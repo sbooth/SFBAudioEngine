@@ -6,6 +6,9 @@
 #import "SFBAudioDevice.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBAggregateDevice.h"
+#import "SFBEndpointDevice.h"
+#import "SFBSubdevice.h"
 #import "SFBAudioDeviceDataSource.h"
 #import "SFBAudioDeviceNotifier.h"
 #import "SFBCStringForOSType.h"
@@ -24,22 +27,22 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 + (NSArray *)devices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (SFBAudioDevice *)defaultInputDevice
 {
-	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultInputDevice];
+	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultInputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (SFBAudioDevice *)defaultOutputDevice
 {
-	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultOutputDevice];
+	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultOutputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (SFBAudioDevice *)defaultSystemOutputDevice
 {
-	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultSystemOutputDevice];
+	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultSystemOutputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (NSArray *)inputDevices
@@ -78,20 +81,20 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	AudioObjectID deviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(deviceUID), &deviceUID, &specifierSize, &deviceID);
+	AudioObjectID objectID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(objectID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(deviceUID), &deviceUID, &specifierSize, &objectID);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
-	if(deviceID == kAudioObjectUnknown) {
+	if(objectID == kAudioObjectUnknown) {
 		os_log_error(gSFBAudioObjectLog, "Unknown audio device UID: %{public}@", deviceUID);
 		return nil;
 	}
 
-	return [self initWithAudioObjectID:deviceID];
+	return [self initWithAudioObjectID:objectID];
 }
 
 - (BOOL)supportsInput
@@ -106,19 +109,23 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)isAggregate
 {
-	return SFBAudioObjectIsClass(_objectID, kAudioAggregateDeviceClassID);
+	BOOL isClass = SFBAudioObjectIsClass(_objectID, kAudioAggregateDeviceClassID);
+	NSAssert(isClass == [self isKindOfClass:[SFBAggregateDevice class]], @"Aggregate device instantiated with incorrect class: %@", self.className);
+	return isClass;
 }
 
-- (BOOL)isPrivateAggregate
+- (BOOL)isPrivateAggregateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	if(!SFBAudioObjectIsClass(_objectID, kAudioAggregateDeviceClassID))
+	if(!self.isAggregate)
 		return NO;
-	return [[[self dictionaryForProperty:kAudioAggregateDevicePropertyComposition] objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
+	return [[(SFBAggregateDevice *)self isPrivateInScope:scope onElement:element] boolValue];
 }
 
 - (BOOL)isEndpointDevice
 {
-	return SFBAudioObjectIsClass(_objectID, kAudioEndPointDeviceClassID);
+	BOOL isClass = SFBAudioObjectIsClass(_objectID, kAudioEndPointDeviceClassID);
+	NSAssert(isClass == [self isKindOfClass:[SFBEndpointDevice class]], @"Endpoint device instantiated with incorrect class: %@", self.className);
+	return isClass;
 }
 
 - (BOOL)isEndpoint
@@ -128,125 +135,132 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)isSubdevice
 {
-	return SFBAudioObjectIsClass(_objectID, kAudioSubDeviceClassID);
+	BOOL isClass = SFBAudioObjectIsClass(_objectID, kAudioSubDeviceClassID);
+	NSAssert(isClass == [self isKindOfClass:[SFBSubdevice class]], @"Subdevice instantiated with incorrect class: %@", self.className);
+	return isClass;
 }
 
 #pragma mark - Device Base Properties
 
-- (NSString *)configurationApplication
+- (NSString *)configurationApplicationInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self stringForProperty:kAudioDevicePropertyConfigurationApplication];
+	return [self stringForProperty:kAudioDevicePropertyConfigurationApplication inScope:scope onElement:element error:NULL];
 }
 
-- (NSString *)deviceUID
+- (NSString *)deviceUIDInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self stringForProperty:kAudioDevicePropertyDeviceUID];
+	return [self stringForProperty:kAudioDevicePropertyDeviceUID inScope:scope onElement:element error:NULL];
 }
 
-- (NSString *)modelUID
+- (NSString *)modelUIDInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self stringForProperty:kAudioDevicePropertyModelUID];
+	return [self stringForProperty:kAudioDevicePropertyModelUID inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)transportType
+- (NSNumber *)transportTypeInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyTransportType];
+	return [self unsignedIntForProperty:kAudioDevicePropertyTransportType inScope:scope onElement:element error:NULL];
 }
 
-- (NSArray *)relatedDevices
+- (NSArray *)relatedDevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioObjectArrayForProperty:kAudioDevicePropertyRelatedDevices];
+	return [self audioObjectArrayForProperty:kAudioDevicePropertyRelatedDevices inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)clockDomain
+- (NSNumber *)clockDomainInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyClockDomain];
+	return [self unsignedIntForProperty:kAudioDevicePropertyClockDomain inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)isAlive
+- (NSNumber *)isAliveInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsAlive];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsAlive inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)isRunning
+- (NSNumber *)isRunningInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsRunning];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsRunning inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)canBeDefaultInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)canBeDefaultInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceCanBeDefaultDevice inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceCanBeDefaultDevice inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)canBeSystemDefaultInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)canBeSystemDefaultInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceCanBeDefaultSystemDevice inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceCanBeDefaultSystemDevice inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)latencyInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)latencyInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyLatency inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertyLatency inScope:scope onElement:element error:NULL];
 }
 
-- (NSArray *)streamsInScope:(SFBAudioObjectPropertyScope)scope
+- (NSArray *)streamsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioObjectArrayForProperty:kAudioDevicePropertyStreams inScope:scope];
+	return [self audioObjectArrayForProperty:kAudioDevicePropertyStreams inScope:scope onElement:element error:NULL];
 }
 
-- (NSArray *)controls
+- (NSArray *)controlsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)safetyOffsetInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)safetyOffsetInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertySafetyOffset inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertySafetyOffset inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)sampleRate
+- (NSNumber *)sampleRateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self doubleForProperty:kAudioDevicePropertyNominalSampleRate];
+	return [self doubleForProperty:kAudioDevicePropertyNominalSampleRate inScope:scope onElement:element error:NULL];
 }
 
-- (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error
+- (BOOL)setSampleRate:(double)sampleRate inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x sample rate to %.2f Hz", _objectID, sampleRate);
-	return [self setDouble:sampleRate forProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
+	return [self setDouble:sampleRate forProperty:kAudioDevicePropertyNominalSampleRate inScope:scope onElement:element error:error];
 }
 
-- (NSArray *)availableSampleRates
+- (NSArray *)availableSampleRatesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioValueRangeArrayForProperty:kAudioDevicePropertyAvailableNominalSampleRates];
+	return [self audioValueRangeArrayForProperty:kAudioDevicePropertyAvailableNominalSampleRates inScope:scope onElement:element error:NULL];
 }
 
-- (NSURL *)icon
+- (NSURL *)iconInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self urlForProperty:kAudioDevicePropertyIcon];
+	return [self urlForProperty:kAudioDevicePropertyIcon inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)isHidden
+- (NSNumber *)isHiddenInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyIsHidden];
+	return [self unsignedIntForProperty:kAudioDevicePropertyIsHidden inScope:scope onElement:element error:NULL];
 }
 
-- (NSArray *)preferredStereoChannelsInScope:(SFBAudioObjectPropertyScope)scope
+- (NSArray *)preferredStereoChannelsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntArrayForProperty:kAudioDevicePropertyPreferredChannelsForStereo inScope:scope];
+	return [self unsignedIntArrayForProperty:kAudioDevicePropertyPreferredChannelsForStereo inScope:scope onElement:element error:NULL];
 }
 
-- (AVAudioChannelLayout *)preferredChannelLayoutInScope:(SFBAudioObjectPropertyScope)scope
+- (AVAudioChannelLayout *)preferredChannelLayoutInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioChannelLayoutForProperty:kAudioDevicePropertyPreferredChannelLayout inScope:scope];
+	return [self audioChannelLayoutForProperty:kAudioDevicePropertyPreferredChannelLayout inScope:scope onElement:element error:NULL];
 }
 
-#pragma mark - Audio Device Properties
+- (BOOL)setPreferredChannelLayout:(AVAudioChannelLayout *)channelLayout inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setAudioChannelLayout:channelLayout forProperty:kAudioDevicePropertyPreferredChannelLayout inScope:scope onElement:element error:error];
+}
 
-- (BOOL)isHoggedInScope:(SFBAudioObjectPropertyScope)scope
+#pragma mark - Device Properties
+
+- (BOOL)isHoggedInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	pid_t hogPID = (pid_t)-1;
@@ -261,12 +275,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return hogPID != (pid_t)-1;
 }
 
-- (BOOL)isHogOwnerInScope:(SFBAudioObjectPropertyScope)scope
+- (BOOL)isHogOwnerInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	pid_t hogPID = (pid_t)-1;
@@ -281,14 +295,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return hogPID == getpid();
 }
 
-- (BOOL)startHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)startHoggingInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Taking hog mode for device 0x%x '%{public}.4s'", _objectID, SFBCStringForOSType(scope));
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	pid_t hogPID = (pid_t)-1;
@@ -319,14 +333,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return YES;
 }
 
-- (BOOL)stopHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)stopHoggingInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Releasing hog mode for device 0x%x '%{public}.4s'", _objectID, SFBCStringForOSType(scope));
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	pid_t hogPID = (pid_t)-1;
@@ -360,7 +374,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 #pragma mark - Audio Controls
 
-- (float)volumeForChannel:(AudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope
+- (float)volumeForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeScalar,
@@ -378,7 +392,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return volume;
 }
 
-- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)setVolume:(float)volume forChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x '%{public}.4s' channel %u volume scalar to %f", _objectID, SFBCStringForOSType(scope), channel, volume);
 
@@ -404,7 +418,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return YES;
 }
 
-- (float)volumeInDecibelsForChannel:(AudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope
+- (float)volumeInDecibelsForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeDecibels,
@@ -422,7 +436,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return volume;
 }
 
-- (BOOL)setVolumeInDecibels:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)setVolumeInDecibels:(float)volume forChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x '%{public}.4s' channel %u volume dB to %f", _objectID, SFBCStringForOSType(scope), channel, volume);
 
@@ -453,7 +467,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeScalarToDecibels,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	Float32 volume = volumeScalar;
@@ -472,7 +486,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeDecibelsToScalar,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	Float32 volume = decibels;
@@ -491,7 +505,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyMute,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	UInt32 isMuted = 0;
@@ -510,7 +524,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyMute,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	UInt32 muted = (UInt32)mute;
@@ -530,7 +544,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyDataSources,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	UInt32 dataSize = 0;
@@ -572,7 +586,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyDataSource,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	UInt32 dataSize = 0;
@@ -628,7 +642,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyDataSource,
 		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
+		.mElement	= element
 	};
 
 	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, (UInt32)sizeof(dataSourceIDs), dataSourceIDs);
@@ -646,27 +660,27 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (void)whenSampleRateChangesPerformBlock:(dispatch_block_t)block
 {
-	[self whenProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyNominalSampleRate inScope:scope changesOnElement:element performBlock:block];
 }
 
 - (void)whenDataSourcesChangeInScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
-	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:element performBlock:block];
 }
 
 - (void)whenActiveDataSourcesChangeInScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
-	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:element performBlock:block];
 }
 
 - (void)whenMuteChangeInScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
-	[self whenProperty:kAudioDevicePropertyMute inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyMute inScope:scope changesOnElement:element performBlock:block];
 }
 
 - (void)whenMasterVolumeChangesInScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
-	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:scope changesOnElement:element performBlock:block];
 }
 
 - (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
