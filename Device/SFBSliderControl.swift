@@ -8,7 +8,6 @@ import Foundation
 extension SliderControl {
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioSliderControlPropertyValue`
-	/// - returns: The control's value
 	/// - throws: An error if the property could not be retrieved
 	public func value() throws -> UInt {
 		return try getProperty(.sliderControlValue)
@@ -24,7 +23,6 @@ extension SliderControl {
 
 	/// Returns the available control values
 	/// - note: This corresponds to `kAudioSliderControlPropertyRange`
-	/// - returns: The available control value
 	/// - throws: An error if the property could not be retrieved
 	public func range() throws -> [UInt] {
 		return try getProperty(.sliderControlRange)

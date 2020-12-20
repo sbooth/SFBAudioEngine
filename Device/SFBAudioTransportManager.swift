@@ -8,7 +8,6 @@ import Foundation
 extension AudioTransportManager {
 	/// Returns the audio endpoints provided by the transport manager
 	/// - note: This corresponds to `kAudioTransportManagerPropertyEndPointList`
-	/// - returns: The audio endpoints provided by the transport manager
 	/// - throws: An error if the property could not be retrieved
 	public func endpoints() throws -> [AudioObject] {
 		return try getProperty(.transportManagerEndPointList)
@@ -16,7 +15,6 @@ extension AudioTransportManager {
 
 	/// Returns the transport type
 	/// - note: This corresponds to `kAudioTransportManagerPropertyTransportType`
-	/// - returns: The transport type
 	/// - throws: An error if the property could not be retrieved
 	public func transportType() throws -> AudioDevice.TransportType {
 		return AudioDevice.TransportType(rawValue: UInt32(try getProperty(.transportManagerTransportType) as UInt))!

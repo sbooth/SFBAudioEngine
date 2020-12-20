@@ -8,7 +8,6 @@ import Foundation
 extension SelectorControl {
 	/// Returns the selected items
 	/// - note: This corresponds to `kAudioSelectorControlPropertyCurrentItem`
-	/// - returns: The selected items
 	/// - throws: An error if the property could not be retrieved
 	public func currentItem() throws -> [UInt] {
 		return try getProperty(.selectorControlCurrentItem)
@@ -16,7 +15,6 @@ extension SelectorControl {
 
 	/// Returns the available items
 	/// - note: This corresponds to `kAudioSelectorControlPropertyAvailableItems`
-	/// - returns: The available items
 	/// - throws: An error if the property could not be retrieved
 	public func availableItems() throws -> [UInt] {
 		return try getProperty(.selectorControlAvailableItems)
@@ -25,7 +23,6 @@ extension SelectorControl {
 	/// Returns the name of `itemID`
 	/// - note: This corresponds to `kAudioSelectorControlPropertyItemName`
 	/// - parameter itemID: The item's ID
-	/// - returns: The item's name
 	/// - throws: An error if the property could not be retrieved
 	public func nameOfItem(_ itemID: UInt) throws -> String {
 		var qualifier: UInt32 = UInt32(itemID)
@@ -35,7 +32,6 @@ extension SelectorControl {
 	/// Returns the kind of `itemID`
 	/// - note: This corresponds to `kAudioSelectorControlPropertyItemKind`
 	/// - parameter itemID: The item's ID
-	/// - returns: The item's kind
 	/// - throws: An error if the property could not be retrieved
 	public func kindOfItem(_ itemID: UInt) throws -> String {
 		var qualifier: UInt32 = UInt32(itemID)
