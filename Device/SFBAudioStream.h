@@ -43,48 +43,46 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 
 /// Returns \c @ YES if the stream is active or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyIsActive
-- (nullable NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isActive NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if this is an output stream or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyDirection
-- (nullable NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isOutput NS_REFINED_FOR_SWIFT;
 /// Returns the terminal type  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyTerminalType
-- (nullable NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *terminalType;
 /// Returns the starting channel in the owning device  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyStartingChannel
-- (nullable NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *startingChannel NS_REFINED_FOR_SWIFT;
 /// Returns the latency  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyLatency
-- (nullable NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *latency;
 /// Returns the virtual format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @note The return value contains a wrapped \c AudioStreamBasicDescription structure
-- (nullable NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSValue *virtualFormat NS_REFINED_FOR_SWIFT;
 /// Sets the virtual format
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @param value The desired value
-/// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Returns the available virtual formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailableVirtualFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
-- (nullable NSArray<NSValue *> *)availableVirtualFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSArray<NSValue *> *availableVirtualFormats NS_REFINED_FOR_SWIFT;
 /// Returns the physical format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
-- (nullable NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSValue *physicalFormat NS_REFINED_FOR_SWIFT;
 /// Sets the physical format
 /// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
 /// @param value The desired value
-/// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Returns the available physical formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailablePhysicalFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
-- (nullable NSArray<NSValue *> *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSArray<NSValue *> *availablePhysicalFormats NS_REFINED_FOR_SWIFT;
 @end
 
 NS_ASSUME_NONNULL_END
