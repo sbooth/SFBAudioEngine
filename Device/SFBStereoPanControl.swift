@@ -8,18 +8,24 @@ import Foundation
 extension StereoPanControl {
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyValue`
+	/// - returns: The control's value
+	/// - throws: An error if the property could not be retrieved
 	public func value() throws -> Float {
 		return try getProperty(.stereoPanControlValue)
 	}
 
 	/// Sets the control's value
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyValue`
+	/// - parameter value: The desired property value
+	/// - throws: An error if the property could not be set
 	public func setValue(_ value: Float) throws {
 		try setProperty(.stereoPanControlValue, value)
 	}
 
 	/// Returns the control's panning channels
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyPanningChannels`
+	/// - returns: The control's panning channels
+	/// - throws: An error if the property could not be retrieved
 	public func panningChannels() throws -> [UInt] {
 		return try getProperty(.stereoPanControlPanningChannels)
 	}
