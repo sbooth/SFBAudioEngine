@@ -271,6 +271,16 @@ extension AudioObject {
 		try __setAudioObject(value, forProperty: property, in: scope, onElement: element)
 	}
 
+	/// Sets the value for `property` as an `AVAudioChannelLayout`
+	/// - note: `property` must refer to a property of type `AudioChannelLayout`
+	/// - parameter property: The property to set
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func setProperty(_ property: PropertySelector, _ value: AVAudioChannelLayout, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setAudioChannelLayout(value, forProperty: property, in: scope, onElement: element)
+	}
 }
 
 extension AudioObject {
