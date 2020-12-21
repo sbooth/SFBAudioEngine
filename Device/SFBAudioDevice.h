@@ -4,7 +4,6 @@
  */
 
 #import <SFBAudioEngine/SFBAudioObject.h>
-#import <AVFoundation/AVFoundation.h>
 
 @class SFBAudioStream, SFBAudioDeviceDataSource, SFBAudioControl;
 
@@ -58,7 +57,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 @property (nonatomic, readonly) BOOL isAggregate;
 /// Returns \c YES if the device is a private aggregate device
 /// @note An aggregate device is private if \c kAudioAggregateDeviceIsPrivateKey is true
-- (BOOL)isPrivateAggregateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, readonly) BOOL isPrivateAggregate;
 
 /// Returns \c YES if the device is an endpoint device
 /// @note A device is an endpoint device if its \c AudioClassID is \c kAudioEndPointDeviceClassID
@@ -75,76 +74,52 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// Returns the configuration application or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyConfigurationApplication
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSString *)configurationApplicationInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSString *configurationApplication NS_REFINED_FOR_SWIFT;
 /// Returns the device UID or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDeviceUID
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSString *)deviceUIDInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSString *deviceUID NS_REFINED_FOR_SWIFT;
 /// Returns the model UID or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyModelUID
-/// @param scope The desired scope
-/// @param element The desired element
 /// @return The property value
-- (nullable NSString *)modelUIDInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSString *modelUID NS_REFINED_FOR_SWIFT;
 /// Returns the transport type  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyTransportType
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)transportTypeInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *transportType NS_REFINED_FOR_SWIFT;
 /// Returns an array  of related audio devices or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyRelatedDevices
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSArray<SFBAudioDevice *> *)relatedDevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSArray<SFBAudioDevice *> *)relatedDevicesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Returns the clock domain  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyClockDomain
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)clockDomainInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *clockDomain NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if the device is alive  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDeviceIsAlive
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)isAliveInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isAlive NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if the device is running  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDeviceIsRunning
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)isRunningInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isRunning NS_REFINED_FOR_SWIFT;
+/// Starts or stops the device
+/// @note This corresponds to \c kAudioDevicePropertyDeviceIsRunning
+/// @param value The desired device state
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the device was started or stopped successfully
+- (BOOL)setIsRunning:(BOOL)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if the device can be the default device  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDeviceCanBeDefaultDevice
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)canBeDefaultInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)canBeDefaultInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if the device can be the system default device  or \c nil on error
-/// @note This corresponds to \c kAudioDevicePropertyDeviceCanBeDefaultSystemDevice
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)canBeSystemDefaultInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the latency  or \c nil on error  or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyDeviceCanBeDefaultSystemDevice
+- (nullable NSNumber *)canBeSystemDefaultInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Returns the latency  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyLatency
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)latencyInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)latencyInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Returns an array  of the device's audio streams or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyStreams
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSArray<SFBAudioStream *> *)streamsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSArray<SFBAudioStream *> *)streamsInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Returns an array  of the device's audio controls or \c nil on error
 /// @note This corresponds to \c kAudioObjectPropertyControlList
 /// @param scope The desired scope
@@ -154,98 +129,146 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// Returns the safety offset  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertySafetyOffset
 /// @param scope The desired scope
-/// @param element The desired element
 /// @return The property value
-- (nullable NSNumber *)safetyOffsetInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)safetyOffsetInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 
 /// Returns the device sample rate or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyNominalSampleRate
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)sampleRateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *sampleRate NS_REFINED_FOR_SWIFT;
 /// Sets the device sample rate
 /// @note This corresponds to \c kAudioDevicePropertyNominalSampleRate
 /// @param sampleRate The desired sample rate
-/// @param scope The desired scope
-/// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the sample rate was set successfully
-- (BOOL)setSampleRate:(double)sampleRate inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns an array of available sample rates or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyAvailableNominalSampleRates
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSArray<NSNumber *> *)availableSampleRatesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
 
 /// Returns the URL of the device's icon or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyIcon
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSURL *)iconInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSURL *icon NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if the device is hidden  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyIsHidden
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSNumber *)isHiddenInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isHidden NS_REFINED_FOR_SWIFT;
 
 /// Returns the preferred stereo channels for the device or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyPreferredChannelsForStereo
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable NSArray<NSNumber *> *)preferredStereoChannelsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSArray<NSNumber *> *)preferredStereoChannelsInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 
 /// Returns the preferred channel layout for the device or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyPreferredChannelLayout
 /// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (nullable AVAudioChannelLayout *)preferredChannelLayoutInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable SFBAudioChannelLayoutWrapper *)preferredChannelLayoutInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the preferred channel layout for the device
 /// @note This corresponds to \c kAudioDevicePropertyPreferredChannelLayout
 /// @param channelLayout The desired channel layout
 /// @param scope The desired scope
-/// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the sample rate was set successfully
-- (BOOL)setPreferredChannelLayout:(AVAudioChannelLayout *)channelLayout inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setPreferredChannelLayout:(SFBAudioChannelLayoutWrapper *)channelLayout inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Device Properties
 
 /// Returns any error codes loading the driver plugin or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyPlugIn
 /// @param scope The desired scope
-/// @param element The desired element
 /// @return The property value
-- (nullable NSNumber *)plugInInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)plugInInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 
-/// Returns \c YES if the device is hogged for the specified scope
-/// @note This queries \c { kAudioDevicePropertyHogMode, scope, kAudioObjectPropertyElementMaster }
+/// Returns \c @ YES if the device is running somewhere or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyDeviceIsRunningSomewhere
+@property (nonatomic, nullable, readonly) NSNumber *isRunningSomewhere NS_REFINED_FOR_SWIFT;
+
+/// Returns the owning \c pid_t (\c -1 if the device is available to all processes) or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param scope The desired scope
-/// @return \c YES if the device is hogged or \c NO if the device is not hogged or an error occurs
-- (BOOL)isHoggedInScope:(SFBAudioObjectPropertyScope)scope;
-/// Returns \c YES if the device is hogged for the specified scope and the current process is the owner
-/// @note This queries \c { kAudioDevicePropertyHogMode, scope, kAudioObjectPropertyElementMaster }
+- (nullable NSNumber *)hogModeInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Sets the owning \c pid_t
+/// @note This corresponds to \c kAudioDevicePropertyHogMode
+/// @param value The desired value
+/// @param scope The desired scope
+/// @return \c YES if successful
+- (BOOL)setHogMode:(pid_t)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+// Hog mode helpers
+
+/// Returns \c @ YES if the device is hogged or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyHogMode
+/// @param scope The desired scope
+- (nullable NSNumber *)isHoggedInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Returns \c YES if the device is hogged and the current process is the owner or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param scope The desired scope
 /// @return \c YES if the device is hogged and the current process is the owner or \c NO if the device is not hogged or an error occurs
-- (BOOL)isHogOwnerInScope:(SFBAudioObjectPropertyScope)scope;
-/// Takes hog mode for the specified scope
+- (nullable NSNumber *)isHogOwnerInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Takes hog mode
+/// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if hog mode was taken successfully
-- (BOOL)startHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
-/// Releases hog mode for the specified scope
+- (BOOL)startHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Releases hog mode
+/// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if hog mode was released successfully
-- (BOOL)stopHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
+- (BOOL)stopHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-#pragma mark - Audio Controls
+/// Returns the buffer frame size or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyBufferFrameSize
+/// @param scope The desired scope
+- (nullable NSNumber *)bufferFrameSizeInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Sets the buffer frame size
+/// @note This corresponds to \c kAudioDevicePropertyBufferFrameSize
+/// @param scope The desired scope
+/// @return \c YES if successful
+- (BOOL)setBufferFrameSize:(UInt32)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns the buffer frame range as a wrapped \c AudioValueRange object  or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyBufferFrameSizeRange
+/// @param scope The desired scope
+- (nullable NSValue *)bufferFrameSizeRangeInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the variable buffer frame size or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyUsesVariableBufferFrameSizes
+/// @param scope The desired scope
+- (nullable NSNumber *)usesVariableBufferFrameSizesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the IO cycle usage or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyIOCycleUsage
+/// @param scope The desired scope
+- (nullable NSNumber *)ioCycleUsageInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the stream configuration or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyStreamConfiguration
+/// @param scope The desired scope
+- (nullable SFBAudioBufferListWrapper *)streamConfigurationInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the IOProc stream usage as a wrapped \c AudioHardwareIOProcStreamUsage object  or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyIOProcStreamUsage
+/// @param scope The desired scope
+- (nullable NSValue *)ioProcStreamUsageInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the actual sample rate or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyActualSampleRate
+/// @return The property value
+@property (nonatomic, nullable, readonly) NSNumber *actualSampleRate NS_REFINED_FOR_SWIFT;
+
+/// Returns the clock device UID or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyClockDevice
+/// @param scope The desired scope
+- (nullable NSString *)clockDeviceInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the IO thread \c os_workgroup_t or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyIOThreadOSWorkgroup
+/// @param scope The desired scope
+- (nullable NSNumber *)ioThreadOSWorkgroupInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+
+#pragma mark - Device Properties Implemented by Audio Controls
 
 /// Returns the volume scalar of the specified channel or \c NaN on error
 /// @note This returns \c { kAudioDevicePropertyVolumeScalar, scope, channel }
