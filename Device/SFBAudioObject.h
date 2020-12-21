@@ -5,7 +5,8 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudio.h>
-#import <AVFoundation/AVFoundation.h>
+
+@class SFBAudioBufferListWrapper, SFBAudioChannelLayoutWrapper;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -576,7 +577,16 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable SFBAudioChannelLayoutWrapper *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns the value for \c property as a wrapped \c AudioBufferList structure or \c nil on error
+/// @note \c property must refer to a property of type \c AudioBufferList
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable SFBAudioBufferListWrapper *)audioBufferListForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
@@ -645,7 +655,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return \c YES if successful
 - (BOOL)setAudioObject:(SFBAudioObject *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Sets the value for \c property as an \c AVAudioChannelLayout object
+/// Sets the value for \c property as an \c SFBAudioChannelLayoutWrapper
 /// @note \c property must refer to a property of type \c AudioChannelLayout
 /// @param value The desired value
 /// @param property The property to set
@@ -653,7 +663,17 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setAudioChannelLayout:(AVAudioChannelLayout *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setAudioChannelLayout:(SFBAudioChannelLayoutWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Sets the value for \c property as an \c SFBAudioBufferListWrapper
+/// @note \c property must refer to a property of type \c AudioBufferList
+/// @param value The desired value
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setAudioBufferList:(SFBAudioBufferListWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
@@ -709,7 +729,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 @end
 
-#pragma mark -
+#pragma mark - NSValue extension for fixed-length Core Audio structures
 
 /// \c NSValue support for \c CoreAudio structures
 @interface NSValue (SFBCoreAudioStructs)
@@ -735,7 +755,9 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 - (AudioValueRange)audioValueRangeValue;
 @end
 
-/// \c NSValue support for \c pid_t
+#pragma mark - NSNumber extension for pid_t
+
+/// \c NSNumber support for \c pid_t
 @interface NSNumber (SFBpid)
 /// Creates a new number object containing the specified \c pid_t
 /// @param pid The value for the new object
@@ -743,6 +765,72 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 + (instancetype)numberWithPid:(pid_t)pid;
 /// Returns the \c pid_t representation of the value
 - (pid_t)pidValue;
+@end
+
+#pragma mark - Wrappers for variable-length Core Audio structures
+
+/// A thin wrapper around a variable-length \c AudioBufferList structure
+NS_SWIFT_NAME(AudioBufferListWrapper) @interface SFBAudioBufferListWrapper : NSObject
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+
+/// Returns an initialized \c SFBAudioBufferListWrapper object wrapping the specified \c AudioBufferList
+/// @note If \c freeWhenDone is \c YES \c audioBufferList must have been allocated using \c malloc
+/// @note If \c freeWhenDone is \c YES the object takes ownership of \c audioBufferList
+/// @param audioBufferList The \c AudioBufferList structure to wrap
+/// @param freeWhenDone Whether the memory for \c audioBufferList should be reclaimed using \c free
+/// @return An initialized \c SFBAudioBufferListWrapper object
+- (instancetype)initWithAudioBufferList:(AudioBufferList *)audioBufferList freeWhenDone:(BOOL)freeWhenDone NS_DESIGNATED_INITIALIZER;
+
+/// Returns an initialized \c SFBAudioBufferListWrapper object with the specified number of channel descriptions
+/// @param numberBuffers The number of buffers in the buffer list
+/// @return An initialized \c SFBAudioBufferListWrapper object
+- (instancetype)initWithNumberBuffers:(unsigned int)numberBuffers;
+
+/// Returns the underlying \c AudioBufferList structure
+@property (nonatomic, readonly) const AudioBufferList *audioBufferList;
+
+/// Returns the buffer list's \c mNumberBuffers
+@property (nonatomic, readonly) UInt32 numberBuffers NS_SWIFT_UNAVAILABLE("Use -buffers");
+/// Returns the buffer list's \c mBuffers or \c NULL if \c mNumberBuffers is zero
+@property (nonatomic, nullable, readonly) const AudioBuffer *buffers NS_REFINED_FOR_SWIFT;
+
+@end
+
+/// A thin wrapper around a variable-length \c AudioChannelLayout structure
+NS_SWIFT_NAME(AudioChannelLayoutWrapper) @interface SFBAudioChannelLayoutWrapper : NSObject
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+/// Returns an initialized \c SFBAudioChannelLayoutWrapper object wrapping the specified \c AudioChannelLayout
+/// @note If \c freeWhenDone is \c YES \c audioChannelLayout must have been allocated using \c malloc
+/// @note If \c freeWhenDone is \c YES the object takes ownership of \c audioChannelLayout
+/// @param audioChannelLayout The \c AudioChannelLayout structure to wrap
+/// @param freeWhenDone Whether the memory for \c audioChannelLayout should be reclaimed using \c free
+/// @return An initialized \c SFBAudioChannelLayoutWrapper object
+- (instancetype)initWithAudioChannelLayout:(AudioChannelLayout *)audioChannelLayout freeWhenDone:(BOOL)freeWhenDone NS_DESIGNATED_INITIALIZER;
+
+/// Returns an initialized \c SFBAudioChannelLayoutWrapper object with the specified number of channel descriptions
+/// @param numberChannelDescriptions The number of channel descriptions in the layout
+/// @return An initialized \c SFBAudioChannelLayoutWrapper object
+- (nullable instancetype)initWithNumberChannelDescriptions:(unsigned int)numberChannelDescriptions;
+
+/// Returns the underlying \c AudioChannelLayout structure
+@property (nonatomic, readonly) const AudioChannelLayout *audioChannelLayout;
+
+/// Returns the layout's \c mAudioChannelLayoutTag
+@property (nonatomic, readonly) AudioChannelLayoutTag tag;
+/// Returns the layout's \c mAudioChannelBitmap
+@property (nonatomic, readonly) AudioChannelBitmap bitmap;
+
+/// Returns the layout's \c mNumberChannelDescriptions
+@property (nonatomic, readonly) UInt32 numberChannelDescriptions NS_SWIFT_UNAVAILABLE("Use -channelDescriptions");
+/// Returns the layout's \c mChannelDescriptions or \c NULL if \c mNumberChannelDescriptions is zero
+@property (nonatomic, nullable, readonly) const AudioChannelDescription *channelDescriptions NS_REFINED_FOR_SWIFT;
+
 @end
 
 NS_ASSUME_NONNULL_END

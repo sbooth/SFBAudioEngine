@@ -206,8 +206,19 @@ extension AudioObject {
 	/// - parameter element: The desired element
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
-	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AVAudioChannelLayout {
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioChannelLayoutWrapper {
 		return try __audioChannelLayout(forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Returns the value for `property` as a wrapped `AudioBufferList` structure
+	/// - note: `property` must refer to a property of type array of `AudioBufferList`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioBufferListWrapper {
+		return try __audioBufferList(forProperty: property, in: scope, onElement: element)
 	}
 
 }
@@ -271,15 +282,26 @@ extension AudioObject {
 		try __setAudioObject(value, forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Sets the value for `property` as an `AVAudioChannelLayout`
+	/// Sets the value for `property` as an `SFBAudioChannelLayoutWrapper`
 	/// - note: `property` must refer to a property of type `AudioChannelLayout`
 	/// - parameter property: The property to set
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if the property could not be set
-	public func setProperty(_ property: PropertySelector, _ value: AVAudioChannelLayout, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+	public func setProperty(_ property: PropertySelector, _ value: AudioChannelLayoutWrapper, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
 		try __setAudioChannelLayout(value, forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Sets the value for `property` as an `SFBAudioBufferListWrapper`
+	/// - note: `property` must refer to a property of type `AudioBufferList`
+	/// - parameter property: The property to set
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func setProperty(_ property: PropertySelector, _ value: AudioBufferListWrapper, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setAudioBufferList(value, forProperty: property, in: scope, onElement: element)
 	}
 }
 
@@ -305,7 +327,7 @@ extension AudioObject {
 	/// - note: The system object does not have an owner
 	/// - returns: The audio object's owning object
 	/// - throws: An error if the property could not be retrieved
-	func owner() throws -> AudioObject {
+	func owner() throws -> AudioObject? {
 		return try getProperty(.owner)
 	}
 
@@ -415,6 +437,26 @@ extension AudioObject.PropertyElement {
 	/// The wildcard element, `kAudioObjectPropertyElementWildcard`
 	public static var wildcard: AudioObject.PropertyElement {
 		return kAudioObjectPropertyElementWildcard
+	}
+}
+
+extension AudioBufferListWrapper {
+	/// Returns the buffer list's `mBuffers` or `nil` if `mNumberBuffers` is zero
+	public var buffers: UnsafeBufferPointer<AudioBuffer>? {
+		guard let values = __buffers else {
+			return nil
+		}
+		return UnsafeBufferPointer(start: values, count: Int(audioBufferList.pointee.mNumberBuffers))
+	}
+}
+
+extension AudioChannelLayoutWrapper {
+	/// Returns the layout's `mChannelDescriptions` or `nil` if `mNumberChannelDescriptions` is zero
+	public var channelDescriptions: UnsafeBufferPointer<AudioChannelDescription>? {
+		guard let values = __channelDescriptions else {
+			return nil
+		}
+		return UnsafeBufferPointer(start: values, count: Int(audioChannelLayout.pointee.mNumberChannelDescriptions))
 	}
 }
 

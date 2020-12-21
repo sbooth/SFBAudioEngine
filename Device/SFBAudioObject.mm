@@ -34,7 +34,14 @@ struct ::std::default_delete<AudioBufferList> {
 	default_delete() = default;
 	template <class U>
 	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(AudioBufferList *abl) const noexcept { std::free(abl); }
+	void operator()(AudioBufferList *abl) const noexcept
+	{
+		for(UInt32 bufferIndex = 0; bufferIndex < abl->mNumberBuffers; ++bufferIndex) {
+			if(abl->mBuffers[bufferIndex].mData)
+				std::free(abl->mBuffers[bufferIndex].mData);
+		}
+		std::free(abl);
+	}
 };
 
 template <>
@@ -72,6 +79,65 @@ namespace {
 		const void 		*mData;
 		const UInt32 	mSize;
 	};
+
+#pragma mark AudioBufferList Helpers
+
+	/// Returns the size in bytes of an \c AudioBufferList with the specified number of buffers
+	size_t GetBufferListSize(UInt32 numberBuffers)
+	{
+		return offsetof(AudioBufferList, mBuffers) + (numberBuffers * sizeof(AudioBuffer));
+	}
+
+	/// Allocates and returns an \c AudioBufferLis with the specified number of buffers
+	AudioBufferList * _Nullable CreateBufferList(UInt32 numberBuffers)
+	{
+		size_t bufferListSize = GetBufferListSize(numberBuffers);
+		AudioBufferList *bufferList = (AudioBufferList *)std::malloc(bufferListSize);
+		if(!bufferList)
+			return nullptr;
+
+		memset(bufferList, 0, bufferListSize);
+		bufferList->mNumberBuffers = numberBuffers;
+
+		return bufferList;
+	}
+
+#pragma mark AudioChannelLayout Helpers
+
+	/// Returns the size in bytes of an \c AudioChannelLayout with the specified number of channel descriptions
+	size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
+	{
+		return offsetof(AudioChannelLayout, mChannelDescriptions) + (numberChannelDescriptions * sizeof(AudioChannelDescription));
+	}
+
+	 /// Allocates and returns an \c AudioChannelLayout with the specified number of channel descriptions
+	AudioChannelLayout * _Nullable CreateChannelLayout(UInt32 numberChannelDescriptions)
+	{
+		size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
+		AudioChannelLayout *channelLayout = (AudioChannelLayout *)std::malloc(layoutSize);
+		if(!channelLayout)
+			return nullptr;
+
+		memset(channelLayout, 0, layoutSize);
+		channelLayout->mNumberChannelDescriptions = numberChannelDescriptions;
+
+		return channelLayout;
+	}
+
+	/// Create and returns a deep copy of \c rhs
+	AudioChannelLayout * _Nullable CopyChannelLayout(const AudioChannelLayout *rhs)
+	{
+		NSCParameterAssert(rhs != nullptr);
+
+		size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
+		AudioChannelLayout *channelLayout = (AudioChannelLayout *)std::malloc(layoutSize);
+		if(!channelLayout)
+			return nullptr;
+
+		memcpy(channelLayout, rhs, layoutSize);
+
+		return channelLayout;
+	}
 
 #pragma mark - Basic Property Getters
 
@@ -274,13 +340,14 @@ namespace {
 		return ObjectForFixedSizeProperty(objectID, propertyAddress, qualifier, error, transform);
 	}
 
-	AVAudioChannelLayout * _Nullable AudioChannelLayoutForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	SFBAudioChannelLayoutWrapper * _Nullable AudioChannelLayoutForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		std::unique_ptr<AudioChannelLayout> value;
 		if(!GetVariableSizeProperty(objectID, propertyAddress, value, qualifier, error))
 			return nil;
-		return [AVAudioChannelLayout layoutWithLayout:value.get()];
+		return [[SFBAudioChannelLayoutWrapper alloc] initWithAudioChannelLayout:value.release() freeWhenDone:YES];
+//		return [AVAudioChannelLayout layoutWithLayout:value.get()];
 	}
 
 #pragma mark - Typed Scalar Property Setters
@@ -310,13 +377,12 @@ namespace {
 		return SetProperty(objectID, propertyAddress, &value, sizeof(value), qualifier, error);
 	}
 
-	bool SetAudioChannelLayoutForProperty(AudioObjectID objectID, AVAudioChannelLayout *value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	bool SetAudioChannelLayoutForProperty(AudioObjectID objectID, SFBAudioChannelLayoutWrapper *value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
 	{
 		NSCParameterAssert(value != nil);
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		const AudioChannelLayout *layout = value.layout;
-		UInt32 layoutSize = offsetof(AudioChannelLayout, mChannelDescriptions) + (layout->mNumberChannelDescriptions * sizeof(AudioChannelDescription));
-		return SetProperty(objectID, propertyAddress, layout, layoutSize, qualifier, error);
+		auto layoutSize = GetChannelLayoutSize(value.audioChannelLayout->mNumberChannelDescriptions);
+		return SetProperty(objectID, propertyAddress, value.audioChannelLayout, static_cast<UInt32>(layoutSize), qualifier, error);
 	}
 
 #pragma mark - Typed Array Property Getters
@@ -805,7 +871,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioValueRangeArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (SFBAudioChannelLayoutWrapper *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioChannelLayoutForProperty(_objectID, property, scope, element, {}, error);
 }
@@ -866,7 +932,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return SetArithmeticProperty<AudioObjectID>(_objectID, value.objectID, property, scope, element, {}, error);
 }
 
-- (BOOL)setAudioChannelLayout:(AVAudioChannelLayout *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (BOOL)setAudioChannelLayout:(SFBAudioChannelLayoutWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return SetAudioChannelLayoutForProperty(_objectID, value, property, scope, element, {}, error);
 }
@@ -1005,6 +1071,125 @@ static SFBAudioObject *sSystemObject = nil;
 - (pid_t)pidValue
 {
 	return self.intValue;
+}
+
+@end
+
+#pragma mark -
+
+@interface SFBAudioBufferListWrapper ()
+{
+@private
+	AudioBufferList *_bufferList;
+	BOOL _freeWhenDone;
+}
+@end
+
+@implementation SFBAudioBufferListWrapper
+
+- (instancetype)initWithAudioBufferList:(AudioBufferList *)audioBufferList freeWhenDone:(BOOL)freeWhenDone
+{
+	NSParameterAssert(audioBufferList != NULL);
+	if((self = [super init])) {
+		_bufferList = audioBufferList;
+		_freeWhenDone = freeWhenDone;
+	}
+	return self;
+}
+
+- (instancetype)initWithNumberBuffers:(unsigned int)numberBuffers
+{
+	auto abl = CreateBufferList(numberBuffers);
+	if(!abl)
+		return nil;
+	return [self initWithAudioBufferList:abl freeWhenDone:YES];
+}
+
+- (void)dealloc
+{
+	if(_freeWhenDone) {
+		for(UInt32 i = 0; i < _bufferList->mNumberBuffers; ++i) {
+			if(_bufferList->mBuffers[i].mData)
+				std::free(_bufferList->mBuffers[i].mData);
+		}
+		std::free(_bufferList);
+	}
+}
+
+- (const AudioBufferList *)audioBufferList
+{
+	return _bufferList;
+}
+
+- (UInt32)numberBuffers
+{
+	return _bufferList->mNumberBuffers;
+}
+
+- (const AudioBuffer *)buffers
+{
+	return _bufferList->mNumberBuffers > 0 ? _bufferList->mBuffers : nullptr;
+}
+
+@end
+
+@interface SFBAudioChannelLayoutWrapper ()
+{
+@private
+	AudioChannelLayout *_channelLayout;
+	BOOL _freeWhenDone;
+}
+@end
+
+@implementation SFBAudioChannelLayoutWrapper
+
+- (instancetype)initWithAudioChannelLayout:(AudioChannelLayout *)audioChannelLayout freeWhenDone:(BOOL)freeWhenDone
+{
+	NSParameterAssert(audioChannelLayout != NULL);
+	if((self = [super init])) {
+		_channelLayout = audioChannelLayout;
+		_freeWhenDone = freeWhenDone;
+	}
+	return self;
+}
+
+- (instancetype)initWithNumberChannelDescriptions:(unsigned int)numberChannelDescriptions
+{
+	auto acl = CreateChannelLayout(numberChannelDescriptions);
+	if(!acl)
+		return nil;
+	return [self initWithAudioChannelLayout:acl freeWhenDone:YES];
+}
+
+- (void)dealloc
+{
+	if(_freeWhenDone)
+		std::free(_channelLayout);
+}
+
+- (const AudioChannelLayout *)audioChannelLayout
+{
+	return _channelLayout;
+}
+
+- (AudioChannelLayoutTag)tag
+{
+	return _channelLayout->mChannelLayoutTag;
+}
+
+- (AudioChannelBitmap)bitmap
+{
+	return _channelLayout->mChannelBitmap;
+}
+
+- (UInt32)numberChannelDescriptions
+{
+	return _channelLayout->mNumberChannelDescriptions;
+}
+
+- (const AudioChannelDescription *)channelDescriptions
+{
+	return _channelLayout->mNumberChannelDescriptions > 0 ? _channelLayout->mChannelDescriptions : nullptr;
 }
 
 @end
