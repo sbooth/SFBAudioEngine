@@ -27,45 +27,45 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (NSArray *)allSubdevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSArray *)allSubdevices
 {
-	return [self arrayForProperty:kAudioAggregateDevicePropertyFullSubDeviceList inScope:scope onElement:element error:NULL];
+	return [self arrayForProperty:kAudioAggregateDevicePropertyFullSubDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (NSArray *)activeSubdevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSArray *)activeSubdevices
 {
-	return [self audioObjectArrayForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList inScope:scope onElement:element error:NULL];
+	return [self audioObjectArrayForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (NSDictionary *)compositionInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSDictionary *)composition
 {
-	return [self dictionaryForProperty:kAudioAggregateDevicePropertyComposition inScope:scope onElement:element error:NULL];
+	return [self dictionaryForProperty:kAudioAggregateDevicePropertyComposition inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (SFBAudioDevice *)masterSubdeviceInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (SFBAudioDevice *)masterSubdevice
 {
-	return (SFBAudioDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyMasterSubDevice inScope:scope onElement:element error:NULL];
+	return (SFBAudioDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyMasterSubDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (SFBClockDevice *)clockDeviceInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (SFBClockDevice *)clockDevice
 {
-	return (SFBClockDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyClockDevice inScope:scope onElement:element error:NULL];
+	return (SFBClockDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyClockDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error
 {
-	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device ('%{public}.4s', %u) to %{public}@", _objectID, SFBCStringForOSType(scope), element, clockDevice.clockDeviceUID ?: @"nil");
-	return [self setAudioObject:clockDevice forProperty:kAudioAggregateDevicePropertyClockDevice inScope:scope onElement:element error:error];
+	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", _objectID, clockDevice.clockDeviceUID ?: @"nil");
+	return [self setAudioObject:clockDevice forProperty:kAudioAggregateDevicePropertyClockDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
-- (NSNumber *)isPrivateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)isPrivate
 {
-	return [[self compositionInScope:scope onElement:element] objectForKey:@ kAudioAggregateDeviceIsPrivateKey];
+	return [self.composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey];
 }
 
-- (NSNumber *)isStackedInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)isStacked
 {
-	return [[self compositionInScope:scope onElement:element] objectForKey:@ kAudioAggregateDeviceIsStackedKey];
+	return [self.composition objectForKey:@ kAudioAggregateDeviceIsStackedKey];
 }
 
 @end
