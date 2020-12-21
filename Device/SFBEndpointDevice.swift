@@ -25,6 +25,6 @@ extension EndpointDevice {
 	/// - note: This corresponds to `kAudioEndPointDevicePropertyIsPrivate`
 	/// - throws: An error if the property could not be retrieved
 	public func isPrivate() throws -> pid_t {
-		return pid_t(try getProperty(.endpointDeviceIsPrivate) as UInt)
+		return pid_t(bitPattern: UInt32(try getProperty(.endpointDeviceIsPrivate) as UInt))
 	}
 }

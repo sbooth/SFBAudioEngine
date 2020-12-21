@@ -199,7 +199,7 @@ extension AudioDevice {
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
 	public func plugin(_ scope: PropertyScope = .global) throws -> OSStatus {
-		return OSStatus(try getProperty(.devicePlugIn, scope: scope) as UInt)
+		return OSStatus(bitPattern: UInt32(try getProperty(.devicePlugIn, scope: scope) as UInt))
 	}
 
 	/// Returns `true` if the device is running somewhere
@@ -214,7 +214,7 @@ extension AudioDevice {
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
 	public func hogMode(_ scope: PropertyScope = .global) throws -> pid_t {
-		return pid_t(try getProperty(.deviceHogMode, scope: scope) as UInt)
+		return pid_t(bitPattern: UInt32(try getProperty(.deviceHogMode, scope: scope) as UInt))
 	}
 
 	/// Sets the owning pid

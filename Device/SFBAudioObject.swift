@@ -311,7 +311,7 @@ extension AudioObject {
 	/// - returns: The audio object's base class
 	/// - throws: An error if the property could not be retrieved
 	func baseClassID() throws -> AudioClassID {
-		return AudioClassID(try getProperty(.baseClass) as UInt)
+		return AudioClassID(bitPattern: Int32(try getProperty(.baseClass) as UInt))
 	}
 
 	/// Returns the audio object's class
@@ -319,7 +319,7 @@ extension AudioObject {
 	/// - returns: The audio object's class
 	/// - throws: An error if the property could not be retrieved
 	func classID() throws -> AudioClassID {
-		return AudioClassID(try getProperty(.class) as UInt)
+		return AudioClassID(bitPattern: Int32(try getProperty(.class) as UInt))
 	}
 
 	/// Returns the audio object's owning object
