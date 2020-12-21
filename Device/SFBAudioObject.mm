@@ -1179,6 +1179,14 @@ static SFBAudioObject *sSystemObject = nil;
 	return self;
 }
 
+- (instancetype)initWithAudioChannelLayout:(AudioChannelLayout *)audioChannelLayout
+{
+	auto acl = CopyChannelLayout(audioChannelLayout);
+	if(!acl)
+		return nil;
+	return [self initWithAudioChannelLayout:acl freeWhenDone:YES];
+}
+
 - (instancetype)initWithNumberChannelDescriptions:(unsigned int)numberChannelDescriptions
 {
 	auto acl = CreateChannelLayout(numberChannelDescriptions);

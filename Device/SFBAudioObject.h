@@ -813,6 +813,12 @@ NS_SWIFT_NAME(AudioChannelLayoutWrapper) @interface SFBAudioChannelLayoutWrapper
 /// @return An initialized \c SFBAudioChannelLayoutWrapper object
 - (instancetype)initWithAudioChannelLayout:(AudioChannelLayout *)audioChannelLayout freeWhenDone:(BOOL)freeWhenDone NS_DESIGNATED_INITIALIZER;
 
+/// Returns an initialized \c SFBAudioChannelLayoutWrapper object with a copy of the specified \c AudioChannelLayout
+/// @note A copy of \c audioChannelLayout is made
+/// @param audioChannelLayout The \c AudioChannelLayout structure to wrap
+/// @return An initialized \c SFBAudioChannelLayoutWrapper object
+- (instancetype)initWithAudioChannelLayout:(AudioChannelLayout *)audioChannelLayout;
+
 /// Returns an initialized \c SFBAudioChannelLayoutWrapper object with the specified number of channel descriptions
 /// @param numberChannelDescriptions The number of channel descriptions in the layout
 /// @return An initialized \c SFBAudioChannelLayoutWrapper object
