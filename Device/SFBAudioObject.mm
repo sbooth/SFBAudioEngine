@@ -347,7 +347,15 @@ namespace {
 		if(!GetVariableSizeProperty(objectID, propertyAddress, value, qualifier, error))
 			return nil;
 		return [[SFBAudioChannelLayoutWrapper alloc] initWithAudioChannelLayout:value.release() freeWhenDone:YES];
-//		return [AVAudioChannelLayout layoutWithLayout:value.get()];
+	}
+
+	SFBAudioBufferListWrapper * _Nullable AudioBufferListForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		std::unique_ptr<AudioBufferList> value;
+		if(!GetVariableSizeProperty(objectID, propertyAddress, value, qualifier, error))
+			return nil;
+		return [[SFBAudioBufferListWrapper alloc] initWithAudioBufferList:value.release() freeWhenDone:YES];
 	}
 
 #pragma mark - Typed Scalar Property Setters
@@ -383,6 +391,14 @@ namespace {
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		auto layoutSize = GetChannelLayoutSize(value.audioChannelLayout->mNumberChannelDescriptions);
 		return SetProperty(objectID, propertyAddress, value.audioChannelLayout, static_cast<UInt32>(layoutSize), qualifier, error);
+	}
+
+	bool SetAudioBufferListForProperty(AudioObjectID objectID, SFBAudioBufferListWrapper *value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		NSCParameterAssert(value != nil);
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		auto bufferListSize = GetBufferListSize(value.audioBufferList->mNumberBuffers);
+		return SetProperty(objectID, propertyAddress, value.audioBufferList, static_cast<UInt32>(bufferListSize), qualifier, error);
 	}
 
 #pragma mark - Typed Array Property Getters
@@ -876,6 +892,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioChannelLayoutForProperty(_objectID, property, scope, element, {}, error);
 }
 
+- (SFBAudioBufferListWrapper *)audioBufferListForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioBufferListForProperty(_objectID, property, scope, element, {}, error);
+}
+
 @end
 
 @implementation SFBAudioObject (SFBPropertySetters)
@@ -935,6 +956,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (BOOL)setAudioChannelLayout:(SFBAudioChannelLayoutWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return SetAudioChannelLayoutForProperty(_objectID, value, property, scope, element, {}, error);
+}
+
+- (BOOL)setAudioBufferList:(SFBAudioBufferListWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return SetAudioBufferListForProperty(_objectID, value, property, scope, element, {}, error);
 }
 
 @end
