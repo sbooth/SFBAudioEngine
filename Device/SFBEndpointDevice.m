@@ -28,7 +28,7 @@
 
 - (NSDictionary *)composition
 {
-	return [self dictionaryForProperty:kAudioEndPointDevicePropertyComposition inScope:scope onElement:element error:NULL];
+	return [self dictionaryForProperty:kAudioEndPointDevicePropertyComposition inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)endpoints
