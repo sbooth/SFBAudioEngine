@@ -10,13 +10,13 @@ extension AudioControl {
 	/// - note: This corresponds to `kAudioControlPropertyScope`
 	/// - throws: An error if the property could not be retrieved
 	public func scope() throws -> PropertyScope {
-		return AudioObject.PropertyScope(rawValue: UInt32(try getProperty(.controlScope) as UInt))!
+		return AudioObject.PropertyScope(rawValue: try getProperty(.controlScope))!
 	}
 
 	/// Returns the control's element
 	/// - note: This corresponds to `kAudioControlPropertyElement`
 	/// - throws: An error if the property could not be retrieved
 	public func element() throws -> PropertyElement {
-		return AudioControl.PropertyElement(try getProperty(.controlElement) as UInt)
+		return AudioControl.PropertyElement(try getProperty(.controlElement) as UInt32)
 	}
 }

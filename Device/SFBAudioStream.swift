@@ -24,21 +24,21 @@ extension AudioStream {
 	/// - note: This corresponds to `kAudioStreamPropertyTerminalType`
 	/// - throws: An error if the property could not be retrieved
 	public func terminalType() throws -> TerminalType {
-		return TerminalType(rawValue: UInt32(try getProperty(.streamTerminalType) as UInt))!
+		return TerminalType(rawValue: try getProperty(.streamTerminalType))!
 	}
 
 	/// Returns the starting channel
 	/// - note: This corresponds to `kAudioStreamPropertyStartingChannel`
 	/// - parameter element: The desired element
 	/// - throws: An error if the property could not be retrieved
-	public func startingChannel() throws -> UInt {
+	public func startingChannel() throws -> UInt32 {
 		return try getProperty(.streamStartingChannel)
 	}
 
 	/// Returns the latency
 	/// - note: This corresponds to `kAudioStreamPropertyLatency`
 	/// - throws: An error if the property could not be retrieved
-	public func latency() throws -> UInt {
+	public func latency() throws -> UInt32 {
 		return try getProperty(.streamLatency)
 	}
 
@@ -47,14 +47,6 @@ extension AudioStream {
 	/// - throws: An error if the property could not be retrieved
 	public func virtualFormat() throws -> AudioStreamBasicDescription {
 		return try getProperty(.streamVirtualFormat)
-	}
-
-	/// Sets the virtual format
-	/// - note: This corresponds to `kAudioStreamPropertyVirtualFormat`
-	/// - parameter value: The desired virtual format
-	/// - throws: An error if the property could not be set
-	public func setVirtualFormat(_ value: AudioStreamBasicDescription) throws {
-		return try setProperty(.streamVirtualFormat, value)
 	}
 
 	/// Returns the available virtual formats
@@ -69,14 +61,6 @@ extension AudioStream {
 	/// - throws: An error if the property could not be retrieved
 	public func physicalFormat() throws -> AudioStreamBasicDescription {
 		return try getProperty(.streamPhysicalFormat)
-	}
-
-	/// Sets the physical format
-	/// - note: This corresponds to `kAudioStreamPropertyPhysicalFormat`
-	/// - parameter value: The desired physical format
-	/// - throws: An error if the property could not be set
-	public func setPhysicalFormat(_ value: AudioStreamBasicDescription) throws {
-		return try setProperty(.streamPhysicalFormat, value)
 	}
 
 	/// Returns the available physical formats

@@ -9,22 +9,14 @@ extension SliderControl {
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioSliderControlPropertyValue`
 	/// - throws: An error if the property could not be retrieved
-	public func value() throws -> UInt {
+	public func value() throws -> UInt32 {
 		return try getProperty(.sliderControlValue)
-	}
-
-	/// Sets the control's value
-	/// - note: This corresponds to `kAudioBooleanControlPropertyValue`
-	/// - parameter value: The desired property value
-	/// - throws: An error if the property could not be set
-	public func setValue(_ value: UInt) throws {
-		try setProperty(.sliderControlValue, value)
 	}
 
 	/// Returns the available control values
 	/// - note: This corresponds to `kAudioSliderControlPropertyRange`
 	/// - throws: An error if the property could not be retrieved
-	public func range() throws -> [UInt] {
+	public func range() throws -> [UInt32] {
 		return try getProperty(.sliderControlRange)
 	}
 }

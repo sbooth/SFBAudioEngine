@@ -17,13 +17,13 @@ extension ClockDevice {
 	/// - note: This corresponds to `kAudioClockDevicePropertyTransportType`
 	/// - throws: An error if the property could not be retrieved
 	public func transportType() throws -> AudioDevice.TransportType {
-		return AudioDevice.TransportType(rawValue: UInt32(try getProperty(.clockDeviceTransportType) as UInt))!
+		return AudioDevice.TransportType(rawValue: try getProperty(.clockDeviceTransportType))!
 	}
 
 	/// Returns the clock domain
 	/// - note: This corresponds to `kAudioClockDevicePropertyClockDomain`
 	/// - throws: An error if the property could not be retrieved
-	public func domain() throws -> UInt {
+	public func domain() throws -> UInt32 {
 		return try getProperty(.clockDeviceClockDomain)
 	}
 
@@ -44,7 +44,7 @@ extension ClockDevice {
 	/// Returns the latency
 	/// - note: This corresponds to `kAudioClockDevicePropertyLatency`
 	/// - throws: An error if the property could not be retrieved
-	public func latency() throws -> UInt {
+	public func latency() throws -> UInt32 {
 		return try getProperty(.clockDeviceLatency)
 	}
 

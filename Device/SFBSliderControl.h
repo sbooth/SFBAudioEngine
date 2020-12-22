@@ -17,7 +17,7 @@ NS_SWIFT_NAME(SliderControl) @interface SFBSliderControl : SFBAudioControl
 /// @note This corresponds to \c kAudioSliderControlPropertyValue
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setValue:(unsigned int)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setValue:(unsigned int)value error:(NSError **)error NS_SWIFT_NAME(setValue(_:));
 
 /// Returns an array of available values or \c nil on error
 /// @note This corresponds to \c kAudioSliderControlPropertyRange

@@ -34,13 +34,13 @@ NS_SWIFT_NAME(AggregateDevice) @interface SFBAggregateDevice : SFBAudioDevice
 
 /// The aggregate device's clock device or \c nil if none
 /// @note This corresponds to \c kAudioAggregateDevicePropertyClockDevice
-@property (nonatomic, nullable, readonly) SFBClockDevice *clockDevice NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) SFBClockDevice *aggregateClockDevice NS_REFINED_FOR_SWIFT;
 /// Sets the aggregate device's clock device
 /// @note This corresponds to \c kAudioAggregateDevicePropertyClockDevice
 /// @param clockDevice The desired clock device
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the clock device was set successfully
-- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setAggregateClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error NS_SWIFT_NAME(setAggregateClockDevice(_:));
 
 #pragma mark - Convenience Accessors
 

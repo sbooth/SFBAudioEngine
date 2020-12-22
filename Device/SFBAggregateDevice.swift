@@ -38,16 +38,8 @@ extension AggregateDevice {
 	/// Returns the aggregate device's clock device
 	/// - note: This corresponds to `kAudioAggregateDevicePropertyClockDevice`
 	/// - throws: An error if the property could not be retrieved
-	public func clockDevice() throws -> AudioDevice {
-		return try getProperty(.aggregateDeviceClockDevice) as AudioObject as! AudioDevice
-	}
-
-	/// Sets the aggregate device's clock device
-	/// - note: This corresponds to `kAudioAggregateDevicePropertyClockDevice`
-	/// - parameter value: The desired property value
-	/// - throws: An error if the property could not be set
-	public func setClockDevice(_ clockDevice: ClockDevice) throws {
-		return try setProperty(.aggregateDeviceClockDevice, clockDevice)
+	public func aggregateClockDevice() throws -> ClockDevice {
+		return try getProperty(.aggregateDeviceClockDevice) as AudioObject as! ClockDevice
 	}
 
 	// MARK: - Convenience Accessors

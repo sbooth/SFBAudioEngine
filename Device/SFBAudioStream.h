@@ -65,7 +65,7 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// @param value The desired value
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value error:(NSError **)error NS_SWIFT_NAME(setVirtualFormat(_:));
 /// Returns the available virtual formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailableVirtualFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
@@ -78,7 +78,7 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// @param value The desired value
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value error:(NSError **)error NS_SWIFT_NAME(setPhysicalFormat(_:));
 /// Returns the available physical formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailablePhysicalFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures

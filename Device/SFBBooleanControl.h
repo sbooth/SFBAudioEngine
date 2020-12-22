@@ -17,7 +17,7 @@ NS_SWIFT_NAME(BooleanControl) @interface SFBBooleanControl : SFBAudioControl
 /// @note This corresponds to \c kAudioBooleanControlPropertyValue
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setValue:(BOOL)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setValue:(BOOL)value error:(NSError **)error NS_SWIFT_NAME(setValue(_:));
 
 @end
 
