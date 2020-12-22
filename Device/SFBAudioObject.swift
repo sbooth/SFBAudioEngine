@@ -221,6 +221,17 @@ extension AudioObject {
 		return try __audioBufferList(forProperty: property, in: scope, onElement: element)
 	}
 
+	/// Returns the value for `property` as a wrapped `AudioHardwareIOProcStreamUsageWrapper` structure
+	/// - note: `property` must refer to a property of type array of `AudioHardwareIOProcStreamUsage`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioHardwareIOProcStreamUsageWrapper {
+		return try __audioHardwareIOProcStreamUsage(forProperty: property, in: scope, onElement: element)
+	}
+
 }
 
 extension AudioObject {
@@ -236,6 +247,17 @@ extension AudioObject {
 	/// - throws: An error if the property could not be set
 	public func setProperty(_ property: PropertySelector, _ value: UInt, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
 		try __setUnsignedInt(UInt32(value), forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Sets the value for `property` as an array of `UInt`
+	/// - note: `property` must refer to a property of type array of `UInt32`
+	/// - parameter property: The property to set
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func setProperty(_ property: PropertySelector, _ value: [UInt], scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setUnsignedIntArray(value.map { NSNumber(value: $0) }, forProperty: property, in: scope, onElement: element)
 	}
 
 	/// Sets the value for `property` as a `Float`
@@ -282,7 +304,7 @@ extension AudioObject {
 		try __setAudioObject(value, forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Sets the value for `property` as an `SFBAudioChannelLayoutWrapper`
+	/// Sets the value for `property` as an `AudioChannelLayoutWrapper`
 	/// - note: `property` must refer to a property of type `AudioChannelLayout`
 	/// - parameter property: The property to set
 	/// - parameter value: The desired property value
@@ -293,7 +315,7 @@ extension AudioObject {
 		try __setAudioChannelLayout(value, forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Sets the value for `property` as an `SFBAudioBufferListWrapper`
+	/// Sets the value for `property` as an `AudioBufferListWrapper`
 	/// - note: `property` must refer to a property of type `AudioBufferList`
 	/// - parameter property: The property to set
 	/// - parameter value: The desired property value
@@ -302,6 +324,17 @@ extension AudioObject {
 	/// - throws: An error if the property could not be set
 	public func setProperty(_ property: PropertySelector, _ value: AudioBufferListWrapper, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
 		try __setAudioBufferList(value, forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Sets the value for `property` as an `AudioHardwareIOProcStreamUsageWrapper`
+	/// - note: `property` must refer to a property of type `AudioBufferList`
+	/// - parameter property: The property to set
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func setProperty(_ property: PropertySelector, _ value: AudioHardwareIOProcStreamUsageWrapper, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setAudioHardwareIOProcStreamUsage(value, forProperty: property, in: scope, onElement: element)
 	}
 }
 
@@ -441,22 +474,23 @@ extension AudioObject.PropertyElement {
 }
 
 extension AudioBufferListWrapper {
-	/// Returns the buffer list's `mBuffers` or `nil` if `mNumberBuffers` is zero
-	public var buffers: UnsafeBufferPointer<AudioBuffer>? {
-		guard let values = __buffers else {
-			return nil
-		}
-		return UnsafeBufferPointer(start: values, count: Int(audioBufferList.pointee.mNumberBuffers))
+	/// Returns the buffer list's `mBuffers`
+	public var buffers: UnsafeBufferPointer<AudioBuffer> {
+		return UnsafeBufferPointer(start: __buffers, count: Int(audioBufferList.pointee.mNumberBuffers))
 	}
 }
 
 extension AudioChannelLayoutWrapper {
-	/// Returns the layout's `mChannelDescriptions` or `nil` if `mNumberChannelDescriptions` is zero
-	public var channelDescriptions: UnsafeBufferPointer<AudioChannelDescription>? {
-		guard let values = __channelDescriptions else {
-			return nil
-		}
-		return UnsafeBufferPointer(start: values, count: Int(audioChannelLayout.pointee.mNumberChannelDescriptions))
+	/// Returns the layout's `mChannelDescriptions`
+	public var channelDescriptions: UnsafeBufferPointer<AudioChannelDescription> {
+		return UnsafeBufferPointer(start: __channelDescriptions, count: Int(audioChannelLayout.pointee.mNumberChannelDescriptions))
+	}
+}
+
+extension AudioHardwareIOProcStreamUsageWrapper {
+	/// Returns `mStreamIsOn`
+	public var streamIsOn: UnsafeBufferPointer<UInt32> {
+		return UnsafeBufferPointer(start: __streamIsOn, count: Int(audioHardwareIOProcStreamUsage.pointee.mNumberStreams))
 	}
 }
 

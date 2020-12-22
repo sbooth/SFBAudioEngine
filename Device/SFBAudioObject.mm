@@ -30,6 +30,14 @@
 os_log_t gSFBAudioObjectLog = NULL;
 
 template <>
+struct ::std::default_delete<AudioChannelLayout> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(AudioChannelLayout *acl) const noexcept { std::free(acl); }
+};
+
+template <>
 struct ::std::default_delete<AudioBufferList> {
 	default_delete() = default;
 	template <class U>
@@ -45,11 +53,11 @@ struct ::std::default_delete<AudioBufferList> {
 };
 
 template <>
-struct ::std::default_delete<AudioChannelLayout> {
+struct ::std::default_delete<AudioHardwareIOProcStreamUsage> {
 	default_delete() = default;
 	template <class U>
 	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(AudioChannelLayout *acl) const noexcept { std::free(acl); }
+	void operator()(AudioHardwareIOProcStreamUsage *streamUsage) const noexcept { std::free(streamUsage); }
 };
 
 bool operator<(const AudioObjectPropertyAddress& lhs, const AudioObjectPropertyAddress& rhs);
@@ -152,6 +160,28 @@ namespace {
 		memcpy(channelLayout, &rhs, layoutSize);
 
 		return std::unique_ptr<AudioChannelLayout>{channelLayout};
+	}
+
+#pragma mark AudioHardwareIOProcStreamUsage Helpers
+
+	/// Returns the size in bytes of an \c AudioHardwareIOProcStreamUsage with the specified number of streams
+	size_t GetHardwareIOProcStreamUsageSize(UInt32 numberStreams)
+	{
+		return offsetof(AudioHardwareIOProcStreamUsage, mNumberStreams) + (numberStreams * sizeof(UInt32));
+	}
+
+	/// Allocates and returns an \c AudioHardwareIOProcStreamUsage with the specified number of streams
+	std::unique_ptr<AudioHardwareIOProcStreamUsage> CreateHardwareIOProcStreamUsage(UInt32 numberStreams)
+	{
+		size_t streamUsageSize = GetHardwareIOProcStreamUsageSize(numberStreams);
+		AudioHardwareIOProcStreamUsage *streamUsage = (AudioHardwareIOProcStreamUsage *)std::malloc(streamUsageSize);
+		if(!streamUsage)
+			return nullptr;
+
+		memset(streamUsage, 0, streamUsageSize);
+		streamUsage->mNumberStreams = numberStreams;
+
+		return std::unique_ptr<AudioHardwareIOProcStreamUsage>{streamUsage};
 	}
 
 #pragma mark - Basic Property Getters
@@ -373,6 +403,15 @@ namespace {
 		return [[SFBAudioBufferListWrapper alloc] initWithAudioBufferList:value.release() freeWhenDone:YES];
 	}
 
+	SFBAudioHardwareIOProcStreamUsageWrapper * _Nullable AudioHardwareIOProcStreamUsageForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		std::unique_ptr<AudioHardwareIOProcStreamUsage> value;
+		if(!GetVariableSizeProperty(objectID, propertyAddress, value, qualifier, error))
+			return nil;
+		return [[SFBAudioHardwareIOProcStreamUsageWrapper alloc] initWithAudioHardwareIOProcStreamUsage:value.release() freeWhenDone:YES];
+	}
+
 #pragma mark - Typed Scalar Property Setters
 
 	template <typename T>
@@ -390,6 +429,7 @@ namespace {
 
 	bool SetStringForProperty(AudioObjectID objectID, NSString *value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
 	{
+		NSCParameterAssert(value != nil);
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		return SetCFTypePropertyFromObject(objectID, propertyAddress, value, qualifier, error);
 	}
@@ -414,6 +454,14 @@ namespace {
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		auto bufferListSize = GetBufferListSize(value.audioBufferList->mNumberBuffers);
 		return SetProperty(objectID, propertyAddress, value.audioBufferList, static_cast<UInt32>(bufferListSize), qualifier, error);
+	}
+
+	bool SetAudioHardwareIOProcStreamUsageForProperty(AudioObjectID objectID, SFBAudioHardwareIOProcStreamUsageWrapper *value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		NSCParameterAssert(value != nil);
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		auto streamUsageSize = GetHardwareIOProcStreamUsageSize(value.audioHardwareIOProcStreamUsage->mNumberStreams);
+		return SetProperty(objectID, propertyAddress, value.audioHardwareIOProcStreamUsage, static_cast<UInt32>(streamUsageSize), qualifier, error);
 	}
 
 #pragma mark - Typed Array Property Getters
@@ -472,6 +520,7 @@ namespace {
 	template <typename T, typename std::enable_if_t<std::is_arithmetic<T>::value, bool> = true>
 	bool SetArithmeticArrayForProperty(AudioObjectID objectID, NSArray<NSNumber *> *values, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
 	{
+		NSCParameterAssert(values != nil);
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		std::vector<T> v;
 		v.reserve(values.count);
@@ -912,6 +961,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioBufferListForProperty(_objectID, property, scope, element, {}, error);
 }
 
+- (SFBAudioHardwareIOProcStreamUsageWrapper *)audioHardwareIOProcStreamUsageForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioHardwareIOProcStreamUsageForProperty(_objectID, property, scope, element, {}, error);
+}
+
 @end
 
 @implementation SFBAudioObject (SFBPropertySetters)
@@ -976,6 +1030,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (BOOL)setAudioBufferList:(SFBAudioBufferListWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return SetAudioBufferListForProperty(_objectID, value, property, scope, element, {}, error);
+}
+
+- (BOOL)setAudioHardwareIOProcStreamUsage:(SFBAudioHardwareIOProcStreamUsageWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return SetAudioHardwareIOProcStreamUsageForProperty(_objectID, value, property, scope, element, {}, error);
 }
 
 @end
@@ -1240,6 +1299,63 @@ static SFBAudioObject *sSystemObject = nil;
 - (const AudioChannelDescription *)channelDescriptions
 {
 	return _channelLayout->mNumberChannelDescriptions > 0 ? _channelLayout->mChannelDescriptions : nullptr;
+}
+
+@end
+
+@interface SFBAudioHardwareIOProcStreamUsageWrapper ()
+{
+@private
+	AudioHardwareIOProcStreamUsage *_hardwareIOProcStreamUsage;
+	BOOL _freeWhenDone;
+}
+@end
+
+
+@implementation SFBAudioHardwareIOProcStreamUsageWrapper
+
+- (instancetype)initWithAudioHardwareIOProcStreamUsage:(AudioHardwareIOProcStreamUsage *)audioHardwareIOProcStreamUsage freeWhenDone:(BOOL)freeWhenDone
+{
+	NSParameterAssert(audioHardwareIOProcStreamUsage != nullptr);
+	if((self = [super init])) {
+		_hardwareIOProcStreamUsage = audioHardwareIOProcStreamUsage;
+		_freeWhenDone = freeWhenDone;
+	}
+	return self;
+}
+
+- (instancetype)initWithNumberStreams:(unsigned int)numberStreams
+{
+	auto streamUsage = CreateHardwareIOProcStreamUsage(numberStreams);
+	if(!streamUsage)
+		return nil;
+	return [self initWithAudioHardwareIOProcStreamUsage:streamUsage.release() freeWhenDone:YES];
+}
+
+- (void)dealloc
+{
+	if(_freeWhenDone)
+		std::free(_hardwareIOProcStreamUsage);
+}
+
+- (const AudioHardwareIOProcStreamUsage *)audioHardwareIOProcStreamUsage
+{
+	return _hardwareIOProcStreamUsage;
+}
+
+- (const void *)ioProc
+{
+	return _hardwareIOProcStreamUsage->mIOProc;
+}
+
+- (UInt32)numberStreams
+{
+	return _hardwareIOProcStreamUsage->mNumberStreams;
+}
+
+- (const UInt32 *)streamIsOn
+{
+	return _hardwareIOProcStreamUsage->mNumberStreams > 0 ? _hardwareIOProcStreamUsage->mStreamIsOn : nullptr;
 }
 
 @end

@@ -6,7 +6,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudio.h>
 
-@class SFBAudioBufferListWrapper, SFBAudioChannelLayoutWrapper;
+@class SFBAudioBufferListWrapper, SFBAudioChannelLayoutWrapper, SFBAudioHardwareIOProcStreamUsageWrapper;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -588,6 +588,15 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return The property value
 - (nullable SFBAudioBufferListWrapper *)audioBufferListForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
+/// Returns the value for \c property as a wrapped \c AudioHardwareIOProcStreamUsage structure or \c nil on error
+/// @note \c property must refer to a property of type \c AudioHardwareIOProcStreamUsage
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable SFBAudioHardwareIOProcStreamUsageWrapper *)audioHardwareIOProcStreamUsageForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
 @end
 
 /// Property Setting
@@ -674,6 +683,16 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
 - (BOOL)setAudioBufferList:(SFBAudioBufferListWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Sets the value for \c property as an \c SFBAudioHardwareIOProcStreamUsageWrapper
+/// @note \c property must refer to a property of type \c AudioHardwareIOProcStreamUsageWrapper
+/// @param value The desired value
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setAudioHardwareIOProcStreamUsage:(SFBAudioHardwareIOProcStreamUsageWrapper *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
@@ -836,6 +855,38 @@ NS_SWIFT_NAME(AudioChannelLayoutWrapper) @interface SFBAudioChannelLayoutWrapper
 @property (nonatomic, readonly) UInt32 numberChannelDescriptions NS_SWIFT_UNAVAILABLE("Use -channelDescriptions");
 /// Returns the layout's \c mChannelDescriptions or \c NULL if \c mNumberChannelDescriptions is zero
 @property (nonatomic, nullable, readonly) const AudioChannelDescription *channelDescriptions NS_REFINED_FOR_SWIFT;
+
+@end
+
+/// A thin wrapper around a variable-length \c AudioHardwareIOProcStreamUsage structure
+NS_SWIFT_NAME(AudioHardwareIOProcStreamUsageWrapper) @interface SFBAudioHardwareIOProcStreamUsageWrapper : NSObject
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+/// Returns an initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object wrapping the specified \c AudioHardwareIOProcStreamUsage
+/// @note If \c freeWhenDone is \c YES \c audioHardwareIOProcStreamUsage must have been allocated using \c malloc
+/// @note If \c freeWhenDone is \c YES the object takes ownership of \c audioHardwareIOProcStreamUsage
+/// @param audioHardwareIOProcStreamUsage The \c AudioHardwareIOProcStreamUsage structure to wrap
+/// @param freeWhenDone Whether the memory for \c audioHardwareIOProcStreamUsage should be reclaimed using \c free
+/// @return An initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object
+- (instancetype)initWithAudioHardwareIOProcStreamUsage:(AudioHardwareIOProcStreamUsage *)audioHardwareIOProcStreamUsage freeWhenDone:(BOOL)freeWhenDone NS_DESIGNATED_INITIALIZER;
+
+/// Returns an initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object with the specified number of streams
+/// @param numberStreams The number of streams
+/// @return An initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object
+- (nullable instancetype)initWithNumberStreams:(unsigned int)numberStreams;
+
+/// Returns the underlying \c AudioHardwareIOProcStreamUsage structure
+@property (nonatomic, readonly) const AudioHardwareIOProcStreamUsage *audioHardwareIOProcStreamUsage;
+
+/// Returns the \c mIOProc
+@property (nonatomic, readonly) const void * ioProc;
+
+/// Returns \c mNumberStreams
+@property (nonatomic, readonly) UInt32 numberStreams NS_SWIFT_UNAVAILABLE("Use -streamIsOn");
+/// Returns \c mStreamIsOn or \c NULL if \c mNumberStreams is zero
+@property (nonatomic, nullable, readonly) const UInt32 *streamIsOn NS_REFINED_FOR_SWIFT;
 
 @end
 
