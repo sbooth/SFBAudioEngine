@@ -221,28 +221,25 @@ extension AudioDevice {
 
 	/// Returns the owning pid or `-1` if the device is available to all processes
 	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func hogMode(_ scope: PropertyScope) throws -> pid_t {
-		return pid_t(bitPattern: try getProperty(.deviceHogMode, scope: scope))
+	public func hogMode() throws -> pid_t {
+		return pid_t(bitPattern: try getProperty(.deviceHogMode))
 	}
 
 	// Hog mode helpers
 
 	/// Returns `true` if the device is hogged
 	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be set
-	public func isHogged(_ scope: PropertyScope = .global) throws -> Bool {
-		return try hogMode(scope) != pid_t(-1)
+	public func isHogged() throws -> Bool {
+		return try hogMode() != pid_t(-1)
 	}
 
 	/// Returns `true` if the device is hogged and the current process is the owner
 	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be set
-	public func isHogOwner(_ scope: PropertyScope = .global) throws -> Bool {
-		return try hogMode(scope) != getpid()
+	public func isHogOwner() throws -> Bool {
+		return try hogMode() != getpid()
 	}
 
 	/// Returns the buffer size in frames

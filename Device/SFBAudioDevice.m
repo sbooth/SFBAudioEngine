@@ -274,53 +274,53 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsRunningSomewhere inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (NSNumber *)hogModeInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)hogMode
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyHogMode inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self unsignedIntForProperty:kAudioDevicePropertyHogMode inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setHogMode:(pid_t)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)setHogMode:(pid_t)value error:(NSError **)error
 {
-	return [self setUnsignedInt:(UInt32)value forProperty:kAudioDevicePropertyHogMode inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self setUnsignedInt:(UInt32)value forProperty:kAudioDevicePropertyHogMode inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 // Hog mode helpers
-- (NSNumber *)isHoggedInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)isHogged
 {
-	NSNumber *hogpid = [self hogModeInScope:scope];
+	NSNumber *hogpid = self.hogMode;
 	if(!hogpid)
 		return nil;
 	return @(hogpid.pidValue != (pid_t)-1);
 }
 
-- (NSNumber *)isHogOwnerInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)isHogOwner
 {
-	NSNumber *hogpid = [self hogModeInScope:scope];
+	NSNumber *hogpid = self.hogMode;
 	if(!hogpid)
 		return nil;
 	return @(hogpid.pidValue == getpid());
 }
 
-- (BOOL)startHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)startHoggingReturningError:(NSError **)error
 {
-	os_log_info(gSFBAudioObjectLog, "Taking hog mode for device 0x%x '%{public}.4s'", _objectID, SFBCStringForOSType(scope));
+	os_log_info(gSFBAudioObjectLog, "Taking hog mode for device 0x%x", _objectID);
 
-	NSNumber *hogpid = [self hogModeInScope:scope];
+	NSNumber *hogpid = self.hogMode;
 	if(hogpid && hogpid.pidValue != (pid_t)-1)
 		os_log_error(gSFBAudioObjectLog, "Device is already hogged by pid: %d", hogpid.pidValue);
 
-	return [self setHogMode:getpid() inScope:scope error:error];
+	return [self setHogMode:getpid() error:error];
 }
 
-- (BOOL)stopHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)stopHoggingReturningError:(NSError **)error
 {
-	os_log_info(gSFBAudioObjectLog, "Releasing hog mode for device 0x%x '%{public}.4s'", _objectID, SFBCStringForOSType(scope));
+	os_log_info(gSFBAudioObjectLog, "Releasing hog mode for device 0x%x", _objectID);
 
-	NSNumber *hogpid = [self hogModeInScope:scope];
+	NSNumber *hogpid = self.hogMode;
 	if(hogpid && hogpid.pidValue != getpid())
 		os_log_error(gSFBAudioObjectLog, "Device is hogged by pid: %d", hogpid.pidValue);
 
-	return [self setHogMode:(pid_t)-1 inScope:scope error:error];
+	return [self setHogMode:(pid_t)-1 error:error];
 }
 
 - (NSNumber *)bufferFrameSize

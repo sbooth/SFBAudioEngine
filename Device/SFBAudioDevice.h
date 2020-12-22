@@ -190,38 +190,32 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// Returns the owning \c pid_t (\c -1 if the device is available to all processes) or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
-/// @param scope The desired scope
-- (nullable NSNumber *)hogModeInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *hogMode NS_REFINED_FOR_SWIFT;
 /// Sets the owning \c pid_t
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param value The desired value
-/// @param scope The desired scope
 /// @return \c YES if successful
-- (BOOL)setHogMode:(pid_t)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(setHogMode(_:scope:));
+- (BOOL)setHogMode:(pid_t)value error:(NSError **)error NS_SWIFT_NAME(setHogMode(_:scope:));
 
 // Hog mode helpers
 
 /// Returns \c @ YES if the device is hogged or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
-/// @param scope The desired scope
-- (nullable NSNumber *)isHoggedInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isHogged NS_REFINED_FOR_SWIFT;
 /// Returns \c YES if the device is hogged and the current process is the owner or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
-/// @param scope The desired scope
 /// @return \c YES if the device is hogged and the current process is the owner or \c NO if the device is not hogged or an error occurs
-- (nullable NSNumber *)isHogOwnerInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *isHogOwner NS_REFINED_FOR_SWIFT;
 /// Takes hog mode
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
-/// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if hog mode was taken successfully
-- (BOOL)startHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(startHogging(_:));
+- (BOOL)startHoggingReturningError:(NSError **)error NS_SWIFT_NAME(startHogging(_:));
 /// Releases hog mode
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
-/// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if hog mode was released successfully
-- (BOOL)stopHoggingInScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(stopHogging(_:));
+- (BOOL)stopHoggingReturningError:(NSError **)error NS_SWIFT_NAME(stopHogging(_:));
 
 /// Returns the buffer frame size or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyBufferFrameSize
