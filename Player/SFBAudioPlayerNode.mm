@@ -555,13 +555,12 @@ namespace {
 		}
 
 		// Set up the collector
-		_collector = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
+		_collector = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
 		if(!_collector) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
 			return nil;
 		}
 
-		dispatch_source_set_timer(_collector, DISPATCH_TIME_NOW, NSEC_PER_SEC * 10, NSEC_PER_SEC * 2);
 		dispatch_source_set_event_handler(_collector, ^{
 			for(size_t i = 0; i < kDecoderStateArraySize; ++i) {
 				auto decoderState = self->_decoderStateArray[i].load();
@@ -1102,6 +1101,7 @@ namespace {
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+					dispatch_source_merge_data(_collector, 1);
 
 					// Perform the decoding cancelled notification
 					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
@@ -1210,6 +1210,7 @@ namespace {
 
 						// The last action performed with a decoder that has completed rendering is this notification
 						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+						dispatch_source_merge_data(_collector, 1);
 					}
 					else
 						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
