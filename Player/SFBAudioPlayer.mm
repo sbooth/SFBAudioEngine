@@ -58,7 +58,7 @@ namespace {
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
 - (id <SFBPCMDecoding>)popDecoderFromInternalQueue;
 - (void)handleInterruption:(NSNotification *)notification;
-- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error;
+- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
 - (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
 
@@ -144,7 +144,7 @@ namespace {
 
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
 	if(forImmediatePlayback)
-		return [self configureForAndEnqueueDecoder:decoder clearInternalDecoderQueue:YES error:error];
+		return [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
 	// If the current SFBAudioPlayerNode doesn't support the decoder's processing format,
 	// add the decoder to our queue
 	else if(![_playerNode supportsFormat:decoder.processingFormat]) {
@@ -588,7 +588,7 @@ namespace {
 		[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
 }
 
-- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error
+- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
 	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
 
@@ -619,11 +619,15 @@ namespace {
 		return NO;
 	}
 
-	if(clearInternalDecoderQueue)
+	if(forImmediatePlayback)
 		[self clearInternalDecoderQueue];
 
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
-	if(![_playerNode enqueueDecoder:decoder error:error]) {
+	if(forImmediatePlayback)
+		success = [_playerNode resetAndEnqueueDecoder:decoder error:error];
+	else
+		success = [_playerNode enqueueDecoder:decoder error:error];
+	if(!success) {
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 		if(self.nowPlaying) {
 			self.nowPlaying = nil;
@@ -843,7 +847,7 @@ namespace {
 	id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue];
 	if(decoder) {
 		NSError *error = nil;
-		if(![self configureForAndEnqueueDecoder:decoder clearInternalDecoderQueue:NO error:&error]) {
+		if(![self configureForAndEnqueueDecoder:decoder forImmediatePlayback:NO error:&error]) {
 			if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 				[_delegate audioPlayer:self encounteredError:error];
 			return;

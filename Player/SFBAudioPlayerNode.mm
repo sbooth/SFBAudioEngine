@@ -27,6 +27,7 @@ NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.Aud
 @interface SFBAudioPlayerNode ()
 - (void *)decoderThreadEntry;
 - (void *)notifierThreadEntry;
+- (void *)collectorThreadEntry;
 @end
 
 namespace {
@@ -41,7 +42,8 @@ namespace {
 		eAudioPlayerNodeFlagMuteRequested				= 1u << 2,
 		eAudioPlayerNodeFlagRingBufferNeedsReset		= 1u << 3,
 		eAudioPlayerNodeFlagStopDecoderThread			= 1u << 4,
-		eAudioPlayerNodeFlagStopNotifierThread			= 1u << 5
+		eAudioPlayerNodeFlagStopNotifierThread			= 1u << 5,
+		eAudioPlayerNodeFlagStopCollectorThread			= 1u << 6
 	};
 
 	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
@@ -68,6 +70,15 @@ namespace {
 
 		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
 		return [playerNode notifierThreadEntry];
+	}
+
+	void * CollectorThreadEntry(void *arg)
+	{
+		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.CollectorThread");
+		pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+
+		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
+		return [playerNode collectorThreadEntry];
 	}
 
 #pragma mark - Constants
@@ -337,8 +348,9 @@ namespace {
 	dispatch_semaphore_t			_notifierSemaphore;
 	dispatch_queue_t				_notificationQueue;
 
-	// Collector
-	dispatch_source_t				_collector;
+	// Collector thread variables
+	std::thread						_collectorThread;
+	dispatch_semaphore_t			_collectorSemaphore;
 
 	// Shared state accessed from multiple threads/queues
 	std::atomic_uint 				_flags;
@@ -554,34 +566,17 @@ namespace {
 			return nil;
 		}
 
-		// Set up the collector
-		_collector = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
-		if(!_collector) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
+		_collectorSemaphore = dispatch_semaphore_create(0);
+		if(!_collectorSemaphore) {
+			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create failed");
 			return nil;
 		}
-
-		dispatch_source_set_timer(_collector, DISPATCH_TIME_NOW, NSEC_PER_SEC * 10, NSEC_PER_SEC * 2);
-		dispatch_source_set_event_handler(_collector, ^{
-			for(size_t i = 0; i < kDecoderStateArraySize; ++i) {
-				auto decoderState = self->_decoderStateArray[i].load();
-				if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
-					continue;
-
-				// See comment in -decoderThreadEntry on why I believe it's safe to use store() and not a CAS loop
-				os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-				self->_decoderStateArray[i].store(nullptr);
-				delete decoderState;
-			}
-		});
-
-		// Start collecting
-		dispatch_resume(_collector);
 
 		// Launch the threads
 		try {
 			_decodingThread = std::thread(DecoderThreadEntry, (__bridge void *)self);
 			_notifierThread = std::thread(NotifierThreadEntry, (__bridge void *)self);
+			_collectorThread = std::thread(CollectorThreadEntry, (__bridge void *)self);
 		}
 
 		catch(const std::exception& e) {
@@ -595,11 +590,16 @@ namespace {
 
 - (void)dealloc
 {
-	_flags.fetch_or(eAudioPlayerNodeFlagStopDecoderThread | eAudioPlayerNodeFlagStopNotifierThread);
+	_flags.fetch_or(eAudioPlayerNodeFlagStopDecoderThread | eAudioPlayerNodeFlagStopNotifierThread | eAudioPlayerNodeFlagStopCollectorThread);
+
 	dispatch_semaphore_signal(_decodingSemaphore);
 	dispatch_semaphore_signal(_notifierSemaphore);
+	dispatch_semaphore_signal(_collectorSemaphore);
+
 	_decodingThread.join();
 	_notifierThread.join();
+	_collectorThread.join();
+
 	while(!_queuedDecoders.empty())
 		_queuedDecoders.pop();
 
@@ -1102,6 +1102,7 @@ namespace {
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+					dispatch_semaphore_signal(self->_collectorSemaphore);
 
 					// Perform the decoding cancelled notification
 					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
@@ -1210,6 +1211,7 @@ namespace {
 
 						// The last action performed with a decoder that has completed rendering is this notification
 						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+						dispatch_semaphore_signal(self->_collectorSemaphore);
 					}
 					else
 						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
@@ -1246,6 +1248,30 @@ namespace {
 	}
 
 	os_log_debug(_audioPlayerNodeLog, "Notifier thread terminating");
+
+	return nullptr;
+}
+
+- (void *)collectorThreadEntry
+{
+	os_log_debug(_audioPlayerNodeLog, "Collector thread starting");
+
+	while(!(_flags.load() & eAudioPlayerNodeFlagStopCollectorThread)) {
+		for(size_t i = 0; i < kDecoderStateArraySize; ++i) {
+			auto decoderState = self->_decoderStateArray[i].load();
+			if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
+				continue;
+
+			// See comment in -decoderThreadEntry on why I believe it's safe to use store() and not a CAS loop
+			os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+			self->_decoderStateArray[i].store(nullptr);
+			delete decoderState;
+		}
+
+		dispatch_semaphore_wait(_collectorSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10));
+	}
+
+	os_log_debug(_audioPlayerNodeLog, "Collector thread terminating");
 
 	return nullptr;
 }
