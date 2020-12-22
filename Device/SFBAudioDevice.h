@@ -210,12 +210,12 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if hog mode was taken successfully
-- (BOOL)startHoggingReturningError:(NSError **)error NS_SWIFT_NAME(startHogging(_:));
+- (BOOL)startHoggingReturningError:(NSError **)error NS_SWIFT_NAME(startHogging());
 /// Releases hog mode
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if hog mode was released successfully
-- (BOOL)stopHoggingReturningError:(NSError **)error NS_SWIFT_NAME(stopHogging(_:));
+- (BOOL)stopHoggingReturningError:(NSError **)error NS_SWIFT_NAME(stopHogging());
 
 /// Returns the buffer frame size or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyBufferFrameSize
