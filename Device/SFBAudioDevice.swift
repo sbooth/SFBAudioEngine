@@ -43,21 +43,21 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyTransportType`
 	/// - throws: An error if the property could not be retrieved
 	public func transportType() throws -> TransportType {
-		return TransportType(rawValue: UInt32(try getProperty(.deviceTransportType) as UInt))!
+		return TransportType(rawValue: try getProperty(.deviceTransportType))!
 	}
 
 	/// Returns related audio devices
 	/// - note: This corresponds to `kAudioDevicePropertyRelatedDevices`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func relatedDevices(_ scope: PropertyScope = .global) throws -> [AudioDevice] {
-		return try getProperty(.deviceRelatedDevices, scope: scope) as [AudioObject] as! [AudioDevice]
+	public func relatedDevices() throws -> [AudioDevice] {
+		return try getProperty(.deviceRelatedDevices) as [AudioObject] as! [AudioDevice]
 	}
 
 	/// Returns the clock domain
 	/// - note: This corresponds to `kAudioClockDevicePropertyClockDomain`
 	/// - throws: An error if the property could not be retrieved
-	public func clockDomain() throws -> UInt {
+	public func clockDomain() throws -> UInt32 {
 		return try getProperty(.deviceClockDomain)
 	}
 
@@ -80,7 +80,7 @@ extension AudioDevice {
 	/// - parameter value: The desired property value
 	/// - throws: An error if the property could not be set
 	public func setIsRunning(_ value: Bool) throws {
-		try setProperty(.deviceIsRunning, UInt(value ? 1 : 0))
+		try setProperty(.deviceIsRunning, UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if the device can be the default device
@@ -103,7 +103,7 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyLatency`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func latency(_ scope: PropertyScope) throws -> UInt {
+	public func latency(_ scope: PropertyScope) throws -> UInt32 {
 		return try getProperty(.deviceLatency, scope: scope)
 	}
 
@@ -127,7 +127,7 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertySafetyOffset`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func safetyOffset(_ scope: PropertyScope) throws -> UInt {
+	public func safetyOffset(_ scope: PropertyScope) throws -> UInt32 {
 		return try getProperty(.deviceSafetyOffset, scope: scope)
 	}
 
@@ -171,8 +171,18 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyPreferredChannelsForStereo`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func preferredStereoChannels(_ scope: PropertyScope) throws -> [UInt] {
+	public func preferredStereoChannels(_ scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(.devicePreferredChannelsForStereo, scope: scope)
+	}
+
+	/// Sets the preferred stereo channels
+	/// - note: This corresponds to `kAudioDevicePropertyPreferredChannelsForStereo`
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be set
+	public func setPreferredStereoChannels(_ value: [UInt32], scope: PropertyScope) throws {
+		precondition(value.count == 2)
+		try setProperty(.devicePreferredChannelsForStereo, value, scope: scope)
 	}
 
 	/// Returns the preferred channel layout
@@ -199,7 +209,7 @@ extension AudioDevice {
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
 	public func plugin(_ scope: PropertyScope = .global) throws -> OSStatus {
-		return OSStatus(bitPattern: UInt32(try getProperty(.devicePlugIn, scope: scope) as UInt))
+		return OSStatus(bitPattern: try getProperty(.devicePlugIn, scope: scope))
 	}
 
 	/// Returns `true` if the device is running somewhere
@@ -213,17 +223,8 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func hogMode(_ scope: PropertyScope = .global) throws -> pid_t {
-		return pid_t(bitPattern: UInt32(try getProperty(.deviceHogMode, scope: scope) as UInt))
-	}
-
-	/// Sets the owning pid
-	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
-	/// - parameter value: The desired property value
-	/// - parameter scope: The desired scope
-	/// - throws: An error if the property could not be set
-	public func setHogMode(_ value: pid_t, scope: PropertyScope = .global) throws {
-		try setProperty(.deviceHogMode, UInt(value), scope: scope)
+	public func hogMode(_ scope: PropertyScope) throws -> pid_t {
+		return pid_t(bitPattern: try getProperty(.deviceHogMode, scope: scope))
 	}
 
 	// Hog mode helpers
@@ -244,36 +245,40 @@ extension AudioDevice {
 		return try hogMode(scope) != getpid()
 	}
 
-	/// Takes hog mode for the current pid
-	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
-	/// - parameter scope: The desired scope
-	/// - throws: An error if the property could not be set
-	public func startHogging(_ scope: PropertyScope = .global) throws {
-		try __startHogging(in: scope)
+	/// Returns the buffer size in frames
+	/// - note: This corresponds to `kAudioDevicePropertyBufferFrameSize`
+	/// - throws: An error if the property could not be retrieved
+	public func bufferFrameSize() throws -> UInt32 {
+		return try getProperty(.deviceBufferFrameSize)
 	}
 
-	/// Releases hog mode
-	/// - note: This corresponds to `kAudioDevicePropertyHogMode`
-	/// - parameter scope: The desired scope
+	/// Sets the buffer size in frames
+	/// - note: This corresponds to `kAudioDevicePropertyBufferFrameSize`
+	/// - parameter value: The desired property value
 	/// - throws: An error if the property could not be set
-	public func stopHogging(_ scope: PropertyScope = .global) throws {
-		try __stopHogging(in: scope)
+	public func setBufferFrameSize(_ value: UInt32) throws {
+		try setProperty(.deviceBufferFrameSize, value)
+	}
+
+	/// Returns the minimum and maximum values for the buffer size in frames
+	/// - note: This corresponds to `kAudioDevicePropertyBufferFrameSizeRange`
+	/// - throws: An error if the property could not be retrieved
+	public func bufferFrameSizeRange() throws -> AudioValueRange {
+		return try getProperty(.deviceBufferFrameSizeRange)
 	}
 
 	/// Returns the variable buffer frame size
 	/// - note: This corresponds to `kAudioDevicePropertyUsesVariableBufferFrameSizes`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func usesVariableBufferFrameSizes(_ scope: PropertyScope = .global) throws -> UInt {
-		return try getProperty(.deviceUsesVariableBufferFrameSizes, scope: scope)
+	public func usesVariableBufferFrameSizes() throws -> UInt32 {
+		return try getProperty(.deviceUsesVariableBufferFrameSizes)
 	}
 
 	/// Returns the IO cycle usage
 	/// - note: This corresponds to `kAudioDevicePropertyIOCycleUsage`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func ioCycleUsage(_ scope: PropertyScope = .global) throws -> Float {
-		return try getProperty(.deviceIOCycleUsage, scope: scope)
+	public func ioCycleUsage() throws -> Float {
+		return try getProperty(.deviceIOCycleUsage)
 	}
 
 	/// Returns the stream configuration
@@ -288,9 +293,8 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyIOProcStreamUsage`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func ioProcStreamUsageInScope(_ scope: PropertyScope) throws -> Int {
-//		return try getProperty(.deviceActualSampleRate, scope: scope)
-		return 0
+	public func ioProcStreamUsage(_ scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
+		return try getProperty(.deviceIOProcStreamUsage, scope: scope)
 	}
 
 	/// Returns the actual sample rate
@@ -302,10 +306,9 @@ extension AudioDevice {
 
 	/// Returns the UID of the clock device
 	/// - note: This corresponds to `kAudioDevicePropertyClockDevice`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func clockDevice(_ scope: PropertyScope = .global) throws -> String {
-		return try getProperty(.deviceClockDevice, scope: scope)
+	public func clockDevice() throws -> String {
+		return try getProperty(.deviceClockDevice)
 	}
 
 	/// Returns the workgroup to which the device's IOThread belongs
