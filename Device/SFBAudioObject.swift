@@ -45,26 +45,26 @@ extension AudioObject {
 
 	// MARK: - Property Retrieval
 
-	/// Returns the value for `property` as an `UInt`
+	/// Returns the value for `property` as an `UInt32`
 	/// - note: `property` must refer to a property of type `UInt32`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
-	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> UInt {
-		return try __unsignedInt(forProperty: property, in: scope, onElement: element).uintValue
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> UInt32 {
+		return try __unsignedInt(forProperty: property, in: scope, onElement: element).uint32Value
 	}
 
-	/// Returns the value for `property` as an array `UInt`
+	/// Returns the value for `property` as an array `UInt32`
 	/// - note: `property` must refer to a property of type array of `UInt32`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
-	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [UInt] {
-		return try __unsignedIntArray(forProperty: property, in: scope, onElement: element).map { $0.uintValue }
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [UInt32] {
+		return try __unsignedIntArray(forProperty: property, in: scope, onElement: element).map { $0.uint32Value }
 	}
 
 	/// Returns the value for `property` as a `Float`
@@ -200,7 +200,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value for `property` as a wrapped `AudioChannelLayout` structure
-	/// - note: `property` must refer to a property of type array of `AudioChannelLayout`
+	/// - note: `property` must refer to a property of type `AudioChannelLayout`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
@@ -211,7 +211,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value for `property` as a wrapped `AudioBufferList` structure
-	/// - note: `property` must refer to a property of type array of `AudioBufferList`
+	/// - note: `property` must refer to a property of type `AudioBufferList`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
@@ -222,7 +222,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value for `property` as a wrapped `AudioHardwareIOProcStreamUsageWrapper` structure
-	/// - note: `property` must refer to a property of type array of `AudioHardwareIOProcStreamUsage`
+	/// - note: `property` must refer to a property of `AudioHardwareIOProcStreamUsage`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
@@ -232,31 +232,43 @@ extension AudioObject {
 		return try __audioHardwareIOProcStreamUsage(forProperty: property, in: scope, onElement: element)
 	}
 
+	/// Returns the value for `property` as a `WorkGroup`
+	/// - note: `property` must refer to a property of type array of `os_workgroup_t`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	@available(macOS 11.0, *)
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> WorkGroup {
+		return try __osWorkgroup(forProperty: property, in: scope, onElement: element)
+	}
+
 }
 
 extension AudioObject {
 
 	// MARK: - Property Setting
 
-	/// Sets the value for `property` as a `UInt`
+	/// Sets the value for `property` as a `UInt32`
 	/// - note: `property` must refer to a property of type `UInt32`
 	/// - parameter property: The property to set
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if the property could not be set
-	public func setProperty(_ property: PropertySelector, _ value: UInt, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
-		try __setUnsignedInt(UInt32(value), forProperty: property, in: scope, onElement: element)
+	public func setProperty(_ property: PropertySelector, _ value: UInt32, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setUnsignedInt(value, forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Sets the value for `property` as an array of `UInt`
+	/// Sets the value for `property` as an array of `UInt32`
 	/// - note: `property` must refer to a property of type array of `UInt32`
 	/// - parameter property: The property to set
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if the property could not be set
-	public func setProperty(_ property: PropertySelector, _ value: [UInt], scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+	public func setProperty(_ property: PropertySelector, _ value: [UInt32], scope: PropertyScope = .global, element: PropertyElement = .master) throws {
 		try __setUnsignedIntArray(value.map { NSNumber(value: $0) }, forProperty: property, in: scope, onElement: element)
 	}
 
@@ -344,7 +356,7 @@ extension AudioObject {
 	/// - returns: The audio object's base class
 	/// - throws: An error if the property could not be retrieved
 	func baseClassID() throws -> AudioClassID {
-		return AudioClassID(bitPattern: Int32(try getProperty(.baseClass) as UInt))
+		return AudioClassID(try getProperty(.baseClass) as UInt32)
 	}
 
 	/// Returns the audio object's class
@@ -352,7 +364,7 @@ extension AudioObject {
 	/// - returns: The audio object's class
 	/// - throws: An error if the property could not be retrieved
 	func classID() throws -> AudioClassID {
-		return AudioClassID(bitPattern: Int32(try getProperty(.class) as UInt))
+		return AudioClassID(try getProperty(.class) as UInt32)
 	}
 
 	/// Returns the audio object's owning object
@@ -428,7 +440,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
 	/// - returns: The audio objects owned by this object
 	/// - throws: An error if the property could not be retrieved
-	func ownedObjects(types: [UInt]) throws -> [AudioObject] {
+	func ownedObjects(types: [UInt32]) throws -> [AudioObject] {
 		let qualifier: [AudioClassID] = types.map { AudioClassID($0)  }
 		let qualifierSize: UInt32 = UInt32(MemoryLayout<AudioClassID>.size * types.count)
 		return try __audioObjectArray(forProperty: .ownedObjects, in: .global, onElement: .master, qualifier: qualifier, qualifierSize: qualifierSize)

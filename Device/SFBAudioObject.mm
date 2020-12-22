@@ -412,6 +412,13 @@ namespace {
 		return [[SFBAudioHardwareIOProcStreamUsageWrapper alloc] initWithAudioHardwareIOProcStreamUsage:value.release() freeWhenDone:YES];
 	}
 
+	os_workgroup_t _Nullable OSWorkgroupForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr) API_AVAILABLE(macos(11.0))
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		void *value = nil;
+		return GetFixedSizeProperty(objectID, propertyAddress, value, qualifier, error) ? (__bridge_transfer os_workgroup_t)value : nil;
+	}
+
 #pragma mark - Typed Scalar Property Setters
 
 	template <typename T>
@@ -891,7 +898,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return StringForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error
+- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
 {
 	return StringForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
@@ -916,7 +923,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error
+- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
 {
 	return AudioObjectForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
@@ -926,7 +933,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
 {
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
@@ -966,28 +973,33 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioHardwareIOProcStreamUsageForProperty(_objectID, property, scope, element, {}, error);
 }
 
+- (os_workgroup_t)osWorkgroupForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return OSWorkgroupForProperty(_objectID, property, scope, element, {}, error);
+}
+
 @end
 
 @implementation SFBAudioObject (SFBPropertySetters)
 
 #pragma mark - Property Setting
 
-- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property
+- (BOOL)setUnsignedInt:(UInt32)value forProperty:(SFBAudioObjectPropertySelector)property
 {
 	return SetArithmeticProperty<UInt32>(_objectID, value, property);
 }
 
-- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+- (BOOL)setUnsignedInt:(UInt32)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope);
 }
 
-- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (BOOL)setUnsignedInt:(UInt32)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope, element);
 }
 
-- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (BOOL)setUnsignedInt:(UInt32)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope, element, {}, error);
 }
@@ -1197,7 +1209,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return self;
 }
 
-- (instancetype)initWithNumberBuffers:(unsigned int)numberBuffers
+- (instancetype)initWithNumberBuffers:(UInt32)numberBuffers
 {
 	auto abl = CreateBufferList(numberBuffers);
 	if(!abl)
@@ -1262,7 +1274,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self initWithAudioChannelLayout:acl.release() freeWhenDone:YES];
 }
 
-- (instancetype)initWithNumberChannelDescriptions:(unsigned int)numberChannelDescriptions
+- (instancetype)initWithNumberChannelDescriptions:(UInt32)numberChannelDescriptions
 {
 	auto acl = CreateChannelLayout(numberChannelDescriptions);
 	if(!acl)
@@ -1324,7 +1336,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return self;
 }
 
-- (instancetype)initWithNumberStreams:(unsigned int)numberStreams
+- (instancetype)initWithNumberStreams:(UInt32)numberStreams
 {
 	auto streamUsage = CreateHardwareIOProcStreamUsage(numberStreams);
 	if(!streamUsage)

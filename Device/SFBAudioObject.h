@@ -467,7 +467,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an \c NSDictionary object or \c nil on error
 /// @note \c property must refer to a property of type \c CFDictionaryRef
@@ -513,7 +513,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an array of \c SFBAudioObject objects or \c nil on error
 /// @note \c property must refer to a property of type array of \c AudioObjectID
@@ -532,7 +532,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as a wrapped \c AudioStreamBasicDescription structure or \c nil on error
 /// @note \c property must refer to a property of type \c AudioStreamBasicDescription
@@ -597,6 +597,15 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return The property value
 - (nullable SFBAudioHardwareIOProcStreamUsageWrapper *)audioHardwareIOProcStreamUsageForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
+/// Returns the value for \c property as an \c os_workgroup_t object or \c nil on error
+/// @note \c property must refer to a property of type \c os_workgroup_t
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable os_workgroup_t)osWorkgroupForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error API_AVAILABLE(macos(11.0)) NS_REFINED_FOR_SWIFT;
+
 @end
 
 /// Property Setting
@@ -612,7 +621,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
-- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setUnsignedInt:(UInt32)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Sets the value for \c property as an array of \c unsigned \c int
 /// @note \c property must refer to a property of type array of \c UInt32
@@ -806,7 +815,7 @@ NS_SWIFT_NAME(AudioBufferListWrapper) @interface SFBAudioBufferListWrapper : NSO
 /// Returns an initialized \c SFBAudioBufferListWrapper object with the specified number of channel descriptions
 /// @param numberBuffers The number of buffers in the buffer list
 /// @return An initialized \c SFBAudioBufferListWrapper object
-- (instancetype)initWithNumberBuffers:(unsigned int)numberBuffers;
+- (instancetype)initWithNumberBuffers:(UInt32)numberBuffers;
 
 /// Returns the underlying \c AudioBufferList structure
 @property (nonatomic, readonly) const AudioBufferList *audioBufferList;
@@ -841,7 +850,7 @@ NS_SWIFT_NAME(AudioChannelLayoutWrapper) @interface SFBAudioChannelLayoutWrapper
 /// Returns an initialized \c SFBAudioChannelLayoutWrapper object with the specified number of channel descriptions
 /// @param numberChannelDescriptions The number of channel descriptions in the layout
 /// @return An initialized \c SFBAudioChannelLayoutWrapper object
-- (nullable instancetype)initWithNumberChannelDescriptions:(unsigned int)numberChannelDescriptions;
+- (nullable instancetype)initWithNumberChannelDescriptions:(UInt32)numberChannelDescriptions;
 
 /// Returns the underlying \c AudioChannelLayout structure
 @property (nonatomic, readonly) const AudioChannelLayout *audioChannelLayout;
@@ -875,7 +884,7 @@ NS_SWIFT_NAME(AudioHardwareIOProcStreamUsageWrapper) @interface SFBAudioHardware
 /// Returns an initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object with the specified number of streams
 /// @param numberStreams The number of streams
 /// @return An initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object
-- (nullable instancetype)initWithNumberStreams:(unsigned int)numberStreams;
+- (nullable instancetype)initWithNumberStreams:(UInt32)numberStreams;
 
 /// Returns the underlying \c AudioHardwareIOProcStreamUsage structure
 @property (nonatomic, readonly) const AudioHardwareIOProcStreamUsage *audioHardwareIOProcStreamUsage;
