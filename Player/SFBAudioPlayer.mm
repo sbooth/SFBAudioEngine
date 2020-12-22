@@ -619,14 +619,14 @@ namespace {
 		return NO;
 	}
 
-	if(forImmediatePlayback)
+	if(forImmediatePlayback) {
 		[self clearInternalDecoderQueue];
-
-	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
-	if(forImmediatePlayback)
 		success = [_playerNode resetAndEnqueueDecoder:decoder error:error];
+	}
 	else
 		success = [_playerNode enqueueDecoder:decoder error:error];
+
+	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(!success) {
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 		if(self.nowPlaying) {
