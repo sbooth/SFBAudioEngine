@@ -572,4 +572,25 @@ extension AudioDevice {
 	public func clockSourceKind(_ clockSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
 		return try translateValue(clockSourceID, using: .deviceClockSourceKindForID, scope: scope)
 	}
+
+	// Clock source helpers
+
+	/// Returns the available clock sources
+	/// - note: This corresponds to `kAudioDevicePropertyClockSources`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func availableClockSources(_ scope: PropertyScope) throws -> [ClockSource] {
+		let clockSourceIDs = try clockSources(scope)
+		return clockSourceIDs.map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
+	}
+
+	/// Returns the active  clock sources
+	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func activeClockSources(_ scope: PropertyScope) throws -> [ClockSource] {
+		let clockSourceIDs = try clockSource(scope)
+		return clockSourceIDs.map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
+	}
+
 }

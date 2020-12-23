@@ -5,7 +5,7 @@
 
 #import <SFBAudioEngine/SFBAudioObject.h>
 
-@class SFBAudioStream, SFBAudioDeviceDataSource, SFBAudioControl;
+@class SFBAudioStream, SFBAudioDeviceDataSource, SFBAudioDeviceClockSource, SFBAudioControl;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -499,6 +499,24 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @param clockSourceID The desired clock source
 /// @param scope The desired scope
 - (nullable NSNumber *)kindOfClockSource:(UInt32)clockSourceID inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+// Clock source helpers
+
+/// Returns an array of \c SFBAudioDeviceClockSource objects for the specified scope or \c nil  on error
+/// @note This corresponds to \c kAudioDevicePropertyClockSources
+/// @param scope The desired scope
+- (nullable NSArray<SFBAudioDeviceClockSource *> *)availableClockSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Returns an array of active \c SFBAudioDeviceClockSource objects for the specified scope
+/// @note This corresponds to \c kAudioDevicePropertyClockSource
+/// @param scope The desired scope
+- (nullable NSArray<SFBAudioDeviceClockSource *> *)activeClockSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Sets the active clock sources for the specified scope
+/// @note This corresponds to \c kAudioDevicePropertyClockSource
+/// @param value An array of \c SFBAudioDeviceClockSource objects to make active
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the clock sources were set successfully
+- (BOOL)setActiveClockSources:(NSArray<SFBAudioDeviceClockSource *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
 
 //kAudioDevicePropertyPlayThru                                        = 'thru',
 //kAudioDevicePropertyPlayThruSolo                                    = 'thrs',

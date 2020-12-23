@@ -8,9 +8,11 @@
 
 #import "NSArray+SFBFunctional.h"
 #import "SFBAggregateDevice.h"
+#import "SFBAudioDeviceDataSource.h"
+#import "SFBAudioDeviceClockSource.h"
 #import "SFBEndpointDevice.h"
 #import "SFBSubdevice.h"
-#import "SFBAudioDeviceDataSource.h"
+
 #import "SFBAudioDeviceNotifier.h"
 #import "SFBCStringForOSType.h"
 
@@ -609,6 +611,30 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 - (NSNumber *)kindOfClockSource:(UInt32)clockSource inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self translateToUnsignedIntegerFromUnsignedInteger:clockSource usingProperty:kAudioDevicePropertyClockSourceKindForID inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
+}
+
+- (NSArray *)availableClockSourcesInScope:(SFBAudioObjectPropertyScope)scope
+{
+	return [[self clockSourcesInScope:scope] mappedArrayUsingBlock:^(NSNumber *obj) {
+		return [[SFBAudioDeviceClockSource alloc] initWithAudioDevice:self scope:scope clockSourceID:obj.unsignedIntValue];
+	}];
+}
+
+- (NSArray *)activeClockSourcesInScope:(SFBAudioObjectPropertyScope)scope
+{
+	return [[self clockSourceInScope:scope] mappedArrayUsingBlock:^(NSNumber *obj) {
+		return [[SFBAudioDeviceClockSource alloc] initWithAudioDevice:self scope:scope clockSourceID:obj.unsignedIntValue];
+	}];
+}
+
+- (BOOL)setActiveClockSources:(NSArray<SFBAudioDeviceClockSource *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+{
+	NSParameterAssert(value != nil);
+	NSArray *clockSourceIDs = [value mappedArrayUsingBlock:^id(SFBAudioDeviceClockSource *obj) {
+		NSAssert(obj.scope == scope, @"Mismatched scopes");
+		return @(obj.clockSourceID);
+	}];
+	return [self setClockSource:clockSourceIDs inScope:scope error:error];
 }
 
 - (NSString *)description
