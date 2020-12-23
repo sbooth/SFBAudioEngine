@@ -456,7 +456,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSArray *)stereoPanChannelsInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyStereoPanChannels inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self unsignedIntArrayForProperty:kAudioDevicePropertyStereoPanChannels inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (BOOL)setStereoPanChannels:(NSArray *)panChannels inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
@@ -465,9 +465,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self setUnsignedIntArray:panChannels forProperty:kAudioDevicePropertyStereoPanChannels inScope:scope onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
-- (NSNumber *)muteInScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)muteInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioDevicePropertyMute inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self unsignedIntForProperty:kAudioDevicePropertyMute inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setMute:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyMute inScope:scope onElement:element error:error];
 }
 
 - (NSArray *)dataSourceInScope:(SFBAudioObjectPropertyScope)scope
@@ -544,46 +549,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 - (NSNumber *)kindOfClockSource:(UInt32)clockSource inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self translateToUnsignedIntegerFromUnsignedInteger:clockSource usingProperty:kAudioDevicePropertyClockSourceKindForID inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
-}
-
-
-- (BOOL)isMutedInScope:(SFBAudioObjectPropertyScope)scope
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyMute,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 isMuted = 0;
-	UInt32 dataSize = sizeof(isMuted);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &isMuted);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return NO;
-	}
-
-	return isMuted ? YES : NO;
-}
-
-- (BOOL)setMute:(BOOL)mute inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyMute,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 muted = (UInt32)mute;
-	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(muted), &muted);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
-		return NO;
-	}
-
-	return YES;
 }
 
 - (NSString *)description

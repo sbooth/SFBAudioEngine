@@ -402,12 +402,13 @@ extension AudioDevice {
 		try setProperty(.deviceStereoPanChannels, [value.0, value.1], scope: scope)
 	}
 
-	/// Returns `true` if the device is muted
+	/// Returns `true` if the element is muted
 	/// - note: This corresponds to `kAudioDevicePropertyMute`
 	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
 	/// - throws: An error if the property could not be retrieved
-	public func mute(_ scope: PropertyScope) throws -> Bool {
-		return try getProperty(.deviceMute, scope: scope) != 0
+	public func mute(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.deviceMute, scope: scope, element: element) != 0
 	}
 
 	/// Returns the IDs of all the currently selected data sources

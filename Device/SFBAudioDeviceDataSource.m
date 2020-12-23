@@ -58,7 +58,7 @@
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<SFBAudioDeviceDataSource '%s', '%s', \"%@\">", SFBCStringForOSType(_dataSourceID), SFBCStringForOSType(_scope), self.name];
+	return [NSString stringWithFormat:@"<%@ '%s', '%s', \"%@\">", self.className, SFBCStringForOSType(_dataSourceID), SFBCStringForOSType(_scope), self.name];
 }
 
 @end

@@ -333,16 +333,18 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @return \c YES if the property was set successfully
 - (BOOL)setStereoPanChannels:(NSArray<NSNumber *> *)panChannels inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns \c @ YES if the device is muted or \c nil on error
+/// Returns \c @ YES if the element is muted or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyMute
 /// @param scope The desired scope
-- (nullable NSNumber *)muteInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
-/// Mutes or unmutes the device
+/// @param element The desired element
+- (nullable NSNumber *)muteInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Mutes or unmutes the element
 /// @note This corresponds to \c kAudioDevicePropertyMute
 /// @param value The desired value
 /// @param scope The desired scope
+/// @param element The desired element
 /// @return \c YES if the property was set successfully, \c NO otherwise
-- (BOOL)setMute:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(setMute(_:scope:));
+- (BOOL)setMute:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_SWIFT_NAME(setMute(_:scope:element:));
 
 //kAudioDevicePropertySolo                                            = 'solo',
 //kAudioDevicePropertyPhantomPower                                    = 'phan',
