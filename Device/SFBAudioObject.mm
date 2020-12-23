@@ -290,7 +290,7 @@ namespace {
 	bool TranslateValueUsingProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, const T& value, R& translatedValue, const SFBAudioObjectPropertyQualifier& qualifier, NSError **error)
 	{
 		AudioValueTranslation translation = {
-			.mInputData			= &value,
+			.mInputData			= reinterpret_cast<void *>(&const_cast<T&>(value)),
 			.mInputDataSize		= sizeof(value),
 			.mOutputData		= &translatedValue,
 			.mOutputDataSize	= sizeof(translatedValue)
