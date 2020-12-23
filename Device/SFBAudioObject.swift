@@ -355,7 +355,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyBaseClass`
 	/// - returns: The audio object's base class
 	/// - throws: An error if the property could not be retrieved
-	func baseClassID() throws -> AudioClassID {
+	public func baseClassID() throws -> AudioClassID {
 		return AudioClassID(try getProperty(.baseClass) as UInt32)
 	}
 
@@ -363,7 +363,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyClass`
 	/// - returns: The audio object's class
 	/// - throws: An error if the property could not be retrieved
-	func classID() throws -> AudioClassID {
+	public func classID() throws -> AudioClassID {
 		return AudioClassID(try getProperty(.class) as UInt32)
 	}
 
@@ -372,7 +372,7 @@ extension AudioObject {
 	/// - note: The system object does not have an owner
 	/// - returns: The audio object's owning object
 	/// - throws: An error if the property could not be retrieved
-	func owner() throws -> AudioObject? {
+	public func owner() throws -> AudioObject? {
 		return try getProperty(.owner)
 	}
 
@@ -380,7 +380,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyName`
 	/// - returns: The audio object's name
 	/// - throws: An error if the property could not be retrieved
-	func name() throws -> String {
+	public func name() throws -> String {
 		return try getProperty(.name)
 	}
 
@@ -388,7 +388,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyModelName`
 	/// - returns: The audio object's model name
 	/// - throws: An error if the property could not be retrieved
-	func modelName() throws -> String {
+	public func modelName() throws -> String {
 		return try getProperty(.modelName)
 	}
 
@@ -396,7 +396,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyManufacturer`
 	/// - returns: The audio object's manufacturer
 	/// - throws: An error if the property could not be retrieved
-	func manufacturer() throws -> String {
+	public func manufacturer() throws -> String {
 		return try getProperty(.manufacturer)
 	}
 
@@ -406,7 +406,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - returns: The name of the specified element
 	/// - throws: An error if the property could not be retrieved
-	func nameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
+	public func nameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
 		return try getProperty(.elementName, scope: scope, element: element)
 	}
 
@@ -416,7 +416,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - returns: The category name of the specified element
 	/// - throws: An error if the property could not be retrieved
-	func categoryNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
+	public func categoryNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
 		return try getProperty(.elementName, scope: scope, element: element)
 	}
 
@@ -424,7 +424,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyElementNumberName`
 	/// - returns: The drift compensation
 	/// - throws: An error if the property could not be retrieved
-	func numberNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
+	public func numberNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
 		return try getProperty(.elementName, scope: scope, element: element)
 	}
 
@@ -432,7 +432,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
 	/// - returns: The audio objects owned by this object
 	/// - throws: An error if the property could not be retrieved
-	func ownedObjects() throws -> [AudioObject] {
+	public func ownedObjects() throws -> [AudioObject] {
 		return try getProperty(.ownedObjects)
 	}
 
@@ -440,7 +440,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
 	/// - returns: The audio objects owned by this object
 	/// - throws: An error if the property could not be retrieved
-	func ownedObjects(types: [UInt32]) throws -> [AudioObject] {
+	public func ownedObjects(types: [UInt32]) throws -> [AudioObject] {
 		let qualifier: [AudioClassID] = types.map { AudioClassID($0)  }
 		let qualifierSize: UInt32 = UInt32(MemoryLayout<AudioClassID>.size * types.count)
 		return try __audioObjectArray(forProperty: .ownedObjects, in: .global, onElement: .master, qualifier: qualifier, qualifierSize: qualifierSize)
@@ -450,7 +450,7 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertySerialNumber`
 	/// - returns: The audio object's serial number
 	/// - throws: An error if the property could not be retrieved
-	func serialNumber() throws -> String {
+	public func serialNumber() throws -> String {
 		return try getProperty(.serialNumber)
 	}
 
@@ -458,8 +458,34 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyFirmwareVersion`
 	/// - returns: The audio object's firmware version
 	/// - throws: An error if the property could not be retrieved
-	func firmwareVersion() throws -> String {
+	public func firmwareVersion() throws -> String {
 		return try getProperty(.firmwareVersion)
+	}
+}
+
+extension AudioObject {
+	/// Translates `value` using an `AudioValueTranslation` structure and returns the translated value
+	/// - note: `property` must accept an `AudioValueTranslation` structure having `UInt32` for input and `CFStringRef` for output
+	/// - parameter value: The value to translate
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The translated value
+	/// - throws: An error if the value could not be translated
+	func translateValue(_ value: UInt32, using property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> String {
+		return try __translateToString(fromUnsignedInteger: value, usingProperty: property, in: scope, onElement: element)
+	}
+
+	/// Translates `value` using an `AudioValueTranslation` structure and returns the translated value
+	/// - note: `property` must accept an `AudioValueTranslation` structure having `UInt32` for input and `UInt32` for output
+	/// - parameter value: The value to translate
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The translated value
+	/// - throws: An error if the value could not be translated
+	func translateValue(_ value: UInt32, using property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> UInt32 {
+		return try __translateToUnsignedInteger(fromUnsignedInteger: value, usingProperty: property, in: scope, onElement: element).uint32Value
 	}
 }
 

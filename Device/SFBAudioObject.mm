@@ -284,6 +284,30 @@ namespace {
 		return true;
 	}
 
+#pragma mark Basic Property Translation
+
+	template <typename T, typename R>
+	bool TranslateValueUsingProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, const T& value, R& translatedValue, const SFBAudioObjectPropertyQualifier& qualifier, NSError **error)
+	{
+		AudioValueTranslation translation = {
+			.mInputData			= &value,
+			.mInputDataSize		= sizeof(value),
+			.mOutputData		= &translatedValue,
+			.mOutputDataSize	= sizeof(translatedValue)
+		};
+
+		UInt32 dataSize = sizeof(translation);
+		OSStatus result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier.mSize, qualifier.mData, &dataSize, &translation);
+		if(result != kAudioHardwareNoError) {
+			os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
+			if(error)
+				*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			return false;
+		}
+
+		return true;
+	}
+
 #pragma mark - Property Information
 
 	bool HasProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
@@ -469,6 +493,34 @@ namespace {
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		auto streamUsageSize = GetHardwareIOProcStreamUsageSize(value.audioHardwareIOProcStreamUsage->mNumberStreams);
 		return SetProperty(objectID, propertyAddress, value.audioHardwareIOProcStreamUsage, static_cast<UInt32>(streamUsageSize), qualifier, error);
+	}
+
+#pragma mark Typed Property Translation
+
+	template <typename R, typename T>
+	R * _Nullable TranslateValueToCFTypeUsingPropertyAndTransformToObject(AudioObjectID objectID, const T& value, const AudioObjectPropertyAddress& propertyAddress, const SFBAudioObjectPropertyQualifier& qualifier, NSError **error)
+	{
+		CFTypeRef translatedValue = nullptr;
+		return TranslateValueUsingProperty(objectID, propertyAddress, value, translatedValue, qualifier, error) ? (__bridge_transfer R *)translatedValue : nil;
+	}
+
+	template <typename R, typename T, typename std::enable_if_t<std::is_arithmetic<R>::value, bool> = true>
+	NSNumber * _Nullable TranslateValueToArithmeticUsingPropertyAndTransformToNumber(AudioObjectID objectID, const T& value, const AudioObjectPropertyAddress& propertyAddress, const SFBAudioObjectPropertyQualifier& qualifier, NSError **error)
+	{
+		R translatedValue = 0;
+		return TranslateValueUsingProperty(objectID, propertyAddress, value, translatedValue, qualifier, error) ? @(translatedValue) : nil;
+	}
+
+	NSString * _Nullable TranslateUInt32ToStringUsingProperty(AudioObjectID objectID, UInt32 value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return TranslateValueToCFTypeUsingPropertyAndTransformToObject<NSString>(objectID, value, propertyAddress, qualifier, error);
+	}
+
+	NSNumber * _Nullable TranslateUInt32ToNumberUsingProperty(AudioObjectID objectID, UInt32 value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return TranslateValueToArithmeticUsingPropertyAndTransformToNumber<UInt32>(objectID, value, propertyAddress, qualifier, error);
 	}
 
 #pragma mark - Typed Array Property Getters
@@ -976,6 +1028,22 @@ static SFBAudioObject *sSystemObject = nil;
 - (os_workgroup_t)osWorkgroupForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return OSWorkgroupForProperty(_objectID, property, scope, element, {}, error);
+}
+
+@end
+
+#pragma mark - Property Translation
+
+@implementation SFBAudioObject (SFBPropertyTranslation)
+
+- (NSString *)translateToStringFromUnsignedInteger:(UInt32)value usingProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return TranslateUInt32ToStringUsingProperty(_objectID, value, property, scope, element, {}, error);
+}
+
+- (NSNumber *)translateToUnsignedIntegerFromUnsignedInteger:(UInt32)value usingProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return TranslateUInt32ToNumberUsingProperty(_objectID, value, property, scope, element, {}, error);
 }
 
 @end
