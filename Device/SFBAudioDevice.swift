@@ -171,8 +171,10 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyPreferredChannelsForStereo`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func preferredStereoChannels(_ scope: PropertyScope) throws -> [UInt32] {
-		return try getProperty(.devicePreferredChannelsForStereo, scope: scope)
+	public func preferredStereoChannels(_ scope: PropertyScope) throws -> (UInt32, UInt32) {
+		let channels: [UInt32] = try getProperty(.devicePreferredChannelsForStereo, scope: scope)
+		precondition(channels.count == 2)
+		return (channels[0], channels[1])
 	}
 
 	/// Sets the preferred stereo channels
@@ -180,9 +182,8 @@ extension AudioDevice {
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be set
-	public func setPreferredStereoChannels(_ value: [UInt32], scope: PropertyScope) throws {
-		precondition(value.count == 2)
-		try setProperty(.devicePreferredChannelsForStereo, value, scope: scope)
+	public func setPreferredStereoChannels(_ value: (UInt32, UInt32), scope: PropertyScope) throws {
+		try setProperty(.devicePreferredChannelsForStereo, [value.0, value.1], scope: scope)
 	}
 
 	/// Returns the preferred channel layout
@@ -206,10 +207,9 @@ extension AudioDevice {
 
 	/// Returns any error codes loading the driver plugin
 	/// - note: This corresponds to `kAudioDevicePropertyPlugIn`
-	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func plugin(_ scope: PropertyScope = .global) throws -> OSStatus {
-		return OSStatus(bitPattern: try getProperty(.devicePlugIn, scope: scope))
+	public func plugIn() throws -> OSStatus {
+		return OSStatus(bitPattern: try getProperty(.devicePlugIn))
 	}
 
 	/// Returns `true` if the device is running somewhere
@@ -312,9 +312,209 @@ extension AudioDevice {
 	/// - note: This corresponds to `kAudioDevicePropertyIOThreadOSWorkgroup`
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
+	@available(macOS 11.0, *)
 	public func ioThreadOSWorkgroup(_ scope: PropertyScope = .global) throws -> WorkGroup {
-//		return try getProperty(.deviceIOThreadOSWorkgroup, scope: scope)
-		fatalError()
+		return try getProperty(.deviceIOThreadOSWorkgroup, scope: scope)
 	}
 
+	// MARK: - Device Properties Implemented by Audio Controls
+
+	/// Returns `true` if a jack is connected to the specified element
+	/// - note: This corresponds to `kAudioDevicePropertyJackIsConnected`
+	/// - parameter element: The desired element
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func jackIsConnected(_ element: PropertyElement = .master, scope: PropertyScope = .global) throws -> Bool {
+		return try getProperty(.deviceJackIsConnected, scope: scope, element: element) != 0
+	}
+
+	/// Returns the volume scalar for the specified channel
+	/// - note: This corresponds to `kAudioDevicePropertyVolumeScalar`
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func volumeScalar(_ channel: PropertyElement = .master, scope: PropertyScope = .global) throws -> Float {
+		return try getProperty(.deviceVolumeScalar, scope: scope, element: channel)
+	}
+
+	/// Sets the volume scalar for the specified channel
+	/// - note: This corresponds to `kAudioDevicePropertyVolumeScalar`
+	/// - parameter value: The desired property value
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be set
+	public func setVolumeScalar(_ value: Float, channel: PropertyElement = .master, scope: PropertyScope = .global) throws {
+		return try setProperty(.deviceVolumeScalar, value, scope: scope, element: channel)
+	}
+
+	/// Returns the volume decibels for the specified channel
+	/// - note: This corresponds to `kAudioDevicePropertyVolumeDecibels`
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func volumeDecibels(_ channel: PropertyElement = .master, scope: PropertyScope = .global) throws -> Float {
+		return try getProperty(.deviceVolumeDecibels, scope: scope, element: channel)
+	}
+
+	/// Sets the volume scalar for the specified channel
+	/// - note: This corresponds to `kAudioDevicePropertyVolumeDecibels`
+	/// - parameter value: The desired property value
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be set
+	public func setVolumeDecibels(_ value: Float, channel: PropertyElement = .master, scope: PropertyScope = .global) throws {
+		return try setProperty(.deviceVolumeDecibels, value, scope: scope, element: channel)
+	}
+
+	/// Returns the volume range in decibels for the specified channel
+	/// - note: This corresponds to `kAudioDevicePropertyVolumeRangeDecibels`
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func volumeRangeDecibels(_ channel: PropertyElement = .master, scope: PropertyScope = .global) throws -> AudioValueRange {
+		return try getProperty(.deviceVolumeRangeDecibels, scope: scope, element: channel)
+	}
+
+	/// Returns the stereo pan
+	/// - note: This corresponds to `kAudioDevicePropertyStereoPan`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func stereoPan(_ scope: PropertyScope) throws -> Float {
+		return try getProperty(.deviceStereoPan, scope: scope)
+	}
+
+	/// Returns the channels used for stereo panning
+	/// - note: This corresponds to `kAudioDevicePropertyStereoPanChannels`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func stereoPanChannels(_ scope: PropertyScope) throws -> (UInt32, UInt32) {
+		let channels: [UInt32] = try getProperty(.deviceStereoPanChannels, scope: scope)
+		precondition(channels.count == 2)
+		return (channels[0], channels[1])
+	}
+
+	/// Sets the channels used for stereo panning
+	/// - note: This corresponds to `kAudioDevicePropertyStereoPanChannels`
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be set
+	public func setStereoPanChannels(_ value: (UInt32, UInt32), scope: PropertyScope) throws {
+		try setProperty(.deviceStereoPanChannels, [value.0, value.1], scope: scope)
+	}
+
+	/// Returns `true` if the device is muted
+	/// - note: This corresponds to `kAudioDevicePropertyMute`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func mute(_ scope: PropertyScope) throws -> Bool {
+		return try getProperty(.deviceMute, scope: scope) != 0
+	}
+
+	/// Returns the IDs of all the currently selected data sources
+	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func dataSource(_ scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(.deviceDataSource, scope: scope)
+	}
+
+	/// Sets the currently selected data sources
+	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
+	/// - parameter value: The desired property value
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be set
+	public func setDataSource(_ value: [UInt32], scope: PropertyScope) throws {
+		return try setProperty(.deviceDataSource, value, scope: scope)
+	}
+
+	/// Returns the IDs of all the currently available data sources
+	/// - note: This corresponds to `kAudioDevicePropertyDataSources`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func dataSources(_ scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(.deviceDataSources, scope: scope)
+	}
+
+	/// Returns the name of `dataSourceID`
+	/// - note: This corresponds to `kAudioDevicePropertyDataSourceNameForIDCFString`
+	/// - parameter dataSourceID: The desired data source
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func dataSourceName(_ dataSourceID: UInt32, scope: PropertyScope) throws -> String {
+		return try translateValue(dataSourceID, using: .deviceDataSourceNameForIDCFString, scope: scope)
+	}
+
+	/// Returns the kind of `dataSourceID`
+	/// - note: This corresponds to `kAudioDevicePropertyDataSourceKindForID`
+	/// - parameter dataSourceID: The desired data source
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func dataSourceKind(_ dataSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
+		return try translateValue(dataSourceID, using: .deviceDataSourceKindForID, scope: scope)
+	}
+
+	// Data source helpers
+
+	/// Returns the available data sources
+	/// - note: This corresponds to `kAudioDevicePropertyDataSources`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func availableDataSources(_ scope: PropertyScope) throws -> [DataSource] {
+		let dataSourceIDs = try dataSources(scope)
+		return dataSourceIDs.map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
+	}
+
+	/// Returns the active  data sources
+	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func activeDataSources(_ scope: PropertyScope) throws -> [DataSource] {
+		let dataSourceIDs = try dataSource(scope)
+		return dataSourceIDs.map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
+	}
+
+	/// Returns the IDs of all the currently selected clock sources
+	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func clockSource(_ scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(.deviceClockSource, scope: scope)
+	}
+
+	/// Sets the currently selected clock sources
+	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
+	/// - parameter value: The desired property value
+	/// - parameter channel: The desired channel
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be set
+	public func setClockSource(_ value: [UInt32], scope: PropertyScope) throws {
+		return try setProperty(.deviceClockSource, value, scope: scope)
+	}
+
+	/// Returns the IDs of all the currently available clock sources
+	/// - note: This corresponds to `kAudioDevicePropertyClockSources`
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func clockSources(_ scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(.deviceClockSources, scope: scope)
+	}
+
+	/// Returns the name of `clockSourceID`
+	/// - note: This corresponds to `kAudioDevicePropertyClockSourceNameForIDCFString`
+	/// - parameter clockSourceID: The desired clock source
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func clockSourceName(_ clockSourceID: UInt32, scope: PropertyScope) throws -> String {
+		return try translateValue(clockSourceID, using: .deviceClockSourceNameForIDCFString, scope: scope)
+	}
+
+	/// Returns the kind of `clockSourceID`
+	/// - note: This corresponds to `kAudioDevicePropertyClockSourceKindForID`
+	/// - parameter clockSourceID: The desired clock source
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func clockSourceKind(_ clockSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
+		return try translateValue(clockSourceID, using: .deviceClockSourceKindForID, scope: scope)
+	}
 }

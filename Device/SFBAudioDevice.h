@@ -180,9 +180,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// Returns any error codes loading the driver plugin or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyPlugIn
-/// @param scope The desired scope
-/// @return The property value
-- (nullable NSNumber *)plugInInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSNumber *plugIn NS_REFINED_FOR_SWIFT;
 
 /// Returns \c @ YES if the device is running somewhere or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDeviceIsRunningSomewhere
@@ -267,102 +265,192 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 #pragma mark - Device Properties Implemented by Audio Controls
 
-/// Returns the volume scalar of the specified channel or \c NaN on error
-/// @note This returns \c { kAudioDevicePropertyVolumeScalar, scope, channel }
+/// Returns \c @ YES if something is plugged into the specified jack or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyJackIsConnected
+/// @param element The desired element
+/// @param scope The desired scope
+- (nullable NSNumber *)jackIsConnectedToElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the volume scalar of the specified channel or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyVolumeScalar
 /// @param channel The desired channel
 /// @param scope The desired scope
-/// @return The volume scalar of the specified channel or \c NaN on error
-- (float)volumeForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSNumber *)volumeScalarForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the volume scalar of the specified channel
-/// @note This sets \c { kAudioDevicePropertyVolumeScalar, scope, channel }
-/// @param volume The desired volume scalar
+/// @note This corresponds to \c kAudioDevicePropertyVolumeScalar
+/// @param scalar The desired volume scalar
 /// @param channel The desired channel
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES if the volume was set successfully
-- (BOOL)setVolume:(float)volume forChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setVolumeScalar:(float)scalar forChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns the volume in decibels of the specified channel or \c NaN on error
-/// @note This returns \c { kAudioDevicePropertyVolumeDecibels, scope, channel }
+/// Returns the volume in decibels of the specified channel or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyVolumeDecibels
 /// @param channel The desired channel
 /// @param scope The desired scope
-/// @return The volume of the specified channel or \c NaN on error
-- (float)volumeInDecibelsForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSNumber *)volumeDecibelsForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the volume in decibels of the specified channel
-/// @note This sets \c { kAudioDevicePropertyVolumeDecibels, scope, channel }
-/// @param volumeInDecibels The desired volume in decibels
+/// @note This corresponds to \c kAudioDevicePropertyVolumeDecibels
+/// @param decibels The desired volume in decibels
 /// @param channel The desired channel
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES if the volume was set successfully
-- (BOOL)setVolumeInDecibels:(float)volumeInDecibels forChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setVolumeDecibels:(float)decibels forChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Converts a volume scalar to a volume in decibels
-/// @note This is the transformation performed by \c { kAudioDevicePropertyVolumeScalarToDecibels, scope, kAudioObjectPropertyElementMaster }
-/// @param volumeScalar The volume scalar to convert
+/// Returns the volume range in decibels of the specified channel or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyVolumeRangeDecibels
+/// @param channel The desired channel
 /// @param scope The desired scope
-/// @return The volume in decibels for the volume scalar or \c NaN on error
-- (float)convertVolumeScalar:(float)volumeScalar toDecibelsInScope:(SFBAudioObjectPropertyScope)scope;
-/// Converts a volume in decibels to scalar
-/// @note This is the transformation performed by \c { kAudioDevicePropertyVolumeScalarToDecibels, scope, kAudioObjectPropertyElementMaster }
-/// @param decibels The volume in decibels to convert
-/// @param scope The desired scope
-/// @return The volume scalar for the volume in decibels or \c NaN on error
-- (float)convertDecibels:(float)decibels toVolumeScalarInScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSValue *)volumeRangeDecibelsForChannel:(SFBAudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 
-/// Returns \c YES if the device is muted
-/// @note This is the property \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
-- (BOOL)isMutedInScope:(SFBAudioObjectPropertyScope)scope;
+/// Converts \c scalar to decibels and returns the converted value or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyVolumeScalarToDecibels
+/// @param scalar The volume scalar
+/// @param scope The desired scope
+- (nullable NSNumber *)convertVolumeToDecibelsFromScalar:(float)scalar inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
+/// Converts \c decibels to scalar and returns the converted value or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyVolumeDecibelsToScalar
+/// @param decibels The volume in decibels
+/// @param scope The desired scope
+- (nullable NSNumber *)convertVolumeToScalarFromDecibels:(float)decibels inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
+
+/// Returns the stereo pan or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyStereoPan
+/// @param scope The desired scope
+- (nullable NSNumber *)stereoPanInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the channels used for stereo panning or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyStereoPanChannels
+/// @param scope The desired scope
+- (nullable NSArray<NSNumber *> *)stereoPanChannelsInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Sets the channels used for stereo panning
+/// @note This corresponds to \c kAudioDevicePropertyStereoPanChannels
+/// @param panChannels The desired panning channels
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the property was set successfully
+- (BOOL)setStereoPanChannels:(NSArray<NSNumber *> *)panChannels inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns \c @ YES if the device is muted or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyMute
+/// @param scope The desired scope
+- (nullable NSNumber *)muteInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Mutes or unmutes the device
-/// @note This sets \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
-- (BOOL)setMute:(BOOL)mute inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
-
-/// Returns an array of \c SFBAudioDeviceDataSource objects for the specified scope
-/// @note This returns \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }
+/// @note This corresponds to \c kAudioDevicePropertyMute
+/// @param value The desired value
 /// @param scope The desired scope
-/// @return An array containing the data sources or \c nil on error
-- (nullable NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(SFBAudioObjectPropertyScope)scope;
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setMute:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(setMute(_:scope:));
 
+//kAudioDevicePropertySolo                                            = 'solo',
+//kAudioDevicePropertyPhantomPower                                    = 'phan',
+//kAudioDevicePropertyPhaseInvert                                     = 'phsi',
+//kAudioDevicePropertyClipLight                                       = 'clip',
+//kAudioDevicePropertyTalkback                                        = 'talb',
+//kAudioDevicePropertyListenback                                      = 'lsnb',
+
+/// Returns an array of the selected data source IDs or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyDataSource
+/// @param scope The desired scope
+- (nullable NSArray<NSNumber *> *)dataSourceInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Sets the selected data sources
+/// @note This corresponds to \c kAudioDevicePropertyDataSource
+/// @param dataSourceIDs The desired data source IDs
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setDataSource:(nullable NSArray<NSNumber *> *)dataSourceIDs inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns an array of the available data source IDs or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyDataSources
+/// @param scope The desired scope
+- (nullable NSArray<NSNumber *> *)dataSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the name of \c dataSourceID or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyDataSourceNameForIDCFString
+/// @param dataSourceID The desired data source
+/// @param scope The desired scope
+- (nullable NSString *)nameOfDataSource:(UInt32)dataSourceID inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the kind of \c dataSourceID or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyDataSourceKindForID
+/// @param dataSourceID The desired data source
+/// @param scope The desired scope
+- (nullable NSNumber *)kindOfDataSource:(UInt32)dataSourceID inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+// Data source helpers
+
+/// Returns an array of \c SFBAudioDeviceDataSource objects for the specified scope or \c nil  on error
+/// @note This corresponds to \c kAudioDevicePropertyDataSources
+/// @param scope The desired scope
+- (nullable NSArray<SFBAudioDeviceDataSource *> *)availableDataSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Returns an array of active \c SFBAudioDeviceDataSource objects for the specified scope
-/// @note This returns \c { kAudioDevicePropertyDataSource, scope, kAudioObjectPropertyElementMaster }
+/// @note This corresponds to \c kAudioDevicePropertyDataSource
 /// @param scope The desired scope
-/// @return An array containing the active data sources or \c nil on error
-- (nullable NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the active data sources for the specified scope
-/// @note This sets \c { kAudioDevicePropertyDataSource, scope, kAudioObjectPropertyElementMaster }
-/// @param activeDataSources An array of \c SFBAudioDeviceDataSource objects to make active for the specified scope
+/// @note This corresponds to \c kAudioDevicePropertyDataSource
+/// @param dataSources An array of \c SFBAudioDeviceDataSource objects to make active
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the data sources were set successfully
-- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
+- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)dataSources inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(setActiveDataSources(_:scope:));
 
-#pragma mark - Device Property Observation
+/// Returns an array of the selected clock source IDs or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyClockSource
+/// @param scope The desired scope
+- (nullable NSArray<NSNumber *> *)clockSourceInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+/// Sets the selected clock sources
+/// @note This corresponds to \c kAudioDevicePropertyClockSource
+/// @param clockSource The desired clock source IDs
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setClockSource:(nullable NSArray<NSNumber *> *)clockSource inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Performs a block when the device sample rate changes
-/// @note This observes \c { kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-/// @param block A block to invoke when the sample rate changes or \c nil to remove the previous value
-- (void)whenSampleRateChangesPerformBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
-/// Performs a block when the device data sources in a scope change
-/// @note This observes \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }
+/// Returns an array of the available clock source IDs or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyClockSources
 /// @param scope The desired scope
-/// @param block A block to invoke when the data sources change or \c nil to remove the previous value
-- (void)whenDataSourcesChangeInScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
-/// Performs a block when the active device data sources in a scope change
-/// @note This observes \c { kAudioDevicePropertyDataSource, scope, kAudioObjectPropertyElementMaster }
+- (nullable NSArray<NSNumber *> *)clockSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the name of \c clockSourceID or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyClockSourceNameForIDCFString
+/// @param clockSourceID The desired clock source
 /// @param scope The desired scope
-/// @param block A block to invoke when the active data sources change or \c nil to remove the previous value
-- (void)whenActiveDataSourcesChangeInScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
-/// Performs a block when mute in a scope changes
-/// @note This observes \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
+- (nullable NSString *)nameOfClockSource:(UInt32)clockSourceID inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the kind of \c clockSourceID or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyClockSourceKindForID
+/// @param clockSourceID The desired clock source
 /// @param scope The desired scope
-/// @param block A block to invoke when mute change or \c nil to remove the previous value
-- (void)whenMuteChangeInScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
-/// Performs a block when the volume for a channel in a scope changes
-/// @note This observes \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }
-/// @param channel The desired channel
-/// @param scope The desired scope
-/// @param block A block to invoke when the volume on the specified channel changes or \c nil to remove the previous value
-- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel inScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
+- (nullable NSNumber *)kindOfClockSource:(UInt32)clockSourceID inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+//kAudioDevicePropertyPlayThru                                        = 'thru',
+//kAudioDevicePropertyPlayThruSolo                                    = 'thrs',
+//kAudioDevicePropertyPlayThruVolumeScalar                            = 'mvsc',
+//kAudioDevicePropertyPlayThruVolumeDecibels                          = 'mvdb',
+//kAudioDevicePropertyPlayThruVolumeRangeDecibels                     = 'mvd#',
+//kAudioDevicePropertyPlayThruVolumeScalarToDecibels                  = 'mv2d',
+//kAudioDevicePropertyPlayThruVolumeDecibelsToScalar                  = 'mv2s',
+//kAudioDevicePropertyPlayThruStereoPan                               = 'mspn',
+//kAudioDevicePropertyPlayThruStereoPanChannels                       = 'msp#',
+//kAudioDevicePropertyPlayThruDestination                             = 'mdds',
+//kAudioDevicePropertyPlayThruDestinations                            = 'mdd#',
+//kAudioDevicePropertyPlayThruDestinationNameForIDCFString            = 'mddc',
+//kAudioDevicePropertyChannelNominalLineLevel                         = 'nlvl',
+//kAudioDevicePropertyChannelNominalLineLevels                        = 'nlv#',
+//kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString        = 'lcnl',
+//kAudioDevicePropertyHighPassFilterSetting                           = 'hipf',
+//kAudioDevicePropertyHighPassFilterSettings                          = 'hip#',
+//kAudioDevicePropertyHighPassFilterSettingNameForIDCFString          = 'hipl',
+//kAudioDevicePropertySubVolumeScalar                                 = 'svlm',
+//kAudioDevicePropertySubVolumeDecibels                               = 'svld',
+//kAudioDevicePropertySubVolumeRangeDecibels                          = 'svd#',
+//kAudioDevicePropertySubVolumeScalarToDecibels                       = 'sv2d',
+//kAudioDevicePropertySubVolumeDecibelsToScalar                       = 'sd2v',
+//kAudioDevicePropertySubMute
 
 @end
 
