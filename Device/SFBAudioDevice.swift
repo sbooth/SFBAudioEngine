@@ -420,6 +420,51 @@ extension AudioDevice {
 		return try getProperty(.deviceSolo, scope: scope, element: element) != 0
 	}
 
+	/// Returns `true` if phantom power is enabled for the specified element
+	/// - note: This corresponds to `kAudioDevicePropertyPhantomPower`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func phantomPower(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.devicePhantomPower, scope: scope, element: element) != 0
+	}
+
+	/// Returns `true` if the phase is inverted for the specified element
+	/// - note: This corresponds to `kAudioDevicePropertyPhaseInvert`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func phaseInvert(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.devicePhaseInvert, scope: scope, element: element) != 0
+	}
+
+	/// Returns `true` if the signal exceeded the sample range
+	/// - note: This corresponds to `kAudioDevicePropertyClipLight`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func clipLight(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.deviceClipLight, scope: scope, element: element) != 0
+	}
+
+	/// Returns `true` if talkback is enabled
+	/// - note: This corresponds to `kAudioDevicePropertyTalkback`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func talkback(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.deviceTalkback, scope: scope, element: element) != 0
+	}
+
+	/// Returns `true` if listenback is enabled
+	/// - note: This corresponds to `kAudioDevicePropertyListenback`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func listenback(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.deviceListenback, scope: scope, element: element) != 0
+	}
+
 	/// Returns the IDs of all the currently selected data sources
 	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
 	/// - parameter scope: The desired scope

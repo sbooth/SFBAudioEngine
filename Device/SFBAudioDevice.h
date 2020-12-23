@@ -193,7 +193,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note This corresponds to \c kAudioDevicePropertyHogMode
 /// @param value The desired value
 /// @return \c YES if successful
-- (BOOL)setHogMode:(pid_t)value error:(NSError **)error NS_SWIFT_NAME(setHogMode(_:scope:));
+- (BOOL)setHogMode:(pid_t)value error:(NSError **)error;
 
 // Hog mode helpers
 
@@ -248,7 +248,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note This corresponds to \c kAudioDevicePropertyIOProcStreamUsage
 /// @param scope The desired scope
 /// @return \c YES if successful
-- (BOOL)setIOProcStreamUsage:(SFBAudioHardwareIOProcStreamUsageWrapper *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(setIOProcStreamUsage(_:scope:));
+- (BOOL)setIOProcStreamUsage:(SFBAudioHardwareIOProcStreamUsageWrapper *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
 
 /// Returns the actual sample rate or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyActualSampleRate
@@ -344,7 +344,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return \c YES if the property was set successfully, \c NO otherwise
-- (BOOL)setMute:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_SWIFT_NAME(setMute(_:scope:element:));
+- (BOOL)setMute:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
 
 /// Returns \c @ YES if only the specified element is audible or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertySolo
@@ -357,14 +357,72 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return \c YES if the property was set successfully, \c NO otherwise
-- (BOOL)setSolo:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_SWIFT_NAME(setSolo(_:scope:element:));
+- (BOOL)setSolo:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
 
-//                                            = 'solo',
-//kAudioDevicePropertyPhantomPower                                    = 'phan',
-//kAudioDevicePropertyPhaseInvert                                     = 'phsi',
-//kAudioDevicePropertyClipLight                                       = 'clip',
-//kAudioDevicePropertyTalkback                                        = 'talb',
-//kAudioDevicePropertyListenback                                      = 'lsnb',
+/// Returns \c @ YES if phantom power is enabled for the specified element or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyPhantomPower
+/// @param scope The desired scope
+/// @param element The desired element
+- (nullable NSNumber *)phantomPowerInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets whether if phantom power is enabled for the specified element
+/// @note This corresponds to \c kAudioDevicePropertyPhantomPower
+/// @param value The desired value
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setPhantomPower:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
+
+/// Returns \c @ YES if the phase is inverted for the specified element or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyPhaseInvert
+/// @param scope The desired scope
+/// @param element The desired element
+- (nullable NSNumber *)phaseInvertInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets whether the phase is inverted for the specified element
+/// @note This corresponds to \c kAudioDevicePropertyPhaseInvert
+/// @param value The desired value
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setPhaseInvert:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
+
+/// Returns \c @ YES if the signal for the specified element has exceeded the sample range or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyClipLight
+/// @param scope The desired scope
+/// @param element The desired element
+- (nullable NSNumber *)clipLightInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets whether the signal for the specified element has exceeded the sample range
+/// @note This corresponds to \c kAudioDevicePropertyClipLight
+/// @param value The desired value
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setClipLight:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
+
+/// Returns \c @ YES talkback is enabled or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyTalkback
+/// @param scope The desired scope
+/// @param element The desired element
+- (nullable NSNumber *)talkbackInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets whether talkback is enabled
+/// @note This corresponds to \c kAudioDevicePropertyTalkback
+/// @param value The desired value
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setTalkback:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
+
+/// Returns \c @ YES listenback is enabled or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyListenback
+/// @param scope The desired scope
+/// @param element The desired element
+- (nullable NSNumber *)listenbackInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets whether listenback is enabled
+/// @note This corresponds to \c kAudioDevicePropertyListenback
+/// @param value The desired value
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if the property was set successfully, \c NO otherwise
+- (BOOL)setListenback:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error;
 
 /// Returns an array of the selected data source IDs or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDataSource
@@ -372,11 +430,11 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 - (nullable NSArray<NSNumber *> *)dataSourceInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the selected data sources
 /// @note This corresponds to \c kAudioDevicePropertyDataSource
-/// @param dataSourceIDs The desired data source IDs
+/// @param value The desired data source IDs
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the property was set successfully, \c NO otherwise
-- (BOOL)setDataSource:(nullable NSArray<NSNumber *> *)dataSourceIDs inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setDataSource:(nullable NSArray<NSNumber *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns an array of the available data source IDs or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyDataSources
@@ -407,11 +465,11 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 - (nullable NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the active data sources for the specified scope
 /// @note This corresponds to \c kAudioDevicePropertyDataSource
-/// @param dataSources An array of \c SFBAudioDeviceDataSource objects to make active
+/// @param value An array of \c SFBAudioDeviceDataSource objects to make active
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the data sources were set successfully
-- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)dataSources inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_SWIFT_NAME(setActiveDataSources(_:scope:));
+- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error;
 
 /// Returns an array of the selected clock source IDs or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyClockSource
@@ -419,11 +477,11 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 - (nullable NSArray<NSNumber *> *)clockSourceInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 /// Sets the selected clock sources
 /// @note This corresponds to \c kAudioDevicePropertyClockSource
-/// @param clockSource The desired clock source IDs
+/// @param value The desired clock source IDs
 /// @param scope The desired scope
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the property was set successfully, \c NO otherwise
-- (BOOL)setClockSource:(nullable NSArray<NSNumber *> *)clockSource inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)setClockSource:(nullable NSArray<NSNumber *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns an array of the available clock source IDs or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyClockSources

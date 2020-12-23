@@ -485,15 +485,65 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertySolo inScope:scope onElement:element error:error];
 }
 
+- (NSNumber *)phantomPowerInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return [self unsignedIntForProperty:kAudioDevicePropertyPhantomPower inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setPhantomPower:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyPhantomPower inScope:scope onElement:element error:error];
+}
+
+- (NSNumber *)phaseInvertInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return [self unsignedIntForProperty:kAudioDevicePropertyPhaseInvert inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setPhaseInvert:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyPhaseInvert inScope:scope onElement:element error:error];
+}
+
+- (NSNumber *)clipLightInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return [self unsignedIntForProperty:kAudioDevicePropertyClipLight inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setClipLight:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyClipLight inScope:scope onElement:element error:error];
+}
+
+- (NSNumber *)talkbackInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return [self unsignedIntForProperty:kAudioDevicePropertyTalkback inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setTalkback:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyTalkback inScope:scope onElement:element error:error];
+}
+
+- (NSNumber *)listenbackInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return [self unsignedIntForProperty:kAudioDevicePropertyListenback inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setListenback:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyListenback inScope:scope onElement:element error:error];
+}
+
 - (NSArray *)dataSourceInScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self unsignedIntArrayForProperty:kAudioDevicePropertyDataSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setDataSource:(NSArray<NSNumber *> *)dataSource inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)setDataSource:(NSArray<NSNumber *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
 {
-	NSParameterAssert(dataSource != nil);
-	return [self setUnsignedIntArray:dataSource forProperty:kAudioDevicePropertyDataSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:error];
+	NSParameterAssert(value != nil);
+	return [self setUnsignedIntArray:value forProperty:kAudioDevicePropertyDataSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (NSArray *)dataSourcesInScope:(SFBAudioObjectPropertyScope)scope
@@ -525,10 +575,10 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	}];
 }
 
-- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)dataSources inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
 {
-	NSParameterAssert(dataSources != nil);
-	NSArray *dataSourceIDs = [dataSources mappedArrayUsingBlock:^id _Nonnull(SFBAudioDeviceDataSource * _Nonnull obj) {
+	NSParameterAssert(value != nil);
+	NSArray *dataSourceIDs = [value mappedArrayUsingBlock:^id(SFBAudioDeviceDataSource *obj) {
 		NSAssert(obj.scope == scope, @"Mismatched scopes");
 		return @(obj.dataSourceID);
 	}];
@@ -540,10 +590,10 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self unsignedIntArrayForProperty:kAudioDevicePropertyClockSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setClockSource:(NSArray<NSNumber *> *)clockSource inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+- (BOOL)setClockSource:(NSArray<NSNumber *> *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
 {
-	NSParameterAssert(clockSource != nil);
-	return [self setUnsignedIntArray:clockSource forProperty:kAudioDevicePropertyClockSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:error];
+	NSParameterAssert(value != nil);
+	return [self setUnsignedIntArray:value forProperty:kAudioDevicePropertyClockSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (NSArray *)clockSourcesInScope:(SFBAudioObjectPropertyScope)scope
