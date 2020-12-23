@@ -31,10 +31,10 @@ NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAu
 
 /// Destroys an endpoint device
 /// @note This corresponds to \c kAudioTransportManagerDestroyEndPointDevice
-/// @param endpointDevice The endpoint device to destroy
+/// @param value The endpoint device to destroy
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-- (BOOL)destroyEndpointDevice:(SFBEndpointDevice *)endpointDevice error:(NSError **)error NS_SWIFT_NAME(destroyEndpointDevice(_:));
+- (BOOL)destroyEndpointDevice:(SFBEndpointDevice *)value error:(NSError **)error;
 
 /// Returns an array  of audio endpoints provided by the transport manager or \c nil on error
 /// @note This corresponds to \c kAudioTransportManagerPropertyEndPointList

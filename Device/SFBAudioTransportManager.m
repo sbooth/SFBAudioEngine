@@ -55,9 +55,9 @@
 	return (SFBEndpointDevice *)[self audioObjectForProperty:kAudioTransportManagerCreateEndPointDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:error];
 }
 
-- (BOOL)destroyEndpointDevice:(SFBEndpointDevice *)endpointDevice error:(NSError **)error
+- (BOOL)destroyEndpointDevice:(SFBEndpointDevice *)value error:(NSError **)error
 {
-	NSParameterAssert(endpointDevice != nil);
+	NSParameterAssert(value != nil);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioTransportManagerDestroyEndPointDevice,
@@ -65,9 +65,9 @@
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	AudioObjectID value = endpointDevice.objectID;
-	UInt32 dataSize = sizeof(value);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
+	AudioObjectID data = value.objectID;
+	UInt32 dataSize = sizeof(data);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &data);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioTransportManagerDestroyEndPointDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)

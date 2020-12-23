@@ -31,10 +31,10 @@ NS_SWIFT_NAME(AudioPlugIn) @interface SFBAudioPlugIn : SFBAudioObject
 
 /// Destroys an aggregate device
 /// @note This corresponds to \c kAudioPlugInDestroyAggregateDevice
-/// @param aggregateDevice The aggregate device to destroy
+/// @param value The aggregate device to destroy
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-- (BOOL)destroyAggregateDevice:(SFBAggregateDevice *)aggregateDevice error:(NSError **)error NS_SWIFT_NAME(destroyAggregateDevice(_:));
+- (BOOL)destroyAggregateDevice:(SFBAggregateDevice *)value error:(NSError **)error;
 
 /// Returns the bundle ID or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyBundleID

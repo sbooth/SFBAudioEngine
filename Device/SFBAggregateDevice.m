@@ -50,10 +50,10 @@
 	return (SFBClockDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyClockDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setAggregateClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error
+- (BOOL)setAggregateClockDevice:(SFBClockDevice *)value error:(NSError **)error
 {
-	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", _objectID, clockDevice.clockDeviceUID ?: @"nil");
-	return [self setAudioObject:clockDevice forProperty:kAudioAggregateDevicePropertyClockDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
+	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", _objectID, value.clockDeviceUID ?: @"nil");
+	return [self setAudioObject:value forProperty:kAudioAggregateDevicePropertyClockDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (NSNumber *)isPrivate

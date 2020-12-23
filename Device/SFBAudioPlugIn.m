@@ -55,9 +55,9 @@
 	return (SFBAggregateDevice *)[self audioObjectForProperty:kAudioPlugInCreateAggregateDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:error];
 }
 
-- (BOOL)destroyAggregateDevice:(SFBAggregateDevice *)aggregateDevice error:(NSError **)error
+- (BOOL)destroyAggregateDevice:(SFBAggregateDevice *)value error:(NSError **)error
 {
-	NSParameterAssert(aggregateDevice != nil);
+	NSParameterAssert(value != nil);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioPlugInDestroyAggregateDevice,
@@ -65,9 +65,9 @@
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	AudioObjectID value = aggregateDevice.objectID;
-	UInt32 dataSize = sizeof(value);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
+	AudioObjectID data = value.objectID;
+	UInt32 dataSize = sizeof(data);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &data);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioPlugInDestroyAggregateDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
