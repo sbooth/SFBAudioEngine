@@ -6,18 +6,16 @@
 #import "SFBSubdevice.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "NSArray+SFBFunctional.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBSubdevice
 
 + (NSArray *)subdevices
 {
-	NSArray *devices = [SFBAudioDevice devices];
-	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-#pragma unused(idx)
-#pragma unused(stop)
+	return [[SFBAudioDevice devices] filteredArrayUsingBlock:^BOOL(SFBAudioDevice *obj) {
 		return [obj isSubdevice];
-	}]];
+	}];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID

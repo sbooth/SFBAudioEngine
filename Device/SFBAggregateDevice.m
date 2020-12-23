@@ -6,6 +6,7 @@
 #import "SFBAggregateDevice.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "NSArray+SFBFunctional.h"
 #import "SFBClockDevice.h"
 #import "SFBCStringForOSType.h"
 
@@ -13,12 +14,9 @@
 
 + (NSArray *)aggregateDevices
 {
-	NSArray *devices = [SFBAudioDevice devices];
-	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-#pragma unused(idx)
-#pragma unused(stop)
+	return [[SFBAudioDevice devices] filteredArrayUsingBlock:^BOOL(SFBAudioDevice *obj) {
 		return [obj isAggregate];
-	}]];
+	}];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
