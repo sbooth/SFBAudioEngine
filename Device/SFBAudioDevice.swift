@@ -411,6 +411,15 @@ extension AudioDevice {
 		return try getProperty(.deviceMute, scope: scope, element: element) != 0
 	}
 
+	/// Returns `true` if only the specified element is audible
+	/// - note: This corresponds to `kAudioDevicePropertySolo`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func solo(_ scope: PropertyScope, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.deviceSolo, scope: scope, element: element) != 0
+	}
+
 	/// Returns the IDs of all the currently selected data sources
 	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
 	/// - parameter scope: The desired scope

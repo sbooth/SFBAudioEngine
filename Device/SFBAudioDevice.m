@@ -475,6 +475,16 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertyMute inScope:scope onElement:element error:error];
 }
 
+- (NSNumber *)soloInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return [self unsignedIntForProperty:kAudioDevicePropertySolo inScope:scope onElement:element error:NULL];
+}
+
+- (BOOL)setSolo:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioDevicePropertySolo inScope:scope onElement:element error:error];
+}
+
 - (NSArray *)dataSourceInScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self unsignedIntArrayForProperty:kAudioDevicePropertyDataSource inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
