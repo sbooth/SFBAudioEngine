@@ -11,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returns an array containing the results of applying \c block to each element in \c self
 - (NSArray *)mappedArrayUsingBlock:(id (^)(ObjectType obj))block;
 /// Returns a copy of \c self including only elements for which \c block returns \c YES
-- (NSArray *)filteredArrayUsingBlock:(BOOL (^)(ObjectType obj))block;
+- (NSArray<ObjectType> *)filteredArrayUsingBlock:(BOOL (^)(ObjectType obj))block;
 @end
 
 NS_ASSUME_NONNULL_END
