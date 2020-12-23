@@ -42,9 +42,11 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 #import <SFBAudioEngine/SFBAudioStream.h>
 #import <SFBAudioEngine/SFBAudioControl.h>
 
+#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
+#import <SFBAudioEngine/SFBAudioDeviceClockSource.h>
+
 #import <SFBAudioEngine/SFBAggregateDevice.h>
 #import <SFBAudioEngine/SFBSubdevice.h>
-#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
 
 #import <SFBAudioEngine/SFBBooleanControl.h>
 #import <SFBAudioEngine/SFBLevelControl.h>
