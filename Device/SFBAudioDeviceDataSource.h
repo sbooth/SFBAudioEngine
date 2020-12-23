@@ -4,14 +4,15 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <CoreAudio/CoreAudio.h>
+
+#import <SFBAudioEngine/SFBAudioObject.h>
 
 @class SFBAudioDevice;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// A data source for an audio device
-NS_SWIFT_NAME(AudioDeviceDataSource) @interface SFBAudioDeviceDataSource : NSObject
+NS_SWIFT_NAME(AudioDevice.DataSource) @interface SFBAudioDeviceDataSource : NSObject
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -21,19 +22,19 @@ NS_SWIFT_NAME(AudioDeviceDataSource) @interface SFBAudioDeviceDataSource : NSObj
 /// @param scope The data source's scope
 /// @param dataSourceID The data source ID
 /// @return An initialized \c SFBAudioDevice object or \c nil on error
-- (nullable instancetype)initWithAudioDevice:(SFBAudioDevice *)audioDevice scope:(AudioObjectPropertyScope)scope dataSourceID:(UInt32)dataSourceID NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithAudioDevice:(SFBAudioDevice *)audioDevice scope:(SFBAudioObjectPropertyScope)scope dataSourceID:(UInt32)dataSourceID NS_DESIGNATED_INITIALIZER;
 
 /// Returns the owning audio device
 @property (nonatomic, readonly) SFBAudioDevice *audioDevice;
 /// Returns the data source scope
-@property (nonatomic, readonly) AudioObjectPropertyScope scope;
+@property (nonatomic, readonly) SFBAudioObjectPropertyScope scope;
 /// Returns the data source ID
 @property (nonatomic, readonly) UInt32 dataSourceID;
 
-/// Returns the data source name
+/// Returns the data source name or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *name;
-/// Returns the data source kind
-@property (nonatomic, readonly) UInt32 kind;
+/// Returns the data source kind or \c nil on error
+@property (nonatomic, nullable, readonly) NSNumber *kind;
 
 @end
 

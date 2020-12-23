@@ -3,27 +3,24 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
-
 #import "SFBAudioDeviceDataSource.h"
+#import "SFBAudioObject+Internal.h"
 
 #import "SFBAudioDevice.h"
 #import "SFBCStringForOSType.h"
-
-extern os_log_t gSFBAudioObjectLog;
 
 @interface SFBAudioDeviceDataSource ()
 {
 @private
 	SFBAudioDevice *_audioDevice;
-	AudioObjectPropertyScope _scope;
+	SFBAudioObjectPropertyScope _scope;
 	UInt32 _dataSourceID;
 }
 @end
 
 @implementation SFBAudioDeviceDataSource
 
-- (instancetype)initWithAudioDevice:(SFBAudioDevice *)audioDevice scope:(AudioObjectPropertyScope)scope dataSourceID:(UInt32)dataSourceID
+- (instancetype)initWithAudioDevice:(SFBAudioDevice *)audioDevice scope:(SFBAudioObjectPropertyScope)scope dataSourceID:(UInt32)dataSourceID
 {
 	NSParameterAssert(audioDevice != nil);
 
@@ -51,54 +48,12 @@ extern os_log_t gSFBAudioObjectLog;
 
 - (NSString *)name
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyDataSourceNameForIDCFString,
-		.mScope		= _scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef dataSourceName = NULL;
-	AudioValueTranslation translation = {
-		.mInputData			= &_dataSourceID,
-		.mInputDataSize		= sizeof(_dataSourceID),
-		.mOutputData		= &dataSourceName,
-		.mOutputDataSize	= sizeof(dataSourceName)
-	};
-
-	UInt32 dataSize = sizeof(translation);
-	OSStatus result = AudioObjectGetPropertyData(_audioDevice.objectID, &propertyAddress, 0, NULL, &dataSize, &translation);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceNameForIDCFString) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge NSString *)dataSourceName;
+	return [_audioDevice nameOfDataSource:_dataSourceID inScope:_scope];
 }
 
-- (UInt32)kind
+- (NSNumber *)kind
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyDataSourceKindForID,
-		.mScope		= _scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSourceKind;
-	AudioValueTranslation translation = {
-		.mInputData			= &_dataSourceID,
-		.mInputDataSize		= sizeof(_dataSourceID),
-		.mOutputData		= &dataSourceKind,
-		.mOutputDataSize	= sizeof(dataSourceKind)
-	};
-
-	UInt32 dataSize = sizeof(translation);
-	OSStatus result = AudioObjectGetPropertyData(_audioDevice.objectID, &propertyAddress, 0, NULL, &dataSize, &translation);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceKindForID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return kAudioObjectUnknown;
-	}
-
-	return dataSourceKind;
+	return [_audioDevice kindOfDataSource:_dataSourceID inScope:_scope];
 }
 
 - (NSString *)description
