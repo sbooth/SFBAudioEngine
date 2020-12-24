@@ -346,13 +346,16 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyIOProcStreamUsage, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result userInfo:nil];
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return nil;
 	}
 
 	AudioHardwareIOProcStreamUsage *streamUsage = (AudioHardwareIOProcStreamUsage *)malloc(dataSize);
-	if(!streamUsage)
+	if(!streamUsage) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return nil;
+	}
 
 	streamUsage->mIOProc = value;
 
@@ -361,7 +364,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyIOProcStreamUsage, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
 		free(streamUsage);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result userInfo:nil];
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return nil;
 	}
 
