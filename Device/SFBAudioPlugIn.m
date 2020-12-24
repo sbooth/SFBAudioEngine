@@ -7,13 +7,14 @@
 #import "SFBAudioObject+Internal.h"
 
 #import "SFBAggregateDevice.h"
+#import "SFBSystemAudioObject.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBAudioPlugIn
 
 + (NSArray *)plugIns
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyPlugInList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [[SFBSystemAudioObject sharedInstance] audioObjectArrayForProperty:kAudioHardwarePropertyPlugInList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID

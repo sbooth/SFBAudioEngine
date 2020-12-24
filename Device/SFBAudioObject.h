@@ -311,10 +311,6 @@ typedef AudioObjectPropertyElement SFBAudioObjectPropertyElement NS_SWIFT_NAME(A
 /// An audio object
 NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
-/// The singleton system audio object
-/// @note This object has a single scope (\c kAudioObjectPropertyScopeGlobal) and a single element (\c kAudioObjectPropertyElementMaster)
-@property (class, nonatomic, readonly) SFBAudioObject * systemObject;
-
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 

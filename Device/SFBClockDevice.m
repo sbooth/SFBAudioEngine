@@ -6,13 +6,14 @@
 #import "SFBClockDevice.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBSystemAudioObject.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBClockDevice
 
 + (NSArray *)clockDevices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [[SFBSystemAudioObject sharedInstance] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID

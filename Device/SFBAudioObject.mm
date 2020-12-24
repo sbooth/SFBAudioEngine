@@ -15,6 +15,7 @@
 #import "SFBAudioDevice.h"
 #import "SFBAudioPlugIn.h"
 #import "SFBAudioStream.h"
+#import "SFBSystemAudioObject.h"
 #import "SFBAudioTransportManager.h"
 #import "SFBBooleanControl.h"
 #import "SFBClockDevice.h"
@@ -723,25 +724,13 @@ extern "C" {
 
 @implementation SFBAudioObject
 
-static SFBAudioObject *sSystemObject = nil;
-
-+ (SFBAudioObject *)systemObject
-{
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		sSystemObject = [[SFBAudioObject alloc] init];
-		sSystemObject->_objectID = kAudioObjectSystemObject;
-	});
-	return sSystemObject;
-}
-
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
 	if(objectID == kAudioObjectUnknown)
 		return nil;
 
 	if(objectID == kAudioObjectSystemObject)
-		return [SFBAudioObject systemObject];
+		return [SFBSystemAudioObject sharedInstance];
 
 	AudioClassID classID = AudioObjectClass(objectID);
 	AudioClassID baseClassID = AudioObjectBaseClass(objectID);
@@ -771,35 +760,35 @@ static SFBAudioObject *sSystemObject = nil;
 
 		case kAudioBooleanControlClassID:
 			switch(classID) {
-				case kAudioMuteControlClassID:
-				case kAudioSoloControlClassID:
-				case kAudioJackControlClassID:
-				case kAudioLFEMuteControlClassID:
-				case kAudioPhantomPowerControlClassID:
-				case kAudioPhaseInvertControlClassID:
-				case kAudioClipLightControlClassID:
-				case kAudioTalkbackControlClassID:
-				case kAudioListenbackControlClassID: 	self = [[SFBBooleanControl alloc] init]; 	break;
-				default:								self = [[SFBBooleanControl alloc] init];	break;
+				case kAudioMuteControlClassID: 			self = [[SFBMuteControl alloc] init]; 			break;
+				case kAudioSoloControlClassID:			self = [[SFBSoloControl alloc] init]; 			break;
+				case kAudioJackControlClassID:			self = [[SFBJackControl alloc] init]; 			break;
+				case kAudioLFEMuteControlClassID:		self = [[SFBLFEMuteControl alloc] init]; 		break;
+				case kAudioPhantomPowerControlClassID:	self = [[SFBPhantomPowerControl alloc] init]; 	break;
+				case kAudioPhaseInvertControlClassID:	self = [[SFBPhaseInvertControl alloc] init]; 	break;
+				case kAudioClipLightControlClassID:		self = [[SFBClipLightControl alloc] init]; 		break;
+				case kAudioTalkbackControlClassID:		self = [[SFBTalkbackControl alloc] init]; 		break;
+				case kAudioListenbackControlClassID: 	self = [[SFBListenbackControl alloc] init]; 	break;
+				default:								self = [[SFBBooleanControl alloc] init];		break;
 			}
 			break;
 
 		case kAudioLevelControlClassID:
 			switch(classID) {
-				case kAudioVolumeControlClassID:
-				case kAudioLFEVolumeControlClassID: 	self = [[SFBLevelControl alloc] init]; 	break;
-				default:								self = [[SFBLevelControl alloc] init];	break;
+				case kAudioVolumeControlClassID: 		self = [[SFBVolumeControl alloc] init]; 	break;
+				case kAudioLFEVolumeControlClassID: 	self = [[SFBLFEVolumeControl alloc] init]; 	break;
+				default:								self = [[SFBLevelControl alloc] init];		break;
 			}
 			break;
 
 		case kAudioSelectorControlClassID:
 			switch(classID) {
-				case kAudioDataSourceControlClassID:
-				case kAudioDataDestinationControlClassID:
-				case kAudioClockSourceControlClassID:
-				case kAudioLineLevelControlClassID:
-				case kAudioHighPassFilterControlClassID: 	self = [[SFBSelectorControl alloc] init]; 	break;
-				default:									self = [[SFBSelectorControl alloc] init];	break;
+				case kAudioDataSourceControlClassID: 		self = [[SFBDataSourceControl alloc] init];			break;
+				case kAudioDataDestinationControlClassID: 	self = [[SFBDataDestinationControl alloc] init];	break;
+				case kAudioClockSourceControlClassID: 		self = [[SFBClockSourceControl alloc] init];		break;
+				case kAudioLineLevelControlClassID: 		self = [[SFBLineLevelControl alloc] init];			break;
+				case kAudioHighPassFilterControlClassID: 	self = [[SFBHighPassFilterControl alloc] init]; 	break;
+				default:									self = [[SFBSelectorControl alloc] init];			break;
 			}
 			break;
 

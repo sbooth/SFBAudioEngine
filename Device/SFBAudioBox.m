@@ -6,13 +6,14 @@
 #import "SFBAudioBox.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBSystemAudioObject.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBAudioBox
 
 + (NSArray *)boxes
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyBoxList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [[SFBSystemAudioObject sharedInstance] audioObjectArrayForProperty:kAudioHardwarePropertyBoxList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID

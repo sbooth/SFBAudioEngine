@@ -10,6 +10,7 @@
 #import "SFBAggregateDevice.h"
 #import "SFBAudioDeviceDataSource.h"
 #import "SFBAudioDeviceClockSource.h"
+#import "SFBSystemAudioObject.h"
 #import "SFBEndpointDevice.h"
 #import "SFBSubdevice.h"
 
@@ -30,22 +31,22 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 + (NSArray *)devices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [[SFBSystemAudioObject sharedInstance] audioObjectArrayForProperty:kAudioHardwarePropertyDevices inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (SFBAudioDevice *)defaultInputDevice
 {
-	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultInputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return (SFBAudioDevice *)[[SFBSystemAudioObject sharedInstance] audioObjectForProperty:kAudioHardwarePropertyDefaultInputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (SFBAudioDevice *)defaultOutputDevice
 {
-	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultOutputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return (SFBAudioDevice *)[[SFBSystemAudioObject sharedInstance] audioObjectForProperty:kAudioHardwarePropertyDefaultOutputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (SFBAudioDevice *)defaultSystemOutputDevice
 {
-	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultSystemOutputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return (SFBAudioDevice *)[[SFBSystemAudioObject sharedInstance] audioObjectForProperty:kAudioHardwarePropertyDefaultSystemOutputDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 + (NSArray *)inputDevices

@@ -530,12 +530,15 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 //kAudioDevicePropertyPlayThruDestination                             = 'mdds',
 //kAudioDevicePropertyPlayThruDestinations                            = 'mdd#',
 //kAudioDevicePropertyPlayThruDestinationNameForIDCFString            = 'mddc',
+
 //kAudioDevicePropertyChannelNominalLineLevel                         = 'nlvl',
 //kAudioDevicePropertyChannelNominalLineLevels                        = 'nlv#',
 //kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString        = 'lcnl',
+
 //kAudioDevicePropertyHighPassFilterSetting                           = 'hipf',
 //kAudioDevicePropertyHighPassFilterSettings                          = 'hip#',
 //kAudioDevicePropertyHighPassFilterSettingNameForIDCFString          = 'hipl',
+
 //kAudioDevicePropertySubVolumeScalar                                 = 'svlm',
 //kAudioDevicePropertySubVolumeDecibels                               = 'svld',
 //kAudioDevicePropertySubVolumeRangeDecibels                          = 'svd#',

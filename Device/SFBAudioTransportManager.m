@@ -6,6 +6,7 @@
 #import "SFBAudioTransportManager.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBSystemAudioObject.h"
 #import "SFBEndpointDevice.h"
 #import "SFBCStringForOSType.h"
 
@@ -13,7 +14,7 @@
 
 + (NSArray *)transportManagers
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyTransportManagerList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [[SFBSystemAudioObject sharedInstance] audioObjectArrayForProperty:kAudioHardwarePropertyTransportManagerList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
