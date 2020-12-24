@@ -17,8 +17,8 @@ extension EndpointDevice {
 	/// Returns the available endpoints
 	/// - note: This corresponds to `kAudioEndPointDevicePropertyEndPointList`
 	/// - throws: An error if the property could not be retrieved
-	public func endpoints() throws -> [AudioDevice] {
-		return try getProperty(.endpointDeviceEndPointList) as [AudioObject] as! [AudioDevice]
+	public func endpoints() throws -> [AudioEndpoint] {
+		return try getProperty(.endpointDeviceEndPointList) as [AudioObject] as! [AudioEndpoint]
 	}
 
 	/// Returns the owning `pid_t` (`0` for public devices)

@@ -5,6 +5,8 @@
 
 #import <SFBAudioEngine/SFBAudioDevice.h>
 
+@class SFBAudioEndpoint;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio endpoint device
@@ -19,7 +21,7 @@ NS_SWIFT_NAME(EndpointDevice) @interface SFBEndpointDevice : SFBAudioDevice
 @property (nonatomic, nullable, readonly) NSDictionary *composition NS_REFINED_FOR_SWIFT;
 /// Returns an array of available endpoints or \c nil on error
 /// @note This corresponds to \c kAudioEndPointDevicePropertyEndPointList
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *endpoints NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioEndpoint *> *endpoints NS_REFINED_FOR_SWIFT;
 /// Returns the owning \c pid_t (\c 0 for public devices) or \c nil on error
 /// @note This corresponds to \c kAudioEndPointDevicePropertyIsPrivate
 @property (nonatomic, nullable, readonly) NSNumber *isPrivate NS_REFINED_FOR_SWIFT;
