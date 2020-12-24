@@ -269,11 +269,11 @@ namespace {
 
 #pragma mark - Basic Property Setters
 
-	bool SetProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, const void * _Nonnull value, size_t size, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	bool SetProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, const void * _Nonnull value, UInt32 size, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
 	{
 		NSCParameterAssert(objectID != kAudioObjectUnknown);
 
-		OSStatus result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifier.mSize, qualifier.mData, (UInt32)size, &value);
+		OSStatus result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifier.mSize, qualifier.mData, size, value);
 		if(kAudioHardwareNoError != result) {
 			os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
 			if(error)
@@ -592,7 +592,7 @@ namespace {
 								 long: 			value.longValue, 		unsigned long: 			value.unsignedLongValue,
 								 long long: 	value.longLongValue, 	unsigned long long: 	value.unsignedLongLongValue,
 								 float:			value.floatValue,		double:					value.doubleValue));
-		return SetProperty(objectID, propertyAddress, &v[0], sizeof(T) * v.size(), qualifier, error);
+		return SetProperty(objectID, propertyAddress, &v[0], static_cast<UInt32>(sizeof(T) * v.size()), qualifier, error);
 	}
 
 #pragma mark - Audio Object Helpers
