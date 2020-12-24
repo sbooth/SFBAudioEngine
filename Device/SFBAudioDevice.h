@@ -6,6 +6,7 @@
 #import <SFBAudioEngine/SFBAudioObject.h>
 
 @class SFBAudioStream, SFBAudioDeviceDataSource, SFBAudioDeviceClockSource, SFBAudioControl;
+@class SFBAudioHardwareIOProcStreamUsageWrapper;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -242,8 +243,15 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// Returns the IOProc stream usage as a wrapped \c AudioHardwareIOProcStreamUsage structure  or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyIOProcStreamUsage
+/// @param value The desired IOProc
 /// @param scope The desired scope
-- (nullable SFBAudioHardwareIOProcStreamUsageWrapper *)ioProcStreamUsageInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+- (nullable SFBAudioHardwareIOProcStreamUsageWrapper *)ioProcStreamUsage:(void *)value inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -ioProcStreamUsage:inScope:error:");
+/// Returns the IOProc stream usage as a wrapped \c AudioHardwareIOProcStreamUsage structure  or \c nil on error
+/// @note This corresponds to \c kAudioDevicePropertyIOProcStreamUsage
+/// @param value The desired IOProc
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+- (nullable SFBAudioHardwareIOProcStreamUsageWrapper *)ioProcStreamUsage:(void *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Sets the IOProc stream usage
 /// @note This corresponds to \c kAudioDevicePropertyIOProcStreamUsage
 /// @param scope The desired scope
@@ -550,6 +558,38 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// An audio end point
 NS_SWIFT_NAME(AudioEndpoint) @interface SFBAudioEndpoint : SFBAudioDevice
+@end
+
+/// A thin wrapper around a variable-length \c AudioHardwareIOProcStreamUsage structure
+NS_SWIFT_NAME(AudioHardwareIOProcStreamUsageWrapper) @interface SFBAudioHardwareIOProcStreamUsageWrapper : NSObject
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+/// Returns an initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object wrapping the specified \c AudioHardwareIOProcStreamUsage
+/// @note If \c freeWhenDone is \c YES \c audioHardwareIOProcStreamUsage must have been allocated using \c malloc
+/// @note If \c freeWhenDone is \c YES the object takes ownership of \c audioHardwareIOProcStreamUsage
+/// @param audioHardwareIOProcStreamUsage The \c AudioHardwareIOProcStreamUsage structure to wrap
+/// @param freeWhenDone Whether the memory for \c audioHardwareIOProcStreamUsage should be reclaimed using \c free
+/// @return An initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object
+- (instancetype)initWithAudioHardwareIOProcStreamUsage:(AudioHardwareIOProcStreamUsage *)audioHardwareIOProcStreamUsage freeWhenDone:(BOOL)freeWhenDone NS_DESIGNATED_INITIALIZER;
+
+/// Returns an initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object with the specified number of streams
+/// @param numberStreams The number of streams
+/// @return An initialized \c SFBAudioHardwareIOProcStreamUsageWrapper object
+- (nullable instancetype)initWithNumberStreams:(UInt32)numberStreams;
+
+/// Returns the underlying \c AudioHardwareIOProcStreamUsage structure
+@property (nonatomic, readonly) const AudioHardwareIOProcStreamUsage *audioHardwareIOProcStreamUsage;
+
+/// Returns the \c mIOProc
+@property (nonatomic, readonly) const void * ioProc;
+
+/// Returns \c mNumberStreams
+@property (nonatomic, readonly) UInt32 numberStreams NS_SWIFT_UNAVAILABLE("Use -streamIsOn");
+/// Returns \c mStreamIsOn or \c NULL if \c mNumberStreams is zero
+@property (nonatomic, nullable, readonly) const UInt32 *streamIsOn NS_REFINED_FOR_SWIFT;
+
 @end
 
 NS_ASSUME_NONNULL_END

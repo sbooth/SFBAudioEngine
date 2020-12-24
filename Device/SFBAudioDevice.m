@@ -17,6 +17,12 @@
 #import "SFBAudioDeviceNotifier.h"
 #import "SFBCStringForOSType.h"
 
+/// Returns the size in bytes of an \c AudioHardwareIOProcStreamUsage with the specified number of streams
+static UInt32 GetAudioHardwareIOProcStreamUsageSize(UInt32 numberStreams)
+{
+	return offsetof(AudioHardwareIOProcStreamUsage, mNumberStreams) + (numberStreams * sizeof(UInt32));
+}
+
 @implementation SFBAudioDevice
 
 static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
@@ -320,14 +326,68 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self audioBufferListForProperty:kAudioDevicePropertyStreamConfiguration inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (SFBAudioHardwareIOProcStreamUsageWrapper *)ioProcStreamUsageInScope:(SFBAudioObjectPropertyScope)scope
+- (SFBAudioHardwareIOProcStreamUsageWrapper *)ioProcStreamUsage:(void *)value inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self audioHardwareIOProcStreamUsageForProperty:kAudioDevicePropertyIOProcStreamUsage inScope:scope onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self ioProcStreamUsage:value inScope:scope error:NULL];
+}
+
+- (SFBAudioHardwareIOProcStreamUsageWrapper *)ioProcStreamUsage:(void *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
+{
+	NSParameterAssert(value != NULL);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyIOProcStreamUsage,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyIOProcStreamUsage, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result userInfo:nil];
+		return nil;
+	}
+
+	AudioHardwareIOProcStreamUsage *streamUsage = (AudioHardwareIOProcStreamUsage *)malloc(dataSize);
+	if(!streamUsage)
+		return nil;
+
+	streamUsage->mIOProc = value;
+
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, streamUsage);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyIOProcStreamUsage, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		free(streamUsage);
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result userInfo:nil];
+		return nil;
+	}
+
+	return [[SFBAudioHardwareIOProcStreamUsageWrapper alloc] initWithAudioHardwareIOProcStreamUsage:streamUsage freeWhenDone:YES];
 }
 
 - (BOOL)setIOProcStreamUsage:(SFBAudioHardwareIOProcStreamUsageWrapper *)value inScope:(SFBAudioObjectPropertyScope)scope error:(NSError **)error
 {
-	return [self setAudioHardwareIOProcStreamUsage:value forProperty:kAudioDevicePropertyIOProcStreamUsage inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
+	NSParameterAssert(value != nil);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyIOProcStreamUsage,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize = GetAudioHardwareIOProcStreamUsageSize(value.numberStreams);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, dataSize, value.audioHardwareIOProcStreamUsage);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyIOProcStreamUsage, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (NSNumber *)actualSampleRate
@@ -620,6 +680,67 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 {
 	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioEndPointClassID));
 	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@interface SFBAudioHardwareIOProcStreamUsageWrapper ()
+{
+@private
+	AudioHardwareIOProcStreamUsage *_ioProcStreamUsage;
+	BOOL _freeWhenDone;
+}
+@end
+
+@implementation SFBAudioHardwareIOProcStreamUsageWrapper
+
+- (instancetype)initWithAudioHardwareIOProcStreamUsage:(AudioHardwareIOProcStreamUsage *)audioHardwareIOProcStreamUsage freeWhenDone:(BOOL)freeWhenDone
+{
+	NSParameterAssert(audioHardwareIOProcStreamUsage != NULL);
+	if((self = [super init])) {
+		_ioProcStreamUsage = audioHardwareIOProcStreamUsage;
+		_freeWhenDone = freeWhenDone;
+	}
+	return self;
+}
+
+- (instancetype)initWithNumberStreams:(UInt32)numberStreams
+{
+	UInt32 streamUsageSize = GetAudioHardwareIOProcStreamUsageSize(numberStreams);
+	AudioHardwareIOProcStreamUsage *streamUsage = (AudioHardwareIOProcStreamUsage *)malloc(streamUsageSize);
+	if(!streamUsage)
+		return nil;
+
+	memset(streamUsage, 0, streamUsageSize);
+	streamUsage->mNumberStreams = numberStreams;
+
+	return [self initWithAudioHardwareIOProcStreamUsage:streamUsage freeWhenDone:YES];
+}
+
+- (void)dealloc
+{
+	if(_freeWhenDone)
+		free(_ioProcStreamUsage);
+}
+
+- (const AudioHardwareIOProcStreamUsage *)audioHardwareIOProcStreamUsage
+{
+	return _ioProcStreamUsage;
+}
+
+- (const void *)ioProc
+{
+	return _ioProcStreamUsage->mIOProc;
+}
+
+- (UInt32)numberStreams
+{
+	return _ioProcStreamUsage->mNumberStreams;
+}
+
+- (const UInt32 *)streamIsOn
+{
+	return _ioProcStreamUsage->mNumberStreams > 0 ? _ioProcStreamUsage->mStreamIsOn : NULL;
 }
 
 @end

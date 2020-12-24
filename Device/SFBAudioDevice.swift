@@ -288,10 +288,11 @@ extension AudioDevice {
 
 	/// Returns IOProc stream usage
 	/// - note: This corresponds to `kAudioDevicePropertyIOProcStreamUsage`
+	/// - parameter ioProc: The desired IOProc
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-	public func ioProcStreamUsage(_ scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
-		return try getProperty(.deviceIOProcStreamUsage, scope: scope)
+	public func ioProcStreamUsage(_ ioProc: UnsafeMutableRawPointer, _ scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
+		return try __ioProcStreamUsage(ioProc, in: scope)
 	}
 
 	/// Returns the actual sample rate
@@ -593,4 +594,11 @@ extension AudioDevice {
 		return clockSourceIDs.map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
 	}
 
+}
+
+extension AudioHardwareIOProcStreamUsageWrapper {
+	/// Returns `mStreamIsOn`
+	public var streamIsOn: UnsafeBufferPointer<UInt32> {
+		return UnsafeBufferPointer(start: __streamIsOn, count: Int(audioHardwareIOProcStreamUsage.pointee.mNumberStreams))
+	}
 }
