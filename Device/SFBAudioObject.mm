@@ -796,6 +796,7 @@ extern "C" {
 			switch(classID) {
 				case kAudioAggregateDeviceClassID: 	self = [[SFBAggregateDevice alloc] init];	break;
 				case kAudioEndPointDeviceClassID:	self = [[SFBEndpointDevice alloc] init]; 	break;
+				case kAudioEndPointClassID:			self = [[SFBAudioEndpoint alloc] init]; 	break;
 				case kAudioSubDeviceClassID:		self = [[SFBSubdevice alloc] init];			break;
 				default:							self = [[SFBAudioDevice alloc] init];		break;
 			}

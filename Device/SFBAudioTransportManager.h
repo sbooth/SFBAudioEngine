@@ -5,7 +5,7 @@
 
 #import <SFBAudioEngine/SFBAudioPlugIn.h>
 
-@class SFBEndpointDevice;
+@class SFBEndpointDevice, SFBAudioEndpoint;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -41,7 +41,7 @@ NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAu
 @property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *endpoints NS_REFINED_FOR_SWIFT;
 /// Returns the audio endpoint provided by the transport manager with the specified UID or \c nil if unknown
 /// @note This corresponds to \c kAudioTransportManagerPropertyTranslateUIDToEndPoint
-- (nullable SFBAudioObject *)endpointForUID:(NSString *)endpointUID NS_SWIFT_NAME(endpoint(_:));
+- (nullable SFBAudioEndpoint *)endpointForUID:(NSString *)endpointUID NS_SWIFT_NAME(endpoint(_:));
 /// Returns the transport type  or \c nil on error
 /// @note This corresponds to \c kAudioTransportManagerPropertyTransportType
 @property (nonatomic, nullable, readonly) NSNumber *transportType NS_REFINED_FOR_SWIFT;

@@ -548,4 +548,9 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 @end
 
+/// An audio end point
+NS_SWIFT_NAME(AudioEndpoint) @interface SFBAudioEndpoint : SFBAudioDevice
+@end
+
 NS_ASSUME_NONNULL_END
+

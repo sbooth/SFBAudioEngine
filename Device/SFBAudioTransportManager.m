@@ -84,11 +84,11 @@
 	return [self audioObjectArrayForProperty:kAudioTransportManagerPropertyEndPointList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (SFBAudioObject *)endpointForUID:(NSString *)endpointUID
+- (SFBAudioEndpoint *)endpointForUID:(NSString *)endpointUID
 {
 	NSParameterAssert(endpointUID != nil);
 	CFStringRef qualifier = (__bridge CFStringRef)endpointUID;
-	return [self audioObjectForProperty:kAudioTransportManagerPropertyTranslateUIDToEndPoint inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:NULL];
+	return (SFBAudioEndpoint *)[self audioObjectForProperty:kAudioTransportManagerPropertyTranslateUIDToEndPoint inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:NULL];
 }
 
 - (NSNumber *)transportType

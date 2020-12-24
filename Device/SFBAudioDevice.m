@@ -105,37 +105,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return SFBAudioDeviceSupportsOutput(_objectID);
 }
 
-- (BOOL)isAggregate
-{
-	BOOL isClass = SFBAudioObjectIsClass(_objectID, kAudioAggregateDeviceClassID);
-	NSAssert(isClass == [self isKindOfClass:[SFBAggregateDevice class]], @"Aggregate device instantiated with incorrect class: %@", self.className);
-	return isClass;
-}
-
-- (BOOL)isPrivateAggregate
-{
-	return self.isAggregate && [(SFBAggregateDevice *)self isPrivate];
-}
-
-- (BOOL)isEndpointDevice
-{
-	BOOL isClass = SFBAudioObjectIsClass(_objectID, kAudioEndPointDeviceClassID);
-	NSAssert(isClass == [self isKindOfClass:[SFBEndpointDevice class]], @"Endpoint device instantiated with incorrect class: %@", self.className);
-	return isClass;
-}
-
-- (BOOL)isEndpoint
-{
-	return SFBAudioObjectIsClass(_objectID, kAudioEndPointClassID);
-}
-
-- (BOOL)isSubdevice
-{
-	BOOL isClass = SFBAudioObjectIsClass(_objectID, kAudioSubDeviceClassID);
-	NSAssert(isClass == [self isKindOfClass:[SFBSubdevice class]], @"Subdevice instantiated with incorrect class: %@", self.className);
-	return isClass;
-}
-
 #pragma mark - Device Base Properties
 
 - (NSString *)configurationApplication
@@ -641,6 +610,16 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 - (NSString *)description
 {
 	return [NSString stringWithFormat:@"<%@ 0x%x, \"%@\">", self.className, _objectID, self.deviceUID];
+}
+
+@end
+
+@implementation SFBAudioEndpoint
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioEndPointClassID));
+	return [super initWithAudioObjectID:objectID];
 }
 
 @end
