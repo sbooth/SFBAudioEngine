@@ -25,3 +25,93 @@
 }
 
 @end
+
+@implementation SFBMuteControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioMuteControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBSoloControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioSoloControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBJackControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioJackControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBLFEMuteControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioLFEMuteControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBPhantomPowerControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioPhantomPowerControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBPhaseInvertControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioPhaseInvertControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBClipLightControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioClipLightControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBTalkbackControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioTalkbackControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBListenbackControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioListenbackControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end

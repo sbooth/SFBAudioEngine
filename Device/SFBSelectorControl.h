@@ -33,3 +33,23 @@ NS_SWIFT_NAME(SelectorControl) @interface SFBSelectorControl : SFBAudioControl
 @end
 
 NS_ASSUME_NONNULL_END
+
+/// An audio data source control
+NS_SWIFT_NAME(DataSourceControl) @interface SFBDataSourceControl : SFBSelectorControl
+@end
+
+/// An audio data destination control
+NS_SWIFT_NAME(DataDestinationControl) @interface SFBDataDestinationControl : SFBSelectorControl
+@end
+
+/// An audio clock source control
+NS_SWIFT_NAME(ClockSourceControl) @interface SFBClockSourceControl : SFBSelectorControl
+@end
+
+/// An audio line level control
+NS_SWIFT_NAME(LineLevelControl) @interface SFBLineLevelControl : SFBSelectorControl
+@end
+
+/// An audio high pass filter control
+NS_SWIFT_NAME(HighPassFilterControl) @interface SFBHighPassFilterControl : SFBSelectorControl
+@end

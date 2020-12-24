@@ -43,4 +43,12 @@ NS_SWIFT_NAME(LevelControl) @interface SFBLevelControl : SFBAudioControl
 
 @end
 
+/// An audio volume control
+NS_SWIFT_NAME(VolumeControl) @interface SFBVolumeControl : SFBLevelControl
+@end
+
+/// An audio LFE volume control
+NS_SWIFT_NAME(LFEVolumeControl) @interface SFBLFEVolumeControl : SFBLevelControl
+@end
+
 NS_ASSUME_NONNULL_END

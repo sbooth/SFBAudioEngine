@@ -84,3 +84,23 @@
 }
 
 @end
+
+@implementation SFBVolumeControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioVolumeControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBLFEVolumeControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioLFEVolumeControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end

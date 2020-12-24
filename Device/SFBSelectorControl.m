@@ -40,3 +40,53 @@
 }
 
 @end
+
+@implementation SFBDataSourceControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioDataSourceControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBDataDestinationControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioDataDestinationControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBClockSourceControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioClockSourceControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBLineLevelControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioLineLevelControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
+
+@implementation SFBHighPassFilterControl
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
+{
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioHighPassFilterControlClassID));
+	return [super initWithAudioObjectID:objectID];
+}
+
+@end
