@@ -5,6 +5,6 @@
 
 import Foundation
 
-/// A HAL audo endpoint (`kAudioEndPointClassID`)
+/// A HAL audio endpoint (`kAudioEndPointClassID`)
 public class AudioEndpoint: AudioDevice {
 }
