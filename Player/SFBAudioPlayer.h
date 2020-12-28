@@ -7,9 +7,6 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
-#if TARGET_OS_OSX
-#import <SFBAudioEngine/SFBAudioDevice.h>
-#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -220,17 +217,15 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns \c YES if the current decoder supports seeking
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-#if TARGET_OS_OSX
-
 #pragma mark - Volume Control
 
 /// Returns \c kHALOutputParam_Volume on channel \c 0 for \c AVAudioEngine.outputNode.audioUnit or \c NaN on error
-@property (nonatomic, readonly) float volume;
+@property (nonatomic, readonly) float volume API_AVAILABLE(macosx(10.15));
 /// Sets \c kHALOutputParam_Volume on channel \c 0 for \c AVAudioEngine.outputNode.audioUnit
 /// @param volume The desired volume
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the volume was successfully set
-- (BOOL)setVolume:(float)volume error:(NSError **)error;
+- (BOOL)setVolume:(float)volume error:(NSError **)error API_AVAILABLE(macosx(10.15));
 
 /// Returns \c kHALOutputParam_Volume on \c channel for \c AVAudioEngine.outputNode.audioUnit or \c NaN on error
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;
@@ -239,19 +234,17 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// @param channel The channel to adjust
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the volume was successfully set
-- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error;
+- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error API_AVAILABLE(macosx(10.15));
 
 #pragma mark - Output Device
 
-/// Returns the output device for \c AVAudioEngine.outputNode
-@property (nonatomic, nonnull, readonly) SFBAudioDevice *outputDevice;
+/// Returns the output device object ID for \c AVAudioEngine.outputNode
+@property (nonatomic, readonly) AUAudioObjectID outputDeviceID API_AVAILABLE(macosx(10.15));
 /// Sets the output device for \c AVAudioEngine.outputNode
-/// @param outputDevice The desired output device
+/// @param outputDeviceID The audio object ID of the desired output device
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the output device was successfully set
-- (BOOL)setOutputDevice:(SFBAudioDevice *)outputDevice error:(NSError **)error;
-
-#endif
+- (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error API_AVAILABLE(macosx(10.15));
 
 #pragma mark - Delegate
 

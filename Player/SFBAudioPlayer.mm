@@ -38,7 +38,7 @@ namespace {
 	std::atomic_bool		_engineIsRunning;
 #if TARGET_OS_OSX
 	/// The current output device for \c _engine.outputNode
-	SFBAudioDevice 			*_outputDevice;
+	AUAudioObjectID 		_outputDevice;
 #endif
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*_playerNode;
@@ -81,7 +81,7 @@ namespace {
 		}
 
 #if TARGET_OS_OSX
-		_outputDevice = [[SFBAudioDevice alloc] initWithAudioObjectID:_engine.outputNode.AUAudioUnit.deviceID];
+		_outputDevice = _engine.outputNode.AUAudioUnit.deviceID;
 #endif
 
 		// Register for configuration change notifications
@@ -466,21 +466,18 @@ namespace {
 
 #pragma mark - Output Device
 
-- (BOOL)setOutputDevice:(SFBAudioDevice *)outputDevice error:(NSError **)error
+- (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error
 {
-	NSParameterAssert(outputDevice != nil);
-	NSParameterAssert(outputDevice.supportsOutput);
-
-	os_log_info(_audioPlayerLog, "Setting output device to %{public}@", outputDevice);
+	os_log_info(_audioPlayerLog, "Setting output device to 0x%x", outputDeviceID);
 
 	__block BOOL result;
 	__block NSError *err = nil;
 	dispatch_async_and_wait(_engineQueue, ^{
-		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.objectID error:&err];
+		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err];
 	});
 
 	if(result)
-		_outputDevice = outputDevice;
+		_outputDevice = outputDeviceID;
 	else {
 		os_log_error(_audioPlayerLog, "Error setting output device: %{public}@", err);
 		if(error)

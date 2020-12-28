@@ -594,6 +594,24 @@ extension AudioDevice {
 		return clockSourceIDs.map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
 	}
 
+	/// Returns `true` if play through is enabled
+	/// - note: This corresponds to `kAudioDevicePropertyPlayThru`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func playThru(_ element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.devicePlayThru, scope: .playThrough, element: element) != 0
+	}
+
+	/// Returns `true` if only the specified play through element is audible
+	/// - note: This corresponds to `kAudioDevicePropertyPlayThruSolo`
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be retrieved
+	public func playThruSolo(_ element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.devicePlayThruSolo, scope: .playThrough, element: element) != 0
+	}
+
 }
 
 extension AudioHardwareIOProcStreamUsageWrapper {
