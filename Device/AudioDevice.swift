@@ -58,29 +58,29 @@ public class AudioDevice: AudioObject {
 
 	/// Returns the available audio devices (`kAudioHardwarePropertyDevices` from `kAudioObjectSystemObject`)
 	public class func devices() throws -> [AudioDevice] {
-		try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyDevices), from: AudioObjectID(kAudioObjectSystemObject)).map { AudioObject.make($0) as! AudioDevice }
+		try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyDevices)).map { AudioObject.make($0) as! AudioDevice }
 	}
 
 	/// Returns the default input device (`kAudioHardwarePropertyDefaultInputDevice` from `kAudioObjectSystemObject`)
 	public class func defaultInputDevice() throws -> AudioDevice {
-		return AudioObject.make(try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyDefaultInputDevice), from: AudioObjectID(kAudioObjectSystemObject))) as! AudioDevice
+		return AudioObject.make(try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyDefaultInputDevice))) as! AudioDevice
 	}
 
 	/// Returns the default output device (`kAudioHardwarePropertyDefaultOutputDevice` from `kAudioObjectSystemObject`)
 	public class func defaultOutputDevice() throws -> AudioDevice {
-		return AudioObject.make(try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyDefaultOutputDevice), from: AudioObjectID(kAudioObjectSystemObject))) as! AudioDevice
+		return AudioObject.make(try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyDefaultOutputDevice))) as! AudioDevice
 	}
 
 	/// Returns the default system output device (`kAudioHardwarePropertyDefaultSystemOutputDevice` from `kAudioObjectSystemObject`)
 	public class func defaultSystemOutputDevice() throws -> AudioDevice {
-		return AudioObject.make(try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyDefaultSystemOutputDevice), from: AudioObjectID(kAudioObjectSystemObject))) as! AudioDevice
+		return AudioObject.make(try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyDefaultSystemOutputDevice))) as! AudioDevice
 	}
 
 	/// Initializes an `AudioDevice` with `uid`
 	/// - parameter uid: The desired device UID
 	public convenience init?(_ uid: String) {
 		var qualifier = uid as CFString
-		guard let deviceObjectID: AudioObjectID = try? getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateUIDToDevice), from: AudioObjectID(kAudioObjectSystemObject), qualifier: PropertyQualifier(&qualifier)), deviceObjectID != kAudioObjectUnknown else {
+		guard let deviceObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateUIDToDevice), qualifier: PropertyQualifier(&qualifier)), deviceObjectID != kAudioObjectUnknown else {
 			return nil
 		}
 		self.init(deviceObjectID)

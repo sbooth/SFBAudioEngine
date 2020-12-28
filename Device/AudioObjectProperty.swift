@@ -208,13 +208,6 @@ func getPropertySize(_ property: PropertyAddress, from objectID: AudioObjectID, 
 	return Int(dataSize)
 }
 
-///// A fixed-length Core Audio C `struct` that can be stored and retrieved as an audio object property
-//public protocol AudioObjectFixedLengthStructureProperty {}
-//
-//extension AudioValueRange: AudioObjectFixedLengthStructureProperty {}
-//extension AudioStreamBasicDescription: AudioObjectFixedLengthStructureProperty {}
-//extension AudioStreamRangedDescription: AudioObjectFixedLengthStructureProperty {}
-
 /// Reads `size` bytes of `property` from `objectID` into `ptr`
 /// - parameter property: The desired property
 /// - parameter objectID: The audio object to query
@@ -296,19 +289,6 @@ func getAudioObjectProperty<T>(_ property: AudioObjectProperty<[T]>, from object
 	}
 
 	return array
-
-//	let data = UnsafeMutablePointer<T>.allocate(capacity: count)
-//	defer {
-//		data.deallocate()
-//	}
-
-//	result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, data)
-//	guard result == kAudioHardwareNoError else {
-//		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-//		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-//	}
-
-//	return [T](UnsafeBufferPointer(start: data, count: count))
 }
 
 /// Sets the value of `property` to `value` on `objectID`

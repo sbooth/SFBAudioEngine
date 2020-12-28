@@ -12,14 +12,14 @@ import CoreAudio
 public class AudioPlugIn: AudioObject {
 	/// Returns the available audio plug-ins (`kAudioHardwarePropertyPlugInList` from `kAudioObjectSystemObject`)
 	public class func plugIns() throws -> [AudioPlugIn] {
-		try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyPlugInList), from: AudioObjectID(kAudioObjectSystemObject)).map { AudioObject.make($0) as! AudioPlugIn }
+		return try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyPlugInList)).map { AudioObject.make($0) as! AudioPlugIn }
 	}
 
 	/// Initializes an `AudioPlugIn` with `bundleID`
 	/// - parameter bundleID: The desired bundle ID
 	public convenience init?(_ bundleID: String) {
 		var qualifier = bundleID as CFString
-		guard let plugInObjectID: AudioObjectID = try? getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateBundleIDToPlugIn), from: AudioObjectID(kAudioObjectSystemObject), qualifier: PropertyQualifier(&qualifier)), plugInObjectID != kAudioObjectUnknown else {
+		guard let plugInObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateBundleIDToPlugIn), qualifier: PropertyQualifier(&qualifier)), plugInObjectID != kAudioObjectUnknown else {
 			return nil
 		}
 		self.init(plugInObjectID)

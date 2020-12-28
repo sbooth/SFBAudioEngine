@@ -12,14 +12,14 @@ import CoreAudio
 public class AudioTransportManager: AudioPlugIn {
 	/// Returns the available audio transport managers (`kAudioHardwarePropertyTransportManagerList` from `kAudioObjectSystemObject`)
 	public class func transportManagers() throws -> [AudioTransportManager] {
-		try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyTransportManagerList), from: AudioObjectID(kAudioObjectSystemObject)).map { AudioObject.make($0) as! AudioTransportManager }
+		return try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyTransportManagerList)).map { AudioObject.make($0) as! AudioTransportManager }
 	}
 
 	/// Initializes an `AudioTransportManager` with `bundleID`
 	/// - parameter bundleID: The desired bundle ID
 	public convenience init?(_ bundleID: String) {
 		var qualifier = bundleID as CFString
-		guard let transportManagerObjectID: AudioObjectID = try? getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateBundleIDToTransportManager), from: AudioObjectID(kAudioObjectSystemObject), qualifier: PropertyQualifier(&qualifier)), transportManagerObjectID != kAudioObjectUnknown else {
+		guard let transportManagerObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateBundleIDToTransportManager), qualifier: PropertyQualifier(&qualifier)), transportManagerObjectID != kAudioObjectUnknown else {
 			return nil
 		}
 		self.init(transportManagerObjectID)

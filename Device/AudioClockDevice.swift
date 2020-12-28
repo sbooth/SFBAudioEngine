@@ -12,14 +12,14 @@ import CoreAudio
 public class AudioClockDevice: AudioObject {
 	/// Returns the available audio clock devices (`kAudioHardwarePropertyClockDeviceList` from `kAudioObjectSystemObject`)
 	public class func boxes() throws -> [AudioClockDevice] {
-		try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyClockDeviceList), from: AudioObjectID(kAudioObjectSystemObject)).map { AudioObject.make($0) as! AudioClockDevice }
+		return try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyClockDeviceList)).map { AudioObject.make($0) as! AudioClockDevice }
 	}
 
 	/// Initializes an `AudioClockDevice` with `uid`
 	/// - parameter uid: The desired clock device UID
 	public convenience init?(_ uid: String) {
 		var qualifier = uid as CFString
-		guard let clockDeviceObjectID: AudioObjectID = try? getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateUIDToClockDevice), from: AudioObjectID(kAudioObjectSystemObject), qualifier: PropertyQualifier(&qualifier)), clockDeviceObjectID != kAudioObjectUnknown else {
+		guard let clockDeviceObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateUIDToClockDevice), qualifier: PropertyQualifier(&qualifier)), clockDeviceObjectID != kAudioObjectUnknown else {
 			return nil
 		}
 		self.init(clockDeviceObjectID)

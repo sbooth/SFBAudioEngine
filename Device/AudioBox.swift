@@ -12,14 +12,14 @@ import CoreAudio
 public class AudioBox: AudioObject {
 	/// Returns the available audio boxes (`kAudioHardwarePropertyBoxList` from `kAudioObjectSystemObject`)
 	public class func boxes() throws -> [AudioBox] {
-		try getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyBoxList), from: AudioObjectID(kAudioObjectSystemObject)).map { AudioObject.make($0) as! AudioBox }
+		return try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyBoxList)).map { AudioObject.make($0) as! AudioBox }
 	}
 
 	/// Initializes an `AudioBox` with `uid`
 	/// - parameter uid: The desired box UID
 	public convenience init?(_ uid: String) {
 		var qualifier = uid as CFString
-		guard let boxObjectID: AudioObjectID = try? getAudioObjectProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateUIDToBox), from: AudioObjectID(kAudioObjectSystemObject), qualifier: PropertyQualifier(&qualifier)), boxObjectID != kAudioObjectUnknown else {
+		guard let boxObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyTranslateUIDToBox), qualifier: PropertyQualifier(&qualifier)), boxObjectID != kAudioObjectUnknown else {
 			return nil
 		}
 		self.init(boxObjectID)
