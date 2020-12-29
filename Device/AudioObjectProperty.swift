@@ -311,12 +311,6 @@ func setAudioObjectProperty<T>(_ property: AudioObjectProperty<[T]>, to value: [
 
 // MARK: - Variable-Length Core Audio Structure Properties
 
-///// A variable-length Core Audio C `struct` that can be stored and retrieved as an audio object property
-//public protocol AudioObjectVariableLengthStructureProperty {}
-//
-//extension AudioChannelLayout: AudioObjectVariableLengthStructureProperty {}
-//extension AudioBufferList: AudioObjectVariableLengthStructureProperty {}
-
 /// Returns the value of `property` from `objectID`
 /// - parameter property: The desired property
 /// - parameter objectID: The audio object to query
@@ -347,6 +341,36 @@ func getAudioObjectProperty(_ property: AudioObjectProperty<AudioChannelLayout>,
 //	return ManagedAudioChannelLayout(audioChannelLayoutPointer: AudioChannelLayout.UnsafePointer(data)) { $0.unsafePointer.deallocate()	}
 	return AudioChannelLayoutWrapper(mem)
 //	return AudioChannelLayout.UnsafePointer(UnsafeRawPointer(mem).assumingMemoryBound(to: AudioChannelLayout.self))
+}
+
+/// Returns the value of `property` from `objectID`
+/// - parameter property: The desired property
+/// - parameter objectID: The audio object to query
+/// - parameter qualifier: An optional property qualifier
+/// - throws: An exception if the object does not have the requested property or the property value could not be retrieved
+func getAudioObjectProperty(_ property: AudioObjectProperty<AudioBufferList>, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws -> AudioBufferListWrapper {
+	var propertyAddress = property.address.rawValue
+
+	var dataSize: UInt32 = 0
+	var result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize)
+	guard result == kAudioHardwareNoError else {
+		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
+		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+	}
+
+	let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(dataSize))
+	defer {
+		mem.deallocate()
+	}
+
+	result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, mem)
+	guard result == kAudioHardwareNoError else {
+		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
+		mem.deallocate()
+		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+	}
+
+	return AudioBufferListWrapper(mem)
 }
 
 // MARK: - Four Character Code Helpers
@@ -431,7 +455,7 @@ public struct AudioChannelLayoutWrapper {
 	}
 
 	/// Returns the layout's `mChannelDescriptions`
-	public var channelDescriptions: UnsafeBufferPointer<AudioChannelDescription>? {
+	public var channelDescriptions: UnsafeBufferPointer<AudioChannelDescription> {
 		let count = Int(numberChannelDescriptions)
 		// Does not compile (!) : MemoryLayout<AudioChannelLayout>.offset(of: \.mChannelDescriptions)
 		let offset = MemoryLayout.offset(of: \AudioChannelLayout.mChannelDescriptions)!
@@ -451,5 +475,35 @@ extension AudioChannelLayoutWrapper {
 	/// Returns `self` converted to an `AVAudioChannelLayout`object
 	var avAudioChannelLayout: AVAudioChannelLayout {
 		return withUnsafePointer { return AVAudioChannelLayout(layout: $0) }
+	}
+}
+
+/// A thin wrapper around a variable-length `AudioBufferList` structure
+public struct AudioBufferListWrapper {
+	/// The underlying memory
+	let ptr: UnsafePointer<UInt8>
+
+	/// Initializes a new `AudioBufferListWrapper` wrapping `mem`
+	init(_ mem: UnsafePointer<UInt8>) {
+		ptr = mem
+	}
+
+	/// Returns the buffer list's `mNumberBuffers`
+	public var numberBuffers: UInt32 {
+		return ptr.withMemoryRebound(to: AudioBufferList.self, capacity: 1) { $0.pointee.mNumberBuffers }
+	}
+
+	/// Returns the buffer list's `mBuffers`
+	public var buffers: UnsafeBufferPointer<AudioBuffer> {
+		let count = Int(numberBuffers)
+		// Does not compile (!) : MemoryLayout<AudioBufferList>.offset(of: \.mBuffers)
+		let offset = MemoryLayout.offset(of: \AudioBufferList.mBuffers)!
+		let bufPtr = UnsafeRawPointer(ptr.advanced(by: offset)).assumingMemoryBound(to: AudioBuffer.self)
+		return UnsafeBufferPointer<AudioBuffer>(start: bufPtr, count: count)
+	}
+
+	/// Performs `block` with a pointer to the underlying `AudioBufferList` structure
+	public func withUnsafePointer<T>(_ block:(UnsafePointer<AudioBufferList>) throws -> T) rethrows -> T {
+		return try ptr.withMemoryRebound(to: AudioBufferList.self, capacity: 1) { return try block($0) }
 	}
 }
