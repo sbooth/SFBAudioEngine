@@ -423,70 +423,59 @@ extension AudioDevice {
 		try setProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyListenback), in: scope, on: element), to: value ? 1 : 0)
 	}
 
-//	/// Returns the IDs of all the currently selected data sources
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func dataSource(in scope: PropertyScope) throws -> [UInt32] {
-//		return try getProperty(.deviceDataSource, scope: scope)
-//	}
-//
-//	/// Sets the currently selected data sources
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
-//	/// - parameter value: The desired property value
-//	/// - parameter channel: The desired channel
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be set
-//	public func setDataSource(_ value: [UInt32], scope: PropertyScope) throws {
-//		return try setProperty(.deviceDataSource, value, scope: scope)
-//	}
-//
-//	/// Returns the IDs of all the currently available data sources
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSources`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func dataSources(in scope: PropertyScope) throws -> [UInt32] {
-//		return try getProperty(.deviceDataSources, scope: scope)
-//	}
-//
-//	/// Returns the name of `dataSourceID`
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSourceNameForIDCFString`
-//	/// - parameter dataSourceID: The desired data source
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func dataSourceName(_ dataSourceID: UInt32, scope: PropertyScope) throws -> String {
-//		return try translateValue(dataSourceID, using: .deviceDataSourceNameForIDCFString, scope: scope)
-//	}
-//
-//	/// Returns the kind of `dataSourceID`
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSourceKindForID`
-//	/// - parameter dataSourceID: The desired data source
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func dataSourceKind(_ dataSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
-//		return try translateValue(dataSourceID, using: .deviceDataSourceKindForID, scope: scope)
-//	}
-//
-//	// Data source helpers
-//
-//	/// Returns the available data sources
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSources`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func availableDataSources(in scope: PropertyScope) throws -> [DataSource] {
-//		let dataSourceIDs = try dataSources(scope)
-//		return dataSourceIDs.map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
-//	}
-//
-//	/// Returns the active  data sources
-//	/// - note: This corresponds to `kAudioDevicePropertyDataSource`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func activeDataSources(in scope: PropertyScope) throws -> [DataSource] {
-//		let dataSourceIDs = try dataSource(scope)
-//		return dataSourceIDs.map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
-//	}
-//
+	/// Returns the IDs of all the currently selected data sources (`kAudioDevicePropertyDataSource`)
+	public func dataSource(in scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyDataSource), in: scope))
+	}
+
+	/// Sets the currently selected data sources (`kAudioDevicePropertyDataSource` )
+	public func setDataSource(_ value: [UInt32], scope: PropertyScope) throws {
+		return try setProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyDataSource), in: scope), to: value)
+	}
+
+	/// Returns the IDs of all the currently available data sources (`kAudioDevicePropertyDataSources`)
+	public func dataSources(in scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyDataSources), in: scope))
+	}
+
+	/// Returns the name of `dataSourceID` (`kAudioDevicePropertyDataSourceNameForIDCFString`)
+	public func dataSourceName(_ dataSourceID: UInt32, scope: PropertyScope) throws -> String {
+		var inputData = dataSourceID
+		var outputData = unsafeBitCast(0, to: CFString.self)
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
+				try readAudioObjectProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyDataSourceNameForIDCFString), in: scope), from: objectID, into: &translation)
+			}
+		}
+		return outputData as String
+	}
+
+	/// Returns the kind of `dataSourceID` (`kAudioDevicePropertyDataSourceKindForID`)
+	public func dataSourceKind(_ dataSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
+		var inputData = dataSourceID
+		var outputData: UInt32 = 0
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<UInt32>.stride))
+				try readAudioObjectProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyDataSourceKindForID), in: scope), from: objectID, into: &translation)
+			}
+		}
+		return outputData
+	}
+
+	// Data source helpers
+
+	/// Returns the available data sources (`kAudioDevicePropertyDataSources`)
+	public func availableDataSources(in scope: PropertyScope) throws -> [DataSource] {
+		return try dataSources(in: scope).map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
+	}
+
+	/// Returns the active  data sources (`kAudioDevicePropertyDataSource`)
+	public func activeDataSources(in scope: PropertyScope) throws -> [DataSource] {
+		return try dataSource(in: scope).map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
+	}
+
 //	/// Returns the IDs of all the currently selected clock sources
 //	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
 //	/// - parameter scope: The desired scope
@@ -632,6 +621,38 @@ extension AudioDevice.TransportType: CustomDebugStringConvertible {
 		case kAudioDeviceTransportTypeAVB:			return "AVB"
 		case kAudioDeviceTransportTypeThunderbolt: 	return "Thunderbolt"
 		default:									return "\(self.rawValue)"
+		}
+	}
+}
+
+extension AudioDevice {
+	public struct DataSource {
+		/// Returns the owning audio device
+		public let audioDevice: AudioDevice
+		/// Returns the data source scope
+		public let scope: PropertyScope
+		/// Returns the data source ID
+		public let dataSourceID: UInt32
+
+		/// Returns the data source name
+		public func name() throws -> String {
+			return try audioDevice.dataSourceName(dataSourceID, scope: scope)
+		}
+
+		/// Returns the data source kind or \c nil on error
+		public func kind() throws -> UInt32 {
+			return try audioDevice.dataSourceKind(dataSourceID, scope: scope)
+		}
+	}
+}
+
+extension AudioDevice.DataSource: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		if let name = try? name() {
+			return "<\(type(of: self)) (\(scope), '\(dataSourceID.fourCC)') \"\(name)\" on AudioDevice 0x\(String(audioDevice.objectID, radix: 16, uppercase: false))>"
+		}
+		else {
+			return "<\(type(of: self)) (\(scope), '\(dataSourceID.fourCC)') on AudioDevice 0x\(String(audioDevice.objectID, radix: 16, uppercase: false)))>"
 		}
 	}
 }
