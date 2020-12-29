@@ -13,55 +13,55 @@ public class AudioStream: AudioObject {
 extension AudioStream {
 	/// Returns `true` if the stream is active (`kAudioStreamPropertyIsActive`)
 	public func isActive() throws -> Bool {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyIsActive)) != 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyIsActive)) != 0
 	}
 
 	/// Returns `true` if `self` is an output stream (`kAudioStreamPropertyDirection`)
 	public func direction() throws -> Bool {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyDirection)) != 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection)) != 0
 	}
 
 	/// Returns the terminal type (`kAudioStreamPropertyTerminalType`)
 	public func terminalType() throws -> TerminalType {
-		return TerminalType(rawValue: try getProperty(AudioObjectProperty(kAudioStreamPropertyTerminalType)))
+		return TerminalType(rawValue: try getProperty(PropertyAddress(kAudioStreamPropertyTerminalType)))
 	}
 
 	/// Returns the starting channel (`kAudioStreamPropertyStartingChannel`)
 	public func startingChannel() throws -> UInt32 {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyStartingChannel))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyStartingChannel))
 	}
 
 	/// Returns the latency (`kAudioStreamPropertyLatency`)
 	public func latency() throws -> UInt32 {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyLatency))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyLatency))
 	}
 
 	/// Returns the virtual format (`kAudioStreamPropertyVirtualFormat`)
 	public func virtualFormat() throws -> AudioStreamBasicDescription {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyVirtualFormat))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyVirtualFormat))
 	}
 	/// Sets the virtual format (`kAudioStreamPropertyVirtualFormat`)
 	public func setVirtualFormat(_ value: AudioStreamBasicDescription) throws {
-		return try setProperty(AudioObjectProperty(kAudioStreamPropertyVirtualFormat), to: value)
+		return try setProperty(PropertyAddress(kAudioStreamPropertyVirtualFormat), to: value)
 	}
 
 	/// Returns the available virtual formats (`kAudioStreamPropertyAvailableVirtualFormats`)
 	public func availableVirtualFormats() throws -> [AudioStreamRangedDescription] {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyAvailableVirtualFormats))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyAvailableVirtualFormats))
 	}
 
 	/// Returns the physical format (`kAudioStreamPropertyPhysicalFormat`)
 	public func physicalFormat() throws -> AudioStreamBasicDescription {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyPhysicalFormat))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyPhysicalFormat))
 	}
 	/// Sets the physical format (`kAudioStreamPropertyPhysicalFormat`)
 	public func setPhysicalFormat(_ value: AudioStreamBasicDescription) throws {
-		return try setProperty(AudioObjectProperty(kAudioStreamPropertyPhysicalFormat), to: value)
+		return try setProperty(PropertyAddress(kAudioStreamPropertyPhysicalFormat), to: value)
 	}
 
 	/// Returns the available physical formats (`kAudioStreamPropertyAvailablePhysicalFormats`)
 	public func availablePhysicalFormats() throws -> [AudioStreamRangedDescription] {
-		return try getProperty(AudioObjectProperty(kAudioStreamPropertyAvailablePhysicalFormats))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyAvailablePhysicalFormats))
 	}
 }
 

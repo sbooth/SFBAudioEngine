@@ -97,55 +97,55 @@ public class AudioObject {
 
 extension AudioObject {
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - parameter qualifier: An optional property qualifier
 	/// - parameter initialValue: An optional initial value for `outData` when calling `AudioObjectGetPropertyData`
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty<T: Numeric>(_ property: AudioObjectProperty<T>, qualifier: PropertyQualifier? = nil, initialValue: T = 0) throws -> T {
+	public func getProperty<T: Numeric>(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil, initialValue: T = 0) throws -> T {
 		return try getAudioObjectProperty(property, from: objectID, qualifier: qualifier, initialValue: initialValue)
 	}
 
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: AudioObjectProperty<CFTypeRef>, qualifier: PropertyQualifier? = nil) throws -> String {
+	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> String {
 		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
 		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
 		return value as! String
 	}
 
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: AudioObjectProperty<CFTypeRef>, qualifier: PropertyQualifier? = nil) throws -> [AnyHashable: Any] {
+	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [AnyHashable: Any] {
 		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
 		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
 		return value as! [AnyHashable: Any]
 	}
 
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: AudioObjectProperty<CFTypeRef>, qualifier: PropertyQualifier? = nil) throws -> URL {
+	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> URL {
 		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
 		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
 		return value as! URL
 	}
 
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: AudioObjectProperty<AudioValueRange>) throws -> AudioValueRange {
+	public func getProperty(_ property: PropertyAddress) throws -> AudioValueRange {
 		var value = AudioValueRange()
 		try readAudioObjectProperty(property, from: objectID, into: &value)
 		return value
 	}
 
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: AudioObjectProperty<AudioStreamBasicDescription>) throws -> AudioStreamBasicDescription {
+	public func getProperty(_ property: PropertyAddress) throws -> AudioStreamBasicDescription {
 		var value = AudioStreamBasicDescription()
 		try readAudioObjectProperty(property, from: objectID, into: &value)
 		return value
@@ -156,10 +156,10 @@ extension AudioObject {
 
 extension AudioObject {
 	/// Sets the value of `property` to `value`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
-	public func setProperty<T>(_ property: AudioObjectProperty<T>, to value: T) throws {
+	public func setProperty<T>(_ property: PropertyAddress, to value: T) throws {
 		try setAudioObjectProperty(property, to: value, on: objectID)
 	}
 }
@@ -168,17 +168,17 @@ extension AudioObject {
 
 extension AudioObject {
 	/// Returns the value of `property`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty<T>(_ property: AudioObjectProperty<[T]>) throws -> [T] {
+	public func getProperty<T>(_ property: PropertyAddress) throws -> [T] {
 		return try getAudioObjectProperty(property, from: objectID)
 	}
 
 	/// Sets the value of `property` to `value`
-	/// - parameter property: The desired property
+	/// - parameter property: The address of the desired property
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
-	public func setProperty<T>(_ property: AudioObjectProperty<[T]>, to value: [T]) throws {
+	public func setProperty<T>(_ property: PropertyAddress, to value: [T]) throws {
 		try setAudioObjectProperty(property, to: value, on: objectID)
 	}
 }
@@ -188,77 +188,77 @@ extension AudioObject {
 extension AudioObject {
 	/// Returns the base class of the underlying HAL audio object (`kAudioObjectPropertyBaseClass`)
 	public func baseClass() throws -> AudioClassID {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyBaseClass))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyBaseClass))
 	}
 
 	/// Returns the class of the underlying HAL audio object (`kAudioObjectPropertyClass`)
 	public func `class`() throws -> AudioClassID {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyClass))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyClass))
 	}
 
 	/// Returns the audio object's owning object (`kAudioObjectPropertyOwner`)
 	/// - note: The system audio object (`kAudioObjectSystemObject`) does not have an owner
 	public func owner() throws -> AudioObject {
-		return AudioObject.make(try getProperty(AudioObjectProperty(kAudioObjectPropertyOwner)))
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioObjectPropertyOwner)))
 	}
 
 	/// Returns the audio object's name (`kAudioObjectPropertyName`)
 	public func name() throws -> String {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyName))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyName))
 	}
 
 	/// Returns the audio object's model name (`kAudioObjectPropertyModelName`)
 	public func modelName() throws -> String {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyModelName))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyModelName))
 	}
 
 	/// Returns the audio object's manufacturer (`kAudioObjectPropertyManufacturer`)
 	public func manufacturer() throws -> String {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyManufacturer))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyManufacturer))
 	}
 
 	/// Returns the name of `element` (`kAudioObjectPropertyElementName`)
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func nameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
-		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioObjectPropertyElementName), in: scope, on: element))
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementName), in: scope, on: element))
 	}
 
 	/// Returns the category name of `element` in `scope` (`kAudioObjectPropertyElementCategoryName`)
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func categoryNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
-		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioObjectPropertyElementCategoryName), in: scope, on: element))
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementCategoryName), in: scope, on: element))
 	}
 
 	/// Returns the number name of `element` (`kAudioObjectPropertyElementNumberName`)
 	public func numberNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
-		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioObjectPropertyElementNumberName), in: scope, on: element))
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementNumberName), in: scope, on: element))
 	}
 
 	/// Returns the audio objects owned by `self` (`kAudioObjectPropertyOwnedObjects`)
 	public func ownedObjects() throws -> [AudioObject] {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyOwnedObjects)).map { AudioObject.make($0) }
+		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects)).map { AudioObject.make($0) }
 	}
 
 	/// Returns `true` if the audio object's hardware is drawing attention to itself (`kAudioObjectPropertyIdentify`)
 	public func identify() throws -> Bool {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyIdentify)) != 0
+		return try getProperty(PropertyAddress(kAudioObjectPropertyIdentify)) != 0
 	}
 	/// Sets whether the audio object's hardware should draw attention to itself (`kAudioObjectPropertyIdentify`)
 	/// - parameter value: Whether the audio hardware should draw attention to itself
 	public func setIdentify(_ value: Bool) throws {
-		try setProperty(AudioObjectProperty(kAudioObjectPropertyIdentify), to: value ? 1 : 0)
+		try setProperty(PropertyAddress(kAudioObjectPropertyIdentify), to: value ? 1 : 0)
 	}
 
 	/// Returns the audio object's serial number (`kAudioObjectPropertySerialNumber`)
 	public func serialNumber() throws -> String {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertySerialNumber))
+		return try getProperty(PropertyAddress(kAudioObjectPropertySerialNumber))
 	}
 
 	/// Returns the audio object's firmware version (`kAudioObjectPropertyFirmwareVersion`)
 	public func firmwareVersion() throws -> String {
-		return try getProperty(AudioObjectProperty(kAudioObjectPropertyFirmwareVersion))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyFirmwareVersion))
 	}
 }
 
@@ -293,7 +293,7 @@ extension AudioObjectPropertyAddress: Hashable {
 
 /// Returns the value of `kAudioObjectPropertyClass` for `objectID` or `0` on error
 func AudioObjectClass(_ objectID: AudioObjectID) -> AudioClassID {
-	guard let objectClass: AudioClassID = try? getAudioObjectProperty(AudioObjectProperty(kAudioObjectPropertyClass), from: objectID) else {
+	guard let objectClass: AudioClassID = try? getAudioObjectProperty(PropertyAddress(kAudioObjectPropertyClass), from: objectID) else {
 		return 0
 	}
 	return objectClass
@@ -301,7 +301,7 @@ func AudioObjectClass(_ objectID: AudioObjectID) -> AudioClassID {
 
 /// Returns the value of `kAudioObjectPropertyBaseClass` for `objectID` or `0` on error
 func AudioObjectBaseClass(_ objectID: AudioObjectID) -> AudioClassID {
-	guard let objectBaseClass: AudioClassID = try? getAudioObjectProperty(AudioObjectProperty(kAudioObjectPropertyBaseClass), from: objectID) else {
+	guard let objectBaseClass: AudioClassID = try? getAudioObjectProperty(PropertyAddress(kAudioObjectPropertyBaseClass), from: objectID) else {
 		return 0
 	}
 	return objectBaseClass

@@ -15,11 +15,11 @@ public class AudioControl: AudioObject {
 extension AudioControl {
 	/// Returns the control's scope (`kAudioControlPropertyScope`)
 	public func scope() throws -> PropertyScope {
-		return PropertyScope(rawValue: try getProperty(AudioObjectProperty(kAudioControlPropertyScope)))
+		return PropertyScope(rawValue: try getProperty(PropertyAddress(kAudioControlPropertyScope)))
 	}
 
 	/// Returns the control's element (`kAudioControlPropertyElement`)
 	public func element() throws -> PropertyElement {
-		return PropertyElement(rawValue: try getProperty(AudioObjectProperty(kAudioControlPropertyElement)))
+		return PropertyElement(rawValue: try getProperty(PropertyAddress(kAudioControlPropertyElement)))
 	}
 }

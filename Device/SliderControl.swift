@@ -13,15 +13,15 @@ public class SliderControl: AudioControl {
 extension SliderControl {
 	/// Returns the control's value (`kAudioSliderControlPropertyValue`)
 	public func value() throws -> UInt32 {
-		return try getProperty(AudioObjectProperty(kAudioSliderControlPropertyValue))
+		return try getProperty(PropertyAddress(kAudioSliderControlPropertyValue))
 	}
 	/// Sets the control's value (`kAudioSliderControlPropertyValue`)
 	public func setValue(_ value: UInt32) throws {
-		try setProperty(AudioObjectProperty(kAudioSliderControlPropertyValue), to: value)
+		try setProperty(PropertyAddress(kAudioSliderControlPropertyValue), to: value)
 	}
 
 	/// Returns the available control values (`kAudioSliderControlPropertyRange`)
 	public func range() throws -> [UInt32] {
-		return try getProperty(AudioObjectProperty(kAudioSliderControlPropertyRange))
+		return try getProperty(PropertyAddress(kAudioSliderControlPropertyRange))
 	}
 }
