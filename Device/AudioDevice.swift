@@ -11,52 +11,6 @@ import os.log
 ///
 /// This class has four scopes (`kAudioObjectPropertyScopeGlobal`, `kAudioObjectPropertyScopeInput`, `kAudioObjectPropertyScopeOutput`, and `kAudioObjectPropertyScopePlayThrough`), a master element (`kAudioObjectPropertyElementMaster`), and an element for each channel in each stream
 public class AudioDevice: AudioObject {
-	/// A thin wrapper around a HAL audio device transport type
-	public struct TransportType: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
-		/// Unknown
-		public static let unknown 		= TransportType(rawValue: kAudioDeviceTransportTypeUnknown)
-		/// Built-in
-		public static let builtIn 		= TransportType(rawValue: kAudioDeviceTransportTypeBuiltIn)
-		/// Aggregate device
-		public static let aggregate 	= TransportType(rawValue: kAudioDeviceTransportTypeAggregate)
-		/// Virtual device
-		public static let virtual 		= TransportType(rawValue: kAudioDeviceTransportTypeVirtual)
-		/// PCI
-		public static let pci 			= TransportType(rawValue: kAudioDeviceTransportTypePCI)
-		/// USB
-		public static let usb 			= TransportType(rawValue: kAudioDeviceTransportTypeUSB)
-		/// FireWire
-		public static let fireWire 		= TransportType(rawValue: kAudioDeviceTransportTypeFireWire)
-		/// Bluetooth
-		public static let bluetooth 	= TransportType(rawValue: kAudioDeviceTransportTypeBluetooth)
-		/// Bluetooth Low Energy
-		public static let bluetoothLE 	= TransportType(rawValue: kAudioDeviceTransportTypeBluetoothLE)
-		/// HDMI
-		public static let hdmi 			= TransportType(rawValue: kAudioDeviceTransportTypeHDMI)
-		/// DisplayPort
-		public static let displayPort 	= TransportType(rawValue: kAudioDeviceTransportTypeDisplayPort)
-		/// AirPlay
-		public static let airPlay 		= TransportType(rawValue: kAudioDeviceTransportTypeAirPlay)
-		/// AVB
-		public static let avb 			= TransportType(rawValue: kAudioDeviceTransportTypeAVB)
-		/// Thunderbolt
-		public static let thunderbolt 	= TransportType(rawValue: kAudioDeviceTransportTypeThunderbolt)
-
-		public let rawValue: UInt32
-
-		public init(rawValue: UInt32) {
-			self.rawValue = rawValue
-		}
-
-		public init(integerLiteral value: UInt32) {
-			self.rawValue = value
-		}
-
-		public init(stringLiteral value: StringLiteralType) {
-			self.rawValue = value.fourCC
-		}
-	}
-
 	/// Returns the available audio devices (`kAudioHardwarePropertyDevices` from `kAudioObjectSystemObject`)
 	public class func devices() throws -> [AudioDevice] {
 		try AudioSystemObject.instance.getProperty(AudioObjectProperty(kAudioHardwarePropertyDevices)).map { AudioObject.make($0) as! AudioDevice }
@@ -610,4 +564,74 @@ extension AudioDevice {
 //	public func playThruSolo(on element: PropertyElement = .master) throws -> Bool {
 //		return try getProperty(.devicePlayThruSolo, scope: .playThrough, element: element) != 0
 //	}
+}
+
+extension AudioDevice {
+	/// A thin wrapper around a HAL audio device transport type
+	public struct TransportType: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
+		/// Unknown
+		public static let unknown 		= TransportType(rawValue: kAudioDeviceTransportTypeUnknown)
+		/// Built-in
+		public static let builtIn 		= TransportType(rawValue: kAudioDeviceTransportTypeBuiltIn)
+		/// Aggregate device
+		public static let aggregate 	= TransportType(rawValue: kAudioDeviceTransportTypeAggregate)
+		/// Virtual device
+		public static let virtual 		= TransportType(rawValue: kAudioDeviceTransportTypeVirtual)
+		/// PCI
+		public static let pci 			= TransportType(rawValue: kAudioDeviceTransportTypePCI)
+		/// USB
+		public static let usb 			= TransportType(rawValue: kAudioDeviceTransportTypeUSB)
+		/// FireWire
+		public static let fireWire 		= TransportType(rawValue: kAudioDeviceTransportTypeFireWire)
+		/// Bluetooth
+		public static let bluetooth 	= TransportType(rawValue: kAudioDeviceTransportTypeBluetooth)
+		/// Bluetooth Low Energy
+		public static let bluetoothLE 	= TransportType(rawValue: kAudioDeviceTransportTypeBluetoothLE)
+		/// HDMI
+		public static let hdmi 			= TransportType(rawValue: kAudioDeviceTransportTypeHDMI)
+		/// DisplayPort
+		public static let displayPort 	= TransportType(rawValue: kAudioDeviceTransportTypeDisplayPort)
+		/// AirPlay
+		public static let airPlay 		= TransportType(rawValue: kAudioDeviceTransportTypeAirPlay)
+		/// AVB
+		public static let avb 			= TransportType(rawValue: kAudioDeviceTransportTypeAVB)
+		/// Thunderbolt
+		public static let thunderbolt 	= TransportType(rawValue: kAudioDeviceTransportTypeThunderbolt)
+
+		public let rawValue: UInt32
+
+		public init(rawValue: UInt32) {
+			self.rawValue = rawValue
+		}
+
+		public init(integerLiteral value: UInt32) {
+			self.rawValue = value
+		}
+
+		public init(stringLiteral value: StringLiteralType) {
+			self.rawValue = value.fourCC
+		}
+	}
+}
+
+extension AudioDevice.TransportType: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		switch self.rawValue {
+		case kAudioDeviceTransportTypeUnknown:		return "Unknown"
+		case kAudioDeviceTransportTypeBuiltIn:		return "Built-in"
+		case kAudioDeviceTransportTypeAggregate: 	return "Aggregate"
+		case kAudioDeviceTransportTypeVirtual:		return "Virtual"
+		case kAudioDeviceTransportTypePCI:			return "PCI"
+		case kAudioDeviceTransportTypeUSB:			return "USB"
+		case kAudioDeviceTransportTypeFireWire:		return "FireWire"
+		case kAudioDeviceTransportTypeBluetooth:	return "Bluetooth"
+		case kAudioDeviceTransportTypeBluetoothLE: 	return "Bluetooth Low Energy"
+		case kAudioDeviceTransportTypeHDMI:			return "HDMI"
+		case kAudioDeviceTransportTypeDisplayPort:	return "DisplayPort"
+		case kAudioDeviceTransportTypeAirPlay:		return "AirPlay"
+		case kAudioDeviceTransportTypeAVB:			return "AVB"
+		case kAudioDeviceTransportTypeThunderbolt: 	return "Thunderbolt"
+		default:									return "\(self.rawValue)"
+		}
+	}
 }
