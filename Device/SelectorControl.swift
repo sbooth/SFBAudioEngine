@@ -16,8 +16,8 @@ extension SelectorControl {
 		return try getProperty(AudioObjectProperty(kAudioSelectorControlPropertyCurrentItem))
 	}
 	/// Sets the selected items (`kAudioSelectorControlPropertyCurrentItem`)
-	public func setCurrentItems(_ value: [UInt32]) throws {
-		try setProperty(AudioObjectProperty(kAudioBooleanControlPropertyValue), to: value)
+	public func setCurrentItem(_ value: [UInt32]) throws {
+		try setProperty(AudioObjectProperty((`kAudioSelectorControlPropertyCurrentItem`)), to: value)
 	}
 
 	/// Returns the available items (`kAudioSelectorControlPropertyAvailableItems`)
