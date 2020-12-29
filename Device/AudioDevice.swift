@@ -476,69 +476,61 @@ extension AudioDevice {
 		return try dataSource(in: scope).map { DataSource(audioDevice: self, scope: scope, dataSourceID: $0) }
 	}
 
-//	/// Returns the IDs of all the currently selected clock sources
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func clockSource(in scope: PropertyScope) throws -> [UInt32] {
-//		return try getProperty(.deviceClockSource, scope: scope)
-//	}
-//
-//	/// Sets the currently selected clock sources
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
-//	/// - parameter value: The desired property value
-//	/// - parameter channel: The desired channel
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be set
-//	public func setClockSource(_ value: [UInt32], scope: PropertyScope) throws {
-//		return try setProperty(.deviceClockSource, value, scope: scope)
-//	}
-//
-//	/// Returns the IDs of all the currently available clock sources
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSources`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func clockSources(in scope: PropertyScope) throws -> [UInt32] {
-//		return try getProperty(.deviceClockSources, scope: scope)
-//	}
-//
-//	/// Returns the name of `clockSourceID`
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSourceNameForIDCFString`
-//	/// - parameter clockSourceID: The desired clock source
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func clockSourceName(_ clockSourceID: UInt32, scope: PropertyScope) throws -> String {
-//		return try translateValue(clockSourceID, using: .deviceClockSourceNameForIDCFString, scope: scope)
-//	}
-//
-//	/// Returns the kind of `clockSourceID`
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSourceKindForID`
-//	/// - parameter clockSourceID: The desired clock source
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func clockSourceKind(_ clockSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
-//		return try translateValue(clockSourceID, using: .deviceClockSourceKindForID, scope: scope)
-//	}
-//
-//	// Clock source helpers
-//
-//	/// Returns the available clock sources
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSources`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func availableClockSources(in scope: PropertyScope) throws -> [ClockSource] {
-//		let clockSourceIDs = try clockSources(scope)
-//		return clockSourceIDs.map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
-//	}
-//
-//	/// Returns the active  clock sources
-//	/// - note: This corresponds to `kAudioDevicePropertyClockSource`
-//	/// - parameter scope: The desired scope
-//	/// - throws: An error if the property could not be retrieved
-//	public func activeClockSources(in scope: PropertyScope) throws -> [ClockSource] {
-//		let clockSourceIDs = try clockSource(scope)
-//		return clockSourceIDs.map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
-//	}
+	/// Returns the IDs of all the currently selected clock sources (`kAudioDevicePropertyClockSource`)
+	public func clockSource(in scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyClockSource), in: scope))
+	}
+
+	/// Sets the currently selected clock sources (`kAudioDevicePropertyClockSource`)
+	public func setClockSource(_ value: [UInt32], scope: PropertyScope) throws {
+		return try setProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyClockSource), in: scope), to: value)
+	}
+
+	/// Returns the IDs of all the currently available clock sources (`kAudioDevicePropertyClockSources`)
+	public func clockSources(in scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyClockSources), in: scope))
+	}
+
+	/// Returns the name of `clockSourceID` (`kAudioDevicePropertyClockSourceNameForIDCFString`)
+	public func clockSourceName(_ clockSourceID: UInt32, scope: PropertyScope) throws -> String {
+		var inputData = clockSourceID
+		var outputData = unsafeBitCast(0, to: CFString.self)
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
+				try readAudioObjectProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyClockSourceNameForIDCFString), in: scope), from: objectID, into: &translation)
+			}
+		}
+		return outputData as String
+	}
+
+	/// Returns the kind of `clockSourceID` (`kAudioDevicePropertyClockSourceKindForID`)
+	/// - parameter clockSourceID: The desired clock source
+	/// - parameter scope: The desired scope
+	/// - throws: An error if the property could not be retrieved
+	public func clockSourceKind(_ clockSourceID: UInt32, scope: PropertyScope) throws -> UInt32 {
+		var inputData = clockSourceID
+		var outputData: UInt32 = 0
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<UInt32>.stride))
+				try readAudioObjectProperty(AudioObjectProperty(PropertySelector(rawValue: kAudioDevicePropertyClockSourceKindForID), in: scope), from: objectID, into: &translation)
+			}
+		}
+		return outputData
+	}
+
+	// Clock source helpers
+
+	/// Returns the available clock sources (`kAudioDevicePropertyClockSources`)
+	public func availableClockSources(in scope: PropertyScope) throws -> [ClockSource] {
+		return try clockSources(in: scope).map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
+	}
+
+	/// Returns the active  clock sources (`kAudioDevicePropertyClockSource`)
+	public func activeClockSources(in scope: PropertyScope) throws -> [ClockSource] {
+		return try clockSource(in: scope).map { ClockSource(audioDevice: self, scope: scope, clockSourceID: $0) }
+	}
 
 	/// Returns `true` if play through is enabled (`kAudioDevicePropertyPlayThru`)
 	public func playThru(on element: PropertyElement = .master) throws -> Bool {
@@ -626,6 +618,7 @@ extension AudioDevice.TransportType: CustomDebugStringConvertible {
 }
 
 extension AudioDevice {
+	/// A data source for an audio device
 	public struct DataSource {
 		/// Returns the owning audio device
 		public let audioDevice: AudioDevice
@@ -639,7 +632,7 @@ extension AudioDevice {
 			return try audioDevice.dataSourceName(dataSourceID, scope: scope)
 		}
 
-		/// Returns the data source kind or \c nil on error
+		/// Returns the data source kind
 		public func kind() throws -> UInt32 {
 			return try audioDevice.dataSourceKind(dataSourceID, scope: scope)
 		}
@@ -653,6 +646,39 @@ extension AudioDevice.DataSource: CustomDebugStringConvertible {
 		}
 		else {
 			return "<\(type(of: self)) (\(scope), '\(dataSourceID.fourCC)') on AudioDevice 0x\(String(audioDevice.objectID, radix: 16, uppercase: false)))>"
+		}
+	}
+}
+
+extension AudioDevice {
+	/// A clock source for an audio device
+	public struct ClockSource {
+		/// Returns the owning audio device
+		public let audioDevice: AudioDevice
+		/// Returns the clock source scope
+		public let scope: PropertyScope
+		/// Returns the clock source ID
+		public let clockSourceID: UInt32
+
+		/// Returns the clock source name
+		public func name() throws -> String {
+			return try audioDevice.clockSourceName(clockSourceID, scope: scope)
+		}
+
+		/// Returns the clock source kind
+		public func kind() throws -> UInt32 {
+			return try audioDevice.clockSourceKind(clockSourceID, scope: scope)
+		}
+	}
+}
+
+extension AudioDevice.ClockSource: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		if let name = try? name() {
+			return "<\(type(of: self)) (\(scope), '\(clockSourceID.fourCC)') \"\(name)\" on AudioDevice 0x\(String(audioDevice.objectID, radix: 16, uppercase: false))>"
+		}
+		else {
+			return "<\(type(of: self)) (\(scope), '\(clockSourceID.fourCC)') on AudioDevice 0x\(String(audioDevice.objectID, radix: 16, uppercase: false)))>"
 		}
 	}
 }
