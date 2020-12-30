@@ -32,9 +32,40 @@ extension SelectorControl {
 	}
 
 	/// Returns the kind of `itemID` (`kAudioSelectorControlPropertyItemKind`)
-	public func kindOfItem(_ itemID: UInt32) throws -> String {
+	public func kindOfItem(_ itemID: UInt32) throws -> UInt32 {
 		var qualifier = itemID
 		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemKind), qualifier: PropertyQualifier(&qualifier))
+	}
+}
+
+extension SelectorControl {
+	/// An item in a selector control
+	public struct Item {
+		/// The owning selector control
+		public let control: SelectorControl
+		/// The item ID
+		public let id: UInt32
+
+		/// Returns the item name
+		public func name() throws -> String {
+			return try control.nameOfItem(id)
+		}
+
+		/// Returns the item kind
+		public func kind() throws -> UInt32 {
+			return try control.kindOfItem(id)
+		}
+	}
+}
+
+extension SelectorControl.Item: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		if let name = try? name() {
+			return "<\(type(of: self)) '\(id.fourCC)' \"\(name)\" on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false))>"
+		}
+		else {
+			return "<\(type(of: self)) '\(id.fourCC)' on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false)))>"
+		}
 	}
 }
 
