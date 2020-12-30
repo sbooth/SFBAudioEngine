@@ -164,36 +164,33 @@ public struct PropertyQualifier {
 	}
 }
 
-// MARK: - Property Retrieval
+// MARK: - Low-Level Property Support
 
 /// Returns the size in bytes of `property` from `objectID`
 /// - parameter property: The address of the desired property
 /// - parameter objectID: The audio object to query
 /// - parameter qualifier: An optional property qualifier
 /// - throws: An exception if the object does not have the requested property or the property value could not be retrieved
-func getPropertySize(_ property: PropertyAddress, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws -> Int {
+func audioObjectPropertySize(_ property: PropertyAddress, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws -> Int {
 	var propertyAddress = property.rawValue
-
 	var dataSize: UInt32 = 0
 	let result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize)
 	guard result == kAudioHardwareNoError else {
 		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
 	}
-
 	return Int(dataSize)
 }
 
 /// Reads `size` bytes of `property` from `objectID` into `ptr`
 /// - parameter property: The address of the desired property
 /// - parameter objectID: The audio object to query
-/// - parameter ptr: A pointer to receive the propert's value
+/// - parameter ptr: A pointer to receive the property's value
 /// - parameter size: The number of bytes to read
 /// - parameter qualifier: An optional property qualifier
 /// - throws: An exception if the object does not have the requested property or the property value could not be retrieved
 func readAudioObjectProperty<T>(_ property: PropertyAddress, from objectID: AudioObjectID, into ptr: UnsafeMutablePointer<T>, size: Int = MemoryLayout<T>.stride, qualifier: PropertyQualifier? = nil) throws {
 	var propertyAddress = property.rawValue
-
 	var dataSize = UInt32(size)
 	let result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, ptr)
 	guard result == kAudioHardwareNoError else {
@@ -202,7 +199,24 @@ func readAudioObjectProperty<T>(_ property: PropertyAddress, from objectID: Audi
 	}
 }
 
-// Helper for the common case with numeric properties
+/// Writes `size` bytes from `ptr` to `property` on `objectID`
+/// - parameter property: The address of the desired property
+/// - parameter objectID: The audio object to change
+/// - parameter ptr: A pointer to the desired property value
+/// - parameter size: The number of bytes to write
+/// - parameter qualifier: An optional property qualifier
+/// - throws: An exception if the object does not have the requested property, the property is not settable, or the property value could not be set
+func writeAudioObjectProperty<T>(_ property: PropertyAddress, on objectID: AudioObjectID, from ptr: UnsafePointer<T>, size: Int = MemoryLayout<T>.stride, qualifier: PropertyQualifier? = nil) throws {
+	var propertyAddress = property.rawValue
+	let dataSize = UInt32(size)
+	let result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, dataSize, ptr)
+	guard result == kAudioHardwareNoError else {
+		os_log(.error, log: audioObjectLog, "AudioObjectSetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
+		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+	}
+}
+
+// MARK: Numeric Property Helper
 
 /// Returns the value of `property` from `objectID`
 /// - parameter property: The address of the desired property
@@ -216,26 +230,6 @@ func getAudioObjectProperty<T: Numeric>(_ property: PropertyAddress, from object
 	return value
 }
 
-// MARK: - Scalar Property Setting
-
-/// Sets the value of `property` to `value` on `objectID`
-/// - parameter property: The address of the desired property
-/// - parameter value: The desired value
-/// - parameter objectID: The audio object to change
-/// - parameter qualifier: An optional property qualifier
-/// - throws: An exception if the object does not have the requested property, the property is not settable, or the property value could not be set
-func setAudioObjectProperty<T>(_ property: PropertyAddress, to value: T, on objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws {
-	var propertyAddress = property.rawValue
-
-	var data = value
-	let dataSize = UInt32(MemoryLayout<T>.stride)
-	let result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, dataSize, &data)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectSetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
-}
-
 // MARK: - Array Properties
 
 /// Returns the value of `property` from `objectID`
@@ -244,26 +238,12 @@ func setAudioObjectProperty<T>(_ property: PropertyAddress, to value: T, on obje
 /// - parameter qualifier: An optional property qualifier
 /// - throws: An exception if the object does not have the requested property or the property value could not be retrieved
 func getAudioObjectProperty<T>(_ property: PropertyAddress, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws -> [T] {
-	var propertyAddress = property.rawValue
-
-	var dataSize: UInt32 = 0
-	var result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
-
-	let count = Int(dataSize) / MemoryLayout<T>.stride
-
+	let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
+	let count = dataSize / MemoryLayout<T>.stride
 	let array = try [T](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
-		result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, UnsafeMutableRawPointer(buffer.baseAddress!))
-		guard result == kAudioHardwareNoError else {
-			os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-			throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-		}
+		try readAudioObjectProperty(property, from: objectID, into: buffer.baseAddress!, size: dataSize, qualifier: qualifier)
 		initializedCount = count
 	}
-
 	return array
 }
 
@@ -274,15 +254,9 @@ func getAudioObjectProperty<T>(_ property: PropertyAddress, from objectID: Audio
 /// - parameter qualifier: An optional property qualifier
 /// - throws: An exception if the object does not have the requested property, the property is not settable, or the property value could not be set
 func setAudioObjectProperty<T>(_ property: PropertyAddress, to value: [T], on objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws {
-	var propertyAddress = property.rawValue
-
 	var data = value
-	let dataSize = UInt32(MemoryLayout<T>.stride * value.count)
-	let result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, dataSize, &data)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectSetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
+	let dataSize = MemoryLayout<T>.stride * value.count
+	try writeAudioObjectProperty(property, on: objectID, from: &data, size: dataSize, qualifier: qualifier)
 }
 
 // MARK: - Variable-Length Core Audio Structure Properties
@@ -293,27 +267,12 @@ func setAudioObjectProperty<T>(_ property: PropertyAddress, to value: [T], on ob
 /// - parameter qualifier: An optional property qualifier
 /// - throws: An exception if the object does not have the requested property or the property value could not be retrieved
 func getAudioObjectProperty(_ property: PropertyAddress, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws -> AudioChannelLayoutWrapper {
-	var propertyAddress = property.rawValue
-
-	var dataSize: UInt32 = 0
-	var result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
-
-	let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(dataSize))
+	let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
+	let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
 	defer {
 		mem.deallocate()
 	}
-
-	result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, mem)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		mem.deallocate()
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
-
+	try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize, qualifier: qualifier)
 	return AudioChannelLayoutWrapper(mem)
 }
 
@@ -323,27 +282,12 @@ func getAudioObjectProperty(_ property: PropertyAddress, from objectID: AudioObj
 /// - parameter qualifier: An optional property qualifier
 /// - throws: An exception if the object does not have the requested property or the property value could not be retrieved
 func getAudioObjectProperty(_ property: PropertyAddress, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil) throws -> AudioBufferListWrapper {
-	var propertyAddress = property.rawValue
-
-	var dataSize: UInt32 = 0
-	var result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
-
-	let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(dataSize))
+	let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
+	let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
 	defer {
 		mem.deallocate()
 	}
-
-	result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, mem)
-	guard result == kAudioHardwareNoError else {
-		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		mem.deallocate()
-		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
-	}
-
+	try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize, qualifier: qualifier)
 	return AudioBufferListWrapper(mem)
 }
 
