@@ -44,12 +44,12 @@ extension AudioClockDevice {
 
 	/// Returns `true` if the clock device is alive (`kAudioClockDevicePropertyDeviceIsAlive`)
 	public func isAlive() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioClockDevicePropertyDeviceIsAlive)) != 0
+		return try getProperty(PropertyAddress(kAudioClockDevicePropertyDeviceIsAlive)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the clock device is running (`kAudioClockDevicePropertyClockDomain`)
 	public func isRunning() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioClockDevicePropertyClockDomain)) != 0
+		return try getProperty(PropertyAddress(kAudioClockDevicePropertyClockDomain)) as UInt32 != 0
 	}
 
 	/// Returns the latency (`kAudioClockDevicePropertyDeviceIsRunning`)

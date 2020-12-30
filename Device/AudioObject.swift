@@ -243,12 +243,12 @@ extension AudioObject {
 
 	/// Returns `true` if the audio object's hardware is drawing attention to itself (`kAudioObjectPropertyIdentify`)
 	public func identify() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyIdentify)) != 0
+		return try getProperty(PropertyAddress(kAudioObjectPropertyIdentify)) as UInt32 != 0
 	}
 	/// Sets whether the audio object's hardware should draw attention to itself (`kAudioObjectPropertyIdentify`)
 	/// - parameter value: Whether the audio hardware should draw attention to itself
 	public func setIdentify(_ value: Bool) throws {
-		try setProperty(PropertyAddress(kAudioObjectPropertyIdentify), to: value ? 1 : 0)
+		try setProperty(PropertyAddress(kAudioObjectPropertyIdentify), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns the audio object's serial number (`kAudioObjectPropertySerialNumber`)

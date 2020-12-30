@@ -39,22 +39,22 @@ extension AudioBox {
 
 	/// Returns `true` if the box has audio (`kAudioBoxPropertyHasAudio`)
 	public func hasAudio() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyHasAudio)) != 0
+		return try getProperty(PropertyAddress(kAudioBoxPropertyHasAudio)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the box has video (`kAudioBoxPropertyHasVideo`)
 	public func hasVideo() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyHasVideo)) != 0
+		return try getProperty(PropertyAddress(kAudioBoxPropertyHasVideo)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the box has MIDI (`kAudioBoxPropertyHasMIDI`)
 	public func hasMIDI() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyHasMIDI)) != 0
+		return try getProperty(PropertyAddress(kAudioBoxPropertyHasMIDI)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the box is acquired (`kAudioBoxPropertyAcquired`)
 	public func acquired() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyAcquired)) != 0
+		return try getProperty(PropertyAddress(kAudioBoxPropertyAcquired)) as UInt32 != 0
 	}
 
 	/// Returns the audio devices provided by the box (`kAudioBoxPropertyDeviceList`)

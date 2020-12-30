@@ -13,12 +13,12 @@ public class AudioStream: AudioObject {
 extension AudioStream {
 	/// Returns `true` if the stream is active (`kAudioStreamPropertyIsActive`)
 	public func isActive() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyIsActive)) != 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyIsActive)) as UInt32 != 0
 	}
 
 	/// Returns `true` if `self` is an output stream (`kAudioStreamPropertyDirection`)
 	public func direction() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection)) != 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection)) as UInt32 != 0
 	}
 
 	/// Returns the terminal type (`kAudioStreamPropertyTerminalType`)

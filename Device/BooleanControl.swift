@@ -13,11 +13,11 @@ public class BooleanControl: AudioControl {
 extension BooleanControl {
 	/// Returns the control's value (`kAudioBooleanControlPropertyValue`)
 	public func value() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioBooleanControlPropertyValue)) != 0
+		return try getProperty(PropertyAddress(kAudioBooleanControlPropertyValue)) as UInt32 != 0
 	}
 	/// Sets the control's value (`kAudioBooleanControlPropertyValue`)
 	public func setValue(_ value: Bool) throws {
-		try setProperty(PropertyAddress(kAudioBooleanControlPropertyValue), to: value ? 1 : 0)
+		try setProperty(PropertyAddress(kAudioBooleanControlPropertyValue), to: UInt32(value ? 1 : 0))
 	}
 }
 

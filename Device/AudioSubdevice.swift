@@ -17,11 +17,11 @@ extension AudioSubdevice {
 
 	/// Returns the drift compensation (`kAudioSubDevicePropertyDriftCompensation`)
 	public func driftCompensation() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation)) != 0
+		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation)) as UInt32 != 0
 	}
 	/// Sets the drift compensation (`kAudioSubDevicePropertyDriftCompensation`)
 	public func setDriftCompensation(_ value: Bool) throws {
-		try setProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation), to: value ? 1 : 0)
+		try setProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns the drift compensation quality (`kAudioSubDevicePropertyDriftCompensationQuality`)
