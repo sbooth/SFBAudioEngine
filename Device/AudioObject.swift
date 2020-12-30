@@ -281,10 +281,10 @@ extension AudioObject {
 extension AudioObject: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		if let name = try? name() {
-			return "<\(type(of: self)) 0x\(String(objectID, radix: 16, uppercase: false)) \"\(name)\">"
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)) \"\(name)\">"
 		}
 		else {
-			return "<\(type(of: self)) 0x\(String(objectID, radix: 16, uppercase: false))>"
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false))>"
 		}
 	}
 }

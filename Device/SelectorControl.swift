@@ -67,10 +67,10 @@ extension SelectorControl {
 extension SelectorControl.Item: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		if let name = try? name() {
-			return "<\(type(of: self)) '\(id.fourCC)' \"\(name)\" on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false))>"
+			return "<\(type(of: self)): '\(id.fourCC)' \"\(name)\" on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false))>"
 		}
 		else {
-			return "<\(type(of: self)) '\(id.fourCC)' on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false)))>"
+			return "<\(type(of: self)): '\(id.fourCC)' on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false)))>"
 		}
 	}
 }

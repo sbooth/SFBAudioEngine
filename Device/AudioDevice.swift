@@ -734,10 +734,10 @@ extension AudioDevice {
 extension AudioDevice.DataSource: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		if let name = try? name() {
-			return "<\(type(of: self)) (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
 		}
 		else {
-			return "<\(type(of: self)) (\(scope), '\(id.fourCC)') on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
 		}
 	}
 }
@@ -767,10 +767,10 @@ extension AudioDevice {
 extension AudioDevice.ClockSource: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		if let name = try? name() {
-			return "<\(type(of: self)) (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
 		}
 		else {
-			return "<\(type(of: self)) (\(scope), '\(id.fourCC)') on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
 		}
 	}
 }
