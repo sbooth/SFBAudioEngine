@@ -6,6 +6,7 @@
 import Foundation
 import CoreAudio
 
+/// A HAL audio subdevice (`kAudioSubDeviceClassID`)
 public class AudioSubdevice: AudioDevice {
 }
 
