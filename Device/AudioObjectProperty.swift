@@ -381,6 +381,18 @@ public struct AudioChannelLayoutWrapper {
 	}
 }
 
+extension AudioChannelDescription: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		return "<\(type(of: self)) label = 0x\(String(mChannelLabel, radix: 16, uppercase: false)), flags = \(mChannelFlags), coordinates = (\(mCoordinates.0), \(mCoordinates.1), \(mCoordinates.2)>"
+	}
+}
+
+extension AudioChannelLayoutWrapper: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		return "<\(type(of: self)) tag = 0x\(String(tag, radix: 16, uppercase: false)), bitmap = \(bitmap), channelDescriptions = \(channelDescriptions.map { $0.debugDescription })>"
+	}
+}
+
 import AVFoundation
 
 extension AudioChannelLayoutWrapper {
@@ -417,5 +429,11 @@ public struct AudioBufferListWrapper {
 	/// Performs `block` with a pointer to the underlying `AudioBufferList` structure
 	public func withUnsafePointer<T>(_ block:(UnsafePointer<AudioBufferList>) throws -> T) rethrows -> T {
 		return try ptr.withMemoryRebound(to: AudioBufferList.self, capacity: 1) { return try block($0) }
+	}
+}
+
+extension AudioBufferListWrapper: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		return "<\(type(of: self)) numberBuffers = \(numberBuffers)>"
 	}
 }
