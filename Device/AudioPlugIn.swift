@@ -17,6 +17,18 @@ public class AudioPlugIn: AudioObject {
 		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyPlugInList)).map { AudioObject.make($0) as! AudioPlugIn }
 	}
 
+	/// Returns an initialized `AudioPlugIn` with `bundleID` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToPlugIn` on `kAudioObjectSystemObject`
+	/// - parameter bundleID: The desired bundle ID
+	public class func plugIn(_ bundleID: String) throws -> AudioPlugIn? {
+		var qualifier = bundleID as CFString
+		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToPlugIn), qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return (AudioObject.make(objectID) as! AudioPlugIn)
+	}
+
 	/// Initializes an `AudioPlugIn` with `bundleID`
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToPlugIn` on `kAudioObjectSystemObject`
 	/// - parameter bundleID: The desired bundle ID

@@ -17,6 +17,18 @@ public class AudioClockDevice: AudioObject {
 		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyClockDeviceList)).map { AudioObject.make($0) as! AudioClockDevice }
 	}
 
+	/// Returns an initialized `AudioClockDevice` with `uid` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToClockDevice` on `kAudioObjectSystemObject`
+	/// - parameter uid: The desired clock device UID
+	public class func clockDevice(_ uid: String) throws -> AudioClockDevice? {
+		var qualifier = uid as CFString
+		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToClockDevice), qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return (AudioObject.make(objectID) as! AudioClockDevice)
+	}
+
 	/// Initializes an `AudioClockDevice` with `uid`
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToClockDevice` on `kAudioObjectSystemObject`
 	/// - parameter uid: The desired clock device UID
