@@ -49,7 +49,8 @@ extension AudioTransportManager {
 	/// - parameter uid: The desired endpoint UID
 	public func endpoint(_ uid: String) throws -> AudioObject? {
 		var qualifierData = uid as CFString
-		guard let endpointObjectID: AudioObjectID = try? getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), qualifier: PropertyQualifier(&qualifierData)), endpointObjectID != kAudioObjectUnknown else {
+		let endpointObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), qualifier: PropertyQualifier(&qualifierData))
+		guard endpointObjectID != kAudioObjectUnknown else {
 			return nil
 		}
 		return AudioObject.make(endpointObjectID)
