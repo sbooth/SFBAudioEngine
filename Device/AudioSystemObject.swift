@@ -46,7 +46,7 @@ extension AudioSystemObject {
 
 	/// Informs the HAL the effective user id of the process has changed (`kAudioHardwarePropertyUserIDChanged`)
 	public func setUserIDChanged() throws {
-		try setProperty(PropertyAddress(kAudioHardwarePropertyUserIDChanged), to: 1)
+		try setProperty(PropertyAddress(kAudioHardwarePropertyUserIDChanged), to: UInt32(1))
 	}
 
 	/// Returns `true` if the process will be heard (`kAudioHardwarePropertyProcessIsAudible`)
