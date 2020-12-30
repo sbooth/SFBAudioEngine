@@ -221,19 +221,19 @@ extension AudioObject {
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func nameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
-		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementName), in: scope, on: element))
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementName), scope: scope, element: element))
 	}
 
 	/// Returns the category name of `element` in `scope` (`kAudioObjectPropertyElementCategoryName`)
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func categoryNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
-		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementCategoryName), in: scope, on: element))
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementCategoryName), scope: scope, element: element))
 	}
 
 	/// Returns the number name of `element` (`kAudioObjectPropertyElementNumberName`)
 	public func numberNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
-		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementNumberName), in: scope, on: element))
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementNumberName), scope: scope, element: element))
 	}
 
 	/// Returns the audio objects owned by `self` (`kAudioObjectPropertyOwnedObjects`)

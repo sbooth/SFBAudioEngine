@@ -110,7 +110,7 @@ public struct PropertyAddress: RawRepresentable {
 	/// - parameter selector: The desired raw selector value
 	/// - parameter scope: The desired raw scope value
 	/// - parameter element: The desired raw element value
-	public init(_ selector: AudioObjectPropertySelector, in scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal, on element: AudioObjectPropertyElement = kAudioObjectPropertyElementMaster) {
+	public init(_ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal, element: AudioObjectPropertyElement = kAudioObjectPropertyElementMaster) {
 		self.rawValue = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: element)
 	}
 
@@ -118,7 +118,7 @@ public struct PropertyAddress: RawRepresentable {
 	/// - parameter selector: The desired selector
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public init(_ selector: PropertySelector, in scope: PropertyScope = .global, on element: PropertyElement = .master) {
+	public init(_ selector: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) {
 		self.rawValue = AudioObjectPropertyAddress(mSelector: selector.rawValue, mScope: scope.rawValue, mElement: element.rawValue)
 	}
 }
