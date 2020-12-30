@@ -657,8 +657,6 @@
 		3268F8672455B527006A5911 /* CFWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFWrapper.h; sourceTree = "<group>"; };
 		3268F8682455B527006A5911 /* NSError+SFBURLPresentation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+SFBURLPresentation.m"; sourceTree = "<group>"; };
 		3268F86F2455B611006A5911 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		3268F8712455D133006A5911 /* SFBAudioDeviceNotifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioDeviceNotifier.m; sourceTree = "<group>"; };
-		3268F8722455D133006A5911 /* SFBAudioDeviceNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioDeviceNotifier.h; sourceTree = "<group>"; };
 		326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioProperties.h; sourceTree = "<group>"; };
 		326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioProperties.m; sourceTree = "<group>"; };
 		326D3C96242CF79C002AEC52 /* SFBAudioFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioFile.m; sourceTree = "<group>"; };
@@ -1011,8 +1009,6 @@
 				32D73967259A771300C0E3F6 /* SelectorControl.swift */,
 				32D73965259A771300C0E3F6 /* SliderControl.swift */,
 				32D73960259A771300C0E3F6 /* StereoPanControl.swift */,
-				3268F8722455D133006A5911 /* SFBAudioDeviceNotifier.h */,
-				3268F8712455D133006A5911 /* SFBAudioDeviceNotifier.m */,
 			);
 			path = Device;
 			sourceTree = "<group>";
