@@ -432,7 +432,7 @@ extension AudioDevice {
 	}
 	/// Sets whether `element` is muted
 	/// - remark: This corresponds to the property `kAudioDevicePropertyMute`
-	public func setMute(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setMute(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyMute), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
@@ -443,7 +443,7 @@ extension AudioDevice {
 	}
 	/// Sets whether `element` is audible
 	/// - remark: This corresponds to the property `kAudioDevicePropertySolo`
-	public func setSolo(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setSolo(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertySolo), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
@@ -454,7 +454,7 @@ extension AudioDevice {
 	}
 	/// Sets whether phantom power is enabled for `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhantomPower`
-	public func setPhantomPower(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setPhantomPower(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPhantomPower), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
@@ -465,7 +465,7 @@ extension AudioDevice {
 	}
 	/// Sets whether the phase is inverted for `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhaseInvert`
-	public func setPhaseInvert(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setPhaseInvert(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPhaseInvert), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
@@ -476,7 +476,7 @@ extension AudioDevice {
 	}
 	/// Sets whether the signal exceeded the sample range
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClipLight`
-	public func setClipLight(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setClipLight(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyClipLight), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
@@ -487,7 +487,7 @@ extension AudioDevice {
 	}
 	/// Sets whether talkback is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyTalkback`
-	public func setTalkback(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setTalkback(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyTalkback), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
@@ -498,7 +498,7 @@ extension AudioDevice {
 	}
 	/// Sets whether listenback is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyListenback`
-	public func setListenback(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws{
+	public func setListenback(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyListenback), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
