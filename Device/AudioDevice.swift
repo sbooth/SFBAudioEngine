@@ -39,7 +39,7 @@ public class AudioDevice: AudioObject {
 	/// Returns an initialized `AudioDevice` with `uid` or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToDevice` on `kAudioObjectSystemObject`
 	/// - parameter uid: The desired device UID
-	public class func device(_ uid: String) throws -> AudioDevice? {
+	public class func makeDevice(_ uid: String) throws -> AudioDevice? {
 		var qualifier = uid as CFString
 		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToDevice), qualifier: PropertyQualifier(&qualifier))
 		guard objectID != kAudioObjectUnknown else {
