@@ -6,30 +6,36 @@
 import Foundation
 import CoreAudio
 
-/// A HAL audio subdevice (`kAudioSubDeviceClassID`)
+/// A HAL audio subdevice
+/// - remark: This class correponds to objects with base class `kAudioSubDeviceClassID`
 public class AudioSubdevice: AudioDevice {
 }
 
 extension AudioSubdevice {
-	/// Returns the extra latency (`kAudioSubDevicePropertyExtraLatency`)
+	/// Returns the extra latency
+	/// - remark: This corresponds to the property `kAudioSubDevicePropertyExtraLatency`
 	public func extraLatency() throws -> Double {
 		return try getProperty(PropertyAddress(kAudioSubDevicePropertyExtraLatency))
 	}
 
-	/// Returns the drift compensation (`kAudioSubDevicePropertyDriftCompensation`)
+	/// Returns the drift compensation
+	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensation`
 	public func driftCompensation() throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation)) as UInt32 != 0
 	}
-	/// Sets the drift compensation (`kAudioSubDevicePropertyDriftCompensation`)
+	/// Sets the drift compensation
+	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensation`
 	public func setDriftCompensation(_ value: Bool) throws {
 		try setProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation), to: UInt32(value ? 1 : 0))
 	}
 
-	/// Returns the drift compensation quality (`kAudioSubDevicePropertyDriftCompensationQuality`)
+	/// Returns the drift compensation quality
+	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensationQuality`
 	public func driftCompensationQuality() throws -> UInt32 {
 		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensationQuality))
 	}
-	/// Sets the drift compensation quality (`kAudioSubDevicePropertyDriftCompensationQuality`)
+	/// Sets the drift compensation quality
+	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensationQuality`
 	public func setDriftCompensationQuality(_ value: UInt32) throws {
 		try setProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensationQuality), to: value)
 	}

@@ -6,16 +6,19 @@
 import Foundation
 import CoreAudio
 
-/// A HAL audio transport manager object (`kAudioTransportManagerClassID`)
+/// A HAL audio transport manager object
 ///
 /// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMaster`)
+/// - remark: This class correponds to objects with base class `kAudioTransportManagerClassID`
 public class AudioTransportManager: AudioPlugIn {
-	/// Returns the available audio transport managers (`kAudioHardwarePropertyTransportManagerList` from `kAudioObjectSystemObject`)
+	/// Returns the available audio transport managers
+	/// - remark: This corresponds to the property`kAudioHardwarePropertyTransportManagerList` on `kAudioObjectSystemObject`
 	public class func transportManagers() throws -> [AudioTransportManager] {
 		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTransportManagerList)).map { AudioObject.make($0) as! AudioTransportManager }
 	}
 
 	/// Initializes an `AudioTransportManager` with `bundleID`
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToTransportManager` on `kAudioObjectSystemObject`
 	/// - parameter bundleID: The desired bundle ID
 	public convenience init?(_ bundleID: String) {
 		var qualifier = bundleID as CFString
@@ -27,7 +30,8 @@ public class AudioTransportManager: AudioPlugIn {
 }
 
 extension AudioTransportManager {
-	/// Creates and returns a new endpoint device (`kAudioTransportManagerCreateEndPointDevice`)
+	/// Creates and returns a new endpoint device
+	/// - remark: This corresponds to the property `kAudioTransportManagerCreateEndPointDevice`
 	/// - parameter composition: The composition of the new endpoint device
 	/// - note: The constants for `composition` are defined in `AudioHardware.h`
 	func createEndpointDevice(composition: [AnyHashable: Any]) throws -> AudioDevice {
@@ -35,17 +39,20 @@ extension AudioTransportManager {
 		return AudioObject.make(try getProperty(PropertyAddress(kAudioTransportManagerCreateEndPointDevice), qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
 	}
 
-	/// Destroys an endpoint device (`kAudioTransportManagerDestroyEndPointDevice`)
+	/// Destroys an endpoint device
+	/// - remark: This corresponds to the property `kAudioTransportManagerDestroyEndPointDevice`
 	func destroyEndpointDevice(_ endpointDevice: AudioDevice) throws {
 		_ = try getProperty(PropertyAddress(kAudioTransportManagerDestroyEndPointDevice), initialValue: endpointDevice.objectID)
 	}
 
-	/// Returns the audio endpoints provided by the transport manager (`kAudioTransportManagerPropertyEndPointList`)
+	/// Returns the audio endpoints provided by the transport manager
+	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyEndPointList`
 	public func endpointList() throws -> [AudioObject] {
 		return try getProperty(PropertyAddress(kAudioTransportManagerPropertyEndPointList)).map { AudioObject.make($0) }
 	}
 
-	/// Returns the audio endpoint provided by the transport manager with the specified UID (`kAudioTransportManagerPropertyTranslateUIDToEndPoint`) or `nil` if unknown
+	/// Returns the audio endpoint provided by the transport manager with the specified UID or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyTranslateUIDToEndPoint`
 	/// - parameter uid: The desired endpoint UID
 	public func endpoint(_ uid: String) throws -> AudioObject? {
 		var qualifierData = uid as CFString
@@ -56,7 +63,8 @@ extension AudioTransportManager {
 		return AudioObject.make(endpointObjectID)
 	}
 
-	/// Returns the transport type (`kAudioTransportManagerPropertyTransportType`)
+	/// Returns the transport type
+	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyTransportType`
 	public func transportType() throws -> AudioDevice.TransportType {
 		return AudioDevice.TransportType(rawValue: try getProperty(PropertyAddress(kAudioTransportManagerPropertyTransportType)))
 	}

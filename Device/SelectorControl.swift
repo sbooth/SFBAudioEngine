@@ -6,32 +6,38 @@
 import Foundation
 import CoreAudio
 
-/// A HAL audio selector control object (`kAudioSelectorControlClassID`)
+/// A HAL audio selector control object
+/// - remark: This class correponds to objects with base class `kAudioSelectorControlClassID`
 public class SelectorControl: AudioControl {
 }
 
 extension SelectorControl {
-	/// Returns the selected items (`kAudioSelectorControlPropertyCurrentItem`)
+	/// Returns the selected items
+	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyCurrentItem`
 	public func currentItem() throws -> [UInt32] {
 		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyCurrentItem))
 	}
-	/// Sets the selected items (`kAudioSelectorControlPropertyCurrentItem`)
+	/// Sets the selected items
+	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyCurrentItem`
 	public func setCurrentItem(_ value: [UInt32]) throws {
 		try setProperty(PropertyAddress((kAudioSelectorControlPropertyCurrentItem)), to: value)
 	}
 
-	/// Returns the available items (`kAudioSelectorControlPropertyAvailableItems`)
+	/// Returns the available items
+	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyAvailableItems`
 	public func availableItems() throws -> [UInt32] {
 		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyAvailableItems))
 	}
 
-	/// Returns the name of `itemID` (`kAudioSelectorControlPropertyItemName`)
+	/// Returns the name of `itemID`
+	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyItemName`
 	public func nameOfItem(_ itemID: UInt32) throws -> String {
 		var qualifier = itemID
 		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemName), qualifier: PropertyQualifier(&qualifier))
 	}
 
-	/// Returns the kind of `itemID` (`kAudioSelectorControlPropertyItemKind`)
+	/// Returns the kind of `itemID`
+	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyItemKind`
 	public func kindOfItem(_ itemID: UInt32) throws -> UInt32 {
 		var qualifier = itemID
 		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemKind), qualifier: PropertyQualifier(&qualifier))
@@ -71,22 +77,27 @@ extension SelectorControl.Item: CustomDebugStringConvertible {
 
 // MARK: -
 
-/// A HAL audio data source control (`kAudioDataSourceControlClassID`)
+/// A HAL audio data source control
+/// - remark: This class correponds to objects with base class `kAudioDataSourceControlClassID`
 public class DataSourceControl: SelectorControl {
 }
 
-/// A HAL audio data destination control (`kAudioDataDestinationControlClassID`)
+/// A HAL audio data destination control
+/// - remark: This class correponds to objects with base class `kAudioDataDestinationControlClassID`
 public class DataDestinationControl: SelectorControl {
 }
 
-/// A HAL audio clock source control (`kAudioClockSourceControlClassID`)
+/// A HAL audio clock source control
+/// - remark: This class correponds to objects with base class `kAudioClockSourceControlClassID`
 public class ClockSourceControl: SelectorControl {
 }
 
-/// A HAL audio line level control (`kAudioLineLevelControlClassID`)
+/// A HAL audio line level control
+/// - remark: This class correponds to objects with base class `kAudioLineLevelControlClassID`
 public class LineLevelControl: SelectorControl {
 }
 
-/// A HAL audio high pass filter control (`kAudioHighPassFilterControlClassID`)
+/// A HAL audio high pass filter control
+/// - remark: This class correponds to objects with base class `kAudioHighPassFilterControlClassID`
 public class HighPassFilterControl: SelectorControl {
 }

@@ -7,6 +7,7 @@ import Foundation
 import CoreAudio
 
 /// A HAL audio stream object (`kAudioStreamClassID`)
+/// - remark: This class correponds to objects with base class `kAudioStereoPanControlClassID`
 public class AudioStream: AudioObject {
 }
 

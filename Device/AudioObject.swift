@@ -186,77 +186,92 @@ extension AudioObject {
 // MARK: - Base Audio Object Properties
 
 extension AudioObject {
-	/// Returns the base class of the underlying HAL audio object (`kAudioObjectPropertyBaseClass`)
+	/// Returns the base class of the underlying HAL audio object
+	/// - remark: This corresponds to the property `kAudioObjectPropertyBaseClass`
 	public func baseClass() throws -> AudioClassID {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyBaseClass))
 	}
 
-	/// Returns the class of the underlying HAL audio object (`kAudioObjectPropertyClass`)
+	/// Returns the class of the underlying HAL audio object
+	/// - remark: This corresponds to the property `kAudioObjectPropertyClass`
 	public func `class`() throws -> AudioClassID {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyClass))
 	}
 
-	/// Returns the audio object's owning object (`kAudioObjectPropertyOwner`)
-	/// - note: The system audio object (`kAudioObjectSystemObject`) does not have an owner
+	/// Returns the audio object's owning object
+	/// - remark: This corresponds to the property `kAudioObjectPropertyOwner`
+	/// - note: The system audio object
+	/// - remark: This corresponds to the property `kAudioObjectSystemObject` does not have an owner
 	public func owner() throws -> AudioObject {
 		return AudioObject.make(try getProperty(PropertyAddress(kAudioObjectPropertyOwner)))
 	}
 
-	/// Returns the audio object's name (`kAudioObjectPropertyName`)
+	/// Returns the audio object's name
+	/// - remark: This corresponds to the property `kAudioObjectPropertyName`
 	public func name() throws -> String {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyName))
 	}
 
-	/// Returns the audio object's model name (`kAudioObjectPropertyModelName`)
+	/// Returns the audio object's model name
+	/// - remark: This corresponds to the property `kAudioObjectPropertyModelName`
 	public func modelName() throws -> String {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyModelName))
 	}
 
-	/// Returns the audio object's manufacturer (`kAudioObjectPropertyManufacturer`)
+	/// Returns the audio object's manufacturer
+	/// - remark: This corresponds to the property `kAudioObjectPropertyManufacturer`
 	public func manufacturer() throws -> String {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyManufacturer))
 	}
 
-	/// Returns the name of `element` (`kAudioObjectPropertyElementName`)
+	/// Returns the name of `element`
+	/// - remark: This corresponds to the property `kAudioObjectPropertyElementName`
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func nameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementName), scope: scope, element: element))
 	}
 
-	/// Returns the category name of `element` in `scope` (`kAudioObjectPropertyElementCategoryName`)
+	/// Returns the category name of `element` in `scope`
+	/// - remark: This corresponds to the property `kAudioObjectPropertyElementCategoryName`
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func categoryNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementCategoryName), scope: scope, element: element))
 	}
 
-	/// Returns the number name of `element` (`kAudioObjectPropertyElementNumberName`)
+	/// Returns the number name of `element`
+	/// - remark: This corresponds to the property `kAudioObjectPropertyElementNumberName`
 	public func numberNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementNumberName), scope: scope, element: element))
 	}
 
-	/// Returns the audio objects owned by `self` (`kAudioObjectPropertyOwnedObjects`)
+	/// Returns the audio objects owned by `self`
+	/// - remark: This corresponds to the property `kAudioObjectPropertyOwnedObjects`
 	public func ownedObjects() throws -> [AudioObject] {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects)).map { AudioObject.make($0) }
 	}
 
-	/// Returns `true` if the audio object's hardware is drawing attention to itself (`kAudioObjectPropertyIdentify`)
+	/// Returns `true` if the audio object's hardware is drawing attention to itself
+	/// - remark: This corresponds to the property `kAudioObjectPropertyIdentify`
 	public func identify() throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyIdentify)) as UInt32 != 0
 	}
-	/// Sets whether the audio object's hardware should draw attention to itself (`kAudioObjectPropertyIdentify`)
+	/// Sets whether the audio object's hardware should draw attention to itself
+	/// - remark: This corresponds to the property `kAudioObjectPropertyIdentify`
 	/// - parameter value: Whether the audio hardware should draw attention to itself
 	public func setIdentify(_ value: Bool) throws {
 		try setProperty(PropertyAddress(kAudioObjectPropertyIdentify), to: UInt32(value ? 1 : 0))
 	}
 
-	/// Returns the audio object's serial number (`kAudioObjectPropertySerialNumber`)
+	/// Returns the audio object's serial number
+	/// - remark: This corresponds to the property `kAudioObjectPropertySerialNumber`
 	public func serialNumber() throws -> String {
 		return try getProperty(PropertyAddress(kAudioObjectPropertySerialNumber))
 	}
 
-	/// Returns the audio object's firmware version (`kAudioObjectPropertyFirmwareVersion`)
+	/// Returns the audio object's firmware version
+	/// - remark: This corresponds to the property `kAudioObjectPropertyFirmwareVersion`
 	public func firmwareVersion() throws -> String {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyFirmwareVersion))
 	}

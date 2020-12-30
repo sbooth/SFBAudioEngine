@@ -5,6 +5,7 @@
 
 import Foundation
 
-/// A HAL audio endpoint (`kAudioEndPointClassID`)
+/// A HAL audio endpoint
+/// - remark: This class correponds to objects with base class `kAudioEndPointClassID`
 public class AudioEndpoint: AudioDevice {
 }
