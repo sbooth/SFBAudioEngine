@@ -11,6 +11,10 @@ import os.log
 public struct PropertySelector: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 	public let rawValue: AudioObjectPropertySelector
 
+	public init(_ value: AudioObjectPropertySelector) {
+		self.rawValue = value
+	}
+
 	public init(rawValue: AudioObjectPropertySelector) {
 		self.rawValue = rawValue
 	}
@@ -26,12 +30,16 @@ public struct PropertySelector: RawRepresentable, ExpressibleByIntegerLiteral, E
 
 extension PropertySelector {
 	/// Wildcard selector
-	public static let wildcard = PropertySelector(rawValue: kAudioObjectPropertySelectorWildcard)
+	public static let wildcard = PropertySelector(kAudioObjectPropertySelectorWildcard)
 }
 
 /// A thin wrapper around a HAL audio object property scope
 public struct PropertyScope: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 	public let rawValue: AudioObjectPropertyScope
+
+	public init(_ value: AudioObjectPropertyScope) {
+		self.rawValue = value
+	}
 
 	public init(rawValue: AudioObjectPropertyScope) {
 		self.rawValue = rawValue
@@ -48,20 +56,24 @@ public struct PropertyScope: RawRepresentable, ExpressibleByIntegerLiteral, Expr
 
 extension PropertyScope {
 	/// Global scope
-	public static let global 		= PropertyScope(rawValue: kAudioObjectPropertyScopeGlobal)
+	public static let global 		= PropertyScope(kAudioObjectPropertyScopeGlobal)
 	/// Input scope
-	public static let input 		= PropertyScope(rawValue: kAudioObjectPropertyScopeInput)
+	public static let input 		= PropertyScope(kAudioObjectPropertyScopeInput)
 	/// Output scope
-	public static let output 		= PropertyScope(rawValue: kAudioObjectPropertyScopeOutput)
+	public static let output 		= PropertyScope(kAudioObjectPropertyScopeOutput)
 	/// Play through scope
-	public static let playThrough 	= PropertyScope(rawValue: kAudioObjectPropertyScopePlayThrough)
+	public static let playThrough 	= PropertyScope(kAudioObjectPropertyScopePlayThrough)
 	/// Wildcard scope
-	public static let wildcard 		= PropertyScope(rawValue: kAudioObjectPropertyScopeWildcard)
+	public static let wildcard 		= PropertyScope(kAudioObjectPropertyScopeWildcard)
 }
 
 /// A thin wrapper around a HAL audio object property element
 public struct PropertyElement: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 	public let rawValue: AudioObjectPropertyElement
+
+	public init(_ value: AudioObjectPropertyElement) {
+		self.rawValue = value
+	}
 
 	public init(rawValue: AudioObjectPropertyElement) {
 		self.rawValue = rawValue
@@ -78,14 +90,18 @@ public struct PropertyElement: RawRepresentable, ExpressibleByIntegerLiteral, Ex
 
 extension PropertyElement {
 	/// Master element
-	public static let master 	= PropertyElement(rawValue: kAudioObjectPropertyElementMaster)
+	public static let master 	= PropertyElement(kAudioObjectPropertyElementMaster)
 	/// Wildcard element
-	public static let wildcard 	= PropertyElement(rawValue: kAudioObjectPropertyElementWildcard)
+	public static let wildcard 	= PropertyElement(kAudioObjectPropertyElementWildcard)
 }
 
 /// A thin wrapper around a HAL audio object property address
 public struct PropertyAddress: RawRepresentable {
 	public let rawValue: AudioObjectPropertyAddress
+
+	public init(_ value: AudioObjectPropertyAddress) {
+		self.rawValue = value
+	}
 
 	public init(rawValue: AudioObjectPropertyAddress) {
 		self.rawValue = rawValue
@@ -93,17 +109,17 @@ public struct PropertyAddress: RawRepresentable {
 
 	/// The property's selector
 	public var selector: PropertySelector {
-		return PropertySelector(rawValue: rawValue.mSelector)
+		return PropertySelector(rawValue.mSelector)
 	}
 
 	/// The property's scope
 	public var scope: PropertyScope {
-		return PropertyScope(rawValue: rawValue.mScope)
+		return PropertyScope(rawValue.mScope)
 	}
 
 	/// The property's element
 	public var element: PropertyElement {
-		return PropertyElement(rawValue: rawValue.mElement)
+		return PropertyElement(rawValue.mElement)
 	}
 
 	/// Initializes a new `PropertyAddress` with the specified raw selector, scope, and element values
