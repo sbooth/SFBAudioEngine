@@ -163,12 +163,13 @@ extension AudioObject {
 extension AudioObject {
 	/// Returns the value of `property`
 	/// - parameter property: The address of the desired property
+	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty<T>(_ property: PropertyAddress) throws -> [T] {
-		let dataSize = try audioObjectPropertySize(property, from: objectID)
+	public func getProperty<T>(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [T] {
+		let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
 		let count = dataSize / MemoryLayout<T>.stride
 		let array = try [T](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
-			try readAudioObjectProperty(property, from: objectID, into: buffer.baseAddress!, size: dataSize)
+			try readAudioObjectProperty(property, from: objectID, into: buffer.baseAddress!, size: dataSize, qualifier: qualifier)
 			initializedCount = count
 		}
 		return array
@@ -250,7 +251,14 @@ extension AudioObject {
 
 	/// Returns the audio objects owned by `self`
 	/// - remark: This corresponds to the property `kAudioObjectPropertyOwnedObjects`
-	public func ownedObjects() throws -> [AudioObject] {
+	/// - parameter type: An optional array of `AudioClassID`s to which the returned objects will be restricted
+	public func ownedObjects(ofType type: [AudioClassID]? = nil) throws -> [AudioObject] {
+		if type != nil {
+			var qualifierData = type!
+			let qualifierDataSize = MemoryLayout<AudioClassID>.stride * type!.count
+			let qualifier = PropertyQualifier(value: &qualifierData, size: UInt32(qualifierDataSize))
+			return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), qualifier: qualifier).map { AudioObject.make($0) }
+		}
 		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects)).map { AudioObject.make($0) }
 	}
 
