@@ -129,15 +129,6 @@ extension AudioObject {
 	/// Returns the value of `property`
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> URL {
-		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
-		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-		return value as! URL
-	}
-
-	/// Returns the value of `property`
-	/// - parameter property: The address of the desired property
-	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty(_ property: PropertyAddress) throws -> AudioValueRange {
 		var value = AudioValueRange()
 		try readAudioObjectProperty(property, from: objectID, into: &value)

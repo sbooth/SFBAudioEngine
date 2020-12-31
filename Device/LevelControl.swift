@@ -36,9 +36,9 @@ extension LevelControl {
 
 	/// Returns the decibel range
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelRange`
-	public func decibelRange() throws -> ClosedRange<Float64> {
-		let range: AudioValueRange = try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelRange))
-		return range.mMinimum ... range.mMaximum
+	public func decibelRange() throws -> ClosedRange<Double> {
+		let value: AudioValueRange = try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelRange))
+		return value.mMinimum ... value.mMaximum
 	}
 
 	/// Converts `scalar` to decibels and returns the converted value

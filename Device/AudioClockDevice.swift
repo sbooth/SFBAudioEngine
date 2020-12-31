@@ -92,7 +92,8 @@ extension AudioClockDevice {
 
 	/// Returns the available sample rates
 	/// - remark: This corresponds to the property `kAudioClockDevicePropertyAvailableNominalSampleRates`
-	public func availableSampleRates() throws -> [AudioValueRange] {
-		return try getProperty(PropertyAddress(kAudioClockDevicePropertyAvailableNominalSampleRates))
+	public func availableSampleRates() throws -> [ClosedRange<Double>] {
+		let value: [AudioValueRange] = try getProperty(PropertyAddress(kAudioClockDevicePropertyAvailableNominalSampleRates))
+		return value.map { $0.mMinimum ... $0.mMaximum }
 	}
 }

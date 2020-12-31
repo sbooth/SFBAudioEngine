@@ -188,14 +188,17 @@ extension AudioDevice {
 
 	/// Returns the available sample rates
 	/// - remark: This corresponds to the property `kAudioDevicePropertyAvailableNominalSampleRates`
-	public func availableSampleRates() throws -> [AudioValueRange] {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyAvailableNominalSampleRates))
+	public func availableSampleRates() throws -> [ClosedRange<Double>] {
+		let value: [AudioValueRange] = try getProperty(PropertyAddress(kAudioDevicePropertyAvailableNominalSampleRates))
+		return value.map { $0.mMinimum ... $0.mMaximum }
 	}
 
 	/// Returns the URL of the device's icon
 	/// - remark: This corresponds to the property `kAudioDevicePropertyIcon`
 	public func icon() throws -> URL {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyIcon))
+		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
+		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIcon), from: objectID, into: &value)
+		return value as! URL
 	}
 
 	/// Returns `true` if the device is hidden
@@ -212,7 +215,6 @@ extension AudioDevice {
 		precondition(channels.count == 2)
 		return (channels[0], channels[1])
 	}
-
 	/// Sets the preferred stereo channels
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelsForStereo`
 	/// - parameter value: The desired property value
@@ -319,8 +321,9 @@ extension AudioDevice {
 
 	/// Returns the minimum and maximum values for the buffer size in frames
 	/// - remark: This corresponds to the property `kAudioDevicePropertyBufferFrameSizeRange`
-	public func bufferFrameSizeRange() throws -> AudioValueRange {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyBufferFrameSizeRange))
+	public func bufferFrameSizeRange() throws -> ClosedRange<UInt32> {
+		let value: AudioValueRange = try getProperty(PropertyAddress(kAudioDevicePropertyBufferFrameSizeRange))
+		return UInt32(value.mMinimum) ... UInt32(value.mMaximum)
 	}
 
 	/// Returns the variable buffer frame size
@@ -412,8 +415,9 @@ extension AudioDevice {
 
 	/// Returns the volume range in decibels for `channel`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyVolumeRangeDecibels`
-	public func volumeRangeDecibels(_ channel: PropertyElement = .master, scope: PropertyScope = .global) throws -> AudioValueRange {
-		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyVolumeRangeDecibels), scope: scope, element: channel))
+	public func volumeRangeDecibels(_ channel: PropertyElement = .master, scope: PropertyScope = .global) throws -> ClosedRange<Float64> {
+		let value: AudioValueRange = try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyVolumeRangeDecibels), scope: scope, element: channel))
+		return value.mMinimum ... value.mMaximum
 	}
 
 	/// Returns the stereo pan
