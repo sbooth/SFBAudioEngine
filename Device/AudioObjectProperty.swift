@@ -216,20 +216,6 @@ func writeAudioObjectProperty<T>(_ property: PropertyAddress, on objectID: Audio
 	}
 }
 
-// MARK: Numeric Property Helper
-
-/// Returns the value of `property` from `objectID`
-/// - parameter property: The address of the desired property
-/// - parameter objectID: The audio object to query
-/// - parameter qualifier: An optional property qualifier
-/// - parameter initialValue: An optional initial value for `outData` when calling `AudioObjectGetPropertyData`
-/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-func getAudioObjectProperty<T: Numeric>(_ property: PropertyAddress, from objectID: AudioObjectID, qualifier: PropertyQualifier? = nil, initialValue: T = 0) throws -> T {
-	var value = initialValue
-	try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-	return value
-}
-
 // MARK: - Array Properties
 
 /// Returns the value of `property` from `objectID`

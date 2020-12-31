@@ -102,7 +102,9 @@ extension AudioObject {
 	/// - parameter initialValue: An optional initial value for `outData` when calling `AudioObjectGetPropertyData`
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty<T: Numeric>(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil, initialValue: T = 0) throws -> T {
-		return try getAudioObjectProperty(property, from: objectID, qualifier: qualifier, initialValue: initialValue)
+		var value = initialValue
+		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
+		return value
 	}
 
 	/// Returns the value of `property`
@@ -309,18 +311,26 @@ extension AudioObjectPropertyAddress: Hashable {
 
 /// Returns the value of `kAudioObjectPropertyClass` for `objectID` or `0` on error
 func AudioObjectClass(_ objectID: AudioObjectID) -> AudioClassID {
-	guard let objectClass: AudioClassID = try? getAudioObjectProperty(PropertyAddress(kAudioObjectPropertyClass), from: objectID) else {
+	do {
+		var value: AudioClassID = 0
+		try readAudioObjectProperty(PropertyAddress(kAudioObjectPropertyClass), from: objectID, into: &value)
+		return value
+	}
+	catch {
 		return 0
 	}
-	return objectClass
 }
 
 /// Returns the value of `kAudioObjectPropertyBaseClass` for `objectID` or `0` on error
 func AudioObjectBaseClass(_ objectID: AudioObjectID) -> AudioClassID {
-	guard let objectBaseClass: AudioClassID = try? getAudioObjectProperty(PropertyAddress(kAudioObjectPropertyBaseClass), from: objectID) else {
+	do {
+		var value: AudioClassID = 0
+		try readAudioObjectProperty(PropertyAddress(kAudioObjectPropertyBaseClass), from: objectID, into: &value)
+		return value
+	}
+	catch {
 		return 0
 	}
-	return objectBaseClass
 }
 
 /// Returns `true` if an audio object's class is equal to `classID`
