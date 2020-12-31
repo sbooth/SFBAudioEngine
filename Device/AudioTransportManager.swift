@@ -28,6 +28,15 @@ public class AudioTransportManager: AudioPlugIn {
 		}
 		return (AudioObject.make(objectID) as! AudioTransportManager)
 	}
+
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), [\(try endpointList().map({ $0.debugDescription }).joined(separator: ", "))]>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension AudioTransportManager {

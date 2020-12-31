@@ -28,6 +28,15 @@ public class AudioPlugIn: AudioObject {
 		}
 		return (AudioObject.make(objectID) as! AudioPlugIn)
 	}
+
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), [\(try deviceList().map({ $0.debugDescription }).joined(separator: ", "))]>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension AudioPlugIn {

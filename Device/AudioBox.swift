@@ -28,6 +28,19 @@ public class AudioBox: AudioObject {
 		}
 		return (AudioObject.make(objectID) as! AudioBox)
 	}
+
+	public override var debugDescription: String {
+		do {
+			var media = [String]()
+			if try hasAudio() { media.append("audio") }
+			if try hasVideo() { media.append("video") }
+			if try hasMIDI() { media.append("MIDI") }
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), \(media.joined(separator: ", ")), [\(try deviceList().map({ $0.debugDescription }).joined(separator: ", "))]>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension AudioBox {
