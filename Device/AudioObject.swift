@@ -230,7 +230,7 @@ extension AudioObject {
 	/// - remark: This corresponds to the property `kAudioObjectPropertyElementName`
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
-	public func nameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
+	public func nameOfElement(_ element: PropertyElement, inScope scope: PropertyScope = .global) throws -> String {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementName), scope: scope, element: element))
 	}
 
@@ -238,13 +238,13 @@ extension AudioObject {
 	/// - remark: This corresponds to the property `kAudioObjectPropertyElementCategoryName`
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
-	public func categoryNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
+	public func categoryNameOfElement(_ element: PropertyElement, inScope scope: PropertyScope = .global) throws -> String {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementCategoryName), scope: scope, element: element))
 	}
 
 	/// Returns the number name of `element`
 	/// - remark: This corresponds to the property `kAudioObjectPropertyElementNumberName`
-	public func numberNameOfElement(_ element: PropertyElement, in scope: PropertyScope = .global) throws -> String {
+	public func numberNameOfElement(_ element: PropertyElement, inScope scope: PropertyScope = .global) throws -> String {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyElementNumberName), scope: scope, element: element))
 	}
 

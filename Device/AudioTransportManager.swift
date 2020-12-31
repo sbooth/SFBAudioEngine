@@ -20,24 +20,13 @@ public class AudioTransportManager: AudioPlugIn {
 	/// Returns an initialized `AudioTransportManager` with `bundleID` or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToTransportManager` on `kAudioObjectSystemObject`
 	/// - parameter bundleID: The desired bundle ID
-	public class func makeTransportManager(_ bundleID: String) throws -> AudioTransportManager? {
+	public class func makeTransportManager(forBundleID bundleID: String) throws -> AudioTransportManager? {
 		var qualifier = bundleID as CFString
 		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), qualifier: PropertyQualifier(&qualifier))
 		guard objectID != kAudioObjectUnknown else {
 			return nil
 		}
 		return (AudioObject.make(objectID) as! AudioTransportManager)
-	}
-
-	/// Initializes an `AudioTransportManager` with `bundleID`
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToTransportManager` on `kAudioObjectSystemObject`
-	/// - parameter bundleID: The desired bundle ID
-	public convenience init?(_ bundleID: String) {
-		var qualifier = bundleID as CFString
-		guard let transportManagerObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), qualifier: PropertyQualifier(&qualifier)), transportManagerObjectID != kAudioObjectUnknown else {
-			return nil
-		}
-		self.init(transportManagerObjectID)
 	}
 }
 
@@ -66,7 +55,7 @@ extension AudioTransportManager {
 	/// Returns the audio endpoint provided by the transport manager with the specified UID or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyTranslateUIDToEndPoint`
 	/// - parameter uid: The desired endpoint UID
-	public func endpoint(_ uid: String) throws -> AudioObject? {
+	public func endpoint(forUID uid: String) throws -> AudioObject? {
 		var qualifierData = uid as CFString
 		let endpointObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), qualifier: PropertyQualifier(&qualifierData))
 		guard endpointObjectID != kAudioObjectUnknown else {

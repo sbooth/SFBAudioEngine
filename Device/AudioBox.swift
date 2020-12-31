@@ -20,24 +20,13 @@ public class AudioBox: AudioObject {
 	/// Returns an initialized `AudioBox` with `uid` or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToBox` on `kAudioObjectSystemObject`
 	/// - parameter uid: The desired box UID
-	public class func makeBox(_ uid: String) throws -> AudioBox? {
+	public class func makeBox(forUID uid: String) throws -> AudioBox? {
 		var qualifier = uid as CFString
 		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToBox), qualifier: PropertyQualifier(&qualifier))
 		guard objectID != kAudioObjectUnknown else {
 			return nil
 		}
 		return (AudioObject.make(objectID) as! AudioBox)
-	}
-
-	/// Initializes an `AudioBox` with `uid`
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToBox` on `kAudioObjectSystemObject`
-	/// - parameter uid: The desired box UID
-	public convenience init?(_ uid: String) {
-		var qualifier = uid as CFString
-		guard let boxObjectID: AudioObjectID = try? AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToBox), qualifier: PropertyQualifier(&qualifier)), boxObjectID != kAudioObjectUnknown else {
-			return nil
-		}
-		self.init(boxObjectID)
 	}
 }
 

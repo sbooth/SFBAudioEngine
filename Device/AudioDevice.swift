@@ -63,14 +63,14 @@ public class AudioDevice: AudioObject {
 	///
 	/// - note: A device supports input if it has buffers in `kAudioObjectPropertyScopeInput` for the property `kAudioDevicePropertyStreamConfiguration`
 	public func supportsInput() throws -> Bool {
-		try streamConfiguration(in: .input).numberBuffers > 0
+		try streamConfiguration(inScope: .input).numberBuffers > 0
 	}
 
 	/// Returns `true` if the device supports output
 	///
 	/// - note: A device supports output if it has buffers in `kAudioObjectPropertyScopeOutput` for the property `kAudioDevicePropertyStreamConfiguration`
 	public func supportsOutput() throws -> Bool {
-		try streamConfiguration(in: .output).numberBuffers > 0
+		try streamConfiguration(inScope: .output).numberBuffers > 0
 	}
 }
 
@@ -134,42 +134,42 @@ extension AudioDevice {
 	/// Returns `true` if the device can be the default device
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDeviceCanBeDefaultDevice`
 	/// - parameter scope: The desired scope
-	public func canBeDefault(in scope: PropertyScope) throws -> Bool {
+	public func canBeDefault(inScope scope: PropertyScope) throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioDevicePropertyDeviceCanBeDefaultDevice)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the device can be the system default device
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDeviceCanBeDefaultSystemDevice`
 	/// - parameter scope: The desired scope
-	public func canBeSystemDefault(in scope: PropertyScope) throws -> Bool {
+	public func canBeSystemDefault(inScope scope: PropertyScope) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyDeviceCanBeDefaultSystemDevice), scope: scope)) as UInt32 != 0
 	}
 
 	/// Returns the latency
 	/// - remark: This corresponds to the property `kAudioDevicePropertyLatency`
 	/// - parameter scope: The desired scope
-	public func latency(in scope: PropertyScope) throws -> UInt32 {
+	public func latency(inScope scope: PropertyScope) throws -> UInt32 {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyLatency), scope: scope))
 	}
 
 	/// Returns the device's streams
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStreams`
 	/// - parameter scope: The desired scope
-	public func streams(in scope: PropertyScope) throws -> [AudioStream] {
+	public func streams(inScope scope: PropertyScope) throws -> [AudioStream] {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStreams), scope: scope)).map { AudioObject.make($0) as! AudioStream }
 	}
 
 	/// Returns the device's audio controls
 	/// - remark: This corresponds to the property `kAudioObjectPropertyControlList`
 	/// - parameter scope: The desired scope
-	public func controlList(in scope: PropertyScope) throws -> [AudioControl] {
+	public func controlList(inScope scope: PropertyScope) throws -> [AudioControl] {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyControlList), scope: scope)).map { AudioObject.make($0) as! AudioControl }
 	}
 
 	/// Returns the safety offset
 	/// - remark: This corresponds to the property `kAudioDevicePropertySafetyOffset`
 	/// - parameter scope: The desired scope
-	public func safetyOffset(in scope: PropertyScope) throws -> UInt32 {
+	public func safetyOffset(inScope scope: PropertyScope) throws -> UInt32 {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertySafetyOffset), scope: scope))
 	}
 
@@ -210,7 +210,7 @@ extension AudioDevice {
 	/// Returns the preferred stereo channels for the device
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelsForStereo`
 	/// - parameter scope: The desired scope
-	public func preferredStereoChannels(in scope: PropertyScope) throws -> (UInt32, UInt32) {
+	public func preferredStereoChannels(inScope scope: PropertyScope) throws -> (UInt32, UInt32) {
 		let channels: [UInt32] = try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelsForStereo), scope: scope))
 		precondition(channels.count == 2)
 		return (channels[0], channels[1])
@@ -226,7 +226,7 @@ extension AudioDevice {
 	/// Returns the preferred channel layout
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelLayout`
 	/// - parameter scope: The desired scope
-	public func preferredChannelLayout(in scope: PropertyScope) throws -> AudioChannelLayoutWrapper {
+	public func preferredChannelLayout(inScope scope: PropertyScope) throws -> AudioChannelLayoutWrapper {
 		let property = PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelLayout), scope: scope)
 		let dataSize = try audioObjectPropertySize(property, from: objectID)
 		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
@@ -240,7 +240,7 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelLayout`
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
-	public func setPreferredChannelLayout(_ value: UnsafePointer<AudioChannelLayout>, in scope: PropertyScope) throws {
+	public func setPreferredChannelLayout(_ value: UnsafePointer<AudioChannelLayout>, inScope scope: PropertyScope) throws {
 		let dataSize = AudioChannelLayout.sizeInBytes(maximumDescriptions: Int(value.pointee.mNumberChannelDescriptions))
 		try writeAudioObjectProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelLayout), scope: scope), on: objectID, from: value, size: dataSize)
 	}
@@ -340,7 +340,7 @@ extension AudioDevice {
 
 	/// Returns the stream configuration
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStreamConfiguration`
-	public func streamConfiguration(in scope: PropertyScope) throws -> AudioBufferListWrapper {
+	public func streamConfiguration(inScope scope: PropertyScope) throws -> AudioBufferListWrapper {
 		let property = PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStreamConfiguration), scope: scope)
 		let dataSize = try audioObjectPropertySize(property, from: objectID)
 		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
@@ -356,7 +356,7 @@ extension AudioDevice {
 	/// - parameter ioProc: The desired IOProc
 	/// - parameter scope: The desired scope
 	/// - throws: An error if the property could not be retrieved
-//	public func ioProcStreamUsage(_ ioProc: UnsafeMutableRawPointer, in scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
+//	public func ioProcStreamUsage(_ ioProc: UnsafeMutableRawPointer, inScope scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
 //		return try __ioProcStreamUsage(ioProc, scope: scope)
 //	}
 
@@ -375,7 +375,7 @@ extension AudioDevice {
 	/// Returns the workgroup to which the device's IOThread belongs
 	/// - remark: This corresponds to the property `kAudioDevicePropertyIOThreadOSWorkgroup`
 	@available(macOS 11.0, *)
-	public func ioThreadOSWorkgroup(in scope: PropertyScope = .global) throws -> WorkGroup {
+	public func ioThreadOSWorkgroup(inScope scope: PropertyScope = .global) throws -> WorkGroup {
 		var value: WorkGroup = unsafeBitCast(0, to: WorkGroup.self)
 		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIOThreadOSWorkgroup), from: objectID, into: &value)
 		return value
@@ -387,7 +387,7 @@ extension AudioDevice {
 extension AudioDevice {
 	/// Returns `true` if a jack is connected to `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyJackIsConnected`
-	public func jackIsConnected(to element: PropertyElement = .master, in scope: PropertyScope = .global) throws -> Bool {
+	public func jackIsConnected(to element: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyJackIsConnected), scope: scope, element: element)) as UInt32 != 0
 	}
 
@@ -398,7 +398,7 @@ extension AudioDevice {
 	}
 	/// Sets the volume scalar for `channel`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyVolumeScalar`
-	public func setVolumeScalar(_ value: Float, channel: PropertyElement = .master, in scope: PropertyScope = .global) throws {
+	public func setVolumeScalar(_ value: Float, channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws {
 		return try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyVolumeScalar), scope: scope, element: channel), to: value)
 	}
 
@@ -422,18 +422,18 @@ extension AudioDevice {
 
 	/// Returns the stereo pan
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStereoPan`
-	public func stereoPan(in scope: PropertyScope) throws -> Float {
+	public func stereoPan(inScope scope: PropertyScope) throws -> Float {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStereoPan), scope: scope))
 	}
 	/// Sets the stereo pan
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStereoPan`
-	public func setStereoPan(_ value: Float, in scope: PropertyScope) throws {
+	public func setStereoPan(_ value: Float, inScope scope: PropertyScope) throws {
 		return try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStereoPan), scope: scope), to: value)
 	}
 
 	/// Returns the channels used for stereo panning
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStereoPanChannels`
-	public func stereoPanChannels(in scope: PropertyScope) throws -> (UInt32, UInt32) {
+	public func stereoPanChannels(inScope scope: PropertyScope) throws -> (UInt32, UInt32) {
 		let channels: [UInt32] = try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStereoPanChannels), scope: scope))
 		precondition(channels.count == 2)
 		return (channels[0], channels[1])
@@ -446,84 +446,84 @@ extension AudioDevice {
 
 	/// Returns `true` if `element` is muted
 	/// - remark: This corresponds to the property `kAudioDevicePropertyMute`
-	public func mute(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func mute(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyMute), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether `element` is muted
 	/// - remark: This corresponds to the property `kAudioDevicePropertyMute`
-	public func setMute(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setMute(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyMute), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if only `element` is audible
 	/// - remark: This corresponds to the property `kAudioDevicePropertySolo`
-	public func solo(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func solo(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertySolo), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether `element` is audible
 	/// - remark: This corresponds to the property `kAudioDevicePropertySolo`
-	public func setSolo(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setSolo(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertySolo), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if phantom power is enabled for `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhantomPower`
-	public func phantomPower(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func phantomPower(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPhantomPower), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether phantom power is enabled for `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhantomPower`
-	public func setPhantomPower(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setPhantomPower(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPhantomPower), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if the phase is inverted for `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhaseInvert`
-	public func phaseInvert(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func phaseInvert(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPhaseInvert), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether the phase is inverted for `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhaseInvert`
-	public func setPhaseInvert(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setPhaseInvert(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPhaseInvert), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if the signal exceeded the sample range
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClipLight`
-	public func clipLight(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func clipLight(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyClipLight), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether the signal exceeded the sample range
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClipLight`
-	public func setClipLight(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setClipLight(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyClipLight), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if talkback is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyTalkback`
-	public func talkback(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func talkback(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyTalkback), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether talkback is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyTalkback`
-	public func setTalkback(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setTalkback(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyTalkback), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if listenback is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyListenback`
-	public func listenback(in scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
+	public func listenback(inScope scope: PropertyScope, on element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyListenback), scope: scope, element: element)) as UInt32 != 0
 	}
 	/// Sets whether listenback is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyListenback`
-	public func setListenback(_ value: Bool, in scope: PropertyScope, on element: PropertyElement = .master) throws {
+	public func setListenback(_ value: Bool, inScope scope: PropertyScope, on element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyListenback), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns the IDs of all the currently selected data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
-	public func dataSource(in scope: PropertyScope) throws -> [UInt32] {
+	public func dataSource(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyDataSource), scope: scope))
 	}
 
@@ -534,7 +534,7 @@ extension AudioDevice {
 
 	/// Returns the IDs of all the currently available data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSources`
-	public func dataSources(in scope: PropertyScope) throws -> [UInt32] {
+	public func dataSources(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyDataSources), scope: scope))
 	}
 
@@ -570,19 +570,19 @@ extension AudioDevice {
 
 	/// Returns the available data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSources`
-	public func availableDataSources(in scope: PropertyScope) throws -> [DataSource] {
-		return try dataSources(in: scope).map { DataSource(device: self, scope: scope, id: $0) }
+	public func availableDataSources(inScope scope: PropertyScope) throws -> [DataSource] {
+		return try dataSources(inScope: scope).map { DataSource(device: self, scope: scope, id: $0) }
 	}
 
 	/// Returns the active  data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
-	public func activeDataSources(in scope: PropertyScope) throws -> [DataSource] {
-		return try dataSource(in: scope).map { DataSource(device: self, scope: scope, id: $0) }
+	public func activeDataSources(inScope scope: PropertyScope) throws -> [DataSource] {
+		return try dataSource(inScope: scope).map { DataSource(device: self, scope: scope, id: $0) }
 	}
 
 	/// Returns the IDs of all the currently selected clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSource`
-	public func clockSource(in scope: PropertyScope) throws -> [UInt32] {
+	public func clockSource(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyClockSource), scope: scope))
 	}
 
@@ -594,7 +594,7 @@ extension AudioDevice {
 
 	/// Returns the IDs of all the currently available clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSources`
-	public func clockSources(in scope: PropertyScope) throws -> [UInt32] {
+	public func clockSources(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyClockSources), scope: scope))
 	}
 
@@ -633,14 +633,14 @@ extension AudioDevice {
 
 	/// Returns the available clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSources`
-	public func availableClockSources(in scope: PropertyScope) throws -> [ClockSource] {
-		return try clockSources(in: scope).map { ClockSource(device: self, scope: scope, id: $0) }
+	public func availableClockSources(inScope scope: PropertyScope) throws -> [ClockSource] {
+		return try clockSources(inScope: scope).map { ClockSource(device: self, scope: scope, id: $0) }
 	}
 
 	/// Returns the active  clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSource`
-	public func activeClockSources(in scope: PropertyScope) throws -> [ClockSource] {
-		return try clockSource(in: scope).map { ClockSource(device: self, scope: scope, id: $0) }
+	public func activeClockSources(inScope scope: PropertyScope) throws -> [ClockSource] {
+		return try clockSource(inScope: scope).map { ClockSource(device: self, scope: scope, id: $0) }
 	}
 
 	/// Returns `true` if play through is enabled
