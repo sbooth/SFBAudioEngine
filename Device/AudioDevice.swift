@@ -483,23 +483,23 @@ extension AudioDevice {
 		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySolo), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
-	/// Returns `true` if phantom power is enabled for `element`
+	/// Returns `true` if phantom power is enabled on `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhantomPower`
 	public func phantomPower(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPhantomPower), scope: scope, element: element)) as UInt32 != 0
 	}
-	/// Sets whether phantom power is enabled for `element`
+	/// Sets whether phantom power is enabled on `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhantomPower`
 	public func setPhantomPower(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPhantomPower), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
-	/// Returns `true` if the phase is inverted for `element`
+	/// Returns `true` if the phase is inverted on `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhaseInvert`
 	public func phaseInvert(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPhaseInvert), scope: scope, element: element)) as UInt32 != 0
 	}
-	/// Sets whether the phase is inverted for `element`
+	/// Sets whether the phase is inverted on `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPhaseInvert`
 	public func setPhaseInvert(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPhaseInvert), scope: scope, element: element), to: UInt32(value ? 1 : 0))
@@ -538,18 +538,18 @@ extension AudioDevice {
 		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyListenback), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
 
-	/// Returns the IDs of all the currently selected data sources
+	/// Returns the IDs of the selected data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
 	public func dataSource(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDataSource), scope: scope))
 	}
-
-	/// Sets the currently selected data sources (`kAudioDevicePropertyDataSource` )
+	/// Sets the IDs of the selected data sources
+	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
 	public func setDataSource(_ value: [UInt32], scope: PropertyScope) throws {
 		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDataSource), scope: scope), to: value)
 	}
 
-	/// Returns the IDs of all the currently available data sources
+	/// Returns the IDs of the available data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSources`
 	public func dataSources(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDataSources), scope: scope))
@@ -591,25 +591,24 @@ extension AudioDevice {
 		return try dataSources(inScope: scope).map { DataSource(device: self, scope: scope, id: $0) }
 	}
 
-	/// Returns the active  data sources
+	/// Returns the active data sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
 	public func activeDataSources(inScope scope: PropertyScope) throws -> [DataSource] {
 		return try dataSource(inScope: scope).map { DataSource(device: self, scope: scope, id: $0) }
 	}
 
-	/// Returns the IDs of all the currently selected clock sources
+	/// Returns the IDs of the selected clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSource`
 	public func clockSource(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyClockSource), scope: scope))
 	}
-
-	/// Sets the currently selected clock sources
+	/// Sets the IDs of the selected clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSource`
 	public func setClockSource(_ value: [UInt32], inScope scope: PropertyScope) throws {
 		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyClockSource), scope: scope), to: value)
 	}
 
-	/// Returns the IDs of all the currently available clock sources
+	/// Returns the IDs of the available clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSources`
 	public func clockSources(inScope scope: PropertyScope) throws -> [UInt32] {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyClockSources), scope: scope))
@@ -654,7 +653,7 @@ extension AudioDevice {
 		return try clockSources(inScope: scope).map { ClockSource(device: self, scope: scope, id: $0) }
 	}
 
-	/// Returns the active  clock sources
+	/// Returns the active clock sources
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSource`
 	public func activeClockSources(inScope scope: PropertyScope) throws -> [ClockSource] {
 		return try clockSource(inScope: scope).map { ClockSource(device: self, scope: scope, id: $0) }
@@ -684,11 +683,54 @@ extension AudioDevice {
 	public var kAudioDevicePropertyChannelNominalLineLevel: AudioObjectPropertySelector { get }
 	public var kAudioDevicePropertyChannelNominalLineLevels: AudioObjectPropertySelector { get }
 	public var kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString: AudioObjectPropertySelector { get }
+*/
 
-	public var kAudioDevicePropertyHighPassFilterSetting: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyHighPassFilterSettings: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyHighPassFilterSettingNameForIDCFString: AudioObjectPropertySelector { get }
+	/// Returns the IDs of the selected high-pass filter settings
+	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSetting`
+	public func highPassFilterSetting(inScope scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyHighPassFilterSetting), scope: scope))
+	}
+	/// Sets the IDs of the selected high-pass filter settings
+	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSetting`
+	public func setHighPassFilterSetting(_ value: [UInt32], scope: PropertyScope) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyHighPassFilterSetting), scope: scope), to: value)
+	}
 
+	/// Returns the IDs of the available high-pass filter settings
+	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSettings`
+	public func highPassFilterSettings(inScope scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyHighPassFilterSettings), scope: scope))
+	}
+
+	/// Returns the name of `highPassFilterSettingID`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSettingNameForIDCFString`
+	public func nameOfHighPassFilterSetting(_ highPassFilterSettingID: UInt32, inScope scope: PropertyScope) throws -> String {
+		var inputData = highPassFilterSettingID
+		var outputData = unsafeBitCast(0, to: CFString.self)
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
+				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyHighPassFilterSettingNameForIDCFString), scope: scope), from: objectID, into: &translation)
+			}
+		}
+		return outputData as String
+	}
+
+	// High-pass filter setting helpers
+
+	/// Returns the available high-pass filter settings
+	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSources`
+	public func availableHighPassFilterSettings(inScope scope: PropertyScope) throws -> [HighPassFilterSetting] {
+		return try highPassFilterSettings(inScope: scope).map { HighPassFilterSetting(device: self, scope: scope, id: $0) }
+	}
+
+	/// Returns the active high-pass filter settings
+	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
+	public func activeHighPassFilterSettings(inScope scope: PropertyScope) throws -> [HighPassFilterSetting] {
+		return try highPassFilterSetting(inScope: scope).map { HighPassFilterSetting(device: self, scope: scope, id: $0) }
+	}
+
+/*
 	public var kAudioDevicePropertySubVolumeScalar: AudioObjectPropertySelector { get }
 	public var kAudioDevicePropertySubVolumeDecibels: AudioObjectPropertySelector { get }
 	public var kAudioDevicePropertySubVolumeRangeDecibels: AudioObjectPropertySelector { get }
@@ -697,6 +739,17 @@ extension AudioDevice {
 
 	public var kAudioDevicePropertySubMute: AudioObjectPropertySelector { get }
 	*/
+
+	/// Returns `true` if LFE are muted on `element`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubMute`
+	public func subMute(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubMute), scope: scope, element: element)) as UInt32 != 0
+	}
+	/// Sets whether LFE are muted on `element`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubMute`
+	public func setSubMute(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
+		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubMute), scope: scope, element: element), to: UInt32(value ? 1 : 0))
+	}
 
 }
 
@@ -826,6 +879,34 @@ extension AudioDevice {
 }
 
 extension AudioDevice.ClockSource: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		if let name = try? name() {
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
+		}
+		else {
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
+		}
+	}
+}
+
+extension AudioDevice {
+	/// A high-pass filter setting for an audio device
+	public struct HighPassFilterSetting {
+		/// Returns the owning audio device
+		public let device: AudioDevice
+		/// Returns the high-pass filter setting scope
+		public let scope: PropertyScope
+		/// Returns the high-pass filter setting ID
+		public let id: UInt32
+
+		/// Returns the high-pass filter setting name
+		public func name() throws -> String {
+			return try device.nameOfHighPassFilterSetting(id, inScope: scope)
+		}
+	}
+}
+
+extension AudioDevice.HighPassFilterSetting: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
