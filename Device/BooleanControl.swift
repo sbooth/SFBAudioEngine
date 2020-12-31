@@ -9,6 +9,14 @@ import CoreAudio
 /// A HAL audio boolean control object
 /// - remark: This class correponds to objects with base class `kAudioBooleanControlClassID`
 public class BooleanControl: AudioControl {
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element())), \(try value() ? "On" : "Off")>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension BooleanControl {

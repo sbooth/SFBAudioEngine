@@ -9,6 +9,15 @@ import CoreAudio
 /// A HAL audio stereo pan control object
 /// - remark: This class correponds to objects with base class `kAudioStereoPanControlClassID`
 public class StereoPanControl: AudioControl {
+	public override var debugDescription: String {
+		do {
+			let panningChannels = try self.panningChannels()
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element())), \(try value()), (\(panningChannels.0), \(panningChannels.1))>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension StereoPanControl {

@@ -9,6 +9,14 @@ import CoreAudio
 /// A HAL audio level control object
 /// - remark: This class correponds to objects with base class `kAudioLevelControlClassID`
 public class LevelControl: AudioControl {
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element())), \(try scalarValue())>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension LevelControl {

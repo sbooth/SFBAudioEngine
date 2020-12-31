@@ -254,7 +254,7 @@ extension PropertyScope: CustomStringConvertible {
 
 extension PropertyElement: CustomStringConvertible {
 	public var description: String {
-		return "\(rawValue)"
+		return rawValue == kAudioObjectPropertyElementMaster ? "master" : "\(rawValue)"
 	}
 }
 

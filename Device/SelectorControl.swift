@@ -9,6 +9,14 @@ import CoreAudio
 /// A HAL audio selector control object
 /// - remark: This class correponds to objects with base class `kAudioSelectorControlClassID`
 public class SelectorControl: AudioControl {
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element())), [\(try currentItem().map({ "'\($0.fourCC)'" }).joined(separator: ", "))]>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension SelectorControl {

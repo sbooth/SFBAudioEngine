@@ -11,6 +11,14 @@ import CoreAudio
 /// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMaster`)
 /// - remark: This class correponds to objects with base class `kAudioControlClassID`
 public class AudioControl: AudioObject {
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element()))>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension AudioControl {

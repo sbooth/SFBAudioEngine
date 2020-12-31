@@ -9,6 +9,14 @@ import CoreAudio
 /// A HAL audio slider control object
 /// - remark: This class correponds to objects with base class `kAudioSliderControlClassID`
 public class SliderControl: AudioControl {
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element())), \(try value())>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension SliderControl {

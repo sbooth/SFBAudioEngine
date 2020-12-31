@@ -61,6 +61,15 @@ public class AudioDevice: AudioObject {
 	public func supportsOutput() throws -> Bool {
 		try streamConfiguration(inScope: .output).numberBuffers > 0
 	}
+
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)) \"\(try name())\", \(try isAlive() ? try isRunning() ? "running" : "stopped" : "dead")>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 // MARK: - Audio Device Base Properties
@@ -105,7 +114,7 @@ extension AudioDevice {
 	/// Returns `true` if the device is alive
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDeviceIsAlive`
 	public func isAlive() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyModelUID)) as UInt32 != 0
+		return try getProperty(PropertyAddress(kAudioDevicePropertyDeviceIsAlive)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the device is running
@@ -150,9 +159,8 @@ extension AudioDevice {
 
 	/// Returns the device's audio controls
 	/// - remark: This corresponds to the property `kAudioObjectPropertyControlList`
-	/// - parameter scope: The desired scope
-	public func controlList(inScope scope: PropertyScope) throws -> [AudioControl] {
-		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioObjectPropertyControlList), scope: scope)).map { AudioObject.make($0) as! AudioControl }
+	public func controlList() throws -> [AudioControl] {
+		return try getProperty(PropertyAddress(kAudioObjectPropertyControlList)).map { AudioObject.make($0) as! AudioControl }
 	}
 
 	/// Returns the safety offset
@@ -343,10 +351,16 @@ extension AudioDevice {
 	/// Returns IOProc stream usage
 	/// - note: This corresponds to `kAudioDevicePropertyIOProcStreamUsage`
 	/// - parameter ioProc: The desired IOProc
-	/// - parameter scope: The desired scope
-	/// - throws: An error if the property could not be retrieved
 //	public func ioProcStreamUsage(_ ioProc: UnsafeMutableRawPointer, inScope scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
-//		return try __ioProcStreamUsage(ioProc, scope: scope)
+//		let property = PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyIOProcStreamUsage), scope: scope)
+//		let dataSize = try audioObjectPropertySize(property, from: objectID)
+//		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
+//		defer {
+//			mem.deallocate()
+//		}
+//		UnsafeMutableRawPointer(mem).assumingMemoryBound(to: AudioHardwareIOProcStreamUsage.self).pointee.mIOProc = ioProc
+//		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+//		return AudioHardwareIOProcStreamUsageWrapper(mem)
 //	}
 
 	/// Returns the actual sample rate
@@ -638,13 +652,43 @@ extension AudioDevice {
 		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPlayThru), scope: .playThrough, element: element)) as UInt32 != 0
 	}
 
-//	/// Returns `true` if only the specified play through element is audible
-//	/// - note: This corresponds to the property `kAudioDevicePropertyPlayThruSolo`
-//	/// - parameter scope: The desired scope
-//	/// - parameter element: The desired element
-//	public func playThruSolo(onElement element: PropertyElement = .master) throws -> Bool {
-//		return try getProperty(.devicePlayThruSolo, scope: .playThrough, element: element) as UInt32 != 0
-//	}
+	/// Returns `true` if only the specified play through element is audible
+	/// - note: This corresponds to the property `kAudioDevicePropertyPlayThruSolo`
+	public func playThruSolo(onElement element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPlayThruSolo), scope: .playThrough, element: element)) as UInt32 != 0
+	}
+
+/*
+	public var kAudioDevicePropertyPlayThruVolumeScalar: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruVolumeDecibels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruVolumeRangeDecibels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruVolumeScalarToDecibels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruVolumeDecibelsToScalar: AudioObjectPropertySelector { get }
+
+	public var kAudioDevicePropertyPlayThruStereoPan: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruStereoPanChannels: AudioObjectPropertySelector { get }
+
+	public var kAudioDevicePropertyPlayThruDestination: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruDestinations: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyPlayThruDestinationNameForIDCFString: AudioObjectPropertySelector { get }
+
+	public var kAudioDevicePropertyChannelNominalLineLevel: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyChannelNominalLineLevels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString: AudioObjectPropertySelector { get }
+
+	public var kAudioDevicePropertyHighPassFilterSetting: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyHighPassFilterSettings: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertyHighPassFilterSettingNameForIDCFString: AudioObjectPropertySelector { get }
+
+	public var kAudioDevicePropertySubVolumeScalar: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertySubVolumeDecibels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertySubVolumeRangeDecibels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertySubVolumeScalarToDecibels: AudioObjectPropertySelector { get }
+	public var kAudioDevicePropertySubVolumeDecibelsToScalar: AudioObjectPropertySelector { get }
+
+	public var kAudioDevicePropertySubMute: AudioObjectPropertySelector { get }
+	*/
+
 }
 
 extension AudioDevice {

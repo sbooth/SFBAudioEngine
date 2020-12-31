@@ -9,60 +9,81 @@ import CoreAudio
 /// A HAL audio stream object (`kAudioStreamClassID`)
 /// - remark: This class correponds to objects with base class `kAudioStereoPanControlClassID`
 public class AudioStream: AudioObject {
+	public override var debugDescription: String {
+		do {
+			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), \(try isActive() ? "active" : "inactive"), \(try direction() ? "output" : "input"), starting channel = \(try startingChannel()), virtual format = \(try virtualFormat()), physical format = \(try physicalFormat())>"
+		}
+		catch {
+			return super.debugDescription
+		}
+	}
 }
 
 extension AudioStream {
-	/// Returns `true` if the stream is active (`kAudioStreamPropertyIsActive`)
+	/// Returns `true` if the stream is active
+	/// - remark: This corresponds to the property `kAudioStreamPropertyIsActive`
 	public func isActive() throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioStreamPropertyIsActive)) as UInt32 != 0
 	}
 
-	/// Returns `true` if `self` is an output stream (`kAudioStreamPropertyDirection`)
+	/// Returns `true` if `self` is an output stream
+	/// - remark: This corresponds to the property `kAudioStreamPropertyDirection`
 	public func direction() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection)) as UInt32 != 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection)) as UInt32 == 0
 	}
 
-	/// Returns the terminal type (`kAudioStreamPropertyTerminalType`)
+	/// Returns the terminal type
+	/// - remark: This corresponds to the property `kAudioStreamPropertyTerminalType`
 	public func terminalType() throws -> TerminalType {
 		return TerminalType(rawValue: try getProperty(PropertyAddress(kAudioStreamPropertyTerminalType)))
 	}
 
-	/// Returns the starting channel (`kAudioStreamPropertyStartingChannel`)
+	/// Returns the starting channel
+	/// - remark: This corresponds to the property `kAudioStreamPropertyStartingChannel`
 	public func startingChannel() throws -> UInt32 {
 		return try getProperty(PropertyAddress(kAudioStreamPropertyStartingChannel))
 	}
 
-	/// Returns the latency (`kAudioStreamPropertyLatency`)
+	/// Returns the latency
+	/// - remark: This corresponds to the property `kAudioStreamPropertyLatency`
 	public func latency() throws -> UInt32 {
 		return try getProperty(PropertyAddress(kAudioStreamPropertyLatency))
 	}
 
-	/// Returns the virtual format (`kAudioStreamPropertyVirtualFormat`)
+	/// Returns the virtual format
+	/// - remark: This corresponds to the property `kAudioStreamPropertyVirtualFormat`
 	public func virtualFormat() throws -> AudioStreamBasicDescription {
 		return try getProperty(PropertyAddress(kAudioStreamPropertyVirtualFormat))
 	}
-	/// Sets the virtual format (`kAudioStreamPropertyVirtualFormat`)
+	/// Sets the virtual format
+	/// - remark: This corresponds to the property `kAudioStreamPropertyVirtualFormat`
 	public func setVirtualFormat(_ value: AudioStreamBasicDescription) throws {
 		return try setProperty(PropertyAddress(kAudioStreamPropertyVirtualFormat), to: value)
 	}
 
-	/// Returns the available virtual formats (`kAudioStreamPropertyAvailableVirtualFormats`)
-	public func availableVirtualFormats() throws -> [AudioStreamRangedDescription] {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyAvailableVirtualFormats))
+	/// Returns the available virtual formats
+	/// - remark: This corresponds to the property `kAudioStreamPropertyAvailableVirtualFormats`
+	public func availableVirtualFormats() throws -> [(AudioStreamBasicDescription, ClosedRange<Double>)] {
+		let value: [AudioStreamRangedDescription] = try getProperty(PropertyAddress(kAudioStreamPropertyAvailableVirtualFormats))
+		return value.map { ($0.mFormat, $0.mSampleRateRange.mMinimum ... $0.mSampleRateRange.mMaximum) }
 	}
 
-	/// Returns the physical format (`kAudioStreamPropertyPhysicalFormat`)
+	/// Returns the physical format
+	/// - remark: This corresponds to the property `kAudioStreamPropertyPhysicalFormat`
 	public func physicalFormat() throws -> AudioStreamBasicDescription {
 		return try getProperty(PropertyAddress(kAudioStreamPropertyPhysicalFormat))
 	}
-	/// Sets the physical format (`kAudioStreamPropertyPhysicalFormat`)
+	/// Sets the physical format
+	/// - remark: This corresponds to the property `kAudioStreamPropertyPhysicalFormat`
 	public func setPhysicalFormat(_ value: AudioStreamBasicDescription) throws {
 		return try setProperty(PropertyAddress(kAudioStreamPropertyPhysicalFormat), to: value)
 	}
 
-	/// Returns the available physical formats (`kAudioStreamPropertyAvailablePhysicalFormats`)
-	public func availablePhysicalFormats() throws -> [AudioStreamRangedDescription] {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyAvailablePhysicalFormats))
+	/// Returns the available physical formats
+	/// - remark: This corresponds to the property `kAudioStreamPropertyAvailablePhysicalFormats`
+	public func availablePhysicalFormats() throws -> [(AudioStreamBasicDescription, ClosedRange<Double>)] {
+		let value: [AudioStreamRangedDescription] = try getProperty(PropertyAddress(kAudioStreamPropertyAvailablePhysicalFormats))
+		return value.map { ($0.mFormat, $0.mSampleRateRange.mMinimum ... $0.mSampleRateRange.mMaximum) }
 	}
 }
 

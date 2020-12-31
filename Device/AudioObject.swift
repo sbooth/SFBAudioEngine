@@ -8,7 +8,7 @@ import CoreAudio
 import os.log
 
 /// A HAL audio object
-public class AudioObject {
+public class AudioObject: CustomDebugStringConvertible {
 	/// The underlying audio object ID
 	public let objectID: AudioObjectID
 
@@ -90,6 +90,10 @@ public class AudioObject {
 				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
 			}
 		}
+	}
+
+	public var debugDescription: String {
+		return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false))>"
 	}
 }
 
@@ -284,17 +288,6 @@ extension AudioObject {
 	/// - remark: This corresponds to the property `kAudioObjectPropertyFirmwareVersion`
 	public func firmwareVersion() throws -> String {
 		return try getProperty(PropertyAddress(kAudioObjectPropertyFirmwareVersion))
-	}
-}
-
-extension AudioObject: CustomDebugStringConvertible {
-	public var debugDescription: String {
-		if let name = try? name() {
-			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)) \"\(name)\">"
-		}
-		else {
-			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false))>"
-		}
 	}
 }
 
