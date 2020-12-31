@@ -225,15 +225,23 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelLayout`
 	/// - parameter scope: The desired scope
 	public func preferredChannelLayout(in scope: PropertyScope) throws -> AudioChannelLayoutWrapper {
-		return try getAudioObjectProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelLayout), scope: scope), from: objectID)
+		let property = PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelLayout), scope: scope)
+		let dataSize = try audioObjectPropertySize(property, from: objectID)
+		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
+		defer {
+			mem.deallocate()
+		}
+		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+		return AudioChannelLayoutWrapper(mem)
 	}
 	/// Sets the preferred channel layout
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelLayout`
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
-//	public func setPreferredChannelLayout(_ value: AudioChannelLayout, in scope: PropertyScope) throws {
-//		try setProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelLayout), scope: scope), to: value)
-//	}
+	public func setPreferredChannelLayout(_ value: UnsafePointer<AudioChannelLayout>, in scope: PropertyScope) throws {
+		let dataSize = AudioChannelLayout.sizeInBytes(maximumDescriptions: Int(value.pointee.mNumberChannelDescriptions))
+		try writeAudioObjectProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyPreferredChannelLayout), scope: scope), on: objectID, from: value, size: dataSize)
+	}
 }
 
 // MARK: - Audio Device Properties
@@ -330,7 +338,14 @@ extension AudioDevice {
 	/// Returns the stream configuration
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStreamConfiguration`
 	public func streamConfiguration(in scope: PropertyScope) throws -> AudioBufferListWrapper {
-		return try getAudioObjectProperty(PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStreamConfiguration), scope: scope), from: objectID)
+		let property = PropertyAddress(PropertySelector(rawValue: kAudioDevicePropertyStreamConfiguration), scope: scope)
+		let dataSize = try audioObjectPropertySize(property, from: objectID)
+		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
+		defer {
+			mem.deallocate()
+		}
+		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+		return AudioBufferListWrapper(mem)
 	}
 
 	/// Returns IOProc stream usage

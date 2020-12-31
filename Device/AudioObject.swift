@@ -174,7 +174,13 @@ extension AudioObject {
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty<T>(_ property: PropertyAddress) throws -> [T] {
-		return try getAudioObjectProperty(property, from: objectID)
+		let dataSize = try audioObjectPropertySize(property, from: objectID)
+		let count = dataSize / MemoryLayout<T>.stride
+		let array = try [T](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
+			try readAudioObjectProperty(property, from: objectID, into: buffer.baseAddress!, size: dataSize)
+			initializedCount = count
+		}
+		return array
 	}
 
 	/// Sets the value of `property` to `value`
@@ -182,7 +188,9 @@ extension AudioObject {
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
 	public func setProperty<T>(_ property: PropertyAddress, to value: [T]) throws {
-		try setAudioObjectProperty(property, to: value, on: objectID)
+		var data = value
+		let dataSize = MemoryLayout<T>.stride * value.count
+		try writeAudioObjectProperty(property, on: objectID, from: &data, size: dataSize)
 	}
 }
 

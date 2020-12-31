@@ -15,7 +15,7 @@ extension Notification.Name {
 /// A class that broadcasts notifications when the available audio devices change
 class AudioDeviceNotifier {
 	/// The singleton audio device notifier
-	public static var instance = AudioDeviceNotifier()
+	static var instance = AudioDeviceNotifier()
 
 	/// `kAudioHardwarePropertyDevices`on `kAudioObjectSystemObject` listener block
 	private let listenerBlock: AudioObjectPropertyListenerBlock
