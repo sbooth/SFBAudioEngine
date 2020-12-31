@@ -659,9 +659,9 @@ extension AudioDevice {
 		return try clockSource(inScope: scope).map { ClockSource(device: self, scope: scope, id: $0) }
 	}
 
-	/// Returns `true` if play through is enabled
+	/// Returns `true` if play-through is enabled
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThru`
-	public func playThru(onElement element: PropertyElement = .master) throws -> Bool {
+	public func playThrough(onElement element: PropertyElement = .master) throws -> Bool {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThru), scope: .playThrough, element: element)) as UInt32 != 0
 	}
 
@@ -675,15 +675,97 @@ extension AudioDevice {
 
 	public var kAudioDevicePropertyPlayThruStereoPan: AudioObjectPropertySelector { get }
 	public var kAudioDevicePropertyPlayThruStereoPanChannels: AudioObjectPropertySelector { get }
-
-	public var kAudioDevicePropertyPlayThruDestination: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruDestinations: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruDestinationNameForIDCFString: AudioObjectPropertySelector { get }
-
-	public var kAudioDevicePropertyChannelNominalLineLevel: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyChannelNominalLineLevels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString: AudioObjectPropertySelector { get }
 */
+
+	/// Returns the IDs of the selected play-through destinations
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestination`
+	public func playThroughDestination() throws -> [UInt32] {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruDestination), scope: .playThrough))
+	}
+	/// Sets the IDs of the selected play-through destinations
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestination`
+	public func setPlayThroughDestination(_ value: [UInt32]) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruDestination), scope: .playThrough), to: value)
+	}
+
+	/// Returns the IDs of the available play-through destinations
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestinations`
+	public func playThroughDestinations() throws -> [UInt32] {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruDestinations), scope: .playThrough))
+	}
+
+	/// Returns the name of `playThroughDestinationID`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestinationNameForIDCFString`
+	public func nameOfPlayThroughDestination(_ playThroughDestinationID: UInt32) throws -> String {
+		var inputData = playThroughDestinationID
+		var outputData = unsafeBitCast(0, to: CFString.self)
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
+				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruDestinationNameForIDCFString), scope: .playThrough), from: objectID, into: &translation)
+			}
+		}
+		return outputData as String
+	}
+
+	// Play-through destination helpers
+
+	/// Returns the available play-through destinations
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestinations`
+	public func availablePlayThroughDestinations() throws -> [PlayThroughDestination] {
+		return try playThroughDestination().map { PlayThroughDestination(device: self, id: $0) }
+	}
+
+	/// Returns the selected play-through destinations
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestination`
+	public func selectedPlayThroughDestinations() throws -> [PlayThroughDestination] {
+		return try playThroughDestinations().map { PlayThroughDestination(device: self, id: $0) }
+	}
+
+	/// Returns the IDs of the selected channel nominal line levels
+	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevel`
+	public func channelNominalLineLevel(inScope scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyChannelNominalLineLevel), scope: scope))
+	}
+	/// Sets the IDs of the selected channel nominal line levels
+	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevel`
+	public func setChannelNominalLineLevel(_ value: [UInt32], scope: PropertyScope) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyChannelNominalLineLevel), scope: scope), to: value)
+	}
+
+	/// Returns the IDs of the available channel nominal line levels
+	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevels`
+	public func channelNominalLineLevels(inScope scope: PropertyScope) throws -> [UInt32] {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyChannelNominalLineLevels), scope: scope))
+	}
+
+	/// Returns the name of `channelNominalLineLevelID`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString`
+	public func nameOfChannelNominalLineLevel(_ channelNominalLineLevelID: UInt32, inScope scope: PropertyScope) throws -> String {
+		var inputData = channelNominalLineLevelID
+		var outputData = unsafeBitCast(0, to: CFString.self)
+		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
+			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
+				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
+				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString), scope: scope), from: objectID, into: &translation)
+			}
+		}
+		return outputData as String
+	}
+
+	// Channel nominal line level helpers
+
+	/// Returns the available channel nominal line levels
+	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevels`
+	public func availableChannelNominalLineLevels(inScope scope: PropertyScope) throws -> [ChannelNominalLineLevel] {
+		return try channelNominalLineLevel(inScope: scope).map { ChannelNominalLineLevel(device: self, scope: scope, id: $0) }
+	}
+
+	/// Returns the selected channel nominal line levels
+	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevel`
+	public func selectedChannelNominalLineLevels(inScope scope: PropertyScope) throws -> [ChannelNominalLineLevel] {
+		return try channelNominalLineLevels(inScope: scope).map { ChannelNominalLineLevel(device: self, scope: scope, id: $0) }
+	}
 
 	/// Returns the IDs of the selected high-pass filter settings
 	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSetting`
@@ -719,14 +801,14 @@ extension AudioDevice {
 	// High-pass filter setting helpers
 
 	/// Returns the available high-pass filter settings
-	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSources`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSettings`
 	public func availableHighPassFilterSettings(inScope scope: PropertyScope) throws -> [HighPassFilterSetting] {
 		return try highPassFilterSettings(inScope: scope).map { HighPassFilterSetting(device: self, scope: scope, id: $0) }
 	}
 
-	/// Returns the active high-pass filter settings
-	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSource`
-	public func activeHighPassFilterSettings(inScope scope: PropertyScope) throws -> [HighPassFilterSetting] {
+	/// Returns the selected high-pass filter settings
+	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSetting`
+	public func selectedHighPassFilterSettings(inScope scope: PropertyScope) throws -> [HighPassFilterSetting] {
 		return try highPassFilterSetting(inScope: scope).map { HighPassFilterSetting(device: self, scope: scope, id: $0) }
 	}
 
@@ -879,6 +961,60 @@ extension AudioDevice {
 }
 
 extension AudioDevice.ClockSource: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		if let name = try? name() {
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
+		}
+		else {
+			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
+		}
+	}
+}
+
+extension AudioDevice {
+	/// A play-through destination for an audio device
+	public struct PlayThroughDestination {
+		/// Returns the owning audio device
+		public let device: AudioDevice
+		/// Returns the play-through destination ID
+		public let id: UInt32
+
+		/// Returns the play-through destination name
+		public func name() throws -> String {
+			return try device.nameOfPlayThroughDestination(id)
+		}
+	}
+}
+
+extension AudioDevice.PlayThroughDestination: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		if let name = try? name() {
+			return "<\(type(of: self)): '\(id.fourCC)' \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
+		}
+		else {
+			return "<\(type(of: self)): '\(id.fourCC)' on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false)))>"
+		}
+	}
+}
+
+extension AudioDevice {
+	/// A channel nominal line level for an audio device
+	public struct ChannelNominalLineLevel {
+		/// Returns the owning audio device
+		public let device: AudioDevice
+		/// Returns the channel nominal line level scope
+		public let scope: PropertyScope
+		/// Returns the channel nominal line level ID
+		public let id: UInt32
+
+		/// Returns the channel nominal line level name
+		public func name() throws -> String {
+			return try device.nameOfChannelNominalLineLevel(id, inScope: scope)
+		}
+	}
+}
+
+extension AudioDevice.ChannelNominalLineLevel: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
