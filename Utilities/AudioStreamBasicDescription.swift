@@ -101,7 +101,8 @@ extension AudioStreamBasicDescription {
 		return mFormatFlags & kAudioFormatFlagIsAlignedHigh == kAudioFormatFlagIsAlignedHigh
 	}
 
-	/// Returns the equivalent non-interleaved format of `self` or `nil` for non-PCM formats
+	/// Returns the equivalent non-interleaved format of `self`
+	/// - note: This returns `nil` for non-PCM formats
 	public func nonInterleavedEquivalent() -> AudioStreamBasicDescription? {
 		guard isPCM else {
 			return nil
@@ -116,8 +117,8 @@ extension AudioStreamBasicDescription {
 		return format
 	}
 
-	/// Returns the equivalent interleaved format of `self` or `nil` for non-PCM formats
-	/// - note: This fails for non-PCM formats
+	/// Returns the equivalent interleaved format of `self`
+	/// - note: This returns `nil` for non-PCM formats
 	public func interleavedEquivalent() -> AudioStreamBasicDescription? {
 		guard isPCM else {
 			return nil
@@ -132,7 +133,8 @@ extension AudioStreamBasicDescription {
 		return format
 	}
 
-	/// Returns the equivalent standard format of `self` or `nil` for non-PCM formats
+	/// Returns the equivalent standard format of `self`
+	/// - note: This returns `nil` for non-PCM formats
 	public func standardEquivalent() -> AudioStreamBasicDescription? {
 		guard isPCM else {
 			return nil
