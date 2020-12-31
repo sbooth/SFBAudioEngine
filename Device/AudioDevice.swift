@@ -394,6 +394,14 @@ extension AudioDevice {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyJackIsConnected), scope: scope, element: element)) as UInt32 != 0
 	}
 
+	// It would be possible to combine the kAudioDevicePropertyVolume* and kAudioDevicePropertyPlayThruVolume* properties
+	// in the following methods based on the scope, choosing the kAudioDevicePropertyPlayThruVolume* variants when scope is
+	// kAudioObjectPropertyScopePlayThrough and the kAudioDevicePropertyVolume* properties otherwise. However, it's unclear
+	// (to me at least) whether kAudioDevicePropertyPlayThruVolumeScalar, for example, could have a meaning in the
+	// kAudioObjectPropertyScopePlayThrough scope. If it could then combining the two sets of properties here would not
+	// allow the kAudioDevicePropertyVolume* properties to be set in the kAudioObjectPropertyScopePlayThrough scope.
+	// For this reason the kAudioDevicePropertyPlayThruVolume* are given their own methods.
+
 	/// Returns the volume scalar for `channel`
 	/// - remark: This corresponds to the property `kAudioDevicePropertyVolumeScalar`
 	public func volumeScalar(forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> Float {
@@ -665,17 +673,83 @@ extension AudioDevice {
 		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThru), scope: .playThrough, element: element)) as UInt32 != 0
 	}
 
+	/// Returns `true` if only play-through `element` is audible
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruSolo`
+	public func playThroughSolo(onElement element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruSolo), scope: .playThrough, element: element)) as UInt32 != 0
+	}
+	/// Sets whether play-through `element` is audible
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruSolo`
+	public func setPlayThroughSolo(_ value: Bool, onElement element: PropertyElement = .master) throws {
+		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruSolo), scope: .playThrough, element: element), to: UInt32(value ? 1 : 0))
+	}
 
-/*
-	public var kAudioDevicePropertyPlayThruVolumeScalar: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruVolumeDecibels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruVolumeRangeDecibels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruVolumeScalarToDecibels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruVolumeDecibelsToScalar: AudioObjectPropertySelector { get }
+	/// Returns the play-through volume scalar for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeScalar`
+	public func playThroughVolumeScalar(forChannel channel: PropertyElement = .master) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeScalar), scope: .playThrough, element: channel))
+	}
+	/// Sets the play-through volume scalar for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeScalar`
+	public func setPlayThroughVolumeScalar(_ value: Float, forChannel channel: PropertyElement = .master) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeScalar), scope: .playThrough, element: channel), to: value)
+	}
 
-	public var kAudioDevicePropertyPlayThruStereoPan: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertyPlayThruStereoPanChannels: AudioObjectPropertySelector { get }
-*/
+	/// Returns the play-through volume in decibels for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeDecibels`
+	public func playThroughVolumeDecibels(forChannel channel: PropertyElement = .master) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeDecibels), scope: .playThrough, element: channel))
+	}
+	/// Sets the play-through volume in decibels for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeDecibels`
+	public func setPlayThroughVolumeDecibels(_ value: Float, forChannel channel: PropertyElement = .master) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeDecibels), scope: .playThrough, element: channel), to: value)
+	}
+
+	/// Returns the play-through volume range in decibels for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeRangeDecibels`
+	public func playThroughVolumeRangeDecibels(forChannel channel: PropertyElement = .master) throws -> ClosedRange<Float> {
+		let value: AudioValueRange = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeRangeDecibels), scope: .playThrough, element: channel))
+		return Float(value.mMinimum) ... Float(value.mMaximum)
+	}
+
+	/// Converts play-through volume `scalar` to decibels and returns the converted value
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeScalarToDecibels`
+	/// - parameter scalar: The value to convert
+	public func convertPlayThroughVolumeToDecibels(fromScalar scalar: Float, forChannel channel: PropertyElement = .master) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeScalarToDecibels), scope: .playThrough, element: channel), initialValue: scalar)
+	}
+
+	/// Converts play-through volume `decibels` to scalar and returns the converted value
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeDecibelsToScalar`
+	/// - parameter decibels: The value to convert
+	public func convertPlayThroughVolumeToScalar(fromDecibels decibels: Float, forChannel channel: PropertyElement = .master) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruVolumeDecibelsToScalar), scope: .playThrough, element: channel), initialValue: decibels)
+	}
+
+	/// Returns the play-through stereo pan
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruStereoPan`
+	public func playThroughStereoPan() throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPan), scope: .playThrough))
+	}
+	/// Sets the play-through stereo pan
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruStereoPan`
+	public func setPlayThroughStereoPan(_ value: Float) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPan), scope: .playThrough), to: value)
+	}
+
+	/// Returns the play-through channels used for stereo panning
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruStereoPanChannels`
+	public func playThroughStereoPanChannels() throws -> (UInt32, UInt32) {
+		let channels: [UInt32] = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPanChannels), scope: .playThrough))
+		precondition(channels.count == 2)
+		return (channels[0], channels[1])
+	}
+	/// Sets the play-through channels used for stereo panning
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruStereoPanChannels`
+	public func setPlayThroughStereoPanChannels(_ value: (UInt32, UInt32)) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPanChannels), scope: .playThrough), to: [value.0, value.1])
+	}
 
 	/// Returns the IDs of the selected play-through destinations
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestination`
@@ -836,7 +910,7 @@ extension AudioDevice {
 
 	/// Returns the LFE volume range in decibels for `channel`
 	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeRangeDecibels`
-	public func volumeRangeDecibels(forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> ClosedRange<Float> {
+	public func subVolumeRangeDecibels(forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> ClosedRange<Float> {
 		let value: AudioValueRange = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeRangeDecibels), scope: scope, element: channel))
 		return Float(value.mMinimum) ... Float(value.mMaximum)
 	}
