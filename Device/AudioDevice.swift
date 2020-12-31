@@ -812,15 +812,48 @@ extension AudioDevice {
 		return try highPassFilterSetting(inScope: scope).map { HighPassFilterSetting(device: self, scope: scope, id: $0) }
 	}
 
-/*
-	public var kAudioDevicePropertySubVolumeScalar: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertySubVolumeDecibels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertySubVolumeRangeDecibels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertySubVolumeScalarToDecibels: AudioObjectPropertySelector { get }
-	public var kAudioDevicePropertySubVolumeDecibelsToScalar: AudioObjectPropertySelector { get }
+	/// Returns the LFE volume scalar for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeScalar`
+	public func subVolumeScalar(forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeScalar), scope: scope, element: channel))
+	}
+	/// Sets the LFE volume scalar for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeScalar`
+	public func setSubVolumeScalar(_ value: Float, forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeScalar), scope: scope, element: channel), to: value)
+	}
 
-	public var kAudioDevicePropertySubMute: AudioObjectPropertySelector { get }
-	*/
+	/// Returns the LFE volume in decibels for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeDecibels`
+	public func subVolumeDecibels(forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeDecibels), scope: scope, element: channel))
+	}
+	/// Sets the LFE volume in decibels for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeDecibels`
+	public func setSubVolumeDecibels(_ value: Float, forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeDecibels), scope: scope, element: channel), to: value)
+	}
+
+	/// Returns the LFE volume range in decibels for `channel`
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeRangeDecibels`
+	public func volumeRangeDecibels(forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> ClosedRange<Float> {
+		let value: AudioValueRange = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeRangeDecibels), scope: scope, element: channel))
+		return Float(value.mMinimum) ... Float(value.mMaximum)
+	}
+
+	/// Converts LFE volume `scalar` to decibels and returns the converted value
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeScalarToDecibels`
+	/// - parameter scalar: The value to convert
+	public func convertSubVolumeToDecibels(fromScalar scalar: Float, forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeScalarToDecibels), scope: scope, element: channel), initialValue: scalar)
+	}
+
+	/// Converts LFE volume `decibels` to scalar and returns the converted value
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeDecibelsToScalar`
+	/// - parameter decibels: The value to convert
+	public func convertSubVolumeToScalar(fromDecibels decibels: Float, forChannel channel: PropertyElement = .master, inScope scope: PropertyScope = .global) throws -> Float {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubVolumeDecibelsToScalar), scope: scope, element: channel), initialValue: decibels)
+	}
 
 	/// Returns `true` if LFE are muted on `element`
 	/// - remark: This corresponds to the property `kAudioDevicePropertySubMute`
@@ -832,7 +865,6 @@ extension AudioDevice {
 	public func setSubMute(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubMute), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
-
 }
 
 extension AudioDevice {
