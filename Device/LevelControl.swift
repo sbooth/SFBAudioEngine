@@ -44,14 +44,14 @@ extension LevelControl {
 	/// Converts `scalar` to decibels and returns the converted value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyConvertScalarToDecibels`
 	/// - parameter scalar: The value to convert
-	public func convertToDecibels(_ scalar: Float) throws -> Float {
+	public func convertToDecibels(fromScalar scalar: Float) throws -> Float {
 		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertScalarToDecibels), initialValue: scalar)
 	}
 
 	/// Converts `decibels` to scalar and returns the converted value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyConvertDecibelsToScalar`
 	/// - parameter decibels: The value to convert
-	public func convertToScalar(_ decibels: Float) throws -> Float {
+	public func convertToScalar(fromDecibels decibels: Float) throws -> Float {
 		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertDecibelsToScalar), initialValue: decibels)
 	}
 }
