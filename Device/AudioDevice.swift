@@ -362,6 +362,14 @@ extension AudioDevice {
 		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
 		return AudioHardwareIOProcStreamUsageWrapper(mem)
 	}
+	/// Sets IOProc stream usage
+	/// - note: This corresponds to the property `kAudioDevicePropertyIOProcStreamUsage`
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	public func setIOProcStreamUsage(_ value: UnsafePointer<AudioHardwareIOProcStreamUsage>, inScope scope: PropertyScope) throws {
+		let dataSize = AudioHardwareIOProcStreamUsage.sizeInBytes(maximumStreams: Int(value.pointee.mNumberStreams))
+		try writeAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyIOProcStreamUsage), scope: scope), on: objectID, from: value, size: dataSize)
+	}
 
 	/// Returns the actual sample rate
 	/// - remark: This corresponds to the property `kAudioDevicePropertyActualSampleRate`
