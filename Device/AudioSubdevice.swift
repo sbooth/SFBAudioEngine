@@ -45,15 +45,15 @@ extension AudioSubdevice {
 	/// A thin wrapper around a HAL audio device transport type
 	public struct DriftCompensationQuality: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Minimum quality
-		public static let min 		= TransportType(rawValue: kAudioSubDeviceDriftCompensationMinQuality)
+		public static let min 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMinQuality)
 		/// Low quality
-		public static let low 		= TransportType(rawValue: kAudioSubDeviceDriftCompensationLowQuality)
+		public static let low 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationLowQuality)
 		/// Medium quality
-		public static let medium 	= TransportType(rawValue: kAudioSubDeviceDriftCompensationMediumQuality)
+		public static let medium 	= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMediumQuality)
 		/// High quality
-		public static let high 		= TransportType(rawValue: kAudioSubDeviceDriftCompensationHighQuality)
+		public static let high 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationHighQuality)
 		/// Maximum quality
-		public static let max 		= TransportType(rawValue: kAudioSubDeviceDriftCompensationMaxQuality)
+		public static let max 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMaxQuality)
 
 		public let rawValue: UInt32
 
