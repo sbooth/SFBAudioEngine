@@ -9,16 +9,16 @@ import CoreAudio
 extension AudioStreamBasicDescription {
 	/// Common PCM formats
 	public enum CommonPCMFormat {
-		/// Native-endian 32-bit floating point samples
+		/// Native endian 32-bit floating point samples
 		/// - remark: This corresponds to `Float`
 		case float32
-		/// Native-endian 64-bit floating point samples
+		/// Native endian 64-bit floating point samples
 		/// - remark: This corresponds to `Double`
 		case float64
-		/// Native-endian signed 16-bit integer samples
+		/// Native endian signed 16-bit integer samples
 		/// - remark: This corresponds to `Int16`
 		case int16
-		/// Native-endian signed 32-bit integer samples
+		/// Native endian signed 32-bit integer samples
 		/// - remark: This corresponds to `Int32`
 		case int32
 	}
