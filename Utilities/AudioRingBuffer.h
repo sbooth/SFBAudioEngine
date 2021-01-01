@@ -113,7 +113,7 @@ namespace SFB {
 			 * @param frameCount The desired number of frames to read
 			 * @return The number of frames actually read
 			 */
-			size_t Read(AudioBufferList *bufferList, size_t frameCount) noexcept;
+			size_t Read(AudioBufferList * const bufferList, size_t frameCount) noexcept;
 
 			/*!
 			 * @brief Write audio to the \c RingBuffer, advancing the write pointer.
@@ -121,7 +121,7 @@ namespace SFB {
 			 * @param frameCount The desired number of frames to write
 			 * @return The number of frames actually written
 			 */
-			size_t Write(const AudioBufferList *bufferList, size_t frameCount) noexcept;
+			size_t Write(const AudioBufferList * const bufferList, size_t frameCount) noexcept;
 
 			//@}
 

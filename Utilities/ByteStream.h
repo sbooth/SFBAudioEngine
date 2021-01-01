@@ -16,7 +16,7 @@ namespace SFB {
 		/// Initializes a \c ByteStream object with the specified buffer and length and sets the read position to \c 0
 		/// @param buf The buffer providing the data
 		/// @param len The length of \c buf in bytes
-		ByteStream(const void *buf, size_t len) noexcept
+		ByteStream(const void * const buf, size_t len) noexcept
 			: mBuffer(buf), mBufferLength(len), mReadPosition(0)
 		{
 			assert(mBuffer != nullptr);
@@ -86,9 +86,9 @@ namespace SFB {
 				return false;
 
 			switch(valueSize) {
-				case 2:	value = (T)OSSwapLittleToHostInt16(value); break;
-				case 4:	value = (T)OSSwapLittleToHostInt32(value); break;
-				case 8:	value = (T)OSSwapLittleToHostInt64(value); break;
+				case 2:	value = static_cast<T>(OSSwapLittleToHostInt16(value)); break;
+				case 4:	value = static_cast<T>(OSSwapLittleToHostInt32(value)); break;
+				case 8:	value = static_cast<T>(OSSwapLittleToHostInt64(value)); break;
 			}
 
 			return true;
@@ -109,9 +109,9 @@ namespace SFB {
 				return false;
 
 			switch(valueSize) {
-				case 2:	value = (T)OSSwapBigToHostInt16(value); break;
-				case 4:	value = (T)OSSwapBigToHostInt32(value); break;
-				case 8:	value = (T)OSSwapBigToHostInt64(value); break;
+				case 2:	value = static_cast<T>(OSSwapBigToHostInt16(value)); break;
+				case 4:	value = static_cast<T>(OSSwapBigToHostInt32(value)); break;
+				case 8:	value = static_cast<T>(OSSwapBigToHostInt64(value)); break;
 			}
 
 			return true;
@@ -132,9 +132,9 @@ namespace SFB {
 				return false;
 
 			switch(valueSize) {
-				case 2: value = (T)OSSwapInt16(value); break;
-				case 4: value = (T)OSSwapInt32(value); break;
-				case 8: value = (T)OSSwapInt64(value); break;
+				case 2: value = static_cast<T>(OSSwapInt16(value)); break;
+				case 4: value = static_cast<T>(OSSwapInt32(value)); break;
+				case 8: value = static_cast<T>(OSSwapInt64(value)); break;
 			}
 
 			return true;
@@ -184,11 +184,11 @@ namespace SFB {
 		/// @param buf The destination buffer or \c nullptr to discard the bytes
 		/// @param count The number of bytes to read
 		/// @return The number of bytes actually read
-		size_t Read(void *buf, size_t count) noexcept
+		size_t Read(void * const buf, size_t count) noexcept
 		{
 			auto bytesToCopy = std::min(count, mBufferLength - mReadPosition);
 			if(buf)
-				memcpy(buf, (const uint8_t *)mBuffer + mReadPosition, bytesToCopy);
+				memcpy(buf, static_cast<const uint8_t *>(mBuffer) + mReadPosition, bytesToCopy);
 			mReadPosition += bytesToCopy;
 			return bytesToCopy;
 		}

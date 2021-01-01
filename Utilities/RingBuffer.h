@@ -101,7 +101,7 @@ namespace SFB {
 		 * @param byteCount The desired number of bytes to read
 		 * @return The number of bytes actually read
 		 */
-		size_t Read(void *destinationBuffer, size_t byteCount) noexcept;
+		size_t Read(void * const destinationBuffer, size_t byteCount) noexcept;
 
 		/*!
 		 * @brief Read data from the \c RingBuffer without advancing the read pointer.
@@ -109,7 +109,7 @@ namespace SFB {
 		 * @param byteCount The desired number of bytes to read
 		 * @return The number of bytes actually read
 		 */
-		size_t Peek(void *destinationBuffer, size_t byteCount) const noexcept;
+		size_t Peek(void * const destinationBuffer, size_t byteCount) const noexcept;
 
 		/*!
 		 * @brief Write data to the \c RingBuffer, advancing the write pointer.
@@ -117,7 +117,7 @@ namespace SFB {
 		 * @param byteCount The desired number of frames to write
 		 * @return The number of bytes actually written
 		 */
-		size_t Write(const void *sourceBuffer, size_t byteCount) noexcept;
+		size_t Write(const void * const sourceBuffer, size_t byteCount) noexcept;
 
 
 		/*! @brief Advance the read position by the specified number of bytes */
@@ -129,7 +129,7 @@ namespace SFB {
 
 		/*! @brief A struct wrapping a memory buffer location and capacity */
 		struct Buffer {
-			uint8_t	*mBuffer;			/*!< The memory buffer location */
+			uint8_t	* const mBuffer;	/*!< The memory buffer location */
 			size_t	mBufferCapacity;	/*!< The capacity of \c mBuffer in bytes */
 
 			/*! @brief Construct an empty Buffer */
@@ -141,7 +141,7 @@ namespace SFB {
 			 * @param buffer The memory buffer location
 			 * @param bufferCapacity The capacity of \c buffer in bytes
 			 */
-			Buffer(uint8_t *buffer, size_t bufferCapacity) noexcept
+			Buffer(uint8_t * const buffer, size_t bufferCapacity) noexcept
 				: mBuffer(buffer), mBufferCapacity(bufferCapacity) {}
 		};
 

@@ -130,7 +130,7 @@ struct ::std::default_delete<lame_global_flags> {
 		auto quality_value = quality.intValue;
 		switch(quality_value) {
 			case 0 ... 9:
-				result = lame_set_quality(_gfp.get(), quality_value);
+				result = lame_set_quality(gfp.get(), quality_value);
 				if(result == -1) {
 					os_log_error(gSFBAudioEncoderLog, "lame_set_quality(%d) failed", quality_value);
 					if(error)
@@ -147,7 +147,7 @@ struct ::std::default_delete<lame_global_flags> {
 	BOOL targetIsBitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3TargetIsBitrate] boolValue];
 	if(!targetIsBitrate) {
 		auto fastVBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EnableFastVBR] boolValue];
-		result = lame_set_VBR(_gfp.get(), fastVBR ? vbr_mtrh : vbr_rh);
+		result = lame_set_VBR(gfp.get(), fastVBR ? vbr_mtrh : vbr_rh);
 		if(result == -1) {
 			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(%d) failed", fastVBR ? vbr_mtrh : vbr_rh);
 			if(error)
@@ -157,7 +157,7 @@ struct ::std::default_delete<lame_global_flags> {
 
 		NSNumber *vbrQuality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality];
 		if(vbrQuality != nil) {
-			result = lame_set_VBR_quality(_gfp.get(), vbrQuality.floatValue);
+			result = lame_set_VBR_quality(gfp.get(), vbrQuality.floatValue);
 			if(result == -1) {
 				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%f) failed", vbrQuality.floatValue);
 				if(error)
@@ -168,7 +168,7 @@ struct ::std::default_delete<lame_global_flags> {
 	}
 	else {
 		auto bitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Bitrate] intValue] * 1000;
-		result = lame_set_brate(_gfp.get(), bitrate);
+		result = lame_set_brate(gfp.get(), bitrate);
 		if(result == -1) {
 			os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", bitrate);
 			if(error)
@@ -178,7 +178,7 @@ struct ::std::default_delete<lame_global_flags> {
 
 		auto enableCBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EnableCBR] boolValue];
 		if(enableCBR) {
-			result = lame_set_VBR(_gfp.get(), vbr_off);
+			result = lame_set_VBR(gfp.get(), vbr_off);
 			if(result == -1) {
 				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
 				if(error)
@@ -187,7 +187,7 @@ struct ::std::default_delete<lame_global_flags> {
 			}
 		}
 		else {
-			result = lame_set_VBR(_gfp.get(), vbr_default);
+			result = lame_set_VBR(gfp.get(), vbr_default);
 			if(result == -1) {
 				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
 				if(error)
@@ -195,7 +195,7 @@ struct ::std::default_delete<lame_global_flags> {
 				return NO;
 			}
 
-			result = lame_set_VBR_min_bitrate_kbps(_gfp.get(), bitrate);
+			result = lame_set_VBR_min_bitrate_kbps(gfp.get(), bitrate);
 			if(result == -1) {
 				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", bitrate);
 				if(error)
@@ -207,9 +207,9 @@ struct ::std::default_delete<lame_global_flags> {
 
 	SFBAudioEncodingSettingsValue stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
 	if(stereoMode != nil) {
-		if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono)				result = lame_set_mode(_gfp.get(), MONO);
-		else if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo)			result = lame_set_mode(_gfp.get(), STEREO);
-		else if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeJointStereo)	result = lame_set_mode(_gfp.get(), JOINT_STEREO);
+		if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono)				result = lame_set_mode(gfp.get(), MONO);
+		else if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo)			result = lame_set_mode(gfp.get(), STEREO);
+		else if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeJointStereo)	result = lame_set_mode(gfp.get(), JOINT_STEREO);
 		else
 			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown LAME stereo mode: %{public}@", stereoMode);
 
