@@ -19,7 +19,7 @@ namespace {
 	{
 		assert(x > 1);
 		assert(x <= ((UINT32_MAX / 2) + 1));
-		return (uint32_t)1 << (32 - __builtin_clz(x - 1));
+		return static_cast<uint32_t>(1 << (32 - __builtin_clz(x - 1)));
 	}
 
 }
@@ -47,9 +47,9 @@ bool SFB::RingBuffer::Allocate(size_t capacityBytes) noexcept
 	Deallocate();
 
 	// Round up to the next power of two
-	capacityBytes = NextPowerOfTwo((uint32_t)capacityBytes);
+	capacityBytes = NextPowerOfTwo(static_cast<uint32_t>(capacityBytes));
 
-	mBuffer = (uint8_t *)std::malloc(capacityBytes);
+	mBuffer = static_cast<uint8_t *>(std::malloc(capacityBytes));
 	if(!mBuffer)
 		return false;
 
@@ -103,9 +103,9 @@ size_t SFB::RingBuffer::BytesAvailableToWrite() const noexcept
 		return mCapacityBytes - 1;
 }
 
-size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount) noexcept
+size_t SFB::RingBuffer::Read(void * const destinationBuffer, size_t byteCount) noexcept
 {
-	if(nullptr == destinationBuffer || 0 == byteCount)
+	if(!destinationBuffer || 0 == byteCount)
 		return 0;
 
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
@@ -134,9 +134,9 @@ size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount) noexcept
 	return bytesToRead;
 }
 
-size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const noexcept
+size_t SFB::RingBuffer::Peek(void * const destinationBuffer, size_t byteCount) const noexcept
 {
-	if(nullptr == destinationBuffer || 0 == byteCount)
+	if(!destinationBuffer || 0 == byteCount)
 		return 0;
 
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
@@ -163,9 +163,9 @@ size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const no
 	return bytesToRead;
 }
 
-size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount) noexcept
+size_t SFB::RingBuffer::Write(const void * const sourceBuffer, size_t byteCount) noexcept
 {
-	if(nullptr == sourceBuffer || 0 == byteCount)
+	if(!sourceBuffer || 0 == byteCount)
 		return 0;
 
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
@@ -219,13 +219,10 @@ SFB::RingBuffer::BufferPair SFB::RingBuffer::ReadVector() const noexcept
 
 	auto endOfRead = readPosition + bytesAvailable;
 
-	SFB::RingBuffer::BufferPair readVector;
 	if(endOfRead > mCapacityBytes)
-		readVector = { { mBuffer + readPosition, mCapacityBytes - readPosition }, { mBuffer, endOfRead & mCapacityBytes } };
+		return { { mBuffer + readPosition, mCapacityBytes - readPosition }, { mBuffer, endOfRead & mCapacityBytes } };
 	else
-		readVector = { { mBuffer + readPosition, bytesAvailable }, {} };
-
-	return readVector;
+		return { { mBuffer + readPosition, bytesAvailable }, {} };
 }
 
 SFB::RingBuffer::BufferPair SFB::RingBuffer::WriteVector() const noexcept
@@ -243,11 +240,8 @@ SFB::RingBuffer::BufferPair SFB::RingBuffer::WriteVector() const noexcept
 
 	auto endOfWrite = writePosition + bytesAvailable;
 
-	SFB::RingBuffer::BufferPair writeVector;
 	if(endOfWrite > mCapacityBytes)
-		writeVector = { { mBuffer + writePosition, mCapacityBytes - writePosition }, { mBuffer, endOfWrite & mCapacityBytes } };
+		return { { mBuffer + writePosition, mCapacityBytes - writePosition }, { mBuffer, endOfWrite & mCapacityBytes } };
 	else
-		writeVector = { { mBuffer + writePosition, bytesAvailable }, {} };
-
-	return writeVector;
+		return { { mBuffer + writePosition, bytesAvailable }, {} };
 }
