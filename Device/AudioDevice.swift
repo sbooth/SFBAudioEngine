@@ -349,19 +349,19 @@ extension AudioDevice {
 	}
 
 	/// Returns IOProc stream usage
-	/// - note: This corresponds to `kAudioDevicePropertyIOProcStreamUsage`
+	/// - note: This corresponds to the property `kAudioDevicePropertyIOProcStreamUsage`
 	/// - parameter ioProc: The desired IOProc
-//	public func ioProcStreamUsage(_ ioProc: UnsafeMutableRawPointer, inScope scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
-//		let property = PropertyAddress(PropertySelector(kAudioDevicePropertyIOProcStreamUsage), scope: scope)
-//		let dataSize = try audioObjectPropertySize(property, from: objectID)
-//		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
-//		defer {
-//			mem.deallocate()
-//		}
-//		UnsafeMutableRawPointer(mem).assumingMemoryBound(to: AudioHardwareIOProcStreamUsage.self).pointee.mIOProc = ioProc
-//		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
-//		return AudioHardwareIOProcStreamUsageWrapper(mem)
-//	}
+	public func ioProcStreamUsage(_ ioProc: UnsafeMutableRawPointer, inScope scope: PropertyScope) throws -> AudioHardwareIOProcStreamUsageWrapper {
+		let property = PropertyAddress(PropertySelector(kAudioDevicePropertyIOProcStreamUsage), scope: scope)
+		let dataSize = try audioObjectPropertySize(property, from: objectID)
+		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
+		defer {
+			mem.deallocate()
+		}
+		UnsafeMutableRawPointer(mem).assumingMemoryBound(to: AudioHardwareIOProcStreamUsage.self).pointee.mIOProc = ioProc
+		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+		return AudioHardwareIOProcStreamUsageWrapper(mem)
+	}
 
 	/// Returns the actual sample rate
 	/// - remark: This corresponds to the property `kAudioDevicePropertyActualSampleRate`

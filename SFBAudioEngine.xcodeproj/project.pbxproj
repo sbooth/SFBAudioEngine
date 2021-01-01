@@ -13,6 +13,7 @@
 		32073139256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3207313B25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
 		3207313C25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
+		32096C89259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */; };
 		3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D71409BA26001F9A60 /* CoreAudio.framework */; };
 		321296812449C4B90008DC93 /* SFBWavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3212967F2449C4B90008DC93 /* SFBWavPackDecoder.h */; };
 		321296822449C4B90008DC93 /* SFBWavPackDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 321296802449C4B90008DC93 /* SFBWavPackDecoder.m */; };
@@ -558,6 +559,7 @@
 		320553EF259396C50028CB64 /* NSArray+SFBFunctional.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+SFBFunctional.m"; sourceTree = "<group>"; };
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
 		3207313A25631560008BEDA7 /* SFBAudioConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
+		32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioHardwareIOProcStreamUsageWrapper.swift; sourceTree = "<group>"; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3212967F2449C4B90008DC93 /* SFBWavPackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBWavPackDecoder.h; sourceTree = "<group>"; };
 		321296802449C4B90008DC93 /* SFBWavPackDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBWavPackDecoder.m; sourceTree = "<group>"; };
@@ -1017,6 +1019,7 @@
 				32D73960259A771300C0E3F6 /* StereoPanControl.swift */,
 				32D7399F259D844500C0E3F6 /* AudioBufferListWrapper.swift */,
 				32D7399D259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift */,
+				32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */,
 				32D7397C259ABB8500C0E3F6 /* AudioDeviceNotifier.swift */,
 			);
 			path = Device;
@@ -1709,6 +1712,7 @@
 				32DD9D9A257D4EE500B47CFD /* RingBuffer.cpp in Sources */,
 				32D73972259A771300C0E3F6 /* AudioStream.swift in Sources */,
 				32D73970259A771300C0E3F6 /* AudioDevice.swift in Sources */,
+				32096C89259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift in Sources */,
 				32D73976259A771300C0E3F6 /* AudioPlugIn.swift in Sources */,
 				325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */,
 				325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */,
