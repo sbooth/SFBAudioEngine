@@ -61,7 +61,7 @@ extension PropertyScope {
 	public static let input 		= PropertyScope(kAudioObjectPropertyScopeInput)
 	/// Output scope
 	public static let output 		= PropertyScope(kAudioObjectPropertyScopeOutput)
-	/// Play through scope
+	/// Play-through scope
 	public static let playThrough 	= PropertyScope(kAudioObjectPropertyScopePlayThrough)
 	/// Wildcard scope
 	public static let wildcard 		= PropertyScope(kAudioObjectPropertyScopeWildcard)
