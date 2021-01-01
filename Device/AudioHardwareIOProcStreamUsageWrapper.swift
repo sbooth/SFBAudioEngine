@@ -25,6 +25,11 @@ public struct AudioHardwareIOProcStreamUsageWrapper {
 		ptr = mem
 	}
 
+	/// Returns the stream usage's `mIOProc`
+	public var ioProc: UnsafeRawPointer {
+		return ptr.withMemoryRebound(to: AudioHardwareIOProcStreamUsage.self, capacity: 1) { UnsafeRawPointer($0.pointee.mIOProc) }
+	}
+
 	/// Returns the stream usage's `mNumberStreams`
 	public var numberStreams: UInt32 {
 		return ptr.withMemoryRebound(to: AudioHardwareIOProcStreamUsage.self, capacity: 1) { $0.pointee.mNumberStreams }
