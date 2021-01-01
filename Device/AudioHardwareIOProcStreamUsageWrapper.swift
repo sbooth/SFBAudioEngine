@@ -6,6 +6,15 @@
 import Foundation
 import CoreAudio
 
+extension AudioHardwareIOProcStreamUsage {
+	/// Returns the size in bytes of an `AudioHardwareIOProcStreamUsage` struct
+	/// - parameter maximumStreams: The number of streams
+	public static func sizeInBytes(maximumStreams: Int) -> Int {
+		let offset = MemoryLayout.offset(of: \AudioHardwareIOProcStreamUsage.mStreamIsOn)!
+		return offset + (MemoryLayout<UInt32>.stride * maximumStreams)
+	}
+}
+
 /// A thin wrapper around a variable-length `AudioHardwareIOProcStreamUsage` structure
 public struct AudioHardwareIOProcStreamUsageWrapper {
 	/// The underlying memory
