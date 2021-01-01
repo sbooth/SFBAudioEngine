@@ -18,10 +18,10 @@ namespace {
 	 * @param srcOffset The byte offset in \c bufferList to begin reading
 	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
 	 */
-	inline void StoreABL(uint8_t **buffers, size_t dstOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount) noexcept
+	inline void StoreABL(uint8_t * const * const buffers, size_t dstOffset, const AudioBufferList * const bufferList, size_t srcOffset, size_t byteCount) noexcept
 	{
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-			memcpy(buffers[bufferIndex] + dstOffset, (uint8_t *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
+			memcpy(buffers[bufferIndex] + dstOffset, static_cast<uint8_t *>(bufferList->mBuffers[bufferIndex].mData) + srcOffset, byteCount);
 	}
 
 	/*!
@@ -32,10 +32,10 @@ namespace {
 	 * @param srcOffset The byte offset in \c bufferList to begin reading
 	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
 	 */
-	inline void FetchABL(AudioBufferList *bufferList, size_t dstOffset, const uint8_t **buffers, size_t srcOffset, size_t byteCount) noexcept
+	inline void FetchABL(AudioBufferList * const bufferList, size_t dstOffset, const uint8_t * const * const buffers, size_t srcOffset, size_t byteCount) noexcept
 	{
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-			memcpy((uint8_t *)bufferList->mBuffers[bufferIndex].mData + dstOffset, buffers[bufferIndex] + srcOffset, byteCount);
+			memcpy(static_cast<uint8_t *>(bufferList->mBuffers[bufferIndex].mData) + dstOffset, buffers[bufferIndex] + srcOffset, byteCount);
 	}
 
 	/*!
@@ -47,7 +47,7 @@ namespace {
 	{
 		assert(x > 1);
 		assert(x <= ((UINT32_MAX / 2) + 1));
-		return (uint32_t)1 << (32 - __builtin_clz(x - 1));
+		return static_cast<uint32_t>(1 << (32 - __builtin_clz(x - 1)));
 	}
 
 }
@@ -76,7 +76,7 @@ bool SFB::Audio::RingBuffer::Allocate(const class Format& format, size_t capacit
 	Deallocate();
 
 	// Round up to the next power of two
-	capacityFrames = NextPowerOfTwo((uint32_t)capacityFrames);
+	capacityFrames = NextPowerOfTwo(static_cast<uint32_t>(capacityFrames));
 
 	mFormat = format;
 
@@ -87,15 +87,15 @@ bool SFB::Audio::RingBuffer::Allocate(const class Format& format, size_t capacit
 
 	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
 	size_t allocationSize = (capacityBytes + sizeof(uint8_t *)) * format.mChannelsPerFrame;
-	uint8_t *memoryChunk = (uint8_t *)std::malloc(allocationSize);
-	if(nullptr == memoryChunk)
+	uint8_t *memoryChunk = static_cast<uint8_t *>(std::malloc(allocationSize));
+	if(!memoryChunk)
 		return false;
 
 	// Zero the entire allocation
 	memset(memoryChunk, 0, allocationSize);
 
 	// Assign the pointers and channel buffers
-	mBuffers = (uint8_t **)memoryChunk;
+	mBuffers = reinterpret_cast<uint8_t **>(memoryChunk);
 	memoryChunk += format.mChannelsPerFrame * sizeof(uint8_t *);
 	for(UInt32 i = 0; i < format.mChannelsPerFrame; ++i) {
 		mBuffers[i] = memoryChunk;
@@ -152,9 +152,9 @@ size_t SFB::Audio::RingBuffer::FramesAvailableToWrite() const noexcept
 		return mCapacityFrames - 1;
 }
 
-size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCount) noexcept
+size_t SFB::Audio::RingBuffer::Read(AudioBufferList * const bufferList, size_t frameCount) noexcept
 {
-	if(nullptr == bufferList || 0 == frameCount)
+	if(!bufferList || 0 == frameCount)
 		return 0;
 
 	auto writePointer = mWritePointer.load(std::memory_order_acquire);
@@ -173,11 +173,11 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 	if(readPointer + framesToRead > mCapacityFrames) {
 		auto framesAfterReadPointer = mCapacityFrames - readPointer;
 		auto bytesAfterReadPointer = mFormat.FrameCountToByteCount(framesAfterReadPointer);
-		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), bytesAfterReadPointer);
-		FetchABL(bufferList, bytesAfterReadPointer, (const uint8_t **)mBuffers, 0, mFormat.FrameCountToByteCount(framesToRead - framesAfterReadPointer));
+		FetchABL(bufferList, 0, mBuffers, mFormat.FrameCountToByteCount(readPointer), bytesAfterReadPointer);
+		FetchABL(bufferList, bytesAfterReadPointer, mBuffers, 0, mFormat.FrameCountToByteCount(framesToRead - framesAfterReadPointer));
 	}
 	else
-		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), mFormat.FrameCountToByteCount(framesToRead));
+		FetchABL(bufferList, 0, mBuffers, mFormat.FrameCountToByteCount(readPointer), mFormat.FrameCountToByteCount(framesToRead));
 
 	mReadPointer.store((readPointer + framesToRead) & mCapacityFramesMask, std::memory_order_release);
 
@@ -189,9 +189,9 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 	return framesToRead;
 }
 
-size_t SFB::Audio::RingBuffer::Write(const AudioBufferList *bufferList, size_t frameCount) noexcept
+size_t SFB::Audio::RingBuffer::Write(const AudioBufferList * const bufferList, size_t frameCount) noexcept
 {
-	if(nullptr == bufferList || 0 == frameCount)
+	if(!bufferList || 0 == frameCount)
 		return 0;
 
 	auto writePointer = mWritePointer.load(std::memory_order_acquire);
