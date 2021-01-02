@@ -33,7 +33,7 @@ public class AudioClockDevice: AudioObject {
 extension AudioClockDevice {
 	/// Returns the clock device UID
 	/// - remark: This corresponds to the property `kAudioClockDevicePropertyDeviceUID`
-	public func clockDeviceUID() throws -> String {
+	public func deviceUID() throws -> String {
 		return try getProperty(PropertyAddress(kAudioClockDevicePropertyDeviceUID))
 	}
 
