@@ -60,11 +60,15 @@ public class AudioObject: CustomDebugStringConvertible {
 		return settable.boolValue
 	}
 
+	/// A block called with one or more changed audio object properties
+	/// - parameter changes: An array of changed property addresses
+	public typealias PropertyChangeNotificationBlock = (_ changes: [PropertyAddress]) -> Void
+
 	/// Registers `block` to be performed when `property` changes
 	/// - parameter property: The property to observe
 	/// - parameter block: A closure to invoke when `property` changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public final func whenPropertyChanges(_ property: PropertyAddress, perform block: (() -> Void)?) throws {
+	public final func whenPropertyChanges(_ property: PropertyAddress, perform block: PropertyChangeNotificationBlock?) throws {
 		var propertyAddress = property.rawValue
 
 		// Remove the existing listener block, if any, for the property
@@ -78,8 +82,15 @@ public class AudioObject: CustomDebugStringConvertible {
 
 		if let block = block {
 			let listenerBlock: AudioObjectPropertyListenerBlock = { inNumberAddresses, inAddresses in
-//				let buf = UnsafeBufferPointer(start: inAddresses, count: Int(inNumberAddresses))
-				block()
+				let count = Int(inNumberAddresses)
+				let addresses = UnsafeBufferPointer(start: inAddresses, count: count)
+				let array = [PropertyAddress](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
+					for i in 0 ..< count {
+						buffer[i] = PropertyAddress(addresses[i])
+					}
+					initializedCount = count
+				}
+				block(array)
 			}
 
 			listenerBlocks[property] = listenerBlock;
@@ -457,5 +468,84 @@ extension AudioObject {
 			os_log(.debug, log: audioObjectLog, "Unknown audio object base class '%{public}@'", objectClass.fourCC)
 			return AudioObject(objectID)
 		}
+	}
+}
+
+// MARK: -
+
+/// A thin wrapper around a HAL audio object property selector for a specific `AudioObject` subclass
+public struct Selector<T: AudioObject> {
+	/// The underlying `AudioObjectPropertySelector` value
+	let rawValue: AudioObjectPropertySelector
+	/// Initializes a `Selector` with `value`
+	init(_ value: AudioObjectPropertySelector) {
+		self.rawValue = value
+	}
+}
+
+extension AudioObject {
+	/// Returns `true` if `self` has `selector` in `scope` on `element`
+	/// - parameter selector: The selector of the desired property
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	public func hasSelector(_ selector: Selector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
+		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
+	}
+
+	/// Returns `true` if `selector` in `scope` on `element` is settable
+	/// - parameter selector: The selector of the desired property
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if `self` does not have the requested property
+	public func isSelectorSettable(_ selector: Selector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
+		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
+	}
+
+	/// Registers `block` to be performed when `selector` in `scope` on `element` changes
+	/// - parameter selector: The selector of the desired property
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	/// - throws: An error if the property listener could not be registered
+	public func whenSelectorChanges(_ selector: Selector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
+		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
+	}
+}
+
+extension Selector where T == AudioObject {
+	/// The wildcard property selector `kAudioObjectPropertySelectorWildcard`
+	public static let wildcard = Selector(kAudioObjectPropertySelectorWildcard)
+
+	/// The property selector `kAudioObjectPropertyBaseClass`
+	public static let baseClass = Selector(kAudioObjectPropertyBaseClass)
+	/// The property selector `kAudioObjectPropertyClass`
+	public static let `class` = Selector(kAudioObjectPropertyClass)
+	/// The property selector `kAudioObjectPropertyOwner`
+	public static let owner = Selector(kAudioObjectPropertyOwner)
+	/// The property selector `kAudioObjectPropertyName`
+	public static let name = Selector(kAudioObjectPropertyName)
+	/// The property selector `kAudioObjectPropertyModelName`
+	public static let modelName = Selector(kAudioObjectPropertyModelName)
+	/// The property selector `kAudioObjectPropertyManufacturer`
+	public static let manufacturer = Selector(kAudioObjectPropertyManufacturer)
+	/// The property selector `kAudioObjectPropertyElementName`
+	public static let elementName = Selector(kAudioObjectPropertyElementName)
+	/// The property selector `kAudioObjectPropertyElementCategoryName`
+	public static let elementCategoryName = Selector(kAudioObjectPropertyElementCategoryName)
+	/// The property selector `kAudioObjectPropertyElementNumberName`
+	public static let elementNumberName = Selector(kAudioObjectPropertyElementNumberName)
+	/// The property selector `kAudioObjectPropertyOwnedObjects`
+	public static let ownedObjects = Selector(kAudioObjectPropertyOwnedObjects)
+	/// The property selector `kAudioObjectPropertyIdentify`
+	public static let identify = Selector(kAudioObjectPropertyIdentify)
+	/// The property selector `kAudioObjectPropertySerialNumber`
+	public static let serialNumber = Selector(kAudioObjectPropertySerialNumber)
+	/// The property selector `kAudioObjectPropertyFirmwareVersion`
+	public static let firmwareVersion = Selector(kAudioObjectPropertyFirmwareVersion)
+}
+
+extension Selector: CustomStringConvertible {
+	public var description: String {
+		return "\(type(of: T.self)): '\(rawValue.fourCC)'"
 	}
 }
