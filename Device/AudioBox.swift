@@ -92,3 +92,45 @@ extension AudioBox {
 		return try getProperty(PropertyAddress(kAudioBoxPropertyClockDeviceList)).map { AudioObject.make($0) as! AudioClockDevice }
 	}
 }
+
+extension AudioBox {
+	/// Returns `true` if `self` has `selector`
+	/// - parameter selector: The selector of the desired property
+	public func hasSelector(_ selector: Selector<AudioBox>) -> Bool {
+		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Returns `true` if `selector` is settable
+	/// - parameter selector: The selector of the desired property
+	/// - throws: An error if `self` does not have the requested property
+	public func isSelectorSettable(_ selector: Selector<AudioBox>) throws -> Bool {
+		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Registers `block` to be performed when `selector` changes
+	/// - parameter selector: The selector of the desired property
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	/// - throws: An error if the property listener could not be registered
+	public func whenSelectorChanges(_ selector: Selector<AudioBox>, perform block: PropertyChangeNotificationBlock?) throws {
+		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
+	}
+}
+
+extension Selector where T == AudioBox {
+	/// The property `kAudioBoxPropertyBoxUID`
+	public static let boxUID = Selector(kAudioBoxPropertyBoxUID)
+	/// The property `kAudioBoxPropertyTransportType`
+	public static let transportType = Selector(kAudioBoxPropertyTransportType)
+	/// The property `kAudioBoxPropertyHasAudio`
+	public static let hasAudio = Selector(kAudioBoxPropertyHasAudio)
+	/// The property `kAudioBoxPropertyHasVideo`
+	public static let hasVideo = Selector(kAudioBoxPropertyHasVideo)
+	/// The property `kAudioBoxPropertyHasMIDI`
+	public static let hasMIDI = Selector(kAudioBoxPropertyHasMIDI)
+	/// The property `kAudioBoxPropertyAcquired`
+	public static let acquired = Selector(kAudioBoxPropertyAcquired)
+	/// The property `kAudioBoxPropertyDeviceList`
+	public static let deviceList = Selector(kAudioBoxPropertyDeviceList)
+	/// The property `kAudioBoxPropertyClockDeviceList`
+	public static let clockDeviceList = Selector(kAudioBoxPropertyClockDeviceList)
+}

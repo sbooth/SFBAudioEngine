@@ -86,3 +86,47 @@ extension AudioClockDevice {
 		return value.map { $0.mMinimum ... $0.mMaximum }
 	}
 }
+
+extension AudioClockDevice {
+	/// Returns `true` if `self` has `selector`
+	/// - parameter selector: The selector of the desired property
+	public func hasSelector(_ selector: Selector<AudioClockDevice>) -> Bool {
+		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Returns `true` if `selector` is settable
+	/// - parameter selector: The selector of the desired property
+	/// - throws: An error if `self` does not have the requested property
+	public func isSelectorSettable(_ selector: Selector<AudioClockDevice>) throws -> Bool {
+		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Registers `block` to be performed when `selector` changes
+	/// - parameter selector: The selector of the desired property
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	/// - throws: An error if the property listener could not be registered
+	public func whenSelectorChanges(_ selector: Selector<AudioClockDevice>, perform block: PropertyChangeNotificationBlock?) throws {
+		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
+	}
+}
+
+extension Selector where T == AudioClockDevice {
+	/// The property `kAudioClockDevicePropertyDeviceUID`
+	public static let deviceUID = Selector(kAudioClockDevicePropertyDeviceUID)
+	/// The property `kAudioClockDevicePropertyTransportType`
+	public static let transportType = Selector(kAudioClockDevicePropertyTransportType)
+	/// The property `kAudioClockDevicePropertyClockDomain`
+	public static let clockDomain = Selector(kAudioClockDevicePropertyClockDomain)
+	/// The property `kAudioClockDevicePropertyDeviceIsAlive`
+	public static let deviceIsAlive = Selector(kAudioClockDevicePropertyDeviceIsAlive)
+	/// The property `kAudioClockDevicePropertyDeviceIsRunning`
+	public static let deviceIsRunning = Selector(kAudioClockDevicePropertyDeviceIsRunning)
+	/// The property `kAudioClockDevicePropertyLatency`
+	public static let latency = Selector(kAudioClockDevicePropertyLatency)
+	/// The property `kAudioClockDevicePropertyControlList`
+	public static let controlList = Selector(kAudioClockDevicePropertyControlList)
+	/// The property `kAudioClockDevicePropertyNominalSampleRate`
+	public static let nominalSampleRate = Selector(kAudioClockDevicePropertyNominalSampleRate)
+	/// The property `kAudioClockDevicePropertyAvailableNominalSampleRates`
+	public static let availableNominalSampleRates = Selector(kAudioClockDevicePropertyAvailableNominalSampleRates)
+}

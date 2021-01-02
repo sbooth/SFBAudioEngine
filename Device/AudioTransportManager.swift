@@ -79,3 +79,39 @@ extension AudioTransportManager {
 		return AudioDevice.TransportType(rawValue: try getProperty(PropertyAddress(kAudioTransportManagerPropertyTransportType)))
 	}
 }
+
+extension AudioTransportManager {
+	/// Returns `true` if `self` has `selector`
+	/// - parameter selector: The selector of the desired property
+	public func hasSelector(_ selector: Selector<AudioTransportManager>) -> Bool {
+		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Returns `true` if `selector` is settable
+	/// - parameter selector: The selector of the desired property
+	/// - throws: An error if `self` does not have the requested property
+	public func isSelectorSettable(_ selector: Selector<AudioTransportManager>) throws -> Bool {
+		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Registers `block` to be performed when `selector` changes
+	/// - parameter selector: The selector of the desired property
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	/// - throws: An error if the property listener could not be registered
+	public func whenSelectorChanges(_ selector: Selector<AudioTransportManager>, perform block: PropertyChangeNotificationBlock?) throws {
+		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
+	}
+}
+
+extension Selector where T == AudioTransportManager {
+	/// The property `kAudioTransportManagerCreateEndPointDevice`
+//	public static let createEndpointDevice = Selector(kAudioTransportManagerCreateEndPointDevice)
+	/// The property `kAudioTransportManagerDestroyEndPointDevice`
+//	public static let destroyEndpointDevice = Selector(kAudioTransportManagerDestroyEndPointDevice)
+	/// The property `kAudioTransportManagerPropertyEndPointList`
+	public static let endpointList = Selector(kAudioTransportManagerPropertyEndPointList)
+	/// The property `kAudioTransportManagerPropertyTranslateUIDToEndPoint`
+	public static let translateUIDToEndpoint = Selector(kAudioTransportManagerPropertyTranslateUIDToEndPoint)
+	/// The property `kAudioTransportManagerPropertyTransportType`
+	public static let transportType = Selector(kAudioTransportManagerPropertyTransportType)
+}
