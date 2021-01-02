@@ -64,6 +64,42 @@ extension LevelControl {
 	}
 }
 
+extension LevelControl {
+	/// Returns `true` if `self` has `selector`
+	/// - parameter selector: The selector of the desired property
+	public func hasSelector(_ selector: Selector<LevelControl>) -> Bool {
+		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Returns `true` if `selector` is settable
+	/// - parameter selector: The selector of the desired property
+	/// - throws: An error if `self` does not have the requested property
+	public func isSelectorSettable(_ selector: Selector<LevelControl>) throws -> Bool {
+		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
+	}
+
+	/// Registers `block` to be performed when `selector` changes
+	/// - parameter selector: The selector of the desired property
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	/// - throws: An error if the property listener could not be registered
+	public func whenSelectorChanges(_ selector: Selector<LevelControl>, perform block: PropertyChangeNotificationBlock?) throws {
+		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
+	}
+}
+
+extension Selector where T == LevelControl {
+	/// The property `kAudioLevelControlPropertyScalarValue`
+	public static let scalarValue = Selector(kAudioLevelControlPropertyScalarValue)
+	/// The property `kAudioLevelControlPropertyDecibelValue`
+	public static let decibelValue = Selector(kAudioLevelControlPropertyDecibelValue)
+	/// The property `kAudioLevelControlPropertyDecibelRange`
+	public static let decibelRange = Selector(kAudioLevelControlPropertyDecibelRange)
+	/// The property `kAudioLevelControlPropertyConvertScalarToDecibels`
+	public static let scalarToDecibels = Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
+	/// The property `kAudioLevelControlPropertyConvertDecibelsToScalar`
+	public static let decibelsToScalar = Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
+}
+
 // MARK: -
 
 /// A HAL audio volume control object
