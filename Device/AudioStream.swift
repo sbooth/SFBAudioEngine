@@ -6,8 +6,10 @@
 import Foundation
 import CoreAudio
 
-/// A HAL audio stream object (`kAudioStreamClassID`)
-/// - remark: This class correponds to objects with base class `kAudioStereoPanControlClassID`
+/// A HAL audio stream object
+///
+/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`), a master element (`kAudioObjectPropertyElementMaster`), and an element for each channel
+/// - remark: This class correponds to objects with base class `kAudioStreamClassID`
 public class AudioStream: AudioObject {
 	public override var debugDescription: String {
 		do {
