@@ -13,12 +13,10 @@ public class AudioObject: CustomDebugStringConvertible {
 	public let objectID: AudioObjectID
 
 	/// Initializes an `AudioObject` with `objectID`
+	/// - note: Throws an error if `objectID` is `kAudioObjectUnknown`
 	/// - parameter objectID: The HAL audio object ID
 	init(_ objectID: AudioObjectID) {
 		precondition(objectID != kAudioObjectUnknown)
-//		if objectID == kAudioObjectUnknown {
-//			return nil
-//		}
 		self.objectID = objectID
 	}
 
@@ -27,8 +25,8 @@ public class AudioObject: CustomDebugStringConvertible {
 
 	deinit {
 		for (property, listenerBlock) in listenerBlocks {
-			var propertyAddress = property.rawValue
-			let result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
+			var address = property.rawValue
+			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
 			if result != kAudioHardwareNoError {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 			}
@@ -47,9 +45,6 @@ public class AudioObject: CustomDebugStringConvertible {
 	/// - throws: An error if `self` does not have `property`
 	public final func isPropertySettable(_ property: PropertyAddress) throws -> Bool {
 		var address = property.rawValue
-//		guard AudioObjectHasProperty(objectID, &address) else {
-//			return false
-//		}
 
 		var settable: DarwinBoolean = false
 		let result = AudioObjectIsPropertySettable(objectID, &address, &settable)
@@ -71,11 +66,11 @@ public class AudioObject: CustomDebugStringConvertible {
 	/// - parameter block: A closure to invoke when `property` changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
 	public final func whenPropertyChanges(_ property: PropertyAddress, perform block: PropertyChangeNotificationBlock?) throws {
-		var propertyAddress = property.rawValue
+		var address = property.rawValue
 
 		// Remove the existing listener block, if any, for the property
 		if let listenerBlock = listenerBlocks[property] {
-			let result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
+			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The listener block for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be removed.", comment: "")]
@@ -98,7 +93,7 @@ public class AudioObject: CustomDebugStringConvertible {
 
 			listenerBlocks[property] = listenerBlock;
 
-			let result = AudioObjectAddPropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
+			let result = AudioObjectAddPropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectAddPropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The listener block for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be added.", comment: "")]
