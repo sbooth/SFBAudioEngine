@@ -39,7 +39,7 @@ extension AudioControl {
 	/// Returns the control's variant
 	/// - remark: This corresponds to the property `kAudioControlPropertyVariant`
 	public func variant() throws -> UInt32 {
-		return PropertyElement(try getProperty(PropertyAddress(kAudioControlPropertyVariant)))
+		return try getProperty(PropertyAddress(kAudioControlPropertyVariant))
 	}
 }
 
