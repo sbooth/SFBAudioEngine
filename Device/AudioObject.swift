@@ -427,8 +427,9 @@ extension AudioObject {
 
 		case kAudioLevelControlClassID:
 			switch objectClass {
-			case kAudioVolumeControlClassID: 		return VolumeControl(objectID)
-			case kAudioLFEVolumeControlClassID: 	return LFEVolumeControl(objectID)
+			case kAudioVolumeControlClassID: 			return VolumeControl(objectID)
+			case kAudioLFEVolumeControlClassID: 		return LFEVolumeControl(objectID)
+			case kAudioBootChimeVolumeControlClassID: 	return BootChimeVolumeControl(objectID)
 			default:
 				os_log(.debug, log: audioObjectLog, "Unknown level control class '%{public}@'", objectClass.fourCC)
 				return LevelControl(objectID)
