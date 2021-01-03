@@ -107,13 +107,13 @@ extension AudioSystemObject {
 
 	/// Returns the power hint
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyPowerHint`
-	public func powerHint() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyPowerHint)) as UInt32 != 0
+	public func powerHint() throws -> AudioHardwarePowerHint {
+		return AudioHardwarePowerHint(rawValue: try getProperty(PropertyAddress(kAudioHardwarePropertyPowerHint)))!
 	}
 	/// Sets the power hint
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyPowerHint`
-	public func setPowerHint(_ value: Bool) throws {
-		try setProperty(PropertyAddress(kAudioHardwarePropertyPowerHint), to: UInt32(value ? 1 : 0))
+	public func setPowerHint(_ value: AudioHardwarePowerHint) throws {
+		try setProperty(PropertyAddress(kAudioHardwarePropertyPowerHint), to: value.rawValue)
 	}
 }
 
