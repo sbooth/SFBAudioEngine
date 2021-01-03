@@ -54,7 +54,9 @@ public class AudioObject: CustomDebugStringConvertible {
 		var settable: DarwinBoolean = false
 		let result = AudioObjectIsPropertySettable(objectID, &address, &settable)
 		guard result == kAudioHardwareNoError else {
-			throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+			os_log(.error, log: audioObjectLog, "AudioObjectIsPropertySettable (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
+			let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("Mutability information on the requested audio object property could not be retrieved.", comment: "")]
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 		}
 
 		return settable.boolValue
@@ -76,7 +78,8 @@ public class AudioObject: CustomDebugStringConvertible {
 			let result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The audio object listener block could not be removed.", comment: "")]
+				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 			}
 		}
 
@@ -98,7 +101,8 @@ public class AudioObject: CustomDebugStringConvertible {
 			let result = AudioObjectAddPropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectAddPropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The audio object listener block could not be added.", comment: "")]
+				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 			}
 		}
 	}
