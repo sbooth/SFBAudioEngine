@@ -419,6 +419,7 @@ extension AudioObject {
 			case kAudioClipLightControlClassID:		return ClipLightControl(objectID)
 			case kAudioTalkbackControlClassID:		return TalkbackControl(objectID)
 			case kAudioListenbackControlClassID: 	return ListenbackControl(objectID)
+			case kAudioISubOwnerControlClassID: 	return iSubOwnerControl(objectID)
 			default:
 				os_log(.debug, log: audioObjectLog, "Unknown boolean control class '%{public}@'", objectClass.fourCC)
 				return BooleanControl(objectID)
