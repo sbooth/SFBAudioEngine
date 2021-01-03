@@ -950,36 +950,68 @@ extension AudioDevice {
 }
 
 extension AudioDevice {
+	/// Returns the volume decibels to scalar transfer function
+	/// - remark: This corresponds to the property `kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction`
+	public func volumeDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
+		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction)))!
+	}
+	/// Returns the play-through decibels to scalar transfer function
+	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction`
+	public func playThroughDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
+		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction)))!
+	}
+
+	/// Returns `true` if the device claims ownership of an attached iSub
+	/// - remark: This corresponds to the property `kAudioDevicePropertyDriverShouldOwniSub`
+	public func shouldOwniSub(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDriverShouldOwniSub), scope: scope, element: element)) as UInt32 != 0
+	}
+	/// Sets whether the device should claim ownership of an attached iSub
+	/// - remark: This corresponds to the property `kAudioDevicePropertyDriverShouldOwniSub`
+	public func setShouldOwniSub(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
+		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDriverShouldOwniSub), scope: scope, element: element), to: UInt32(value ? 1 : 0))
+	}
+
+	/// Returns the LFE decibels to scalar transfer function
+	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction`
+	public func decibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
+		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction)))!
+	}
+}
+
+extension AudioDevice {
 	/// A thin wrapper around a HAL audio device transport type
 	public struct TransportType: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Unknown
-		public static let unknown 		= TransportType(rawValue: kAudioDeviceTransportTypeUnknown)
+		public static let unknown 			= TransportType(rawValue: kAudioDeviceTransportTypeUnknown)
 		/// Built-in
-		public static let builtIn 		= TransportType(rawValue: kAudioDeviceTransportTypeBuiltIn)
+		public static let builtIn 			= TransportType(rawValue: kAudioDeviceTransportTypeBuiltIn)
 		/// Aggregate device
-		public static let aggregate 	= TransportType(rawValue: kAudioDeviceTransportTypeAggregate)
+		public static let aggregate 		= TransportType(rawValue: kAudioDeviceTransportTypeAggregate)
 		/// Virtual device
-		public static let virtual 		= TransportType(rawValue: kAudioDeviceTransportTypeVirtual)
+		public static let virtual 			= TransportType(rawValue: kAudioDeviceTransportTypeVirtual)
 		/// PCI
-		public static let pci 			= TransportType(rawValue: kAudioDeviceTransportTypePCI)
+		public static let pci 				= TransportType(rawValue: kAudioDeviceTransportTypePCI)
 		/// USB
-		public static let usb 			= TransportType(rawValue: kAudioDeviceTransportTypeUSB)
+		public static let usb 				= TransportType(rawValue: kAudioDeviceTransportTypeUSB)
 		/// FireWire
-		public static let fireWire 		= TransportType(rawValue: kAudioDeviceTransportTypeFireWire)
+		public static let fireWire 			= TransportType(rawValue: kAudioDeviceTransportTypeFireWire)
 		/// Bluetooth
-		public static let bluetooth 	= TransportType(rawValue: kAudioDeviceTransportTypeBluetooth)
+		public static let bluetooth 		= TransportType(rawValue: kAudioDeviceTransportTypeBluetooth)
 		/// Bluetooth Low Energy
-		public static let bluetoothLE 	= TransportType(rawValue: kAudioDeviceTransportTypeBluetoothLE)
+		public static let bluetoothLE 		= TransportType(rawValue: kAudioDeviceTransportTypeBluetoothLE)
 		/// HDMI
-		public static let hdmi 			= TransportType(rawValue: kAudioDeviceTransportTypeHDMI)
+		public static let hdmi 				= TransportType(rawValue: kAudioDeviceTransportTypeHDMI)
 		/// DisplayPort
-		public static let displayPort 	= TransportType(rawValue: kAudioDeviceTransportTypeDisplayPort)
+		public static let displayPort 		= TransportType(rawValue: kAudioDeviceTransportTypeDisplayPort)
 		/// AirPlay
-		public static let airPlay 		= TransportType(rawValue: kAudioDeviceTransportTypeAirPlay)
+		public static let airPlay 			= TransportType(rawValue: kAudioDeviceTransportTypeAirPlay)
 		/// AVB
-		public static let avb 			= TransportType(rawValue: kAudioDeviceTransportTypeAVB)
+		public static let avb 				= TransportType(rawValue: kAudioDeviceTransportTypeAVB)
 		/// Thunderbolt
-		public static let thunderbolt 	= TransportType(rawValue: kAudioDeviceTransportTypeThunderbolt)
+		public static let thunderbolt 		= TransportType(rawValue: kAudioDeviceTransportTypeThunderbolt)
+		/// Automatically-generated aggregate
+		public static let autoAggregate 	= TransportType(rawValue: kAudioDeviceTransportTypeAutoAggregate)
 
 		public let rawValue: UInt32
 
@@ -1000,21 +1032,22 @@ extension AudioDevice {
 extension AudioDevice.TransportType: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		switch self.rawValue {
-		case kAudioDeviceTransportTypeUnknown:		return "Unknown"
-		case kAudioDeviceTransportTypeBuiltIn:		return "Built-in"
-		case kAudioDeviceTransportTypeAggregate: 	return "Aggregate"
-		case kAudioDeviceTransportTypeVirtual:		return "Virtual"
-		case kAudioDeviceTransportTypePCI:			return "PCI"
-		case kAudioDeviceTransportTypeUSB:			return "USB"
-		case kAudioDeviceTransportTypeFireWire:		return "FireWire"
-		case kAudioDeviceTransportTypeBluetooth:	return "Bluetooth"
-		case kAudioDeviceTransportTypeBluetoothLE: 	return "Bluetooth Low Energy"
-		case kAudioDeviceTransportTypeHDMI:			return "HDMI"
-		case kAudioDeviceTransportTypeDisplayPort:	return "DisplayPort"
-		case kAudioDeviceTransportTypeAirPlay:		return "AirPlay"
-		case kAudioDeviceTransportTypeAVB:			return "AVB"
-		case kAudioDeviceTransportTypeThunderbolt: 	return "Thunderbolt"
-		default:									return "\(self.rawValue)"
+		case kAudioDeviceTransportTypeUnknown:			return "Unknown"
+		case kAudioDeviceTransportTypeBuiltIn:			return "Built-in"
+		case kAudioDeviceTransportTypeAggregate: 		return "Aggregate"
+		case kAudioDeviceTransportTypeVirtual:			return "Virtual"
+		case kAudioDeviceTransportTypePCI:				return "PCI"
+		case kAudioDeviceTransportTypeUSB:				return "USB"
+		case kAudioDeviceTransportTypeFireWire:			return "FireWire"
+		case kAudioDeviceTransportTypeBluetooth:		return "Bluetooth"
+		case kAudioDeviceTransportTypeBluetoothLE: 		return "Bluetooth Low Energy"
+		case kAudioDeviceTransportTypeHDMI:				return "HDMI"
+		case kAudioDeviceTransportTypeDisplayPort:		return "DisplayPort"
+		case kAudioDeviceTransportTypeAirPlay:			return "AirPlay"
+		case kAudioDeviceTransportTypeAVB:				return "AVB"
+		case kAudioDeviceTransportTypeThunderbolt: 		return "Thunderbolt"
+		case kAudioDeviceTransportTypeAutoAggregate: 	return "Automatic Aggregate"
+		default:										return "\(self.rawValue)"
 		}
 	}
 }
@@ -1367,4 +1400,13 @@ extension Selector where T == AudioDevice {
 	public static let subVolumeDecibelsToScalar = Selector(kAudioDevicePropertySubVolumeDecibelsToScalar)
 	/// The property selector `kAudioDevicePropertySubMute`
 	public static let subMute = Selector(kAudioDevicePropertySubMute)
+
+	/// The property selector `kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction`
+	public static let volumeDecibelsToScalarTransferFunction = Selector(kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction)
+	/// The property selector `kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction`
+	public static let playThruVolumeDecibelsToScalarTransferFunction = Selector(kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction)
+	/// The property selector `kAudioDevicePropertyDriverShouldOwniSub`
+	public static let driverShouldOwniSub = Selector(kAudioDevicePropertyDriverShouldOwniSub)
+	/// The property selector `kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction`
+	public static let subVolumeDecibelsToScalarTransferFunction = Selector(kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction)
 }
