@@ -193,7 +193,7 @@ func audioObjectPropertySize(_ property: PropertyAddress, from objectID: AudioOb
 	let result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize)
 	guard result == kAudioHardwareNoError else {
 		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("Size information on the requested audio object property could not be retrieved.", comment: "")]
+		let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("Size information for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be retrieved.", comment: "")]
 		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 	}
 	return Int(dataSize)
@@ -212,7 +212,7 @@ func readAudioObjectProperty<T>(_ property: PropertyAddress, from objectID: Audi
 	let result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, &dataSize, ptr)
 	guard result == kAudioHardwareNoError else {
 		os_log(.error, log: audioObjectLog, "AudioObjectGetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The requested audio object property could not be retrieved.", comment: "")]
+		let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be retrieved.", comment: "")]
 		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 	}
 }
@@ -230,7 +230,7 @@ func writeAudioObjectProperty<T>(_ property: PropertyAddress, on objectID: Audio
 	let result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifier?.size ?? 0, qualifier?.value, dataSize, ptr)
 	guard result == kAudioHardwareNoError else {
 		os_log(.error, log: audioObjectLog, "AudioObjectSetPropertyData (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-		let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The requested audio object property could not be set.", comment: "")]
+		let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be set.", comment: "")]
 		throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 	}
 }

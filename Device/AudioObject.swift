@@ -55,7 +55,7 @@ public class AudioObject: CustomDebugStringConvertible {
 		let result = AudioObjectIsPropertySettable(objectID, &address, &settable)
 		guard result == kAudioHardwareNoError else {
 			os_log(.error, log: audioObjectLog, "AudioObjectIsPropertySettable (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-			let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("Mutability information on the requested audio object property could not be retrieved.", comment: "")]
+			let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("Mutability information for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be retrieved.", comment: "")]
 			throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 		}
 
@@ -78,7 +78,7 @@ public class AudioObject: CustomDebugStringConvertible {
 			let result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The audio object listener block could not be removed.", comment: "")]
+				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The listener block for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be removed.", comment: "")]
 				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 			}
 		}
@@ -101,7 +101,7 @@ public class AudioObject: CustomDebugStringConvertible {
 			let result = AudioObjectAddPropertyListenerBlock(objectID, &propertyAddress, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectAddPropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
-				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The audio object listener block could not be added.", comment: "")]
+				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The listener block for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be added.", comment: "")]
 				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 			}
 		}
