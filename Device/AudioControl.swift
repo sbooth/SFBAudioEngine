@@ -58,9 +58,9 @@ extension AudioControl {
 	}
 }
 
-extension Selector where T == AudioControl {
+extension AudioObject.Selector where T == AudioControl {
 	/// The property selector `kAudioControlPropertyScope`
-	public static let scope = Selector(kAudioControlPropertyScope)
+	public static let scope = AudioObject.Selector(kAudioControlPropertyScope)
 	/// The property selector `kAudioControlPropertyElement`
-	public static let element = Selector(kAudioControlPropertyElement)
+	public static let element = AudioObject.Selector(kAudioControlPropertyElement)
 }

@@ -87,17 +87,17 @@ extension LevelControl {
 	}
 }
 
-extension Selector where T == LevelControl {
+extension AudioObject.Selector where T == LevelControl {
 	/// The property selector `kAudioLevelControlPropertyScalarValue`
-	public static let scalarValue = Selector(kAudioLevelControlPropertyScalarValue)
+	public static let scalarValue = AudioObject.Selector(kAudioLevelControlPropertyScalarValue)
 	/// The property selector `kAudioLevelControlPropertyDecibelValue`
-	public static let decibelValue = Selector(kAudioLevelControlPropertyDecibelValue)
+	public static let decibelValue = AudioObject.Selector(kAudioLevelControlPropertyDecibelValue)
 	/// The property selector `kAudioLevelControlPropertyDecibelRange`
-	public static let decibelRange = Selector(kAudioLevelControlPropertyDecibelRange)
+	public static let decibelRange = AudioObject.Selector(kAudioLevelControlPropertyDecibelRange)
 	/// The property selector `kAudioLevelControlPropertyConvertScalarToDecibels`
-	public static let scalarToDecibels = Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
+	public static let scalarToDecibels = AudioObject.Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
 	/// The property selector `kAudioLevelControlPropertyConvertDecibelsToScalar`
-	public static let decibelsToScalar = Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
+	public static let decibelsToScalar = AudioObject.Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
 }
 
 // MARK: -

@@ -110,23 +110,23 @@ extension AudioClockDevice {
 	}
 }
 
-extension Selector where T == AudioClockDevice {
+extension AudioObject.Selector where T == AudioClockDevice {
 	/// The property selector `kAudioClockDevicePropertyDeviceUID`
-	public static let deviceUID = Selector(kAudioClockDevicePropertyDeviceUID)
+	public static let deviceUID = AudioObject.Selector(kAudioClockDevicePropertyDeviceUID)
 	/// The property selector `kAudioClockDevicePropertyTransportType`
-	public static let transportType = Selector(kAudioClockDevicePropertyTransportType)
+	public static let transportType = AudioObject.Selector(kAudioClockDevicePropertyTransportType)
 	/// The property selector `kAudioClockDevicePropertyClockDomain`
-	public static let clockDomain = Selector(kAudioClockDevicePropertyClockDomain)
+	public static let clockDomain = AudioObject.Selector(kAudioClockDevicePropertyClockDomain)
 	/// The property selector `kAudioClockDevicePropertyDeviceIsAlive`
-	public static let deviceIsAlive = Selector(kAudioClockDevicePropertyDeviceIsAlive)
+	public static let deviceIsAlive = AudioObject.Selector(kAudioClockDevicePropertyDeviceIsAlive)
 	/// The property selector `kAudioClockDevicePropertyDeviceIsRunning`
-	public static let deviceIsRunning = Selector(kAudioClockDevicePropertyDeviceIsRunning)
+	public static let deviceIsRunning = AudioObject.Selector(kAudioClockDevicePropertyDeviceIsRunning)
 	/// The property selector `kAudioClockDevicePropertyLatency`
-	public static let latency = Selector(kAudioClockDevicePropertyLatency)
+	public static let latency = AudioObject.Selector(kAudioClockDevicePropertyLatency)
 	/// The property selector `kAudioClockDevicePropertyControlList`
-	public static let controlList = Selector(kAudioClockDevicePropertyControlList)
+	public static let controlList = AudioObject.Selector(kAudioClockDevicePropertyControlList)
 	/// The property selector `kAudioClockDevicePropertyNominalSampleRate`
-	public static let nominalSampleRate = Selector(kAudioClockDevicePropertyNominalSampleRate)
+	public static let nominalSampleRate = AudioObject.Selector(kAudioClockDevicePropertyNominalSampleRate)
 	/// The property selector `kAudioClockDevicePropertyAvailableNominalSampleRates`
-	public static let availableNominalSampleRates = Selector(kAudioClockDevicePropertyAvailableNominalSampleRates)
+	public static let availableNominalSampleRates = AudioObject.Selector(kAudioClockDevicePropertyAvailableNominalSampleRates)
 }

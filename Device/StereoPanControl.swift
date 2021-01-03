@@ -69,9 +69,9 @@ extension StereoPanControl {
 	}
 }
 
-extension Selector where T == StereoPanControl {
+extension AudioObject.Selector where T == StereoPanControl {
 	/// The property selector `kAudioStereoPanControlPropertyValue`
-	public static let value = Selector(kAudioStereoPanControlPropertyValue)
+	public static let value = AudioObject.Selector(kAudioStereoPanControlPropertyValue)
 	/// The property selector `kAudioStereoPanControlPropertyPanningChannels`
-	public static let panningChannels = Selector(kAudioStereoPanControlPropertyPanningChannels)
+	public static let panningChannels = AudioObject.Selector(kAudioStereoPanControlPropertyPanningChannels)
 }

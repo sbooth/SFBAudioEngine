@@ -106,15 +106,15 @@ extension SelectorControl {
 	}
 }
 
-extension Selector where T == SelectorControl {
+extension AudioObject.Selector where T == SelectorControl {
 	/// The property selector `kAudioSelectorControlPropertyCurrentItem`
-	public static let currentItem = Selector(kAudioSelectorControlPropertyCurrentItem)
+	public static let currentItem = AudioObject.Selector(kAudioSelectorControlPropertyCurrentItem)
 	/// The property selector `kAudioSelectorControlPropertyAvailableItems`
-	public static let availableItems = Selector(kAudioSelectorControlPropertyAvailableItems)
+	public static let availableItems = AudioObject.Selector(kAudioSelectorControlPropertyAvailableItems)
 	/// The property selector `kAudioSelectorControlPropertyItemName`
-	public static let itemName = Selector(kAudioSelectorControlPropertyItemName)
+	public static let itemName = AudioObject.Selector(kAudioSelectorControlPropertyItemName)
 	/// The property selector `kAudioSelectorControlPropertyItemKind`
-	public static let itemKind = Selector(kAudioSelectorControlPropertyItemKind)
+	public static let itemKind = AudioObject.Selector(kAudioSelectorControlPropertyItemKind)
 }
 
 // MARK: -

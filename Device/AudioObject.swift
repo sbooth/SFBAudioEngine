@@ -473,17 +473,17 @@ extension AudioObject {
 
 // MARK: -
 
-/// A thin wrapper around a HAL audio object property selector for a specific `AudioObject` subclass
-public struct Selector<T: AudioObject> {
-	/// The underlying `AudioObjectPropertySelector` value
-	let rawValue: AudioObjectPropertySelector
-	/// Initializes a `Selector` with `value`
-	init(_ value: AudioObjectPropertySelector) {
-		self.rawValue = value
-	}
-}
-
 extension AudioObject {
+	/// A thin wrapper around a HAL audio object property selector for a specific `AudioObject` subclass
+	public struct Selector<T: AudioObject> {
+		/// The underlying `AudioObjectPropertySelector` value
+		let rawValue: AudioObjectPropertySelector
+		/// Initializes a `Selector` with `value`
+		init(_ value: AudioObjectPropertySelector) {
+			self.rawValue = value
+		}
+	}
+
 	/// Returns `true` if `self` has `selector` in `scope` on `element`
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
@@ -512,39 +512,39 @@ extension AudioObject {
 	}
 }
 
-extension Selector where T == AudioObject {
+extension AudioObject.Selector where T == AudioObject {
 	/// The wildcard property selector `kAudioObjectPropertySelectorWildcard`
-	public static let wildcard = Selector(kAudioObjectPropertySelectorWildcard)
+	public static let wildcard = AudioObject.Selector(kAudioObjectPropertySelectorWildcard)
 
 	/// The property selector `kAudioObjectPropertyBaseClass`
-	public static let baseClass = Selector(kAudioObjectPropertyBaseClass)
+	public static let baseClass = AudioObject.Selector(kAudioObjectPropertyBaseClass)
 	/// The property selector `kAudioObjectPropertyClass`
-	public static let `class` = Selector(kAudioObjectPropertyClass)
+	public static let `class` = AudioObject.Selector(kAudioObjectPropertyClass)
 	/// The property selector `kAudioObjectPropertyOwner`
-	public static let owner = Selector(kAudioObjectPropertyOwner)
+	public static let owner = AudioObject.Selector(kAudioObjectPropertyOwner)
 	/// The property selector `kAudioObjectPropertyName`
-	public static let name = Selector(kAudioObjectPropertyName)
+	public static let name = AudioObject.Selector(kAudioObjectPropertyName)
 	/// The property selector `kAudioObjectPropertyModelName`
-	public static let modelName = Selector(kAudioObjectPropertyModelName)
+	public static let modelName = AudioObject.Selector(kAudioObjectPropertyModelName)
 	/// The property selector `kAudioObjectPropertyManufacturer`
-	public static let manufacturer = Selector(kAudioObjectPropertyManufacturer)
+	public static let manufacturer = AudioObject.Selector(kAudioObjectPropertyManufacturer)
 	/// The property selector `kAudioObjectPropertyElementName`
-	public static let elementName = Selector(kAudioObjectPropertyElementName)
+	public static let elementName = AudioObject.Selector(kAudioObjectPropertyElementName)
 	/// The property selector `kAudioObjectPropertyElementCategoryName`
-	public static let elementCategoryName = Selector(kAudioObjectPropertyElementCategoryName)
+	public static let elementCategoryName = AudioObject.Selector(kAudioObjectPropertyElementCategoryName)
 	/// The property selector `kAudioObjectPropertyElementNumberName`
-	public static let elementNumberName = Selector(kAudioObjectPropertyElementNumberName)
+	public static let elementNumberName = AudioObject.Selector(kAudioObjectPropertyElementNumberName)
 	/// The property selector `kAudioObjectPropertyOwnedObjects`
-	public static let ownedObjects = Selector(kAudioObjectPropertyOwnedObjects)
+	public static let ownedObjects = AudioObject.Selector(kAudioObjectPropertyOwnedObjects)
 	/// The property selector `kAudioObjectPropertyIdentify`
-	public static let identify = Selector(kAudioObjectPropertyIdentify)
+	public static let identify = AudioObject.Selector(kAudioObjectPropertyIdentify)
 	/// The property selector `kAudioObjectPropertySerialNumber`
-	public static let serialNumber = Selector(kAudioObjectPropertySerialNumber)
+	public static let serialNumber = AudioObject.Selector(kAudioObjectPropertySerialNumber)
 	/// The property selector `kAudioObjectPropertyFirmwareVersion`
-	public static let firmwareVersion = Selector(kAudioObjectPropertyFirmwareVersion)
+	public static let firmwareVersion = AudioObject.Selector(kAudioObjectPropertyFirmwareVersion)
 }
 
-extension Selector: CustomStringConvertible {
+extension AudioObject.Selector: CustomStringConvertible {
 	public var description: String {
 		return "\(type(of: T.self)): '\(rawValue.fourCC)'"
 	}

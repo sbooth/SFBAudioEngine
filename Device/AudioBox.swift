@@ -116,21 +116,21 @@ extension AudioBox {
 	}
 }
 
-extension Selector where T == AudioBox {
+extension AudioObject.Selector where T == AudioBox {
 	/// The property selector `kAudioBoxPropertyBoxUID`
-	public static let boxUID = Selector(kAudioBoxPropertyBoxUID)
+	public static let boxUID = AudioObject.Selector(kAudioBoxPropertyBoxUID)
 	/// The property selector `kAudioBoxPropertyTransportType`
-	public static let transportType = Selector(kAudioBoxPropertyTransportType)
+	public static let transportType = AudioObject.Selector(kAudioBoxPropertyTransportType)
 	/// The property selector `kAudioBoxPropertyHasAudio`
-	public static let hasAudio = Selector(kAudioBoxPropertyHasAudio)
+	public static let hasAudio = AudioObject.Selector(kAudioBoxPropertyHasAudio)
 	/// The property selector `kAudioBoxPropertyHasVideo`
-	public static let hasVideo = Selector(kAudioBoxPropertyHasVideo)
+	public static let hasVideo = AudioObject.Selector(kAudioBoxPropertyHasVideo)
 	/// The property selector `kAudioBoxPropertyHasMIDI`
-	public static let hasMIDI = Selector(kAudioBoxPropertyHasMIDI)
+	public static let hasMIDI = AudioObject.Selector(kAudioBoxPropertyHasMIDI)
 	/// The property selector `kAudioBoxPropertyAcquired`
-	public static let acquired = Selector(kAudioBoxPropertyAcquired)
+	public static let acquired = AudioObject.Selector(kAudioBoxPropertyAcquired)
 	/// The property selector `kAudioBoxPropertyDeviceList`
-	public static let deviceList = Selector(kAudioBoxPropertyDeviceList)
+	public static let deviceList = AudioObject.Selector(kAudioBoxPropertyDeviceList)
 	/// The property selector `kAudioBoxPropertyClockDeviceList`
-	public static let clockDeviceList = Selector(kAudioBoxPropertyClockDeviceList)
+	public static let clockDeviceList = AudioObject.Selector(kAudioBoxPropertyClockDeviceList)
 }
