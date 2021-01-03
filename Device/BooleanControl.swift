@@ -55,9 +55,9 @@ extension BooleanControl {
 	}
 }
 
-extension AudioObject.Selector where T == BooleanControl {
+extension Selector where T == BooleanControl {
 	/// The property selector `kAudioBooleanControlPropertyValue`
-	public static let value = AudioObject.Selector(kAudioBooleanControlPropertyValue)
+	public static let value = Selector(kAudioBooleanControlPropertyValue)
 }
 
 // MARK: -

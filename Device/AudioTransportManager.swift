@@ -103,15 +103,15 @@ extension AudioTransportManager {
 	}
 }
 
-extension AudioObject.Selector where T == AudioTransportManager {
+extension Selector where T == AudioTransportManager {
 	/// The property selector `kAudioTransportManagerCreateEndPointDevice`
-//	public static let createEndpointDevice = AudioObject.Selector(kAudioTransportManagerCreateEndPointDevice)
+//	public static let createEndpointDevice = Selector(kAudioTransportManagerCreateEndPointDevice)
 	/// The property selector `kAudioTransportManagerDestroyEndPointDevice`
-//	public static let destroyEndpointDevice = AudioObject.Selector(kAudioTransportManagerDestroyEndPointDevice)
+//	public static let destroyEndpointDevice = Selector(kAudioTransportManagerDestroyEndPointDevice)
 	/// The property selector `kAudioTransportManagerPropertyEndPointList`
-	public static let endpointList = AudioObject.Selector(kAudioTransportManagerPropertyEndPointList)
+	public static let endpointList = Selector(kAudioTransportManagerPropertyEndPointList)
 	/// The property selector `kAudioTransportManagerPropertyTranslateUIDToEndPoint`
-	public static let translateUIDToEndpoint = AudioObject.Selector(kAudioTransportManagerPropertyTranslateUIDToEndPoint)
+	public static let translateUIDToEndpoint = Selector(kAudioTransportManagerPropertyTranslateUIDToEndPoint)
 	/// The property selector `kAudioTransportManagerPropertyTransportType`
-	public static let transportType = AudioObject.Selector(kAudioTransportManagerPropertyTransportType)
+	public static let transportType = Selector(kAudioTransportManagerPropertyTransportType)
 }

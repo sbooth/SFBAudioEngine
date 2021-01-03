@@ -179,23 +179,23 @@ extension AudioStream {
 	}
 }
 
-extension AudioObject.Selector where T == AudioStream {
+extension Selector where T == AudioStream {
 	/// The property selector `kAudioStreamPropertyIsActive`
-	public static let isActive = AudioObject.Selector(kAudioStreamPropertyIsActive)
+	public static let isActive = Selector(kAudioStreamPropertyIsActive)
 	/// The property selector `kAudioStreamPropertyDirection`
-	public static let direction = AudioObject.Selector(kAudioStreamPropertyDirection)
+	public static let direction = Selector(kAudioStreamPropertyDirection)
 	/// The property selector `kAudioStreamPropertyTerminalType`
-	public static let terminalType = AudioObject.Selector(kAudioStreamPropertyTerminalType)
+	public static let terminalType = Selector(kAudioStreamPropertyTerminalType)
 	/// The property selector `kAudioStreamPropertyStartingChannel`
-	public static let startingChannel = AudioObject.Selector(kAudioStreamPropertyStartingChannel)
+	public static let startingChannel = Selector(kAudioStreamPropertyStartingChannel)
 	/// The property selector `kAudioStreamPropertyLatency`
-	public static let latency = AudioObject.Selector(kAudioStreamPropertyLatency)
+	public static let latency = Selector(kAudioStreamPropertyLatency)
 	/// The property selector `kAudioStreamPropertyVirtualFormat`
-	public static let virtualFormat = AudioObject.Selector(kAudioStreamPropertyVirtualFormat)
+	public static let virtualFormat = Selector(kAudioStreamPropertyVirtualFormat)
 	/// The property selector `kAudioStreamPropertyAvailableVirtualFormats`
-	public static let availableVirtualFormats = AudioObject.Selector(kAudioStreamPropertyAvailableVirtualFormats)
+	public static let availableVirtualFormats = Selector(kAudioStreamPropertyAvailableVirtualFormats)
 	/// The property selector `kAudioStreamPropertyPhysicalFormat`
-	public static let physicalFormat = AudioObject.Selector(kAudioStreamPropertyPhysicalFormat)
+	public static let physicalFormat = Selector(kAudioStreamPropertyPhysicalFormat)
 	/// The property selector `kAudioStreamPropertyAvailablePhysicalFormats`
-	public static let availablePhysicalFormats = AudioObject.Selector(kAudioStreamPropertyAvailablePhysicalFormats)
+	public static let availablePhysicalFormats = Selector(kAudioStreamPropertyAvailablePhysicalFormats)
 }

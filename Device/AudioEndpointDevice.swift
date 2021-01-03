@@ -60,11 +60,11 @@ extension AudioEndpointDevice {
 	}
 }
 
-extension AudioObject.Selector where T == AudioEndpointDevice {
+extension Selector where T == AudioEndpointDevice {
 	/// The property selector `kAudioEndPointDevicePropertyComposition`
-	public static let composition = AudioObject.Selector(kAudioEndPointDevicePropertyComposition)
+	public static let composition = Selector(kAudioEndPointDevicePropertyComposition)
 	/// The property selector `kAudioEndPointDevicePropertyEndPointList`
-	public static let endpointList = AudioObject.Selector(kAudioEndPointDevicePropertyEndPointList)
+	public static let endpointList = Selector(kAudioEndPointDevicePropertyEndPointList)
 	/// The property selector `kAudioEndPointDevicePropertyIsPrivate`
-	public static let isPrivate = AudioObject.Selector(kAudioEndPointDevicePropertyIsPrivate)
+	public static let isPrivate = Selector(kAudioEndPointDevicePropertyIsPrivate)
 }

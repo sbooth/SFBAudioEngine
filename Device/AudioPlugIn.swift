@@ -139,23 +139,23 @@ extension AudioPlugIn {
 	}
 }
 
-extension AudioObject.Selector where T == AudioPlugIn {
+extension Selector where T == AudioPlugIn {
 	/// The property selector `kAudioPlugInCreateAggregateDevice`
-//	public static let createAggregateDevice = AudioObject.Selector(kAudioPlugInCreateAggregateDevice)
+//	public static let createAggregateDevice = Selector(kAudioPlugInCreateAggregateDevice)
 	/// The property selector `kAudioPlugInDestroyAggregateDevice`
-//	public static let destroyAggregateDevice = AudioObject.Selector(kAudioPlugInDestroyAggregateDevice)
+//	public static let destroyAggregateDevice = Selector(kAudioPlugInDestroyAggregateDevice)
 	/// The property selector `kAudioPlugInPropertyBundleID`
-	public static let bundleID = AudioObject.Selector(kAudioPlugInPropertyBundleID)
+	public static let bundleID = Selector(kAudioPlugInPropertyBundleID)
 	/// The property selector `kAudioPlugInPropertyDeviceList`
-	public static let deviceList = AudioObject.Selector(kAudioPlugInPropertyDeviceList)
+	public static let deviceList = Selector(kAudioPlugInPropertyDeviceList)
 	/// The property selector `kAudioPlugInPropertyTranslateUIDToDevice`
-	public static let translateUIDToDevice = AudioObject.Selector(kAudioPlugInPropertyTranslateUIDToDevice)
+	public static let translateUIDToDevice = Selector(kAudioPlugInPropertyTranslateUIDToDevice)
 	/// The property selector `kAudioPlugInPropertyBoxList`
-	public static let boxList = AudioObject.Selector(kAudioPlugInPropertyBoxList)
+	public static let boxList = Selector(kAudioPlugInPropertyBoxList)
 	/// The property selector `kAudioPlugInPropertyTranslateUIDToBox`
-	public static let translateUIDToBox = AudioObject.Selector(kAudioPlugInPropertyTranslateUIDToBox)
+	public static let translateUIDToBox = Selector(kAudioPlugInPropertyTranslateUIDToBox)
 	/// The property selector `kAudioPlugInPropertyClockDeviceList`
-	public static let clockDeviceList = AudioObject.Selector(kAudioPlugInPropertyClockDeviceList)
+	public static let clockDeviceList = Selector(kAudioPlugInPropertyClockDeviceList)
 	/// The property selector `kAudioPlugInPropertyTranslateUIDToClockDevice`
-	public static let translateUIDToClockDevice = AudioObject.Selector(kAudioPlugInPropertyTranslateUIDToClockDevice)
+	public static let translateUIDToClockDevice = Selector(kAudioPlugInPropertyTranslateUIDToClockDevice)
 }

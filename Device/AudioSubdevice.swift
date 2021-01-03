@@ -113,11 +113,11 @@ extension AudioSubdevice {
 	}
 }
 
-extension AudioObject.Selector where T == AudioSubdevice {
+extension Selector where T == AudioSubdevice {
 	/// The property selector `kAudioSubDevicePropertyExtraLatency`
-	public static let extraLatency = AudioObject.Selector(kAudioSubDevicePropertyExtraLatency)
+	public static let extraLatency = Selector(kAudioSubDevicePropertyExtraLatency)
 	/// The property selector `kAudioSubDevicePropertyDriftCompensation`
-	public static let driftCompensation = AudioObject.Selector(kAudioSubDevicePropertyDriftCompensation)
+	public static let driftCompensation = Selector(kAudioSubDevicePropertyDriftCompensation)
 	/// The property selector `kAudioSubDevicePropertyDriftCompensationQuality`
-	public static let driftCompensationQuality = AudioObject.Selector(kAudioSubDevicePropertyDriftCompensationQuality)
+	public static let driftCompensationQuality = Selector(kAudioSubDevicePropertyDriftCompensationQuality)
 }

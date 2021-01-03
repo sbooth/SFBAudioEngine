@@ -95,15 +95,15 @@ extension AudioAggregateDevice {
 	}
 }
 
-extension AudioObject.Selector where T == AudioAggregateDevice {
+extension Selector where T == AudioAggregateDevice {
 	/// The property selector `kAudioAggregateDevicePropertyFullSubDeviceList`
-	public static let fullSubDeviceList = AudioObject.Selector(kAudioAggregateDevicePropertyFullSubDeviceList)
+	public static let fullSubDeviceList = Selector(kAudioAggregateDevicePropertyFullSubDeviceList)
 	/// The property selector `kAudioAggregateDevicePropertyActiveSubDeviceList`
-	public static let activeSubDeviceList = AudioObject.Selector(kAudioAggregateDevicePropertyActiveSubDeviceList)
+	public static let activeSubDeviceList = Selector(kAudioAggregateDevicePropertyActiveSubDeviceList)
 	/// The property selector `kAudioAggregateDevicePropertyComposition`
-	public static let composition = AudioObject.Selector(kAudioAggregateDevicePropertyComposition)
+	public static let composition = Selector(kAudioAggregateDevicePropertyComposition)
 	/// The property selector `kAudioAggregateDevicePropertyMasterSubDevice`
-	public static let masterSubDevice = AudioObject.Selector(kAudioAggregateDevicePropertyMasterSubDevice)
+	public static let masterSubDevice = Selector(kAudioAggregateDevicePropertyMasterSubDevice)
 	/// The property selector `kAudioAggregateDevicePropertyClockDevice`
-	public static let clockDevice = AudioObject.Selector(kAudioAggregateDevicePropertyClockDevice)
+	public static let clockDevice = Selector(kAudioAggregateDevicePropertyClockDevice)
 }
