@@ -107,13 +107,13 @@ extension SelectorControl {
 }
 
 extension Selector where T == SelectorControl {
-	/// The property `kAudioSelectorControlPropertyCurrentItem`
+	/// The property selector `kAudioSelectorControlPropertyCurrentItem`
 	public static let currentItem = Selector(kAudioSelectorControlPropertyCurrentItem)
-	/// The property `kAudioSelectorControlPropertyAvailableItems`
+	/// The property selector `kAudioSelectorControlPropertyAvailableItems`
 	public static let availableItems = Selector(kAudioSelectorControlPropertyAvailableItems)
-	/// The property `kAudioSelectorControlPropertyItemName`
+	/// The property selector `kAudioSelectorControlPropertyItemName`
 	public static let itemName = Selector(kAudioSelectorControlPropertyItemName)
-	/// The property `kAudioSelectorControlPropertyItemKind`
+	/// The property selector `kAudioSelectorControlPropertyItemKind`
 	public static let itemKind = Selector(kAudioSelectorControlPropertyItemKind)
 }
 

@@ -61,10 +61,10 @@ extension AudioEndpointDevice {
 }
 
 extension Selector where T == AudioEndpointDevice {
-	/// The property `kAudioEndPointDevicePropertyComposition`
+	/// The property selector `kAudioEndPointDevicePropertyComposition`
 	public static let composition = Selector(kAudioEndPointDevicePropertyComposition)
-	/// The property `kAudioEndPointDevicePropertyEndPointList`
+	/// The property selector `kAudioEndPointDevicePropertyEndPointList`
 	public static let endpointList = Selector(kAudioEndPointDevicePropertyEndPointList)
-	/// The property `kAudioEndPointDevicePropertyIsPrivate`
+	/// The property selector `kAudioEndPointDevicePropertyIsPrivate`
 	public static let isPrivate = Selector(kAudioEndPointDevicePropertyIsPrivate)
 }

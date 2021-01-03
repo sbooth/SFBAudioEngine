@@ -62,8 +62,8 @@ extension SliderControl {
 }
 
 extension Selector where T == SliderControl {
-	/// The property `kAudioSliderControlPropertyValue`
+	/// The property selector `kAudioSliderControlPropertyValue`
 	public static let value = Selector(kAudioSliderControlPropertyValue)
-	/// The property `kAudioSliderControlPropertyRange`
+	/// The property selector `kAudioSliderControlPropertyRange`
 	public static let range = Selector(kAudioSliderControlPropertyRange)
 }

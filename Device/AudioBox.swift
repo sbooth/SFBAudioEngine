@@ -117,20 +117,20 @@ extension AudioBox {
 }
 
 extension Selector where T == AudioBox {
-	/// The property `kAudioBoxPropertyBoxUID`
+	/// The property selector `kAudioBoxPropertyBoxUID`
 	public static let boxUID = Selector(kAudioBoxPropertyBoxUID)
-	/// The property `kAudioBoxPropertyTransportType`
+	/// The property selector `kAudioBoxPropertyTransportType`
 	public static let transportType = Selector(kAudioBoxPropertyTransportType)
-	/// The property `kAudioBoxPropertyHasAudio`
+	/// The property selector `kAudioBoxPropertyHasAudio`
 	public static let hasAudio = Selector(kAudioBoxPropertyHasAudio)
-	/// The property `kAudioBoxPropertyHasVideo`
+	/// The property selector `kAudioBoxPropertyHasVideo`
 	public static let hasVideo = Selector(kAudioBoxPropertyHasVideo)
-	/// The property `kAudioBoxPropertyHasMIDI`
+	/// The property selector `kAudioBoxPropertyHasMIDI`
 	public static let hasMIDI = Selector(kAudioBoxPropertyHasMIDI)
-	/// The property `kAudioBoxPropertyAcquired`
+	/// The property selector `kAudioBoxPropertyAcquired`
 	public static let acquired = Selector(kAudioBoxPropertyAcquired)
-	/// The property `kAudioBoxPropertyDeviceList`
+	/// The property selector `kAudioBoxPropertyDeviceList`
 	public static let deviceList = Selector(kAudioBoxPropertyDeviceList)
-	/// The property `kAudioBoxPropertyClockDeviceList`
+	/// The property selector `kAudioBoxPropertyClockDeviceList`
 	public static let clockDeviceList = Selector(kAudioBoxPropertyClockDeviceList)
 }

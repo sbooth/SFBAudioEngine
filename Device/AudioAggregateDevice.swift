@@ -96,14 +96,14 @@ extension AudioAggregateDevice {
 }
 
 extension Selector where T == AudioAggregateDevice {
-	/// The property `kAudioAggregateDevicePropertyFullSubDeviceList`
+	/// The property selector `kAudioAggregateDevicePropertyFullSubDeviceList`
 	public static let fullSubDeviceList = Selector(kAudioAggregateDevicePropertyFullSubDeviceList)
-	/// The property `kAudioAggregateDevicePropertyActiveSubDeviceList`
+	/// The property selector `kAudioAggregateDevicePropertyActiveSubDeviceList`
 	public static let activeSubDeviceList = Selector(kAudioAggregateDevicePropertyActiveSubDeviceList)
-	/// The property `kAudioAggregateDevicePropertyComposition`
+	/// The property selector `kAudioAggregateDevicePropertyComposition`
 	public static let composition = Selector(kAudioAggregateDevicePropertyComposition)
-	/// The property `kAudioAggregateDevicePropertyMasterSubDevice`
+	/// The property selector `kAudioAggregateDevicePropertyMasterSubDevice`
 	public static let masterSubDevice = Selector(kAudioAggregateDevicePropertyMasterSubDevice)
-	/// The property `kAudioAggregateDevicePropertyClockDevice`
+	/// The property selector `kAudioAggregateDevicePropertyClockDevice`
 	public static let clockDevice = Selector(kAudioAggregateDevicePropertyClockDevice)
 }

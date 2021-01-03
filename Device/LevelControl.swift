@@ -88,15 +88,15 @@ extension LevelControl {
 }
 
 extension Selector where T == LevelControl {
-	/// The property `kAudioLevelControlPropertyScalarValue`
+	/// The property selector `kAudioLevelControlPropertyScalarValue`
 	public static let scalarValue = Selector(kAudioLevelControlPropertyScalarValue)
-	/// The property `kAudioLevelControlPropertyDecibelValue`
+	/// The property selector `kAudioLevelControlPropertyDecibelValue`
 	public static let decibelValue = Selector(kAudioLevelControlPropertyDecibelValue)
-	/// The property `kAudioLevelControlPropertyDecibelRange`
+	/// The property selector `kAudioLevelControlPropertyDecibelRange`
 	public static let decibelRange = Selector(kAudioLevelControlPropertyDecibelRange)
-	/// The property `kAudioLevelControlPropertyConvertScalarToDecibels`
+	/// The property selector `kAudioLevelControlPropertyConvertScalarToDecibels`
 	public static let scalarToDecibels = Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
-	/// The property `kAudioLevelControlPropertyConvertDecibelsToScalar`
+	/// The property selector `kAudioLevelControlPropertyConvertDecibelsToScalar`
 	public static let decibelsToScalar = Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
 }
 

@@ -114,10 +114,10 @@ extension AudioSubdevice {
 }
 
 extension Selector where T == AudioSubdevice {
-	/// The property `kAudioSubDevicePropertyExtraLatency`
+	/// The property selector `kAudioSubDevicePropertyExtraLatency`
 	public static let extraLatency = Selector(kAudioSubDevicePropertyExtraLatency)
-	/// The property `kAudioSubDevicePropertyDriftCompensation`
+	/// The property selector `kAudioSubDevicePropertyDriftCompensation`
 	public static let driftCompensation = Selector(kAudioSubDevicePropertyDriftCompensation)
-	/// The property `kAudioSubDevicePropertyDriftCompensationQuality`
+	/// The property selector `kAudioSubDevicePropertyDriftCompensationQuality`
 	public static let driftCompensationQuality = Selector(kAudioSubDevicePropertyDriftCompensationQuality)
 }

@@ -111,22 +111,22 @@ extension AudioClockDevice {
 }
 
 extension Selector where T == AudioClockDevice {
-	/// The property `kAudioClockDevicePropertyDeviceUID`
+	/// The property selector `kAudioClockDevicePropertyDeviceUID`
 	public static let deviceUID = Selector(kAudioClockDevicePropertyDeviceUID)
-	/// The property `kAudioClockDevicePropertyTransportType`
+	/// The property selector `kAudioClockDevicePropertyTransportType`
 	public static let transportType = Selector(kAudioClockDevicePropertyTransportType)
-	/// The property `kAudioClockDevicePropertyClockDomain`
+	/// The property selector `kAudioClockDevicePropertyClockDomain`
 	public static let clockDomain = Selector(kAudioClockDevicePropertyClockDomain)
-	/// The property `kAudioClockDevicePropertyDeviceIsAlive`
+	/// The property selector `kAudioClockDevicePropertyDeviceIsAlive`
 	public static let deviceIsAlive = Selector(kAudioClockDevicePropertyDeviceIsAlive)
-	/// The property `kAudioClockDevicePropertyDeviceIsRunning`
+	/// The property selector `kAudioClockDevicePropertyDeviceIsRunning`
 	public static let deviceIsRunning = Selector(kAudioClockDevicePropertyDeviceIsRunning)
-	/// The property `kAudioClockDevicePropertyLatency`
+	/// The property selector `kAudioClockDevicePropertyLatency`
 	public static let latency = Selector(kAudioClockDevicePropertyLatency)
-	/// The property `kAudioClockDevicePropertyControlList`
+	/// The property selector `kAudioClockDevicePropertyControlList`
 	public static let controlList = Selector(kAudioClockDevicePropertyControlList)
-	/// The property `kAudioClockDevicePropertyNominalSampleRate`
+	/// The property selector `kAudioClockDevicePropertyNominalSampleRate`
 	public static let nominalSampleRate = Selector(kAudioClockDevicePropertyNominalSampleRate)
-	/// The property `kAudioClockDevicePropertyAvailableNominalSampleRates`
+	/// The property selector `kAudioClockDevicePropertyAvailableNominalSampleRates`
 	public static let availableNominalSampleRates = Selector(kAudioClockDevicePropertyAvailableNominalSampleRates)
 }

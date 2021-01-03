@@ -59,8 +59,8 @@ extension AudioControl {
 }
 
 extension Selector where T == AudioControl {
-	/// The property `kAudioControlPropertyScope`
+	/// The property selector `kAudioControlPropertyScope`
 	public static let scope = Selector(kAudioControlPropertyScope)
-	/// The property `kAudioControlPropertyElement`
+	/// The property selector `kAudioControlPropertyElement`
 	public static let element = Selector(kAudioControlPropertyElement)
 }

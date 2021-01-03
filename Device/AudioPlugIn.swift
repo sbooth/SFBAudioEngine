@@ -140,22 +140,22 @@ extension AudioPlugIn {
 }
 
 extension Selector where T == AudioPlugIn {
-	/// The property `kAudioPlugInCreateAggregateDevice`
+	/// The property selector `kAudioPlugInCreateAggregateDevice`
 //	public static let createAggregateDevice = Selector(kAudioPlugInCreateAggregateDevice)
-	/// The property `kAudioPlugInDestroyAggregateDevice`
+	/// The property selector `kAudioPlugInDestroyAggregateDevice`
 //	public static let destroyAggregateDevice = Selector(kAudioPlugInDestroyAggregateDevice)
-	/// The property `kAudioPlugInPropertyBundleID`
+	/// The property selector `kAudioPlugInPropertyBundleID`
 	public static let bundleID = Selector(kAudioPlugInPropertyBundleID)
-	/// The property `kAudioPlugInPropertyDeviceList`
+	/// The property selector `kAudioPlugInPropertyDeviceList`
 	public static let deviceList = Selector(kAudioPlugInPropertyDeviceList)
-	/// The property `kAudioPlugInPropertyTranslateUIDToDevice`
+	/// The property selector `kAudioPlugInPropertyTranslateUIDToDevice`
 	public static let translateUIDToDevice = Selector(kAudioPlugInPropertyTranslateUIDToDevice)
-	/// The property `kAudioPlugInPropertyBoxList`
+	/// The property selector `kAudioPlugInPropertyBoxList`
 	public static let boxList = Selector(kAudioPlugInPropertyBoxList)
-	/// The property `kAudioPlugInPropertyTranslateUIDToBox`
+	/// The property selector `kAudioPlugInPropertyTranslateUIDToBox`
 	public static let translateUIDToBox = Selector(kAudioPlugInPropertyTranslateUIDToBox)
-	/// The property `kAudioPlugInPropertyClockDeviceList`
+	/// The property selector `kAudioPlugInPropertyClockDeviceList`
 	public static let clockDeviceList = Selector(kAudioPlugInPropertyClockDeviceList)
-	/// The property `kAudioPlugInPropertyTranslateUIDToClockDevice`
+	/// The property selector `kAudioPlugInPropertyTranslateUIDToClockDevice`
 	public static let translateUIDToClockDevice = Selector(kAudioPlugInPropertyTranslateUIDToClockDevice)
 }

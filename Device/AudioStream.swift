@@ -180,22 +180,22 @@ extension AudioStream {
 }
 
 extension Selector where T == AudioStream {
-	/// The property `kAudioStreamPropertyIsActive`
+	/// The property selector `kAudioStreamPropertyIsActive`
 	public static let isActive = Selector(kAudioStreamPropertyIsActive)
-	/// The property `kAudioStreamPropertyDirection`
+	/// The property selector `kAudioStreamPropertyDirection`
 	public static let direction = Selector(kAudioStreamPropertyDirection)
-	/// The property `kAudioStreamPropertyTerminalType`
+	/// The property selector `kAudioStreamPropertyTerminalType`
 	public static let terminalType = Selector(kAudioStreamPropertyTerminalType)
-	/// The property `kAudioStreamPropertyStartingChannel`
+	/// The property selector `kAudioStreamPropertyStartingChannel`
 	public static let startingChannel = Selector(kAudioStreamPropertyStartingChannel)
-	/// The property `kAudioStreamPropertyLatency`
+	/// The property selector `kAudioStreamPropertyLatency`
 	public static let latency = Selector(kAudioStreamPropertyLatency)
-	/// The property `kAudioStreamPropertyVirtualFormat`
+	/// The property selector `kAudioStreamPropertyVirtualFormat`
 	public static let virtualFormat = Selector(kAudioStreamPropertyVirtualFormat)
-	/// The property `kAudioStreamPropertyAvailableVirtualFormats`
+	/// The property selector `kAudioStreamPropertyAvailableVirtualFormats`
 	public static let availableVirtualFormats = Selector(kAudioStreamPropertyAvailableVirtualFormats)
-	/// The property `kAudioStreamPropertyPhysicalFormat`
+	/// The property selector `kAudioStreamPropertyPhysicalFormat`
 	public static let physicalFormat = Selector(kAudioStreamPropertyPhysicalFormat)
-	/// The property `kAudioStreamPropertyAvailablePhysicalFormats`
+	/// The property selector `kAudioStreamPropertyAvailablePhysicalFormats`
 	public static let availablePhysicalFormats = Selector(kAudioStreamPropertyAvailablePhysicalFormats)
 }

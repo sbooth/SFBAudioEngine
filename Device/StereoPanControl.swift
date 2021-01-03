@@ -70,8 +70,8 @@ extension StereoPanControl {
 }
 
 extension Selector where T == StereoPanControl {
-	/// The property `kAudioStereoPanControlPropertyValue`
+	/// The property selector `kAudioStereoPanControlPropertyValue`
 	public static let value = Selector(kAudioStereoPanControlPropertyValue)
-	/// The property `kAudioStereoPanControlPropertyPanningChannels`
+	/// The property selector `kAudioStereoPanControlPropertyPanningChannels`
 	public static let panningChannels = Selector(kAudioStereoPanControlPropertyPanningChannels)
 }
