@@ -193,7 +193,7 @@ extension AudioDevice {
 	/// Returns the URL of the device's icon
 	/// - remark: This corresponds to the property `kAudioDevicePropertyIcon`
 	public func icon() throws -> URL {
-		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
+		var value: CFTypeRef! = nil
 		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIcon), from: objectID, into: &value)
 		return value as! URL
 	}

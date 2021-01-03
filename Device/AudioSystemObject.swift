@@ -118,18 +118,18 @@ extension AudioSystemObject {
 }
 
 extension AudioSystemObject {
-//	/// Returns the run loop used for HAL notification handlers
-//	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
-//	public func runLoop() throws -> RunLoop? {
-//		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
-//		try readAudioObjectProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), from: objectID, into: &value)
-//		return value as! RunLoop?
-//	}
-//	/// Sets the run loop used for HAL notification handlers
-//	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
-//	public func setRunLoop(_ value: RunLoop?) throws {
-//		try setProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), to: value as CFRunLoop?)
-//	}
+	/// Returns the run loop used for HAL notification handlers
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
+	public func runLoop() throws -> RunLoop? {
+		var value: CFTypeRef! = nil
+		try readAudioObjectProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), from: objectID, into: &value)
+		return value as? RunLoop
+	}
+	/// Sets the run loop used for HAL notification handlers
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
+	public func setRunLoop(_ value: RunLoop?) throws {
+		try setProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), to: value as CFTypeRef?)
+	}
 
 	// kAudioHardwarePropertyDeviceForUID functionality in AudioDevice.makeDevice(forUID:)
 	// kAudioHardwarePropertyPlugInForBundleID functionality in AudioPlugIn.makePlugIn(forBundleID:)

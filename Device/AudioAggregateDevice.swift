@@ -15,7 +15,7 @@ extension AudioAggregateDevice {
 	/// Returns the UIDs of all subdevices in the aggregate device, active or inactive
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyFullSubDeviceList`
 	public func fullSubdeviceList() throws -> [String] {
-		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
+		var value: CFTypeRef! = nil
 		try readAudioObjectProperty(PropertyAddress(kAudioAggregateDevicePropertyFullSubDeviceList), from: objectID, into: &value)
 		return value as! [String]
 	}

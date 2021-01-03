@@ -127,7 +127,7 @@ extension AudioObject {
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> String {
-		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
+		var value: CFTypeRef! = nil
 		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
 		return value as! String
 	}
@@ -136,7 +136,7 @@ extension AudioObject {
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [AnyHashable: Any] {
-		var value: CFTypeRef = unsafeBitCast(0, to: CFTypeRef.self)
+		var value: CFTypeRef! = nil
 		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
 		return value as! [AnyHashable: Any]
 	}
