@@ -36,6 +36,14 @@ extension AudioControl {
 }
 
 extension AudioControl {
+	/// Returns the control's variant
+	/// - remark: This corresponds to the property `kAudioControlPropertyVariant`
+	public func variant() throws -> UInt32 {
+		return PropertyElement(try getProperty(PropertyAddress(kAudioControlPropertyVariant)))
+	}
+}
+
+extension AudioControl {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
 	public func hasSelector(_ selector: Selector<AudioControl>) -> Bool {
@@ -63,4 +71,6 @@ extension Selector where T == AudioControl {
 	public static let scope = Selector(kAudioControlPropertyScope)
 	/// The property selector `kAudioControlPropertyElement`
 	public static let element = Selector(kAudioControlPropertyElement)
+	/// The property selector `kAudioControlPropertyVariant`
+	public static let variant = Selector(kAudioControlPropertyVariant)
 }
