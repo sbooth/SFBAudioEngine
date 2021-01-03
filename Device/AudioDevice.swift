@@ -326,13 +326,13 @@ extension AudioDevice {
 	/// Returns the variable buffer frame size
 	/// - remark: This corresponds to the property `kAudioDevicePropertyUsesVariableBufferFrameSizes`
 	public func usesVariableBufferFrameSizes() throws -> UInt32 {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyHogMode))
+		return try getProperty(PropertyAddress(kAudioDevicePropertyUsesVariableBufferFrameSizes))
 	}
 
 	/// Returns the IO cycle usage
 	/// - remark: This corresponds to the property `kAudioDevicePropertyIOCycleUsage`
 	public func ioCycleUsage() throws -> Float {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyHogMode))
+		return try getProperty(PropertyAddress(kAudioDevicePropertyIOCycleUsage))
 	}
 
 	/// Returns the stream configuration
