@@ -13,7 +13,7 @@ public class AudioObject: CustomDebugStringConvertible {
 	public let objectID: AudioObjectID
 
 	/// Initializes an `AudioObject` with `objectID`
-	/// - note: Throws an error if `objectID` is `kAudioObjectUnknown`
+	/// - precondition: `objectID` != `kAudioObjectUnknown`
 	/// - parameter objectID: The HAL audio object ID
 	init(_ objectID: AudioObjectID) {
 		precondition(objectID != kAudioObjectUnknown)
@@ -372,8 +372,11 @@ extension AudioObject {
 	/// Creates and returns an initialized `AudioObject`
 	///
 	/// Whenever possible this will return a specialized subclass exposing additional functionality
+	/// - precondition: `objectID` != `kAudioObjectUnknown`
 	/// - parameter objectID: The audio object ID
 	public class func make(_ objectID: AudioObjectID) -> AudioObject {
+		precondition(objectID != kAudioObjectUnknown)
+
 		if objectID == kAudioObjectSystemObject {
 			return AudioSystemObject.instance
 		}
