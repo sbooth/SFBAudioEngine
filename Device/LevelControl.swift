@@ -62,6 +62,12 @@ extension LevelControl {
 	public func convertToScalar(fromDecibels decibels: Float) throws -> Float {
 		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertDecibelsToScalar), initialValue: decibels)
 	}
+
+	/// Returns the decibels to scalar transfer function
+	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelsToScalarTransferFunction`
+	public func decibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
+		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelsToScalarTransferFunction)))!
+	}
 }
 
 extension LevelControl {
@@ -98,6 +104,8 @@ extension Selector where T == LevelControl {
 	public static let scalarToDecibels = Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
 	/// The property selector `kAudioLevelControlPropertyConvertDecibelsToScalar`
 	public static let decibelsToScalar = Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
+	/// The property selector `kAudioLevelControlPropertyDecibelsToScalarTransferFunction`
+	public static let decibelsToScalarTransferFunction = Selector(kAudioLevelControlPropertyDecibelsToScalarTransferFunction)
 }
 
 // MARK: -
