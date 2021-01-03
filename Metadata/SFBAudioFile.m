@@ -31,7 +31,24 @@ static void SFBCreateAudioFileLog()
 
 static NSMutableArray *_registeredSubclasses = nil;
 
-+ (NSSet<NSString *> *)supportedPathExtensions
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioFileErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBAudioFileErrorCodeFileFormatNotRecognized:
+					return NSLocalizedString(@"The file's format was not recognized.", @"");
+				case SFBAudioFileErrorCodeFileFormatNotSupported:
+					return NSLocalizedString(@"The file's format is not supported.", @"");
+				case SFBAudioFileErrorCodeInputOutput:
+					return NSLocalizedString(@"An input/output error occurred.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
++ (NSSet *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];
 	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
@@ -42,7 +59,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return result;
 }
 
-+ (NSSet<NSString *> *)supportedMIMETypes
++ (NSSet *)supportedMIMETypes
 {
 	NSMutableSet *result = [NSMutableSet set];
 	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {

@@ -111,10 +111,12 @@ extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.Err
 
 /// Possible \c NSError error codes used by \c SFBDSDDecoder
 typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
-	/// File not found
-	SFBDSDDecoderErrorCodeFileNotFound		= 0,
-	/// Input/output error
-	SFBDSDDecoderErrorCodeInputOutput		= 1
+	/// Internal decoder error
+	SFBDSDDecoderErrorCodeInternalError		= 0,
+	/// Unknown decoder name
+	SFBDSDDecoderErrorCodeUnknownDecoder	= 1,
+	/// Invalid, unknown, or unsupported format
+	SFBDSDDecoderErrorCodeInvalidFormat		= 2
 } NS_SWIFT_NAME(DSDDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END

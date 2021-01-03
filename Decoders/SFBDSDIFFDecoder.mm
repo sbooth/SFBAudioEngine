@@ -673,7 +673,7 @@ namespace {
 	static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	{
 		return [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-									   code:SFBDSDDecoderErrorCodeInputOutput
+									   code:SFBDSDDecoderErrorCodeInvalidFormat
 			  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @"")
 										url:url
 							  failureReason:NSLocalizedString(@"Not a DSDIFF file", @"")

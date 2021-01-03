@@ -42,6 +42,23 @@ static void SFBCreateDSDDecoderLog()
 
 static NSMutableArray *_registeredSubclasses = nil;
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBDSDDecoderErrorCodeInternalError:
+					return NSLocalizedString(@"An internal decoder error occurred.", @"");
+				case SFBDSDDecoderErrorCodeUnknownDecoder:
+					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
+				case SFBDSDDecoderErrorCodeInvalidFormat:
+					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 + (NSSet *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];
@@ -144,7 +161,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!pathExtension) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unknown file type", @"")
@@ -158,7 +175,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported file type", @"")
