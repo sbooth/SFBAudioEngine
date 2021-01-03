@@ -26,6 +26,19 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 @implementation SFBAudioConverter
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioConverterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBAudioConverterErrorCodeFormatNotSupported:
+					return NSLocalizedString(@"The requested audio format is not supported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 + (BOOL)convertURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL destinationURL:destinationURL error:error];

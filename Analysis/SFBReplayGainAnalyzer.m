@@ -333,6 +333,21 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 @implementation SFBReplayGainAnalyzer
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBReplayGainAnalyzerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
+					return NSLocalizedString(@"The file's format is not supported.", @"");
+				case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
+					return NSLocalizedString(@"The file does not contain sufficient audio samples for analysis.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 + (float)referenceLoudness
 {
 	return 89.0;

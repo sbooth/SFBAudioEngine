@@ -43,6 +43,23 @@ static void SFBCreateAudioEncoderLog()
 
 static NSMutableArray *_registeredSubclasses = nil;
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioEncoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBAudioEncoderErrorCodeInternalError:
+					return NSLocalizedString(@"An internal encoder error occurred.", @"");
+				case SFBAudioEncoderErrorCodeUnknownEncoder:
+					return NSLocalizedString(@"The requested encoder is unavailable.", @"");
+				case SFBAudioEncoderErrorCodeInvalidFormat:
+					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 + (NSSet *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];
