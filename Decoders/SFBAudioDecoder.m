@@ -41,6 +41,23 @@ static void SFBCreateAudioDecoderLog()
 
 static NSMutableArray *_registeredSubclasses = nil;
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBAudioDecoderErrorCodeInternalError:
+					return NSLocalizedString(@"An internal decoder error occurred.", @"");
+				case SFBAudioDecoderErrorCodeUnknownDecoder:
+					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
+				case SFBAudioDecoderErrorCodeInvalidFormat:
+					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 + (NSSet *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];

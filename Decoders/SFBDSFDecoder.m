@@ -33,7 +33,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 static NSError * CreateInvalidDSFFileError(NSURL * url)
 {
 	return [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-								   code:SFBDSDDecoderErrorCodeInputOutput
+								   code:SFBDSDDecoderErrorCodeInvalidFormat
 		  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSF file.", @"")
 									url:url
 						  failureReason:NSLocalizedString(@"Not a DSF file", @"")

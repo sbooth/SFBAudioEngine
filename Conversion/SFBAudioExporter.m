@@ -18,6 +18,19 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 
 @implementation SFBAudioExporter
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioExporterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBAudioExporterErrorCodeFileFormatNotSupported:
+					return NSLocalizedString(@"The file's format is not supported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 + (BOOL)exportURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error
 {
 	NSParameterAssert(sourceURL != nil);

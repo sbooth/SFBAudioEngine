@@ -114,7 +114,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	if(!(asbd->mFormatID == kSFBAudioFormatDSD)) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInputOutput
+											 code:SFBDSDDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD file.", @"")
 											  url:_decoder.inputSource.url
 									failureReason:NSLocalizedString(@"Not a DSD file", @"")
@@ -127,7 +127,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %f", asbd->mSampleRate);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInputOutput
+											 code:SFBDSDDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not supported.", @"")
 											  url:_decoder.inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported DSD sample rate", @"")

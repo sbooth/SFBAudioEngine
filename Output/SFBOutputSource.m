@@ -10,6 +10,9 @@
 #import "SFBFileOutputSource.h"
 #import "SFBMutableDataOutputSource.h"
 
+// NSError domain for OutputSource and subclasses
+NSErrorDomain const SFBOutputSourceErrorDomain = @"org.sbooth.AudioEngine.OutputSource";
+
 os_log_t gSFBOutputSourceLog = NULL;
 
 static void SFBCreateOutputSourceLog(void) __attribute__ ((constructor));
@@ -22,6 +25,21 @@ static void SFBCreateOutputSourceLog()
 }
 
 @implementation SFBOutputSource
+
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBOutputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBOutputSourceErrorCodeFileNotFound:
+					return NSLocalizedString(@"The requested file was not found.", @"");
+				case SFBOutputSourceErrorCodeInputOutput:
+					return NSLocalizedString(@"An input/output error occurred.", @"");
+			}
+		}
+		return nil;
+	}];
+}
 
 + (instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error
 {
