@@ -974,7 +974,7 @@ extension AudioDevice {
 
 	/// Returns the LFE decibels to scalar transfer function
 	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction`
-	public func decibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
+	public func subDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
 		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction)))!
 	}
 }
