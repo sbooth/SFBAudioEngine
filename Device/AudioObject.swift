@@ -121,6 +121,7 @@ extension AudioObject: Hashable {
 
 extension AudioObject {
 	/// Returns the value of `property`
+	/// - note: The underlying audio object property must be backed by an equivalent C type of `T`
 	/// - parameter property: The address of the desired property
 	/// - parameter qualifier: An optional property qualifier
 	/// - parameter initialValue: An optional initial value for `outData` when calling `AudioObjectGetPropertyData`
@@ -132,6 +133,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value of `property`
+	/// - note: The underlying audio object property must be backed by `CFString`
 	/// - parameter property: The address of the desired property
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
@@ -142,6 +144,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value of `property`
+	/// - note: The underlying audio object property must be backed by `CFDictionary`
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [AnyHashable: Any] {
@@ -151,6 +154,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value of `property`
+	/// - note: The underlying audio object property must be backed by `AudioValueRange`
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty(_ property: PropertyAddress) throws -> AudioValueRange {
@@ -160,6 +164,7 @@ extension AudioObject {
 	}
 
 	/// Returns the value of `property`
+	/// - note: The underlying audio object property must be backed by `AudioStreamBasicDescription`
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty(_ property: PropertyAddress) throws -> AudioStreamBasicDescription {
@@ -173,6 +178,7 @@ extension AudioObject {
 
 extension AudioObject {
 	/// Sets the value of `property` to `value`
+	/// - note: The underlying audio object property must be backed by `T`
 	/// - parameter property: The address of the desired property
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
@@ -186,6 +192,7 @@ extension AudioObject {
 
 extension AudioObject {
 	/// Returns the value of `property`
+	/// - note: The underlying audio object property must be backed by a C array of `T`
 	/// - parameter property: The address of the desired property
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
@@ -200,6 +207,7 @@ extension AudioObject {
 	}
 
 	/// Sets the value of `property` to `value`
+	/// - note: The underlying audio object property must be backed by a C array of `T`
 	/// - parameter property: The address of the desired property
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
