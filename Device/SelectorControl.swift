@@ -23,7 +23,7 @@ extension SelectorControl {
 	/// Returns the selected items
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyCurrentItem`
 	public func currentItem() throws -> [UInt32] {
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyCurrentItem))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyCurrentItem), arrayType: UInt32.self)
 	}
 	/// Sets the selected items
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyCurrentItem`
@@ -34,21 +34,21 @@ extension SelectorControl {
 	/// Returns the available items
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyAvailableItems`
 	public func availableItems() throws -> [UInt32] {
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyAvailableItems))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyAvailableItems), arrayType: UInt32.self)
 	}
 
 	/// Returns the name of `itemID`
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyItemName`
 	public func nameOfItem(_ itemID: UInt32) throws -> String {
 		var qualifier = itemID
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemName), qualifier: PropertyQualifier(&qualifier))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemName), type: CFString.self, qualifier: PropertyQualifier(&qualifier)) as String
 	}
 
 	/// Returns the kind of `itemID`
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyItemKind`
 	public func kindOfItem(_ itemID: UInt32) throws -> UInt32 {
 		var qualifier = itemID
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemKind), qualifier: PropertyQualifier(&qualifier))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemKind), type: UInt32.self, qualifier: PropertyQualifier(&qualifier))
 	}
 }
 

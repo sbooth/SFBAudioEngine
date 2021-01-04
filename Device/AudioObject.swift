@@ -117,62 +117,21 @@ extension AudioObject: Hashable {
 	}
 }
 
-// MARK: - Scalar Property Retrieval
+// MARK: - Scalar Properties
 
 extension AudioObject {
-	/// Returns the value of `property`
+	/// Returns the value of `property` for scalar properties
 	/// - parameter property: The address of the desired property
-	/// - parameter qualifier: An optional property qualifier
-	/// - parameter initialValue: An optional initial value for `outData` when calling `AudioObjectGetPropertyData`
-	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty<T: Numeric>(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil, initialValue: T = 0) throws -> T {
-		var value = initialValue
-		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-		return value
-	}
-
-	/// Returns the value of `property`
-	/// - parameter property: The address of the desired property
+	/// - parameter type: The raw type of the underlying audio object property
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> String {
-		var value: CFTypeRef! = nil
+	public func getProperty<T>(_ property: PropertyAddress, type: T.Type, qualifier: PropertyQualifier? = nil, initialValue: T! = nil) throws -> T {
+		var value: T! = initialValue
 		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-		return value as! String
-	}
-
-	/// Returns the value of `property`
-	/// - parameter property: The address of the desired property
-	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [AnyHashable: Any] {
-		var value: CFTypeRef! = nil
-		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-		return value as! [AnyHashable: Any]
-	}
-
-	/// Returns the value of `property`
-	/// - parameter property: The address of the desired property
-	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: PropertyAddress) throws -> AudioValueRange {
-		var value = AudioValueRange()
-		try readAudioObjectProperty(property, from: objectID, into: &value)
 		return value
 	}
 
-	/// Returns the value of `property`
-	/// - parameter property: The address of the desired property
-	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty(_ property: PropertyAddress) throws -> AudioStreamBasicDescription {
-		var value = AudioStreamBasicDescription()
-		try readAudioObjectProperty(property, from: objectID, into: &value)
-		return value
-	}
-}
-
-// MARK: - Scalar Property Setting
-
-extension AudioObject {
-	/// Sets the value of `property` to `value`
+	/// Sets the value of `property` to `value` for scalar properties
 	/// - parameter property: The address of the desired property
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
@@ -185,11 +144,13 @@ extension AudioObject {
 // MARK: - Array Properties
 
 extension AudioObject {
-	/// Returns the value of `property`
+	/// Returns the value of `property` for array properties
+	/// - note: Array properties are properties with an underlying C array
 	/// - parameter property: The address of the desired property
+	/// - parameter type: The raw type of element in the underlying audio object array property
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty<T>(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [T] {
+	public func getProperty<T>(_ property: PropertyAddress, arrayType type: T.Type, qualifier: PropertyQualifier? = nil) throws -> [T] {
 		let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
 		let count = dataSize / MemoryLayout<T>.stride
 		let array = try [T](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
@@ -199,7 +160,7 @@ extension AudioObject {
 		return array
 	}
 
-	/// Sets the value of `property` to `value`
+	/// Sets the value of `property` to `value` for array properties
 	/// - parameter property: The address of the desired property
 	/// - parameter value: The desired value
 	/// - throws: An error if `self` does not have `property`, `property` is not settable, or the property value could not be set
@@ -216,13 +177,13 @@ extension AudioObject {
 	/// Returns the base class of the underlying HAL audio object
 	/// - remark: This corresponds to the property `kAudioObjectPropertyBaseClass`
 	public func baseClass() throws -> AudioClassID {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyBaseClass))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyBaseClass), type: AudioClassID.self)
 	}
 
 	/// Returns the class of the underlying HAL audio object
 	/// - remark: This corresponds to the property `kAudioObjectPropertyClass`
 	public func `class`() throws -> AudioClassID {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyClass))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyClass), type: AudioClassID.self)
 	}
 
 	/// Returns the audio object's owning object
@@ -230,25 +191,25 @@ extension AudioObject {
 	/// - note: The system audio object
 	/// - remark: This corresponds to the property `kAudioObjectSystemObject` does not have an owner
 	public func owner() throws -> AudioObject {
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioObjectPropertyOwner)))
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioObjectPropertyOwner), type: AudioObjectID.self))
 	}
 
 	/// Returns the audio object's name
 	/// - remark: This corresponds to the property `kAudioObjectPropertyName`
 	public func name() throws -> String {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyName))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyName), type: CFString.self) as String
 	}
 
 	/// Returns the audio object's model name
 	/// - remark: This corresponds to the property `kAudioObjectPropertyModelName`
 	public func modelName() throws -> String {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyModelName))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyModelName), type: CFString.self) as String
 	}
 
 	/// Returns the audio object's manufacturer
 	/// - remark: This corresponds to the property `kAudioObjectPropertyManufacturer`
 	public func manufacturer() throws -> String {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyManufacturer))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyManufacturer), type: CFString.self) as String
 	}
 
 	/// Returns the name of `element`
@@ -256,7 +217,7 @@ extension AudioObject {
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func nameOfElement(_ element: PropertyElement, inScope scope: PropertyScope = .global) throws -> String {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioObjectPropertyElementName), scope: scope, element: element))
+		return try getProperty(PropertyAddress(PropertySelector(kAudioObjectPropertyElementName), scope: scope, element: element), type: CFString.self) as String
 	}
 
 	/// Returns the category name of `element` in `scope`
@@ -264,13 +225,13 @@ extension AudioObject {
 	/// - parameter element: The desired element
 	/// - parameter scope: The desired scope
 	public func categoryNameOfElement(_ element: PropertyElement, inScope scope: PropertyScope = .global) throws -> String {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioObjectPropertyElementCategoryName), scope: scope, element: element))
+		return try getProperty(PropertyAddress(PropertySelector(kAudioObjectPropertyElementCategoryName), scope: scope, element: element), type: CFString.self) as String
 	}
 
 	/// Returns the number name of `element`
 	/// - remark: This corresponds to the property `kAudioObjectPropertyElementNumberName`
 	public func numberNameOfElement(_ element: PropertyElement, inScope scope: PropertyScope = .global) throws -> String {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioObjectPropertyElementNumberName), scope: scope, element: element))
+		return try getProperty(PropertyAddress(PropertySelector(kAudioObjectPropertyElementNumberName), scope: scope, element: element), type: CFString.self) as String
 	}
 
 	/// Returns the audio objects owned by `self`
@@ -281,15 +242,15 @@ extension AudioObject {
 			var qualifierData = type!
 			let qualifierDataSize = MemoryLayout<AudioClassID>.stride * type!.count
 			let qualifier = PropertyQualifier(value: &qualifierData, size: UInt32(qualifierDataSize))
-			return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), qualifier: qualifier).map { AudioObject.make($0) }
+			return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), arrayType: AudioClassID.self, qualifier: qualifier).map { AudioObject.make($0) }
 		}
-		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects)).map { AudioObject.make($0) }
+		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), arrayType: AudioClassID.self).map { AudioObject.make($0) }
 	}
 
 	/// Returns `true` if the audio object's hardware is drawing attention to itself
 	/// - remark: This corresponds to the property `kAudioObjectPropertyIdentify`
 	public func identify() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyIdentify)) as UInt32 != 0
+		return try getProperty(PropertyAddress(kAudioObjectPropertyIdentify), type: UInt32.self) != 0
 	}
 	/// Sets whether the audio object's hardware should draw attention to itself
 	/// - remark: This corresponds to the property `kAudioObjectPropertyIdentify`
@@ -301,13 +262,13 @@ extension AudioObject {
 	/// Returns the audio object's serial number
 	/// - remark: This corresponds to the property `kAudioObjectPropertySerialNumber`
 	public func serialNumber() throws -> String {
-		return try getProperty(PropertyAddress(kAudioObjectPropertySerialNumber))
+		return try getProperty(PropertyAddress(kAudioObjectPropertySerialNumber), type: CFString.self) as String
 	}
 
 	/// Returns the audio object's firmware version
 	/// - remark: This corresponds to the property `kAudioObjectPropertyFirmwareVersion`
 	public func firmwareVersion() throws -> String {
-		return try getProperty(PropertyAddress(kAudioObjectPropertyFirmwareVersion))
+		return try getProperty(PropertyAddress(kAudioObjectPropertyFirmwareVersion), type: CFString.self) as String
 	}
 }
 
