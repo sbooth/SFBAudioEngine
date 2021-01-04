@@ -78,19 +78,19 @@ extension AudioDevice {
 	/// Returns the configuration application
 	/// - remark: This corresponds to the property `kAudioDevicePropertyConfigurationApplication`
 	public func configurationApplication() throws -> String {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyConfigurationApplication))
+		return try getProperty(PropertyAddress(kAudioDevicePropertyConfigurationApplication), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the device UID
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDeviceUID`
 	public func deviceUID() throws -> String {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyDeviceUID))
+		return try getProperty(PropertyAddress(kAudioDevicePropertyDeviceUID), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the model UID
 	/// - remark: This corresponds to the property `kAudioDevicePropertyModelUID`
 	public func modelUID() throws -> String {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyModelUID))
+		return try getProperty(PropertyAddress(kAudioDevicePropertyModelUID), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the transport type
@@ -193,9 +193,7 @@ extension AudioDevice {
 	/// Returns the URL of the device's icon
 	/// - remark: This corresponds to the property `kAudioDevicePropertyIcon`
 	public func icon() throws -> URL {
-		var value: CFTypeRef! = nil
-		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIcon), from: objectID, into: &value)
-		return value as! URL
+		return try getProperty(PropertyAddress(kAudioDevicePropertyIcon), underlyingCFType: CFURL.self) as URL
 	}
 
 	/// Returns `true` if the device is hidden
@@ -380,16 +378,16 @@ extension AudioDevice {
 	/// Returns the UID of the clock device
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockDevice`
 	public func clockDevice() throws -> String {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyClockDevice))
+		return try getProperty(PropertyAddress(kAudioDevicePropertyClockDevice), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the workgroup to which the device's IOThread belongs
 	/// - remark: This corresponds to the property `kAudioDevicePropertyIOThreadOSWorkgroup`
 	@available(macOS 11.0, *)
 	public func ioThreadOSWorkgroup(inScope scope: PropertyScope = .global) throws -> WorkGroup {
-		var value: WorkGroup = unsafeBitCast(0, to: WorkGroup.self)
+		var value: Unmanaged<os_workgroup_t>?
 		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIOThreadOSWorkgroup), from: objectID, into: &value)
-		return value
+		return value!.takeRetainedValue() as WorkGroup
 	}
 }
 
@@ -575,14 +573,14 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyDataSourceNameForIDCFString`
 	public func nameOfDataSource(_ dataSourceID: UInt32, inScope scope: PropertyScope) throws -> String {
 		var inputData = dataSourceID
-		var outputData = unsafeBitCast(0, to: CFString.self)
+		var outputData: Unmanaged<CFString>?
 		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
 			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
 				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
 				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDataSourceNameForIDCFString), scope: scope), from: objectID, into: &translation)
 			}
 		}
-		return outputData as String
+		return outputData!.takeRetainedValue() as String
 	}
 
 	/// Returns the kind of `dataSourceID`
@@ -634,14 +632,14 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyClockSourceNameForIDCFString`
 	public func nameOfClockSource(_ clockSourceID: UInt32, inScope scope: PropertyScope) throws -> String {
 		var inputData = clockSourceID
-		var outputData = unsafeBitCast(0, to: CFString.self)
+		var outputData: Unmanaged<CFString>?
 		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
 			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
 				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
 				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyClockSourceNameForIDCFString), scope: scope), from: objectID, into: &translation)
 			}
 		}
-		return outputData as String
+		return outputData!.takeRetainedValue() as String
 	}
 
 	/// Returns the kind of `clockSourceID`
@@ -780,14 +778,14 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruDestinationNameForIDCFString`
 	public func nameOfPlayThroughDestination(_ playThroughDestinationID: UInt32) throws -> String {
 		var inputData = playThroughDestinationID
-		var outputData = unsafeBitCast(0, to: CFString.self)
+		var outputData: Unmanaged<CFString>?
 		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
 			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
 				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
 				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruDestinationNameForIDCFString), scope: .playThrough), from: objectID, into: &translation)
 			}
 		}
-		return outputData as String
+		return outputData!.takeRetainedValue() as String
 	}
 
 	// Play-through destination helpers
@@ -825,14 +823,14 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString`
 	public func nameOfChannelNominalLineLevel(_ channelNominalLineLevelID: UInt32, inScope scope: PropertyScope) throws -> String {
 		var inputData = channelNominalLineLevelID
-		var outputData = unsafeBitCast(0, to: CFString.self)
+		var outputData: Unmanaged<CFString>?
 		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
 			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
 				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
 				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString), scope: scope), from: objectID, into: &translation)
 			}
 		}
-		return outputData as String
+		return outputData!.takeRetainedValue() as String
 	}
 
 	// Channel nominal line level helpers
@@ -870,14 +868,14 @@ extension AudioDevice {
 	/// - remark: This corresponds to the property `kAudioDevicePropertyHighPassFilterSettingNameForIDCFString`
 	public func nameOfHighPassFilterSetting(_ highPassFilterSettingID: UInt32, inScope scope: PropertyScope) throws -> String {
 		var inputData = highPassFilterSettingID
-		var outputData = unsafeBitCast(0, to: CFString.self)
+		var outputData: Unmanaged<CFString>?
 		try withUnsafeMutablePointer(to: &inputData) { inputPointer in
 			try withUnsafeMutablePointer(to: &outputData) { outputPointer in
 				var translation = AudioValueTranslation(mInputData: inputPointer, mInputDataSize: UInt32(MemoryLayout<UInt32>.stride), mOutputData: outputPointer, mOutputDataSize: UInt32(MemoryLayout<CFString>.stride))
 				try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyHighPassFilterSettingNameForIDCFString), scope: scope), from: objectID, into: &translation)
 			}
 		}
-		return outputData as String
+		return outputData!.takeRetainedValue() as String
 	}
 
 	// High-pass filter setting helpers

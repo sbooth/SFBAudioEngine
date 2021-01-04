@@ -58,7 +58,7 @@ extension AudioPlugIn {
 	/// Returns the plug-in's bundle ID
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyBundleID`
 	public func bundleID() throws -> String {
-		return try getProperty(PropertyAddress(kAudioPlugInPropertyBundleID))
+		return try getProperty(PropertyAddress(kAudioPlugInPropertyBundleID), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the audio devices provided by the plug-in

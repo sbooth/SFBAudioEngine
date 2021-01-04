@@ -15,7 +15,7 @@ extension AudioEndpointDevice {
 	/// Returns the composition
 	/// - remark: This corresponds to the property `kAudioEndPointDevicePropertyComposition`
 	public func composition() throws -> [AnyHashable: Any] {
-		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyComposition))
+		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyComposition), underlyingCFType: CFDictionary.self) as! [AnyHashable: Any]
 	}
 
 	/// Returns the audio endpoints owned by `self`

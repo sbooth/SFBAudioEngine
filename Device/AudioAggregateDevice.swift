@@ -15,9 +15,7 @@ extension AudioAggregateDevice {
 	/// Returns the UIDs of all subdevices in the aggregate device, active or inactive
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyFullSubDeviceList`
 	public func fullSubdeviceList() throws -> [String] {
-		var value: CFTypeRef! = nil
-		try readAudioObjectProperty(PropertyAddress(kAudioAggregateDevicePropertyFullSubDeviceList), from: objectID, into: &value)
-		return value as! [String]
+		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyFullSubDeviceList), underlyingCFType: CFArray.self) as! [String]
 	}
 
 	/// Returns the active subdevices in the aggregate device
@@ -29,7 +27,7 @@ extension AudioAggregateDevice {
 	/// Returns the composition
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyComposition`
 	public func composition() throws -> [AnyHashable: Any] {
-		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyComposition))
+		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyComposition), underlyingCFType: CFDictionary.self) as! [AnyHashable: Any]
 	}
 
 	/// Returns the master subdevice

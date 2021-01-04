@@ -47,7 +47,7 @@ extension AudioBox {
 	/// Returns the box UID
 	/// - remark: This corresponds to the property `kAudioBoxPropertyBoxUID`
 	public func boxUID() throws -> String {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyBoxUID))
+		return try getProperty(PropertyAddress(kAudioBoxPropertyBoxUID), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the transport type

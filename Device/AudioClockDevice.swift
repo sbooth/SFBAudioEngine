@@ -34,7 +34,7 @@ extension AudioClockDevice {
 	/// Returns the clock device UID
 	/// - remark: This corresponds to the property `kAudioClockDevicePropertyDeviceUID`
 	public func deviceUID() throws -> String {
-		return try getProperty(PropertyAddress(kAudioClockDevicePropertyDeviceUID))
+		return try getProperty(PropertyAddress(kAudioClockDevicePropertyDeviceUID), underlyingCFType: CFString.self) as String
 	}
 
 	/// Returns the transport type

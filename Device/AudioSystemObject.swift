@@ -120,14 +120,14 @@ extension AudioSystemObject {
 extension AudioSystemObject {
 	/// Returns the run loop used for HAL notification handlers
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
-	public func runLoop() throws -> RunLoop? {
-		var value: CFTypeRef! = nil
+	public func runLoop() throws -> CFRunLoop? {
+		var value: Unmanaged<CFRunLoop>?
 		try readAudioObjectProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), from: objectID, into: &value)
-		return value as? RunLoop
+		return value?.takeRetainedValue()
 	}
 	/// Sets the run loop used for HAL notification handlers
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
-	public func setRunLoop(_ value: RunLoop?) throws {
+	public func setRunLoop(_ value: CFRunLoop?) throws {
 		try setProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), to: value as CFTypeRef?)
 	}
 

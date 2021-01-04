@@ -41,7 +41,7 @@ extension SelectorControl {
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyItemName`
 	public func nameOfItem(_ itemID: UInt32) throws -> String {
 		var qualifier = itemID
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemName), qualifier: PropertyQualifier(&qualifier))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyItemName), underlyingCFType: CFString.self, qualifier: PropertyQualifier(&qualifier)) as String
 	}
 
 	/// Returns the kind of `itemID`
