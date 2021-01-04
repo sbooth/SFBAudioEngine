@@ -107,6 +107,16 @@ public class AudioObject: CustomDebugStringConvertible {
 	}
 }
 
+extension AudioObject: Hashable {
+	public static func == (lhs: AudioObject, rhs: AudioObject) -> Bool {
+		return lhs.objectID == rhs.objectID
+	}
+
+	public func hash(into hasher: inout Hasher) {
+		hasher.combine(objectID)
+	}
+}
+
 // MARK: - Scalar Property Retrieval
 
 extension AudioObject {
