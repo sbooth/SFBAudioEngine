@@ -481,7 +481,9 @@ extension AudioObject {
 public struct Selector<T: AudioObject> {
 	/// The underlying `AudioObjectPropertySelector` value
 	let rawValue: AudioObjectPropertySelector
-	/// Initializes a `Selector` with `value`
+
+	/// Creates a new instance with the specified value
+	/// - parameter value: The value to use for the new instance
 	init(_ value: AudioObjectPropertySelector) {
 		self.rawValue = value
 	}

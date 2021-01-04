@@ -20,7 +20,7 @@ public struct AudioHardwareIOProcStreamUsageWrapper {
 	/// The underlying memory
 	let ptr: UnsafePointer<UInt8>
 
-	/// Initializes a new `AudioHardwareIOProcStreamUsage` wrapping `mem`
+	/// Creates a new `AudioHardwareIOProcStreamUsage` instance wrapping `mem`
 	init(_ mem: UnsafePointer<UInt8>) {
 		ptr = mem
 	}

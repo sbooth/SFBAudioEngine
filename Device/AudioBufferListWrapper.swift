@@ -11,7 +11,7 @@ public struct AudioBufferListWrapper {
 	/// The underlying memory
 	let ptr: UnsafePointer<UInt8>
 
-	/// Initializes a new `AudioBufferListWrapper` wrapping `mem`
+	/// Creates a new `AudioBufferListWrapper` instance wrapping `mem`
 	init(_ mem: UnsafePointer<UInt8>) {
 		ptr = mem
 	}

@@ -42,7 +42,7 @@ extension AudioSubdevice {
 }
 
 extension AudioSubdevice {
-	/// A thin wrapper around a HAL audio device transport type
+	/// A thin wrapper around a HAL audio subdevice drift compensation quality setting
 	public struct DriftCompensationQuality: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Minimum quality
 		public static let min 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMinQuality)

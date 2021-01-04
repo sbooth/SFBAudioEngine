@@ -11,6 +11,8 @@ import os.log
 public struct PropertySelector: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 	public let rawValue: AudioObjectPropertySelector
 
+	/// Creates a new instance with the specified value
+	/// - parameter value: The value to use for the new instance
 	public init(_ value: AudioObjectPropertySelector) {
 		self.rawValue = value
 	}
@@ -37,6 +39,8 @@ extension PropertySelector {
 public struct PropertyScope: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 	public let rawValue: AudioObjectPropertyScope
 
+	/// Creates a new instance with the specified value
+	/// - parameter value: The value to use for the new instance
 	public init(_ value: AudioObjectPropertyScope) {
 		self.rawValue = value
 	}
@@ -71,6 +75,8 @@ extension PropertyScope {
 public struct PropertyElement: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 	public let rawValue: AudioObjectPropertyElement
 
+	/// Creates a new instance with the specified value
+	/// - parameter value: The value to use for the new instance
 	public init(_ value: AudioObjectPropertyElement) {
 		self.rawValue = value
 	}
@@ -99,6 +105,8 @@ extension PropertyElement {
 public struct PropertyAddress: RawRepresentable {
 	public let rawValue: AudioObjectPropertyAddress
 
+	/// Creates a new instance with the specified value
+	/// - parameter value: The value to use for the new instance
 	public init(_ value: AudioObjectPropertyAddress) {
 		self.rawValue = value
 	}
@@ -164,7 +172,7 @@ public struct PropertyQualifier {
 	/// The property qualifier's size
 	public let size: UInt32
 
-	/// Initializes a new `PropertyQualifier`with the specified value and size
+	/// Creates a new instance with the specified value and size
 	/// - parameter value: A pointer to the qualifier data
 	/// - parameter size: The size in bytes of the data pointed to by `value`
 	public init(value: UnsafeRawPointer, size: UInt32) {
@@ -172,7 +180,9 @@ public struct PropertyQualifier {
 		self.size = size
 	}
 
-	/// Initializes a new `PropertyQualifier`with the specified value
+	/// Creates a new instance with the specified value
+	///
+	/// `size` is initlalized to `MemoryLayout<T>.stride`
 	/// - parameter value: A pointer to the qualifier data
 	public init<T>(_ value: UnsafePointer<T>) {
 		self.value = UnsafeRawPointer(value)

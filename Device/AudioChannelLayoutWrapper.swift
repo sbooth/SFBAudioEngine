@@ -11,7 +11,7 @@ public struct AudioChannelLayoutWrapper {
 	/// The underlying memory
 	let ptr: UnsafePointer<UInt8>
 
-	/// Initializes a new `AudioChannelLayoutWrapper` wrapping `mem`
+	/// Creates a new `AudioChannelLayoutWrapper` instance wrapping `mem`
 	init(_ mem: UnsafePointer<UInt8>) {
 		ptr = mem
 	}
