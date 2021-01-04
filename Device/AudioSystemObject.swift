@@ -9,7 +9,7 @@ import CoreAudio
 /// The HAL audio system object
 ///
 /// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMaster`)
-/// - remark: This class correponds to objects with base class `kAudioSystemObjectClassID`
+/// - remark: This class correponds to the object with id `kAudioObjectSystemObject` and class `kAudioSystemObjectClassID`
 public class AudioSystemObject: AudioObject {
 	/// The singleton audio system object
 	public static var instance = AudioSystemObject()
