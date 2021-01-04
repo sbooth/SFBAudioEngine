@@ -78,6 +78,7 @@ class PlayerWindowController: NSWindowController {
 	@IBOutlet weak var title: NSTextField!
 	@IBOutlet weak var artist: NSTextField!
 	@IBOutlet weak var playlistTable: NSTableView!
+	@IBOutlet weak var devicePopUpButton: NSPopUpButton!
 
 	/// The audio player instance
 	let player = AudioPlayer()
@@ -92,6 +93,14 @@ class PlayerWindowController: NSWindowController {
 
 	override func windowDidLoad() {
 		player.delegate = self
+
+		try? AudioSystemObject.instance.whenSelectorChanges(.devices) { _ in
+			DispatchQueue.main.async {
+				self.updateDeviceMenu()
+			}
+		}
+
+		updateDeviceMenu()
 
 		// Create a repeating timer to update the UI with the player's playback position
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
@@ -204,6 +213,14 @@ class PlayerWindowController: NSWindowController {
 
 	@IBAction func delete(_ sender: AnyObject?) {
 		removeFromPlaylist(items: selectedItems)
+	}
+
+	@IBAction func selectDevice(_ sender: AnyObject?) {
+		guard let menuItem = sender as? NSMenuItem, let device = menuItem.representedObject as? AudioDevice else {
+			return
+		}
+
+		try? player.setOutputDevice(device)
 	}
 
 	// MARK: - Player Control
@@ -392,6 +409,35 @@ class PlayerWindowController: NSWindowController {
 			albumArt.image = NSImage(named: "NSApplicationIcon")
 			title.stringValue = ""
 			artist.stringValue = ""
+		}
+	}
+
+	private func updateDeviceMenu() {
+		devicePopUpButton.menu?.removeAllItems()
+
+		do {
+			let currentOutputDevice = player.outputDevice
+			let outputDevices = try AudioDevice.devices().filter({ guard let value = try? $0.supportsOutput() else { return false }; return value })
+			for outputDevice in outputDevices {
+				// AVAudioEngine creates private aggregate devices, ignore them
+				if let isPrivateAggregate = try (outputDevice as? AudioAggregateDevice)?.isPrivate(), isPrivateAggregate {
+					continue
+				}
+
+				let isActiveDevice = outputDevice == currentOutputDevice
+				let deviceMenuItem = NSMenuItem(title: try outputDevice.name(), action: #selector(PlayerWindowController.selectDevice(_:)), keyEquivalent: "")
+				deviceMenuItem.target = self
+				deviceMenuItem.representedObject = outputDevice
+				deviceMenuItem.state = isActiveDevice ? NSControl.StateValue.on : NSControl.StateValue.off
+
+				devicePopUpButton.menu?.addItem(deviceMenuItem)
+				if isActiveDevice {
+					devicePopUpButton.select(deviceMenuItem)
+				}
+			}
+		}
+		catch let error {
+			NSApp.presentError(error)
 		}
 	}
 
