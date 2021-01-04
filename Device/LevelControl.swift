@@ -23,7 +23,7 @@ extension LevelControl {
 	/// Returns the control's scalar value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyScalarValue`
 	public func scalarValue() throws -> Float {
-		return try getProperty(PropertyAddress(kAudioLevelControlPropertyScalarValue), type: Float.self)
+		return try getProperty(PropertyAddress(kAudioLevelControlPropertyScalarValue))
 	}
 	/// Sets the control's scalar value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyScalarValue`
@@ -34,7 +34,7 @@ extension LevelControl {
 	/// Returns the control's decibel value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelValue`
 	public func decibelValue() throws -> Float {
-		return try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelValue), type: Float.self)
+		return try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelValue))
 	}
 	/// Sets the control's decibel value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelValue`
@@ -45,7 +45,7 @@ extension LevelControl {
 	/// Returns the decibel range
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelRange`
 	public func decibelRange() throws -> ClosedRange<Float> {
-		let value = try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelRange), type: AudioValueRange.self)
+		let value: AudioValueRange = try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelRange))
 		return Float(value.mMinimum) ... Float(value.mMaximum)
 	}
 
@@ -53,20 +53,20 @@ extension LevelControl {
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyConvertScalarToDecibels`
 	/// - parameter scalar: The value to convert
 	public func convertToDecibels(fromScalar scalar: Float) throws -> Float {
-		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertScalarToDecibels), type: Float.self, initialValue: scalar)
+		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertScalarToDecibels), initialValue: scalar)
 	}
 
 	/// Converts `decibels` to scalar and returns the converted value
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyConvertDecibelsToScalar`
 	/// - parameter decibels: The value to convert
 	public func convertToScalar(fromDecibels decibels: Float) throws -> Float {
-		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertDecibelsToScalar), type: Float.self, initialValue: decibels)
+		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertDecibelsToScalar), initialValue: decibels)
 	}
 
 	/// Returns the decibels to scalar transfer function
 	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelsToScalarTransferFunction`
 	public func decibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelsToScalarTransferFunction), type: UInt32.self))!
+		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelsToScalarTransferFunction)))!
 	}
 }
 

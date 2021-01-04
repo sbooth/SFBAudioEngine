@@ -29,7 +29,7 @@ extension AudioSystemObject {
 	/// Returns `true` if audio devices should mix stereo to mono
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyMixStereoToMono`
 	public func mixStereoToMono() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyMixStereoToMono), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyMixStereoToMono)) as UInt32 != 0
 	}
 	/// Sets whether audio devices should mix stereo to mono
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyMixStereoToMono`
@@ -40,13 +40,13 @@ extension AudioSystemObject {
 	/// Returns `true` if the current process contains the master HAL instance
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessIsMaster`
 	public func processIsMaster() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessIsMaster), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessIsMaster)) as UInt32 != 0
 	}
 
 	/// Returns `true` if the HAL is initing or exiting the process
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyIsInitingOrExiting`
 	public func isInitingOrExiting() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyIsInitingOrExiting), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyIsInitingOrExiting)) as UInt32 != 0
 	}
 
 	/// Informs the HAL the effective user id of the process has changed
@@ -58,7 +58,7 @@ extension AudioSystemObject {
 	/// Returns `true` if the process will be heard
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessIsAudible`
 	public func processIsAudible() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessIsAudible), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessIsAudible)) as UInt32 != 0
 	}
 	/// Sets whether the process is audible
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessIsAudible`
@@ -69,7 +69,7 @@ extension AudioSystemObject {
 	/// Returns `true` if the process will allow the CPU to sleep while audio IO is in progress
 	/// - remark: This corresponds to the property `kAudioHardwarePropertySleepingIsAllowed`
 	public func sleepingIsAllowed() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertySleepingIsAllowed), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertySleepingIsAllowed)) as UInt32 != 0
 	}
 	/// Sets whether the process will allow the CPU to sleep while audio IO is in progress
 	/// - remark: This corresponds to the property `kAudioHardwarePropertySleepingIsAllowed`
@@ -80,7 +80,7 @@ extension AudioSystemObject {
 	/// Returns `true` if the process should be unloaded after a period of inactivity
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyUnloadingIsAllowed`
 	public func unloadingIsAllowed() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyUnloadingIsAllowed), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyUnloadingIsAllowed)) as UInt32 != 0
 	}
 	/// Sets whether the process should be unloaded after a period of inactivity
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyUnloadingIsAllowed`
@@ -91,7 +91,7 @@ extension AudioSystemObject {
 	/// Returns `true` if the HAL should automatically take hog mode on behalf of the process
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyHogModeIsAllowed`
 	public func hogModeIsAllowed() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyHogModeIsAllowed), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyHogModeIsAllowed)) as UInt32 != 0
 	}
 	/// Sets whether the HAL should automatically take hog mode on behalf of the process
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyHogModeIsAllowed`
@@ -102,13 +102,13 @@ extension AudioSystemObject {
 	/// Returns `true` if the login session of the user is a console or headless session
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyUserSessionIsActiveOrHeadless`
 	public func userSessionIsActiveOrHeadless() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioHardwarePropertyUserSessionIsActiveOrHeadless), type: UInt32.self) != 0
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyUserSessionIsActiveOrHeadless)) as UInt32 != 0
 	}
 
 	/// Returns the power hint
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyPowerHint`
 	public func powerHint() throws -> AudioHardwarePowerHint {
-		return AudioHardwarePowerHint(rawValue: try getProperty(PropertyAddress(kAudioHardwarePropertyPowerHint), type: UInt32.self))!
+		return AudioHardwarePowerHint(rawValue: try getProperty(PropertyAddress(kAudioHardwarePropertyPowerHint)))!
 	}
 	/// Sets the power hint
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyPowerHint`
@@ -137,7 +137,7 @@ extension AudioSystemObject {
 	/// Returns the boot chime volume scalar
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeScalar`
 	public func bootChimeVolumeScalar() throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalar)), type: Float.self)
+		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalar)))
 	}
 	/// Sets the boot chime volume scalar
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeScalar`
@@ -148,7 +148,7 @@ extension AudioSystemObject {
 	/// Returns the boot chime volume in decibels
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibels`
 	public func bootChimeVolumeDecibels() throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibels)), type: Float.self)
+		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibels)))
 	}
 	/// Sets the boot chime volume in decibels
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibels`
@@ -159,7 +159,7 @@ extension AudioSystemObject {
 	/// Returns the boot chime volume range in decibels
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeRangeDecibels`
 	public func bootChimeVolumeRangeDecibels() throws -> ClosedRange<Float> {
-		let value = try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeRangeDecibels)), type: AudioValueRange.self)
+		let value: AudioValueRange = try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeRangeDecibels)))
 		return Float(value.mMinimum) ... Float(value.mMaximum)
 	}
 
@@ -167,20 +167,20 @@ extension AudioSystemObject {
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeScalarToDecibels`
 	/// - parameter scalar: The value to convert
 	public func convertBootChimeVolumeToDecibels(fromScalar scalar: Float) throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalarToDecibels)), type: Float.self, initialValue: scalar)
+		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalarToDecibels)), initialValue: scalar)
 	}
 
 	/// Converts boot chime volume `decibels` to scalar and returns the converted value
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar`
 	/// - parameter decibels: The value to convert
 	public func convertBootChimeVolumeToScalar(fromDecibels decibels: Float) throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar)), type: Float.self, initialValue: decibels)
+		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar)), initialValue: decibels)
 	}
 
 	/// Returns the boot chime decibels to scalar transfer function
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction`
 	public func bootChimeDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction), type: UInt32.self))!
+		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction)))!
 	}
 }
 

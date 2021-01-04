@@ -15,19 +15,19 @@ extension AudioEndpointDevice {
 	/// Returns the composition
 	/// - remark: This corresponds to the property `kAudioEndPointDevicePropertyComposition`
 	public func composition() throws -> [AnyHashable: Any] {
-		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyComposition), type: CFDictionary.self) as! [AnyHashable: Any]
+		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyComposition))
 	}
 
 	/// Returns the audio endpoints owned by `self`
 	/// - remark: This corresponds to the property `kAudioEndPointDevicePropertyEndPointList`
 	public func endpointList() throws -> [AudioEndpoint] {
-		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyEndPointList), arrayType: AudioObjectID.self).map { AudioObject.make($0) as! AudioEndpoint }
+		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyEndPointList)).map { AudioObject.make($0) as! AudioEndpoint }
 	}
 
 	/// Returns the owning `pid_t`or `0` for public devices
 	/// - remark: This corresponds to the property `kAudioEndPointDevicePropertyIsPrivate`
 	public func isPrivate() throws -> pid_t {
-		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyIsPrivate), type: pid_t.self)
+		return try getProperty(PropertyAddress(kAudioEndPointDevicePropertyIsPrivate))
 	}
 }
 

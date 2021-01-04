@@ -14,7 +14,7 @@ public class AudioTransportManager: AudioPlugIn {
 	/// Returns the available audio transport managers
 	/// - remark: This corresponds to the property`kAudioHardwarePropertyTransportManagerList` on `kAudioObjectSystemObject`
 	public class func transportManagers() throws -> [AudioTransportManager] {
-		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTransportManagerList), arrayType: AudioObjectID.self).map { AudioObject.make($0) as! AudioTransportManager }
+		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTransportManagerList)).map { AudioObject.make($0) as! AudioTransportManager }
 	}
 
 	/// Returns an initialized `AudioTransportManager` with `bundleID` or `nil` if unknown
@@ -22,7 +22,7 @@ public class AudioTransportManager: AudioPlugIn {
 	/// - parameter bundleID: The desired bundle ID
 	public class func makeTransportManager(forBundleID bundleID: String) throws -> AudioTransportManager? {
 		var qualifier = bundleID as CFString
-		let objectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
+		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), qualifier: PropertyQualifier(&qualifier))
 		guard objectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -46,19 +46,19 @@ extension AudioTransportManager {
 	/// - note: The constants for `composition` are defined in `AudioHardware.h`
 	func createEndpointDevice(composition: [AnyHashable: Any]) throws -> AudioDevice {
 		var qualifier = composition as CFDictionary
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioTransportManagerCreateEndPointDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioTransportManagerCreateEndPointDevice), qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
 	}
 
 	/// Destroys an endpoint device
 	/// - remark: This corresponds to the property `kAudioTransportManagerDestroyEndPointDevice`
 	func destroyEndpointDevice(_ endpointDevice: AudioDevice) throws {
-		_ = try getProperty(PropertyAddress(kAudioTransportManagerDestroyEndPointDevice), type: AudioObjectID.self, initialValue: endpointDevice.objectID)
+		_ = try getProperty(PropertyAddress(kAudioTransportManagerDestroyEndPointDevice), initialValue: endpointDevice.objectID)
 	}
 
 	/// Returns the audio endpoints provided by the transport manager
 	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyEndPointList`
 	public func endpointList() throws -> [AudioObject] {
-		return try getProperty(PropertyAddress(kAudioTransportManagerPropertyEndPointList), arrayType: AudioObjectID.self).map { AudioObject.make($0) }
+		return try getProperty(PropertyAddress(kAudioTransportManagerPropertyEndPointList)).map { AudioObject.make($0) }
 	}
 
 	/// Returns the audio endpoint provided by the transport manager with the specified UID or `nil` if unknown
@@ -66,7 +66,7 @@ extension AudioTransportManager {
 	/// - parameter uid: The desired endpoint UID
 	public func endpoint(forUID uid: String) throws -> AudioObject? {
 		var qualifierData = uid as CFString
-		let endpointObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
+		let endpointObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), qualifier: PropertyQualifier(&qualifierData))
 		guard endpointObjectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -76,7 +76,7 @@ extension AudioTransportManager {
 	/// Returns the transport type
 	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyTransportType`
 	public func transportType() throws -> AudioDevice.TransportType {
-		return AudioDevice.TransportType(rawValue: try getProperty(PropertyAddress(kAudioTransportManagerPropertyTransportType), type: UInt32.self))
+		return AudioDevice.TransportType(rawValue: try getProperty(PropertyAddress(kAudioTransportManagerPropertyTransportType)))
 	}
 }
 
