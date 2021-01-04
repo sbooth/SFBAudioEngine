@@ -36,10 +36,6 @@ namespace {
 	dispatch_queue_t		_engineQueue;
 	/// Cached value of \c _engine.isRunning
 	std::atomic_bool		_engineIsRunning;
-#if TARGET_OS_OSX
-	/// The current output device for \c _engine.outputNode
-	AUAudioObjectID 		_outputDevice;
-#endif
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*_playerNode;
 	/// The lock used to protect access to \c _queuedDecoders
@@ -79,10 +75,6 @@ namespace {
 			os_log_error(_audioPlayerLog, "Unable to create audio processing graph for 44.1 kHz stereo");
 			return nil;
 		}
-
-#if TARGET_OS_OSX
-		_outputDevice = _engine.outputNode.AUAudioUnit.deviceID;
-#endif
 
 		// Register for configuration change notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
@@ -466,6 +458,15 @@ namespace {
 
 #pragma mark - Output Device
 
+- (AUAudioObjectID)outputDeviceID
+{
+	__block AUAudioObjectID objectID = kAudioObjectUnknown;
+	dispatch_async_and_wait(_engineQueue, ^{
+		objectID = _engine.outputNode.AUAudioUnit.deviceID;
+	});
+	return objectID;
+}
+
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error
 {
 	os_log_info(_audioPlayerLog, "Setting output device to 0x%x", outputDeviceID);
@@ -476,9 +477,7 @@ namespace {
 		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err];
 	});
 
-	if(result)
-		_outputDevice = outputDeviceID;
-	else {
+	if(!result) {
 		os_log_error(_audioPlayerLog, "Error setting output device: %{public}@", err);
 		if(error)
 			*error = err;
