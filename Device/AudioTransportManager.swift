@@ -83,14 +83,14 @@ extension AudioTransportManager {
 extension AudioTransportManager {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<AudioTransportManager>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioTransportManager>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioTransportManager>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioTransportManager>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -98,20 +98,20 @@ extension AudioTransportManager {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioTransportManager>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioTransportManager>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == AudioTransportManager {
+extension AudioObjectSelector where T == AudioTransportManager {
 	/// The property selector `kAudioTransportManagerCreateEndPointDevice`
 //	public static let createEndpointDevice = Selector(kAudioTransportManagerCreateEndPointDevice)
 	/// The property selector `kAudioTransportManagerDestroyEndPointDevice`
 //	public static let destroyEndpointDevice = Selector(kAudioTransportManagerDestroyEndPointDevice)
 	/// The property selector `kAudioTransportManagerPropertyEndPointList`
-	public static let endpointList = Selector(kAudioTransportManagerPropertyEndPointList)
+	public static let endpointList = AudioObjectSelector(kAudioTransportManagerPropertyEndPointList)
 	/// The property selector `kAudioTransportManagerPropertyTranslateUIDToEndPoint`
-	public static let translateUIDToEndpoint = Selector(kAudioTransportManagerPropertyTranslateUIDToEndPoint)
+	public static let translateUIDToEndpoint = AudioObjectSelector(kAudioTransportManagerPropertyTranslateUIDToEndPoint)
 	/// The property selector `kAudioTransportManagerPropertyTransportType`
-	public static let transportType = Selector(kAudioTransportManagerPropertyTransportType)
+	public static let transportType = AudioObjectSelector(kAudioTransportManagerPropertyTransportType)
 }

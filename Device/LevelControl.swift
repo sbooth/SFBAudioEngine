@@ -67,14 +67,14 @@ extension LevelControl {
 extension LevelControl {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<LevelControl>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<LevelControl>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<LevelControl>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<LevelControl>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -82,22 +82,22 @@ extension LevelControl {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<LevelControl>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<LevelControl>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == LevelControl {
+extension AudioObjectSelector where T == LevelControl {
 	/// The property selector `kAudioLevelControlPropertyScalarValue`
-	public static let scalarValue = Selector(kAudioLevelControlPropertyScalarValue)
+	public static let scalarValue = AudioObjectSelector(kAudioLevelControlPropertyScalarValue)
 	/// The property selector `kAudioLevelControlPropertyDecibelValue`
-	public static let decibelValue = Selector(kAudioLevelControlPropertyDecibelValue)
+	public static let decibelValue = AudioObjectSelector(kAudioLevelControlPropertyDecibelValue)
 	/// The property selector `kAudioLevelControlPropertyDecibelRange`
-	public static let decibelRange = Selector(kAudioLevelControlPropertyDecibelRange)
+	public static let decibelRange = AudioObjectSelector(kAudioLevelControlPropertyDecibelRange)
 	/// The property selector `kAudioLevelControlPropertyConvertScalarToDecibels`
-	public static let scalarToDecibels = Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
+	public static let scalarToDecibels = AudioObjectSelector(kAudioLevelControlPropertyConvertScalarToDecibels)
 	/// The property selector `kAudioLevelControlPropertyConvertDecibelsToScalar`
-	public static let decibelsToScalar = Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
+	public static let decibelsToScalar = AudioObjectSelector(kAudioLevelControlPropertyConvertDecibelsToScalar)
 }
 
 // MARK: -

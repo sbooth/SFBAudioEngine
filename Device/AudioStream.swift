@@ -159,14 +159,14 @@ extension AudioStream.TerminalType: CustomDebugStringConvertible {
 extension AudioStream {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<AudioStream>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioStream>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioStream>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioStream>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -174,28 +174,28 @@ extension AudioStream {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioStream>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioStream>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == AudioStream {
+extension AudioObjectSelector where T == AudioStream {
 	/// The property selector `kAudioStreamPropertyIsActive`
-	public static let isActive = Selector(kAudioStreamPropertyIsActive)
+	public static let isActive = AudioObjectSelector(kAudioStreamPropertyIsActive)
 	/// The property selector `kAudioStreamPropertyDirection`
-	public static let direction = Selector(kAudioStreamPropertyDirection)
+	public static let direction = AudioObjectSelector(kAudioStreamPropertyDirection)
 	/// The property selector `kAudioStreamPropertyTerminalType`
-	public static let terminalType = Selector(kAudioStreamPropertyTerminalType)
+	public static let terminalType = AudioObjectSelector(kAudioStreamPropertyTerminalType)
 	/// The property selector `kAudioStreamPropertyStartingChannel`
-	public static let startingChannel = Selector(kAudioStreamPropertyStartingChannel)
+	public static let startingChannel = AudioObjectSelector(kAudioStreamPropertyStartingChannel)
 	/// The property selector `kAudioStreamPropertyLatency`
-	public static let latency = Selector(kAudioStreamPropertyLatency)
+	public static let latency = AudioObjectSelector(kAudioStreamPropertyLatency)
 	/// The property selector `kAudioStreamPropertyVirtualFormat`
-	public static let virtualFormat = Selector(kAudioStreamPropertyVirtualFormat)
+	public static let virtualFormat = AudioObjectSelector(kAudioStreamPropertyVirtualFormat)
 	/// The property selector `kAudioStreamPropertyAvailableVirtualFormats`
-	public static let availableVirtualFormats = Selector(kAudioStreamPropertyAvailableVirtualFormats)
+	public static let availableVirtualFormats = AudioObjectSelector(kAudioStreamPropertyAvailableVirtualFormats)
 	/// The property selector `kAudioStreamPropertyPhysicalFormat`
-	public static let physicalFormat = Selector(kAudioStreamPropertyPhysicalFormat)
+	public static let physicalFormat = AudioObjectSelector(kAudioStreamPropertyPhysicalFormat)
 	/// The property selector `kAudioStreamPropertyAvailablePhysicalFormats`
-	public static let availablePhysicalFormats = Selector(kAudioStreamPropertyAvailablePhysicalFormats)
+	public static let availablePhysicalFormats = AudioObjectSelector(kAudioStreamPropertyAvailablePhysicalFormats)
 }

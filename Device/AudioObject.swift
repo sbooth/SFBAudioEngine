@@ -487,7 +487,7 @@ extension AudioObject {
 // MARK: -
 
 /// A thin wrapper around a HAL audio object property selector for a specific `AudioObject` subclass
-public struct Selector<T: AudioObject> {
+public struct AudioObjectSelector<T: AudioObject> {
 	/// The underlying `AudioObjectPropertySelector` value
 	let rawValue: AudioObjectPropertySelector
 
@@ -503,7 +503,7 @@ extension AudioObject {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public func hasSelector(_ selector: Selector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -512,7 +512,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -522,44 +522,44 @@ extension AudioObject {
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
 	}
 }
 
-extension Selector where T == AudioObject {
+extension AudioObjectSelector where T == AudioObject {
 	/// The wildcard property selector `kAudioObjectPropertySelectorWildcard`
-	public static let wildcard = Selector(kAudioObjectPropertySelectorWildcard)
+	public static let wildcard = AudioObjectSelector(kAudioObjectPropertySelectorWildcard)
 
 	/// The property selector `kAudioObjectPropertyBaseClass`
-	public static let baseClass = Selector(kAudioObjectPropertyBaseClass)
+	public static let baseClass = AudioObjectSelector(kAudioObjectPropertyBaseClass)
 	/// The property selector `kAudioObjectPropertyClass`
-	public static let `class` = Selector(kAudioObjectPropertyClass)
+	public static let `class` = AudioObjectSelector(kAudioObjectPropertyClass)
 	/// The property selector `kAudioObjectPropertyOwner`
-	public static let owner = Selector(kAudioObjectPropertyOwner)
+	public static let owner = AudioObjectSelector(kAudioObjectPropertyOwner)
 	/// The property selector `kAudioObjectPropertyName`
-	public static let name = Selector(kAudioObjectPropertyName)
+	public static let name = AudioObjectSelector(kAudioObjectPropertyName)
 	/// The property selector `kAudioObjectPropertyModelName`
-	public static let modelName = Selector(kAudioObjectPropertyModelName)
+	public static let modelName = AudioObjectSelector(kAudioObjectPropertyModelName)
 	/// The property selector `kAudioObjectPropertyManufacturer`
-	public static let manufacturer = Selector(kAudioObjectPropertyManufacturer)
+	public static let manufacturer = AudioObjectSelector(kAudioObjectPropertyManufacturer)
 	/// The property selector `kAudioObjectPropertyElementName`
-	public static let elementName = Selector(kAudioObjectPropertyElementName)
+	public static let elementName = AudioObjectSelector(kAudioObjectPropertyElementName)
 	/// The property selector `kAudioObjectPropertyElementCategoryName`
-	public static let elementCategoryName = Selector(kAudioObjectPropertyElementCategoryName)
+	public static let elementCategoryName = AudioObjectSelector(kAudioObjectPropertyElementCategoryName)
 	/// The property selector `kAudioObjectPropertyElementNumberName`
-	public static let elementNumberName = Selector(kAudioObjectPropertyElementNumberName)
+	public static let elementNumberName = AudioObjectSelector(kAudioObjectPropertyElementNumberName)
 	/// The property selector `kAudioObjectPropertyOwnedObjects`
-	public static let ownedObjects = Selector(kAudioObjectPropertyOwnedObjects)
+	public static let ownedObjects = AudioObjectSelector(kAudioObjectPropertyOwnedObjects)
 	/// The property selector `kAudioObjectPropertyIdentify`
-	public static let identify = Selector(kAudioObjectPropertyIdentify)
+	public static let identify = AudioObjectSelector(kAudioObjectPropertyIdentify)
 	/// The property selector `kAudioObjectPropertySerialNumber`
-	public static let serialNumber = Selector(kAudioObjectPropertySerialNumber)
+	public static let serialNumber = AudioObjectSelector(kAudioObjectPropertySerialNumber)
 	/// The property selector `kAudioObjectPropertyFirmwareVersion`
-	public static let firmwareVersion = Selector(kAudioObjectPropertyFirmwareVersion)
+	public static let firmwareVersion = AudioObjectSelector(kAudioObjectPropertyFirmwareVersion)
 }
 
-extension Selector: CustomStringConvertible {
+extension AudioObjectSelector: CustomStringConvertible {
 	public var description: String {
 		return "\(type(of: T.self)): '\(rawValue.fourCC)'"
 	}

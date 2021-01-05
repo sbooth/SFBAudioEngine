@@ -119,14 +119,14 @@ extension AudioPlugIn {
 extension AudioPlugIn {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<AudioPlugIn>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioPlugIn>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioPlugIn>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioPlugIn>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -134,28 +134,28 @@ extension AudioPlugIn {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioPlugIn>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioPlugIn>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == AudioPlugIn {
+extension AudioObjectSelector where T == AudioPlugIn {
 	/// The property selector `kAudioPlugInCreateAggregateDevice`
 //	public static let createAggregateDevice = Selector(kAudioPlugInCreateAggregateDevice)
 	/// The property selector `kAudioPlugInDestroyAggregateDevice`
 //	public static let destroyAggregateDevice = Selector(kAudioPlugInDestroyAggregateDevice)
 	/// The property selector `kAudioPlugInPropertyBundleID`
-	public static let bundleID = Selector(kAudioPlugInPropertyBundleID)
+	public static let bundleID = AudioObjectSelector(kAudioPlugInPropertyBundleID)
 	/// The property selector `kAudioPlugInPropertyDeviceList`
-	public static let deviceList = Selector(kAudioPlugInPropertyDeviceList)
+	public static let deviceList = AudioObjectSelector(kAudioPlugInPropertyDeviceList)
 	/// The property selector `kAudioPlugInPropertyTranslateUIDToDevice`
-	public static let translateUIDToDevice = Selector(kAudioPlugInPropertyTranslateUIDToDevice)
+	public static let translateUIDToDevice = AudioObjectSelector(kAudioPlugInPropertyTranslateUIDToDevice)
 	/// The property selector `kAudioPlugInPropertyBoxList`
-	public static let boxList = Selector(kAudioPlugInPropertyBoxList)
+	public static let boxList = AudioObjectSelector(kAudioPlugInPropertyBoxList)
 	/// The property selector `kAudioPlugInPropertyTranslateUIDToBox`
-	public static let translateUIDToBox = Selector(kAudioPlugInPropertyTranslateUIDToBox)
+	public static let translateUIDToBox = AudioObjectSelector(kAudioPlugInPropertyTranslateUIDToBox)
 	/// The property selector `kAudioPlugInPropertyClockDeviceList`
-	public static let clockDeviceList = Selector(kAudioPlugInPropertyClockDeviceList)
+	public static let clockDeviceList = AudioObjectSelector(kAudioPlugInPropertyClockDeviceList)
 	/// The property selector `kAudioPlugInPropertyTranslateUIDToClockDevice`
-	public static let translateUIDToClockDevice = Selector(kAudioPlugInPropertyTranslateUIDToClockDevice)
+	public static let translateUIDToClockDevice = AudioObjectSelector(kAudioPlugInPropertyTranslateUIDToClockDevice)
 }

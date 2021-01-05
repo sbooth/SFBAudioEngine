@@ -1170,7 +1170,7 @@ extension AudioDevice {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public func hasSelector(_ selector: Selector<AudioDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -1179,7 +1179,7 @@ extension AudioDevice {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -1189,180 +1189,180 @@ extension AudioDevice {
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
 	}
 }
 
-extension Selector where T == AudioDevice {
+extension AudioObjectSelector where T == AudioDevice {
 	/// The property selector `kAudioDevicePropertyConfigurationApplication`
-	public static let configurationApplication = Selector(kAudioDevicePropertyConfigurationApplication)
+	public static let configurationApplication = AudioObjectSelector(kAudioDevicePropertyConfigurationApplication)
 	/// The property selector `kAudioDevicePropertyDeviceUID`
-	public static let deviceUID = Selector(kAudioDevicePropertyDeviceUID)
+	public static let deviceUID = AudioObjectSelector(kAudioDevicePropertyDeviceUID)
 	/// The property selector `kAudioDevicePropertyModelUID`
-	public static let modelUID = Selector(kAudioDevicePropertyModelUID)
+	public static let modelUID = AudioObjectSelector(kAudioDevicePropertyModelUID)
 	/// The property selector `kAudioDevicePropertyTransportType`
-	public static let transportType = Selector(kAudioDevicePropertyTransportType)
+	public static let transportType = AudioObjectSelector(kAudioDevicePropertyTransportType)
 	/// The property selector `kAudioDevicePropertyRelatedDevices`
 	/// The property selector `kAudioDevicePropertyRelatedDevices`
-	public static let relatedDevices = Selector(kAudioDevicePropertyRelatedDevices)
+	public static let relatedDevices = AudioObjectSelector(kAudioDevicePropertyRelatedDevices)
 	/// The property selector `kAudioDevicePropertyClockDomain`
 	/// The property selector `kAudioDevicePropertyClockDomain`
-	public static let clockDomain = Selector(kAudioDevicePropertyClockDomain)
+	public static let clockDomain = AudioObjectSelector(kAudioDevicePropertyClockDomain)
 	/// The property selector `kAudioDevicePropertyDeviceIsAlive`
 	/// The property selector `kAudioDevicePropertyDeviceIsAlive`
-	public static let deviceIsAlive = Selector(kAudioDevicePropertyDeviceIsAlive)
+	public static let deviceIsAlive = AudioObjectSelector(kAudioDevicePropertyDeviceIsAlive)
 	/// The property selector `kAudioDevicePropertyDeviceIsRunning`
 	/// The property selector `kAudioDevicePropertyDeviceIsRunning`
-	public static let deviceIsRunning = Selector(kAudioDevicePropertyDeviceIsRunning)
+	public static let deviceIsRunning = AudioObjectSelector(kAudioDevicePropertyDeviceIsRunning)
 	/// The property selector `kAudioDevicePropertyDeviceCanBeDefaultDevice`
-	public static let deviceCanBeDefaultDevice = Selector(kAudioDevicePropertyDeviceCanBeDefaultDevice)
+	public static let deviceCanBeDefaultDevice = AudioObjectSelector(kAudioDevicePropertyDeviceCanBeDefaultDevice)
 	/// The property selector `kAudioDevicePropertyDeviceCanBeDefaultSystemDevice`
-	public static let deviceCanBeDefaultSystemDevice = Selector(kAudioDevicePropertyDeviceCanBeDefaultSystemDevice)
+	public static let deviceCanBeDefaultSystemDevice = AudioObjectSelector(kAudioDevicePropertyDeviceCanBeDefaultSystemDevice)
 	/// The property selector `kAudioDevicePropertyLatency`
-	public static let latency = Selector(kAudioDevicePropertyLatency)
+	public static let latency = AudioObjectSelector(kAudioDevicePropertyLatency)
 	/// The property selector `kAudioDevicePropertyStreams`
-	public static let streams = Selector(kAudioDevicePropertyStreams)
+	public static let streams = AudioObjectSelector(kAudioDevicePropertyStreams)
 	/// The property selector `kAudioObjectPropertyControlList`
-	public static let controlList = Selector(kAudioObjectPropertyControlList)
+	public static let controlList = AudioObjectSelector(kAudioObjectPropertyControlList)
 	/// The property selector `kAudioDevicePropertySafetyOffset`
-	public static let safetyOffset = Selector(kAudioDevicePropertySafetyOffset)
+	public static let safetyOffset = AudioObjectSelector(kAudioDevicePropertySafetyOffset)
 	/// The property selector `kAudioDevicePropertyNominalSampleRate`
-	public static let nominalSampleRate = Selector(kAudioDevicePropertyNominalSampleRate)
+	public static let nominalSampleRate = AudioObjectSelector(kAudioDevicePropertyNominalSampleRate)
 	/// The property selector `kAudioDevicePropertyAvailableNominalSampleRates`
-	public static let availableNominalSampleRates = Selector(kAudioDevicePropertyAvailableNominalSampleRates)
+	public static let availableNominalSampleRates = AudioObjectSelector(kAudioDevicePropertyAvailableNominalSampleRates)
 	/// The property selector `kAudioDevicePropertyIcon`
-	public static let icon = Selector(kAudioDevicePropertyIcon)
+	public static let icon = AudioObjectSelector(kAudioDevicePropertyIcon)
 	/// The property selector `kAudioDevicePropertyIsHidden`
-	public static let isHidden = Selector(kAudioDevicePropertyIsHidden)
+	public static let isHidden = AudioObjectSelector(kAudioDevicePropertyIsHidden)
 	/// The property selector `kAudioDevicePropertyPreferredChannelsForStereo`
-	public static let preferredChannelsForStereo = Selector(kAudioDevicePropertyPreferredChannelsForStereo)
+	public static let preferredChannelsForStereo = AudioObjectSelector(kAudioDevicePropertyPreferredChannelsForStereo)
 	/// The property selector `kAudioDevicePropertyPreferredChannelLayout`
-	public static let preferredChannelLayout = Selector(kAudioDevicePropertyPreferredChannelLayout)
+	public static let preferredChannelLayout = AudioObjectSelector(kAudioDevicePropertyPreferredChannelLayout)
 
 	/// The property selector `kAudioDevicePropertyPlugIn`
-	public static let plugIn = Selector(kAudioDevicePropertyPlugIn)
+	public static let plugIn = AudioObjectSelector(kAudioDevicePropertyPlugIn)
 	/// The property selector `kAudioDevicePropertyDeviceHasChanged`
-	public static let hasChanged = Selector(kAudioDevicePropertyDeviceHasChanged)
+	public static let hasChanged = AudioObjectSelector(kAudioDevicePropertyDeviceHasChanged)
 	/// The property selector `kAudioDevicePropertyDeviceIsRunningSomewhere`
-	public static let isRunningSomewhere = Selector(kAudioDevicePropertyDeviceIsRunningSomewhere)
+	public static let isRunningSomewhere = AudioObjectSelector(kAudioDevicePropertyDeviceIsRunningSomewhere)
 	/// The property selector `kAudioDeviceProcessorOverload`
-	public static let processorOverload = Selector(kAudioDeviceProcessorOverload)
+	public static let processorOverload = AudioObjectSelector(kAudioDeviceProcessorOverload)
 	/// The property selector `kAudioDevicePropertyIOStoppedAbnormally`
-	public static let ioStoppedAbornormally = Selector(kAudioDevicePropertyIOStoppedAbnormally)
+	public static let ioStoppedAbornormally = AudioObjectSelector(kAudioDevicePropertyIOStoppedAbnormally)
 	/// The property selector `kAudioDevicePropertyHogMode`
-	public static let hogMode = Selector(kAudioDevicePropertyHogMode)
+	public static let hogMode = AudioObjectSelector(kAudioDevicePropertyHogMode)
 	/// The property selector `kAudioDevicePropertyBufferFrameSize`
-	public static let bufferFrameSize = Selector(kAudioDevicePropertyBufferFrameSize)
+	public static let bufferFrameSize = AudioObjectSelector(kAudioDevicePropertyBufferFrameSize)
 	/// The property selector `kAudioDevicePropertyBufferFrameSizeRange`
-	public static let bufferFrameSizeRange = Selector(kAudioDevicePropertyBufferFrameSizeRange)
+	public static let bufferFrameSizeRange = AudioObjectSelector(kAudioDevicePropertyBufferFrameSizeRange)
 	/// The property selector `kAudioDevicePropertyUsesVariableBufferFrameSizes`
-	public static let usesVariableBufferFrameSizes = Selector(kAudioDevicePropertyUsesVariableBufferFrameSizes)
+	public static let usesVariableBufferFrameSizes = AudioObjectSelector(kAudioDevicePropertyUsesVariableBufferFrameSizes)
 	/// The property selector `kAudioDevicePropertyIOCycleUsage`
-	public static let ioCycleUsage = Selector(kAudioDevicePropertyIOCycleUsage)
+	public static let ioCycleUsage = AudioObjectSelector(kAudioDevicePropertyIOCycleUsage)
 	/// The property selector `kAudioDevicePropertyStreamConfiguration`
-	public static let streamConfiguration = Selector(kAudioDevicePropertyStreamConfiguration)
+	public static let streamConfiguration = AudioObjectSelector(kAudioDevicePropertyStreamConfiguration)
 	/// The property selector `kAudioDevicePropertyIOProcStreamUsage`
-	public static let ioProcStreamUsage = Selector(kAudioDevicePropertyIOProcStreamUsage)
+	public static let ioProcStreamUsage = AudioObjectSelector(kAudioDevicePropertyIOProcStreamUsage)
 	/// The property selector `kAudioDevicePropertyActualSampleRate`
-	public static let actualSampleRate = Selector(kAudioDevicePropertyActualSampleRate)
+	public static let actualSampleRate = AudioObjectSelector(kAudioDevicePropertyActualSampleRate)
 	/// The property selector `kAudioDevicePropertyClockDevice`
-	public static let clockDevice = Selector(kAudioDevicePropertyClockDevice)
+	public static let clockDevice = AudioObjectSelector(kAudioDevicePropertyClockDevice)
 	/// The property selector `kAudioDevicePropertyIOThreadOSWorkgroup`
-	public static let ioThreadOSWorkgroup = Selector(kAudioDevicePropertyIOThreadOSWorkgroup)
+	public static let ioThreadOSWorkgroup = AudioObjectSelector(kAudioDevicePropertyIOThreadOSWorkgroup)
 
 	/// The property selector `kAudioDevicePropertyJackIsConnected`
-	public static let jackIsConnected = Selector(kAudioDevicePropertyJackIsConnected)
+	public static let jackIsConnected = AudioObjectSelector(kAudioDevicePropertyJackIsConnected)
 	/// The property selector `kAudioDevicePropertyVolumeScalar`
-	public static let volumeScalar = Selector(kAudioDevicePropertyVolumeScalar)
+	public static let volumeScalar = AudioObjectSelector(kAudioDevicePropertyVolumeScalar)
 	/// The property selector `kAudioDevicePropertyVolumeDecibels`
-	public static let volumeDecibels = Selector(kAudioDevicePropertyVolumeDecibels)
+	public static let volumeDecibels = AudioObjectSelector(kAudioDevicePropertyVolumeDecibels)
 	/// The property selector `kAudioDevicePropertyVolumeRangeDecibels`
-	public static let volumeRangeDecibels = Selector(kAudioDevicePropertyVolumeRangeDecibels)
+	public static let volumeRangeDecibels = AudioObjectSelector(kAudioDevicePropertyVolumeRangeDecibels)
 	/// The property selector `kAudioDevicePropertyVolumeScalarToDecibels`
-	public static let volumeScalarToDecibels = Selector(kAudioDevicePropertyVolumeScalarToDecibels)
+	public static let volumeScalarToDecibels = AudioObjectSelector(kAudioDevicePropertyVolumeScalarToDecibels)
 	/// The property selector `kAudioDevicePropertyVolumeDecibelsToScalar`
-	public static let volumeDecibelsToScalar = Selector(kAudioDevicePropertyVolumeDecibelsToScalar)
+	public static let volumeDecibelsToScalar = AudioObjectSelector(kAudioDevicePropertyVolumeDecibelsToScalar)
 	/// The property selector `kAudioDevicePropertyStereoPan`
-	public static let stereoPan = Selector(kAudioDevicePropertyStereoPan)
+	public static let stereoPan = AudioObjectSelector(kAudioDevicePropertyStereoPan)
 	/// The property selector `kAudioDevicePropertyStereoPanChannels`
-	public static let stereoPanChannels = Selector(kAudioDevicePropertyStereoPanChannels)
+	public static let stereoPanChannels = AudioObjectSelector(kAudioDevicePropertyStereoPanChannels)
 	/// The property selector `kAudioDevicePropertyMute`
-	public static let mute = Selector(kAudioDevicePropertyMute)
+	public static let mute = AudioObjectSelector(kAudioDevicePropertyMute)
 	/// The property selector `kAudioDevicePropertySolo`
-	public static let solo = Selector(kAudioDevicePropertySolo)
+	public static let solo = AudioObjectSelector(kAudioDevicePropertySolo)
 	/// The property selector `kAudioDevicePropertyPhantomPower`
-	public static let phantomPower = Selector(kAudioDevicePropertyPhantomPower)
+	public static let phantomPower = AudioObjectSelector(kAudioDevicePropertyPhantomPower)
 	/// The property selector `kAudioDevicePropertyPhaseInvert`
-	public static let phaseInvert = Selector(kAudioDevicePropertyPhaseInvert)
+	public static let phaseInvert = AudioObjectSelector(kAudioDevicePropertyPhaseInvert)
 	/// The property selector `kAudioDevicePropertyClipLight`
-	public static let clipLight = Selector(kAudioDevicePropertyClipLight)
+	public static let clipLight = AudioObjectSelector(kAudioDevicePropertyClipLight)
 	/// The property selector `kAudioDevicePropertyTalkback`
-	public static let talkback = Selector(kAudioDevicePropertyTalkback)
+	public static let talkback = AudioObjectSelector(kAudioDevicePropertyTalkback)
 	/// The property selector `kAudioDevicePropertyListenback`
-	public static let listenback = Selector(kAudioDevicePropertyListenback)
+	public static let listenback = AudioObjectSelector(kAudioDevicePropertyListenback)
 	/// The property selector `kAudioDevicePropertyDataSource`
-	public static let dataSource = Selector(kAudioDevicePropertyDataSource)
+	public static let dataSource = AudioObjectSelector(kAudioDevicePropertyDataSource)
 	/// The property selector `kAudioDevicePropertyDataSources`
-	public static let dataSources = Selector(kAudioDevicePropertyDataSources)
+	public static let dataSources = AudioObjectSelector(kAudioDevicePropertyDataSources)
 	/// The property selector `kAudioDevicePropertyDataSourceNameForIDCFString`
-	public static let dataSourceNameForID = Selector(kAudioDevicePropertyDataSourceNameForIDCFString)
+	public static let dataSourceNameForID = AudioObjectSelector(kAudioDevicePropertyDataSourceNameForIDCFString)
 	/// The property selector `kAudioDevicePropertyDataSourceKindForID`
-	public static let dataSourceKindForID = Selector(kAudioDevicePropertyDataSourceKindForID)
+	public static let dataSourceKindForID = AudioObjectSelector(kAudioDevicePropertyDataSourceKindForID)
 	/// The property selector `kAudioDevicePropertyClockSource`
-	public static let clockSource = Selector(kAudioDevicePropertyClockSource)
+	public static let clockSource = AudioObjectSelector(kAudioDevicePropertyClockSource)
 	/// The property selector `kAudioDevicePropertyClockSources`
-	public static let clockSources = Selector(kAudioDevicePropertyClockSources)
+	public static let clockSources = AudioObjectSelector(kAudioDevicePropertyClockSources)
 	/// The property selector `kAudioDevicePropertyClockSourceNameForIDCFString`
-	public static let clockSourceNameForID = Selector(kAudioDevicePropertyClockSourceNameForIDCFString)
+	public static let clockSourceNameForID = AudioObjectSelector(kAudioDevicePropertyClockSourceNameForIDCFString)
 	/// The property selector `kAudioDevicePropertyClockSourceKindForID`
-	public static let clockSourceKindForID = Selector(kAudioDevicePropertyClockSourceKindForID)
+	public static let clockSourceKindForID = AudioObjectSelector(kAudioDevicePropertyClockSourceKindForID)
 	/// The property selector `kAudioDevicePropertyPlayThru`
-	public static let playThru = Selector(kAudioDevicePropertyPlayThru)
+	public static let playThru = AudioObjectSelector(kAudioDevicePropertyPlayThru)
 	/// The property selector `kAudioDevicePropertyPlayThruSolo`
-	public static let playThruSolo = Selector(kAudioDevicePropertyPlayThruSolo)
+	public static let playThruSolo = AudioObjectSelector(kAudioDevicePropertyPlayThruSolo)
 	/// The property selector `kAudioDevicePropertyPlayThruVolumeScalar`
-	public static let playThruVolumeScalar = Selector(kAudioDevicePropertyPlayThruVolumeScalar)
+	public static let playThruVolumeScalar = AudioObjectSelector(kAudioDevicePropertyPlayThruVolumeScalar)
 	/// The property selector `kAudioDevicePropertyPlayThruVolumeDecibels`
-	public static let playThruVolumeDecibels = Selector(kAudioDevicePropertyPlayThruVolumeDecibels)
+	public static let playThruVolumeDecibels = AudioObjectSelector(kAudioDevicePropertyPlayThruVolumeDecibels)
 	/// The property selector `kAudioDevicePropertyPlayThruVolumeRangeDecibels`
-	public static let playThruVolumeRangeDecibels = Selector(kAudioDevicePropertyPlayThruVolumeRangeDecibels)
+	public static let playThruVolumeRangeDecibels = AudioObjectSelector(kAudioDevicePropertyPlayThruVolumeRangeDecibels)
 	/// The property selector `kAudioDevicePropertyPlayThruVolumeScalarToDecibels`
-	public static let playThruVolumeScalarToDecibels = Selector(kAudioDevicePropertyPlayThruVolumeScalarToDecibels)
+	public static let playThruVolumeScalarToDecibels = AudioObjectSelector(kAudioDevicePropertyPlayThruVolumeScalarToDecibels)
 	/// The property selector `kAudioDevicePropertyPlayThruVolumeDecibelsToScalar`
-	public static let playThruVolumeDecibelsToScalar = Selector(kAudioDevicePropertyPlayThruVolumeDecibelsToScalar)
+	public static let playThruVolumeDecibelsToScalar = AudioObjectSelector(kAudioDevicePropertyPlayThruVolumeDecibelsToScalar)
 	/// The property selector `kAudioDevicePropertyPlayThruStereoPan`
-	public static let playThruStereoPan = Selector(kAudioDevicePropertyPlayThruStereoPan)
+	public static let playThruStereoPan = AudioObjectSelector(kAudioDevicePropertyPlayThruStereoPan)
 	/// The property selector `kAudioDevicePropertyPlayThruStereoPanChannels`
-	public static let playThruStereoPanChannels = Selector(kAudioDevicePropertyPlayThruStereoPanChannels)
+	public static let playThruStereoPanChannels = AudioObjectSelector(kAudioDevicePropertyPlayThruStereoPanChannels)
 	/// The property selector `kAudioDevicePropertyPlayThruDestination`
-	public static let playThruDestination = Selector(kAudioDevicePropertyPlayThruDestination)
+	public static let playThruDestination = AudioObjectSelector(kAudioDevicePropertyPlayThruDestination)
 	/// The property selector `kAudioDevicePropertyPlayThruDestinations`
-	public static let playThruDestinations = Selector(kAudioDevicePropertyPlayThruDestinations)
+	public static let playThruDestinations = AudioObjectSelector(kAudioDevicePropertyPlayThruDestinations)
 	/// The property selector `kAudioDevicePropertyPlayThruDestinationNameForIDCFString`
-	public static let playThruDestinationNameForID = Selector(kAudioDevicePropertyPlayThruDestinationNameForIDCFString)
+	public static let playThruDestinationNameForID = AudioObjectSelector(kAudioDevicePropertyPlayThruDestinationNameForIDCFString)
 	/// The property selector `kAudioDevicePropertyChannelNominalLineLevel`
-	public static let channelNominalLineLevel = Selector(kAudioDevicePropertyChannelNominalLineLevel)
+	public static let channelNominalLineLevel = AudioObjectSelector(kAudioDevicePropertyChannelNominalLineLevel)
 	/// The property selector `kAudioDevicePropertyChannelNominalLineLevels`
-	public static let channelNominalLineLevels = Selector(kAudioDevicePropertyChannelNominalLineLevels)
+	public static let channelNominalLineLevels = AudioObjectSelector(kAudioDevicePropertyChannelNominalLineLevels)
 	/// The property selector `kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString`
-	public static let channelNominalLineLevelNameForID = Selector(kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString)
+	public static let channelNominalLineLevelNameForID = AudioObjectSelector(kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString)
 	/// The property selector `kAudioDevicePropertyHighPassFilterSetting`
-	public static let highPassFilterSetting = Selector(kAudioDevicePropertyHighPassFilterSetting)
+	public static let highPassFilterSetting = AudioObjectSelector(kAudioDevicePropertyHighPassFilterSetting)
 	/// The property selector `kAudioDevicePropertyHighPassFilterSettings`
-	public static let highPassFilterSettings = Selector(kAudioDevicePropertyHighPassFilterSettings)
+	public static let highPassFilterSettings = AudioObjectSelector(kAudioDevicePropertyHighPassFilterSettings)
 	/// The property selector `kAudioDevicePropertyHighPassFilterSettingNameForIDCFString`
-	public static let highPassFilterSettingNameForID = Selector(kAudioDevicePropertyHighPassFilterSettingNameForIDCFString)
+	public static let highPassFilterSettingNameForID = AudioObjectSelector(kAudioDevicePropertyHighPassFilterSettingNameForIDCFString)
 	/// The property selector `kAudioDevicePropertySubVolumeScalar`
-	public static let subVolumeScalar = Selector(kAudioDevicePropertySubVolumeScalar)
+	public static let subVolumeScalar = AudioObjectSelector(kAudioDevicePropertySubVolumeScalar)
 	/// The property selector `kAudioDevicePropertySubVolumeDecibels`
-	public static let subVolumeDecibels = Selector(kAudioDevicePropertySubVolumeDecibels)
+	public static let subVolumeDecibels = AudioObjectSelector(kAudioDevicePropertySubVolumeDecibels)
 	/// The property selector `kAudioDevicePropertySubVolumeRangeDecibels`
-	public static let subVolumeRangeDecibels = Selector(kAudioDevicePropertySubVolumeRangeDecibels)
+	public static let subVolumeRangeDecibels = AudioObjectSelector(kAudioDevicePropertySubVolumeRangeDecibels)
 	/// The property selector `kAudioDevicePropertySubVolumeScalarToDecibels`
-	public static let subVolumeScalarToDecibels = Selector(kAudioDevicePropertySubVolumeScalarToDecibels)
+	public static let subVolumeScalarToDecibels = AudioObjectSelector(kAudioDevicePropertySubVolumeScalarToDecibels)
 	/// The property selector `kAudioDevicePropertySubVolumeDecibelsToScalar`
-	public static let subVolumeDecibelsToScalar = Selector(kAudioDevicePropertySubVolumeDecibelsToScalar)
+	public static let subVolumeDecibelsToScalar = AudioObjectSelector(kAudioDevicePropertySubVolumeDecibelsToScalar)
 	/// The property selector `kAudioDevicePropertySubMute`
-	public static let subMute = Selector(kAudioDevicePropertySubMute)
+	public static let subMute = AudioObjectSelector(kAudioDevicePropertySubMute)
 }

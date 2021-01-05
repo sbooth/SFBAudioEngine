@@ -96,14 +96,14 @@ extension AudioBox {
 extension AudioBox {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<AudioBox>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioBox>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioBox>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioBox>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -111,26 +111,26 @@ extension AudioBox {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioBox>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioBox>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == AudioBox {
+extension AudioObjectSelector where T == AudioBox {
 	/// The property selector `kAudioBoxPropertyBoxUID`
-	public static let boxUID = Selector(kAudioBoxPropertyBoxUID)
+	public static let boxUID = AudioObjectSelector(kAudioBoxPropertyBoxUID)
 	/// The property selector `kAudioBoxPropertyTransportType`
-	public static let transportType = Selector(kAudioBoxPropertyTransportType)
+	public static let transportType = AudioObjectSelector(kAudioBoxPropertyTransportType)
 	/// The property selector `kAudioBoxPropertyHasAudio`
-	public static let hasAudio = Selector(kAudioBoxPropertyHasAudio)
+	public static let hasAudio = AudioObjectSelector(kAudioBoxPropertyHasAudio)
 	/// The property selector `kAudioBoxPropertyHasVideo`
-	public static let hasVideo = Selector(kAudioBoxPropertyHasVideo)
+	public static let hasVideo = AudioObjectSelector(kAudioBoxPropertyHasVideo)
 	/// The property selector `kAudioBoxPropertyHasMIDI`
-	public static let hasMIDI = Selector(kAudioBoxPropertyHasMIDI)
+	public static let hasMIDI = AudioObjectSelector(kAudioBoxPropertyHasMIDI)
 	/// The property selector `kAudioBoxPropertyAcquired`
-	public static let acquired = Selector(kAudioBoxPropertyAcquired)
+	public static let acquired = AudioObjectSelector(kAudioBoxPropertyAcquired)
 	/// The property selector `kAudioBoxPropertyDeviceList`
-	public static let deviceList = Selector(kAudioBoxPropertyDeviceList)
+	public static let deviceList = AudioObjectSelector(kAudioBoxPropertyDeviceList)
 	/// The property selector `kAudioBoxPropertyClockDeviceList`
-	public static let clockDeviceList = Selector(kAudioBoxPropertyClockDeviceList)
+	public static let clockDeviceList = AudioObjectSelector(kAudioBoxPropertyClockDeviceList)
 }

@@ -90,14 +90,14 @@ extension AudioClockDevice {
 extension AudioClockDevice {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<AudioClockDevice>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioClockDevice>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioClockDevice>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioClockDevice>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -105,28 +105,28 @@ extension AudioClockDevice {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioClockDevice>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioClockDevice>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == AudioClockDevice {
+extension AudioObjectSelector where T == AudioClockDevice {
 	/// The property selector `kAudioClockDevicePropertyDeviceUID`
-	public static let deviceUID = Selector(kAudioClockDevicePropertyDeviceUID)
+	public static let deviceUID = AudioObjectSelector(kAudioClockDevicePropertyDeviceUID)
 	/// The property selector `kAudioClockDevicePropertyTransportType`
-	public static let transportType = Selector(kAudioClockDevicePropertyTransportType)
+	public static let transportType = AudioObjectSelector(kAudioClockDevicePropertyTransportType)
 	/// The property selector `kAudioClockDevicePropertyClockDomain`
-	public static let clockDomain = Selector(kAudioClockDevicePropertyClockDomain)
+	public static let clockDomain = AudioObjectSelector(kAudioClockDevicePropertyClockDomain)
 	/// The property selector `kAudioClockDevicePropertyDeviceIsAlive`
-	public static let deviceIsAlive = Selector(kAudioClockDevicePropertyDeviceIsAlive)
+	public static let deviceIsAlive = AudioObjectSelector(kAudioClockDevicePropertyDeviceIsAlive)
 	/// The property selector `kAudioClockDevicePropertyDeviceIsRunning`
-	public static let deviceIsRunning = Selector(kAudioClockDevicePropertyDeviceIsRunning)
+	public static let deviceIsRunning = AudioObjectSelector(kAudioClockDevicePropertyDeviceIsRunning)
 	/// The property selector `kAudioClockDevicePropertyLatency`
-	public static let latency = Selector(kAudioClockDevicePropertyLatency)
+	public static let latency = AudioObjectSelector(kAudioClockDevicePropertyLatency)
 	/// The property selector `kAudioClockDevicePropertyControlList`
-	public static let controlList = Selector(kAudioClockDevicePropertyControlList)
+	public static let controlList = AudioObjectSelector(kAudioClockDevicePropertyControlList)
 	/// The property selector `kAudioClockDevicePropertyNominalSampleRate`
-	public static let nominalSampleRate = Selector(kAudioClockDevicePropertyNominalSampleRate)
+	public static let nominalSampleRate = AudioObjectSelector(kAudioClockDevicePropertyNominalSampleRate)
 	/// The property selector `kAudioClockDevicePropertyAvailableNominalSampleRates`
-	public static let availableNominalSampleRates = Selector(kAudioClockDevicePropertyAvailableNominalSampleRates)
+	public static let availableNominalSampleRates = AudioObjectSelector(kAudioClockDevicePropertyAvailableNominalSampleRates)
 }

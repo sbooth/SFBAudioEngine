@@ -69,7 +69,7 @@ extension AudioAggregateDevice {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public func hasSelector(_ selector: Selector<AudioAggregateDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioAggregateDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -78,7 +78,7 @@ extension AudioAggregateDevice {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioAggregateDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioAggregateDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -88,20 +88,20 @@ extension AudioAggregateDevice {
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioAggregateDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioAggregateDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
 	}
 }
 
-extension Selector where T == AudioAggregateDevice {
+extension AudioObjectSelector where T == AudioAggregateDevice {
 	/// The property selector `kAudioAggregateDevicePropertyFullSubDeviceList`
-	public static let fullSubDeviceList = Selector(kAudioAggregateDevicePropertyFullSubDeviceList)
+	public static let fullSubDeviceList = AudioObjectSelector(kAudioAggregateDevicePropertyFullSubDeviceList)
 	/// The property selector `kAudioAggregateDevicePropertyActiveSubDeviceList`
-	public static let activeSubDeviceList = Selector(kAudioAggregateDevicePropertyActiveSubDeviceList)
+	public static let activeSubDeviceList = AudioObjectSelector(kAudioAggregateDevicePropertyActiveSubDeviceList)
 	/// The property selector `kAudioAggregateDevicePropertyComposition`
-	public static let composition = Selector(kAudioAggregateDevicePropertyComposition)
+	public static let composition = AudioObjectSelector(kAudioAggregateDevicePropertyComposition)
 	/// The property selector `kAudioAggregateDevicePropertyMasterSubDevice`
-	public static let masterSubDevice = Selector(kAudioAggregateDevicePropertyMasterSubDevice)
+	public static let masterSubDevice = AudioObjectSelector(kAudioAggregateDevicePropertyMasterSubDevice)
 	/// The property selector `kAudioAggregateDevicePropertyClockDevice`
-	public static let clockDevice = Selector(kAudioAggregateDevicePropertyClockDevice)
+	public static let clockDevice = AudioObjectSelector(kAudioAggregateDevicePropertyClockDevice)
 }

@@ -120,14 +120,14 @@ extension AudioSystemObject {
 extension AudioSystemObject {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<AudioSystemObject>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioSystemObject>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<AudioSystemObject>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioSystemObject>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -135,58 +135,58 @@ extension AudioSystemObject {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<AudioSystemObject>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioSystemObject>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == AudioSystemObject {
+extension AudioObjectSelector where T == AudioSystemObject {
 	/// The property selector `kAudioHardwarePropertyDevices`
-	public static let devices = Selector(kAudioHardwarePropertyDevices)
+	public static let devices = AudioObjectSelector(kAudioHardwarePropertyDevices)
 	/// The property selector `kAudioHardwarePropertyDefaultInputDevice`
-	public static let defaultInputDevice = Selector(kAudioHardwarePropertyDefaultInputDevice)
+	public static let defaultInputDevice = AudioObjectSelector(kAudioHardwarePropertyDefaultInputDevice)
 	/// The property selector `kAudioHardwarePropertyDefaultOutputDevice`
-	public static let defaultOutputDevice = Selector(kAudioHardwarePropertyDefaultOutputDevice)
+	public static let defaultOutputDevice = AudioObjectSelector(kAudioHardwarePropertyDefaultOutputDevice)
 	/// The property selector `kAudioHardwarePropertyDefaultSystemOutputDevice`
-	public static let defaultSystemOutputDevice = Selector(kAudioHardwarePropertyDefaultSystemOutputDevice)
+	public static let defaultSystemOutputDevice = AudioObjectSelector(kAudioHardwarePropertyDefaultSystemOutputDevice)
 	/// The property selector `kAudioHardwarePropertyTranslateUIDToDevice`
-	public static let translateUIDToDevice = Selector(kAudioHardwarePropertyTranslateUIDToDevice)
+	public static let translateUIDToDevice = AudioObjectSelector(kAudioHardwarePropertyTranslateUIDToDevice)
 	/// The property selector `kAudioHardwarePropertyMixStereoToMono`
-	public static let mixStereoToMono = Selector(kAudioHardwarePropertyMixStereoToMono)
+	public static let mixStereoToMono = AudioObjectSelector(kAudioHardwarePropertyMixStereoToMono)
 	/// The property selector `kAudioHardwarePropertyPlugInList`
-	public static let plugInList = Selector(kAudioHardwarePropertyPlugInList)
+	public static let plugInList = AudioObjectSelector(kAudioHardwarePropertyPlugInList)
 	/// The property selector `kAudioHardwarePropertyTranslateBundleIDToPlugIn`
-	public static let translateBundleIDToPlugIn = Selector(kAudioHardwarePropertyTranslateBundleIDToPlugIn)
+	public static let translateBundleIDToPlugIn = AudioObjectSelector(kAudioHardwarePropertyTranslateBundleIDToPlugIn)
 	/// The property selector `kAudioHardwarePropertyTransportManagerList`
-	public static let transportManagerList = Selector(kAudioHardwarePropertyTransportManagerList)
+	public static let transportManagerList = AudioObjectSelector(kAudioHardwarePropertyTransportManagerList)
 	/// The property selector `kAudioHardwarePropertyTranslateBundleIDToTransportManager`
-	public static let translateBundleIDToTransportManager = Selector(kAudioHardwarePropertyTranslateBundleIDToTransportManager)
+	public static let translateBundleIDToTransportManager = AudioObjectSelector(kAudioHardwarePropertyTranslateBundleIDToTransportManager)
 	/// The property selector `kAudioHardwarePropertyBoxList`
-	public static let boxList = Selector(kAudioHardwarePropertyBoxList)
+	public static let boxList = AudioObjectSelector(kAudioHardwarePropertyBoxList)
 	/// The property selector `kAudioHardwarePropertyTranslateUIDToBox`
-	public static let translateUIDToBox = Selector(kAudioHardwarePropertyTranslateUIDToBox)
+	public static let translateUIDToBox = AudioObjectSelector(kAudioHardwarePropertyTranslateUIDToBox)
 	/// The property selector `kAudioHardwarePropertyClockDeviceList`
-	public static let clockDeviceList = Selector(kAudioHardwarePropertyClockDeviceList)
+	public static let clockDeviceList = AudioObjectSelector(kAudioHardwarePropertyClockDeviceList)
 	/// The property selector `kAudioHardwarePropertyTranslateUIDToClockDevice`
-	public static let translateUIDToClockDevice = Selector(kAudioHardwarePropertyTranslateUIDToClockDevice)
+	public static let translateUIDToClockDevice = AudioObjectSelector(kAudioHardwarePropertyTranslateUIDToClockDevice)
 	/// The property selector `kAudioHardwarePropertyProcessIsMaster`
-	public static let processIsMaster = Selector(kAudioHardwarePropertyProcessIsMaster)
+	public static let processIsMaster = AudioObjectSelector(kAudioHardwarePropertyProcessIsMaster)
 	/// The property selector `kAudioHardwarePropertyIsInitingOrExiting`
-	public static let isInitingOrExiting = Selector(kAudioHardwarePropertyIsInitingOrExiting)
+	public static let isInitingOrExiting = AudioObjectSelector(kAudioHardwarePropertyIsInitingOrExiting)
 	/// The property selector `kAudioHardwarePropertyUserIDChanged`
-	public static let userIDChanged = Selector(kAudioHardwarePropertyUserIDChanged)
+	public static let userIDChanged = AudioObjectSelector(kAudioHardwarePropertyUserIDChanged)
 	/// The property selector `kAudioHardwarePropertyProcessIsAudible`
-	public static let processIsAudible = Selector(kAudioHardwarePropertyProcessIsAudible)
+	public static let processIsAudible = AudioObjectSelector(kAudioHardwarePropertyProcessIsAudible)
 	/// The property selector `kAudioHardwarePropertySleepingIsAllowed`
-	public static let sleepingIsAllowed = Selector(kAudioHardwarePropertySleepingIsAllowed)
+	public static let sleepingIsAllowed = AudioObjectSelector(kAudioHardwarePropertySleepingIsAllowed)
 	/// The property selector `kAudioHardwarePropertyUnloadingIsAllowed`
-	public static let unloadingIsAllowed = Selector(kAudioHardwarePropertyUnloadingIsAllowed)
+	public static let unloadingIsAllowed = AudioObjectSelector(kAudioHardwarePropertyUnloadingIsAllowed)
 	/// The property selector `kAudioHardwarePropertyHogModeIsAllowed`
-	public static let hogModeIsAllowed = Selector(kAudioHardwarePropertyHogModeIsAllowed)
+	public static let hogModeIsAllowed = AudioObjectSelector(kAudioHardwarePropertyHogModeIsAllowed)
 	/// The property selector `kAudioHardwarePropertyUserSessionIsActiveOrHeadless`
-	public static let userSessionIsActiveOrHeadless = Selector(kAudioHardwarePropertyUserSessionIsActiveOrHeadless)
+	public static let userSessionIsActiveOrHeadless = AudioObjectSelector(kAudioHardwarePropertyUserSessionIsActiveOrHeadless)
 	/// The property selector `kAudioHardwarePropertyServiceRestarted`
-	public static let serviceRestarted = Selector(kAudioHardwarePropertyServiceRestarted)
+	public static let serviceRestarted = AudioObjectSelector(kAudioHardwarePropertyServiceRestarted)
 	/// The property selector `kAudioHardwarePropertyPowerHint`
-	public static let powerHint = Selector(kAudioHardwarePropertyPowerHint)
+	public static let powerHint = AudioObjectSelector(kAudioHardwarePropertyPowerHint)
 }

@@ -86,14 +86,14 @@ extension SelectorControl.Item: CustomDebugStringConvertible {
 extension SelectorControl {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
-	public func hasSelector(_ selector: Selector<SelectorControl>) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<SelectorControl>) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
 	/// Returns `true` if `selector` is settable
 	/// - parameter selector: The selector of the desired property
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: Selector<SelectorControl>) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<SelectorControl>) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue)))
 	}
 
@@ -101,20 +101,20 @@ extension SelectorControl {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: Selector<SelectorControl>, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<SelectorControl>, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue)), perform: block)
 	}
 }
 
-extension Selector where T == SelectorControl {
+extension AudioObjectSelector where T == SelectorControl {
 	/// The property selector `kAudioSelectorControlPropertyCurrentItem`
-	public static let currentItem = Selector(kAudioSelectorControlPropertyCurrentItem)
+	public static let currentItem = AudioObjectSelector(kAudioSelectorControlPropertyCurrentItem)
 	/// The property selector `kAudioSelectorControlPropertyAvailableItems`
-	public static let availableItems = Selector(kAudioSelectorControlPropertyAvailableItems)
+	public static let availableItems = AudioObjectSelector(kAudioSelectorControlPropertyAvailableItems)
 	/// The property selector `kAudioSelectorControlPropertyItemName`
-	public static let itemName = Selector(kAudioSelectorControlPropertyItemName)
+	public static let itemName = AudioObjectSelector(kAudioSelectorControlPropertyItemName)
 	/// The property selector `kAudioSelectorControlPropertyItemKind`
-	public static let itemKind = Selector(kAudioSelectorControlPropertyItemKind)
+	public static let itemKind = AudioObjectSelector(kAudioSelectorControlPropertyItemKind)
 }
 
 // MARK: -
