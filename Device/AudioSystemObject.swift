@@ -26,6 +26,18 @@ public class AudioSystemObject: AudioObject {
 }
 
 extension AudioSystemObject {
+	/// Returns the `AudioObjectID` for the audio device with `uid` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToDevice`
+	/// - parameter uid: The desired device UID
+	public func deviceID(forUID uid: String) throws -> AudioObjectID? {
+		var qualifier = uid as CFString
+		let objectID = try getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return objectID
+	}
+
 	/// Returns `true` if audio devices should mix stereo to mono
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyMixStereoToMono`
 	public func mixStereoToMono() throws -> Bool {
@@ -35,6 +47,54 @@ extension AudioSystemObject {
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyMixStereoToMono`
 	public func setMixStereoToMono(_ value: Bool) throws {
 		try setProperty(PropertyAddress(kAudioHardwarePropertyMixStereoToMono), to: UInt32(value ? 1 : 0))
+	}
+
+	/// Returns the `AudioObjectID` for the audio plug-in for `bundleID` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToPlugIn`
+	/// - parameter uid: The desired device UID
+	public func plugInID(forBundleID bundleID: String) throws -> AudioObjectID? {
+		var qualifier = bundleID as CFString
+		let objectID = try getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToPlugIn), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return objectID
+	}
+
+	/// Returns the `AudioObjectID` for the audio transport manager for `bundleID` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToTransportManager`
+	/// - parameter uid: The desired device UID
+	public func transportManagerID(forBundleID bundleID: String) throws -> AudioObjectID? {
+		var qualifier = bundleID as CFString
+		let objectID = try getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return objectID
+	}
+
+	/// Returns the `AudioObjectID` for the audio box with `uid` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToBox`
+	/// - parameter uid: The desired device UID
+	public func boxID(forUID uid: String) throws -> AudioObjectID? {
+		var qualifier = uid as CFString
+		let objectID = try getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToBox), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return objectID
+	}
+
+	/// Returns the `AudioObjectID` for the audio clock device with `uid` or `nil` if unknown
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToClockDevice`
+	/// - parameter uid: The desired device UID
+	public func clockDeviceID(forUID uid: String) throws -> AudioObjectID? {
+		var qualifier = uid as CFString
+		let objectID = try getProperty(PropertyAddress(kAudioHardwarePropertyTranslateUIDToClockDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
+		guard objectID != kAudioObjectUnknown else {
+			return nil
+		}
+		return objectID
 	}
 
 	/// Returns `true` if the current process contains the master HAL instance
