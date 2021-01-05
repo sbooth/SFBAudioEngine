@@ -47,8 +47,10 @@ namespace {
 			return kAudioFileUnspecifiedError;
 
 		if(inPosition != offset) {
-			if(!decoder->_inputSource.supportsSeeking || ![decoder->_inputSource seekToOffset:inPosition error:nil])
+			if(!decoder->_inputSource.supportsSeeking)
 				return kAudioFileOperationNotSupportedError;
+			if(![decoder->_inputSource seekToOffset:inPosition error:nil])
+				return kAudioFileUnspecifiedError;
 		}
 
 		NSInteger bytesRead;
