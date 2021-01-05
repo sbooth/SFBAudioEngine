@@ -14,7 +14,7 @@ public class AudioBox: AudioObject {
 	/// Returns the available audio boxes
 	/// - remark: This corresponds to the property`kAudioHardwarePropertyBoxList` on `kAudioObjectSystemObject`
 	public class func boxes() throws -> [AudioBox] {
-		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyBoxList)).map { AudioObject.make($0) as! AudioBox }
+		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyBoxList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioBox }
 	}
 
 	/// Returns an initialized `AudioBox` with `uid` or `nil` if unknown
@@ -83,13 +83,13 @@ extension AudioBox {
 	/// Returns the audio devices provided by the box
 	/// - remark: This corresponds to the property `kAudioBoxPropertyDeviceList`
 	public func deviceList() throws -> [AudioDevice] {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyDeviceList)).map { AudioObject.make($0) as! AudioDevice }
+		return try getProperty(PropertyAddress(kAudioBoxPropertyDeviceList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioDevice }
 	}
 
 	/// Returns the audio clock devices provided by the box
 	/// - remark: This corresponds to the property `kAudioBoxPropertyClockDeviceList`
 	public func clockDeviceList() throws -> [AudioClockDevice] {
-		return try getProperty(PropertyAddress(kAudioBoxPropertyClockDeviceList)).map { AudioObject.make($0) as! AudioClockDevice }
+		return try getProperty(PropertyAddress(kAudioBoxPropertyClockDeviceList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioClockDevice }
 	}
 }
 

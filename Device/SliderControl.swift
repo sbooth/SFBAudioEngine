@@ -34,7 +34,7 @@ extension SliderControl {
 	/// Returns the available control values
 	/// - remark: This corresponds to the property `kAudioSliderControlPropertyRange`
 	public func range() throws -> [UInt32] {
-		return try getProperty(PropertyAddress(kAudioSliderControlPropertyRange))
+		return try getProperty(PropertyAddress(kAudioSliderControlPropertyRange), elementType: UInt32.self)
 	}
 }
 

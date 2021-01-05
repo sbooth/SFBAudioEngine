@@ -120,7 +120,7 @@ extension AudioObject: Hashable {
 // MARK: - Scalar Property Retrieval
 
 extension AudioObject {
-	/// Returns the value of `property`
+	/// Returns the numeric value of `property`
 	/// - note: The underlying audio object property must be backed by an equivalent native C type of `T`
 	/// - parameter property: The address of the desired property
 	/// - parameter type: The underlying numeric type
@@ -133,8 +133,8 @@ extension AudioObject {
 		return value
 	}
 
-	/// Returns the value of `property`
-	/// - note: The underlying audio object property must be backed by a`CFObject` subclass
+	/// Returns the Core Foundation object value of `property`
+	/// - note: The underlying audio object property must be backed by a Core Foundation object and return a `CFType` with a +1 retain count
 	/// - parameter property: The address of the desired property
 	/// - parameter type: The underlying `CFType`
 	/// - parameter qualifier: An optional property qualifier
@@ -145,7 +145,7 @@ extension AudioObject {
 		return value!.takeRetainedValue()
 	}
 
-	/// Returns the value of `property`
+	/// Returns the `AudioValueRange` value of `property`
 	/// - note: The underlying audio object property must be backed by `AudioValueRange`
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
@@ -155,7 +155,7 @@ extension AudioObject {
 		return value
 	}
 
-	/// Returns the value of `property`
+	/// Returns the `AudioStreamBasicDescription` value of `property`
 	/// - note: The underlying audio object property must be backed by `AudioStreamBasicDescription`
 	/// - parameter property: The address of the desired property
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
@@ -183,12 +183,13 @@ extension AudioObject {
 // MARK: - Array Properties
 
 extension AudioObject {
-	/// Returns the value of `property`
+	/// Returns the array value of `property`
 	/// - note: The underlying audio object property must be backed by a C array of `T`
 	/// - parameter property: The address of the desired property
+	/// - parameter type: The underlying array element type
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
-	public func getProperty<T>(_ property: PropertyAddress, qualifier: PropertyQualifier? = nil) throws -> [T] {
+	public func getProperty<T>(_ property: PropertyAddress, elementType type: T.Type, qualifier: PropertyQualifier? = nil) throws -> [T] {
 		let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
 		let count = dataSize / MemoryLayout<T>.stride
 		let array = try [T](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
@@ -281,9 +282,9 @@ extension AudioObject {
 			var qualifierData = type!
 			let qualifierDataSize = MemoryLayout<AudioClassID>.stride * type!.count
 			let qualifier = PropertyQualifier(value: &qualifierData, size: UInt32(qualifierDataSize))
-			return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), qualifier: qualifier).map { AudioObject.make($0) }
+			return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), elementType: AudioObjectID.self, qualifier: qualifier).map { AudioObject.make($0) }
 		}
-		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects)).map { AudioObject.make($0) }
+		return try getProperty(PropertyAddress(kAudioObjectPropertyOwnedObjects), elementType: AudioObjectID.self).map { AudioObject.make($0) }
 	}
 
 	/// Returns `true` if the audio object's hardware is drawing attention to itself

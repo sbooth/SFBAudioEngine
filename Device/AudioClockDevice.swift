@@ -14,7 +14,7 @@ public class AudioClockDevice: AudioObject {
 	/// Returns the available audio clock devices
 	/// - remark: This corresponds to the property`kAudioHardwarePropertyClockDeviceList` on `kAudioObjectSystemObject`
 	public class func clockDevices() throws -> [AudioClockDevice] {
-		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyClockDeviceList)).map { AudioObject.make($0) as! AudioClockDevice }
+		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyClockDeviceList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioClockDevice }
 	}
 
 	/// Returns an initialized `AudioClockDevice` with `uid` or `nil` if unknown
@@ -70,7 +70,7 @@ extension AudioClockDevice {
 	/// Returns the audio controls owned by `self`
 	/// - remark: This corresponds to the property `kAudioClockDevicePropertyControlList`
 	public func controlList() throws -> [AudioControl] {
-		return try getProperty(PropertyAddress(kAudioClockDevicePropertyControlList)).map { AudioObject.make($0) as! AudioControl }
+		return try getProperty(PropertyAddress(kAudioClockDevicePropertyControlList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioControl }
 	}
 
 	/// Returns the sample rate
@@ -82,7 +82,7 @@ extension AudioClockDevice {
 	/// Returns the available sample rates
 	/// - remark: This corresponds to the property `kAudioClockDevicePropertyAvailableNominalSampleRates`
 	public func availableSampleRates() throws -> [ClosedRange<Double>] {
-		let value: [AudioValueRange] = try getProperty(PropertyAddress(kAudioClockDevicePropertyAvailableNominalSampleRates))
+		let value = try getProperty(PropertyAddress(kAudioClockDevicePropertyAvailableNominalSampleRates), elementType: AudioValueRange.self)
 		return value.map { $0.mMinimum ... $0.mMaximum }
 	}
 }

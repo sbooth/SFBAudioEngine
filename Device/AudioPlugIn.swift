@@ -14,7 +14,7 @@ public class AudioPlugIn: AudioObject {
 	/// Returns the available audio plug-ins
 	/// - remark: This corresponds to the property`kAudioHardwarePropertyPlugInList` on `kAudioObjectSystemObject`
 	public class func plugIns() throws -> [AudioPlugIn] {
-		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyPlugInList)).map { AudioObject.make($0) as! AudioPlugIn }
+		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyPlugInList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioPlugIn }
 	}
 
 	/// Returns an initialized `AudioPlugIn` with `bundleID` or `nil` if unknown
@@ -64,7 +64,7 @@ extension AudioPlugIn {
 	/// Returns the audio devices provided by the plug-in
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyDeviceList`
 	public func deviceList() throws -> [AudioDevice] {
-		return try getProperty(PropertyAddress(kAudioPlugInPropertyDeviceList)).map { AudioObject.make($0) as! AudioDevice }
+		return try getProperty(PropertyAddress(kAudioPlugInPropertyDeviceList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioDevice }
 	}
 
 	/// Returns the audio device provided by the plug-in with the specified UID or `nil` if unknown
@@ -82,7 +82,7 @@ extension AudioPlugIn {
 	/// Returns the audio boxes provided by the plug-in
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyBoxList`
 	public func boxList() throws -> [AudioBox] {
-		return try getProperty(PropertyAddress(kAudioPlugInPropertyBoxList)).map { AudioObject.make($0) as! AudioBox }
+		return try getProperty(PropertyAddress(kAudioPlugInPropertyBoxList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioBox }
 	}
 
 	/// Returns the audio box provided by the plug-in with the specified UID or `nil` if unknown
@@ -100,7 +100,7 @@ extension AudioPlugIn {
 	/// Returns the clock devices provided by the plug-in
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyClockDeviceList`
 	public func clockDeviceList() throws -> [AudioClockDevice] {
-		return try getProperty(PropertyAddress(kAudioPlugInPropertyClockDeviceList)).map { AudioObject.make($0) as! AudioClockDevice }
+		return try getProperty(PropertyAddress(kAudioPlugInPropertyClockDeviceList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioClockDevice }
 	}
 
 	/// Returns the audio clock device provided by the plug-in with the specified UID or `nil` if unknown

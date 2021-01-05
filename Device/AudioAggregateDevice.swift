@@ -21,7 +21,7 @@ extension AudioAggregateDevice {
 	/// Returns the active subdevices in the aggregate device
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyActiveSubDeviceList`
 	public func activeSubdeviceList() throws -> [AudioDevice] {
-		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyActiveSubDeviceList)).map { AudioObject.make($0) as! AudioDevice }
+		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyActiveSubDeviceList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioDevice }
 	}
 
 	/// Returns the composition

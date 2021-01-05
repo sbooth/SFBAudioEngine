@@ -35,7 +35,7 @@ extension StereoPanControl {
 	/// Returns the control's panning channels
 	/// - remark: This corresponds to the property `kAudioStereoPanControlPropertyPanningChannels`
 	public func panningChannels() throws -> (UInt32, UInt32) {
-		let channels: [UInt32] = try getProperty(PropertyAddress(kAudioStereoPanControlPropertyPanningChannels))
+		let channels = try getProperty(PropertyAddress(kAudioStereoPanControlPropertyPanningChannels), elementType: UInt32.self)
 		precondition(channels.count == 2)
 		return (channels[0], channels[1])
 	}

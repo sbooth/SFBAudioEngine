@@ -66,7 +66,7 @@ extension AudioStream {
 	/// Returns the available virtual formats
 	/// - remark: This corresponds to the property `kAudioStreamPropertyAvailableVirtualFormats`
 	public func availableVirtualFormats() throws -> [(AudioStreamBasicDescription, ClosedRange<Double>)] {
-		let value: [AudioStreamRangedDescription] = try getProperty(PropertyAddress(kAudioStreamPropertyAvailableVirtualFormats))
+		let value = try getProperty(PropertyAddress(kAudioStreamPropertyAvailableVirtualFormats), elementType: AudioStreamRangedDescription.self)
 		return value.map { ($0.mFormat, $0.mSampleRateRange.mMinimum ... $0.mSampleRateRange.mMaximum) }
 	}
 
@@ -84,7 +84,7 @@ extension AudioStream {
 	/// Returns the available physical formats
 	/// - remark: This corresponds to the property `kAudioStreamPropertyAvailablePhysicalFormats`
 	public func availablePhysicalFormats() throws -> [(AudioStreamBasicDescription, ClosedRange<Double>)] {
-		let value: [AudioStreamRangedDescription] = try getProperty(PropertyAddress(kAudioStreamPropertyAvailablePhysicalFormats))
+		let value = try getProperty(PropertyAddress(kAudioStreamPropertyAvailablePhysicalFormats), elementType: AudioStreamRangedDescription.self)
 		return value.map { ($0.mFormat, $0.mSampleRateRange.mMinimum ... $0.mSampleRateRange.mMaximum) }
 	}
 }

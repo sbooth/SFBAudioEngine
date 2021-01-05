@@ -14,7 +14,7 @@ public class AudioTransportManager: AudioPlugIn {
 	/// Returns the available audio transport managers
 	/// - remark: This corresponds to the property`kAudioHardwarePropertyTransportManagerList` on `kAudioObjectSystemObject`
 	public class func transportManagers() throws -> [AudioTransportManager] {
-		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTransportManagerList)).map { AudioObject.make($0) as! AudioTransportManager }
+		return try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTransportManagerList), elementType: AudioObjectID.self).map { AudioObject.make($0) as! AudioTransportManager }
 	}
 
 	/// Returns an initialized `AudioTransportManager` with `bundleID` or `nil` if unknown
@@ -58,7 +58,7 @@ extension AudioTransportManager {
 	/// Returns the audio endpoints provided by the transport manager
 	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyEndPointList`
 	public func endpointList() throws -> [AudioObject] {
-		return try getProperty(PropertyAddress(kAudioTransportManagerPropertyEndPointList)).map { AudioObject.make($0) }
+		return try getProperty(PropertyAddress(kAudioTransportManagerPropertyEndPointList), elementType: AudioObjectID.self).map { AudioObject.make($0) }
 	}
 
 	/// Returns the audio endpoint provided by the transport manager with the specified UID or `nil` if unknown

@@ -23,7 +23,7 @@ extension SelectorControl {
 	/// Returns the selected items
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyCurrentItem`
 	public func currentItem() throws -> [UInt32] {
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyCurrentItem))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyCurrentItem), elementType: UInt32.self)
 	}
 	/// Sets the selected items
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyCurrentItem`
@@ -34,7 +34,7 @@ extension SelectorControl {
 	/// Returns the available items
 	/// - remark: This corresponds to the property `kAudioSelectorControlPropertyAvailableItems`
 	public func availableItems() throws -> [UInt32] {
-		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyAvailableItems))
+		return try getProperty(PropertyAddress(kAudioSelectorControlPropertyAvailableItems), elementType: UInt32.self)
 	}
 
 	/// Returns the name of `itemID`
