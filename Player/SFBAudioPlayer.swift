@@ -60,20 +60,6 @@ extension AudioPlayer {
 		}
 		return (position: PlaybackPosition(position), time: PlaybackTime(time))
 	}
-
-	#if os(macOS)
-
-	/// Returns the output device for `AVAudioEngine.outputNode`
-	public var outputDevice: AudioDevice {
-		AudioObject.make(outputDeviceID) as! AudioDevice
-	}
-
-	/// Sets the output device for `AVAudioEngine.outputNode`
-	public func setOutputDevice(_ value: AudioDevice) throws {
-		try setOutputDeviceID(value.objectID)
-	}
-
-	#endif
 }
 
 extension AudioPlayer.PlaybackState: CustomDebugStringConvertible {
