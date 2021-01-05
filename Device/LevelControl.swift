@@ -62,12 +62,6 @@ extension LevelControl {
 	public func convertToScalar(fromDecibels decibels: Float) throws -> Float {
 		return try getProperty(PropertyAddress(kAudioLevelControlPropertyConvertDecibelsToScalar), initialValue: decibels)
 	}
-
-	/// Returns the decibels to scalar transfer function
-	/// - remark: This corresponds to the property `kAudioLevelControlPropertyDecibelsToScalarTransferFunction`
-	public func decibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioLevelControlPropertyDecibelsToScalarTransferFunction)))!
-	}
 }
 
 extension LevelControl {
@@ -104,8 +98,6 @@ extension Selector where T == LevelControl {
 	public static let scalarToDecibels = Selector(kAudioLevelControlPropertyConvertScalarToDecibels)
 	/// The property selector `kAudioLevelControlPropertyConvertDecibelsToScalar`
 	public static let decibelsToScalar = Selector(kAudioLevelControlPropertyConvertDecibelsToScalar)
-	/// The property selector `kAudioLevelControlPropertyDecibelsToScalarTransferFunction`
-	public static let decibelsToScalarTransferFunction = Selector(kAudioLevelControlPropertyDecibelsToScalarTransferFunction)
 }
 
 // MARK: -
@@ -118,35 +110,4 @@ public class VolumeControl: LevelControl {
 /// A HAL audio LFE volume control object
 /// - remark: This class correponds to objects with base class `kAudioLFEVolumeControlClassID`
 public class LFEVolumeControl: LevelControl {
-}
-
-/// A HAL audio boot chime volume control object
-/// - remark: This class correponds to objects with base class `kAudioBootChimeVolumeControlClassID`
-public class BootChimeVolumeControl: LevelControl {
-}
-
-// MARK: -
-
-extension AudioLevelControlTransferFunction: CustomDebugStringConvertible {
-	public var debugDescription: String {
-		switch self {
-		case .tranferFunctionLinear:	return "Linear"
-		case .tranferFunction1Over3:	return "1/3"
-		case .tranferFunction1Over2:	return "1/2"
-		case .tranferFunction3Over4:	return "3/4"
-		case .tranferFunction3Over2:	return "3/2"
-		case .tranferFunction2Over1:	return "2/1"
-		case .tranferFunction3Over1:	return "3/1"
-		case .tranferFunction4Over1:	return "4/1"
-		case .tranferFunction5Over1:	return "5/1"
-		case .tranferFunction6Over1:	return "6/1"
-		case .tranferFunction7Over1:	return "7/1"
-		case .tranferFunction8Over1:	return "8/1"
-		case .tranferFunction9Over1:	return "9/1"
-		case .tranferFunction10Over1:	return "10/1"
-		case .tranferFunction11Over1:	return "11/1"
-		case .tranferFunction12Over1: 	return "12/1"
-		default:						return "\(self.rawValue)"
-		}
-	}
 }

@@ -118,73 +118,6 @@ extension AudioSystemObject {
 }
 
 extension AudioSystemObject {
-	/// Returns the run loop used for HAL notification handlers
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
-	public func runLoop() throws -> CFRunLoop? {
-		var value: Unmanaged<CFRunLoop>?
-		try readAudioObjectProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), from: objectID, into: &value)
-		return value?.takeRetainedValue()
-	}
-	/// Sets the run loop used for HAL notification handlers
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyRunLoop`
-	public func setRunLoop(_ value: CFRunLoop?) throws {
-		try setProperty(PropertyAddress(kAudioHardwarePropertyRunLoop), to: value as CFTypeRef?)
-	}
-
-	// kAudioHardwarePropertyDeviceForUID functionality in AudioDevice.makeDevice(forUID:)
-	// kAudioHardwarePropertyPlugInForBundleID functionality in AudioPlugIn.makePlugIn(forBundleID:)
-
-	/// Returns the boot chime volume scalar
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeScalar`
-	public func bootChimeVolumeScalar() throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalar)))
-	}
-	/// Sets the boot chime volume scalar
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeScalar`
-	public func setBootChimeVolumeScalar(_ value: Float) throws {
-		return try setProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalar)), to: value)
-	}
-
-	/// Returns the boot chime volume in decibels
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibels`
-	public func bootChimeVolumeDecibels() throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibels)))
-	}
-	/// Sets the boot chime volume in decibels
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibels`
-	public func setVootChimeVolumeDecibels(_ value: Float) throws {
-		return try setProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibels)), to: value)
-	}
-
-	/// Returns the boot chime volume range in decibels
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeRangeDecibels`
-	public func bootChimeVolumeRangeDecibels() throws -> ClosedRange<Float> {
-		let value: AudioValueRange = try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeRangeDecibels)))
-		return Float(value.mMinimum) ... Float(value.mMaximum)
-	}
-
-	/// Converts boot chime volume `scalar` to decibels and returns the converted value
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeScalarToDecibels`
-	/// - parameter scalar: The value to convert
-	public func convertBootChimeVolumeToDecibels(fromScalar scalar: Float) throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeScalarToDecibels)), initialValue: scalar)
-	}
-
-	/// Converts boot chime volume `decibels` to scalar and returns the converted value
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar`
-	/// - parameter decibels: The value to convert
-	public func convertBootChimeVolumeToScalar(fromDecibels decibels: Float) throws -> Float {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar)), initialValue: decibels)
-	}
-
-	/// Returns the boot chime decibels to scalar transfer function
-	/// - remark: This corresponds to the property `kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction`
-	public func bootChimeDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction)))!
-	}
-}
-
-extension AudioSystemObject {
 	/// Returns `true` if `self` has `selector`
 	/// - parameter selector: The selector of the desired property
 	public func hasSelector(_ selector: Selector<AudioSystemObject>) -> Bool {
@@ -256,23 +189,4 @@ extension Selector where T == AudioSystemObject {
 	public static let serviceRestarted = Selector(kAudioHardwarePropertyServiceRestarted)
 	/// The property selector `kAudioHardwarePropertyPowerHint`
 	public static let powerHint = Selector(kAudioHardwarePropertyPowerHint)
-
-	/// The property selector `kAudioHardwarePropertyRunLoop`
-	public static let runLoop = Selector(kAudioHardwarePropertyRunLoop)
-	/// The property selector `kAudioHardwarePropertyDeviceForUID`
-	public static let deviceForUID = Selector(kAudioHardwarePropertyDeviceForUID)
-	/// The property selector `kAudioHardwarePropertyPlugInForBundleID`
-	public static let plugInForBundleID = Selector(kAudioHardwarePropertyPlugInForBundleID)
-	/// The property selector `kAudioHardwarePropertyBootChimeVolumeScalar`
-	public static let bootChimeVolumeScalar = Selector(kAudioHardwarePropertyBootChimeVolumeScalar)
-	/// The property selector `kAudioHardwarePropertyBootChimeVolumeDecibels`
-	public static let bootChimeVolumeDecibels = Selector(kAudioHardwarePropertyBootChimeVolumeDecibels)
-	/// The property selector `kAudioHardwarePropertyBootChimeVolumeRangeDecibels`
-	public static let bootChimeVolumeRangeDecibels = Selector(kAudioHardwarePropertyBootChimeVolumeRangeDecibels)
-	/// The property selector `kAudioHardwarePropertyBootChimeVolumeScalarToDecibels`
-	public static let bootChimeVolumeScalarToDecibels = Selector(kAudioHardwarePropertyBootChimeVolumeScalarToDecibels)
-	/// The property selector `kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar`
-	public static let bootChimeVolumeDecibelsToScalar = Selector(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalar)
-	/// The property selector `kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction`
-	public static let bootChimeVolumeDecibelsToScalarTransferFunction = Selector(kAudioHardwarePropertyBootChimeVolumeDecibelsToScalarTransferFunction)
 }

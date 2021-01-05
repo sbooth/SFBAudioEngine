@@ -430,7 +430,6 @@ extension AudioObject {
 			case kAudioClipLightControlClassID:		return ClipLightControl(objectID)
 			case kAudioTalkbackControlClassID:		return TalkbackControl(objectID)
 			case kAudioListenbackControlClassID: 	return ListenbackControl(objectID)
-			case kAudioISubOwnerControlClassID: 	return iSubOwnerControl(objectID)
 			default:
 				os_log(.debug, log: audioObjectLog, "Unknown boolean control class '%{public}@'", objectClass.fourCC)
 				return BooleanControl(objectID)
@@ -440,7 +439,6 @@ extension AudioObject {
 			switch objectClass {
 			case kAudioVolumeControlClassID: 			return VolumeControl(objectID)
 			case kAudioLFEVolumeControlClassID: 		return LFEVolumeControl(objectID)
-			case kAudioBootChimeVolumeControlClassID: 	return BootChimeVolumeControl(objectID)
 			default:
 				os_log(.debug, log: audioObjectLog, "Unknown level control class '%{public}@'", objectClass.fourCC)
 				return LevelControl(objectID)

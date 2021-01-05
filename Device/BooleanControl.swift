@@ -106,8 +106,3 @@ public class TalkbackControl: BooleanControl {
 /// - remark: This class correponds to objects with base class `kAudioListenbackControlClassID`
 public class ListenbackControl: BooleanControl {
 }
-
-/// A HAL audio iSub owner control object
-/// - remark: This class correponds to objects with base class `kAudioISubOwnerControlClassID`
-public class iSubOwnerControl: BooleanControl {
-}

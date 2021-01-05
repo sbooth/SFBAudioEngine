@@ -948,36 +948,6 @@ extension AudioDevice {
 }
 
 extension AudioDevice {
-	/// Returns the volume decibels to scalar transfer function
-	/// - remark: This corresponds to the property `kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction`
-	public func volumeDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction)))!
-	}
-	/// Returns the play-through decibels to scalar transfer function
-	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction`
-	public func playThroughDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction)))!
-	}
-
-	/// Returns `true` if the device claims ownership of an attached iSub
-	/// - remark: This corresponds to the property `kAudioDevicePropertyDriverShouldOwniSub`
-	public func shouldOwniSub(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
-		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDriverShouldOwniSub), scope: scope, element: element)) as UInt32 != 0
-	}
-	/// Sets whether the device should claim ownership of an attached iSub
-	/// - remark: This corresponds to the property `kAudioDevicePropertyDriverShouldOwniSub`
-	public func setShouldOwniSub(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
-		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyDriverShouldOwniSub), scope: scope, element: element), to: UInt32(value ? 1 : 0))
-	}
-
-	/// Returns the LFE decibels to scalar transfer function
-	/// - remark: This corresponds to the property `kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction`
-	public func subDecibelsToScalarTransferFunction() throws -> AudioLevelControlTransferFunction {
-		return AudioLevelControlTransferFunction(rawValue: try getProperty(PropertyAddress(kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction)))!
-	}
-}
-
-extension AudioDevice {
 	/// A thin wrapper around a HAL audio device transport type
 	public struct TransportType: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Unknown
@@ -1008,8 +978,6 @@ extension AudioDevice {
 		public static let avb 				= TransportType(rawValue: kAudioDeviceTransportTypeAVB)
 		/// Thunderbolt
 		public static let thunderbolt 		= TransportType(rawValue: kAudioDeviceTransportTypeThunderbolt)
-		/// Automatically-generated aggregate
-		public static let autoAggregate 	= TransportType(rawValue: kAudioDeviceTransportTypeAutoAggregate)
 
 		public let rawValue: UInt32
 
@@ -1044,7 +1012,6 @@ extension AudioDevice.TransportType: CustomDebugStringConvertible {
 		case kAudioDeviceTransportTypeAirPlay:			return "AirPlay"
 		case kAudioDeviceTransportTypeAVB:				return "AVB"
 		case kAudioDeviceTransportTypeThunderbolt: 		return "Thunderbolt"
-		case kAudioDeviceTransportTypeAutoAggregate: 	return "Automatic Aggregate"
 		default:										return "\(self.rawValue)"
 		}
 	}
@@ -1398,13 +1365,4 @@ extension Selector where T == AudioDevice {
 	public static let subVolumeDecibelsToScalar = Selector(kAudioDevicePropertySubVolumeDecibelsToScalar)
 	/// The property selector `kAudioDevicePropertySubMute`
 	public static let subMute = Selector(kAudioDevicePropertySubMute)
-
-	/// The property selector `kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction`
-	public static let volumeDecibelsToScalarTransferFunction = Selector(kAudioDevicePropertyVolumeDecibelsToScalarTransferFunction)
-	/// The property selector `kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction`
-	public static let playThruVolumeDecibelsToScalarTransferFunction = Selector(kAudioDevicePropertyPlayThruVolumeDecibelsToScalarTransferFunction)
-	/// The property selector `kAudioDevicePropertyDriverShouldOwniSub`
-	public static let driverShouldOwniSub = Selector(kAudioDevicePropertyDriverShouldOwniSub)
-	/// The property selector `kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction`
-	public static let subVolumeDecibelsToScalarTransferFunction = Selector(kAudioDevicePropertySubVolumeDecibelsToScalarTransferFunction)
 }
