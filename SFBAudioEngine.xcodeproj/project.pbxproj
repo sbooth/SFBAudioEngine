@@ -427,7 +427,6 @@
 		32D7399E259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7399D259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift */; };
 		32D739A0259D844500C0E3F6 /* AudioBufferListWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7399F259D844500C0E3F6 /* AudioBufferListWrapper.swift */; };
 		32D739A2259E09E700C0E3F6 /* AudioStreamBasicDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D739A1259E09E700C0E3F6 /* AudioStreamBasicDescription.swift */; };
-		32D739A3259E09E700C0E3F6 /* AudioStreamBasicDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D739A1259E09E700C0E3F6 /* AudioStreamBasicDescription.swift */; };
 		32D740BF255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */; };
 		32D740C0255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */; };
 		32D740C1255F6D91004D3C1A /* SFBPCMEncoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D740B0255F6D91004D3C1A /* SFBPCMEncoding.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1578,7 +1577,6 @@
 				32714C0A2551D4DF00029BD7 /* SFBAudioMetadata.m in Sources */,
 				32714C0B2551D4DF00029BD7 /* SFBDSDPCMDecoder.mm in Sources */,
 				32714C0C2551D4DF00029BD7 /* SFBDataInputSource.m in Sources */,
-				32D739A3259E09E700C0E3F6 /* AudioStreamBasicDescription.swift in Sources */,
 				32714C0D2551D4DF00029BD7 /* SFBOggSpeexDecoder.m in Sources */,
 				32714C0E2551D4DF00029BD7 /* SFBDSFDecoder.m in Sources */,
 				32714C0F2551D4DF00029BD7 /* SFBAudioPlayerNode.mm in Sources */,
