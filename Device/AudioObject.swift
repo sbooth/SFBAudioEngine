@@ -128,9 +128,7 @@ extension AudioObject {
 	/// - parameter initialValue: An optional initial value for `outData` when calling `AudioObjectGetPropertyData`
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty<T: Numeric>(_ property: PropertyAddress, type: T.Type, qualifier: PropertyQualifier? = nil, initialValue: T = 0) throws -> T {
-		var value = initialValue
-		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-		return value
+		return try getAudioObjectProperty(property, from: objectID, type: type, qualifier: qualifier, initialValue: initialValue)
 	}
 
 	/// Returns the Core Foundation object value of `property`
@@ -140,9 +138,7 @@ extension AudioObject {
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty<T: CFTypeRef>(_ property: PropertyAddress, type: T.Type, qualifier: PropertyQualifier? = nil) throws -> T {
-		var value: Unmanaged<T>?
-		try readAudioObjectProperty(property, from: objectID, into: &value, qualifier: qualifier)
-		return value!.takeRetainedValue()
+		return try getAudioObjectProperty(property, from: objectID, type: type, qualifier: qualifier)
 	}
 
 	/// Returns the `AudioValueRange` value of `property`
@@ -190,13 +186,7 @@ extension AudioObject {
 	/// - parameter qualifier: An optional property qualifier
 	/// - throws: An error if `self` does not have `property` or the property value could not be retrieved
 	public func getProperty<T>(_ property: PropertyAddress, elementType type: T.Type, qualifier: PropertyQualifier? = nil) throws -> [T] {
-		let dataSize = try audioObjectPropertySize(property, from: objectID, qualifier: qualifier)
-		let count = dataSize / MemoryLayout<T>.stride
-		let array = try [T](unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
-			try readAudioObjectProperty(property, from: objectID, into: buffer.baseAddress!, size: dataSize, qualifier: qualifier)
-			initializedCount = count
-		}
-		return array
+		return try getAudioObjectProperty(property, from: objectID, elementType: type, qualifier: qualifier)
 	}
 
 	/// Sets the value of `property` to `value`
@@ -380,6 +370,10 @@ let audioObjectLog = OSLog(subsystem: "org.sbooth.AudioEngine", category: "Audio
 // the factory method `AudioObject.make(_ objectID: AudioObjectID)` is public.
 
 extension AudioObject {
+	public class func make<T: AudioObject>(_ objectID: AudioObjectID, type: T.Type) -> T? {
+		return AudioObject.make(objectID) as? T
+	}
+
 	/// Creates and returns an initialized `AudioObject`
 	///
 	/// Whenever possible this will return a specialized subclass exposing additional functionality
