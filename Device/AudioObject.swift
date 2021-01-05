@@ -370,10 +370,6 @@ let audioObjectLog = OSLog(subsystem: "org.sbooth.AudioEngine", category: "Audio
 // the factory method `AudioObject.make(_ objectID: AudioObjectID)` is public.
 
 extension AudioObject {
-	public class func make<T: AudioObject>(_ objectID: AudioObjectID, type: T.Type) -> T? {
-		return AudioObject.make(objectID) as? T
-	}
-
 	/// Creates and returns an initialized `AudioObject`
 	///
 	/// Whenever possible this will return a specialized subclass exposing additional functionality
