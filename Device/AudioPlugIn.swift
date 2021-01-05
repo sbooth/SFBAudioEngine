@@ -22,7 +22,7 @@ public class AudioPlugIn: AudioObject {
 	/// - parameter bundleID: The desired bundle ID
 	public class func makePlugIn(forBundleID bundleID: String) throws -> AudioPlugIn? {
 		var qualifier = bundleID as CFString
-		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToPlugIn), qualifier: PropertyQualifier(&qualifier))
+		let objectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToPlugIn), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
 		guard objectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -46,19 +46,19 @@ extension AudioPlugIn {
 	/// - note: The constants for `composition` are defined in `AudioHardware.h`
 	func createAggregateDevice(composition: [AnyHashable: Any]) throws -> AudioDevice {
 		var qualifier = composition as CFDictionary
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioPlugInCreateAggregateDevice), qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioPlugInCreateAggregateDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
 	}
 
 	/// Destroys an aggregate device
 	/// - remark: This corresponds to the property `kAudioPlugInDestroyAggregateDevice`
 	func destroyAggregateDevice(_ aggregateDevice: AudioDevice) throws {
-		_ = try getProperty(PropertyAddress(kAudioPlugInDestroyAggregateDevice), initialValue: aggregateDevice.objectID)
+		_ = try getProperty(PropertyAddress(kAudioPlugInDestroyAggregateDevice), type: UInt32.self, initialValue: aggregateDevice.objectID)
 	}
 
 	/// Returns the plug-in's bundle ID
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyBundleID`
 	public func bundleID() throws -> String {
-		return try getProperty(PropertyAddress(kAudioPlugInPropertyBundleID), underlyingCFType: CFString.self) as String
+		return try getProperty(PropertyAddress(kAudioPlugInPropertyBundleID), type: CFString.self) as String
 	}
 
 	/// Returns the audio devices provided by the plug-in
@@ -72,7 +72,7 @@ extension AudioPlugIn {
 	/// - parameter uid: The desired device UID
 	public func device(forUID uid: String) throws -> AudioDevice? {
 		var qualifierData = uid as CFString
-		let deviceObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToDevice), qualifier: PropertyQualifier(&qualifierData))
+		let deviceObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
 		guard deviceObjectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -90,7 +90,7 @@ extension AudioPlugIn {
 	/// - parameter uid: The desired box UID
 	public func box(forUID uid: String) throws -> AudioBox? {
 		var qualifierData = uid as CFString
-		let boxObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToBox), qualifier: PropertyQualifier(&qualifierData))
+		let boxObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToBox), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
 		guard boxObjectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -108,7 +108,7 @@ extension AudioPlugIn {
 	/// - parameter uid: The desired clock device UID
 	public func clockDevice(forUID uid: String) throws -> AudioClockDevice? {
 		var qualifierData = uid as CFString
-		let clockDeviceObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToClockDevice), qualifier: PropertyQualifier(&qualifierData))
+		let clockDeviceObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToClockDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
 		guard clockDeviceObjectID != kAudioObjectUnknown else {
 			return nil
 		}

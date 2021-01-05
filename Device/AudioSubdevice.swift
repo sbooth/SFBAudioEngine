@@ -15,13 +15,13 @@ extension AudioSubdevice {
 	/// Returns the extra latency
 	/// - remark: This corresponds to the property `kAudioSubDevicePropertyExtraLatency`
 	public func extraLatency() throws -> Double {
-		return try getProperty(PropertyAddress(kAudioSubDevicePropertyExtraLatency))
+		return try getProperty(PropertyAddress(kAudioSubDevicePropertyExtraLatency), type: Double.self)
 	}
 
 	/// Returns the drift compensation
 	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensation`
 	public func driftCompensation() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation)) as UInt32 != 0
+		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensation), type: UInt32.self) != 0
 	}
 	/// Sets the drift compensation
 	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensation`
@@ -32,7 +32,7 @@ extension AudioSubdevice {
 	/// Returns the drift compensation quality
 	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensationQuality`
 	public func driftCompensationQuality() throws -> UInt32 {
-		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensationQuality))
+		return try getProperty(PropertyAddress(kAudioSubDevicePropertyDriftCompensationQuality), type: UInt32.self)
 	}
 	/// Sets the drift compensation quality
 	/// - remark: This corresponds to the property `kAudioSubDevicePropertyDriftCompensationQuality`

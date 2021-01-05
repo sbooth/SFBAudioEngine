@@ -23,7 +23,7 @@ extension SliderControl {
 	/// Returns the control's value
 	/// - remark: This corresponds to the property `kAudioSliderControlPropertyValue`
 	public func value() throws -> UInt32 {
-		return try getProperty(PropertyAddress(kAudioSliderControlPropertyValue))
+		return try getProperty(PropertyAddress(kAudioSliderControlPropertyValue), type: UInt32.self)
 	}
 	/// Sets the control's value
 	/// - remark: This corresponds to the property `kAudioSliderControlPropertyValue`

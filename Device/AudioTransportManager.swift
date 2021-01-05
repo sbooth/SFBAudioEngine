@@ -22,7 +22,7 @@ public class AudioTransportManager: AudioPlugIn {
 	/// - parameter bundleID: The desired bundle ID
 	public class func makeTransportManager(forBundleID bundleID: String) throws -> AudioTransportManager? {
 		var qualifier = bundleID as CFString
-		let objectID: AudioObjectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), qualifier: PropertyQualifier(&qualifier))
+		let objectID = try AudioSystemObject.instance.getProperty(PropertyAddress(kAudioHardwarePropertyTranslateBundleIDToTransportManager), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))
 		guard objectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -46,13 +46,13 @@ extension AudioTransportManager {
 	/// - note: The constants for `composition` are defined in `AudioHardware.h`
 	func createEndpointDevice(composition: [AnyHashable: Any]) throws -> AudioDevice {
 		var qualifier = composition as CFDictionary
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioTransportManagerCreateEndPointDevice), qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioTransportManagerCreateEndPointDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
 	}
 
 	/// Destroys an endpoint device
 	/// - remark: This corresponds to the property `kAudioTransportManagerDestroyEndPointDevice`
 	func destroyEndpointDevice(_ endpointDevice: AudioDevice) throws {
-		_ = try getProperty(PropertyAddress(kAudioTransportManagerDestroyEndPointDevice), initialValue: endpointDevice.objectID)
+		_ = try getProperty(PropertyAddress(kAudioTransportManagerDestroyEndPointDevice), type: UInt32.self, initialValue: endpointDevice.objectID)
 	}
 
 	/// Returns the audio endpoints provided by the transport manager
@@ -66,7 +66,7 @@ extension AudioTransportManager {
 	/// - parameter uid: The desired endpoint UID
 	public func endpoint(forUID uid: String) throws -> AudioObject? {
 		var qualifierData = uid as CFString
-		let endpointObjectID: AudioObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), qualifier: PropertyQualifier(&qualifierData))
+		let endpointObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
 		guard endpointObjectID != kAudioObjectUnknown else {
 			return nil
 		}
@@ -76,7 +76,7 @@ extension AudioTransportManager {
 	/// Returns the transport type
 	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyTransportType`
 	public func transportType() throws -> AudioDevice.TransportType {
-		return AudioDevice.TransportType(rawValue: try getProperty(PropertyAddress(kAudioTransportManagerPropertyTransportType)))
+		return AudioDevice.TransportType(rawValue: try getProperty(PropertyAddress(kAudioTransportManagerPropertyTransportType), type: UInt32.self))
 	}
 }
 

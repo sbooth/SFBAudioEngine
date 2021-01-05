@@ -23,7 +23,7 @@ extension BooleanControl {
 	/// Returns the control's value
 	/// - remark: This corresponds to the property `kAudioBooleanControlPropertyValue`
 	public func value() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioBooleanControlPropertyValue)) as UInt32 != 0
+		return try getProperty(PropertyAddress(kAudioBooleanControlPropertyValue), type: UInt32.self) != 0
 	}
 	/// Sets the control's value
 	/// - remark: This corresponds to the property `kAudioBooleanControlPropertyValue`

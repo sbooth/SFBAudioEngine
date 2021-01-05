@@ -24,7 +24,7 @@ extension StereoPanControl {
 	/// Returns the control's value
 	/// - remark: This corresponds to the property `kAudioStereoPanControlPropertyValue`
 	public func value() throws -> Float {
-		return try getProperty(PropertyAddress(kAudioStereoPanControlPropertyValue))
+		return try getProperty(PropertyAddress(kAudioStereoPanControlPropertyValue), type: Float.self)
 	}
 	/// Sets the control's value
 	/// - remark: This corresponds to the property `kAudioStereoPanControlPropertyValue`

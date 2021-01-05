@@ -25,31 +25,31 @@ extension AudioStream {
 	/// Returns `true` if the stream is active
 	/// - remark: This corresponds to the property `kAudioStreamPropertyIsActive`
 	public func isActive() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyIsActive)) as UInt32 != 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyIsActive), type: UInt32.self) != 0
 	}
 
 	/// Returns `true` if `self` is an output stream
 	/// - remark: This corresponds to the property `kAudioStreamPropertyDirection`
 	public func direction() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection)) as UInt32 == 0
+		return try getProperty(PropertyAddress(kAudioStreamPropertyDirection), type: UInt32.self) == 0
 	}
 
 	/// Returns the terminal type
 	/// - remark: This corresponds to the property `kAudioStreamPropertyTerminalType`
 	public func terminalType() throws -> TerminalType {
-		return TerminalType(rawValue: try getProperty(PropertyAddress(kAudioStreamPropertyTerminalType)))
+		return TerminalType(rawValue: try getProperty(PropertyAddress(kAudioStreamPropertyTerminalType), type: UInt32.self))
 	}
 
 	/// Returns the starting channel
 	/// - remark: This corresponds to the property `kAudioStreamPropertyStartingChannel`
 	public func startingChannel() throws -> UInt32 {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyStartingChannel))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyStartingChannel), type: UInt32.self)
 	}
 
 	/// Returns the latency
 	/// - remark: This corresponds to the property `kAudioStreamPropertyLatency`
 	public func latency() throws -> UInt32 {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyLatency))
+		return try getProperty(PropertyAddress(kAudioStreamPropertyLatency), type: UInt32.self)
 	}
 
 	/// Returns the virtual format

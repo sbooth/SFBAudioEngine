@@ -15,7 +15,7 @@ extension AudioAggregateDevice {
 	/// Returns the UIDs of all subdevices in the aggregate device, active or inactive
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyFullSubDeviceList`
 	public func fullSubdeviceList() throws -> [String] {
-		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyFullSubDeviceList), underlyingCFType: CFArray.self) as! [String]
+		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyFullSubDeviceList), type: CFArray.self) as! [String]
 	}
 
 	/// Returns the active subdevices in the aggregate device
@@ -27,19 +27,19 @@ extension AudioAggregateDevice {
 	/// Returns the composition
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyComposition`
 	public func composition() throws -> [AnyHashable: Any] {
-		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyComposition), underlyingCFType: CFDictionary.self) as! [AnyHashable: Any]
+		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyComposition), type: CFDictionary.self) as! [AnyHashable: Any]
 	}
 
 	/// Returns the master subdevice
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyMasterSubDevice`
 	public func masterSubdevice() throws -> AudioDevice {
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyMasterSubDevice))) as! AudioDevice
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyMasterSubDevice), type: AudioObjectID.self)) as! AudioDevice
 	}
 
 	/// Returns the clock device
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyClockDevice`
 	public func clockDevice() throws -> AudioClockDevice {
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyClockDevice))) as! AudioClockDevice
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyClockDevice), type: AudioObjectID.self)) as! AudioClockDevice
 	}
 	/// Sets the clock device
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyClockDevice`
