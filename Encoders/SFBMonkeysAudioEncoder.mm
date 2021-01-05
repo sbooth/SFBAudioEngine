@@ -71,7 +71,7 @@ namespace {
 
 			*pBytesWritten = (unsigned int)bytesWritten;
 
-			return ERR_SUCCESS;
+			return ERROR_SUCCESS;
 		}
 
 		virtual APE::int64 PerformSeek()
