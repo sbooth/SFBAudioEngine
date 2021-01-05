@@ -205,17 +205,17 @@ extension AudioDevice {
 	/// Returns the preferred stereo channels for the device
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelsForStereo`
 	/// - parameter scope: The desired scope
-	public func preferredStereoChannels(inScope scope: PropertyScope) throws -> (UInt32, UInt32) {
+	public func preferredStereoChannels(inScope scope: PropertyScope) throws -> (PropertyElement, PropertyElement) {
 		let channels = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPreferredChannelsForStereo), scope: scope), elementType: UInt32.self)
 		precondition(channels.count == 2)
-		return (channels[0], channels[1])
+		return (PropertyElement(channels[0]), PropertyElement(channels[1]))
 	}
 	/// Sets the preferred stereo channels
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPreferredChannelsForStereo`
 	/// - parameter value: The desired property value
 	/// - parameter scope: The desired scope
-	public func setPreferredStereoChannels(_ value: (UInt32, UInt32), inScope scope: PropertyScope) throws {
-		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPreferredChannelsForStereo), scope: scope), to: [value.0, value.1])
+	public func setPreferredStereoChannels(_ value: (PropertyElement, PropertyElement), inScope scope: PropertyScope) throws {
+		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPreferredChannelsForStereo), scope: scope), to: [value.0.rawValue, value.1.rawValue])
 	}
 
 	/// Returns the preferred channel layout
@@ -464,15 +464,15 @@ extension AudioDevice {
 
 	/// Returns the channels used for stereo panning
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStereoPanChannels`
-	public func stereoPanChannels(inScope scope: PropertyScope) throws -> (UInt32, UInt32) {
+	public func stereoPanChannels(inScope scope: PropertyScope) throws -> (PropertyElement, PropertyElement) {
 		let channels = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyStereoPanChannels), scope: scope), elementType: UInt32.self)
 		precondition(channels.count == 2)
-		return (channels[0], channels[1])
+		return (PropertyElement(channels[0]), PropertyElement(channels[1]))
 	}
 	/// Sets the channels used for stereo panning
 	/// - remark: This corresponds to the property `kAudioDevicePropertyStereoPanChannels`
-	public func setStereoPanChannels(_ value: (UInt32, UInt32), inScope scope: PropertyScope) throws {
-		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyStereoPanChannels), scope: scope), to: [value.0, value.1])
+	public func setStereoPanChannels(_ value: (PropertyElement, PropertyElement), inScope scope: PropertyScope) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyStereoPanChannels), scope: scope), to: [value.0.rawValue, value.1.rawValue])
 	}
 
 	/// Returns `true` if `element` is muted
@@ -746,15 +746,15 @@ extension AudioDevice {
 
 	/// Returns the play-through channels used for stereo panning
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruStereoPanChannels`
-	public func playThroughStereoPanChannels() throws -> (UInt32, UInt32) {
+	public func playThroughStereoPanChannels() throws -> (PropertyElement, PropertyElement) {
 		let channels = try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPanChannels), scope: .playThrough), elementType: UInt32.self)
 		precondition(channels.count == 2)
-		return (channels[0], channels[1])
+		return (PropertyElement(channels[0]), PropertyElement(channels[1]))
 	}
 	/// Sets the play-through channels used for stereo panning
 	/// - remark: This corresponds to the property `kAudioDevicePropertyPlayThruStereoPanChannels`
-	public func setPlayThroughStereoPanChannels(_ value: (UInt32, UInt32)) throws {
-		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPanChannels), scope: .playThrough), to: [value.0, value.1])
+	public func setPlayThroughStereoPanChannels(_ value: (PropertyElement, PropertyElement)) throws {
+		return try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyPlayThruStereoPanChannels), scope: .playThrough), to: [value.0.rawValue, value.1.rawValue])
 	}
 
 	/// Returns the IDs of the selected play-through destinations

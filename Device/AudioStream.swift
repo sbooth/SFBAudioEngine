@@ -42,8 +42,8 @@ extension AudioStream {
 
 	/// Returns the starting channel
 	/// - remark: This corresponds to the property `kAudioStreamPropertyStartingChannel`
-	public func startingChannel() throws -> UInt32 {
-		return try getProperty(PropertyAddress(kAudioStreamPropertyStartingChannel), type: UInt32.self)
+	public func startingChannel() throws -> PropertyElement {
+		return PropertyElement(try getProperty(PropertyAddress(kAudioStreamPropertyStartingChannel), type: UInt32.self))
 	}
 
 	/// Returns the latency
