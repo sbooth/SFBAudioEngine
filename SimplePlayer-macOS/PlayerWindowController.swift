@@ -100,6 +100,10 @@ class PlayerWindowController: NSWindowController {
 			}
 		}
 
+		if let uid = UserDefaults.standard.object(forKey: "deviceUID") as? String, let device = try? AudioDevice.makeDevice(forUID: uid) {
+			try? player.setOutputDevice(device)
+		}
+
 		updateDeviceMenu()
 
 		// Create a repeating timer to update the UI with the player's playback position
@@ -536,6 +540,10 @@ extension PlayerWindowController: NSMenuItemValidation {
 extension PlayerWindowController: NSWindowDelegate {
 	func windowWillClose(_ notification: Notification) {
 		player.stop()
+
+		if let uid = try? player.outputDevice.deviceUID() {
+			UserDefaults.standard.set(uid, forKey: "deviceUID")
+		}
 
 		let urls = playlist.map({ $0.url.absoluteString })
 		UserDefaults.standard.set(urls, forKey: "playlistURLs")
