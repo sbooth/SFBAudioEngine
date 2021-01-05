@@ -144,12 +144,20 @@ namespace {
 		SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
 		SFBOutputSource *outputSource = encoder->_outputSource;
 
-		if(![outputSource seekToOffset:inPosition error:nil])
-			return ioErr;
+		NSInteger offset;
+		if(![outputSource getOffset:&offset error:nil])
+			return kAudioFileUnspecifiedError;
+
+		if(inPosition != offset) {
+			if(!outputSource.supportsSeeking)
+				return kAudioFileOperationNotSupportedError;
+			if(![outputSource seekToOffset:inPosition error:nil])
+				return kAudioFileUnspecifiedError;
+		}
 
 		NSInteger bytesRead;
 		if(![outputSource readBytes:buffer length:(NSInteger)requestCount bytesRead:&bytesRead error:nil])
-			return ioErr;
+			return kAudioFileUnspecifiedError;
 
 		*actualCount = (UInt32)bytesRead;
 
@@ -163,12 +171,20 @@ namespace {
 		SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
 		SFBOutputSource *outputSource = encoder->_outputSource;
 
-		if(![outputSource seekToOffset:inPosition error:nil])
-			return ioErr;
+		NSInteger offset;
+		if(![outputSource getOffset:&offset error:nil])
+			return kAudioFileUnspecifiedError;
+
+		if(inPosition != offset) {
+			if(!outputSource.supportsSeeking)
+				return kAudioFileOperationNotSupportedError;
+			if(![outputSource seekToOffset:inPosition error:nil])
+				return kAudioFileUnspecifiedError;
+		}
 
 		NSInteger bytesWritten;
 		if(![outputSource writeBytes:buffer length:(NSInteger)requestCount bytesWritten:&bytesWritten error:nil])
-			return ioErr;
+			return kAudioFileUnspecifiedError;
 
 		*actualCount = (UInt32)bytesWritten;
 
@@ -200,7 +216,7 @@ namespace {
 		(void)outputSource;
 		(void)inSize;
 
-		return ioErr;
+		return kAudioFileOperationNotSupportedError;
 	}
 	
 }
