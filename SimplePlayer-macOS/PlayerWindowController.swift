@@ -78,6 +78,7 @@ class PlayerWindowController: NSWindowController {
 	@IBOutlet weak var title: NSTextField!
 	@IBOutlet weak var artist: NSTextField!
 	@IBOutlet weak var playlistTable: NSTableView!
+	@IBOutlet weak var devicePopUpButton: NSPopUpButton!
 
 	/// The audio player instance
 	let player = AudioPlayer()
@@ -92,6 +93,18 @@ class PlayerWindowController: NSWindowController {
 
 	override func windowDidLoad() {
 		player.delegate = self
+
+		try? AudioSystemObject.instance.whenSelectorChanges(.devices) { _ in
+			DispatchQueue.main.async {
+				self.updateDeviceMenu()
+			}
+		}
+
+		if let uid = UserDefaults.standard.object(forKey: "deviceUID") as? String, let device = try? AudioDevice.makeDevice(forUID: uid) {
+			try? player.setOutputDevice(device)
+		}
+
+		updateDeviceMenu()
 
 		// Create a repeating timer to update the UI with the player's playback position
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
@@ -198,12 +211,23 @@ class PlayerWindowController: NSWindowController {
 
 	@IBAction func playlistDoubleAction(_ sender: AnyObject?) {
 		let row = playlistTable.clickedRow
+		guard row != -1 else {
+			return
+		}
 		let item = playlist[row]
 		play(item: item)
 	}
 
 	@IBAction func delete(_ sender: AnyObject?) {
 		removeFromPlaylist(items: selectedItems)
+	}
+
+	@IBAction func selectDevice(_ sender: AnyObject?) {
+		guard let menuItem = sender as? NSMenuItem, let device = menuItem.representedObject as? AudioDevice else {
+			return
+		}
+
+		try? player.setOutputDevice(device)
 	}
 
 	// MARK: - Player Control
@@ -395,6 +419,35 @@ class PlayerWindowController: NSWindowController {
 		}
 	}
 
+	private func updateDeviceMenu() {
+		devicePopUpButton.menu?.removeAllItems()
+
+		do {
+			let currentOutputDevice = player.outputDevice
+			let outputDevices = try AudioDevice.devices().filter({ guard let value = try? $0.supportsOutput() else { return false }; return value })
+			for outputDevice in outputDevices {
+				// AVAudioEngine creates private aggregate devices, ignore them
+				if let isPrivateAggregate = try (outputDevice as? AudioAggregateDevice)?.isPrivate(), isPrivateAggregate {
+					continue
+				}
+
+				let isActiveDevice = outputDevice == currentOutputDevice
+				let deviceMenuItem = NSMenuItem(title: try outputDevice.name(), action: #selector(PlayerWindowController.selectDevice(_:)), keyEquivalent: "")
+				deviceMenuItem.target = self
+				deviceMenuItem.representedObject = outputDevice
+				deviceMenuItem.state = isActiveDevice ? NSControl.StateValue.on : NSControl.StateValue.off
+
+				devicePopUpButton.menu?.addItem(deviceMenuItem)
+				if isActiveDevice {
+					devicePopUpButton.select(deviceMenuItem)
+				}
+			}
+		}
+		catch let error {
+			NSApp.presentError(error)
+		}
+	}
+
 	// MARK: - Internals
 
 	/// Enqueues or plays the playlist item based on the player's playback state
@@ -487,6 +540,10 @@ extension PlayerWindowController: NSMenuItemValidation {
 extension PlayerWindowController: NSWindowDelegate {
 	func windowWillClose(_ notification: Notification) {
 		player.stop()
+
+		if let uid = try? player.outputDevice.deviceUID() {
+			UserDefaults.standard.set(uid, forKey: "deviceUID")
+		}
 
 		let urls = playlist.map({ $0.url.absoluteString })
 		UserDefaults.standard.set(urls, forKey: "playlistURLs")
