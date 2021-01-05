@@ -100,8 +100,8 @@ class PlayerWindowController: NSWindowController {
 			}
 		}
 
-		if let uid = UserDefaults.standard.object(forKey: "deviceUID") as? String, let device = try? AudioDevice.makeDevice(forUID: uid) {
-			try? player.setOutputDevice(device)
+		if let uid = UserDefaults.standard.object(forKey: "deviceUID") as? String, let deviceID = try? AudioSystemObject.instance.deviceID(forUID: uid) {
+			try? player.setOutputDeviceID(deviceID)
 		}
 
 		updateDeviceMenu()
@@ -227,7 +227,7 @@ class PlayerWindowController: NSWindowController {
 			return
 		}
 
-		try? player.setOutputDevice(device)
+		try? player.setOutputDeviceID(device.objectID)
 	}
 
 	// MARK: - Player Control
@@ -423,7 +423,7 @@ class PlayerWindowController: NSWindowController {
 		devicePopUpButton.menu?.removeAllItems()
 
 		do {
-			let currentOutputDevice = player.outputDevice
+			let currentOutputDeviceID = player.outputDeviceID
 			let outputDevices = try AudioDevice.devices().filter({ guard let value = try? $0.supportsOutput() else { return false }; return value })
 			for outputDevice in outputDevices {
 				// AVAudioEngine creates private aggregate devices, ignore them
@@ -431,7 +431,7 @@ class PlayerWindowController: NSWindowController {
 					continue
 				}
 
-				let isActiveDevice = outputDevice == currentOutputDevice
+				let isActiveDevice = outputDevice.objectID == currentOutputDeviceID
 				let deviceMenuItem = NSMenuItem(title: try outputDevice.name(), action: #selector(PlayerWindowController.selectDevice(_:)), keyEquivalent: "")
 				deviceMenuItem.target = self
 				deviceMenuItem.representedObject = outputDevice
@@ -541,7 +541,7 @@ extension PlayerWindowController: NSWindowDelegate {
 	func windowWillClose(_ notification: Notification) {
 		player.stop()
 
-		if let uid = try? player.outputDevice.deviceUID() {
+		if let uid = try? getAudioObjectProperty(PropertyAddress(kAudioDevicePropertyDeviceUID), from: player.outputDeviceID, type: CFString.self) as String {
 			UserDefaults.standard.set(uid, forKey: "deviceUID")
 		}
 
