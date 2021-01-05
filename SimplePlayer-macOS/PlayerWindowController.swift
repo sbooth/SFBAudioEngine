@@ -207,6 +207,9 @@ class PlayerWindowController: NSWindowController {
 
 	@IBAction func playlistDoubleAction(_ sender: AnyObject?) {
 		let row = playlistTable.clickedRow
+		guard row != -1 else {
+			return
+		}
 		let item = playlist[row]
 		play(item: item)
 	}
