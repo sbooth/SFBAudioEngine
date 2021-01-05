@@ -44,14 +44,14 @@ extension AudioPlugIn {
 	/// - remark: This corresponds to the property `kAudioPlugInCreateAggregateDevice`
 	/// - parameter composition: The composition of the new aggregate device
 	/// - note: The constants for `composition` are defined in `AudioHardware.h`
-	func createAggregateDevice(composition: [AnyHashable: Any]) throws -> AudioDevice {
+	func createAggregateDevice(composition: [AnyHashable: Any]) throws -> AudioAggregateDevice {
 		var qualifier = composition as CFDictionary
-		return AudioObject.make(try getProperty(PropertyAddress(kAudioPlugInCreateAggregateDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))) as! AudioDevice
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioPlugInCreateAggregateDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifier))) as! AudioAggregateDevice
 	}
 
 	/// Destroys an aggregate device
 	/// - remark: This corresponds to the property `kAudioPlugInDestroyAggregateDevice`
-	func destroyAggregateDevice(_ aggregateDevice: AudioDevice) throws {
+	func destroyAggregateDevice(_ aggregateDevice: AudioAggregateDevice) throws {
 		_ = try getProperty(PropertyAddress(kAudioPlugInDestroyAggregateDevice), type: UInt32.self, initialValue: aggregateDevice.objectID)
 	}
 
