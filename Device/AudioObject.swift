@@ -117,7 +117,7 @@ extension AudioObject: Hashable {
 	}
 }
 
-// MARK: - Scalar Property Retrieval
+// MARK: - Scalar Properties
 
 extension AudioObject {
 	/// Returns the numeric value of `property`
@@ -160,11 +160,7 @@ extension AudioObject {
 		try readAudioObjectProperty(property, from: objectID, into: &value)
 		return value
 	}
-}
 
-// MARK: - Scalar Property Setting
-
-extension AudioObject {
 	/// Sets the value of `property` to `value`
 	/// - note: The underlying audio object property must be backed by `T`
 	/// - parameter property: The address of the desired property

@@ -67,7 +67,7 @@ extension AudioPlugIn {
 
 	/// Returns the audio device provided by the plug-in with the specified UID or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyTranslateUIDToDevice`
-	/// - parameter uid: The desired device UID
+	/// - parameter uid: The UID of the desired device
 	public func device(forUID uid: String) throws -> AudioDevice? {
 		var qualifierData = uid as CFString
 		let deviceObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
@@ -85,7 +85,7 @@ extension AudioPlugIn {
 
 	/// Returns the audio box provided by the plug-in with the specified UID or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyTranslateUIDToBox`
-	/// - parameter uid: The desired box UID
+	/// - parameter uid: The UID of the desired box
 	public func box(forUID uid: String) throws -> AudioBox? {
 		var qualifierData = uid as CFString
 		let boxObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToBox), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
@@ -103,7 +103,7 @@ extension AudioPlugIn {
 
 	/// Returns the audio clock device provided by the plug-in with the specified UID or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioPlugInPropertyTranslateUIDToClockDevice`
-	/// - parameter uid: The desired clock device UID
+	/// - parameter uid: The UID of the desired clock device
 	public func clockDevice(forUID uid: String) throws -> AudioClockDevice? {
 		var qualifierData = uid as CFString
 		let clockDeviceObjectID = try getProperty(PropertyAddress(kAudioPlugInPropertyTranslateUIDToClockDevice), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))

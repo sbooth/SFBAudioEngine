@@ -61,7 +61,7 @@ extension AudioTransportManager {
 
 	/// Returns the audio endpoint provided by the transport manager with the specified UID or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioTransportManagerPropertyTranslateUIDToEndPoint`
-	/// - parameter uid: The desired endpoint UID
+	/// - parameter uid: The UID of the desired endpoint
 	public func endpoint(forUID uid: String) throws -> AudioEndpoint? {
 		var qualifierData = uid as CFString
 		let endpointObjectID = try getProperty(PropertyAddress(kAudioTransportManagerPropertyTranslateUIDToEndPoint), type: AudioObjectID.self, qualifier: PropertyQualifier(&qualifierData))
