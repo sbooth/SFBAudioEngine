@@ -19,7 +19,7 @@ public class AudioClockDevice: AudioObject {
 
 	/// Returns an initialized `AudioClockDevice` with `uid` or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateUIDToClockDevice` on `kAudioObjectSystemObject`
-	/// - parameter uid: The desired clock device UID
+	/// - parameter uid: The UID of the desired clock device
 	public class func makeClockDevice(forUID uid: String) throws -> AudioClockDevice? {
 		guard let objectID = try AudioSystemObject.instance.clockDeviceID(forUID: uid) else {
 			return nil

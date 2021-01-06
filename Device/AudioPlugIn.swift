@@ -19,7 +19,7 @@ public class AudioPlugIn: AudioObject {
 
 	/// Returns an initialized `AudioPlugIn` with `bundleID` or `nil` if unknown
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyTranslateBundleIDToPlugIn` on `kAudioObjectSystemObject`
-	/// - parameter bundleID: The desired bundle ID
+	/// - parameter bundleID: The bundle ID of the desired plug-in
 	public class func makePlugIn(forBundleID bundleID: String) throws -> AudioPlugIn? {
 		guard let objectID = try AudioSystemObject.instance.plugInID(forBundleID: bundleID) else {
 			return nil
