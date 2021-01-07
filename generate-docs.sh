@@ -1,17 +1,26 @@
 #!/bin/sh
 
-JAZZY_FRAMEWORK_ROOT=SFBAudioEngine
+if ! [ -x "$(command -v sourcekitten)" ]; then
+	echo "Error: sourcekitten not present"
+	exit 1
+fi
 
 if ! [ -x "$(command -v jazzy)" ]; then
 	echo "Error: jazzy not present"
 	exit 1
 fi
 
-xcodebuild -project ./SFBAudioEngine.xcodeproj -configuration Debug
+# Generate Swift SourceKitten output
+sourcekitten doc -- -project SFBAudioEngine.xcodeproj -target macOS -arch x86_64 -configuration Debug > swiftDoc.json
 
+# Generate Objective-C SourceKitten output
 # jazzy doesn't like headers in multiple directories
-/bin/ln -s ./build/Debug/SFBAudioEngine.framework/Headers ./$JAZZY_FRAMEWORK_ROOT
+xcodebuild -project ./SFBAudioEngine.xcodeproj -target macOS -arch x86_64 -configuration Debug
+sourcekitten doc --objc SFBAudioEngine.h \
+		-- -x objective-c -isysroot $(xcrun --show-sdk-path --sdk macosx) \
+		-I ./build/Debug -F ./build/Debug > objcDoc.json
 
-jazzy
+# Feed both outputs to Jazzy as a comma-separated list
+jazzy --sourcekitten-sourcefile swiftDoc.json,objcDoc.json
 
-/bin/rm ./$JAZZY_FRAMEWORK_ROOT
+rm -f swiftDoc.json objcDoc.json
