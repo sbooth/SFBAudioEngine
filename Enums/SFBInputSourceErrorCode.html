@@ -13,7 +13,7 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Enum/SFBInputSourceErrorCode" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Enum/SFBInputSourceErrorCode" class="dashAnchor"></a>
     <a title="SFBInputSourceErrorCode Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -938,13 +938,8 @@
             <h1>SFBInputSourceErrorCode</h1>
               <div class="declaration">
                 <div class="language">
-                  <p class="aside-title">Objective-C</p>
+                  
                   <pre class="highlight objective_c"><code><span class="k">enum</span> <span class="n">SFBInputSourceErrorCode</span> <span class="p">{}</span></code></pre>
-
-                </div>
-                <div class="language">
-                  <p class="aside-title">Swift</p>
-                  <pre class="highlight swift"><code><span class="kd">typealias</span> <span class="kt">InputSource</span><span class="o">.</span><span class="kt">ErrorCode</span><span class="o">.</span><span class="kt">Code</span><span class="o">.</span><span class="n">_ErrorType</span> <span class="o">=</span> <span class="kt">InputSource</span><span class="o">.</span><span class="kt">ErrorCode</span></code></pre>
 
                 </div>
               </div>
@@ -958,7 +953,7 @@
                   <div>
                     <code>
                     <a name="/c:@E@SFBInputSourceErrorCode@SFBInputSourceErrorCodeFileNotFound"></a>
-                    <a name="//apple_ref/objc/Case/SFBInputSourceErrorCodeFileNotFound" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Case/SFBInputSourceErrorCodeFileNotFound" class="dashAnchor"></a>
                     <a class="token" href="#/c:@E@SFBInputSourceErrorCode@SFBInputSourceErrorCodeFileNotFound">SFBInputSourceErrorCodeFileNotFound</a>
                     </code>
                   </div>
@@ -977,11 +972,6 @@
                           <pre class="highlight objective_c"><code><span class="n">SFBInputSourceErrorCodeFileNotFound</span> <span class="o">=</span> <span class="mi">0</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">fileNotFound</span> <span class="o">=</span> <span class="mi">0</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -990,7 +980,7 @@
                   <div>
                     <code>
                     <a name="/c:@E@SFBInputSourceErrorCode@SFBInputSourceErrorCodeInputOutput"></a>
-                    <a name="//apple_ref/objc/Case/SFBInputSourceErrorCodeInputOutput" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Case/SFBInputSourceErrorCodeInputOutput" class="dashAnchor"></a>
                     <a class="token" href="#/c:@E@SFBInputSourceErrorCode@SFBInputSourceErrorCodeInputOutput">SFBInputSourceErrorCodeInputOutput</a>
                     </code>
                   </div>
@@ -1009,11 +999,6 @@
                           <pre class="highlight objective_c"><code><span class="n">SFBInputSourceErrorCodeInputOutput</span> <span class="o">=</span> <span class="mi">1</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">inputOutput</span> <span class="o">=</span> <span class="mi">1</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1023,7 +1008,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

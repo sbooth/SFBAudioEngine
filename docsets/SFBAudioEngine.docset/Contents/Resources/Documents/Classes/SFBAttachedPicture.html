@@ -13,7 +13,7 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Class/SFBAttachedPicture" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Class/SFBAttachedPicture" class="dashAnchor"></a>
     <a title="SFBAttachedPicture Class Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -938,14 +938,9 @@
             <h1>SFBAttachedPicture</h1>
               <div class="declaration">
                 <div class="language">
-                  <p class="aside-title">Objective-C</p>
+                  
                   <pre class="highlight objective_c"><code>
 <span class="k">@interface</span> <span class="nc">SFBAttachedPicture</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
-
-                </div>
-                <div class="language">
-                  <p class="aside-title">Swift</p>
-                  <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AttachedPicture</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCopying</span></code></pre>
 
                 </div>
               </div>
@@ -961,7 +956,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(cm)new"></a>
-                    <a name="//apple_ref/objc/Method/+new" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+new" class="dashAnchor"></a>
                     <a class="token discouraged" href="#/c:objc(cs)SFBAttachedPicture(cm)new">+new</a>
                     </code>
                   </div>
@@ -992,7 +987,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(im)init"></a>
-                    <a name="//apple_ref/objc/Method/-init" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-init" class="dashAnchor"></a>
                     <a class="token discouraged" href="#/c:objc(cs)SFBAttachedPicture(im)init">-init</a>
                     </code>
                   </div>
@@ -1023,7 +1018,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(im)initWithImageData:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithImageData:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithImageData:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(im)initWithImageData:">-initWithImageData:<wbr></a>
                     </code>
                   </div>
@@ -1040,11 +1035,6 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithImageData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">imageData</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">imageData</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1074,7 +1064,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(im)initWithImageData:type:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithImageData:type:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithImageData:type:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(im)initWithImageData:type:">-initWithImageData:<wbr>type:<wbr></a>
                     </code>
                   </div>
@@ -1092,11 +1082,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithImageData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">imageData</span>
                                      <span class="nf">type</span><span class="p">:(</span><span class="n"><a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a></span><span class="p">)</span><span class="nv">type</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">imageData</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="o">.</span><span class="p">`</span><span class="nv">Type</span><span class="p">`)</span></code></pre>
 
                         </div>
                       </div>
@@ -1138,7 +1123,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(im)initWithImageData:type:description:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithImageData:type:description:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithImageData:type:description:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(im)initWithImageData:type:description:">-initWithImageData:<wbr>type:<wbr>description:<wbr></a>
                     </code>
                   </div>
@@ -1157,11 +1142,6 @@
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithImageData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">imageData</span>
                                      <span class="nf">type</span><span class="p">:(</span><span class="n"><a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a></span><span class="p">)</span><span class="nv">type</span>
                               <span class="nf">description</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">description</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">imageData</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="o">.</span><span class="p">`</span><span class="nv">Type</span><span class="p">`,</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
 
                         </div>
                       </div>
@@ -1215,7 +1195,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(im)initWithDictionaryRepresentation:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithDictionaryRepresentation:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithDictionaryRepresentation:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(im)initWithDictionaryRepresentation:">-initWithDictionaryRepresentation:<wbr></a>
                     </code>
                   </div>
@@ -1235,11 +1215,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithDictionaryRepresentation</span><span class="p">:</span>
     <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a></span><span class="p">,</span> <span class="n">id</span><span class="o">&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">dictionaryRepresentation</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">?(</span><span class="nv">dictionaryRepresentation</span><span class="p">:</span> <span class="p">[</span><span class="kt">AttachedPicture</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">])</span></code></pre>
 
                         </div>
                       </div>
@@ -1269,7 +1244,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(py)dictionaryRepresentation"></a>
-                    <a name="//apple_ref/objc/Property/dictionaryRepresentation" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/dictionaryRepresentation" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(py)dictionaryRepresentation">dictionaryRepresentation</a>
                     </code>
                   </div>
@@ -1288,11 +1263,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a></span><span class="p">,</span> <span class="n">id</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">dictionaryRepresentation</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">dictionaryRepresentation</span><span class="p">:</span> <span class="p">[</span><span class="kt">AttachedPicture</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                       <div>
                         <h4>Return Value</h4>
@@ -1305,7 +1275,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(py)imageData"></a>
-                    <a name="//apple_ref/objc/Property/imageData" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/imageData" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(py)imageData">imageData</a>
                     </code>
                   </div>
@@ -1324,11 +1294,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">imageData</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">imageData</span><span class="p">:</span> <span class="kt">Data</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1337,7 +1302,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(py)pictureType"></a>
-                    <a name="//apple_ref/objc/Property/pictureType" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/pictureType" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(py)pictureType">pictureType</a>
                     </code>
                   </div>
@@ -1356,11 +1321,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n"><a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a></span> <span class="n">pictureType</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="o">.</span><span class="p">`</span><span class="nv">Type</span><span class="p">`</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1369,7 +1329,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAttachedPicture(py)pictureDescription"></a>
-                    <a name="//apple_ref/objc/Property/pictureDescription" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/pictureDescription" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAttachedPicture(py)pictureDescription">pictureDescription</a>
                     </code>
                   </div>
@@ -1388,11 +1348,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">pictureDescription</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1402,7 +1357,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

@@ -13,7 +13,7 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Class/SFBOutputSource" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Class/SFBOutputSource" class="dashAnchor"></a>
     <a title="SFBOutputSource Class Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -938,14 +938,9 @@
             <h1>SFBOutputSource</h1>
               <div class="declaration">
                 <div class="language">
-                  <p class="aside-title">Objective-C</p>
+                  
                   <pre class="highlight objective_c"><code>
 <span class="k">@interface</span> <span class="nc">SFBOutputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                </div>
-                <div class="language">
-                  <p class="aside-title">Swift</p>
-                  <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">OutputSource</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                 </div>
               </div>
@@ -959,7 +954,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(cm)outputSourceForURL:error:"></a>
-                    <a name="//apple_ref/objc/Method/+outputSourceForURL:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+outputSourceForURL:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(cm)outputSourceForURL:error:">+outputSourceForURL:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -978,11 +973,6 @@
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">outputSourceForURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
                                       <span class="nf">error</span><span class="p">:</span>
                                           <span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="k">for</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1028,7 +1018,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(cm)dataOutputSource"></a>
-                    <a name="//apple_ref/objc/Method/+dataOutputSource" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+dataOutputSource" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(cm)dataOutputSource">+dataOutputSource</a>
                     </code>
                   </div>
@@ -1047,11 +1037,6 @@
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="n">dataOutputSource</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">makeForData</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1060,7 +1045,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(cm)outputSourceWithBuffer:capacity:"></a>
-                    <a name="//apple_ref/objc/Method/+outputSourceWithBuffer:capacity:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+outputSourceWithBuffer:capacity:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(cm)outputSourceWithBuffer:capacity:">+outputSourceWithBuffer:<wbr>capacity:<wbr></a>
                     </code>
                   </div>
@@ -1078,11 +1063,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">outputSourceWithBuffer</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nv">buffer</span>
                                       <span class="nf">capacity</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">capacity</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">buffer</span><span class="p">:</span> <span class="kt">UnsafeMutableRawPointer</span><span class="p">,</span> <span class="nv">capacity</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1128,7 +1108,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(py)url"></a>
-                    <a name="//apple_ref/objc/Property/url" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/url" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(py)url">url</a>
                     </code>
                   </div>
@@ -1147,11 +1127,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1160,7 +1135,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(py)data"></a>
-                    <a name="//apple_ref/objc/Property/data" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/data" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(py)data">data</a>
                     </code>
                   </div>
@@ -1179,11 +1154,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1192,7 +1162,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)openReturningError:"></a>
-                    <a name="//apple_ref/objc/Method/-openReturningError:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-openReturningError:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)openReturningError:">-openReturningError:<wbr></a>
                     </code>
                   </div>
@@ -1209,11 +1179,6 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">openReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">open</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1247,7 +1212,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)closeReturningError:"></a>
-                    <a name="//apple_ref/objc/Method/-closeReturningError:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-closeReturningError:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)closeReturningError:">-closeReturningError:<wbr></a>
                     </code>
                   </div>
@@ -1264,11 +1229,6 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">closeReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">close</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1302,7 +1262,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(py)isOpen"></a>
-                    <a name="//apple_ref/objc/Property/isOpen" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isOpen" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(py)isOpen">isOpen</a>
                     </code>
                   </div>
@@ -1321,11 +1281,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isOpen</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isOpen</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1334,7 +1289,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)readBytes:length:bytesRead:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readBytes:length:bytesRead:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readBytes:length:bytesRead:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)readBytes:length:bytesRead:error:">-readBytes:<wbr>length:<wbr>bytesRead:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1423,7 +1378,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeBytes:length:bytesWritten:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeBytes:length:bytesWritten:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeBytes:length:bytesWritten:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeBytes:length:bytesWritten:error:">-writeBytes:<wbr>length:<wbr>bytesWritten:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1512,7 +1467,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(py)atEOF"></a>
-                    <a name="//apple_ref/objc/Property/atEOF" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/atEOF" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(py)atEOF">atEOF</a>
                     </code>
                   </div>
@@ -1531,11 +1486,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">atEOF</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">atEOF</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1544,7 +1494,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)getOffset:error:"></a>
-                    <a name="//apple_ref/objc/Method/-getOffset:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-getOffset:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)getOffset:error:">-getOffset:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1572,7 +1522,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)getLength:error:"></a>
-                    <a name="//apple_ref/objc/Method/-getLength:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-getLength:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)getLength:error:">-getLength:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1600,7 +1550,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(py)supportsSeeking"></a>
-                    <a name="//apple_ref/objc/Property/supportsSeeking" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/supportsSeeking" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(py)supportsSeeking">supportsSeeking</a>
                     </code>
                   </div>
@@ -1619,11 +1569,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">supportsSeeking</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">supportsSeeking</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1632,7 +1577,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)seekToOffset:error:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToOffset:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToOffset:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)seekToOffset:error:">-seekToOffset:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1650,11 +1595,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToOffset</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">offset</span>
                <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">toOffset</span> <span class="nv">offset</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1689,7 +1629,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBDataWriting"></a>
-                <a name="//apple_ref/objc/Section/SFBDataWriting" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBDataWriting" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBDataWriting"></a>
                   <h3 class="section-name"><p>SFBDataWriting</p>
@@ -1701,7 +1641,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeData:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeData:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeData:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeData:error:">-writeData:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1719,11 +1659,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">data</span>
             <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">writeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1770,7 +1705,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBSignedIntegerWriting"></a>
-                <a name="//apple_ref/objc/Section/SFBSignedIntegerWriting" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBSignedIntegerWriting" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBSignedIntegerWriting"></a>
                   <h3 class="section-name"><p>SFBSignedIntegerWriting</p>
@@ -1782,7 +1717,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeInt8:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeInt8:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeInt8:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt8:error:">-writeInt8:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1844,7 +1779,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeInt16:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeInt16:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeInt16:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt16:error:">-writeInt16:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1906,7 +1841,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeInt32:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeInt32:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeInt32:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt32:error:">-writeInt32:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1968,7 +1903,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeInt64:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeInt64:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeInt64:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt64:error:">-writeInt64:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2031,7 +1966,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBUnsignedIntegerWriting"></a>
-                <a name="//apple_ref/objc/Section/SFBUnsignedIntegerWriting" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBUnsignedIntegerWriting" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBUnsignedIntegerWriting"></a>
                   <h3 class="section-name"><p>SFBUnsignedIntegerWriting</p>
@@ -2043,7 +1978,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt8:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt8:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt8:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt8:error:">-writeUInt8:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2105,7 +2040,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt16:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt16:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt16:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt16:error:">-writeUInt16:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2167,7 +2102,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt32:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt32:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt32:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt32:error:">-writeUInt32:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2229,7 +2164,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt64:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt64:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt64:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt64:error:">-writeUInt64:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2292,7 +2227,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBBigEndianWriting"></a>
-                <a name="//apple_ref/objc/Section/SFBBigEndianWriting" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBBigEndianWriting" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBBigEndianWriting"></a>
                   <h3 class="section-name"><p>SFBBigEndianWriting</p>
@@ -2304,7 +2239,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt16BigEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt16BigEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt16BigEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt16BigEndian:error:">-writeUInt16BigEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2367,7 +2302,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt32BigEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt32BigEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt32BigEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt32BigEndian:error:">-writeUInt32BigEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2430,7 +2365,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt64BigEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt64BigEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt64BigEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt64BigEndian:error:">-writeUInt64BigEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2494,7 +2429,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBLittleEndianWriting"></a>
-                <a name="//apple_ref/objc/Section/SFBLittleEndianWriting" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBLittleEndianWriting" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBLittleEndianWriting"></a>
                   <h3 class="section-name"><p>SFBLittleEndianWriting</p>
@@ -2506,7 +2441,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt16LittleEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt16LittleEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt16LittleEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt16LittleEndian:error:">-writeUInt16LittleEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2569,7 +2504,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt32LittleEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt32LittleEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt32LittleEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt32LittleEndian:error:">-writeUInt32LittleEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2632,7 +2567,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBOutputSource(im)writeUInt64LittleEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-writeUInt64LittleEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-writeUInt64LittleEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt64LittleEndian:error:">-writeUInt64LittleEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2691,12 +2626,618 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE4read_6lengthSiSv_SitKF"></a>
+                    <a name="//apple_ref/swift/Method/read(_:length:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE4read_6lengthSiSv_SitKF">read(_:<wbr>length:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads bytes from the input</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">read</span><span class="p">(</span><span class="n">_</span> <span class="nv">buffer</span><span class="p">:</span> <span class="kt">UnsafeMutableRawPointer</span><span class="p">,</span> <span class="nv">length</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>buffer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A buffer to receive data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>length</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The maximum number of bytes to read</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The number of bytes actually read</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE5write_6lengthSiSV_SitKF"></a>
+                    <a name="//apple_ref/swift/Method/write(_:length:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE5write_6lengthSiSV_SitKF">write(_:<wbr>length:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes bytes to the output</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">write</span><span class="p">(</span><span class="n">_</span> <span class="nv">buffer</span><span class="p">:</span> <span class="kt">UnsafeRawPointer</span><span class="p">,</span> <span class="nv">length</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>buffer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A buffer of data to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>length</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The maximum number of bytes to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The number of bytes actually written</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE6offsetSiyKF"></a>
+                    <a name="//apple_ref/swift/Method/offset()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE6offsetSiyKF">offset()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the current offset in the output, in bytes</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">offset</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE6lengthSiyKF"></a>
+                    <a name="//apple_ref/swift/Method/length()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE6lengthSiyKF">length()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the length of the output, in bytes</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">length</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE5writeyy10Foundation4DataVKF"></a>
+                    <a name="//apple_ref/swift/Method/write(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE5writeyy10Foundation4DataVKF">write(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes bytes to the output</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">write</span><span class="p">(</span><span class="n">_</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>data</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE5writeyyxKSzRzlF"></a>
+                    <a name="//apple_ref/swift/Method/write(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE5writeyyxKSzRzlF">write(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a binary integer to the output</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">write</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">i</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">BinaryInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>i</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE14writeBigEndianyys6UInt16VKF"></a>
+                    <a name="//apple_ref/swift/Method/writeBigEndian(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE14writeBigEndianyys6UInt16VKF">writeBigEndian(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a 16-bit integer to the output in big-endian format</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">writeBigEndian</span><span class="p">(</span><span class="n">_</span> <span class="nv">ui16</span><span class="p">:</span> <span class="kt">UInt16</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui16</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE14writeBigEndianyys6UInt32VKF"></a>
+                    <a name="//apple_ref/swift/Method/writeBigEndian(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE14writeBigEndianyys6UInt32VKF">writeBigEndian(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a 32-bit integer to the output in big-endian format</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">writeBigEndian</span><span class="p">(</span><span class="n">_</span> <span class="nv">ui32</span><span class="p">:</span> <span class="kt">UInt32</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui32</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE14writeBigEndianyys6UInt64VKF"></a>
+                    <a name="//apple_ref/swift/Method/writeBigEndian(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE14writeBigEndianyys6UInt64VKF">writeBigEndian(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a 64-bit integer to the output in little-endian format</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">writeBigEndian</span><span class="p">(</span><span class="n">_</span> <span class="nv">ui64</span><span class="p">:</span> <span class="kt">UInt64</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui64</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE17writeLittleEndianyys6UInt16VKF"></a>
+                    <a name="//apple_ref/swift/Method/writeLittleEndian(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE17writeLittleEndianyys6UInt16VKF">writeLittleEndian(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a 16-bit integer to the output in big-endian format</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">writeLittleEndian</span><span class="p">(</span><span class="n">_</span> <span class="nv">ui16</span><span class="p">:</span> <span class="kt">UInt16</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui16</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE17writeLittleEndianyys6UInt32VKF"></a>
+                    <a name="//apple_ref/swift/Method/writeLittleEndian(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE17writeLittleEndianyys6UInt32VKF">writeLittleEndian(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a 32-bit integer to the output in little-endian format</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">writeLittleEndian</span><span class="p">(</span><span class="n">_</span> <span class="nv">ui32</span><span class="p">:</span> <span class="kt">UInt32</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui32</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So15SFBOutputSourceC14SFBAudioEngineE17writeLittleEndianyys6UInt64VKF"></a>
+                    <a name="//apple_ref/swift/Method/writeLittleEndian(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So15SFBOutputSourceC14SFBAudioEngineE17writeLittleEndianyys6UInt64VKF">writeLittleEndian(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes a 64-bit integer to the output in little-endian format</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">writeLittleEndian</span><span class="p">(</span><span class="n">_</span> <span class="nv">ui64</span><span class="p">:</span> <span class="kt">UInt64</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui64</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

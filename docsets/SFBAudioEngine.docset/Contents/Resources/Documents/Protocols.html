@@ -13,7 +13,7 @@
     <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Section/Protocols" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Section/Protocols" class="dashAnchor"></a>
     <a title="Protocols  Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -946,7 +946,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBAudioDecoding"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBAudioDecoding" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBAudioDecoding" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBAudioDecoding">SFBAudioDecoding</a>
                     </code>
                   </div>
@@ -966,11 +966,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBAudioDecoding</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">protocol</span> <span class="kt">AudioDecoding</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -979,7 +974,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBAudioEncoding"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBAudioEncoding" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBAudioEncoding" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBAudioEncoding">SFBAudioEncoding</a>
                     </code>
                   </div>
@@ -999,11 +994,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBAudioEncoding</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">protocol</span> <span class="kt">AudioEncoding</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1013,7 +1003,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBAudioPlayerDelegate"></a>
-                <a name="//apple_ref/objc/Section/SFBAudioPlayerDelegate" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBAudioPlayerDelegate" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBAudioPlayerDelegate"></a>
                   <h3 class="section-name"><p>SFBAudioPlayerDelegate</p>
@@ -1025,7 +1015,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBAudioPlayerDelegate"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBAudioPlayerDelegate" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBAudioPlayerDelegate" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBAudioPlayerDelegate">SFBAudioPlayerDelegate</a>
                     </code>
                   </div>
@@ -1045,11 +1035,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBAudioPlayerDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">protocol</span> <span class="kt">Delegate</span> <span class="p">:</span> <span class="kt">NSObjectProtocol</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1059,7 +1044,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBAudioPlayerNodeDelegate"></a>
-                <a name="//apple_ref/objc/Section/SFBAudioPlayerNodeDelegate" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBAudioPlayerNodeDelegate" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBAudioPlayerNodeDelegate"></a>
                   <h3 class="section-name"><p>SFBAudioPlayerNodeDelegate</p>
@@ -1071,7 +1056,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBAudioPlayerNodeDelegate"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBAudioPlayerNodeDelegate" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBAudioPlayerNodeDelegate" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBAudioPlayerNodeDelegate">SFBAudioPlayerNodeDelegate</a>
                     </code>
                   </div>
@@ -1091,11 +1076,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBAudioPlayerNodeDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">protocol</span> <span class="kt">Delegate</span> <span class="p">:</span> <span class="kt">NSObjectProtocol</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1104,7 +1084,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBDSDDecoding"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBDSDDecoding" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBDSDDecoding" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBDSDDecoding">SFBDSDDecoding</a>
                     </code>
                   </div>
@@ -1132,7 +1112,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBPCMDecoding"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBPCMDecoding" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBPCMDecoding" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBPCMDecoding">SFBPCMDecoding</a>
                     </code>
                   </div>
@@ -1160,7 +1140,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(pl)SFBPCMEncoding"></a>
-                    <a name="//apple_ref/objc/Protocol/SFBPCMEncoding" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Protocol/SFBPCMEncoding" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(pl)SFBPCMEncoding">SFBPCMEncoding</a>
                     </code>
                   </div>
@@ -1189,7 +1169,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

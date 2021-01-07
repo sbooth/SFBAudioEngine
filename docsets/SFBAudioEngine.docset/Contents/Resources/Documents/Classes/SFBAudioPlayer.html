@@ -13,7 +13,7 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Class/SFBAudioPlayer" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Class/SFBAudioPlayer" class="dashAnchor"></a>
     <a title="SFBAudioPlayer Class Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -938,14 +938,9 @@
             <h1>SFBAudioPlayer</h1>
               <div class="declaration">
                 <div class="language">
-                  <p class="aside-title">Objective-C</p>
+                  
                   <pre class="highlight objective_c"><code>
 <span class="k">@interface</span> <span class="nc">SFBAudioPlayer</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a></span><span class="o">&gt;</span></code></pre>
-
-                </div>
-                <div class="language">
-                  <p class="aside-title">Swift</p>
-                  <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioPlayer</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                 </div>
               </div>
@@ -981,7 +976,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Playlist%20Management"></a>
-                <a name="//apple_ref/objc/Section/Playlist Management" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Playlist Management" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Playlist%20Management"></a>
                   <h3 class="section-name"><p>Playlist Management</p>
@@ -993,7 +988,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)playURL:error:"></a>
-                    <a name="//apple_ref/objc/Method/-playURL:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-playURL:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)playURL:error:">-playURL:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1015,11 +1010,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">playURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">play</span><span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1065,7 +1055,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)playDecoder:error:"></a>
-                    <a name="//apple_ref/objc/Method/-playDecoder:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-playDecoder:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)playDecoder:error:">-playDecoder:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1088,11 +1078,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">playDecoder</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span>
               <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">play</span><span class="p">(</span><span class="n">_</span> <span class="nv">decoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1138,7 +1123,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)enqueueURL:error:"></a>
-                    <a name="//apple_ref/objc/Method/-enqueueURL:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-enqueueURL:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)enqueueURL:error:">-enqueueURL:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1161,11 +1146,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">enqueueURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
              <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1211,7 +1191,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)enqueueURL:forImmediatePlayback:error:"></a>
-                    <a name="//apple_ref/objc/Method/-enqueueURL:forImmediatePlayback:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-enqueueURL:forImmediatePlayback:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)enqueueURL:forImmediatePlayback:error:">-enqueueURL:<wbr>forImmediatePlayback:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1235,11 +1215,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">enqueueURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
     <span class="nf">forImmediatePlayback</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">forImmediatePlayback</span>
                    <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="n">immediate</span> <span class="nv">forImmediatePlayback</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1297,7 +1272,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)enqueueDecoder:error:"></a>
-                    <a name="//apple_ref/objc/Method/-enqueueDecoder:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-enqueueDecoder:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)enqueueDecoder:error:">-enqueueDecoder:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1320,11 +1295,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">enqueueDecoder</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span>
                  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">decoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1370,7 +1340,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)enqueueDecoder:forImmediatePlayback:error:"></a>
-                    <a name="//apple_ref/objc/Method/-enqueueDecoder:forImmediatePlayback:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-enqueueDecoder:forImmediatePlayback:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)enqueueDecoder:forImmediatePlayback:error:">-enqueueDecoder:<wbr>forImmediatePlayback:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1394,11 +1364,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">enqueueDecoder</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span>
     <span class="nf">forImmediatePlayback</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">forImmediatePlayback</span>
                    <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">decoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">,</span> <span class="n">immediate</span> <span class="nv">forImmediatePlayback</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1456,7 +1421,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)formatWillBeGaplessIfEnqueued:"></a>
-                    <a name="//apple_ref/objc/Method/-formatWillBeGaplessIfEnqueued:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-formatWillBeGaplessIfEnqueued:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)formatWillBeGaplessIfEnqueued:">-formatWillBeGaplessIfEnqueued:<wbr></a>
                     </code>
                   </div>
@@ -1475,11 +1440,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">formatWillBeGaplessIfEnqueued</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">AVAudioFormat</span> <span class="o">*</span><span class="p">)</span><span class="nv">format</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">formatWillBeGaplessIfEnqueued</span><span class="p">(</span><span class="n">_</span> <span class="nv">format</span><span class="p">:</span> <span class="kt">AVAudioFormat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1488,7 +1448,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)clearQueue"></a>
-                    <a name="//apple_ref/objc/Method/-clearQueue" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-clearQueue" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)clearQueue">-clearQueue</a>
                     </code>
                   </div>
@@ -1507,11 +1467,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">clearQueue</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">clearQueue</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1520,7 +1475,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)queueIsEmpty"></a>
-                    <a name="//apple_ref/objc/Property/queueIsEmpty" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/queueIsEmpty" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)queueIsEmpty">queueIsEmpty</a>
                     </code>
                   </div>
@@ -1539,11 +1494,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">queueIsEmpty</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">queueIsEmpty</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1553,7 +1503,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Playback%20Control"></a>
-                <a name="//apple_ref/objc/Section/Playback Control" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Playback Control" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Playback%20Control"></a>
                   <h3 class="section-name"><p>Playback Control</p>
@@ -1565,7 +1515,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)playReturningError:"></a>
-                    <a name="//apple_ref/objc/Method/-playReturningError:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-playReturningError:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)playReturningError:">-playReturningError:<wbr></a>
                     </code>
                   </div>
@@ -1587,11 +1537,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">playReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">play</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1625,7 +1570,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)pause"></a>
-                    <a name="//apple_ref/objc/Method/-pause" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-pause" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)pause">-pause</a>
                     </code>
                   </div>
@@ -1649,11 +1594,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pause</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">pause</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1662,7 +1602,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)resume"></a>
-                    <a name="//apple_ref/objc/Method/-resume" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-resume" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)resume">-resume</a>
                     </code>
                   </div>
@@ -1686,11 +1626,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">resume</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">resume</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1699,7 +1634,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)stop"></a>
-                    <a name="//apple_ref/objc/Method/-stop" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-stop" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)stop">-stop</a>
                     </code>
                   </div>
@@ -1727,11 +1662,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">stop</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">stop</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1740,7 +1670,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)togglePlayPauseReturningError:"></a>
-                    <a name="//apple_ref/objc/Method/-togglePlayPauseReturningError:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-togglePlayPauseReturningError:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)togglePlayPauseReturningError:">-togglePlayPauseReturningError:<wbr></a>
                     </code>
                   </div>
@@ -1763,11 +1693,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">togglePlayPauseReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">togglePlayPause</span><span class="p">()</span> <span class="k">throws</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1776,7 +1701,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)reset"></a>
-                    <a name="//apple_ref/objc/Method/-reset" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-reset" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)reset">-reset</a>
                     </code>
                   </div>
@@ -1800,11 +1725,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">reset</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">reset</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1814,7 +1734,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Player%20State"></a>
-                <a name="//apple_ref/objc/Section/Player State" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Player State" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Player%20State"></a>
                   <h3 class="section-name"><p>Player State</p>
@@ -1826,7 +1746,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)engineIsRunning"></a>
-                    <a name="//apple_ref/objc/Property/engineIsRunning" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/engineIsRunning" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)engineIsRunning">engineIsRunning</a>
                     </code>
                   </div>
@@ -1845,11 +1765,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">engineIsRunning</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">engineIsRunning</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1858,7 +1773,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)playerNodeIsPlaying"></a>
-                    <a name="//apple_ref/objc/Property/playerNodeIsPlaying" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playerNodeIsPlaying" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)playerNodeIsPlaying">playerNodeIsPlaying</a>
                     </code>
                   </div>
@@ -1877,11 +1792,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">playerNodeIsPlaying</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">playerNodeIsPlaying</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1890,7 +1800,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)playbackState"></a>
-                    <a name="//apple_ref/objc/Property/playbackState" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playbackState" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)playbackState">playbackState</a>
                     </code>
                   </div>
@@ -1909,11 +1819,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n"><a href="../Enums/SFBAudioPlayerPlaybackState.html">SFBAudioPlayerPlaybackState</a></span> <span class="n">playbackState</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">playbackState</span><span class="p">:</span> <span class="kt">AudioPlayer</span><span class="o">.</span><span class="kt">PlaybackState</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1922,7 +1827,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)isPlaying"></a>
-                    <a name="//apple_ref/objc/Property/isPlaying" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isPlaying" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)isPlaying">isPlaying</a>
                     </code>
                   </div>
@@ -1941,11 +1846,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isPlaying</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isPlaying</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1954,7 +1854,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)isPaused"></a>
-                    <a name="//apple_ref/objc/Property/isPaused" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isPaused" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)isPaused">isPaused</a>
                     </code>
                   </div>
@@ -1973,11 +1873,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isPaused</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isPaused</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1986,7 +1881,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)isStopped"></a>
-                    <a name="//apple_ref/objc/Property/isStopped" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isStopped" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)isStopped">isStopped</a>
                     </code>
                   </div>
@@ -2005,11 +1900,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isStopped</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isStopped</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2018,7 +1908,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)isReady"></a>
-                    <a name="//apple_ref/objc/Property/isReady" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isReady" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)isReady">isReady</a>
                     </code>
                   </div>
@@ -2037,11 +1927,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isReady</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isReady</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2050,7 +1935,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)currentDecoder"></a>
-                    <a name="//apple_ref/objc/Property/currentDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/currentDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)currentDecoder">currentDecoder</a>
                     </code>
                   </div>
@@ -2074,11 +1959,6 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span> <span class="n">currentDecoder</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">currentDecoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2087,7 +1967,7 @@ If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this met
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)nowPlaying"></a>
-                    <a name="//apple_ref/objc/Property/nowPlaying" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/nowPlaying" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)nowPlaying">nowPlaying</a>
                     </code>
                   </div>
@@ -2112,11 +1992,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span> <span class="n">nowPlaying</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">nowPlaying</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2126,7 +2001,7 @@ currently rendering audio.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Playback%20Properties"></a>
-                <a name="//apple_ref/objc/Section/Playback Properties" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Playback Properties" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Playback%20Properties"></a>
                   <h3 class="section-name"><p>Playback Properties</p>
@@ -2138,7 +2013,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)framePosition"></a>
-                    <a name="//apple_ref/objc/Property/framePosition" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/framePosition" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)framePosition">framePosition</a>
                     </code>
                   </div>
@@ -2165,7 +2040,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)frameLength"></a>
-                    <a name="//apple_ref/objc/Property/frameLength" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/frameLength" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)frameLength">frameLength</a>
                     </code>
                   </div>
@@ -2192,7 +2067,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)playbackPosition"></a>
-                    <a name="//apple_ref/objc/Property/playbackPosition" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playbackPosition" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)playbackPosition">playbackPosition</a>
                     </code>
                   </div>
@@ -2219,7 +2094,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)currentTime"></a>
-                    <a name="//apple_ref/objc/Property/currentTime" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/currentTime" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)currentTime">currentTime</a>
                     </code>
                   </div>
@@ -2246,7 +2121,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)totalTime"></a>
-                    <a name="//apple_ref/objc/Property/totalTime" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/totalTime" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)totalTime">totalTime</a>
                     </code>
                   </div>
@@ -2273,7 +2148,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)playbackTime"></a>
-                    <a name="//apple_ref/objc/Property/playbackTime" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playbackTime" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)playbackTime">playbackTime</a>
                     </code>
                   </div>
@@ -2300,7 +2175,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)getPlaybackPosition:andTime:"></a>
-                    <a name="//apple_ref/objc/Method/-getPlaybackPosition:andTime:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-getPlaybackPosition:andTime:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)getPlaybackPosition:andTime:">-getPlaybackPosition:<wbr>andTime:<wbr></a>
                     </code>
                   </div>
@@ -2365,7 +2240,7 @@ currently rendering audio.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Seeking"></a>
-                <a name="//apple_ref/objc/Section/Seeking" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Seeking" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Seeking"></a>
                   <h3 class="section-name"><p>Seeking</p>
@@ -2377,7 +2252,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekForward"></a>
-                    <a name="//apple_ref/objc/Method/-seekForward" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekForward" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekForward">-seekForward</a>
                     </code>
                   </div>
@@ -2396,11 +2271,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="n">seekForward</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seekForward</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
-
-                        </div>
                       </div>
                       <div>
                         <h4>Return Value</h4>
@@ -2413,7 +2283,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekBackward"></a>
-                    <a name="//apple_ref/objc/Method/-seekBackward" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekBackward" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekBackward">-seekBackward</a>
                     </code>
                   </div>
@@ -2432,11 +2302,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="n">seekBackward</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seekBackward</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
-
-                        </div>
                       </div>
                       <div>
                         <h4>Return Value</h4>
@@ -2449,7 +2314,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekForward:"></a>
-                    <a name="//apple_ref/objc/Method/-seekForward:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekForward:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekForward:">-seekForward:<wbr></a>
                     </code>
                   </div>
@@ -2466,11 +2331,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekForward</span><span class="p">:(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nv">secondsToSkip</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">forward</span> <span class="nv">secondsToSkip</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2504,7 +2364,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekBackward:"></a>
-                    <a name="//apple_ref/objc/Method/-seekBackward:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekBackward:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekBackward:">-seekBackward:<wbr></a>
                     </code>
                   </div>
@@ -2521,11 +2381,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekBackward</span><span class="p">:(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nv">secondsToSkip</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">backward</span> <span class="nv">secondsToSkip</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2559,7 +2414,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekToTime:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToTime:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToTime:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekToTime:">-seekToTime:<wbr></a>
                     </code>
                   </div>
@@ -2576,11 +2431,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToTime</span><span class="p">:(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nv">timeInSeconds</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">time</span> <span class="nv">timeInSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2614,7 +2464,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekToPosition:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToPosition:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToPosition:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekToPosition:">-seekToPosition:<wbr></a>
                     </code>
                   </div>
@@ -2631,11 +2481,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToPosition</span><span class="p">:(</span><span class="kt">double</span><span class="p">)</span><span class="nv">position</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="nv">position</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2669,7 +2514,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)seekToFrame:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToFrame:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToFrame:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)seekToFrame:">-seekToFrame:<wbr></a>
                     </code>
                   </div>
@@ -2686,11 +2531,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToFrame</span><span class="p">:(</span><span class="n">AVAudioFramePosition</span><span class="p">)</span><span class="nv">frame</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="nv">frame</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2724,7 +2564,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)supportsSeeking"></a>
-                    <a name="//apple_ref/objc/Property/supportsSeeking" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/supportsSeeking" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)supportsSeeking">supportsSeeking</a>
                     </code>
                   </div>
@@ -2743,11 +2583,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">supportsSeeking</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">supportsSeeking</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2757,7 +2592,7 @@ currently rendering audio.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Volume%20Control"></a>
-                <a name="//apple_ref/objc/Section/Volume Control" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Volume Control" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Volume%20Control"></a>
                   <h3 class="section-name"><p>Volume Control</p>
@@ -2769,7 +2604,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)volume"></a>
-                    <a name="//apple_ref/objc/Property/volume" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/volume" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)volume">volume</a>
                     </code>
                   </div>
@@ -2788,11 +2623,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="kt">float</span> <span class="n">volume</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">volume</span><span class="p">:</span> <span class="kt">Float</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2801,7 +2631,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)setVolume:error:"></a>
-                    <a name="//apple_ref/objc/Method/-setVolume:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-setVolume:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)setVolume:error:">-setVolume:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2818,11 +2648,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setVolume</span><span class="p">:(</span><span class="kt">float</span><span class="p">)</span><span class="nv">volume</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setVolume</span><span class="p">(</span><span class="n">_</span> <span class="nv">volume</span><span class="p">:</span> <span class="kt">Float</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -2868,7 +2693,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)volumeForChannel:"></a>
-                    <a name="//apple_ref/objc/Method/-volumeForChannel:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-volumeForChannel:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)volumeForChannel:">-volumeForChannel:<wbr></a>
                     </code>
                   </div>
@@ -2887,11 +2712,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">volumeForChannel</span><span class="p">:(</span><span class="n">AudioObjectPropertyElement</span><span class="p">)</span><span class="nv">channel</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">volume</span><span class="p">(</span><span class="n">forChannel</span> <span class="nv">channel</span><span class="p">:</span> <span class="kt">AudioObjectPropertyElement</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Float</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2900,7 +2720,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)setVolume:forChannel:error:"></a>
-                    <a name="//apple_ref/objc/Method/-setVolume:forChannel:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-setVolume:forChannel:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)setVolume:forChannel:error:">-setVolume:<wbr>forChannel:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2919,11 +2739,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setVolume</span><span class="p">:(</span><span class="kt">float</span><span class="p">)</span><span class="nv">volume</span>
        <span class="nf">forChannel</span><span class="p">:(</span><span class="n">AudioObjectPropertyElement</span><span class="p">)</span><span class="nv">channel</span>
             <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setVolume</span><span class="p">(</span><span class="n">_</span> <span class="nv">volume</span><span class="p">:</span> <span class="kt">Float</span><span class="p">,</span> <span class="n">forChannel</span> <span class="nv">channel</span><span class="p">:</span> <span class="kt">AudioObjectPropertyElement</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -2982,7 +2797,7 @@ currently rendering audio.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Output%20Device"></a>
-                <a name="//apple_ref/objc/Section/Output Device" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Output Device" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Output%20Device"></a>
                   <h3 class="section-name"><p>Output Device</p>
@@ -2993,9 +2808,9 @@ currently rendering audio.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBAudioPlayer(py)outputDevice"></a>
-                    <a name="//apple_ref/objc/Property/outputDevice" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)outputDevice">outputDevice</a>
+                    <a name="/c:objc(cs)SFBAudioPlayer(py)outputDeviceID"></a>
+                    <a name="//apple_ref/swift/Property/outputDeviceID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)outputDeviceID">outputDeviceID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3003,19 +2818,14 @@ currently rendering audio.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Returns the output device for \c AVAudioEngine.outputNode</p>
+                        <p>Returns the output device object ID for \c AVAudioEngine.outputNode</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nonnull</span><span class="p">)</span> <span class="n"><a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a></span> <span class="o">*</span><span class="n">outputDevice</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">outputDevice</span><span class="p">:</span> <span class="kt">UnsafeMutablePointer</span><span class="o">&lt;</span><span class="kt">Int32</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">AUAudioObjectID</span> <span class="n">outputDeviceID</span><span class="p">;</span></code></pre>
 
                         </div>
                       </div>
@@ -3025,9 +2835,9 @@ currently rendering audio.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBAudioPlayer(im)setOutputDevice:error:"></a>
-                    <a name="//apple_ref/objc/Method/-setOutputDevice:error:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)setOutputDevice:error:">-setOutputDevice:<wbr>error:<wbr></a>
+                    <a name="/c:objc(cs)SFBAudioPlayer(im)setOutputDeviceID:error:"></a>
+                    <a name="//apple_ref/swift/Method/-setOutputDeviceID:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)setOutputDeviceID:error:">-setOutputDeviceID:<wbr>error:<wbr></a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3042,13 +2852,8 @@ currently rendering audio.</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setOutputDevice</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">outputDevice</span>
-                  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setOutputDevice</span><span class="p">(</span><span class="n">_</span> <span class="nv">outputDevice</span><span class="p">:</span> <span class="kt">Any</span><span class="o">!</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setOutputDeviceID</span><span class="p">:(</span><span class="n">AUAudioObjectID</span><span class="p">)</span><span class="nv">outputDeviceID</span>
+                    <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
 
                         </div>
                       </div>
@@ -3059,12 +2864,12 @@ currently rendering audio.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>outputDevice</em>
+                                <em>outputDeviceID</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The desired output device</p>
+                                  <p>The audio object ID of the desired output device</p>
                                 </div>
                               </td>
                             </tr>
@@ -3095,7 +2900,7 @@ currently rendering audio.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Delegate"></a>
-                <a name="//apple_ref/objc/Section/Delegate" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Delegate" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Delegate"></a>
                   <h3 class="section-name"><p>Delegate</p>
@@ -3107,7 +2912,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)delegate"></a>
-                    <a name="//apple_ref/objc/Property/delegate" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/delegate" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)delegate">delegate</a>
                     </code>
                   </div>
@@ -3126,11 +2931,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">weak</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBAudioPlayerDelegate.html">SFBAudioPlayerDelegate</a></span><span class="o">&gt;</span> <span class="n">delegate</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">weak</span> <span class="k">var</span> <span class="nv">delegate</span><span class="p">:</span> <span class="kt">Delegate</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -3140,7 +2940,7 @@ currently rendering audio.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/AVAudioEngine%20Access"></a>
-                <a name="//apple_ref/objc/Section/AVAudioEngine Access" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/AVAudioEngine Access" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/AVAudioEngine%20Access"></a>
                   <h3 class="section-name"><p>AVAudioEngine Access</p>
@@ -3152,7 +2952,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(im)withEngine:"></a>
-                    <a name="//apple_ref/objc/Method/-withEngine:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-withEngine:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(im)withEngine:">-withEngine:<wbr></a>
                     </code>
                   </div>
@@ -3174,11 +2974,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">withEngine</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerAVAudioEngineBlock">SFBAudioPlayerAVAudioEngineBlock</a></span><span class="p">)</span><span class="nv">block</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">withEngine</span><span class="p">(</span><span class="n">_</span> <span class="nv">block</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt">AudioPlayer</span><span class="o">.</span><span class="kt">AVAudioEngineClosure</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -3208,7 +3003,7 @@ currently rendering audio.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer(py)playerNode"></a>
-                    <a name="//apple_ref/objc/Property/playerNode" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playerNode" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer(py)playerNode">playerNode</a>
                     </code>
                   </div>
@@ -3227,9 +3022,274 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nonnull</span><span class="p">)</span> <span class="n"><a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a></span> <span class="o">*</span><span class="n">playerNode</span><span class="p">;</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE16PlaybackPositiona"></a>
+                    <a name="//apple_ref/swift/Alias/PlaybackPosition" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE16PlaybackPositiona">PlaybackPosition</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">playerNode</span><span class="p">:</span> <span class="kt">UnsafeMutablePointer</span><span class="o">&lt;</span><span class="kt">Int32</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">PlaybackPosition</span> <span class="o">=</span> <span class="kt">AudioPlayerNode</span><span class="o">.</span><span class="kt">PlaybackPosition</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE12PlaybackTimea"></a>
+                    <a name="//apple_ref/swift/Alias/PlaybackTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE12PlaybackTimea">PlaybackTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">PlaybackTime</span> <span class="o">=</span> <span class="kt">AudioPlayerNode</span><span class="o">.</span><span class="kt">PlaybackTime</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE13framePositions5Int64VSgvp"></a>
+                    <a name="//apple_ref/swift/Property/framePosition" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE13framePositions5Int64VSgvp">framePosition</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the frame position in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">framePosition</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE11frameLengths5Int64VSgvp"></a>
+                    <a name="//apple_ref/swift/Property/frameLength" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE11frameLengths5Int64VSgvp">frameLength</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the frame length of the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">frameLength</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE8positionSo0aB4NodeCACE16PlaybackPositionVSgvp"></a>
+                    <a name="//apple_ref/swift/Property/position" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE8positionSo0aB4NodeCACE16PlaybackPositionVSgvp">position</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the playback position in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">position</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayer.html#/s:So14SFBAudioPlayerC0A6EngineE16PlaybackPositiona">PlaybackPosition</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE11currentTimeSdSgvp"></a>
+                    <a name="//apple_ref/swift/Property/currentTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE11currentTimeSdSgvp">currentTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the current time in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">currentTime</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE9totalTimeSdSgvp"></a>
+                    <a name="//apple_ref/swift/Property/totalTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE9totalTimeSdSgvp">totalTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total time of the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">totalTime</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE4timeSo0aB4NodeCACE12PlaybackTimeVSgvp"></a>
+                    <a name="//apple_ref/swift/Property/time" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE4timeSo0aB4NodeCACE12PlaybackTimeVSgvp">time</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the playback time in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">time</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayer.html#/s:So14SFBAudioPlayerC0A6EngineE12PlaybackTimea">PlaybackTime</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBAudioPlayerC0A6EngineE15positionAndTimeSo0aB4NodeCACE16PlaybackPositionV0D0_AfCE0hF0V4timetSgvp"></a>
+                    <a name="//apple_ref/swift/Property/positionAndTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBAudioPlayerC0A6EngineE15positionAndTimeSo0aB4NodeCACE16PlaybackPositionV0D0_AfCE0hF0V4timetSgvp">positionAndTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the playback position and time in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">positionAndTime</span><span class="p">:</span> <span class="p">(</span><span class="nv">position</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayer.html#/s:So14SFBAudioPlayerC0A6EngineE16PlaybackPositiona">PlaybackPosition</a></span><span class="p">,</span> <span class="nv">time</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayer.html#/s:So14SFBAudioPlayerC0A6EngineE12PlaybackTimea">PlaybackTime</a></span><span class="p">)?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@E@SFBAudioPlayerPlaybackState"></a>
+                    <a name="//apple_ref/swift/Extension/PlaybackState" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@SFBAudioPlayerPlaybackState">PlaybackState</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                        <a href="../Classes/SFBAudioPlayer/PlaybackState.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AudioPlayer</span><span class="o">.</span><span class="kt">PlaybackState</span><span class="p">:</span> <span class="kt">CustomDebugStringConvertible</span></code></pre>
 
                         </div>
                       </div>
@@ -3241,7 +3301,7 @@ currently rendering audio.</p>
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

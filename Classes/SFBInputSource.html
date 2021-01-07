@@ -13,7 +13,7 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Class/SFBInputSource" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Class/SFBInputSource" class="dashAnchor"></a>
     <a title="SFBInputSource Class Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -938,14 +938,9 @@
             <h1>SFBInputSource</h1>
               <div class="declaration">
                 <div class="language">
-                  <p class="aside-title">Objective-C</p>
+                  
                   <pre class="highlight objective_c"><code>
 <span class="k">@interface</span> <span class="nc">SFBInputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                </div>
-                <div class="language">
-                  <p class="aside-title">Swift</p>
-                  <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">InputSource</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                 </div>
               </div>
@@ -959,7 +954,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(cm)inputSourceForURL:flags:error:"></a>
-                    <a name="//apple_ref/objc/Method/+inputSourceForURL:flags:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+inputSourceForURL:flags:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(cm)inputSourceForURL:flags:error:">+inputSourceForURL:<wbr>flags:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -978,11 +973,6 @@
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">inputSourceForURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
                                      <span class="nf">flags</span><span class="p">:(</span><span class="n"><a href="../Enums/SFBInputSourceFlags.html">SFBInputSourceFlags</a></span><span class="p">)</span><span class="nv">flags</span>
                                      <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="k">for</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">flags</span><span class="p">:</span> <span class="kt">InputSource</span><span class="o">.</span><span class="kt">Flags</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1040,7 +1030,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(cm)inputSourceWithData:"></a>
-                    <a name="//apple_ref/objc/Method/+inputSourceWithData:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+inputSourceWithData:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(cm)inputSourceWithData:">+inputSourceWithData:<wbr></a>
                     </code>
                   </div>
@@ -1057,11 +1047,6 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">inputSourceWithData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">data</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1095,7 +1080,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(cm)inputSourceWithBytes:length:"></a>
-                    <a name="//apple_ref/objc/Method/+inputSourceWithBytes:length:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+inputSourceWithBytes:length:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(cm)inputSourceWithBytes:length:">+inputSourceWithBytes:<wbr>length:<wbr></a>
                     </code>
                   </div>
@@ -1113,11 +1098,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">inputSourceWithBytes</span><span class="p">:(</span><span class="n">nonnull</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nv">bytes</span>
                                        <span class="nf">length</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">length</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">?(</span><span class="nv">bytes</span><span class="p">:</span> <span class="kt">UnsafeRawPointer</span><span class="p">,</span> <span class="nv">length</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1163,7 +1143,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(cm)inputSourceWithBytesNoCopy:length:freeWhenDone:"></a>
-                    <a name="//apple_ref/objc/Method/+inputSourceWithBytesNoCopy:length:freeWhenDone:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/+inputSourceWithBytesNoCopy:length:freeWhenDone:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(cm)inputSourceWithBytesNoCopy:length:freeWhenDone:">+inputSourceWithBytesNoCopy:<wbr>length:<wbr>freeWhenDone:<wbr></a>
                     </code>
                   </div>
@@ -1187,11 +1167,6 @@
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">inputSourceWithBytesNoCopy</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nv">bytes</span>
                                              <span class="nf">length</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">length</span>
                                        <span class="nf">freeWhenDone</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">freeWhenDone</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">?(</span><span class="n">bytesNoCopy</span> <span class="nv">bytes</span><span class="p">:</span> <span class="kt">UnsafeMutableRawPointer</span><span class="p">,</span> <span class="nv">length</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">freeWhenDone</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1249,7 +1224,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(py)url"></a>
-                    <a name="//apple_ref/objc/Property/url" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/url" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(py)url">url</a>
                     </code>
                   </div>
@@ -1268,11 +1243,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1281,7 +1251,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)openReturningError:"></a>
-                    <a name="//apple_ref/objc/Method/-openReturningError:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-openReturningError:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)openReturningError:">-openReturningError:<wbr></a>
                     </code>
                   </div>
@@ -1298,11 +1268,6 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">openReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">open</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1336,7 +1301,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)closeReturningError:"></a>
-                    <a name="//apple_ref/objc/Method/-closeReturningError:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-closeReturningError:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)closeReturningError:">-closeReturningError:<wbr></a>
                     </code>
                   </div>
@@ -1353,11 +1318,6 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">closeReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">close</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1391,7 +1351,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(py)isOpen"></a>
-                    <a name="//apple_ref/objc/Property/isOpen" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isOpen" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(py)isOpen">isOpen</a>
                     </code>
                   </div>
@@ -1410,11 +1370,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isOpen</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isOpen</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1423,7 +1378,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readBytes:length:bytesRead:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readBytes:length:bytesRead:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readBytes:length:bytesRead:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readBytes:length:bytesRead:error:">-readBytes:<wbr>length:<wbr>bytesRead:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1512,7 +1467,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(py)atEOF"></a>
-                    <a name="//apple_ref/objc/Property/atEOF" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/atEOF" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(py)atEOF">atEOF</a>
                     </code>
                   </div>
@@ -1531,11 +1486,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">atEOF</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">atEOF</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1544,7 +1494,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)getOffset:error:"></a>
-                    <a name="//apple_ref/objc/Method/-getOffset:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-getOffset:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)getOffset:error:">-getOffset:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1572,7 +1522,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)getLength:error:"></a>
-                    <a name="//apple_ref/objc/Method/-getLength:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-getLength:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)getLength:error:">-getLength:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1600,7 +1550,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(py)supportsSeeking"></a>
-                    <a name="//apple_ref/objc/Property/supportsSeeking" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/supportsSeeking" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(py)supportsSeeking">supportsSeeking</a>
                     </code>
                   </div>
@@ -1619,11 +1569,6 @@
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">supportsSeeking</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">supportsSeeking</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1632,7 +1577,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)seekToOffset:error:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToOffset:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToOffset:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)seekToOffset:error:">-seekToOffset:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1650,11 +1595,6 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToOffset</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">offset</span>
                <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">toOffset</span> <span class="nv">offset</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1689,7 +1629,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBSignedIntegerReading"></a>
-                <a name="//apple_ref/objc/Section/SFBSignedIntegerReading" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBSignedIntegerReading" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBSignedIntegerReading"></a>
                   <h3 class="section-name"><p>SFBSignedIntegerReading</p>
@@ -1701,7 +1641,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readInt8:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readInt8:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readInt8:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readInt8:error:">-readInt8:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1764,7 +1704,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readInt16:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readInt16:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readInt16:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readInt16:error:">-readInt16:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1827,7 +1767,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readInt32:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readInt32:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readInt32:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readInt32:error:">-readInt32:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1890,7 +1830,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readInt64:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readInt64:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readInt64:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readInt64:error:">-readInt64:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1954,7 +1894,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBUnsignedIntegerReading"></a>
-                <a name="//apple_ref/objc/Section/SFBUnsignedIntegerReading" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBUnsignedIntegerReading" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBUnsignedIntegerReading"></a>
                   <h3 class="section-name"><p>SFBUnsignedIntegerReading</p>
@@ -1966,7 +1906,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt8:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt8:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt8:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt8:error:">-readUInt8:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2029,7 +1969,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt16:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt16:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt16:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt16:error:">-readUInt16:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2092,7 +2032,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt32:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt32:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt32:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt32:error:">-readUInt32:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2155,7 +2095,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt64:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt64:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt64:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt64:error:">-readUInt64:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2219,7 +2159,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBBigEndianReading"></a>
-                <a name="//apple_ref/objc/Section/SFBBigEndianReading" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBBigEndianReading" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBBigEndianReading"></a>
                   <h3 class="section-name"><p>SFBBigEndianReading</p>
@@ -2231,7 +2171,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt16BigEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt16BigEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt16BigEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt16BigEndian:error:">-readUInt16BigEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2294,7 +2234,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt32BigEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt32BigEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt32BigEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt32BigEndian:error:">-readUInt32BigEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2357,7 +2297,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt64BigEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt64BigEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt64BigEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt64BigEndian:error:">-readUInt64BigEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2421,7 +2361,7 @@
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBLittleEndianReading"></a>
-                <a name="//apple_ref/objc/Section/SFBLittleEndianReading" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBLittleEndianReading" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBLittleEndianReading"></a>
                   <h3 class="section-name"><p>SFBLittleEndianReading</p>
@@ -2433,7 +2373,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt16LittleEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt16LittleEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt16LittleEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt16LittleEndian:error:">-readUInt16LittleEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2496,7 +2436,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt32LittleEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt32LittleEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt32LittleEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt32LittleEndian:error:">-readUInt32LittleEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2559,7 +2499,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBInputSource(im)readUInt64LittleEndian:error:"></a>
-                    <a name="//apple_ref/objc/Method/-readUInt64LittleEndian:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-readUInt64LittleEndian:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBInputSource(im)readUInt64LittleEndian:error:">-readUInt64LittleEndian:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -2618,12 +2558,371 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE4read_6lengthSiSv_SitKF"></a>
+                    <a name="//apple_ref/swift/Method/read(_:length:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE4read_6lengthSiSv_SitKF">read(_:<wbr>length:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads bytes from the input</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">read</span><span class="p">(</span><span class="n">_</span> <span class="nv">buffer</span><span class="p">:</span> <span class="kt">UnsafeMutableRawPointer</span><span class="p">,</span> <span class="nv">length</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>buffer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A buffer to receive data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>length</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The maximum number of bytes to read</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The number of bytes actually read</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE6offsetSiyKF"></a>
+                    <a name="//apple_ref/swift/Method/offset()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE6offsetSiyKF">offset()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the current offset in the input, in bytes</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">offset</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE6lengthSiyKF"></a>
+                    <a name="//apple_ref/swift/Method/length()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE6lengthSiyKF">length()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the length of the input, in bytes</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">length</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE4readxyKSzRzlF"></a>
+                    <a name="//apple_ref/swift/Method/read()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE4readxyKSzRzlF">read()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads and returns a binary integer</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">read</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">BinaryInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The integer value read</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE13readBigEndians6UInt16VyKF"></a>
+                    <a name="//apple_ref/swift/Method/readBigEndian()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE13readBigEndians6UInt16VyKF">readBigEndian()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads a 16-bit integer from the input in big-endian format and returns the value</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">readBigEndian</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">UInt16</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE13readBigEndians6UInt32VyKF"></a>
+                    <a name="//apple_ref/swift/Method/readBigEndian()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE13readBigEndians6UInt32VyKF">readBigEndian()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads a 32-bit integer from the input in big-endian format and returns the value</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">readBigEndian</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">UInt32</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE13readBigEndians6UInt64VyKF"></a>
+                    <a name="//apple_ref/swift/Method/readBigEndian()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE13readBigEndians6UInt64VyKF">readBigEndian()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads a 64-bit integer from the input in big-endian format and returns the value</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">readBigEndian</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE16readLittleEndians6UInt16VyKF"></a>
+                    <a name="//apple_ref/swift/Method/readLittleEndian()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE16readLittleEndians6UInt16VyKF">readLittleEndian()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads a 16-bit integer from the input in little-endian format and returns the value</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">readLittleEndian</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">UInt16</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE16readLittleEndians6UInt32VyKF"></a>
+                    <a name="//apple_ref/swift/Method/readLittleEndian()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE16readLittleEndians6UInt32VyKF">readLittleEndian()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads a 32-bit integer from the input in little-endian format and returns the value</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">readLittleEndian</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">UInt32</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So14SFBInputSourceC14SFBAudioEngineE16readLittleEndians6UInt64VyKF"></a>
+                    <a name="//apple_ref/swift/Method/readLittleEndian()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So14SFBInputSourceC14SFBAudioEngineE16readLittleEndians6UInt64VyKF">readLittleEndian()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads a 64-bit integer from the input in little-endian format and returns the value</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    An <code>NSError</code> object if an error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">readLittleEndian</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

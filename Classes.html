@@ -13,7 +13,7 @@
     <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Section/Classes" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Section/Classes" class="dashAnchor"></a>
     <a title="Classes  Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -945,9 +945,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBAttachedPicture"></a>
-                    <a name="//apple_ref/objc/Class/SFBAttachedPicture" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAttachedPicture">SFBAttachedPicture</a>
+                    <a name="/c:objc(cs)SFBReplayGainAnalyzer"></a>
+                    <a name="//apple_ref/swift/Class/SFBReplayGainAnalyzer" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBReplayGainAnalyzer">SFBReplayGainAnalyzer</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -955,23 +955,21 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>A class encapsulating a single attached picture.</p>
+                        <p>A class that calculates replay gain</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <a href="http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification">http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification</a>
 
-<p>Most file formats may have more than one attached picture of each type.</p>
+</div>
 
-                        <a href="Classes/SFBAttachedPicture.html" class="slightly-smaller">See more</a>
+                        <a href="Classes/SFBReplayGainAnalyzer.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAttachedPicture</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AttachedPicture</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCopying</span></code></pre>
+<span class="k">@interface</span> <span class="nc">SFBReplayGainAnalyzer</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                         </div>
                       </div>
@@ -981,9 +979,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBAudioConverter"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioConverter" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioConverter">SFBAudioConverter</a>
+                    <a name="/c:objc(cs)SFBInputSource"></a>
+                    <a name="//apple_ref/swift/Class/SFBInputSource" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBInputSource">SFBInputSource</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -991,215 +989,16 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>An audio converter</p>
+                        <p>An input source</p>
 
-                        <a href="Classes/SFBAudioConverter.html" class="slightly-smaller">See more</a>
+                        <a href="Classes/SFBInputSource.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioConverter</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioConverter</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBAudioDecoder"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioDecoder" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioDecoder">SFBAudioDecoder</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A decoder providing audio as PCM</p>
-
-                        <a href="Classes/SFBAudioDecoder.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioDecoder</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n"><a href="Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBAudioDevice"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioDevice" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioDevice">SFBAudioDevice</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An audio device with an underlying \c AudioObjectID supporting input or output</p>
-
-                        <a href="Classes/SFBAudioDevice.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioDevice</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioDevice</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBAudioDeviceDataSource"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioDeviceDataSource" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioDeviceDataSource">SFBAudioDeviceDataSource</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A data source for an audio device</p>
-
-                        <a href="Classes/SFBAudioDeviceDataSource.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioDeviceDataSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioDeviceDataSource</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBAudioEncoder"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioEncoder" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioEncoder">SFBAudioEncoder</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An encoder consuming PCM audio</p>
-
-                        <a href="Classes/SFBAudioEncoder.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioEncoder</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n"><a href="Protocols/SFBPCMEncoding.html">SFBPCMEncoding</a></span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBAudioExporter"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioExporter" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioExporter">SFBAudioExporter</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A class that exports audio using \c AVAudioFile</p>
-
-                        <a href="Classes/SFBAudioExporter.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioExporter</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioExporter</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBAudioFile"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioFile" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioFile">SFBAudioFile</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An audio file containing properties (like channel count and sample rate) and metadata (like artist name and album title)</p>
-
-                        <a href="Classes/SFBAudioFile.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioFile</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioFile</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+<span class="k">@interface</span> <span class="nc">SFBInputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                         </div>
                       </div>
@@ -1210,7 +1009,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioMetadata"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioMetadata" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioMetadata" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioMetadata">SFBAudioMetadata</a>
                     </code>
                   </div>
@@ -1231,9 +1030,33 @@
 <span class="k">@interface</span> <span class="nc">SFBAudioMetadata</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioProperties"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioProperties" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioProperties">SFBAudioProperties</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Class providing information on basic audio properties</p>
+
+                        <a href="Classes/SFBAudioProperties.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
                         <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioMetadata</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCopying</span></code></pre>
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioProperties</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -1243,9 +1066,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBAudioOutputDevice"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioOutputDevice" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice">SFBAudioOutputDevice</a>
+                    <a name="/c:objc(cs)SFBOutputSource"></a>
+                    <a name="//apple_ref/swift/Class/SFBOutputSource" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource">SFBOutputSource</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1253,21 +1076,16 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>An \c SFBAudioDevice supporting output</p>
+                        <p>An output source</p>
 
-                        <a href="Classes/SFBAudioOutputDevice.html" class="slightly-smaller">See more</a>
+                        <a href="Classes/SFBOutputSource.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioOutputDevice</span> <span class="p">:</span> <span class="nc"><a href="Classes/SFBAudioDevice.html">SFBAudioDevice</a></span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioOutputDevice</span></code></pre>
+<span class="k">@interface</span> <span class="nc">SFBOutputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                         </div>
                       </div>
@@ -1278,7 +1096,7 @@
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayer"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioPlayer" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioPlayer" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayer">SFBAudioPlayer</a>
                     </code>
                   </div>
@@ -1324,11 +1142,6 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
 <span class="k">@interface</span> <span class="nc">SFBAudioPlayer</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n"><a href="Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a></span><span class="o">&gt;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioPlayer</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1338,7 +1151,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/SFBAudioPlayerNode"></a>
-                <a name="//apple_ref/objc/Section/SFBAudioPlayerNode" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/SFBAudioPlayerNode" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/SFBAudioPlayerNode"></a>
                   <h3 class="section-name"><p>SFBAudioPlayerNode</p>
@@ -1350,7 +1163,7 @@ and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying)
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioPlayerNode" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioPlayerNode" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode">SFBAudioPlayerNode</a>
                     </code>
                   </div>
@@ -1403,9 +1216,35 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
 <span class="k">@interface</span> <span class="nc">SFBAudioPlayerNode</span> <span class="p">:</span> <span class="nc">AVAudioSourceNode</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAttachedPicture"></a>
+                    <a name="//apple_ref/swift/Class/SFBAttachedPicture" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAttachedPicture">SFBAttachedPicture</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A class encapsulating a single attached picture.</p>
+
+<p>Most file formats may have more than one attached picture of each type.</p>
+
+                        <a href="Classes/SFBAttachedPicture.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
                         <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioPlayerNode</span> <span class="p">:</span> <span class="kt">AVAudioSourceNode</span></code></pre>
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAttachedPicture</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -1415,9 +1254,9 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBAudioProperties"></a>
-                    <a name="//apple_ref/objc/Class/SFBAudioProperties" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBAudioProperties">SFBAudioProperties</a>
+                    <a name="/c:objc(cs)SFBAudioConverter"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioConverter" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioConverter">SFBAudioConverter</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1425,21 +1264,132 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Class providing information on basic audio properties</p>
+                        <p>An audio converter</p>
 
-                        <a href="Classes/SFBAudioProperties.html" class="slightly-smaller">See more</a>
+                        <a href="Classes/SFBAudioConverter.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBAudioProperties</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
+<span class="k">@interface</span> <span class="nc">SFBAudioConverter</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioDecoder"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioDecoder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioDecoder">SFBAudioDecoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A decoder providing audio as PCM</p>
+
+                        <a href="Classes/SFBAudioDecoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
                         <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioProperties</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCopying</span></code></pre>
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioDecoder</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n"><a href="Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioEncoder"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioEncoder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioEncoder">SFBAudioEncoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An encoder consuming PCM audio</p>
+
+                        <a href="Classes/SFBAudioEncoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioEncoder</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n"><a href="Protocols/SFBPCMEncoding.html">SFBPCMEncoding</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioExporter"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioExporter" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioExporter">SFBAudioExporter</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A class that exports audio using \c AVAudioFile</p>
+
+                        <a href="Classes/SFBAudioExporter.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioExporter</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioFile"></a>
+                    <a name="//apple_ref/swift/Class/SFBAudioFile" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioFile">SFBAudioFile</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An audio file containing properties (like channel count and sample rate) and metadata (like artist name and album title)</p>
+
+                        <a href="Classes/SFBAudioFile.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioFile</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                         </div>
                       </div>
@@ -1450,7 +1400,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBDSDDecoder"></a>
-                    <a name="//apple_ref/objc/Class/SFBDSDDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBDSDDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBDSDDecoder">SFBDSDDecoder</a>
                     </code>
                   </div>
@@ -1479,7 +1429,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBDSDPCMDecoder"></a>
-                    <a name="//apple_ref/objc/Class/SFBDSDPCMDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBDSDPCMDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBDSDPCMDecoder">SFBDSDPCMDecoder</a>
                     </code>
                   </div>
@@ -1508,7 +1458,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBDoPDecoder"></a>
-                    <a name="//apple_ref/objc/Class/SFBDoPDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBDoPDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBDoPDecoder">SFBDoPDecoder</a>
                     </code>
                   </div>
@@ -1541,42 +1491,8 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)SFBInputSource"></a>
-                    <a name="//apple_ref/objc/Class/SFBInputSource" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBInputSource">SFBInputSource</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An input source</p>
-
-                        <a href="Classes/SFBInputSource.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBInputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">InputSource</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:objc(cs)SFBLoopableRegionDecoder"></a>
-                    <a name="//apple_ref/objc/Class/SFBLoopableRegionDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Class/SFBLoopableRegionDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBLoopableRegionDecoder">SFBLoopableRegionDecoder</a>
                     </code>
                   </div>
@@ -1601,85 +1517,12 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBOutputSource"></a>
-                    <a name="//apple_ref/objc/Class/SFBOutputSource" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBOutputSource">SFBOutputSource</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An output source</p>
-
-                        <a href="Classes/SFBOutputSource.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBOutputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">OutputSource</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)SFBReplayGainAnalyzer"></a>
-                    <a name="//apple_ref/objc/Class/SFBReplayGainAnalyzer" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)SFBReplayGainAnalyzer">SFBReplayGainAnalyzer</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A class that calculates replay gain</p>
-<div class="aside aside-see">
-    <p class="aside-title">See</p>
-    <a href="http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification">http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification</a>
-
-</div>
-
-                        <a href="Classes/SFBReplayGainAnalyzer.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code>
-<span class="k">@interface</span> <span class="nc">SFBReplayGainAnalyzer</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">ReplayGainAnalyzer</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

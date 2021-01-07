@@ -13,7 +13,7 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/objc/Class/SFBAudioPlayerNode" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Class/SFBAudioPlayerNode" class="dashAnchor"></a>
     <a title="SFBAudioPlayerNode Class Reference"></a>
     <header>
       <div class="content-wrapper">
@@ -49,12 +49,6 @@
                 <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
               </li>
               <li class="nav-group-task">
@@ -67,13 +61,19 @@
                 <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
@@ -157,9 +157,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
@@ -923,6 +920,9 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
               </li>
               <li class="nav-group-task">
@@ -938,14 +938,9 @@
             <h1>SFBAudioPlayerNode</h1>
               <div class="declaration">
                 <div class="language">
-                  <p class="aside-title">Objective-C</p>
+                  
                   <pre class="highlight objective_c"><code>
 <span class="k">@interface</span> <span class="nc">SFBAudioPlayerNode</span> <span class="p">:</span> <span class="nc">AVAudioSourceNode</span></code></pre>
-
-                </div>
-                <div class="language">
-                  <p class="aside-title">Swift</p>
-                  <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">AudioPlayerNode</span> <span class="p">:</span> <span class="kt">AVAudioSourceNode</span></code></pre>
 
                 </div>
               </div>
@@ -991,7 +986,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)init"></a>
-                    <a name="//apple_ref/objc/Method/-init" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-init" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)init">-init</a>
                     </code>
                   </div>
@@ -1010,11 +1005,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="n">init</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1023,7 +1013,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)initWithSampleRate:channels:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithSampleRate:channels:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithSampleRate:channels:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)initWithSampleRate:channels:">-initWithSampleRate:<wbr>channels:<wbr></a>
                     </code>
                   </div>
@@ -1041,11 +1031,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithSampleRate</span><span class="p">:(</span><span class="kt">double</span><span class="p">)</span><span class="nv">sampleRate</span>
                                   <span class="nf">channels</span><span class="p">:(</span><span class="n">AVAudioChannelCount</span><span class="p">)</span><span class="nv">channels</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">sampleRate</span><span class="p">:</span> <span class="kt">Double</span><span class="p">,</span> <span class="nv">channels</span><span class="p">:</span> <span class="kt">AVAudioChannelCount</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1091,7 +1076,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)initWithFormat:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithFormat:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithFormat:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)initWithFormat:">-initWithFormat:<wbr></a>
                     </code>
                   </div>
@@ -1113,11 +1098,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithFormat</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">AVAudioFormat</span> <span class="o">*</span><span class="p">)</span><span class="nv">format</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">format</span><span class="p">:</span> <span class="kt">AVAudioFormat</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1151,7 +1131,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)initWithRenderBlock:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithRenderBlock:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithRenderBlock:" class="dashAnchor"></a>
                     <a class="token discouraged" href="#/c:objc(cs)SFBAudioPlayerNode(im)initWithRenderBlock:">-initWithRenderBlock:<wbr></a>
                     </code>
                   </div>
@@ -1182,7 +1162,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)initWithFormat:renderBlock:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithFormat:renderBlock:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-initWithFormat:renderBlock:" class="dashAnchor"></a>
                     <a class="token discouraged" href="#/c:objc(cs)SFBAudioPlayerNode(im)initWithFormat:renderBlock:">-initWithFormat:<wbr>renderBlock:<wbr></a>
                     </code>
                   </div>
@@ -1214,7 +1194,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Format%20Information"></a>
-                <a name="//apple_ref/objc/Section/Format Information" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Format Information" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Format%20Information"></a>
                   <h3 class="section-name"><p>Format Information</p>
@@ -1226,7 +1206,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)renderingFormat"></a>
-                    <a name="//apple_ref/objc/Property/renderingFormat" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/renderingFormat" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)renderingFormat">renderingFormat</a>
                     </code>
                   </div>
@@ -1245,11 +1225,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">AVAudioFormat</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">renderingFormat</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">renderingFormat</span><span class="p">:</span> <span class="kt">AVAudioFormat</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1258,7 +1233,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)supportsFormat:"></a>
-                    <a name="//apple_ref/objc/Method/-supportsFormat:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-supportsFormat:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)supportsFormat:">-supportsFormat:<wbr></a>
                     </code>
                   </div>
@@ -1275,11 +1250,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">supportsFormat</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">AVAudioFormat</span> <span class="o">*</span><span class="p">)</span><span class="nv">format</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">supportsFormat</span><span class="p">(</span><span class="n">_</span> <span class="nv">format</span><span class="p">:</span> <span class="kt">AVAudioFormat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -1314,7 +1284,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Queue%20Management"></a>
-                <a name="//apple_ref/objc/Section/Queue Management" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Queue Management" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Queue%20Management"></a>
                   <h3 class="section-name"><p>Queue Management</p>
@@ -1326,7 +1296,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)resetAndEnqueueURL:error:"></a>
-                    <a name="//apple_ref/objc/Method/-resetAndEnqueueURL:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-resetAndEnqueueURL:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)resetAndEnqueueURL:error:">-resetAndEnqueueURL:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1349,11 +1319,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">resetAndEnqueueURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
                      <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">resetAndEnqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1399,7 +1364,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)resetAndEnqueueDecoder:error:"></a>
-                    <a name="//apple_ref/objc/Method/-resetAndEnqueueDecoder:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-resetAndEnqueueDecoder:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)resetAndEnqueueDecoder:error:">-resetAndEnqueueDecoder:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1422,11 +1387,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">resetAndEnqueueDecoder</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span>
                          <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">resetAndEnqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">decoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1472,7 +1432,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)enqueueURL:error:"></a>
-                    <a name="//apple_ref/objc/Method/-enqueueURL:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-enqueueURL:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)enqueueURL:error:">-enqueueURL:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1495,11 +1455,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">enqueueURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
              <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1545,7 +1500,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)enqueueDecoder:error:"></a>
-                    <a name="//apple_ref/objc/Method/-enqueueDecoder:error:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-enqueueDecoder:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)enqueueDecoder:error:">-enqueueDecoder:<wbr>error:<wbr></a>
                     </code>
                   </div>
@@ -1563,11 +1518,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">enqueueDecoder</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span>
                  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">_</span> <span class="nv">decoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1613,7 +1563,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)cancelCurrentDecoder"></a>
-                    <a name="//apple_ref/objc/Method/-cancelCurrentDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-cancelCurrentDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)cancelCurrentDecoder">-cancelCurrentDecoder</a>
                     </code>
                   </div>
@@ -1632,11 +1582,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelCurrentDecoder</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">cancelCurrentDecoder</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1645,7 +1590,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)clearQueue"></a>
-                    <a name="//apple_ref/objc/Method/-clearQueue" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-clearQueue" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)clearQueue">-clearQueue</a>
                     </code>
                   </div>
@@ -1664,11 +1609,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">clearQueue</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">clearQueue</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1677,7 +1617,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)queueIsEmpty"></a>
-                    <a name="//apple_ref/objc/Property/queueIsEmpty" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/queueIsEmpty" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)queueIsEmpty">queueIsEmpty</a>
                     </code>
                   </div>
@@ -1696,11 +1636,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">queueIsEmpty</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">queueIsEmpty</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1709,7 +1644,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)dequeueDecoder"></a>
-                    <a name="//apple_ref/objc/Method/-dequeueDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-dequeueDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)dequeueDecoder">-dequeueDecoder</a>
                     </code>
                   </div>
@@ -1728,11 +1663,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="n">dequeueDecoder</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">dequeueDecoder</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
-
-                        </div>
                       </div>
                       <div>
                         <h4>Return Value</h4>
@@ -1746,7 +1676,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Playback%20Control"></a>
-                <a name="//apple_ref/objc/Section/Playback Control" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Playback Control" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Playback%20Control"></a>
                   <h3 class="section-name"><p>Playback Control</p>
@@ -1758,7 +1688,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)play"></a>
-                    <a name="//apple_ref/objc/Method/-play" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-play" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)play">-play</a>
                     </code>
                   </div>
@@ -1777,11 +1707,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">play</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">play</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1790,7 +1715,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)pause"></a>
-                    <a name="//apple_ref/objc/Method/-pause" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-pause" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)pause">-pause</a>
                     </code>
                   </div>
@@ -1809,11 +1734,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pause</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">pause</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1822,7 +1742,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)stop"></a>
-                    <a name="//apple_ref/objc/Method/-stop" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-stop" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)stop">-stop</a>
                     </code>
                   </div>
@@ -1841,11 +1761,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">stop</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">stop</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1854,7 +1769,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)togglePlayPause"></a>
-                    <a name="//apple_ref/objc/Method/-togglePlayPause" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-togglePlayPause" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)togglePlayPause">-togglePlayPause</a>
                     </code>
                   </div>
@@ -1873,11 +1788,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">togglePlayPause</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">togglePlayPause</span><span class="p">()</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1887,7 +1797,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/State"></a>
-                <a name="//apple_ref/objc/Section/State" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/State" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/State"></a>
                   <h3 class="section-name"><p>State</p>
@@ -1899,7 +1809,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)isPlaying"></a>
-                    <a name="//apple_ref/objc/Property/isPlaying" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isPlaying" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)isPlaying">isPlaying</a>
                     </code>
                   </div>
@@ -1918,11 +1828,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isPlaying</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isPlaying</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1931,7 +1836,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)isReady"></a>
-                    <a name="//apple_ref/objc/Property/isReady" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/isReady" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)isReady">isReady</a>
                     </code>
                   </div>
@@ -1950,11 +1855,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isReady</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isReady</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1963,7 +1863,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)currentDecoder"></a>
-                    <a name="//apple_ref/objc/Property/currentDecoder" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/currentDecoder" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)currentDecoder">currentDecoder</a>
                     </code>
                   </div>
@@ -1987,11 +1887,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span> <span class="n">currentDecoder</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">currentDecoder</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2001,7 +1896,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Playback%20Properties"></a>
-                <a name="//apple_ref/objc/Section/Playback Properties" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Playback Properties" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Playback%20Properties"></a>
                   <h3 class="section-name"><p>Playback Properties</p>
@@ -2013,7 +1908,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)playbackPosition"></a>
-                    <a name="//apple_ref/objc/Property/playbackPosition" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playbackPosition" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)playbackPosition">playbackPosition</a>
                     </code>
                   </div>
@@ -2040,7 +1935,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)playbackTime"></a>
-                    <a name="//apple_ref/objc/Property/playbackTime" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/playbackTime" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)playbackTime">playbackTime</a>
                     </code>
                   </div>
@@ -2067,7 +1962,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)getPlaybackPosition:andTime:"></a>
-                    <a name="//apple_ref/objc/Method/-getPlaybackPosition:andTime:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-getPlaybackPosition:andTime:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)getPlaybackPosition:andTime:">-getPlaybackPosition:<wbr>andTime:<wbr></a>
                     </code>
                   </div>
@@ -2133,7 +2028,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Seeking"></a>
-                <a name="//apple_ref/objc/Section/Seeking" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Seeking" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Seeking"></a>
                   <h3 class="section-name"><p>Seeking</p>
@@ -2145,7 +2040,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)seekForward:"></a>
-                    <a name="//apple_ref/objc/Method/-seekForward:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekForward:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)seekForward:">-seekForward:<wbr></a>
                     </code>
                   </div>
@@ -2162,11 +2057,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekForward</span><span class="p">:(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nv">secondsToSkip</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">forward</span> <span class="nv">secondsToSkip</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2200,7 +2090,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)seekBackward:"></a>
-                    <a name="//apple_ref/objc/Method/-seekBackward:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekBackward:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)seekBackward:">-seekBackward:<wbr></a>
                     </code>
                   </div>
@@ -2217,11 +2107,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekBackward</span><span class="p">:(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nv">secondsToSkip</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">backward</span> <span class="nv">secondsToSkip</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2255,7 +2140,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)seekToTime:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToTime:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToTime:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)seekToTime:">-seekToTime:<wbr></a>
                     </code>
                   </div>
@@ -2272,11 +2157,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToTime</span><span class="p">:(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nv">timeInSeconds</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">time</span> <span class="nv">timeInSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2310,7 +2190,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)seekToPosition:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToPosition:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToPosition:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)seekToPosition:">-seekToPosition:<wbr></a>
                     </code>
                   </div>
@@ -2327,11 +2207,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToPosition</span><span class="p">:(</span><span class="kt">double</span><span class="p">)</span><span class="nv">position</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="nv">position</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2365,7 +2240,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(im)seekToFrame:"></a>
-                    <a name="//apple_ref/objc/Method/-seekToFrame:" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Method/-seekToFrame:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(im)seekToFrame:">-seekToFrame:<wbr></a>
                     </code>
                   </div>
@@ -2382,11 +2257,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToFrame</span><span class="p">:(</span><span class="n">AVAudioFramePosition</span><span class="p">)</span><span class="nv">frame</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="nv">frame</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -2420,7 +2290,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)supportsSeeking"></a>
-                    <a name="//apple_ref/objc/Property/supportsSeeking" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/supportsSeeking" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)supportsSeeking">supportsSeeking</a>
                     </code>
                   </div>
@@ -2439,11 +2309,6 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">supportsSeeking</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">supportsSeeking</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2453,7 +2318,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
             <div class="task-group">
               <div class="task-name-container">
                 <a name="/Delegate"></a>
-                <a name="//apple_ref/objc/Section/Delegate" class="dashAnchor"></a>
+                <a name="//apple_ref/swift/Section/Delegate" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Delegate"></a>
                   <h3 class="section-name"><p>Delegate</p>
@@ -2465,7 +2330,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                   <div>
                     <code>
                     <a name="/c:objc(cs)SFBAudioPlayerNode(py)delegate"></a>
-                    <a name="//apple_ref/objc/Property/delegate" class="dashAnchor"></a>
+                    <a name="//apple_ref/swift/Property/delegate" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)SFBAudioPlayerNode(py)delegate">delegate</a>
                     </code>
                   </div>
@@ -2484,9 +2349,141 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">weak</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a></span><span class="o">&gt;</span> <span class="n">delegate</span><span class="p">;</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So18SFBAudioPlayerNodeC0A6EngineE16PlaybackPositionV"></a>
+                    <a name="//apple_ref/swift/Struct/PlaybackPosition" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So18SFBAudioPlayerNodeC0A6EngineE16PlaybackPositionV">PlaybackPosition</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Playback position information for <code>AudioPlayerNode</code></p>
+
+                        <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">weak</span> <span class="k">var</span> <span class="nv">delegate</span><span class="p">:</span> <span class="kt">Delegate</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">PlaybackPosition</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So18SFBAudioPlayerNodeC0A6EngineE16playbackPositionAbCE08PlaybackF0VSgvp"></a>
+                    <a name="//apple_ref/swift/Property/playbackPosition" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So18SFBAudioPlayerNodeC0A6EngineE16playbackPositionAbCE08PlaybackF0VSgvp">playbackPosition</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the playback position in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">playbackPosition</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">PlaybackPosition</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So18SFBAudioPlayerNodeC0A6EngineE12PlaybackTimeV"></a>
+                    <a name="//apple_ref/swift/Struct/PlaybackTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So18SFBAudioPlayerNodeC0A6EngineE12PlaybackTimeV">PlaybackTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Playback time information for <code>AudioPlayerNode</code></p>
+
+                        <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">PlaybackTime</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So18SFBAudioPlayerNodeC0A6EngineE12playbackTimeAbCE08PlaybackF0VSgvp"></a>
+                    <a name="//apple_ref/swift/Property/playbackTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So18SFBAudioPlayerNodeC0A6EngineE12playbackTimeAbCE08PlaybackF0VSgvp">playbackTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the playback time in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">playbackTime</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">PlaybackTime</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So18SFBAudioPlayerNodeC0A6EngineE23playbackPositionAndTimeAbCE08PlaybackF0V8position_AbCE0iH0V4timetSgvp"></a>
+                    <a name="//apple_ref/swift/Property/playbackPositionAndTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So18SFBAudioPlayerNodeC0A6EngineE23playbackPositionAndTimeAbCE08PlaybackF0V8position_AbCE0iH0V4timetSgvp">playbackPositionAndTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the playback position and time in the current decoder or <code>nil</code> if the current decoder is <code>nil</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">playbackPositionAndTime</span><span class="p">:</span> <span class="p">(</span><span class="nv">position</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">PlaybackPosition</a></span><span class="p">,</span> <span class="nv">time</span><span class="p">:</span> <span class="kt"><a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">PlaybackTime</a></span><span class="p">)?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -2498,7 +2495,7 @@ rendering is complete, which cannot occur until after decoding is complete.</p>
           </section>
         </section>
         <section id="footer">
-          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>© 2006 - 2021 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
