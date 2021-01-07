@@ -23,4 +23,4 @@ sourcekitten doc --objc SFBAudioEngine.h \
 # Feed both outputs to Jazzy as a comma-separated list
 jazzy --sourcekitten-sourcefile swiftDoc.json,objcDoc.json
 
-rm -f swiftDoc.json objcDoc.json
+/bin/rm -f swiftDoc.json objcDoc.json
