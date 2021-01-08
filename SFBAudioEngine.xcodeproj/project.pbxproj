@@ -108,6 +108,7 @@
 		325A5E8D2444B931003138D5 /* SFBCoreAudioDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.mm */; };
 		325A5E902444D868003138D5 /* SFBModuleDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */; };
 		325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */; };
+		325ADADA25A8B093002C1238 /* AudioChannelLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 325ADAD925A8B093002C1238 /* AudioChannelLayout.swift */; };
 		3267724D254B6BB80041B063 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; };
 		32677252254B6C4D0041B063 /* wavpack.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3267747D254BA7570041B063 /* tta++.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; };
@@ -643,6 +644,7 @@
 		325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBCoreAudioDecoder.mm; sourceTree = "<group>"; };
 		325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBModuleDecoder.h; sourceTree = "<group>"; };
 		325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBModuleDecoder.m; sourceTree = "<group>"; };
+		325ADAD925A8B093002C1238 /* AudioChannelLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioChannelLayout.swift; sourceTree = "<group>"; };
 		3267724B254B6BB80041B063 /* wavpack.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = wavpack.xcframework; sourceTree = "<group>"; };
 		3267747C254BA7570041B063 /* tta++.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "tta++.xcframework"; sourceTree = "<group>"; };
 		32677939254C421F0041B063 /* MAC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = MAC.xcframework; sourceTree = "<group>"; };
@@ -1034,6 +1036,7 @@
 		3268F8642455B527006A5911 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				325ADAD925A8B093002C1238 /* AudioChannelLayout.swift */,
 				322A914D257007D8006795AA /* AudioFormat.h */,
 				322A914F257007D8006795AA /* AudioFormat.cpp */,
 				32DD9D8D257D4EE500B47CFD /* AudioRingBuffer.h */,
@@ -1671,6 +1674,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				325ADADA25A8B093002C1238 /* AudioChannelLayout.swift in Sources */,
 				325A5E89244493B9003138D5 /* SFBMPEGDecoder.m in Sources */,
 				32D7397B259A771300C0E3F6 /* AudioEndpointDevice.swift in Sources */,
 				326D3CAF242D2A21002AEC52 /* SFBDSDIFFFile.mm in Sources */,

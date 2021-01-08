@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
 // See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
 //
 
@@ -39,5 +39,11 @@ public struct AudioBufferListWrapper {
 extension AudioBufferListWrapper: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		return "<\(type(of: self)): mNumberBuffers = \(numberBuffers), mBuffers = [\(buffers.map({ $0.debugDescription }).joined(separator: ", "))]>"
+	}
+}
+
+extension AudioBuffer: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		return "<\(type(of: self)): mNumberChannels = \(mNumberChannels), mDataByteSize = \(mDataByteSize), mData = \(mData?.debugDescription ?? "nil")>"
 	}
 }
