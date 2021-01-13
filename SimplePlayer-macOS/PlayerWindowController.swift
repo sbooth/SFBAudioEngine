@@ -424,7 +424,7 @@ class PlayerWindowController: NSWindowController {
 
 		do {
 			let currentOutputDeviceID = player.outputDeviceID
-			let outputDevices = try AudioDevice.devices().filter({ guard let value = try? $0.supportsOutput() else { return false }; return value })
+			let outputDevices = try AudioDevice.devices().filter({ try $0.supportsOutput() })
 			for outputDevice in outputDevices {
 				// AVAudioEngine creates private aggregate devices, ignore them
 				if let isPrivateAggregate = try (outputDevice as? AudioAggregateDevice)?.isPrivate(), isPrivateAggregate {
