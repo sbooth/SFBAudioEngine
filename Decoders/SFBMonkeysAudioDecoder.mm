@@ -177,7 +177,7 @@ namespace {
 		return NO;
 
 	auto ioInterface = 	std::make_unique<APEIOInterface>(_inputSource);
-	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
+	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr, true));
 	if(!decompressor) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
