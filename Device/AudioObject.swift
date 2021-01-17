@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
 // See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
 //
 
@@ -214,8 +214,7 @@ extension AudioObject {
 
 	/// Returns the audio object's owning object
 	/// - remark: This corresponds to the property `kAudioObjectPropertyOwner`
-	/// - note: The system audio object
-	/// - remark: This corresponds to the property `kAudioObjectSystemObject` does not have an owner
+	/// - note: The system audio object does not have an owner
 	public func owner() throws -> AudioObject {
 		return AudioObject.make(try getProperty(PropertyAddress(kAudioObjectPropertyOwner), type: AudioObjectID.self))
 	}
