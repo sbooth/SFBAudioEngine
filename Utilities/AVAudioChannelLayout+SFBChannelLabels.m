@@ -1,12 +1,9 @@
 /*
- * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #import "AVAudioChannelLayout+SFBChannelLabels.h"
-
-static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions);
-static AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions);
 
 static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
 {
