@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -287,7 +287,7 @@ namespace {
 		mach_timebase_info_data_t timebase_info;
 		auto result = mach_timebase_info(&timebase_info);
 		assert(result == KERN_SUCCESS);
-		return (double)timebase_info.numer / (double)timebase_info.denom;
+		return static_cast<double>(timebase_info.numer) / static_cast<double>(timebase_info.denom);
 	}
 
 	double NanosPerHostTick()
@@ -295,7 +295,7 @@ namespace {
 		mach_timebase_info_data_t timebase_info;
 		auto result = mach_timebase_info(&timebase_info);
 		assert(result == KERN_SUCCESS);
-		return (double)timebase_info.denom / (double)timebase_info.numer;
+		return static_cast<double>(timebase_info.denom) / static_cast<double>(timebase_info.numer);
 	}
 
 	const double kHostTicksPerNano = HostTicksPerNano();
@@ -303,7 +303,7 @@ namespace {
 
 	inline uint64_t ConvertNanosToHostTicks(double ns)
 	{
-		return (uint64_t)(ns * kNanosPerHostTick);
+		return static_cast<uint64_t>(ns * kNanosPerHostTick);
 	}
 
 	inline uint64_t ConvertSecondsToHostTicks(double s)
@@ -313,7 +313,7 @@ namespace {
 
 	inline double ConvertHostTicksToNanos(uint64_t t)
 	{
-		return (double)t * kHostTicksPerNano;
+		return static_cast<double>(t) * kHostTicksPerNano;
 	}
 
 }
@@ -384,7 +384,7 @@ namespace {
 
 		// ========================================
 		// 1. Determine how many audio frames are available to read in the ring buffer
-		AVAudioFrameCount framesAvailableToRead = (AVAudioFrameCount)self->_audioRingBuffer.FramesAvailableToRead();
+		AVAudioFrameCount framesAvailableToRead = static_cast<AVAudioFrameCount>(self->_audioRingBuffer.FramesAvailableToRead());
 
 		// ========================================
 		// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
@@ -392,7 +392,7 @@ namespace {
 			size_t byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(frameCount);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
 				memset(outputData->mBuffers[bufferIndex].mData, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
-				outputData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
+				outputData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
 			}
 
 			*isSilence = YES;
@@ -402,7 +402,7 @@ namespace {
 		// ========================================
 		// 3. Read as many frames as available from the ring buffer
 		AVAudioFrameCount framesToRead = std::min(framesAvailableToRead, frameCount);
-		AVAudioFrameCount framesRead = (AVAudioFrameCount)self->_audioRingBuffer.Read(outputData, framesToRead);
+		AVAudioFrameCount framesRead = static_cast<AVAudioFrameCount>(self->_audioRingBuffer.Read(outputData, framesToRead));
 		if(framesRead != framesToRead)
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
@@ -415,13 +415,13 @@ namespace {
 			auto byteCountToSkip = self->_audioRingBuffer.Format().FrameCountToByteCount(framesRead);
 			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(framesOfSilence);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset((int8_t *)outputData->mBuffers[bufferIndex].mData + byteCountToSkip, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
+				memset(static_cast<int8_t *>(outputData->mBuffers[bufferIndex].mData) + byteCountToSkip, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
 			}
 		}
 
 		// ========================================
 		// 5. If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		AVAudioFrameCount framesAvailableToWrite = (AVAudioFrameCount)self->_audioRingBuffer.FramesAvailableToWrite();
+		AVAudioFrameCount framesAvailableToWrite = static_cast<AVAudioFrameCount>(self->_audioRingBuffer.FramesAvailableToWrite());
 		if(framesAvailableToWrite >= kRingBufferChunkSize)
 			dispatch_semaphore_signal(self->_decodingSemaphore);
 
@@ -444,7 +444,7 @@ namespace {
 
 		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize);
 		while(decoderState) {
-			AVAudioFrameCount decoderFramesRemaining = (AVAudioFrameCount)(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
+			AVAudioFrameCount decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
 			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
 
 			if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
@@ -529,7 +529,7 @@ namespace {
 #if 0
 		// See the comments in SFBAudioPlayer -configureEngineForGaplessPlaybackOfFormat:
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice while 1156 is AVAudioSourceNode's default
-		AVAudioFrameCount maximumFramesToRender = (AVAudioFrameCount)ceil(512 * (format.sampleRate / 44100));
+		AVAudioFrameCount maximumFramesToRender = static_cast<AVAudioFrameCount>(ceil(512 * (format.sampleRate / 44100)));
 		if(self.AUAudioUnit.maximumFramesToRender < maximumFramesToRender) {
 			os_log_debug(_audioPlayerNodeLog, "Setting maximumFramesToRender to %u", maximumFramesToRender);
 			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
