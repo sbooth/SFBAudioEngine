@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -88,10 +88,10 @@ namespace SFB {
 			void Reset() noexcept;
 
 
-			/*! @brief Returns the capacity of this RingBuffer in frames */
+			/*! @brief Returns the capacity of this \c RingBuffer in frames */
 			inline size_t CapacityFrames() const noexcept				{ return mCapacityFrames; }
 
-			/*! @brief Returns the format of this \c BufferList */
+			/*! @brief Returns the format of this \c RingBuffer */
 			inline const Format& Format() const noexcept				{ return mFormat; }
 
 			/*! @brief Returns the number of frames available for reading */
