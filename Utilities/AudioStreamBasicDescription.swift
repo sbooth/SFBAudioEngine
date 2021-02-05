@@ -103,7 +103,7 @@ extension AudioStreamBasicDescription {
 
 	/// Returns `true` if this format is signed integer linear PCM
 	public var isSignedInteger: Bool {
-		return mFormatFlags & kAudioFormatFlagIsSignedInteger == kAudioFormatFlagIsSignedInteger
+		return isPCM && mFormatFlags & kAudioFormatFlagIsSignedInteger == kAudioFormatFlagIsSignedInteger
 	}
 
 	/// Returns `true` if this format is packed
