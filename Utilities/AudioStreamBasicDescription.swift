@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
 // See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
 //
 
@@ -7,6 +7,9 @@ import Foundation
 import CoreAudio
 
 extension AudioStreamBasicDescription {
+
+	// MARK: Common Formats
+
 	/// Common PCM formats
 	public enum CommonPCMFormat {
 		/// Native endian 32-bit floating point samples
@@ -31,24 +34,26 @@ extension AudioStreamBasicDescription {
 	public init(commonFormat format: CommonPCMFormat, sampleRate: Float64, channelsPerFrame: UInt32, isInterleaved interleaved: Bool) {
 		switch format {
 		case .float32:
-			self = asbdForLPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 32, totalBitsPerChannel: 32, isFloat: true, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
+			self = makeASBDForLinearPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 32, totalBitsPerChannel: 32, isFloat: true, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
 		case .float64:
-			self = asbdForLPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 64, totalBitsPerChannel: 64, isFloat: true, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
+			self = makeASBDForLinearPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 64, totalBitsPerChannel: 64, isFloat: true, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
 		case .int16:
-			self = asbdForLPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 16, totalBitsPerChannel: 16, isFloat: false, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
+			self = makeASBDForLinearPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 16, totalBitsPerChannel: 16, isFloat: false, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
 		case .int32:
-			self = asbdForLPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 32, totalBitsPerChannel: 32, isFloat: false, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
+			self = makeASBDForLinearPCM(sampleRate: sampleRate, channelsPerFrame: channelsPerFrame, validBitsPerChannel: 32, totalBitsPerChannel: 32, isFloat: false, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: !interleaved)
 		}
 	}
 
-	/// Returns `true` if `self` represents non-interleaved data
+	// MARK: Format Information
+
+	/// Returns `true` if this format is non-interleaved
 	public var isNonInterleaved: Bool {
 		return mFormatFlags & kAudioFormatFlagIsNonInterleaved == kAudioFormatFlagIsNonInterleaved
 	}
 
-	/// Returns `true` if `self` represents interleaved data
+	/// Returns `true` if this format is interleaved
 	public var isInterleaved: Bool {
-		return !isNonInterleaved
+		return mFormatFlags & kAudioFormatFlagIsNonInterleaved == 0
 	}
 
 	/// Returns the number of interleaved channels
@@ -56,50 +61,100 @@ extension AudioStreamBasicDescription {
 		return isInterleaved ? mChannelsPerFrame : 1
 	}
 
-	/// Returns `true` if `self` represents linear PCM data
+	/// Returns the number of channel streams
+	public var channelStreamCount: UInt32 {
+		return isInterleaved ? 1 : mChannelsPerFrame
+	}
+
+	/// Returns the number of channels
+	public var channelCount: UInt32 {
+		return mChannelsPerFrame
+	}
+
+	/// Returns `true` if this format is linear PCM
 	public var isPCM: Bool {
 		return mFormatID == kAudioFormatLinearPCM
 	}
 
-	/// Returns `true` if `self` represents big endian audio
+	/// Returns `true` if this format is big-endian
 	public var isBigEndian: Bool {
 		return mFormatFlags & kAudioFormatFlagIsBigEndian == kAudioFormatFlagIsBigEndian
 	}
 
-	/// Returns `true` if `self` represents little endian audio
+	/// Returns `true` if this format is little-endian
 	public var isLittleEndian: Bool {
-		return !isBigEndian
+		return mFormatFlags & kAudioFormatFlagIsBigEndian == 0
 	}
 
-	/// Returns `true` if `self` represents native endian audio
+	/// Returns `true` if this format is native-endian
 	public var isNativeEndian: Bool {
 		return mFormatFlags & kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian
 	}
 
-	/// Returns `true` if `self` represents floating-point data
+	/// Returns `true` if this format is floating-point linear PCM
 	public var isFloat: Bool {
-		return mFormatFlags & kAudioFormatFlagIsFloat == kAudioFormatFlagIsFloat
+		return isPCM && mFormatFlags & kAudioFormatFlagIsFloat == kAudioFormatFlagIsFloat
 	}
 
-	/// Returns `true` if `self` represents integer data
+	/// Returns `true` if this format is integer linear PCM
 	public var isInteger: Bool {
-		return !isFloat
+		return isPCM && mFormatFlags & kAudioFormatFlagIsFloat == 0
 	}
 
-	/// Returns `true` if `self` represents signed integer data
+	/// Returns `true` if this format is signed integer linear PCM
 	public var isSignedInteger: Bool {
 		return mFormatFlags & kAudioFormatFlagIsSignedInteger == kAudioFormatFlagIsSignedInteger
 	}
 
-	/// Returns `true` if `self` represents packed data
+	/// Returns `true` if this format is packed
 	public var isPacked: Bool {
 		return mFormatFlags & kAudioFormatFlagIsPacked == kAudioFormatFlagIsPacked
 	}
 
-	/// Returns `true` if `self` represents high-aligned data
+	/// Returns `true` if this format is high-aligned
 	public var isAlignedHigh: Bool {
 		return mFormatFlags & kAudioFormatFlagIsAlignedHigh == kAudioFormatFlagIsAlignedHigh
 	}
+
+	/// Returns `true` if this format is non-mixable
+	/// - note: This flag is only used when interacting with HAL stream formats
+	public var isNonMixable: Bool {
+		return mFormatFlags & kAudioFormatFlagIsNonMixable == kAudioFormatFlagIsNonMixable
+	}
+
+	/// Returns `true` if this format is mixable
+	/// - note: This flag is only used when interacting with HAL stream formats
+	public var isMixable: Bool {
+		return isPCM && mFormatFlags & kAudioFormatFlagIsNonMixable == 0
+	}
+
+	/// Returns the sample word size in bytes
+	public var sampleWordSize: Int {
+		let interleavedChannelCount = self.interleavedChannelCount
+//		assert(interleavedChannelCount != 0, "self.interleavedChannelCount == 0 in sampleWordSize")
+		if(interleavedChannelCount == 0) {
+			return 0
+		}
+		return Int(mBytesPerFrame / interleavedChannelCount)
+	}
+
+	/// Returns the byte size of `frameCount` audio frames
+	/// - note: This is equivalent to `frameCount * mBytesPerFrame`
+	public func byteSize(forFrameCount frameCount: Int) -> Int {
+		return frameCount * Int(mBytesPerFrame)
+	}
+
+	/// Returns the frame count of `byteSize` bytes
+	/// - note: This is equivalent to `byteSize / mBytesPerFrame`
+	public func frameCount(forByteSize byteSize: Int) -> Int {
+//		assert(mBytesPerFrame != 0, "mBytesPerFrame == 0 in frameCount(forByteSize:)")
+		if(mBytesPerFrame == 0) {
+			return 0
+		}
+		return byteSize / Int(mBytesPerFrame)
+	}
+
+	// MARK: Format Transformation
 
 	/// Returns the equivalent non-interleaved format of `self`
 	/// - note: This returns `nil` for non-PCM formats
@@ -139,21 +194,41 @@ extension AudioStreamBasicDescription {
 		guard isPCM else {
 			return nil
 		}
-		return asbdForLPCM(sampleRate: mSampleRate, channelsPerFrame: mChannelsPerFrame, validBitsPerChannel: 32, totalBitsPerChannel: 32, isFloat: true, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: true)
+		return makeASBDForLinearPCM(sampleRate: mSampleRate, channelsPerFrame: mChannelsPerFrame, validBitsPerChannel: 32, totalBitsPerChannel: 32, isFloat: true, isBigEndian: kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, isNonInterleaved: true)
+	}
+
+	/// Resets `self` to the default state
+	public mutating func reset() {
+		memset(&self, 0, MemoryLayout<AudioStreamBasicDescription>.stride);
+	}
+
+}
+
+extension AudioStreamBasicDescription: Equatable {
+	public static func == (lhs: AudioStreamBasicDescription, rhs: AudioStreamBasicDescription) -> Bool {
+		return
+			lhs.mFormatID == rhs.mFormatID &&
+			lhs.mFormatFlags == rhs.mFormatFlags &&
+			lhs.mSampleRate == rhs.mSampleRate &&
+			lhs.mChannelsPerFrame == rhs.mChannelsPerFrame &&
+			lhs.mBitsPerChannel == rhs.mBitsPerChannel &&
+			lhs.mBytesPerPacket == rhs.mBytesPerPacket &&
+			lhs.mFramesPerPacket == rhs.mFramesPerPacket &&
+			lhs.mBytesPerFrame == rhs.mBytesPerFrame
 	}
 }
 
-private func lpcmFlags(validBitsPerChannel: UInt32, totalBitsPerChannel: UInt32, isFloat float: Bool, isBigEndian bigEndian: Bool, isNonInterleaved nonInterleaved: Bool) -> AudioFormatFlags
+private func makeLinearPCMFlags(validBitsPerChannel: UInt32, totalBitsPerChannel: UInt32, isFloat float: Bool, isBigEndian bigEndian: Bool, isNonInterleaved nonInterleaved: Bool) -> AudioFormatFlags
 {
 	return (float ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (bigEndian ? kAudioFormatFlagIsBigEndian : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (nonInterleaved ? kAudioFormatFlagIsNonInterleaved : 0);
 }
 
-private func asbdForLPCM(sampleRate: Float64, channelsPerFrame: UInt32, validBitsPerChannel: UInt32, totalBitsPerChannel: UInt32, isFloat float: Bool, isBigEndian bigEndian: Bool, isNonInterleaved nonInterleaved: Bool) -> AudioStreamBasicDescription
+private func makeASBDForLinearPCM(sampleRate: Float64, channelsPerFrame: UInt32, validBitsPerChannel: UInt32, totalBitsPerChannel: UInt32, isFloat float: Bool, isBigEndian bigEndian: Bool, isNonInterleaved nonInterleaved: Bool) -> AudioStreamBasicDescription
 {
 	var asbd = AudioStreamBasicDescription()
 
 	asbd.mFormatID = kAudioFormatLinearPCM;
-	asbd.mFormatFlags = lpcmFlags(validBitsPerChannel: validBitsPerChannel, totalBitsPerChannel: totalBitsPerChannel, isFloat: float, isBigEndian: bigEndian, isNonInterleaved: nonInterleaved);
+	asbd.mFormatFlags = makeLinearPCMFlags(validBitsPerChannel: validBitsPerChannel, totalBitsPerChannel: totalBitsPerChannel, isFloat: float, isBigEndian: bigEndian, isNonInterleaved: nonInterleaved);
 
 	asbd.mSampleRate = sampleRate;
 	asbd.mChannelsPerFrame = channelsPerFrame;
@@ -210,7 +285,7 @@ extension AudioStreamBasicDescription: CustomDebugStringConvertible {
 		}
 		else if mFormatID == kAudioFormatAppleLossless {
 			var sourceBitDepth: UInt32 = 0;
-			switch mFormatFlags  {
+			switch mFormatFlags {
 			case kAppleLosslessFormatFlag_16BitSourceData:		sourceBitDepth = 16
 			case kAppleLosslessFormatFlag_20BitSourceData:		sourceBitDepth = 20
 			case kAppleLosslessFormatFlag_24BitSourceData:		sourceBitDepth = 24
