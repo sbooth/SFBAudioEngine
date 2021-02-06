@@ -391,7 +391,7 @@ namespace {
 		if(!(self->_flags.load() & eAudioPlayerNodeFlagIsPlaying) || self->_flags.load() & eAudioPlayerNodeFlagOutputIsMuted || framesAvailableToRead == 0) {
 			size_t byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(frameCount);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset(outputData->mBuffers[bufferIndex].mData, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
+				std::memset(outputData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
 				outputData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
 			}
 
@@ -414,9 +414,8 @@ namespace {
 			auto framesOfSilence = frameCount - framesRead;
 			auto byteCountToSkip = self->_audioRingBuffer.Format().FrameCountToByteCount(framesRead);
 			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(framesOfSilence);
-			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset(static_cast<int8_t *>(outputData->mBuffers[bufferIndex].mData) + byteCountToSkip, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
-			}
+			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex)
+				std::memset(static_cast<int8_t *>(outputData->mBuffers[bufferIndex].mData) + byteCountToSkip, 0, byteCountToZero);
 		}
 
 		// ========================================
@@ -456,9 +455,9 @@ namespace {
 				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.Format().mSampleRate);
 
 				uint8_t bytesToWrite [4 + 8 + 8];
-				memcpy(bytesToWrite, &cmd, 4);
-				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-				memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
+				std::memcpy(bytesToWrite, &cmd, 4);
+				std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
+				std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
 				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8 );
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 			}
@@ -475,9 +474,9 @@ namespace {
 				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.Format().mSampleRate);
 
 				uint8_t bytesToWrite [4 + 8 + 8];
-				memcpy(bytesToWrite, &cmd, 4);
-				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-				memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
+				std::memcpy(bytesToWrite, &cmd, 4);
+				std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
+				std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
 				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 			}
@@ -497,8 +496,8 @@ namespace {
 			const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(framesRead / self->_audioRingBuffer.Format().mSampleRate);
 
 			uint8_t bytesToWrite [4 + 8];
-			memcpy(bytesToWrite, &cmd, 4);
-			memcpy(bytesToWrite + 4, &hostTime, 8);
+			std::memcpy(bytesToWrite, &cmd, 4);
+			std::memcpy(bytesToWrite + 4, &hostTime, 8);
 			self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8);
 			dispatch_semaphore_signal(self->_notifierSemaphore);
 		}
