@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -28,18 +28,16 @@ static const uint8_t sBitReverseTable256 [256] =
 // as well as the 48.0 KHz variants 6.144 MHz and 12.288 MHz
 static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 {
-	if(sampleRate == kSFBSampleRateDSD64)
-		return YES;
-	else if(sampleRate == kSFBSampleRateDSD128)
-		return YES;
-	else if(sampleRate == kSFBSampleRateDSD256)
-		return YES;
-	else if(sampleRate == kSFBSampleRateDSD128Variant)
-		return YES;
-	else if(sampleRate == kSFBSampleRateDSD256Variant)
-		return YES;
-	else
-		return NO;
+	switch((uint32_t)sampleRate) {
+		case kSFBSampleRateDSD64:
+		case kSFBSampleRateDSD128:
+		case kSFBSampleRateDSD256:
+		case kSFBSampleRateDSD128Variant:
+		case kSFBSampleRateDSD256Variant:
+				return YES;
+		default:
+				return NO;
+	}
 }
 
 @interface SFBDoPDecoder ()
@@ -141,7 +139,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	// Generate non-interleaved 24-bit big endian output
 	AudioStreamBasicDescription processingStreamDescription = {0};
 
-	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM/*SFBAudioFormatDoP*/;
+	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM/*kSFBAudioFormatDoP*/;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
 
 	processingStreamDescription.mSampleRate			= asbd->mSampleRate / (kSFBPCMFramesPerDSDPacket * DSD_PACKETS_PER_DOP_FRAME);
