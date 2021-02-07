@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -10,8 +10,9 @@
 
 #import "SFBShortenDecoder.h"
 
+#import "SFBByteStream.hpp"
+
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-#import "ByteStream.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";

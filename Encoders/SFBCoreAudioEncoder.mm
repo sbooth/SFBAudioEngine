@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -12,7 +12,8 @@
 
 #import "SFBCoreAudioEncoder.h"
 
-#import "AudioFormat.h"
+#import "SFBCAStreamBasicDescription.hpp"
+
 #import "SFBCStringForOSType.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
@@ -396,7 +397,7 @@ namespace {
 	else
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; mBitsPerChannel will be zero which is probably incorrect");
 
-	SFB::Audio::Format format;
+	SFB::CAStreamBasicDescription format;
 
 	format.mFormatID 			= formatID;
 	format.mFormatFlags 		= formatFlags;

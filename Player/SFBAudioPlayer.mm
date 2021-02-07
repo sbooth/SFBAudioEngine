@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -11,20 +11,23 @@
 
 #import "SFBAudioPlayer.h"
 
+#import "SFBUnfairLock.hpp"
+
 #import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
-#import "UnfairLock.h"
 
 namespace {
-	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
-	os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
-	enum eAudioPlayerFlags : unsigned int {
-		eAudioPlayerFlagRenderingImminent				= 1u << 0,
-		eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
-		eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2
-	};
+using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
+
+enum eAudioPlayerFlags : unsigned int {
+	eAudioPlayerFlagRenderingImminent				= 1u << 0,
+	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
+	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2
+};
+
 }
 
 @interface SFBAudioPlayer ()

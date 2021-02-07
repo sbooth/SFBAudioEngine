@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -14,7 +14,8 @@
 
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 
-#import "CFWrapper.h"
+#import "SFBCFWrapper.hpp"
+
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 
