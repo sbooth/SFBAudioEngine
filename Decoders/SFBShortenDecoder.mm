@@ -926,7 +926,7 @@ namespace {
 		header_bytes[i] = (int8_t)byte;
 	}
 
-	SFB::ByteStream chunkData{header_bytes, (size_t)header_size};
+	SFB::ByteStream chunkData{header_bytes, static_cast<size_t>(header_size)};
 	auto chunkID = chunkData.ReadBE<uint32_t>();
 
 	// Skip chunk size
