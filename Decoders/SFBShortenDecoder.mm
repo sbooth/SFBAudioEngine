@@ -221,7 +221,7 @@ namespace {
 
 		static size_t sizeof_var(int32_t val, size_t nbin)
 		{
-			return (size_t)(labs(val) >> nbin) + nbin + 1;
+			return static_cast<size_t>(labs(val) >> nbin) + nbin + 1;
 		}
 
 		void Reset()
@@ -527,8 +527,8 @@ namespace {
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:(AVAudioFrameCount)_blocksize];
 
 	// Allocate decoding buffers
-	_buffer = AllocateContiguous2DArray<int32_t>((size_t)_nchan, (size_t)(_blocksize + _nwrap));
-	_offset = AllocateContiguous2DArray<int32_t>((size_t)_nchan, (size_t)std::max(1, _nmean));
+	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(_blocksize + _nwrap));
+	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(std::max(1, _nmean)));
 
 	for(auto i = 0; i < _nchan; ++i) {
 		for(auto j = 0; j < _nwrap; ++j) {
@@ -538,7 +538,7 @@ namespace {
 	}
 
 	if(_maxnlpc > 0)
-		_qlpc = new int [(size_t)_maxnlpc];
+		_qlpc = new int [static_cast<size_t>(_maxnlpc)];
 
 	// Initialize offset
 	int32_t mean = 0;
@@ -757,7 +757,7 @@ namespace {
 		NSInteger bytesRead;
 		if(![inputSource readBytes:buf length:(NSInteger)len bytesRead:&bytesRead error:nil])
 			return false;
-		read = (size_t)bytesRead;
+		read = static_cast<size_t>(bytesRead);
 		return true;
 	});
 
@@ -784,7 +784,7 @@ namespace {
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported audio type.", @"")];
 		return NO;
 	}
-	_internal_ftype = (int)ftype;
+	_internal_ftype = static_cast<int>(ftype);
 
 	// Read number of channels
 	uint32_t nchan = 0;
@@ -799,12 +799,12 @@ namespace {
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported number of channels.", @"")];
 		return NO;
 	}
-	_nchan = (int)nchan;
+	_nchan = static_cast<int>(nchan);
 
 	// Read blocksize if version > 0
 	if(_version > 0) {
 		uint32_t blocksize = 0;
-		if(!_input.uint_get(blocksize, _version, (size_t)log2(DEFAULT_BLOCK_SIZE)) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
+		if(!_input.uint_get(blocksize, _version, static_cast<size_t>(log2(DEFAULT_BLOCK_SIZE))) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -815,7 +815,7 @@ namespace {
 								   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
 			return NO;
 		}
-		_blocksize = (int)blocksize;
+		_blocksize = static_cast<int>(blocksize);
 
 		uint32_t maxnlpc = 0;
 		if(!_input.uint_get(maxnlpc, _version, LPCQSIZE) || maxnlpc > 1024) {
@@ -829,7 +829,7 @@ namespace {
 								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 			return NO;
 		}
-		_maxnlpc = (int)maxnlpc;
+		_maxnlpc = static_cast<int>(maxnlpc);
 
 		uint32_t nmean = 0;
 		if(!_input.uint_get(nmean, _version, 0) || nmean > 32768) {
@@ -843,7 +843,7 @@ namespace {
 								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 			return NO;
 		}
-		_nmean = (int)nmean;
+		_nmean = static_cast<int>(nmean);
 
 		uint32_t nskip;
 		if(!_input.uint_get(nskip, _version, NSKIPSIZE) /* || nskip > bits_remaining_in_input */) {
@@ -876,7 +876,7 @@ namespace {
 		_maxnlpc = DEFAULT_MAXNLPC;
 	}
 
-	_nwrap = std::max(NWRAP, (int)_maxnlpc);
+	_nwrap = std::max(NWRAP, static_cast<int>(_maxnlpc));
 
 	if(_version > 1)
 		_lpcqoffset = V2LPCQOFFSET;
@@ -923,7 +923,7 @@ namespace {
 			return NO;
 		}
 
-		header_bytes[i] = (int8_t)byte;
+		header_bytes[i] = static_cast<int8_t>(byte);
 	}
 
 	SFB::ByteStream chunkData{header_bytes, static_cast<size_t>(header_size)};
@@ -1202,7 +1202,7 @@ namespace {
 					case FN_DIFF0:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1218,7 +1218,7 @@ namespace {
 					case FN_DIFF1:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1234,7 +1234,7 @@ namespace {
 					case FN_DIFF2:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1250,7 +1250,7 @@ namespace {
 					case FN_DIFF3:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1297,7 +1297,7 @@ namespace {
 								sum += _qlpc[j] * cbuffer[i - j - 1];
 							}
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1409,7 +1409,7 @@ namespace {
 			case FN_BLOCKSIZE:
 			{
 				uint32_t uint = 0;
-				if(!_input.uint_get(uint, _version, (size_t)log2(_blocksize)) || uint == 0 || uint > MAX_BLOCKSIZE || (int)uint > _blocksize) {
+				if(!_input.uint_get(uint, _version, static_cast<size_t>(log2(_blocksize))) || uint == 0 || uint > MAX_BLOCKSIZE || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1420,7 +1420,7 @@ namespace {
 										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
 					return NO;
 				}
-				_blocksize = (int)uint;
+				_blocksize = static_cast<int>(uint);
 				break;
 			}
 			case FN_BITSHIFT:
