@@ -15,19 +15,19 @@
 
 namespace {
 
-	TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
-	{
-		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size() freeWhenDone:NO];
-		NSData *decoded = [[NSData alloc] initWithBase64EncodedData:data options:0];
-		return {(const char *)decoded.bytes, (size_t)decoded.length};
-	}
+TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
+{
+	NSData *data = [NSData dataWithBytesNoCopy:reinterpret_cast<void *>(const_cast<char *>(input.data())) length:static_cast<NSUInteger>(input.size()) freeWhenDone:NO];
+	NSData *decoded = [[NSData alloc] initWithBase64EncodedData:data options:0];
+	return { static_cast<const char *>(decoded.bytes), static_cast<size_t>(decoded.length) };
+}
 
-	TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
-	{
-		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size() freeWhenDone:NO];
-		NSData *encoded = [data base64EncodedDataWithOptions:0];
-		return {(const char *)encoded.bytes, (size_t)encoded.length};
-	}
+TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
+{
+	NSData *data = [NSData dataWithBytesNoCopy:reinterpret_cast<void *>(const_cast<char *>(input.data())) length:static_cast<NSUInteger>(input.size()) freeWhenDone:NO];
+	NSData *encoded = [data base64EncodedDataWithOptions:0];
+	return { static_cast<const char *>(encoded.bytes), static_cast<size_t>(encoded.length) };
+}
 
 }
 

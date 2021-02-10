@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -45,7 +45,9 @@ struct ::std::default_delete<FLAC__StreamDecoder> {
 
 #pragma mark FLAC Callbacks
 
-static FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+namespace {
+
+FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -65,7 +67,7 @@ static FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *de
 	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 }
 
-static FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -82,7 +84,7 @@ static FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *de
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-static FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -97,7 +99,7 @@ static FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *de
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
-static FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
+FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -112,7 +114,7 @@ static FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-static FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data)
+FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -121,7 +123,7 @@ static FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_
 	return flacDecoder->_inputSource.atEOF;
 }
 
-static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
+FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -130,7 +132,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 	return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
 }
 
-static void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
+void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
 {
 	NSCParameterAssert(client_data != NULL);
 
@@ -138,12 +140,14 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__St
 	[flacDecoder handleFLACMetadata:decoder metadata:metadata];
 }
 
-static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
+void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
 {
 	NSCParameterAssert(client_data != NULL);
 
 	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 	[flacDecoder handleFLACError:decoder status:status];
+}
+
 }
 
 @implementation SFBFLACDecoder

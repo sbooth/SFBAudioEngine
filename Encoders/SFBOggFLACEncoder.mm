@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -50,7 +50,9 @@ struct ::std::default_delete<FLAC__StreamMetadata> {
 
 #pragma mark FLAC Callbacks
 
-static FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+namespace {
+
+FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != NULL);
@@ -70,7 +72,7 @@ static FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *en
 	return FLAC__STREAM_ENCODER_READ_STATUS_CONTINUE;
 }
 
-static FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], size_t bytes, uint32_t samples, uint32_t current_frame, void *client_data)
+FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], size_t bytes, uint32_t samples, uint32_t current_frame, void *client_data)
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != nullptr);
@@ -88,7 +90,7 @@ static FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *
 	return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
 
-static FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset, void *client_data)
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != nullptr);
@@ -105,7 +107,7 @@ static FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *en
 	return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
-static FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != nullptr);
@@ -122,7 +124,7 @@ static FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *en
 	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
 
-static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, void *client_data)
+void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, void *client_data)
 {
 #pragma unused(encoder)
 #pragma unused(metadata)
@@ -130,6 +132,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 //	SFBOggFLACEncoder *flacEncoder = (__bridge SFBOggFLACEncoder *)client_data;
 //	SFBOutputSource *outputSource = flacEncoder->_outputSource;
+}
+
 }
 
 @implementation SFBOggFLACEncoder

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -61,18 +61,20 @@ struct ::std::default_delete<OggOpusEnc> {
 };
 
 namespace {
-	int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
-	{
-		SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
-		NSInteger bytesWritten;
-		return !([encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] && bytesWritten == len);
-	}
 
-	int close_callback(void *user_data)
-	{
-		SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
-		return ![encoder->_outputSource closeReturningError:nil];
-	}
+int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
+{
+	SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
+	NSInteger bytesWritten;
+	return !([encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] && bytesWritten == len);
+}
+
+int close_callback(void *user_data)
+{
+	SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
+	return ![encoder->_outputSource closeReturningError:nil];
+}
+
 }
 
 @interface SFBOggOpusEncoder ()

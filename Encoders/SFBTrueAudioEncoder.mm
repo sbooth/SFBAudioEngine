@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -15,29 +15,29 @@ SFBAudioEncoderName const SFBAudioEncoderNameTrueAudio = @"org.sbooth.AudioEngin
 
 namespace {
 
-	struct TTACallbacks : TTA_io_callback
-	{
-		SFBAudioEncoder *mEncoder;
-	};
+struct TTACallbacks : TTA_io_callback
+{
+	SFBAudioEncoder *mEncoder;
+};
 
-	TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
-	{
-		TTACallbacks *iocb = (TTACallbacks *)io;
+TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
+{
+	TTACallbacks *iocb = (TTACallbacks *)io;
 
-		NSInteger bytesWritten;
-		if(![iocb->mEncoder->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil])
-			return -1;
-		return (TTAint32)bytesWritten;
-	}
+	NSInteger bytesWritten;
+	if(![iocb->mEncoder->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil])
+		return -1;
+	return (TTAint32)bytesWritten;
+}
 
-	TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
-	{
-		TTACallbacks *iocb = (TTACallbacks *)io;
+TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
+{
+	TTACallbacks *iocb = (TTACallbacks *)io;
 
-		if(![iocb->mEncoder->_outputSource seekToOffset:offset error:nil])
-			return -1;
-		return offset;
-	}
+	if(![iocb->mEncoder->_outputSource seekToOffset:offset error:nil])
+		return -1;
+	return offset;
+}
 
 }
 

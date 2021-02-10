@@ -65,160 +65,160 @@ namespace {
 //		AudioFileID _af;
 //	};
 
-	template <typename T>
-	OSStatus SetAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue)
-	{
-		NSCParameterAssert(audioConverter != nullptr);
-		return AudioConverterSetProperty(audioConverter, propertyID, sizeof(propertyValue), &propertyValue);
+template <typename T>
+OSStatus SetAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue)
+{
+	NSCParameterAssert(audioConverter != nullptr);
+	return AudioConverterSetProperty(audioConverter, propertyID, sizeof(propertyValue), &propertyValue);
+}
+
+std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtension)
+{
+	NSCParameterAssert(pathExtension != nil);
+	CFStringRef extension = (__bridge CFStringRef)pathExtension;
+
+	UInt32 size = 0;
+	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size);
+	if(result != noErr) {
+		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_TypesForExtension) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return {};
 	}
 
-	std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtension)
-	{
-		NSCParameterAssert(pathExtension != nil);
-		CFStringRef extension = (__bridge CFStringRef)pathExtension;
+	auto typesForExtensionCount = size / sizeof(AudioFileTypeID);
+	std::vector<AudioFileTypeID> typesForExtension(typesForExtensionCount);
 
-		UInt32 size = 0;
-		auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size);
-		if(result != noErr) {
-			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_TypesForExtension) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-			return {};
-		}
-
-		auto typesForExtensionCount = size / sizeof(AudioFileTypeID);
-		std::vector<AudioFileTypeID> typesForExtension(typesForExtensionCount);
-
-		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size, &typesForExtension[0]);
-		if(result != noErr) {
-			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_TypesForExtension) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-			return {};
-		}
-
-		return typesForExtension;
+	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size, &typesForExtension[0]);
+	if(result != noErr) {
+		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_TypesForExtension) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return {};
 	}
 
-	std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false)
-	{
-		UInt32 size = 0;
-		auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size);
-		if(result != noErr) {
-			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_AvailableFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-			return {};
-		}
+	return typesForExtension;
+}
 
-		auto availableFormatIDCount = size / sizeof(AudioFormatID);
-		std::vector<AudioFormatID> availableFormatIDs(availableFormatIDCount);
-
-		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size, &availableFormatIDs[0]);
-		if(result != noErr) {
-			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AvailableFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-			return {};
-		}
-
-		if(!forEncoding)
-			return availableFormatIDs;
-
-		result = AudioFormatGetPropertyInfo(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size);
-		if(result != noErr) {
-			os_log_error(gSFBAudioEncoderLog, "AudioFormatGetPropertyInfo (kAudioFormatProperty_EncodeFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-			return {};
-		}
-
-		auto encodeFormatIDCount = size / sizeof(AudioFormatID);
-		std::vector<AudioFormatID> encodeFormatIDs(encodeFormatIDCount);
-
-		result = AudioFormatGetProperty(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size, &encodeFormatIDs[0]);
-		if(result != noErr) {
-			os_log_error(gSFBAudioEncoderLog, "AudioFormatGetPropertyInfo (kAudioFormatProperty_EncodeFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-			return {};
-		}
-
-		std::vector<AudioFormatID> formatIDs;
-		std::set_intersection(encodeFormatIDs.begin(), encodeFormatIDs.end(), availableFormatIDs.begin(), availableFormatIDs.end(), std::back_inserter(formatIDs));
-
-		return formatIDs;
+std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false)
+{
+	UInt32 size = 0;
+	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size);
+	if(result != noErr) {
+		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_AvailableFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return {};
 	}
 
-	OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
-	{
-		NSCParameterAssert(inClientData != nullptr);
+	auto availableFormatIDCount = size / sizeof(AudioFormatID);
+	std::vector<AudioFormatID> availableFormatIDs(availableFormatIDCount);
 
-		SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-		SFBOutputSource *outputSource = encoder->_outputSource;
+	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size, &availableFormatIDs[0]);
+	if(result != noErr) {
+		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AvailableFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return {};
+	}
 
-		NSInteger offset;
-		if(![outputSource getOffset:&offset error:nil])
+	if(!forEncoding)
+		return availableFormatIDs;
+
+	result = AudioFormatGetPropertyInfo(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size);
+	if(result != noErr) {
+		os_log_error(gSFBAudioEncoderLog, "AudioFormatGetPropertyInfo (kAudioFormatProperty_EncodeFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return {};
+	}
+
+	auto encodeFormatIDCount = size / sizeof(AudioFormatID);
+	std::vector<AudioFormatID> encodeFormatIDs(encodeFormatIDCount);
+
+	result = AudioFormatGetProperty(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size, &encodeFormatIDs[0]);
+	if(result != noErr) {
+		os_log_error(gSFBAudioEncoderLog, "AudioFormatGetPropertyInfo (kAudioFormatProperty_EncodeFormatIDs) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return {};
+	}
+
+	std::vector<AudioFormatID> formatIDs;
+	std::set_intersection(encodeFormatIDs.begin(), encodeFormatIDs.end(), availableFormatIDs.begin(), availableFormatIDs.end(), std::back_inserter(formatIDs));
+
+	return formatIDs;
+}
+
+OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
+{
+	NSCParameterAssert(inClientData != nullptr);
+
+	SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+	SFBOutputSource *outputSource = encoder->_outputSource;
+
+	NSInteger offset;
+	if(![outputSource getOffset:&offset error:nil])
+		return kAudioFileUnspecifiedError;
+
+	if(inPosition != offset) {
+		if(!outputSource.supportsSeeking)
+			return kAudioFileOperationNotSupportedError;
+		if(![outputSource seekToOffset:inPosition error:nil])
 			return kAudioFileUnspecifiedError;
+	}
 
-		if(inPosition != offset) {
-			if(!outputSource.supportsSeeking)
-				return kAudioFileOperationNotSupportedError;
-			if(![outputSource seekToOffset:inPosition error:nil])
-				return kAudioFileUnspecifiedError;
-		}
+	NSInteger bytesRead;
+	if(![outputSource readBytes:buffer length:(NSInteger)requestCount bytesRead:&bytesRead error:nil])
+		return kAudioFileUnspecifiedError;
 
-		NSInteger bytesRead;
-		if(![outputSource readBytes:buffer length:(NSInteger)requestCount bytesRead:&bytesRead error:nil])
+	*actualCount = (UInt32)bytesRead;
+
+	return noErr;
+}
+
+OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer, UInt32 *actualCount)
+{
+	NSCParameterAssert(inClientData != nullptr);
+
+	SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+	SFBOutputSource *outputSource = encoder->_outputSource;
+
+	NSInteger offset;
+	if(![outputSource getOffset:&offset error:nil])
+		return kAudioFileUnspecifiedError;
+
+	if(inPosition != offset) {
+		if(!outputSource.supportsSeeking)
+			return kAudioFileOperationNotSupportedError;
+		if(![outputSource seekToOffset:inPosition error:nil])
 			return kAudioFileUnspecifiedError;
-
-		*actualCount = (UInt32)bytesRead;
-
-		return noErr;
 	}
 
-	OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer, UInt32 *actualCount)
-	{
-		NSCParameterAssert(inClientData != nullptr);
+	NSInteger bytesWritten;
+	if(![outputSource writeBytes:buffer length:(NSInteger)requestCount bytesWritten:&bytesWritten error:nil])
+		return kAudioFileUnspecifiedError;
 
-		SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-		SFBOutputSource *outputSource = encoder->_outputSource;
+	*actualCount = (UInt32)bytesWritten;
 
-		NSInteger offset;
-		if(![outputSource getOffset:&offset error:nil])
-			return kAudioFileUnspecifiedError;
+	return noErr;
+}
 
-		if(inPosition != offset) {
-			if(!outputSource.supportsSeeking)
-				return kAudioFileOperationNotSupportedError;
-			if(![outputSource seekToOffset:inPosition error:nil])
-				return kAudioFileUnspecifiedError;
-		}
+SInt64 my_AudioFile_GetSizeProc(void *inClientData)
+{
+	NSCParameterAssert(inClientData != nullptr);
 
-		NSInteger bytesWritten;
-		if(![outputSource writeBytes:buffer length:(NSInteger)requestCount bytesWritten:&bytesWritten error:nil])
-			return kAudioFileUnspecifiedError;
+	SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+	SFBOutputSource *outputSource = encoder->_outputSource;
 
-		*actualCount = (UInt32)bytesWritten;
+	NSInteger length;
+	if(![outputSource getLength:&length error:nil])
+		return -1;
 
-		return noErr;
-	}
+	return length;
+}
 
-	SInt64 my_AudioFile_GetSizeProc(void *inClientData)
-	{
-		NSCParameterAssert(inClientData != nullptr);
+OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
+{
+	NSCParameterAssert(inClientData != nullptr);
 
-		SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-		SFBOutputSource *outputSource = encoder->_outputSource;
+	SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+	SFBOutputSource *outputSource = encoder->_outputSource;
 
-		NSInteger length;
-		if(![outputSource getLength:&length error:nil])
-			return -1;
+	// FIXME: Actually do something here
+	(void)outputSource;
+	(void)inSize;
 
-		return length;
-	}
-
-	OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
-	{
-		NSCParameterAssert(inClientData != nullptr);
-
-		SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-		SFBOutputSource *outputSource = encoder->_outputSource;
-
-		// FIXME: Actually do something here
-		(void)outputSource;
-		(void)inSize;
-
-		return kAudioFileOperationNotSupportedError;
-	}
+	return kAudioFileOperationNotSupportedError;
+}
 	
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -34,48 +34,50 @@ struct ::std::default_delete<OpaqueExtAudioFile> {
 };
 
 namespace {
-	// ========================================
-	// Callbacks
-	OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
-	{
-		NSCParameterAssert(inClientData != nullptr);
 
-		SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
+// ========================================
+// Callbacks
+OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
+{
+	NSCParameterAssert(inClientData != nullptr);
 
-		NSInteger offset;
-		if(![decoder->_inputSource getOffset:&offset error:nil])
+	SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
+
+	NSInteger offset;
+	if(![decoder->_inputSource getOffset:&offset error:nil])
+		return kAudioFileUnspecifiedError;
+
+	if(inPosition != offset) {
+		if(!decoder->_inputSource.supportsSeeking)
+			return kAudioFileOperationNotSupportedError;
+		if(![decoder->_inputSource seekToOffset:inPosition error:nil])
 			return kAudioFileUnspecifiedError;
-
-		if(inPosition != offset) {
-			if(!decoder->_inputSource.supportsSeeking)
-				return kAudioFileOperationNotSupportedError;
-			if(![decoder->_inputSource seekToOffset:inPosition error:nil])
-				return kAudioFileUnspecifiedError;
-		}
-
-		NSInteger bytesRead;
-		if(![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil])
-			return kAudioFileUnspecifiedError;
-
-		*actualCount = (UInt32)bytesRead;
-
-		if(decoder->_inputSource.atEOF)
-			return kAudioFileEndOfFileError;
-
-		return noErr;
 	}
 
-	SInt64 get_size_callback(void *inClientData)
-	{
-		NSCParameterAssert(inClientData != nullptr);
+	NSInteger bytesRead;
+	if(![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil])
+		return kAudioFileUnspecifiedError;
 
-		SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
+	*actualCount = (UInt32)bytesRead;
 
-		NSInteger length;
-		if(![decoder->_inputSource getLength:&length error:nil])
-			return -1;
-		return length;
-	}
+	if(decoder->_inputSource.atEOF)
+		return kAudioFileEndOfFileError;
+
+	return noErr;
+}
+
+SInt64 get_size_callback(void *inClientData)
+{
+	NSCParameterAssert(inClientData != nullptr);
+
+	SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
+
+	NSInteger length;
+	if(![decoder->_inputSource getLength:&length error:nil])
+		return -1;
+	return length;
+}
+
 }
 
 @interface SFBCoreAudioDecoder ()
