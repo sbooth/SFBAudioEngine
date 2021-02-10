@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -31,118 +31,118 @@ SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsV
 
 namespace {
 
-	// The I/O interface for MAC
-	class APEIOInterface : public APE::CIO
-	{
-	public:
-		explicit APEIOInterface(SFBOutputSource *outputSource)
-			: mOutputSource(outputSource)
-		{}
+// The I/O interface for MAC
+class APEIOInterface : public APE::CIO
+{
+public:
+	explicit APEIOInterface(SFBOutputSource *outputSource)
+	: mOutputSource(outputSource)
+	{}
 
-		inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
-		{
+	inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
+	{
 #pragma unused(pName)
 #pragma unused(bOpenReadOnly)
 
-			return ERROR_INVALID_INPUT_FILE;
-		}
+		return ERROR_INVALID_INPUT_FILE;
+	}
 
-		inline virtual int Close()
-		{
-			return ERROR_SUCCESS;
-		}
+	inline virtual int Close()
+	{
+		return ERROR_SUCCESS;
+	}
 
-		virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
-		{
-			NSInteger bytesRead;
-			if(![mOutputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
-				return ERROR_IO_READ;
+	virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
+	{
+		NSInteger bytesRead;
+		if(![mOutputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
+			return ERROR_IO_READ;
 
-			*pBytesRead = (unsigned int)bytesRead;
+		*pBytesRead = (unsigned int)bytesRead;
 
-			return ERROR_SUCCESS;
-		}
+		return ERROR_SUCCESS;
+	}
 
-		inline virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
-		{
-			NSInteger bytesWritten;
-			if(![mOutputSource writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] || bytesWritten != nBytesToWrite)
-				return ERROR_IO_WRITE;
+	inline virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
+	{
+		NSInteger bytesWritten;
+		if(![mOutputSource writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] || bytesWritten != nBytesToWrite)
+			return ERROR_IO_WRITE;
 
-			*pBytesWritten = (unsigned int)bytesWritten;
+		*pBytesWritten = (unsigned int)bytesWritten;
 
-			return ERROR_SUCCESS;
-		}
+		return ERROR_SUCCESS;
+	}
 
-		virtual APE::int64 PerformSeek()
-		{
-			if(!mOutputSource.supportsSeeking)
-				return ERROR_IO_READ;
+	virtual APE::int64 PerformSeek()
+	{
+		if(!mOutputSource.supportsSeeking)
+			return ERROR_IO_READ;
 
-			NSInteger offset = m_nSeekPosition;
-			switch(m_nSeekMethod) {
-				case SEEK_SET:
-					// offset remains unchanged
-					break;
-				case SEEK_CUR: {
-					NSInteger inputSourceOffset;
-					if([mOutputSource getOffset:&inputSourceOffset error:nil])
-						offset += inputSourceOffset;
-					break;
-				}
-				case SEEK_END: {
-					NSInteger inputSourceLength;
-					if([mOutputSource getLength:&inputSourceLength error:nil])
-						offset += inputSourceLength;
-					break;
-				}
+		NSInteger offset = m_nSeekPosition;
+		switch(m_nSeekMethod) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR: {
+				NSInteger inputSourceOffset;
+				if([mOutputSource getOffset:&inputSourceOffset error:nil])
+					offset += inputSourceOffset;
+				break;
 			}
-
-			return ![mOutputSource seekToOffset:offset error:nil];
+			case SEEK_END: {
+				NSInteger inputSourceLength;
+				if([mOutputSource getLength:&inputSourceLength error:nil])
+					offset += inputSourceLength;
+				break;
+			}
 		}
 
-		inline virtual int Create(const wchar_t * pName)
-		{
+		return ![mOutputSource seekToOffset:offset error:nil];
+	}
+
+	inline virtual int Create(const wchar_t * pName)
+	{
 #pragma unused(pName)
-			return ERROR_IO_WRITE;
-		}
+		return ERROR_IO_WRITE;
+	}
 
-		inline virtual int Delete()
-		{
-			return ERROR_IO_WRITE;
-		}
+	inline virtual int Delete()
+	{
+		return ERROR_IO_WRITE;
+	}
 
-		inline virtual int SetEOF()
-		{
-			return ERROR_IO_WRITE;
-		}
+	inline virtual int SetEOF()
+	{
+		return ERROR_IO_WRITE;
+	}
 
-		inline virtual APE::int64 GetPosition()
-		{
-			NSInteger offset;
-			if(![mOutputSource getOffset:&offset error:nil])
-				return -1;
-			return offset;
-		}
+	inline virtual APE::int64 GetPosition()
+	{
+		NSInteger offset;
+		if(![mOutputSource getOffset:&offset error:nil])
+			return -1;
+		return offset;
+	}
 
-		inline virtual APE::int64 GetSize()
-		{
-			NSInteger length;
-			if(![mOutputSource getLength:&length error:nil])
-				return -1;
-			return length;
-		}
+	inline virtual APE::int64 GetSize()
+	{
+		NSInteger length;
+		if(![mOutputSource getLength:&length error:nil])
+			return -1;
+		return length;
+	}
 
-		inline virtual int GetName(wchar_t * pBuffer)
-		{
+	inline virtual int GetName(wchar_t * pBuffer)
+	{
 #pragma unused(pBuffer)
-			return ERROR_SUCCESS;
-		}
+		return ERROR_SUCCESS;
+	}
 
-	private:
+private:
 
-		SFBOutputSource *mOutputSource;
-	};
+	SFBOutputSource *mOutputSource;
+};
 
 }
 

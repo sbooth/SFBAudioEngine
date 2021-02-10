@@ -15,11 +15,12 @@
 
 #import "SFBAudioPlayerNode.h"
 
-#import "AudioRingBuffer.h"
+#import "SFBAudioRingBuffer.hpp"
+#import "SFBRingBuffer.hpp"
+#import "SFBUnfairLock.hpp"
+
 #import "NSError+SFBURLPresentation.h"
-#import "RingBuffer.h"
 #import "SFBAudioDecoder.h"
-#import "UnfairLock.h"
 
 const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
@@ -31,290 +32,290 @@ NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.Aud
 
 namespace {
 
-	os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
+os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
 
 #pragma mark - Flags
 
-	enum eAudioPlayerNodeFlags : unsigned int {
-		eAudioPlayerNodeFlagIsPlaying					= 1u << 0,
-		eAudioPlayerNodeFlagOutputIsMuted				= 1u << 1,
-		eAudioPlayerNodeFlagMuteRequested				= 1u << 2,
-		eAudioPlayerNodeFlagRingBufferNeedsReset		= 1u << 3,
-		eAudioPlayerNodeFlagStopDecoderThread			= 1u << 4,
-		eAudioPlayerNodeFlagStopNotifierThread			= 1u << 5
-	};
+enum eAudioPlayerNodeFlags : unsigned int {
+	eAudioPlayerNodeFlagIsPlaying					= 1u << 0,
+	eAudioPlayerNodeFlagOutputIsMuted				= 1u << 1,
+	eAudioPlayerNodeFlagMuteRequested				= 1u << 2,
+	eAudioPlayerNodeFlagRingBufferNeedsReset		= 1u << 3,
+	eAudioPlayerNodeFlagStopDecoderThread			= 1u << 4,
+	eAudioPlayerNodeFlagStopNotifierThread			= 1u << 5
+};
 
-	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
-		eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
-		eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2,
-		eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio			= 3
-	};
+enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
+	eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
+	eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2,
+	eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio			= 3
+};
 
 #pragma mark - Thread entry points
 
-	void * DecoderThreadEntry(void *arg)
-	{
-		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.DecoderThread");
-		pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+void * DecoderThreadEntry(void *arg)
+{
+	pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.DecoderThread");
+	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
-		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
-		return [playerNode decoderThreadEntry];
-	}
+	SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
+	return [playerNode decoderThreadEntry];
+}
 
-	void * NotifierThreadEntry(void *arg)
-	{
-		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.NotifierThread");
-		pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+void * NotifierThreadEntry(void *arg)
+{
+	pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.NotifierThread");
+	pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
 
-		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
-		return [playerNode notifierThreadEntry];
-	}
+	SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
+	return [playerNode notifierThreadEntry];
+}
 
 #pragma mark - Constants
 
-	const AVAudioFrameCount 	kRingBufferFrameCapacity 	= 16384;
-	const AVAudioFrameCount 	kRingBufferChunkSize 		= 2048;
-	const size_t 				kDecoderStateArraySize		= 8;
-	const int64_t				kInvalidFramePosition 		= -1;
+const AVAudioFrameCount 	kRingBufferFrameCapacity 	= 16384;
+const AVAudioFrameCount 	kRingBufferChunkSize 		= 2048;
+const size_t 				kDecoderStateArraySize		= 8;
+const int64_t				kInvalidFramePosition 		= -1;
 
 #pragma mark - Decoder State
 
-	/// State data for tracking/syncing decoding progress
-	struct DecoderStateData {
-		using atomic_ptr = std::atomic<DecoderStateData *>;
+/// State data for tracking/syncing decoding progress
+struct DecoderStateData {
+	using atomic_ptr = std::atomic<DecoderStateData *>;
 
-		static const AVAudioFrameCount kDefaultBufferSize = 1024;
+	static const AVAudioFrameCount kDefaultBufferSize = 1024;
 
-		enum eDecoderStateDataFlags : unsigned int {
-			eCancelDecodingFlag		= 1u << 0,
-			eDecodingStartedFlag	= 1u << 1,
-			eDecodingCompleteFlag	= 1u << 2,
-			eRenderingStartedFlag	= 1u << 3,
-			eRenderingCompleteFlag	= 1u << 4,
-			eMarkedForRemovalFlag 	= 1u << 5
-		};
+	enum eDecoderStateDataFlags : unsigned int {
+		eCancelDecodingFlag		= 1u << 0,
+		eDecodingStartedFlag	= 1u << 1,
+		eDecodingCompleteFlag	= 1u << 2,
+		eRenderingStartedFlag	= 1u << 3,
+		eRenderingCompleteFlag	= 1u << 4,
+		eMarkedForRemovalFlag 	= 1u << 5
+	};
 
-		/// Monotonically increasing instance counter
-		const uint64_t			mSequenceNumber;
+	/// Monotonically increasing instance counter
+	const uint64_t			mSequenceNumber;
 
-		/// Decoder state data flags
-		std::atomic_uint 		mFlags;
-		/// The number of frames decoded
-		std::atomic_int64_t 	mFramesDecoded;
-		/// The number of frames converted
-		std::atomic_int64_t 	mFramesConverted;
-		/// The number of frames rendered
-		std::atomic_int64_t 	mFramesRendered;
-		/// The total number of audio frames
-		std::atomic_int64_t 	mFrameLength;
-		/// The desired seek offset
-		std::atomic_int64_t 	mFrameToSeek;
+	/// Decoder state data flags
+	std::atomic_uint 		mFlags;
+	/// The number of frames decoded
+	std::atomic_int64_t 	mFramesDecoded;
+	/// The number of frames converted
+	std::atomic_int64_t 	mFramesConverted;
+	/// The number of frames rendered
+	std::atomic_int64_t 	mFramesRendered;
+	/// The total number of audio frames
+	std::atomic_int64_t 	mFrameLength;
+	/// The desired seek offset
+	std::atomic_int64_t 	mFrameToSeek;
 
-//	private:
-		/// Decodes audio from the source representation to PCM
-		id <SFBPCMDecoding> 	mDecoder;
-		/// Converts audio from the decoder's processing format to another PCM variant at the same sample rate
-		AVAudioConverter 		*mConverter;
-	private:
-		/// Buffer used internally for buffering during conversion
-		AVAudioPCMBuffer 		*mDecodeBuffer;
-		/// Next sequence number to use
-		static uint64_t			sSequenceNumber;
+	//	private:
+	/// Decodes audio from the source representation to PCM
+	id <SFBPCMDecoding> 	mDecoder;
+	/// Converts audio from the decoder's processing format to another PCM variant at the same sample rate
+	AVAudioConverter 		*mConverter;
+private:
+	/// Buffer used internally for buffering during conversion
+	AVAudioPCMBuffer 		*mDecodeBuffer;
+	/// Next sequence number to use
+	static uint64_t			sSequenceNumber;
 
-	public:
-		DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultBufferSize)
-			: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(kInvalidFramePosition), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
-		{
-			mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
-			// The logic in this class assumes no SRC is performed by mConverter
-			assert(mConverter.inputFormat.sampleRate == mConverter.outputFormat.sampleRate);
-			mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:frameCapacity];
+public:
+	DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultBufferSize)
+	: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(kInvalidFramePosition), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
+	{
+		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
+		// The logic in this class assumes no SRC is performed by mConverter
+		assert(mConverter.inputFormat.sampleRate == mConverter.outputFormat.sampleRate);
+		mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:frameCapacity];
 
-			AVAudioFramePosition framePosition = decoder.framePosition;
-			if(framePosition != 0) {
-				mFramesDecoded.store(framePosition);
-				mFramesConverted.store(framePosition);
-				mFramesRendered.store(framePosition);
-			}
+		AVAudioFramePosition framePosition = decoder.framePosition;
+		if(framePosition != 0) {
+			mFramesDecoded.store(framePosition);
+			mFramesConverted.store(framePosition);
+			mFramesRendered.store(framePosition);
 		}
+	}
 
-		inline AVAudioFramePosition FramePosition() const
-		{
-			int64_t seek = mFrameToSeek.load();
-			return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
-		}
+	inline AVAudioFramePosition FramePosition() const noexcept
+	{
+		int64_t seek = mFrameToSeek.load();
+		return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
+	}
 
-		inline AVAudioFramePosition FrameLength() const
-		{
-			return mFrameLength.load();
-		}
+	inline AVAudioFramePosition FrameLength() const noexcept
+	{
+		return mFrameLength.load();
+	}
 
-		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
-		{
+	bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
+	{
 #if DEBUG
-			assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
+		assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
 #endif
 
-			if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
-				return false;
+		if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
+			return false;
 
-			if(mDecodeBuffer.frameLength == 0) {
-				mFlags.fetch_or(eDecodingCompleteFlag);
-				return true;
-			}
-
-			this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
-
-			// Only PCM to PCM conversions are performed
-			if(![mConverter convertToBuffer:buffer fromBuffer:mDecodeBuffer error:error])
-				return false;
-			mFramesConverted.fetch_add(buffer.frameLength);
-
+		if(mDecodeBuffer.frameLength == 0) {
+			mFlags.fetch_or(eDecodingCompleteFlag);
 			return true;
 		}
 
-		/// Seeks to the frame specified by \c mFrameToSeek
-		bool PerformSeek()
-		{
-			AVAudioFramePosition seekOffset = mFrameToSeek.load();
+		this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
 
-			os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld", seekOffset);
+		// Only PCM to PCM conversions are performed
+		if(![mConverter convertToBuffer:buffer fromBuffer:mDecodeBuffer error:error])
+			return false;
+		mFramesConverted.fetch_add(buffer.frameLength);
 
-			if([mDecoder seekToFrame:seekOffset error:nil])
-				// Reset the converter to flush any buffers
-				[mConverter reset];
-			else
-				os_log_debug(_audioPlayerNodeLog, "Error seeking to frame %lld", seekOffset);
-
-			AVAudioFramePosition newFrame = mDecoder.framePosition;
-			if(newFrame != seekOffset) {
-				os_log_debug(_audioPlayerNodeLog, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
-				seekOffset = newFrame;
-			}
-
-			// Update the seek request
-			mFrameToSeek.store(kInvalidFramePosition);
-
-			// Update the frame counters accordingly
-			// A seek is handled in essentially the same way as initial playback
-			if(newFrame != kInvalidFramePosition) {
-				mFramesDecoded.store(newFrame);
-				mFramesConverted.store(seekOffset);
-				mFramesRendered.store(seekOffset);
-			}
-
-			return newFrame != kInvalidFramePosition;
-		}
-
-	};
-
-	uint64_t DecoderStateData::sSequenceNumber = 0;
-	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
-
-	/// Returns the element in \c decoders with the smallest sequence number that has not completed rendering and has not been marked for removal
-	DecoderStateData * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count)
-	{
-		DecoderStateData *result = nullptr;
-		for(size_t i = 0; i < count; ++i) {
-			auto decoderState = decoderStateArray[i].load();
-			if(!decoderState)
-				continue;
-
-			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
-				continue;
-
-			if(!result)
-				result = decoderState;
-			else if(decoderState->mSequenceNumber < result->mSequenceNumber)
-				result = decoderState;
-		}
-
-		return result;
+		return true;
 	}
 
-	/// Returns the element in \c decoders with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
-	DecoderStateData * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count, const uint64_t& sequenceNumber)
+	/// Seeks to the frame specified by \c mFrameToSeek
+	bool PerformSeek()
 	{
-		DecoderStateData *result = nullptr;
-		for(size_t i = 0; i < count; ++i) {
-			auto decoderState = decoderStateArray[i].load();
-			if(!decoderState)
-				continue;
+		AVAudioFramePosition seekOffset = mFrameToSeek.load();
 
-			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
-				continue;
+		os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld", seekOffset);
 
-			if(!result && decoderState->mSequenceNumber > sequenceNumber)
-				result = decoderState;
-			else if(result && decoderState->mSequenceNumber > sequenceNumber && decoderState->mSequenceNumber < result->mSequenceNumber)
-				result = decoderState;
+		if([mDecoder seekToFrame:seekOffset error:nil])
+			// Reset the converter to flush any buffers
+			[mConverter reset];
+		else
+			os_log_debug(_audioPlayerNodeLog, "Error seeking to frame %lld", seekOffset);
+
+		AVAudioFramePosition newFrame = mDecoder.framePosition;
+		if(newFrame != seekOffset) {
+			os_log_debug(_audioPlayerNodeLog, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
+			seekOffset = newFrame;
 		}
 
-		return result;
-	}
+		// Update the seek request
+		mFrameToSeek.store(kInvalidFramePosition);
 
-	/// Returns the element in \c decoders with the sequence number equal to \c sequenceNumber that has not been marked for removal
-	DecoderStateData * GetDecoderStateWithSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count, const uint64_t& sequenceNumber)
-	{
-		for(size_t i = 0; i < count; ++i) {
-			auto decoderState = decoderStateArray[i].load();
-			if(!decoderState)
-				continue;
-
-			if(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag)
-				continue;
-
-			if(decoderState->mSequenceNumber == sequenceNumber)
-				return decoderState;
+		// Update the frame counters accordingly
+		// A seek is handled in essentially the same way as initial playback
+		if(newFrame != kInvalidFramePosition) {
+			mFramesDecoded.store(newFrame);
+			mFramesConverted.store(seekOffset);
+			mFramesRendered.store(seekOffset);
 		}
 
-		return nullptr;
+		return newFrame != kInvalidFramePosition;
 	}
+
+};
+
+uint64_t DecoderStateData::sSequenceNumber = 0;
+using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+
+/// Returns the element in \c decoders with the smallest sequence number that has not completed rendering and has not been marked for removal
+DecoderStateData * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count)
+{
+	DecoderStateData *result = nullptr;
+	for(size_t i = 0; i < count; ++i) {
+		auto decoderState = decoderStateArray[i].load();
+		if(!decoderState)
+			continue;
+
+		auto flags = decoderState->mFlags.load();
+		if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
+			continue;
+
+		if(!result)
+			result = decoderState;
+		else if(decoderState->mSequenceNumber < result->mSequenceNumber)
+			result = decoderState;
+	}
+
+	return result;
+}
+
+/// Returns the element in \c decoders with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
+DecoderStateData * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count, const uint64_t& sequenceNumber)
+{
+	DecoderStateData *result = nullptr;
+	for(size_t i = 0; i < count; ++i) {
+		auto decoderState = decoderStateArray[i].load();
+		if(!decoderState)
+			continue;
+
+		auto flags = decoderState->mFlags.load();
+		if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
+			continue;
+
+		if(!result && decoderState->mSequenceNumber > sequenceNumber)
+			result = decoderState;
+		else if(result && decoderState->mSequenceNumber > sequenceNumber && decoderState->mSequenceNumber < result->mSequenceNumber)
+			result = decoderState;
+	}
+
+	return result;
+}
+
+/// Returns the element in \c decoders with the sequence number equal to \c sequenceNumber that has not been marked for removal
+DecoderStateData * GetDecoderStateWithSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count, const uint64_t& sequenceNumber)
+{
+	for(size_t i = 0; i < count; ++i) {
+		auto decoderState = decoderStateArray[i].load();
+		if(!decoderState)
+			continue;
+
+		if(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag)
+			continue;
+
+		if(decoderState->mSequenceNumber == sequenceNumber)
+			return decoderState;
+	}
+
+	return nullptr;
+}
 
 #pragma mark - Time Utilities
 
-	// These functions are probably unnecessarily complicated because
-	// on Intel processors mach_timebase_info is always 1/1. However,
-	// on PPC it is either 1000000000/33333335 or 1000000000/25000000 so
-	// naively multiplying by .numer then dividing by .denom may result in
-	// integer overflow. To avoid the possibility double is used here, but
-	// __int128 would be an alternative.
+// These functions are probably unnecessarily complicated because
+// on Intel processors mach_timebase_info is always 1/1. However,
+// on PPC it is either 1000000000/33333335 or 1000000000/25000000 so
+// naively multiplying by .numer then dividing by .denom may result in
+// integer overflow. To avoid the possibility double is used here, but
+// __int128 would be an alternative.
 
-	double HostTicksPerNano()
-	{
-		mach_timebase_info_data_t timebase_info;
-		auto result = mach_timebase_info(&timebase_info);
-		assert(result == KERN_SUCCESS);
-		return static_cast<double>(timebase_info.numer) / static_cast<double>(timebase_info.denom);
-	}
+double HostTicksPerNano()
+{
+	mach_timebase_info_data_t timebase_info;
+	auto result = mach_timebase_info(&timebase_info);
+	assert(result == KERN_SUCCESS);
+	return static_cast<double>(timebase_info.numer) / static_cast<double>(timebase_info.denom);
+}
 
-	double NanosPerHostTick()
-	{
-		mach_timebase_info_data_t timebase_info;
-		auto result = mach_timebase_info(&timebase_info);
-		assert(result == KERN_SUCCESS);
-		return static_cast<double>(timebase_info.denom) / static_cast<double>(timebase_info.numer);
-	}
+double NanosPerHostTick()
+{
+	mach_timebase_info_data_t timebase_info;
+	auto result = mach_timebase_info(&timebase_info);
+	assert(result == KERN_SUCCESS);
+	return static_cast<double>(timebase_info.denom) / static_cast<double>(timebase_info.numer);
+}
 
-	const double kHostTicksPerNano = HostTicksPerNano();
-	const double kNanosPerHostTick = NanosPerHostTick();
+const double kHostTicksPerNano = HostTicksPerNano();
+const double kNanosPerHostTick = NanosPerHostTick();
 
-	inline uint64_t ConvertNanosToHostTicks(double ns)
-	{
-		return static_cast<uint64_t>(ns * kNanosPerHostTick);
-	}
+inline uint64_t ConvertNanosToHostTicks(double ns) noexcept
+{
+	return static_cast<uint64_t>(ns * kNanosPerHostTick);
+}
 
-	inline uint64_t ConvertSecondsToHostTicks(double s)
-	{
-		return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
-	}
+inline uint64_t ConvertSecondsToHostTicks(double s) noexcept
+{
+	return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
+}
 
-	inline double ConvertHostTicksToNanos(uint64_t t)
-	{
-		return static_cast<double>(t) * kHostTicksPerNano;
-	}
+inline double ConvertHostTicksToNanos(uint64_t t) noexcept
+{
+	return static_cast<double>(t) * kHostTicksPerNano;
+}
 
 }
 
@@ -342,7 +343,7 @@ namespace {
 
 	// Shared state accessed from multiple threads/queues
 	std::atomic_uint 				_flags;
-	SFB::Audio::RingBuffer			_audioRingBuffer;
+	SFB::AudioRingBuffer			_audioRingBuffer;
 	SFB::RingBuffer					_renderEventsRingBuffer;
 	DecoderStateData::atomic_ptr 	_decoderStateArray [kDecoderStateArraySize];
 }
@@ -389,10 +390,10 @@ namespace {
 		// ========================================
 		// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
 		if(!(self->_flags.load() & eAudioPlayerNodeFlagIsPlaying) || self->_flags.load() & eAudioPlayerNodeFlagOutputIsMuted || framesAvailableToRead == 0) {
-			size_t byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(frameCount);
-			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				std::memset(outputData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
-				outputData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
+			size_t byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteSize(frameCount);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize = static_cast<UInt32>(byteCountToZero);
 			}
 
 			*isSilence = YES;
@@ -412,10 +413,10 @@ namespace {
 			os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
 
 			auto framesOfSilence = frameCount - framesRead;
-			auto byteCountToSkip = self->_audioRingBuffer.Format().FrameCountToByteCount(framesRead);
-			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(framesOfSilence);
-			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex)
-				std::memset(static_cast<int8_t *>(outputData->mBuffers[bufferIndex].mData) + byteCountToSkip, 0, byteCountToZero);
+			auto byteCountToSkip = self->_audioRingBuffer.Format().FrameCountToByteSize(framesRead);
+			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
+				std::memset(static_cast<int8_t *>(outputData->mBuffers[i].mData) + byteCountToSkip, 0, byteCountToZero);
 		}
 
 		// ========================================
@@ -518,7 +519,7 @@ namespace {
 
 		// Allocate the audio ring buffer and the rendering events ring buffer
 		_renderingFormat = format;
-		if(!_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity)) {
+		if(!_audioRingBuffer.Allocate(*(_renderingFormat.streamDescription), kRingBufferFrameCapacity)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
 			return nil;
 		}

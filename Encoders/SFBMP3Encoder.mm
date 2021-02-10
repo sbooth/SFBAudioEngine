@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -10,8 +10,6 @@
 #include <lame/lame.h>
 
 #import "SFBMP3Encoder.h"
-
-#import "SFBCStringForOSType.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
 

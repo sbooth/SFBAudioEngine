@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -20,148 +20,148 @@ SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDe
 
 namespace {
 
-	// Convert a four byte chunk ID to a uint32_t
-	inline uint32_t BytesToID(char bytes [4])
-	{
-		auto one	= bytes[0];
-		auto two	= bytes[1];
-		auto three	= bytes[2];
-		auto four	= bytes[3];
+// Convert a four byte chunk ID to a uint32_t
+inline uint32_t BytesToID(char bytes [4])
+{
+	auto one	= bytes[0];
+	auto two	= bytes[1];
+	auto three	= bytes[2];
+	auto four	= bytes[3];
 
-		// Verify well-formedness
-		if(!isprint(one) || !isprint(two) || !isprint(three) || !isprint(four))
-			return 0;
+	// Verify well-formedness
+	if(!isprint(one) || !isprint(two) || !isprint(three) || !isprint(four))
+		return 0;
 
-		if(isspace(one))
-			return 0;
+	if(isspace(one))
+		return 0;
 
-		if(isspace(two) && isspace(one))
-			return 0;
+	if(isspace(two) && isspace(one))
+		return 0;
 
-		if(isspace(three) && isspace(two) && isspace(one))
-			return 0;
+	if(isspace(three) && isspace(two) && isspace(one))
+		return 0;
 
-		if(isspace(four) && isspace(three) && isspace(two) && isspace(one))
-			return 0;
+	if(isspace(four) && isspace(three) && isspace(two) && isspace(one))
+		return 0;
 
-		return (uint32_t)((one << 24u) | (two << 16u) | (three << 8u) | four);
+	return (uint32_t)((one << 24u) | (two << 16u) | (three << 8u) | four);
+}
+
+// Read an ID as a uint32_t, performing validation
+bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID)
+{
+	NSCParameterAssert(inputSource != nil);
+
+	char chunkIDBytes [4];
+	NSInteger bytesRead;
+	if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
+		return false;
 	}
 
-	// Read an ID as a uint32_t, performing validation
-	bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID)
-	{
-		NSCParameterAssert(inputSource != nil);
-
-		char chunkIDBytes [4];
-		NSInteger bytesRead;
-		if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
-			return false;
-		}
-
-		chunkID = BytesToID(chunkIDBytes);
-		if(0 == chunkID) {
-			os_log_error(gSFBDSDDecoderLog, "Illegal chunk ID");
-			return false;
-		}
-
-		return true;
+	chunkID = BytesToID(chunkIDBytes);
+	if(0 == chunkID) {
+		os_log_error(gSFBDSDDecoderLog, "Illegal chunk ID");
+		return false;
 	}
 
-	inline AudioChannelLabel DSDIFFChannelIDToCoreAudioChannelLabel(uint32_t channelID)
-	{
-		switch(channelID) {
-			case 'SLFT':	return kAudioChannelLabel_Left;
-			case 'SRGT':	return kAudioChannelLabel_Right;
-			case 'MLFT':	return kAudioChannelLabel_LeftSurroundDirect;
-			case 'MRGT':	return kAudioChannelLabel_RightSurroundDirect;
-			case 'LS  ':	return kAudioChannelLabel_LeftSurround;
-			case 'RS  ':	return kAudioChannelLabel_RightSurround;
-			case 'C   ':	return kAudioChannelLabel_Center;
-			case 'LFE ':	return kAudioChannelLabel_LFE2;
-		}
+	return true;
+}
 
-		return kAudioChannelLabel_Unknown;
+inline AudioChannelLabel DSDIFFChannelIDToCoreAudioChannelLabel(uint32_t channelID)
+{
+	switch(channelID) {
+		case 'SLFT':	return kAudioChannelLabel_Left;
+		case 'SRGT':	return kAudioChannelLabel_Right;
+		case 'MLFT':	return kAudioChannelLabel_LeftSurroundDirect;
+		case 'MRGT':	return kAudioChannelLabel_RightSurroundDirect;
+		case 'LS  ':	return kAudioChannelLabel_LeftSurround;
+		case 'RS  ':	return kAudioChannelLabel_RightSurround;
+		case 'C   ':	return kAudioChannelLabel_Center;
+		case 'LFE ':	return kAudioChannelLabel_LFE2;
 	}
+
+	return kAudioChannelLabel_Unknown;
+}
 
 #pragma mark DSDIFF chunks
 
-	// Base class for DSDIFF chunks
-	struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk>
-	{
-		using shared_ptr = std::shared_ptr<DSDIFFChunk>;
-		using chunk_map = std::map<uint32_t, shared_ptr>;
+// Base class for DSDIFF chunks
+struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk>
+{
+	using shared_ptr = std::shared_ptr<DSDIFFChunk>;
+	using chunk_map = std::map<uint32_t, shared_ptr>;
 
-		// Shared pointer support
-		shared_ptr getptr()					{ return shared_from_this(); }
+	// Shared pointer support
+	shared_ptr getptr()					{ return shared_from_this(); }
 
-		uint32_t mChunkID;
-		uint64_t mDataSize;
+	uint32_t mChunkID;
+	uint64_t mDataSize;
 
-		int64_t mDataOffset;
-	};
+	int64_t mDataOffset;
+};
 
-	// 'FRM8'
-	struct FormDSDChunk : public DSDIFFChunk
-	{
-		uint32_t mFormType;
-		chunk_map mLocalChunks;
-	};
+// 'FRM8'
+struct FormDSDChunk : public DSDIFFChunk
+{
+	uint32_t mFormType;
+	chunk_map mLocalChunks;
+};
 
-	// 'FVER' in 'FRM8'
-	struct FormatVersionChunk : public DSDIFFChunk
-	{
-		static const uint32_t kSupportedFormatVersion = 0x01050000;
-		uint32_t mFormatVersion;
-	};
+// 'FVER' in 'FRM8'
+struct FormatVersionChunk : public DSDIFFChunk
+{
+	static const uint32_t kSupportedFormatVersion = 0x01050000;
+	uint32_t mFormatVersion;
+};
 
-	// 'PROP' in 'FRM8'
-	struct PropertyChunk : public DSDIFFChunk
-	{
-		uint32_t mPropertyType;
-		chunk_map mLocalChunks;
-	};
+// 'PROP' in 'FRM8'
+struct PropertyChunk : public DSDIFFChunk
+{
+	uint32_t mPropertyType;
+	chunk_map mLocalChunks;
+};
 
-	// 'FS  ' in 'PROP'
-	struct SampleRateChunk : public DSDIFFChunk
-	{
-		uint32_t mSampleRate;
-	};
+// 'FS  ' in 'PROP'
+struct SampleRateChunk : public DSDIFFChunk
+{
+	uint32_t mSampleRate;
+};
 
-	// 'CHNL' in 'PROP'
-	struct ChannelsChunk : public DSDIFFChunk
-	{
-		uint16_t mNumberChannels;
-		std::vector<uint32_t> mChannelIDs;
-	};
+// 'CHNL' in 'PROP'
+struct ChannelsChunk : public DSDIFFChunk
+{
+	uint16_t mNumberChannels;
+	std::vector<uint32_t> mChannelIDs;
+};
 
-	// 'CMPR' in 'PROP'
-	struct CompressionTypeChunk : public DSDIFFChunk
-	{
-		uint32_t mCompressionType;
-		std::string mCompressionName;
-	};
+// 'CMPR' in 'PROP'
+struct CompressionTypeChunk : public DSDIFFChunk
+{
+	uint32_t mCompressionType;
+	std::string mCompressionName;
+};
 
-	// 'ABSS' in 'PROP'
-	struct AbsoluteStartTimeChunk : public DSDIFFChunk
-	{
-		uint16_t mHours;
-		uint8_t mMinutes;
-		uint8_t mSeconds;
-		uint32_t mSamples;
-	};
+// 'ABSS' in 'PROP'
+struct AbsoluteStartTimeChunk : public DSDIFFChunk
+{
+	uint16_t mHours;
+	uint8_t mMinutes;
+	uint8_t mSeconds;
+	uint32_t mSamples;
+};
 
-	// 'LSCO' in 'PROP'
-	struct LoudspeakerConfigurationChunk : public DSDIFFChunk
-	{
-		uint16_t mLoudspeakerConfiguration;
-	};
+// 'LSCO' in 'PROP'
+struct LoudspeakerConfigurationChunk : public DSDIFFChunk
+{
+	uint16_t mLoudspeakerConfiguration;
+};
 
-	// 'DSD ' in 'FRM8'
-	struct DSDSoundDataChunk : public DSDIFFChunk
-	{};
+// 'DSD ' in 'FRM8'
+struct DSDSoundDataChunk : public DSDIFFChunk
+{};
 
-	// 'DST ', 'DSTI', 'COMT', 'DIIN', 'MANF' are not handled
+// 'DST ', 'DSTI', 'COMT', 'DIIN', 'MANF' are not handled
 
 //	// 'DST ' in 'FRM8'
 //	class DSTSoundDataChunk : public DSDIFFChunk
@@ -213,475 +213,474 @@ namespace {
 
 #pragma mark DSDIFF parsing
 
-	bool ReadChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize)
-	{
-		if(!ReadID(inputSource, chunkID))
-			return false;
+bool ReadChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize)
+{
+	if(!ReadID(inputSource, chunkID))
+		return false;
 
-		if(![inputSource readUInt64BigEndian:&chunkDataSize error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read chunk data size");
-			return false;
-		}
-
-		return true;
+	if(![inputSource readUInt64BigEndian:&chunkDataSize error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read chunk data size");
+		return false;
 	}
 
-	std::shared_ptr<FormatVersionChunk> ParseFormatVersionChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'FVER') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'FVER' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<FormatVersionChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(![inputSource readUInt32BigEndian:&result->mFormatVersion error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read format version in 'FVER' chunk");
-			return nullptr;
-		}
-
-		if(result->mFormatVersion > FormatVersionChunk::kSupportedFormatVersion) {
-			os_log_error(gSFBDSDDecoderLog, "Unsupported format version in 'FVER': %u", result->mFormatVersion);
-			return nullptr;
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<SampleRateChunk> ParseSampleRateChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'FS  ') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'FS  ' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<SampleRateChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(![inputSource readUInt32BigEndian:&result->mSampleRate error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read sample rate in 'FS  ' chunk");
-			return nullptr;
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<ChannelsChunk> ParseChannelsChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'CHNL') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'CHNL' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<ChannelsChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(![inputSource readUInt16BigEndian:&result->mNumberChannels error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read number channels in 'CHNL' chunk");
-			return nullptr;
-		}
-
-		for(uint16_t i = 0; i < result->mNumberChannels; ++i) {
-			uint32_t channelID;
-			if(!ReadID(inputSource, channelID)) {
-				os_log_error(gSFBDSDDecoderLog, "Unable to read channel ID in 'CHNL' chunk");
-				return nullptr;
-			}
-			result->mChannelIDs.push_back(channelID);
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'CMPR') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'CMPR' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<CompressionTypeChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(!ReadID(inputSource, result->mCompressionType)) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read compression type in 'CMPR' chunk");
-			return nullptr;
-		}
-
-		uint8_t count;
-		if(![inputSource readUInt8:&count error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read count in 'CMPR' chunk");
-			return nullptr;
-		}
-
-		char compressionName [count];
-		NSInteger bytesRead;
-		if(![inputSource readBytes:compressionName length:count bytesRead:&bytesRead error:nil] || bytesRead != count) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read compressionName in 'CMPR' chunk");
-			return nullptr;
-		}
-
-		result->mCompressionName = std::string(compressionName, count);
-
-		// Chunks always have an even length
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-
-		if(offset % 2) {
-			uint8_t unused;
-			if(![inputSource readUInt8:&unused error:nil]) {
-				os_log_error(gSFBDSDDecoderLog, "Unable to read dummy byte in 'CMPR' chunk");
-				return nullptr;
-			}
-
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<AbsoluteStartTimeChunk> ParseAbsoluteStartTimeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'ABSS') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'ABSS' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<AbsoluteStartTimeChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(![inputSource readUInt16BigEndian:&result->mHours error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read hours in 'ABSS' chunk");
-			return nullptr;
-		}
-
-		if(![inputSource readUInt8:&result->mMinutes error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read minutes in 'ABSS' chunk");
-			return nullptr;
-		}
-
-		if(![inputSource readUInt8:&result->mSeconds error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read seconds in 'ABSS' chunk");
-			return nullptr;
-		}
-
-		if(![inputSource readUInt32BigEndian:&result->mSamples error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read samples in 'ABSS' chunk");
-			return nullptr;
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<LoudspeakerConfigurationChunk> ParseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'LSCO') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'LSCO' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<LoudspeakerConfigurationChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(![inputSource readUInt16BigEndian:&result->mLoudspeakerConfiguration error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read loudspeaker configuration in 'LSCO' chunk");
-			return nullptr;
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'PROP') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'PROP' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<PropertyChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(!ReadID(inputSource, result->mPropertyType)) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read property type in 'PROP' chunk");
-			return nullptr;
-		}
-
-		if(result->mPropertyType != 'SND ') {
-			os_log_error(gSFBDSDDecoderLog, "Unexpected property type in 'PROP' chunk: %u", result->mPropertyType);
-			return nullptr;
-		}
-
-		// Parse the local chunks
-		auto chunkDataSizeRemaining = result->mDataSize - 4; // adjust for mPropertyType
-		while(chunkDataSizeRemaining) {
-
-			uint32_t localChunkID;
-			uint64_t localChunkDataSize;
-
-			if(ReadChunkIDAndDataSize(inputSource, localChunkID, localChunkDataSize)) {
-				switch(localChunkID) {
-					case 'FS  ':
-					{
-						auto chunk = ParseSampleRateChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-					case 'CHNL':
-					{
-						auto chunk = ParseChannelsChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-					case 'CMPR':
-					{
-						auto chunk = ParseCompressionTypeChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-					case 'ABSS':
-					{
-						auto chunk = ParseAbsoluteStartTimeChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-					case 'LSCO':
-					{
-						auto chunk = ParseLoudspeakerConfigurationChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-						// Skip unrecognized or ignored chunks
-					default:
-						if(![inputSource getOffset:&offset error:nil]) {
-							os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-							return nullptr;
-						}
-
-						if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
-							os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
-							return nullptr;
-						}
-
-						break;
-				}
-
-				chunkDataSizeRemaining -= 12;
-				chunkDataSizeRemaining -= localChunkDataSize;
-			}
-			else {
-				os_log_error(gSFBDSDDecoderLog, "Error reading local chunk in 'PROP' chunk");
-				return nullptr;
-			}
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'DSD ') {
-			os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'DSD ' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_shared<DSDSoundDataChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		// Skip the data
-		if(![inputSource seekToOffset:(offset + (NSInteger)chunkDataSize) error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
-			return nullptr;
-		}
-
-		return result;
-	}
-
-	std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
-	{
-		if(chunkID != 'FRM8') {
-			os_log_error(gSFBDSDDecoderLog, "Missing 'FRM8' chunk");
-			return nullptr;
-		}
-
-		auto result = std::make_unique<FormDSDChunk>();
-
-		result->mChunkID = chunkID;
-		result->mDataSize = chunkDataSize;
-		NSInteger offset;
-		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-			return nullptr;
-		}
-		result->mDataOffset = offset;
-
-		if(!ReadID(inputSource, result->mFormType)) {
-			os_log_error(gSFBDSDDecoderLog, "Unable to read formType in 'FRM8' chunk");
-			return nullptr;
-		}
-
-		if(result->mFormType != 'DSD ') {
-			os_log_error(gSFBDSDDecoderLog, "Unexpected formType in 'FRM8' chunk: '%{public}.4s'", SFBCStringForOSType(result->mFormType));
-			return nullptr;
-		}
-
-		// Parse the local chunks
-		auto chunkDataSizeRemaining = result->mDataSize - 4; // adjust for mFormType
-		while(chunkDataSizeRemaining) {
-
-			uint32_t localChunkID;
-			uint64_t localChunkDataSize;
-
-			if(ReadChunkIDAndDataSize(inputSource, localChunkID, localChunkDataSize)) {
-				switch(localChunkID) {
-					case 'FVER':
-					{
-						auto chunk = ParseFormatVersionChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-					case 'PROP':
-					{
-						auto chunk = ParsePropertyChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-					case 'DSD ':
-					{
-						auto chunk = ParseDSDSoundDataChunk(inputSource, localChunkID, localChunkDataSize);
-						if(chunk)
-							result->mLocalChunks[chunk->mChunkID] = chunk;
-						break;
-					}
-
-						// Skip unrecognized or ignored chunks
-					default:
-						if(![inputSource getOffset:&offset error:nil]) {
-							os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
-							return nullptr;
-						}
-
-						if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
-							os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
-							return nullptr;
-						}
-
-						break;
-				}
-
-				chunkDataSizeRemaining -= 12;
-				chunkDataSizeRemaining -= localChunkDataSize;
-			}
-			else {
-				os_log_error(gSFBDSDDecoderLog, "Error reading local chunk in 'FRM8' chunk");
-				return nullptr;
-			}
-		}
-
-		return result;
-	}
-
-	std::unique_ptr<FormDSDChunk> ParseDSDIFF(SFBInputSource *inputSource)
-	{
-		uint32_t chunkID;
-		uint64_t chunkDataSize;
-		if(!ReadChunkIDAndDataSize(inputSource, chunkID, chunkDataSize))
-			return nullptr;
-
-		return ParseFormDSDChunk(inputSource, chunkID, chunkDataSize);
-	}
-
-	static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
-	{
-		return [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-									   code:SFBDSDDecoderErrorCodeInvalidFormat
-			  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @"")
-										url:url
-							  failureReason:NSLocalizedString(@"Not a DSDIFF file", @"")
-						 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-	}
-
+	return true;
 }
 
+std::shared_ptr<FormatVersionChunk> ParseFormatVersionChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'FVER') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'FVER' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<FormatVersionChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(![inputSource readUInt32BigEndian:&result->mFormatVersion error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read format version in 'FVER' chunk");
+		return nullptr;
+	}
+
+	if(result->mFormatVersion > FormatVersionChunk::kSupportedFormatVersion) {
+		os_log_error(gSFBDSDDecoderLog, "Unsupported format version in 'FVER': %u", result->mFormatVersion);
+		return nullptr;
+	}
+
+	return result;
+}
+
+std::shared_ptr<SampleRateChunk> ParseSampleRateChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'FS  ') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'FS  ' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<SampleRateChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(![inputSource readUInt32BigEndian:&result->mSampleRate error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read sample rate in 'FS  ' chunk");
+		return nullptr;
+	}
+
+	return result;
+}
+
+std::shared_ptr<ChannelsChunk> ParseChannelsChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'CHNL') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'CHNL' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<ChannelsChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(![inputSource readUInt16BigEndian:&result->mNumberChannels error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read number channels in 'CHNL' chunk");
+		return nullptr;
+	}
+
+	for(uint16_t i = 0; i < result->mNumberChannels; ++i) {
+		uint32_t channelID;
+		if(!ReadID(inputSource, channelID)) {
+			os_log_error(gSFBDSDDecoderLog, "Unable to read channel ID in 'CHNL' chunk");
+			return nullptr;
+		}
+		result->mChannelIDs.push_back(channelID);
+	}
+
+	return result;
+}
+
+std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'CMPR') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'CMPR' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<CompressionTypeChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(!ReadID(inputSource, result->mCompressionType)) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read compression type in 'CMPR' chunk");
+		return nullptr;
+	}
+
+	uint8_t count;
+	if(![inputSource readUInt8:&count error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read count in 'CMPR' chunk");
+		return nullptr;
+	}
+
+	char compressionName [count];
+	NSInteger bytesRead;
+	if(![inputSource readBytes:compressionName length:count bytesRead:&bytesRead error:nil] || bytesRead != count) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read compressionName in 'CMPR' chunk");
+		return nullptr;
+	}
+
+	result->mCompressionName = std::string(compressionName, count);
+
+	// Chunks always have an even length
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+
+	if(offset % 2) {
+		uint8_t unused;
+		if(![inputSource readUInt8:&unused error:nil]) {
+			os_log_error(gSFBDSDDecoderLog, "Unable to read dummy byte in 'CMPR' chunk");
+			return nullptr;
+		}
+
+	}
+
+	return result;
+}
+
+std::shared_ptr<AbsoluteStartTimeChunk> ParseAbsoluteStartTimeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'ABSS') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'ABSS' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<AbsoluteStartTimeChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(![inputSource readUInt16BigEndian:&result->mHours error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read hours in 'ABSS' chunk");
+		return nullptr;
+	}
+
+	if(![inputSource readUInt8:&result->mMinutes error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read minutes in 'ABSS' chunk");
+		return nullptr;
+	}
+
+	if(![inputSource readUInt8:&result->mSeconds error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read seconds in 'ABSS' chunk");
+		return nullptr;
+	}
+
+	if(![inputSource readUInt32BigEndian:&result->mSamples error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read samples in 'ABSS' chunk");
+		return nullptr;
+	}
+
+	return result;
+}
+
+std::shared_ptr<LoudspeakerConfigurationChunk> ParseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'LSCO') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'LSCO' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<LoudspeakerConfigurationChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(![inputSource readUInt16BigEndian:&result->mLoudspeakerConfiguration error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read loudspeaker configuration in 'LSCO' chunk");
+		return nullptr;
+	}
+
+	return result;
+}
+
+std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'PROP') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'PROP' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<PropertyChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(!ReadID(inputSource, result->mPropertyType)) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read property type in 'PROP' chunk");
+		return nullptr;
+	}
+
+	if(result->mPropertyType != 'SND ') {
+		os_log_error(gSFBDSDDecoderLog, "Unexpected property type in 'PROP' chunk: %u", result->mPropertyType);
+		return nullptr;
+	}
+
+	// Parse the local chunks
+	auto chunkDataSizeRemaining = result->mDataSize - 4; // adjust for mPropertyType
+	while(chunkDataSizeRemaining) {
+
+		uint32_t localChunkID;
+		uint64_t localChunkDataSize;
+
+		if(ReadChunkIDAndDataSize(inputSource, localChunkID, localChunkDataSize)) {
+			switch(localChunkID) {
+				case 'FS  ':
+				{
+					auto chunk = ParseSampleRateChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+				case 'CHNL':
+				{
+					auto chunk = ParseChannelsChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+				case 'CMPR':
+				{
+					auto chunk = ParseCompressionTypeChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+				case 'ABSS':
+				{
+					auto chunk = ParseAbsoluteStartTimeChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+				case 'LSCO':
+				{
+					auto chunk = ParseLoudspeakerConfigurationChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+					// Skip unrecognized or ignored chunks
+				default:
+					if(![inputSource getOffset:&offset error:nil]) {
+						os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+						return nullptr;
+					}
+
+					if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
+						os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
+						return nullptr;
+					}
+
+					break;
+			}
+
+			chunkDataSizeRemaining -= 12;
+			chunkDataSizeRemaining -= localChunkDataSize;
+		}
+		else {
+			os_log_error(gSFBDSDDecoderLog, "Error reading local chunk in 'PROP' chunk");
+			return nullptr;
+		}
+	}
+
+	return result;
+}
+
+std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'DSD ') {
+		os_log_error(gSFBDSDDecoderLog, "Invalid chunk ID for 'DSD ' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_shared<DSDSoundDataChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	// Skip the data
+	if(![inputSource seekToOffset:(offset + (NSInteger)chunkDataSize) error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
+		return nullptr;
+	}
+
+	return result;
+}
+
+std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+{
+	if(chunkID != 'FRM8') {
+		os_log_error(gSFBDSDDecoderLog, "Missing 'FRM8' chunk");
+		return nullptr;
+	}
+
+	auto result = std::make_unique<FormDSDChunk>();
+
+	result->mChunkID = chunkID;
+	result->mDataSize = chunkDataSize;
+	NSInteger offset;
+	if(![inputSource getOffset:&offset error:nil]) {
+		os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+		return nullptr;
+	}
+	result->mDataOffset = offset;
+
+	if(!ReadID(inputSource, result->mFormType)) {
+		os_log_error(gSFBDSDDecoderLog, "Unable to read formType in 'FRM8' chunk");
+		return nullptr;
+	}
+
+	if(result->mFormType != 'DSD ') {
+		os_log_error(gSFBDSDDecoderLog, "Unexpected formType in 'FRM8' chunk: '%{public}.4s'", SFBCStringForOSType(result->mFormType));
+		return nullptr;
+	}
+
+	// Parse the local chunks
+	auto chunkDataSizeRemaining = result->mDataSize - 4; // adjust for mFormType
+	while(chunkDataSizeRemaining) {
+
+		uint32_t localChunkID;
+		uint64_t localChunkDataSize;
+
+		if(ReadChunkIDAndDataSize(inputSource, localChunkID, localChunkDataSize)) {
+			switch(localChunkID) {
+				case 'FVER':
+				{
+					auto chunk = ParseFormatVersionChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+				case 'PROP':
+				{
+					auto chunk = ParsePropertyChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+				case 'DSD ':
+				{
+					auto chunk = ParseDSDSoundDataChunk(inputSource, localChunkID, localChunkDataSize);
+					if(chunk)
+						result->mLocalChunks[chunk->mChunkID] = chunk;
+					break;
+				}
+
+					// Skip unrecognized or ignored chunks
+				default:
+					if(![inputSource getOffset:&offset error:nil]) {
+						os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
+						return nullptr;
+					}
+
+					if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
+						os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
+						return nullptr;
+					}
+
+					break;
+			}
+
+			chunkDataSizeRemaining -= 12;
+			chunkDataSizeRemaining -= localChunkDataSize;
+		}
+		else {
+			os_log_error(gSFBDSDDecoderLog, "Error reading local chunk in 'FRM8' chunk");
+			return nullptr;
+		}
+	}
+
+	return result;
+}
+
+std::unique_ptr<FormDSDChunk> ParseDSDIFF(SFBInputSource *inputSource)
+{
+	uint32_t chunkID;
+	uint64_t chunkDataSize;
+	if(!ReadChunkIDAndDataSize(inputSource, chunkID, chunkDataSize))
+		return nullptr;
+
+	return ParseFormDSDChunk(inputSource, chunkID, chunkDataSize);
+}
+
+static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
+{
+	return [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
+								   code:SFBDSDDecoderErrorCodeInvalidFormat
+		  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @"")
+									url:url
+						  failureReason:NSLocalizedString(@"Not a DSDIFF file", @"")
+					 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+}
+
+}
 
 @interface SFBDSDIFFDecoder ()
 {

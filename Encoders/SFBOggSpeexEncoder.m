@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -22,7 +22,6 @@
 #import "SFBOggSpeexEncoder.h"
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-#import "SFBCStringForOSType.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex = @"org.sbooth.AudioEngine.Encoder.OggSpeex";
 

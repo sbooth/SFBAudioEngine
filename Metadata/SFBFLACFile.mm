@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -18,8 +18,9 @@
 
 #import "SFBFLACFile.h"
 
+#import "SFBCFWrapper.hpp"
+
 #import "AddAudioPropertiesToDictionary.h"
-#import "CFWrapper.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"

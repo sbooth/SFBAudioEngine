@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -10,8 +10,9 @@
 
 #import "SFBShortenDecoder.h"
 
+#import "SFBByteStream.hpp"
+
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-#import "ByteStream.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
@@ -77,304 +78,309 @@ SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.
 #define ROUNDEDSHIFTDOWN(x, n) (((n) == 0) ? (x) : ((x) >> ((n) - 1)) >> 1)
 
 namespace {
-	/// Returns a two-dimensional \c rows x \c cols array using one allocation from \c malloc
-	template <typename T>
-	T ** AllocateContiguous2DArray(size_t rows, size_t cols)
+
+/// Returns a two-dimensional \c rows x \c cols array using one allocation from \c malloc
+template <typename T>
+T ** AllocateContiguous2DArray(size_t rows, size_t cols)
+{
+	T **result = static_cast<T **>(std::malloc((rows * sizeof(T *)) + (rows * cols * sizeof(T))));
+	T *tmp = reinterpret_cast<T *>(result + rows);
+	for(size_t i = 0; i < rows; ++i)
+	result[i] = tmp + i * cols;
+	return result;
+}
+
+/// Clips values to the interval [lower, upper]
+template <typename T>
+constexpr const T& clip(const T& n, const T& lower, const T& upper) {
+	return std::max(lower, std::min(n, upper));
+}
+
+///// Returns @c v clamped to the interval @c [lo,hi]
+//template<typename T>
+//constexpr const T& clamp(const T& v, const T& lo, const T& hi)
+//{
+//	assert(!(hi < lo));
+//	return (v < lo) ? lo : (hi < v) ? hi : v;
+//}
+
+/// Variable-length input using Golomb-Rice coding
+class VariableLengthInput {
+public:
+	static constexpr uint32_t sMaskTable [] = {
+		0x0,
+		0x1,		0x3,		0x7,		0xf,
+		0x1f,		0x3f,		0x7f,		0xff,
+		0x1ff,		0x3ff,		0x7ff,		0xfff,
+		0x1fff,		0x3fff,		0x7fff,		0xffff,
+		0x1ffff,	0x3ffff,	0x7ffff,	0xfffff,
+		0x1fffff,	0x3fffff,	0x7fffff,	0xffffff,
+		0x1ffffff,	0x3ffffff,	0x7ffffff,	0xfffffff,
+		0x1fffffff,	0x3fffffff,	0x7fffffff,	0xffffffff
+	};
+
+	/// Creates a new \c VariableLengthInput object with an internal buffer of the specified size
+	/// @warning Sizes other than \c 512 will break seeking
+	VariableLengthInput(size_t size = 512)
+	: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
 	{
-		T **result = (T **)malloc((rows * sizeof(T *)) + (rows * cols * sizeof(T)));
-		T *tmp = (T *)(result + rows);
-		for(size_t i = 0; i < rows; ++i) {
-			result[i] = tmp + i * cols;
-		}
-		return result;
+		mByteBuffer = new uint8_t [mSize];
+		mByteBufferPosition = mByteBuffer;
 	}
 
-	/// Clips values to the interval [lower, upper]
-	template <typename T>
-	T clip(const T& n, const T& lower, const T& upper) {
-		return std::max(lower, std::min(n, upper));
+	~VariableLengthInput()
+	{
+		delete [] mByteBuffer;
 	}
 
-	/// Variable-length input using Golomb-Rice coding
-	class VariableLengthInput {
-	public:
-		static constexpr uint32_t sMaskTable [] = {
-			0x0,
-			0x1,		0x3,		0x7,		0xf,
-			0x1f,		0x3f,		0x7f,		0xff,
-			0x1ff,		0x3ff,		0x7ff,		0xfff,
-			0x1fff,		0x3fff,		0x7fff,		0xffff,
-			0x1ffff,	0x3ffff,	0x7ffff,	0xfffff,
-			0x1fffff,	0x3fffff,	0x7fffff,	0xffffff,
-			0x1ffffff,	0x3ffffff,	0x7ffffff,	0xfffffff,
-			0x1fffffff,	0x3fffffff,	0x7fffffff,	0xffffffff
-		};
+	/// Input callback type
+	using InputBlock = bool(^)(void *buf, size_t len, size_t& read);
 
-		/// Creates a new \c VariableLengthInput object with an internal buffer of the specified size
-		/// @warning Sizes other than \c 512 will break seeking
-		VariableLengthInput(size_t size = 512)
-			: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
-		{
-			mByteBuffer = new uint8_t [mSize];
-			mByteBufferPosition = mByteBuffer;
+	/// Sets the input callback
+	void SetInputCallback(InputBlock block)
+	{
+		mInputBlock = block;
+	}
+
+	/// Reads a single unsigned value from the specified bin
+	bool uvar_get(int32_t& i32, size_t bin)
+	{
+		if(mBitsAvailable == 0) {
+			if(!word_get(mBitBuffer))
+				return false;
+			mBitsAvailable = 32;
 		}
 
-		~VariableLengthInput()
-		{
-			delete [] mByteBuffer;
-		}
-
-		/// Input callback type
-		using InputBlock = bool(^)(void *buf, size_t len, size_t& read);
-
-		/// Sets the input callback
-		void SetInputCallback(InputBlock block)
-		{
-			mInputBlock = block;
-		}
-
-		/// Reads a single unsigned value from the specified bin
-		bool uvar_get(int32_t& i32, size_t bin)
-		{
+		int32_t result;
+		for(result = 0; !(mBitBuffer & (1L << --mBitsAvailable)); ++result) {
 			if(mBitsAvailable == 0) {
 				if(!word_get(mBitBuffer))
 					return false;
 				mBitsAvailable = 32;
 			}
+		}
 
-			int32_t result;
-			for(result = 0; !(mBitBuffer & (1L << --mBitsAvailable)); ++result) {
-				if(mBitsAvailable == 0) {
-					if(!word_get(mBitBuffer))
-						return false;
-					mBitsAvailable = 32;
-				}
+		while(bin != 0) {
+			if(mBitsAvailable >= bin) {
+				result = (result << bin) | static_cast<int32_t>((mBitBuffer >> (mBitsAvailable - bin)) & sMaskTable[bin]);
+				mBitsAvailable -= bin;
+				bin = 0;
 			}
-
-			while(bin != 0) {
-				if(mBitsAvailable >= bin) {
-					result = (result << bin) | (int32_t)((mBitBuffer >> (mBitsAvailable - bin)) & sMaskTable[bin]);
-					mBitsAvailable -= bin;
-					bin = 0;
-				}
-				else {
-					result = (result << mBitsAvailable) | (int32_t)(mBitBuffer & sMaskTable[mBitsAvailable]);
-					bin -= mBitsAvailable;
-					if(!word_get(mBitBuffer))
-						return false;
-					mBitsAvailable = 32;
-				}
-			}
-
-			i32 = result;
-			return true;
-		}
-
-		/// Reads a single signed value from the specified bin
-		bool var_get(int32_t& i32, size_t bin)
-		{
-			int32_t var;
-			if(!uvar_get(var, bin + 1))
-				return false;
-
-			uint32_t uvar = (uint32_t)var;
-			if(uvar & 1)
-				i32 = ~(uvar >> 1);
-			else
-				i32 = (uvar >> 1);
-			return true;
-		}
-
-		/// Reads the unsigned Golomb-Rice code
-		bool ulong_get(uint32_t& ui32)
-		{
-			int32_t bitcount;
-			if(!uvar_get(bitcount, ULONGSIZE))
-				return false;
-
-			int32_t i32;
-			if(!uvar_get(i32, (uint32_t)bitcount))
-				return false;
-
-			ui32 = (uint32_t)i32;
-			return true;
-		}
-
-		bool uint_get(uint32_t& ui32, int version, size_t bin)
-		{
-			if(version == 0) {
-				int32_t i32;
-				if(!uvar_get(i32, bin))
+			else {
+				result = (result << mBitsAvailable) | static_cast<int32_t>(mBitBuffer & sMaskTable[mBitsAvailable]);
+				bin -= mBitsAvailable;
+				if(!word_get(mBitBuffer))
 					return false;
-				ui32 = (uint32_t)i32;
-				return true;
+				mBitsAvailable = 32;
 			}
-			else
-				return ulong_get(ui32);
 		}
 
-		static size_t sizeof_uvar(uint32_t val, size_t nbin)
-		{
-			return (val >> nbin) + nbin;
-		}
+		i32 = result;
+		return true;
+	}
 
-		static size_t sizeof_var(int32_t val, size_t nbin)
-		{
-			return (size_t)(labs(val) >> nbin) + nbin + 1;
-		}
+	/// Reads a single signed value from the specified bin
+	bool var_get(int32_t& i32, size_t bin)
+	{
+		int32_t var;
+		if(!uvar_get(var, bin + 1))
+			return false;
 
-		void Reset()
-		{
-			mByteBufferPosition = mByteBuffer;
-			mBytesAvailable = 0;
-			mBitsAvailable = 0;
-		}
+		uint32_t uvar = static_cast<uint32_t>(var);
+		if(uvar & 1)
+			i32 = ~(uvar >> 1);
+		else
+			i32 = (uvar >> 1);
+		return true;
+	}
 
-		bool Refill()
-		{
-			size_t bytesRead = 0;
-			if(!mInputBlock || !mInputBlock(mByteBuffer, mSize, bytesRead) || bytesRead < 4)
+	/// Reads the unsigned Golomb-Rice code
+	bool ulong_get(uint32_t& ui32)
+	{
+		int32_t bitcount;
+		if(!uvar_get(bitcount, ULONGSIZE))
+			return false;
+
+		int32_t i32;
+		if(!uvar_get(i32, static_cast<uint32_t>(bitcount)))
+			return false;
+
+		ui32 = static_cast<uint32_t>(i32);
+		return true;
+	}
+
+	bool uint_get(uint32_t& ui32, int version, size_t bin)
+	{
+		if(version == 0) {
+			int32_t i32;
+			if(!uvar_get(i32, bin))
 				return false;
-			mBytesAvailable += bytesRead;
-			mByteBufferPosition = mByteBuffer;
+			ui32 = static_cast<uint32_t>(i32);
 			return true;
 		}
-
-		bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable)
-		{
-			if(byteBufferPosition > mBytesAvailable || bytesAvailable > mBytesAvailable - byteBufferPosition || bitsAvailable > 32)
-				return false;
-			mByteBufferPosition = mByteBuffer + byteBufferPosition;
-			mBytesAvailable = bytesAvailable;
-			mBitBuffer = bitBuffer;
-			mBitsAvailable = bitsAvailable;
-			return true;
-		}
-
-	private:
-		/// Input callback
-		InputBlock mInputBlock;
-		/// Size of \c mByteBuffer in bytes
-		size_t mSize;
-		/// Byte buffer
-		uint8_t *mByteBuffer;
-		/// Current position in \c mByteBuffer
-		uint8_t *mByteBufferPosition;
-		/// Bytes available in \c mByteBuffer
-		size_t mBytesAvailable;
-		/// Bit buffer
-		uint32_t mBitBuffer;
-		/// Bits available in \c mBuffer
-		size_t mBitsAvailable;
-
-		/// Reads a single \c uint32_t from the byte buffer, refilling if necessary
-		bool word_get(uint32_t& ui32)
-		{
-			if(mBytesAvailable < 4 && !Refill())
-				return false;
-
-			ui32 = (uint32_t)((((int32_t)mByteBufferPosition[0]) << 24) | (((int32_t)mByteBufferPosition[1]) << 16) | (((int32_t)mByteBufferPosition[2]) << 8) | ((int32_t)mByteBufferPosition[3]));
-
-			mByteBufferPosition += 4;
-			mBytesAvailable -= 4;
-
-			return true;
-		}
-
-	};
-
-	/// Shorten seek table header
-	struct SeekTableHeader
-	{
-		int8_t mSignature [4];
-		uint32_t mVersion;
-		uint32_t mFileSize;
-	};
-
-	SeekTableHeader ParseSeekTableHeader(const void *buf)
-	{
-		SFB::ByteStream byteStream(buf, SEEK_HEADER_SIZE);
-
-		SeekTableHeader header;
-		byteStream.Read(header.mSignature, 4);
-		header.mVersion = byteStream.ReadLE<uint32_t>();
-		header.mFileSize = byteStream.ReadLE<uint32_t>();
-
-		return header;
+		else
+			return ulong_get(ui32);
 	}
 
-	/// Shorten seek table trailer
-	struct SeekTableTrailer
+	static size_t sizeof_uvar(uint32_t val, size_t nbin)
 	{
-		uint32_t mSeekTableSize;
-		int8_t mSignature [8];
-	};
-
-	SeekTableTrailer ParseSeekTableTrailer(const void *buf)
-	{
-		SFB::ByteStream byteStream(buf, SEEK_TRAILER_SIZE);
-
-		SeekTableTrailer trailer;
-		trailer.mSeekTableSize = byteStream.ReadLE<uint32_t>();
-		byteStream.Read(trailer.mSignature, 8);
-
-		return trailer;
+		return (val >> nbin) + nbin;
 	}
 
-	/// A Shorten seek table entry
-	struct SeekTableEntry
+	static size_t sizeof_var(int32_t val, size_t nbin)
 	{
-		uint32_t mFrameNumber;
-		uint32_t mByteOffsetInFile;
-		uint32_t mLastBufferReadPosition;
-		uint16_t mBytesAvailable;
-		uint16_t mByteBufferPosition;
-		uint16_t mBitBufferPosition;
-		uint32_t mBitBuffer;
-		uint16_t mBitshift;
-		int32_t mCBuf0 [3];
-		int32_t mCBuf1 [3];
-		int32_t mOffset0 [4];
-		int32_t mOffset1 [4];
-	};
-
-	SeekTableEntry ParseSeekTableEntry(const void *buf)
-	{
-		SFB::ByteStream byteStream(buf, SEEK_ENTRY_SIZE);
-
-		SeekTableEntry entry;
-		entry.mFrameNumber = byteStream.ReadLE<uint32_t>();
-		entry.mByteOffsetInFile = byteStream.ReadLE<uint32_t>();
-		entry.mLastBufferReadPosition = byteStream.ReadLE<uint32_t>();
-		entry.mBytesAvailable = byteStream.ReadLE<uint16_t>();
-		entry.mByteBufferPosition = byteStream.ReadLE<uint16_t>();
-		entry.mBitBufferPosition = byteStream.ReadLE<uint16_t>();
-		entry.mBitBuffer = byteStream.ReadLE<uint32_t>();
-		entry.mBitshift = byteStream.ReadLE<uint16_t>();
-		for(auto i = 0; i < 3; ++i) {
-			entry.mCBuf0[i] = (int32_t)byteStream.ReadLE<uint32_t>();
-		}
-		for(auto i = 0; i < 3; ++i) {
-			entry.mCBuf1[i] = (int32_t)byteStream.ReadLE<uint32_t>();
-		}
-		for(auto i = 0; i < 4; ++i) {
-			entry.mOffset0[i] = (int32_t)byteStream.ReadLE<uint32_t>();
-		}
-		for(auto i = 0; i < 4; ++i) {
-			entry.mOffset1[i] = (int32_t)byteStream.ReadLE<uint32_t>();
-		}
-
-		return entry;
+		return static_cast<size_t>(labs(val) >> nbin) + nbin + 1;
 	}
 
-	/// Locates the most suitable seek table entry for \c frame
-	std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::const_iterator begin, std::vector<SeekTableEntry>::const_iterator end, AVAudioFramePosition frame)
+	void Reset()
 	{
-		auto it = std::upper_bound(begin, end, frame, [](AVAudioFramePosition value, const SeekTableEntry& entry) {
-			return value < entry.mFrameNumber;
-		});
-		return it == begin ? end : --it;
+		mByteBufferPosition = mByteBuffer;
+		mBytesAvailable = 0;
+		mBitsAvailable = 0;
 	}
+
+	bool Refill()
+	{
+		size_t bytesRead = 0;
+		if(!mInputBlock || !mInputBlock(mByteBuffer, mSize, bytesRead) || bytesRead < 4)
+			return false;
+		mBytesAvailable += bytesRead;
+		mByteBufferPosition = mByteBuffer;
+		return true;
+	}
+
+	bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable)
+	{
+		if(byteBufferPosition > mBytesAvailable || bytesAvailable > mBytesAvailable - byteBufferPosition || bitsAvailable > 32)
+			return false;
+		mByteBufferPosition = mByteBuffer + byteBufferPosition;
+		mBytesAvailable = bytesAvailable;
+		mBitBuffer = bitBuffer;
+		mBitsAvailable = bitsAvailable;
+		return true;
+	}
+
+private:
+	/// Input callback
+	InputBlock mInputBlock;
+	/// Size of \c mByteBuffer in bytes
+	size_t mSize;
+	/// Byte buffer
+	uint8_t *mByteBuffer;
+	/// Current position in \c mByteBuffer
+	uint8_t *mByteBufferPosition;
+	/// Bytes available in \c mByteBuffer
+	size_t mBytesAvailable;
+	/// Bit buffer
+	uint32_t mBitBuffer;
+	/// Bits available in \c mBuffer
+	size_t mBitsAvailable;
+
+	/// Reads a single \c uint32_t from the byte buffer, refilling if necessary
+	bool word_get(uint32_t& ui32)
+	{
+		if(mBytesAvailable < 4 && !Refill())
+			return false;
+
+		ui32 = static_cast<uint32_t>((static_cast<int32_t>(mByteBufferPosition[0]) << 24) | (static_cast<int32_t>(mByteBufferPosition[1]) << 16) | (static_cast<int32_t>(mByteBufferPosition[2]) << 8) | static_cast<int32_t>(mByteBufferPosition[3]));
+
+		mByteBufferPosition += 4;
+		mBytesAvailable -= 4;
+
+		return true;
+	}
+
+};
+
+/// Shorten seek table header
+struct SeekTableHeader
+{
+	int8_t mSignature [4];
+	uint32_t mVersion;
+	uint32_t mFileSize;
+};
+
+SeekTableHeader ParseSeekTableHeader(const void *buf)
+{
+	SFB::ByteStream byteStream(buf, SEEK_HEADER_SIZE);
+
+	SeekTableHeader header;
+	byteStream.Read(header.mSignature, 4);
+	header.mVersion = byteStream.ReadLE<uint32_t>();
+	header.mFileSize = byteStream.ReadLE<uint32_t>();
+
+	return header;
+}
+
+/// Shorten seek table trailer
+struct SeekTableTrailer
+{
+	uint32_t mSeekTableSize;
+	int8_t mSignature [8];
+};
+
+SeekTableTrailer ParseSeekTableTrailer(const void *buf)
+{
+	SFB::ByteStream byteStream(buf, SEEK_TRAILER_SIZE);
+
+	SeekTableTrailer trailer;
+	trailer.mSeekTableSize = byteStream.ReadLE<uint32_t>();
+	byteStream.Read(trailer.mSignature, 8);
+
+	return trailer;
+}
+
+/// A Shorten seek table entry
+struct SeekTableEntry
+{
+	uint32_t mFrameNumber;
+	uint32_t mByteOffsetInFile;
+	uint32_t mLastBufferReadPosition;
+	uint16_t mBytesAvailable;
+	uint16_t mByteBufferPosition;
+	uint16_t mBitBufferPosition;
+	uint32_t mBitBuffer;
+	uint16_t mBitshift;
+	int32_t mCBuf0 [3];
+	int32_t mCBuf1 [3];
+	int32_t mOffset0 [4];
+	int32_t mOffset1 [4];
+};
+
+SeekTableEntry ParseSeekTableEntry(const void *buf)
+{
+	SFB::ByteStream byteStream(buf, SEEK_ENTRY_SIZE);
+
+	SeekTableEntry entry;
+	entry.mFrameNumber = byteStream.ReadLE<uint32_t>();
+	entry.mByteOffsetInFile = byteStream.ReadLE<uint32_t>();
+	entry.mLastBufferReadPosition = byteStream.ReadLE<uint32_t>();
+	entry.mBytesAvailable = byteStream.ReadLE<uint16_t>();
+	entry.mByteBufferPosition = byteStream.ReadLE<uint16_t>();
+	entry.mBitBufferPosition = byteStream.ReadLE<uint16_t>();
+	entry.mBitBuffer = byteStream.ReadLE<uint32_t>();
+	entry.mBitshift = byteStream.ReadLE<uint16_t>();
+	for(auto i = 0; i < 3; ++i)
+		entry.mCBuf0[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+	for(auto i = 0; i < 3; ++i)
+		entry.mCBuf1[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+	for(auto i = 0; i < 4; ++i)
+		entry.mOffset0[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+	for(auto i = 0; i < 4; ++i)
+		entry.mOffset1[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+
+	return entry;
+}
+
+/// Locates the most suitable seek table entry for \c frame
+std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::const_iterator begin, std::vector<SeekTableEntry>::const_iterator end, AVAudioFramePosition frame)
+{
+	auto it = std::upper_bound(begin, end, frame, [](AVAudioFramePosition value, const SeekTableEntry& entry) {
+		return value < entry.mFrameNumber;
+	});
+	return it == begin ? end : --it;
+}
+
 }
 
 @interface SFBShortenDecoder ()
@@ -489,7 +495,7 @@ namespace {
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
 
 	processingStreamDescription.mSampleRate			= _sampleRate;
-	processingStreamDescription.mChannelsPerFrame	= (UInt32)_nchan;
+	processingStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_nchan);
 	processingStreamDescription.mBitsPerChannel		= _bitsPerSample;
 
 	processingStreamDescription.mBytesPerPacket		= (_bitsPerSample + 7) / 8;
@@ -516,18 +522,18 @@ namespace {
 	sourceStreamDescription.mFormatID			= kSFBAudioFormatShorten;
 
 	sourceStreamDescription.mSampleRate			= _sampleRate;
-	sourceStreamDescription.mChannelsPerFrame	= (UInt32)_nchan;
+	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_nchan);
 	sourceStreamDescription.mBitsPerChannel		= _bitsPerSample;
 
-	sourceStreamDescription.mFramesPerPacket	= (UInt32)_blocksize;
+	sourceStreamDescription.mFramesPerPacket	= static_cast<UInt32>(_blocksize);
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:(AVAudioFrameCount)_blocksize];
 
 	// Allocate decoding buffers
-	_buffer = AllocateContiguous2DArray<int32_t>((size_t)_nchan, (size_t)(_blocksize + _nwrap));
-	_offset = AllocateContiguous2DArray<int32_t>((size_t)_nchan, (size_t)std::max(1, _nmean));
+	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(_blocksize + _nwrap));
+	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(std::max(1, _nmean)));
 
 	for(auto i = 0; i < _nchan; ++i) {
 		for(auto j = 0; j < _nwrap; ++j) {
@@ -537,7 +543,7 @@ namespace {
 	}
 
 	if(_maxnlpc > 0)
-		_qlpc = new int [(size_t)_maxnlpc];
+		_qlpc = new int [static_cast<size_t>(_maxnlpc)];
 
 	// Initialize offset
 	int32_t mean = 0;
@@ -576,11 +582,11 @@ namespace {
 - (BOOL)closeReturningError:(NSError **)error
 {
 	if(_buffer) {
-		free(_buffer);
+		std::free(_buffer);
 		_buffer = nullptr;
 	}
 	if(_offset) {
-		free(_offset);
+		std::free(_offset);
 		_offset = nullptr;
 	}
 	if(_qlpc) {
@@ -756,7 +762,7 @@ namespace {
 		NSInteger bytesRead;
 		if(![inputSource readBytes:buf length:(NSInteger)len bytesRead:&bytesRead error:nil])
 			return false;
-		read = (size_t)bytesRead;
+		read = static_cast<size_t>(bytesRead);
 		return true;
 	});
 
@@ -783,7 +789,7 @@ namespace {
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported audio type.", @"")];
 		return NO;
 	}
-	_internal_ftype = (int)ftype;
+	_internal_ftype = static_cast<int>(ftype);
 
 	// Read number of channels
 	uint32_t nchan = 0;
@@ -798,12 +804,12 @@ namespace {
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported number of channels.", @"")];
 		return NO;
 	}
-	_nchan = (int)nchan;
+	_nchan = static_cast<int>(nchan);
 
 	// Read blocksize if version > 0
 	if(_version > 0) {
 		uint32_t blocksize = 0;
-		if(!_input.uint_get(blocksize, _version, (size_t)log2(DEFAULT_BLOCK_SIZE)) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
+		if(!_input.uint_get(blocksize, _version, static_cast<size_t>(log2(DEFAULT_BLOCK_SIZE))) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -814,7 +820,7 @@ namespace {
 								   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
 			return NO;
 		}
-		_blocksize = (int)blocksize;
+		_blocksize = static_cast<int>(blocksize);
 
 		uint32_t maxnlpc = 0;
 		if(!_input.uint_get(maxnlpc, _version, LPCQSIZE) || maxnlpc > 1024) {
@@ -828,7 +834,7 @@ namespace {
 								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 			return NO;
 		}
-		_maxnlpc = (int)maxnlpc;
+		_maxnlpc = static_cast<int>(maxnlpc);
 
 		uint32_t nmean = 0;
 		if(!_input.uint_get(nmean, _version, 0) || nmean > 32768) {
@@ -842,7 +848,7 @@ namespace {
 								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 			return NO;
 		}
-		_nmean = (int)nmean;
+		_nmean = static_cast<int>(nmean);
 
 		uint32_t nskip;
 		if(!_input.uint_get(nskip, _version, NSKIPSIZE) /* || nskip > bits_remaining_in_input */) {
@@ -875,7 +881,7 @@ namespace {
 		_maxnlpc = DEFAULT_MAXNLPC;
 	}
 
-	_nwrap = std::max(NWRAP, (int)_maxnlpc);
+	_nwrap = std::max(NWRAP, static_cast<int>(_maxnlpc));
 
 	if(_version > 1)
 		_lpcqoffset = V2LPCQOFFSET;
@@ -922,10 +928,10 @@ namespace {
 			return NO;
 		}
 
-		header_bytes[i] = (int8_t)byte;
+		header_bytes[i] = static_cast<int8_t>(byte);
 	}
 
-	SFB::ByteStream chunkData{header_bytes, (size_t)header_size};
+	SFB::ByteStream chunkData{header_bytes, static_cast<size_t>(header_size)};
 	auto chunkID = chunkData.ReadBE<uint32_t>();
 
 	// Skip chunk size
@@ -1067,7 +1073,7 @@ namespace {
 	while(chunkData.ReadBE<uint32_t>() != 'COMM') {
 		auto len = chunkData.ReadBE<uint32_t>();
 		// pad byte not included in ckLen
-		if((int32_t)len < 0 || chunkData.Remaining() < 18 + len + (len & 1)) {
+		if(static_cast<int32_t>(len) < 0 || chunkData.Remaining() < 18 + len + (len & 1)) {
 			os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1082,7 +1088,7 @@ namespace {
 	}
 
 	auto len = chunkData.ReadBE<uint32_t>();
-	if((int32_t)len < 18) {
+	if(static_cast<int32_t>(len) < 18) {
 		os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", len);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1103,7 +1109,7 @@ namespace {
 	_bitsPerSample = chunkData.ReadBE<uint16_t>();
 
 	// sample rate is IEEE 754 80-bit extended float (16-bit exponent, 1-bit integer part, 63-bit fraction)
-	auto exp = (int16_t)chunkData.ReadBE<uint16_t>() - 16383 - 63;
+	auto exp = static_cast<int16_t>(chunkData.ReadBE<uint16_t>()) - 16383 - 63;
 	if(exp < -63 || exp > 63) {
 		os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
 		if(error)
@@ -1118,9 +1124,9 @@ namespace {
 
 	auto frac = chunkData.ReadBE<uint64_t>();
 	if(exp >= 0)
-		_sampleRate = (uint32_t)(frac << exp);
+		_sampleRate = static_cast<uint32_t>(frac << exp);
 	else
-		_sampleRate = (uint32_t)((frac + ((uint64_t)1 << (-exp - 1))) >> -exp);
+		_sampleRate = static_cast<uint32_t>((frac + (static_cast<uint64_t>(1) << (-exp - 1))) >> -exp);
 
 	if(len > 18)
 		os_log_info(gSFBAudioDecoderLog, "%u bytes in 'COMM' chunk not parsed", len - 16);
@@ -1201,7 +1207,7 @@ namespace {
 					case FN_DIFF0:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1217,7 +1223,7 @@ namespace {
 					case FN_DIFF1:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1233,7 +1239,7 @@ namespace {
 					case FN_DIFF2:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1249,7 +1255,7 @@ namespace {
 					case FN_DIFF3:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1296,7 +1302,7 @@ namespace {
 								sum += _qlpc[j] * cbuffer[i - j - 1];
 							}
 							int32_t var;
-							if(!_input.var_get(var, (size_t)resn)) {
+							if(!_input.var_get(var, static_cast<size_t>(resn))) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1350,10 +1356,9 @@ namespace {
 						{
 							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _nchan; ++channel) {
-								auto channel_buf = (uint8_t *)abl->mBuffers[channel].mData;
-								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = (uint8_t)clip(_buffer[channel][sample], 0, UINT8_MAX);
-								}
+								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample)
+									channel_buf[sample] = static_cast<uint8_t>(clip(_buffer[channel][sample], 0, UINT8_MAX));
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
@@ -1362,10 +1367,9 @@ namespace {
 						{
 							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _nchan; ++channel) {
-								auto channel_buf = (int8_t *)abl->mBuffers[channel].mData;
-								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = (int8_t)clip(_buffer[channel][sample], INT8_MIN, INT8_MAX);
-								}
+								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample)
+									channel_buf[sample] = static_cast<int8_t>(clip(_buffer[channel][sample], INT8_MIN, INT8_MAX));
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
@@ -1375,10 +1379,9 @@ namespace {
 						{
 							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _nchan; ++channel) {
-								auto channel_buf = (uint16_t *)abl->mBuffers[channel].mData;
-								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = (uint16_t)clip(_buffer[channel][sample], 0, UINT16_MAX);
-								}
+								auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample)
+									channel_buf[sample] = static_cast<uint16_t>(clip(_buffer[channel][sample], 0, UINT16_MAX));
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
@@ -1388,9 +1391,9 @@ namespace {
 						{
 							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _nchan; ++channel) {
-								auto channel_buf = (int16_t *)abl->mBuffers[channel].mData;
+								auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = (int16_t)clip(_buffer[channel][sample], INT16_MIN, INT16_MAX);
+									channel_buf[sample] = static_cast<int16_t>(clip(_buffer[channel][sample], INT16_MIN, INT16_MAX));
 								}
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
@@ -1408,7 +1411,7 @@ namespace {
 			case FN_BLOCKSIZE:
 			{
 				uint32_t uint = 0;
-				if(!_input.uint_get(uint, _version, (size_t)log2(_blocksize)) || uint == 0 || uint > MAX_BLOCKSIZE || (int)uint > _blocksize) {
+				if(!_input.uint_get(uint, _version, static_cast<size_t>(log2(_blocksize))) || uint == 0 || uint > MAX_BLOCKSIZE || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1419,7 +1422,7 @@ namespace {
 										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
 					return NO;
 				}
-				_blocksize = (int)uint;
+				_blocksize = static_cast<int>(uint);
 				break;
 			}
 			case FN_BITSHIFT:
