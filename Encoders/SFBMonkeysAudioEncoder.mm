@@ -58,7 +58,7 @@ public:
 		if(![mOutputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
 			return ERROR_IO_READ;
 
-		*pBytesRead = (unsigned int)bytesRead;
+		*pBytesRead = static_cast<unsigned int>(bytesRead);
 
 		return ERROR_SUCCESS;
 	}
@@ -69,7 +69,7 @@ public:
 		if(![mOutputSource writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] || bytesWritten != nBytesToWrite)
 			return ERROR_IO_WRITE;
 
-		*pBytesWritten = (unsigned int)bytesWritten;
+		*pBytesWritten = static_cast<unsigned int>(bytesWritten);
 
 		return ERROR_SUCCESS;
 	}

@@ -24,7 +24,7 @@ struct TTACallbacks : TTA_io_callback
 
 TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
 {
-	TTACallbacks *iocb = (TTACallbacks *)io;
+	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
 	NSInteger bytesRead;
 	if(![iocb->mDecoder->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil])
@@ -34,7 +34,7 @@ TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
 
 TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 {
-	TTACallbacks *iocb = (TTACallbacks *)io;
+	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
 	if(![iocb->mDecoder->_inputSource seekToOffset:offset error:nil])
 		return -1;
@@ -95,7 +95,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	TTA_info streamInfo;
 
 	try {
-		_decoder = std::make_unique<tta::tta_decoder>((TTA_io_callback *)_callbacks.get());
+		_decoder = std::make_unique<tta::tta_decoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
 		_decoder->init_get_info(&streamInfo, 0);
 	}
 	catch(const tta::tta_exception& e) {
@@ -231,11 +231,11 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	try {
 		while(_framesToSkip && !eos) {
 			if(_framesToSkip >= frameLength) {
-				framesRead = (AVAudioFrameCount)_decoder->process_stream((TTAuint8 *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
+				framesRead = (AVAudioFrameCount)_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength);
 				_framesToSkip -= framesRead;
 			}
 			else {
-				framesRead = (AVAudioFrameCount)_decoder->process_stream((TTAuint8 *)buffer.audioBufferList->mBuffers[0].mData, _framesToSkip);
+				framesRead = (AVAudioFrameCount)_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), _framesToSkip);
 				_framesToSkip = 0;
 			}
 
@@ -244,7 +244,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 		}
 
 		if(!eos) {
-			framesRead = (AVAudioFrameCount)_decoder->process_stream((TTAuint8 *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
+			framesRead = (AVAudioFrameCount)_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength);
 			if(framesRead == 0)
 				eos = true;
 		}
@@ -267,7 +267,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 {
 	NSParameterAssert(frame >= 0);
 
-	TTAuint32 seconds = (TTAuint32)(frame / _processingFormat.sampleRate);
+	TTAuint32 seconds = static_cast<TTAuint32>(frame / _processingFormat.sampleRate);
 	TTAuint32 frame_start = 0;
 
 	try {
@@ -281,7 +281,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	_framePosition = frame;
 
 	// We need to skip some samples from start of the frame if required
-	_framesToSkip = UInt32((seconds - frame_start) * _processingFormat.sampleRate + 0.5);
+	_framesToSkip = static_cast<UInt32>((seconds - frame_start) * _processingFormat.sampleRate + 0.5);
 
 	return YES;
 }

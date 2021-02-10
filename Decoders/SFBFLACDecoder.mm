@@ -59,7 +59,7 @@ FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, 
 	if(![inputSource readBytes:buffer length:(NSInteger)*bytes bytesRead:&bytesRead error:nil])
 		return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
 
-	*bytes = (size_t)bytesRead;
+	*bytes = static_cast<size_t>(bytesRead);
 
 	if(bytesRead == 0 && inputSource.atEOF)
 		return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
@@ -78,7 +78,7 @@ FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, 
 	if(!inputSource.supportsSeeking)
 		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
 
-	if(![inputSource seekToOffset:(NSInteger)absolute_byte_offset error:nil])
+	if(![inputSource seekToOffset:static_cast<NSInteger>(absolute_byte_offset) error:nil])
 		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
 
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
@@ -95,7 +95,7 @@ FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, 
 	if(![flacDecoder->_inputSource getOffset:&offset error:nil])
 		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
 
-	*absolute_byte_offset = (FLAC__uint64)offset;
+	*absolute_byte_offset = static_cast<FLAC__uint64>(offset);
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
@@ -110,7 +110,7 @@ FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decod
 	if(![flacDecoder->_inputSource getLength:&length error:nil])
 		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 
-	*stream_length = (FLAC__uint64)length;
+	*stream_length = static_cast<FLAC__uint64>(length);
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
@@ -397,7 +397,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	NSParameterAssert(frame >= 0);
 //	NSParameterAssert(frame <= _totalFrames);
 
-	FLAC__bool result = FLAC__stream_decoder_seek_absolute(_flac.get(), (FLAC__uint64)frame);
+	FLAC__bool result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
 
 	// Attempt to re-sync the stream if necessary
 	if(FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR)
@@ -428,9 +428,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	switch(bytesPerFrame) {
 		case 1: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int8_t *dst = (int8_t *)abl->mBuffers[channel].mData;
+				int8_t *dst = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = (int8_t)buffer[channel][sample];
+					*dst++ = static_cast<int8_t>(buffer[channel][sample]);
 			}
 
 			_frameBuffer.frameLength = frame->header.blocksize;
@@ -439,9 +439,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 		case 2: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int16_t *dst = (int16_t *)abl->mBuffers[channel].mData;
+				int16_t *dst = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = (int16_t)buffer[channel][sample];
+					*dst++ = static_cast<int16_t>(buffer[channel][sample]);
 			}
 
 			_frameBuffer.frameLength = frame->header.blocksize;
@@ -450,12 +450,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 		case 3: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				uint8_t *dst = (uint8_t *)abl->mBuffers[channel].mData;
+				uint8_t *dst = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
 					uint32_t value = OSSwapHostToLittleInt32(buffer[channel][sample]);
-					*dst++ = (uint8_t)(value & 0xff);
-					*dst++ = (uint8_t)((value >> 8) & 0xff);
-					*dst++ = (uint8_t)((value >> 16) & 0xff);
+					*dst++ = static_cast<uint8_t>(value & 0xff);
+					*dst++ = static_cast<uint8_t>((value >> 8) & 0xff);
+					*dst++ = static_cast<uint8_t>((value >> 16) & 0xff);
 				}
 			}
 
@@ -465,9 +465,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 		case 4: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int32_t *dst = (int32_t *)abl->mBuffers[channel].mData;
+				int32_t *dst = static_cast<int32_t *>(abl->mBuffers[channel].mData);
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = (int32_t)buffer[channel][sample];
+					*dst++ = static_cast<int32_t>(buffer[channel][sample]);
 			}
 
 			_frameBuffer.frameLength = frame->header.blocksize;

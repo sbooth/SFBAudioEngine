@@ -58,7 +58,7 @@ OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCoun
 	if(![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil])
 		return kAudioFileUnspecifiedError;
 
-	*actualCount = (UInt32)bytesRead;
+	*actualCount = static_cast<UInt32>(bytesRead);
 
 	if(decoder->_inputSource.atEOF)
 		return kAudioFileEndOfFileError;

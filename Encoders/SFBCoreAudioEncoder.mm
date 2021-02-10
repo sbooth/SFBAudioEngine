@@ -160,7 +160,7 @@ OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 req
 	if(![outputSource readBytes:buffer length:(NSInteger)requestCount bytesRead:&bytesRead error:nil])
 		return kAudioFileUnspecifiedError;
 
-	*actualCount = (UInt32)bytesRead;
+	*actualCount = static_cast<UInt32>(bytesRead);
 
 	return noErr;
 }
@@ -187,7 +187,7 @@ OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 re
 	if(![outputSource writeBytes:buffer length:(NSInteger)requestCount bytesWritten:&bytesWritten error:nil])
 		return kAudioFileUnspecifiedError;
 
-	*actualCount = (UInt32)bytesWritten;
+	*actualCount = static_cast<UInt32>(bytesWritten);
 
 	return noErr;
 }
@@ -386,14 +386,14 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 	UInt32 formatFlags = 0;
 	NSNumber *formatFlagsSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags];
 	if(formatFlagsSetting != nil)
-		formatFlags = (UInt32)formatFlagsSetting.unsignedIntValue;
+		formatFlags = static_cast<UInt32>(formatFlagsSetting.unsignedIntValue);
 	else
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatFlags is not set; mFormatFlags will be zero which is probably incorrect");
 
 	UInt32 bitsPerChannel = 0;
 	NSNumber *bitsPerChannelSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel];
 	if(bitsPerChannelSetting != nil)
-		bitsPerChannel = (UInt32)bitsPerChannelSetting.unsignedIntValue;
+		bitsPerChannel = static_cast<UInt32>(bitsPerChannelSetting.unsignedIntValue);
 	else
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; mBitsPerChannel will be zero which is probably incorrect");
 

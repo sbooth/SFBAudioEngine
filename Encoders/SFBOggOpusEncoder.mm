@@ -344,7 +344,7 @@ int close_callback(void *user_data)
 
 		// Encode the next Opus frame
 		if(_frameBuffer.isFull) {
-			int result = ope_encoder_write_float(_enc.get(), (float *)_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength);
+			int result = ope_encoder_write_float(_enc.get(), static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData), static_cast<int>(_frameBuffer.frameLength));
 			if(result != OPE_OK) {
 				os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
 				if(error)
@@ -368,7 +368,7 @@ int close_callback(void *user_data)
 {
 	// Write remaining partial frame
 	if(!_frameBuffer.isEmpty) {
-		int result = ope_encoder_write_float(_enc.get(), (float *)_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength);
+		int result = ope_encoder_write_float(_enc.get(), static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData), static_cast<int>(_frameBuffer.frameLength));
 		if(result != OPE_OK) {
 			os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
 			if(error)

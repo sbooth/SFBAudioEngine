@@ -65,7 +65,7 @@ FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder
 	SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
 	NSInteger bytesWritten;
-	if(![outputSource writeBytes:(const void *)buffer length:(NSInteger)bytes bytesWritten:&bytesWritten error:nil] || bytesWritten != (NSInteger)bytes)
+	if(![outputSource writeBytes:static_cast<const void *>(buffer) length:static_cast<NSInteger>(bytes) bytesWritten:&bytesWritten error:nil] || bytesWritten != static_cast<NSInteger>(bytes))
 		return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 
 	if(samples > 0)
@@ -85,7 +85,7 @@ FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, 
 	if(!outputSource.supportsSeeking)
 		return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
 
-	if(![outputSource seekToOffset:(NSInteger)absolute_byte_offset error:nil])
+	if(![outputSource seekToOffset:static_cast<NSInteger>(absolute_byte_offset) error:nil])
 		return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
 
 	return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
@@ -103,7 +103,7 @@ FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, 
 	if(![outputSource getOffset:&offset error:nil])
 		return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
 
-	*absolute_byte_offset = (FLAC__uint64)offset;
+	*absolute_byte_offset = static_cast<FLAC__uint64>(offset);
 
 	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
@@ -200,7 +200,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	}
 
 	// Output format
-	if(!FLAC__stream_encoder_set_sample_rate(flac.get(), (uint32_t)_processingFormat.sampleRate)) {
+	if(!FLAC__stream_encoder_set_sample_rate(flac.get(), static_cast<uint32_t>(_processingFormat.sampleRate))) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_sample_rate failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
 
 		if(error)
@@ -239,7 +239,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		return NO;
 	}
 
-	if(_estimatedFramesToEncode > 0 && !FLAC__stream_encoder_set_total_samples_estimate(flac.get(), (FLAC__uint64)_estimatedFramesToEncode)) {
+	if(_estimatedFramesToEncode > 0 && !FLAC__stream_encoder_set_total_samples_estimate(flac.get(), static_cast<FLAC__uint64>(_estimatedFramesToEncode))) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_total_samples_estimate failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
@@ -300,7 +300,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		}
 
 		// Append seekpoints (one every 10 seconds)
-		if(!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(seektable.get(), (uint32_t)(10 * _processingFormat.sampleRate), (FLAC__uint64)_estimatedFramesToEncode)) {
+		if(!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(seektable.get(), static_cast<uint32_t>(10 * _processingFormat.sampleRate), static_cast<FLAC__uint64>(_estimatedFramesToEncode))) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_seektable_template_append_spaced_points_by_samples failed");
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -395,7 +395,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	if(frameLength == 0)
 		return YES;
 
-	if(!FLAC__stream_encoder_process_interleaved(_flac.get(), (const FLAC__int32 *)buffer.audioBufferList->mBuffers[0].mData, frameLength)) {
+	if(!FLAC__stream_encoder_process_interleaved(_flac.get(), static_cast<const FLAC__int32 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength)) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];

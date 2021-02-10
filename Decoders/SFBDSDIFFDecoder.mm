@@ -29,22 +29,22 @@ inline uint32_t BytesToID(char bytes [4])
 	auto four	= bytes[3];
 
 	// Verify well-formedness
-	if(!isprint(one) || !isprint(two) || !isprint(three) || !isprint(four))
+	if(!std::isprint(one) || !std::isprint(two) || !std::isprint(three) || !std::isprint(four))
 		return 0;
 
-	if(isspace(one))
+	if(std::isspace(one))
 		return 0;
 
-	if(isspace(two) && isspace(one))
+	if(std::isspace(two) && std::isspace(one))
 		return 0;
 
-	if(isspace(three) && isspace(two) && isspace(one))
+	if(std::isspace(three) && std::isspace(two) && std::isspace(one))
 		return 0;
 
-	if(isspace(four) && isspace(three) && isspace(two) && isspace(one))
+	if(std::isspace(four) && std::isspace(three) && std::isspace(two) && std::isspace(one))
 		return 0;
 
-	return (uint32_t)((one << 24u) | (two << 16u) | (three << 8u) | four);
+	return static_cast<uint32_t>((one << 24u) | (two << 16u) | (three << 8u) | four);
 }
 
 // Read an ID as a uint32_t, performing validation
@@ -779,7 +779,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 
 	sourceStreamDescription.mFormatID			= kSFBAudioFormatDSD;
 
-	sourceStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
+	sourceStreamDescription.mSampleRate			= static_cast<Float64>(sampleRateChunk->mSampleRate);
 	sourceStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
 	sourceStreamDescription.mBitsPerChannel		= 1;
 
@@ -840,7 +840,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	if(packetCount == 0)
 		return YES;
 
-	AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
+	AVAudioPacketCount packetsRemaining = static_cast<AVAudioPacketCount>(_packetCount - _packetPosition);
 	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsRead = 0;
 
@@ -855,7 +855,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 
 		NSInteger bytesRead;
 		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
-			os_log_debug(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", (long)bytesToRead, bytesRead);
+			os_log_debug(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
 			break;
 		}
 
@@ -865,8 +865,8 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 
 		packetsRead += (bytesRead / packetSize);
 
-		buffer.packetCount += (AVAudioPacketCount)(bytesRead / packetSize);
-		buffer.byteLength += (uint32_t)bytesRead;
+		buffer.packetCount += static_cast<AVAudioPacketCount>(bytesRead / packetSize);
+		buffer.byteLength += static_cast<uint32_t>(bytesRead);
 
 		// All requested frames were read
 		if(packetsRead == packetCount)

@@ -22,7 +22,7 @@ struct TTACallbacks : TTA_io_callback
 
 TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
 {
-	TTACallbacks *iocb = (TTACallbacks *)io;
+	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
 	NSInteger bytesWritten;
 	if(![iocb->mEncoder->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil])
@@ -32,7 +32,7 @@ TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAui
 
 TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 {
-	TTACallbacks *iocb = (TTACallbacks *)io;
+	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
 	if(![iocb->mEncoder->_outputSource seekToOffset:offset error:nil])
 		return -1;
@@ -134,7 +134,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	streamInfo.samples = (TTAuint32)_estimatedFramesToEncode;
 
 	try {
-		_encoder = std::make_unique<tta::tta_encoder>((TTA_io_callback *)_callbacks.get());
+		_encoder = std::make_unique<tta::tta_encoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
 		_encoder->init_set_info(&streamInfo, 0);
 	}
 	catch(const tta::tta_exception& e) {
@@ -192,7 +192,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 
 	try {
 		auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
-		_encoder->process_stream((TTAuint8 *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
+		_encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
 	}
 
 	catch(const tta::tta_exception& e) {

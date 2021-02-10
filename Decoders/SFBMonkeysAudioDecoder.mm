@@ -50,7 +50,7 @@ public:
 		if(![mInputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
 			return ERROR_IO_READ;
 
-		*pBytesRead = (unsigned int)bytesRead;
+		*pBytesRead = static_cast<unsigned int>(bytesRead);
 
 		return ERROR_SUCCESS;
 	}
@@ -226,9 +226,9 @@ private:
 
 	sourceStreamDescription.mFormatID			= kSFBAudioFormatMonkeysAudio;
 
-	sourceStreamDescription.mBitsPerChannel		= (UInt32)_decompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE);
+	sourceStreamDescription.mBitsPerChannel		= static_cast<UInt32>(_decompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE));
 	sourceStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::APE_INFO_SAMPLE_RATE);
-	sourceStreamDescription.mChannelsPerFrame	= (UInt32)_decompressor->GetInfo(APE::APE_INFO_CHANNELS);
+	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_decompressor->GetInfo(APE::APE_INFO_CHANNELS));
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
@@ -273,7 +273,7 @@ private:
 		return YES;
 
 	int64_t blocksRead = 0;
-	if(_decompressor->GetData((char *)buffer.audioBufferList->mBuffers[0].mData, (int64_t)frameLength, &blocksRead)) {
+	if(_decompressor->GetData(static_cast<char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
 		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
 		return NO;
 	}

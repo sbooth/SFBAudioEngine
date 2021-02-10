@@ -97,7 +97,7 @@ struct ::std::default_delete<lame_global_flags> {
 	lame_set_bWriteVbrTag(gfp.get(), 1);
 
 	// Initialize the LAME encoder
-	auto result = lame_set_num_channels(gfp.get(), (int)_processingFormat.channelCount);
+	auto result = lame_set_num_channels(gfp.get(), static_cast<int>(_processingFormat.channelCount));
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_set_num_channels(%d) failed", _processingFormat.channelCount);
 		if(error)
@@ -105,7 +105,7 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
-	result = lame_set_in_samplerate(gfp.get(), (int)_processingFormat.sampleRate);
+	result = lame_set_in_samplerate(gfp.get(), static_cast<int>(_processingFormat.sampleRate));
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_set_in_samplerate(%f) failed", _processingFormat.sampleRate);
 		if(error)
@@ -275,7 +275,7 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
-	auto result = lame_encode_buffer_interleaved_ieee_float(_gfp.get(), (const float *)buffer.audioBufferList->mBuffers[0].mData, (int)frameLength, buf.get(), (int)bufsize);
+	auto result = lame_encode_buffer_interleaved_ieee_float(_gfp.get(), (const float *)buffer.audioBufferList->mBuffers[0].mData, static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_encode_buffer_interleaved_ieee_float failed");
 		if(error)
