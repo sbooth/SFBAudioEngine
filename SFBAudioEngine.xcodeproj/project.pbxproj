@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		320553F0259396C50028CB64 /* NSArray+SFBFunctional.h in Headers */ = {isa = PBXBuildFile; fileRef = 320553EE259396C50028CB64 /* NSArray+SFBFunctional.h */; };
-		320553F2259396C50028CB64 /* NSArray+SFBFunctional.m in Sources */ = {isa = PBXBuildFile; fileRef = 320553EF259396C50028CB64 /* NSArray+SFBFunctional.m */; };
 		32073138256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32073139256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3207313B25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
@@ -542,8 +540,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		320553EE259396C50028CB64 /* NSArray+SFBFunctional.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+SFBFunctional.h"; sourceTree = "<group>"; };
-		320553EF259396C50028CB64 /* NSArray+SFBFunctional.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+SFBFunctional.m"; sourceTree = "<group>"; };
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
 		3207313A25631560008BEDA7 /* SFBAudioConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
 		32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioHardwareIOProcStreamUsageWrapper.swift; sourceTree = "<group>"; };
@@ -1048,8 +1044,6 @@
 		3268F8642455B527006A5911 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				320553EE259396C50028CB64 /* NSArray+SFBFunctional.h */,
-				320553EF259396C50028CB64 /* NSArray+SFBFunctional.m */,
 				3268F8662455B527006A5911 /* NSError+SFBURLPresentation.h */,
 				3268F8682455B527006A5911 /* NSError+SFBURLPresentation.m */,
 				3268F8652455B527006A5911 /* SFBCStringForOSType.h */,
@@ -1420,7 +1414,6 @@
 				326D3CAC242D1D97002AEC52 /* SFBMP3File.h in Headers */,
 				328501BF256AA2A0009140DE /* SFBMP3Encoder.h in Headers */,
 				325A5E11243F8D8B003138D5 /* SFBDataInputSource.h in Headers */,
-				320553F0259396C50028CB64 /* NSArray+SFBFunctional.h in Headers */,
 				32DBB6F5256D65D40002DEAA /* SFBOggFLACEncoder.h in Headers */,
 				321296AB244B42970008DC93 /* SFBDSDDecoding.h in Headers */,
 				32DD9D7A257BCF8A00B47CFD /* SFBMusepackEncoder.h in Headers */,
@@ -1758,7 +1751,6 @@
 				3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */,
 				326D3CCD242D2A21002AEC52 /* SFBWAVEFile.mm in Sources */,
 				325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */,
-				320553F2259396C50028CB64 /* NSArray+SFBFunctional.m in Sources */,
 				3229C5AF25CF5D71002395CD /* AudioChannelLayout+SFBExtensions.swift in Sources */,
 				32DBB6F7256D65D40002DEAA /* SFBOggFLACEncoder.mm in Sources */,
 				32D7396B259A771300C0E3F6 /* AudioSubdevice.swift in Sources */,
