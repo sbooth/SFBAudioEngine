@@ -148,19 +148,18 @@ static const double htaps[HTAPS] = {
 
 static float ctables[CTABLES][256];
 
-void dsd2pcm_precalc()
+void dsd2pcm_precalc() noexcept
 {
 	int t, e, m, k;
 	double acc;
-	for (t=0; t<CTABLES; ++t) {
+	for(t=0; t<CTABLES; ++t) {
 		k = HTAPS - t*8;
-		if (k>8) k=8;
-		for (e=0; e<256; ++e) {
+		if(k>8) k=8;
+		for(e=0; e<256; ++e) {
 			acc = 0.0;
-			for (m=0; m<k; ++m) {
+			for(m=0; m<k; ++m)
 				acc += (((e >> (7-m)) & 1)*2-1) * htaps[t*8+m];
-			}
-			ctables[CTABLES-1-t][e] = (float)acc;
+			ctables[CTABLES-1-t][e] = static_cast<float>(acc);
 		}
 	}
 }
@@ -174,10 +173,10 @@ struct dsd2pcm_ctx
 /**
  * resets the internal state for a fresh new stream
  */
-void dsd2pcm_reset(dsd2pcm_ctx *ptr)
+void dsd2pcm_reset(dsd2pcm_ctx *ptr) noexcept
 {
 	int i;
-	for (i=0; i<FIFOSIZE; ++i)
+	for(i=0; i<FIFOSIZE; ++i)
 		ptr->fifo[i] = 0x69; /* my favorite silence pattern */
 	ptr->fifopos = 0;
 	/* 0x69 = 01101001
@@ -191,11 +190,10 @@ void dsd2pcm_reset(dsd2pcm_ctx *ptr)
  * initializes a "dsd2pcm engine" for one channel
  * (allocates memory)
  */
-dsd2pcm_ctx * dsd2pcm_init()
+dsd2pcm_ctx * dsd2pcm_init() noexcept
 {
-	dsd2pcm_ctx *ptr;
-	ptr = (dsd2pcm_ctx *) malloc(sizeof(dsd2pcm_ctx));
-	if (ptr) dsd2pcm_reset(ptr);
+	dsd2pcm_ctx *ptr = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
+	if(ptr) dsd2pcm_reset(ptr);
 	return ptr;
 }
 
@@ -203,22 +201,19 @@ dsd2pcm_ctx * dsd2pcm_init()
  * deinitializes a "dsd2pcm engine"
  * (releases memory, don't forget!)
  */
-void dsd2pcm_destroy(dsd2pcm_ctx *ptr)
+void dsd2pcm_destroy(dsd2pcm_ctx *ptr) noexcept
 {
-	free(ptr);
+	std::free(ptr);
 }
 
 /**
  * clones the context and returns a pointer to the
  * newly allocated copy
  */
-dsd2pcm_ctx * dsd2pcm_clone(dsd2pcm_ctx *ptr)
+dsd2pcm_ctx * dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept
 {
-	dsd2pcm_ctx *p2;
-	p2 = (dsd2pcm_ctx *) malloc(sizeof(dsd2pcm_ctx));
-	if (p2) {
-		memcpy(p2,ptr,sizeof(dsd2pcm_ctx));
-	}
+	dsd2pcm_ctx *p2 = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
+	if(p2) std::memcpy(p2,ptr,sizeof(dsd2pcm_ctx));
 	return p2;
 }
 
@@ -233,7 +228,7 @@ dsd2pcm_ctx * dsd2pcm_clone(dsd2pcm_ctx *ptr)
  * @param dst -- pointer to first float (output)
  * @param dst_stride -- dst pointer increment
  */
-void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, int lsbf, float *dst, ptrdiff_t dst_stride)
+void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, int lsbf, float *dst, ptrdiff_t dst_stride) noexcept
 {
 	unsigned ffp;
 	unsigned i;
@@ -242,19 +237,19 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
 	double acc;
 	ffp = ptr->fifopos;
 	lsbf = lsbf ? 1 : 0;
-	while (samples-- > 0) {
+	while(samples-- > 0) {
 		bite1 = *src & 0xFFu;
-		if (lsbf) bite1 = sBitReverseTable256[bite1];
-		ptr->fifo[ffp] = (unsigned char)bite1; src += src_stride;
+		if(lsbf) bite1 = sBitReverseTable256[bite1];
+		ptr->fifo[ffp] = static_cast<unsigned char>(bite1); src += src_stride;
 		p = ptr->fifo + ((ffp-CTABLES) & FIFOMASK);
 		*p = sBitReverseTable256[*p & 0xFF];
 		acc = 0;
-		for (i=0; i<CTABLES; ++i) {
+		for(i=0; i<CTABLES; ++i) {
 			bite1 = ptr->fifo[(ffp              -i) & FIFOMASK] & 0xFF;
 			bite2 = ptr->fifo[(ffp-(CTABLES*2-1)+i) & FIFOMASK] & 0xFF;
 			acc += ctables[i][bite1] + ctables[i][bite2];
 		}
-		*dst = (float)acc; dst += dst_stride;
+		*dst = static_cast<float>(acc); dst += dst_stride;
 		ffp = (ffp + 1) & FIFOMASK;
 	}
 	ptr->fifopos = ffp;
@@ -264,8 +259,8 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
 
 #pragma mark Initialization
 
-void SetupDSD2PCM() __attribute__ ((constructor));
-void SetupDSD2PCM()
+void SetupDSD2PCM() noexcept __attribute__ ((constructor));
+void SetupDSD2PCM() noexcept
 {
 	dsd2pcm_precalc();
 }
@@ -277,14 +272,14 @@ public:
 	DXD()
 	: handle(dsd2pcm_init())
 	{
-		if(nullptr == handle)
+		if(!handle)
 			throw std::bad_alloc();
 	}
 
 	DXD(DXD const& x)
 	: handle(dsd2pcm_clone(x.handle))
 	{
-		if(nullptr == handle)
+		if(!handle)
 			throw std::bad_alloc();
 	}
 
@@ -293,18 +288,13 @@ public:
 		dsd2pcm_destroy(handle);
 	}
 
-	friend void Swap(DXD& a, DXD& b)
-	{
-		std::swap(a.handle, b.handle);
-	}
-
 	DXD& operator=(DXD x)
 	{
-		Swap(*this, x);
+		std::swap(handle, x.handle);
 		return *this;
 	}
 
-	void Translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst, ptrdiff_t dst_stride)
+	void Translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst, ptrdiff_t dst_stride) noexcept
 	{
 		dsd2pcm_translate(handle, samples, src, src_stride, lsbitfirst, dst, dst_stride);
 	}
