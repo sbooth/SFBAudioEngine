@@ -6,33 +6,19 @@
 
 #import <os/log.h>
 
-#import <memory>
 #import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
 
 #import "SFBCoreAudioDecoder.h"
 
+#import "SFBAudioFileWrapper.hpp"
+#import "SFBExtAudioFileWrapper.hpp"
+
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
-
-template <>
-struct ::std::default_delete<OpaqueAudioFileID> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(OpaqueAudioFileID *af) const noexcept { /* OSStatus result =*/ AudioFileClose(af); }
-};
-
-template <>
-struct ::std::default_delete<OpaqueExtAudioFile> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(OpaqueExtAudioFile *eaf) const noexcept { /* OSStatus result =*/ ExtAudioFileDispose(eaf); }
-};
 
 namespace {
 
@@ -84,8 +70,8 @@ SInt64 get_size_callback(void *inClientData)
 @interface SFBCoreAudioDecoder ()
 {
 @private
-	std::unique_ptr<OpaqueAudioFileID> _af;
-	std::unique_ptr<OpaqueExtAudioFile> _eaf;
+	SFB::AudioFileWrapper _af;
+	SFB::ExtAudioFileWrapper _eaf;
 }
 @end
 
@@ -220,10 +206,10 @@ SInt64 get_size_callback(void *inClientData)
 		return NO;
 	}
 
-	auto af = std::unique_ptr<OpaqueAudioFileID>(audioFile);
+	auto af = SFB::AudioFileWrapper(audioFile);
 
 	ExtAudioFileRef extAudioFile;
-	result = ExtAudioFileWrapAudioFileID(af.get(), false, &extAudioFile);
+	result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
@@ -238,12 +224,12 @@ SInt64 get_size_callback(void *inClientData)
 		return NO;
 	}
 
-	auto eaf = std::unique_ptr<OpaqueExtAudioFile>(extAudioFile);
+	auto eaf = SFB::ExtAudioFileWrapper(extAudioFile);
 
 	// Query file format
 	AudioStreamBasicDescription format{};
 	UInt32 dataSize = sizeof(format);
-	result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
+	result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
@@ -253,10 +239,10 @@ SInt64 get_size_callback(void *inClientData)
 
 	// Query channel layout
 	AVAudioChannelLayout *channelLayout = nil;
-	result = ExtAudioFileGetPropertyInfo(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
+	result = ExtAudioFileGetPropertyInfo(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
 	if(result == noErr) {
 		AudioChannelLayout *layout = (AudioChannelLayout *)malloc(dataSize);
-		result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
+		result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
 		if(result != noErr) {
 			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
@@ -342,7 +328,7 @@ SInt64 get_size_callback(void *inClientData)
 		return NO;
 	}
 
-	result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
+	result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
@@ -379,7 +365,7 @@ SInt64 get_size_callback(void *inClientData)
 - (AVAudioFramePosition)framePosition
 {
 	SInt64 currentFrame;
-	auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
+	auto result = ExtAudioFileTell(_eaf, &currentFrame);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return SFBUnknownFramePosition;
@@ -391,7 +377,7 @@ SInt64 get_size_callback(void *inClientData)
 {
 	SInt64 frameLength;
 	UInt32 dataSize = sizeof(frameLength);
-	auto result = ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
+	auto result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return SFBUnknownFrameLength;
@@ -414,7 +400,7 @@ SInt64 get_size_callback(void *inClientData)
 
 	buffer.frameLength = buffer.frameCapacity;
 
-	auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
+	auto result = ExtAudioFileRead(_eaf, &frameLength, buffer.mutableAudioBufferList);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		buffer.frameLength = 0;
@@ -431,7 +417,7 @@ SInt64 get_size_callback(void *inClientData)
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 	NSParameterAssert(frame >= 0);
-	auto result = ExtAudioFileSeek(_eaf.get(), frame);
+	auto result = ExtAudioFileSeek(_eaf, frame);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
