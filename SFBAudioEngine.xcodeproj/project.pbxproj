@@ -88,6 +88,8 @@
 		325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 325116CB2423B15200B02926 /* SFBAttachedPicture.m */; };
 		32569570256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
 		32569571256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
+		3259D16525D987D2005F636F /* SFBAudioFileWrapper.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 3259D16325D987D2005F636F /* SFBAudioFileWrapper.hpp */; };
+		3259D16625D987D2005F636F /* SFBExtAudioFileWrapper.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 3259D16425D987D2005F636F /* SFBExtAudioFileWrapper.hpp */; };
 		325A5E05243F8D8B003138D5 /* SFBInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5DF8243F8D8B003138D5 /* SFBInputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5DF9243F8D8B003138D5 /* SFBFileInputSource.m */; };
 		325A5E07243F8D8B003138D5 /* SFBDataInputSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5DFA243F8D8B003138D5 /* SFBDataInputSource.m */; };
@@ -611,6 +613,8 @@
 		322A916025725637006795AA /* SFBLibsndfileEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLibsndfileEncoder.m; sourceTree = "<group>"; };
 		325116CB2423B15200B02926 /* SFBAttachedPicture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAttachedPicture.m; sourceTree = "<group>"; };
 		3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBOggOpusEncoder.h; sourceTree = "<group>"; };
+		3259D16325D987D2005F636F /* SFBAudioFileWrapper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioFileWrapper.hpp; sourceTree = "<group>"; };
+		3259D16425D987D2005F636F /* SFBExtAudioFileWrapper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBExtAudioFileWrapper.hpp; sourceTree = "<group>"; };
 		325A5DF8243F8D8B003138D5 /* SFBInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBInputSource.h; sourceTree = "<group>"; };
 		325A5DF9243F8D8B003138D5 /* SFBFileInputSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBFileInputSource.m; sourceTree = "<group>"; };
 		325A5DFA243F8D8B003138D5 /* SFBDataInputSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDataInputSource.m; sourceTree = "<group>"; };
@@ -897,9 +901,11 @@
 			children = (
 				3229C5DA25D04A2C002395CD /* SFBCAStreamBasicDescription.hpp */,
 				3229C5DB25D04A2C002395CD /* SFBCAStreamBasicDescription.cpp */,
-				3229C58A25CF5D18002395CD /* SFBByteStream.hpp */,
+				3259D16325D987D2005F636F /* SFBAudioFileWrapper.hpp */,
+				3259D16425D987D2005F636F /* SFBExtAudioFileWrapper.hpp */,
 				3229C5A025CF5D18002395CD /* SFBAudioRingBuffer.hpp */,
 				3229C59525CF5D18002395CD /* SFBAudioRingBuffer.cpp */,
+				3229C58A25CF5D18002395CD /* SFBByteStream.hpp */,
 				3229C59C25CF5D18002395CD /* SFBCFWrapper.hpp */,
 				3229C58E25CF5D18002395CD /* SFBRingBuffer.hpp */,
 				3229C5AA25CF5D18002395CD /* SFBRingBuffer.cpp */,
@@ -1412,6 +1418,7 @@
 				325A5E3F24408C8D003138D5 /* SFBAudioPlayer.h in Headers */,
 				326D3C94242CE9D1002AEC52 /* SFBAudioProperties.h in Headers */,
 				326D3CAC242D1D97002AEC52 /* SFBMP3File.h in Headers */,
+				3259D16625D987D2005F636F /* SFBExtAudioFileWrapper.hpp in Headers */,
 				328501BF256AA2A0009140DE /* SFBMP3Encoder.h in Headers */,
 				325A5E11243F8D8B003138D5 /* SFBDataInputSource.h in Headers */,
 				32DBB6F5256D65D40002DEAA /* SFBOggFLACEncoder.h in Headers */,
@@ -1443,6 +1450,7 @@
 				321296AA244B42970008DC93 /* SFBAudioDecoding.h in Headers */,
 				32129691244A2AD80008DC93 /* SFBOggVorbisDecoder.h in Headers */,
 				326D3CCC242D2A21002AEC52 /* SFBWAVEFile.h in Headers */,
+				3259D16525D987D2005F636F /* SFBAudioFileWrapper.hpp in Headers */,
 				3212969D244A60680008DC93 /* SFBLibsndfileDecoder.h in Headers */,
 				326D3CA1242D0291002AEC52 /* SFBAudioFile+Internal.h in Headers */,
 				326D3CC0242D2A21002AEC52 /* SFBOggOpusFile.h in Headers */,
