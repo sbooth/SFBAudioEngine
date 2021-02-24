@@ -151,8 +151,8 @@ enum eAudioPlayerFlags : unsigned int {
 		// Enqueuing is expected to succeed since the formats are compatible
 		return [_playerNode enqueueDecoder:decoder error:error];
 	}
-	// If the internal queue is empty and _playerNode doesn't support
-	// the decoder's processing format, add the decoder to our queue
+	// If the internal queue is not empty or _playerNode doesn't support
+	// the decoder's processing format add the decoder to our internal queue
 	else {
 		[self pushDecoderToInternalQueue:decoder];
 		return YES;
