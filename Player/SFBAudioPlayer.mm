@@ -141,15 +141,22 @@ enum eAudioPlayerFlags : unsigned int {
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
 	if(forImmediatePlayback)
 		return [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
-	// If the current SFBAudioPlayerNode doesn't support the decoder's processing format,
-	// add the decoder to our queue
-	else if(![_playerNode supportsFormat:decoder.processingFormat]) {
+	// To preserve the order of enqueued decoders, when the internal queue is not empty
+	// enqueue all decoders there regardless of format compability with _playerNode
+	// This prevents incorrect playback order arising from the scenario where
+	// decoders A and AA have formats supported by _playerNode and decoder B does not;
+	// bypassing the internal queue for supported formats when enqueueing A, B, AA
+	// would result in playback order A, AA, B
+	else if(self.internalDecoderQueueIsEmpty && [_playerNode supportsFormat:decoder.processingFormat]) {
+		// Enqueuing is expected to succeed since the formats are compatible
+		return [_playerNode enqueueDecoder:decoder error:error];
+	}
+	// If the internal queue is not empty or _playerNode doesn't support
+	// the decoder's processing format add the decoder to our internal queue
+	else {
 		[self pushDecoderToInternalQueue:decoder];
 		return YES;
 	}
-
-	// Enqueuing is expected to succeed since the formats are compatible
-	return [_playerNode enqueueDecoder:decoder error:error];
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
