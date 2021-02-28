@@ -333,7 +333,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 	AudioFormatID formatID = 0;
 	NSNumber *formatIDSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatID];
 	if(formatIDSetting != nil)
-		formatID = (AudioFormatID)formatIDSetting.unsignedIntValue;
+		formatID = static_cast<AudioFormatID>(formatIDSetting.unsignedIntValue);
 	else {
 		auto availableFormatIDs = AudioFormatIDsForFileTypeID(fileType, true);
 		// There is no way to determine caller intent and select the most appropriate format; use PCM if available, otherwise use the first one
