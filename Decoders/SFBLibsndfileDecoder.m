@@ -221,14 +221,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	int subFormat = _sfinfo.format & SF_FORMAT_SUBMASK;
 
 	// 8-bit PCM will be high-aligned in shorts
-	if(subFormat == SF_FORMAT_PCM_U8) {
-		AudioStreamBasicDescription asbd = {0};
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 8, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		asbd.mFormatFlags &= ~kAudioFormatFlagIsSignedInteger;
-		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
-		_readMethod = Short;
-	}
-	else if(subFormat == SF_FORMAT_PCM_S8) {
+	if(subFormat == SF_FORMAT_PCM_U8 || subFormat == SF_FORMAT_PCM_S8) {
 		AudioStreamBasicDescription asbd = {0};
 		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 8, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
