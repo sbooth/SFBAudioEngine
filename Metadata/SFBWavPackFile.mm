@@ -36,7 +36,7 @@
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/wavpack"];
+	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

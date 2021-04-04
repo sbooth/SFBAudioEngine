@@ -36,7 +36,7 @@
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/musepack"];
+	return [NSSet setWithArray:@[@"audio/musepack", @"audio/x-musepack"]];
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

@@ -36,7 +36,7 @@
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/monkeys-audio"];
+	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

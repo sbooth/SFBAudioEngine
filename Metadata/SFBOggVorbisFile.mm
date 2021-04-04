@@ -35,7 +35,7 @@
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/ogg-vorbis"];
+	return [NSSet setWithObject:@"audio/ogg; codecs=vorbis"];
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

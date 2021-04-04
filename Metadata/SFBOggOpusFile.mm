@@ -35,7 +35,7 @@
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/opus"];
+	return [NSSet setWithObject:@"audio/ogg; codecs=opus"];
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
