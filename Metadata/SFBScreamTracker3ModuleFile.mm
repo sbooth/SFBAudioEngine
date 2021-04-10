@@ -22,6 +22,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module = @"org.sbooth.AudioEngine.File.ScreamTracker3Module";
+
 @implementation SFBScreamTracker3ModuleFile
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/s3m"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameScreamTracker3Module;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

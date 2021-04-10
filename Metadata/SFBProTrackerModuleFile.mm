@@ -22,6 +22,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sbooth.AudioEngine.File.ProTrackerModule";
+
 @implementation SFBProTrackerModuleFile
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/mod", @"audio/x-mod"]];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameProTrackerModule;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

@@ -21,6 +21,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioEngine.File.OggFLAC";
+
 @implementation SFBOggFLACFile
 
 + (void)load
@@ -36,6 +38,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/ogg; codecs=flac"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameOggFLAC;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -56,7 +63,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
@@ -100,7 +107,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
