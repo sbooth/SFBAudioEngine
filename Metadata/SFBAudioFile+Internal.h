@@ -14,6 +14,8 @@ NS_ASSUME_NONNULL_BEGIN
 extern os_log_t gSFBAudioFileLog;
 
 @interface SFBAudioFile ()
+/// Returns the audio file format name
+@property (class, nonatomic, readonly) SFBAudioFileFormatName formatName;
 @property (nonatomic) SFBAudioProperties *properties;
 @end
 
@@ -33,6 +35,8 @@ extern os_log_t gSFBAudioFileLog;
 + (nullable Class)subclassForPathExtension:(NSString *)extension;
 /// Returns the appropriate \c SFBAudioFile subclass for data of \c mimeType
 + (nullable Class)subclassForMIMEType:(NSString *)mimeType;
+/// Returns the appropriate \c SFBAudioFile subclass corresponding to \c formatName
++ (nullable Class)subclassForFormatName:(SFBAudioFileFormatName)formatName;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -22,6 +22,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth.AudioEngine.File.ExtendedModule";
+
 @implementation SFBExtendedModuleFile
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/xm"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameExtendedModule;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -57,7 +64,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid extended module.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an extended module", @"")

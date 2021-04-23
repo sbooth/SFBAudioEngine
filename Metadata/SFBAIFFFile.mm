@@ -21,6 +21,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameAIFF = @"org.sbooth.AudioEngine.File.AIFF";
+
 @implementation SFBAIFFFile
 
 + (void)load
@@ -36,6 +38,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/aiff"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameAIFF;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -56,7 +63,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid AIFF file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an AIFF file", @"")
@@ -102,7 +109,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid AIFF file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an AIFF file", @"")

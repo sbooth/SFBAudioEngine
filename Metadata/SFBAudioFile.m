@@ -9,6 +9,8 @@
 #import "SFBAudioFile.h"
 #import "SFBAudioFile+Internal.h"
 
+#import "NSError+SFBURLPresentation.h"
+
 // NSError domain for AudioFile and subclasses
 NSErrorDomain const SFBAudioFileErrorDomain = @"org.sbooth.AudioEngine.AudioFile";
 
@@ -37,12 +39,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 	[NSError setUserInfoValueProviderForDomain:SFBAudioFileErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
 		if(userInfoKey == NSLocalizedDescriptionKey) {
 			switch(err.code) {
-				case SFBAudioFileErrorCodeFileFormatNotRecognized:
-					return NSLocalizedString(@"The file's format was not recognized.", @"");
-				case SFBAudioFileErrorCodeFileFormatNotSupported:
-					return NSLocalizedString(@"The file's format is not supported.", @"");
+				case SFBAudioFileErrorCodeInternalError:
+					return NSLocalizedString(@"An internal error occurred.", @"");
+				case SFBAudioFileErrorCodeUnknownFormatName:
+					return NSLocalizedString(@"The requested format is unavailable.", @"");
 				case SFBAudioFileErrorCodeInputOutput:
 					return NSLocalizedString(@"An input/output error occurred.", @"");
+				case SFBAudioFileErrorCodeInvalidFormat:
+					return NSLocalizedString(@"The file's format is invalid, unknown, or unsupported.", @"");
 			}
 		}
 		return nil;
@@ -69,6 +73,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 
 	return result;
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
 }
 
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
@@ -106,14 +116,85 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (instancetype)initWithURL:(NSURL *)url
 {
+	return [self initWithURL:url mimeType:nil error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)url error:(NSError **)error
+{
+	return [self initWithURL:url mimeType:nil error:error];
+}
+
+- (instancetype)initWithURL:(NSURL *)url mimeType:(NSString *)mimeType error:(NSError **)error
+{
 	NSParameterAssert(url != nil);
 
-	Class subclass = [SFBAudioFile subclassForURL:url];
-	if(!subclass)
+	// The MIME type takes precedence over the file extension
+	if(mimeType) {
+		Class subclass = [SFBAudioFile subclassForMIMEType:mimeType.lowercaseString];
+		if(subclass && (self = [[subclass alloc] init])) {
+			_url = url;
+			return self;
+		}
+		os_log_debug(gSFBAudioFileLog, "SFBAudioFile unsupported MIME type: %{public}@", mimeType);
+	}
+
+	// If no MIME type was specified, use the extension-based resolvers
+
+	// TODO: Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
+
+	NSString *pathExtension = url.pathExtension;
+	if(!pathExtension) {
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
+											  url:url
+									failureReason:NSLocalizedString(@"Unknown file type", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
 		return nil;
+	}
+
+	Class subclass = [SFBAudioFile subclassForPathExtension:pathExtension.lowercaseString];
+	if(!subclass) {
+		os_log_debug(gSFBAudioFileLog, "SFBAudioFile unsupported path extension: %{public}@", pathExtension);
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
+											  url:url
+									failureReason:NSLocalizedString(@"Unsupported file type", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
+		return nil;
+	}
 
 	if((self = [[subclass alloc] init]))
 		_url = url;
+
+	return self;
+}
+
+- (instancetype)initWithURL:(NSURL *)url formatName:(SFBAudioFileFormatName)formatName
+{
+	return [self initWithURL:url formatName:formatName error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)url formatName:(SFBAudioFileFormatName)formatName error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	Class subclass = [SFBAudioFile subclassForFormatName:formatName];
+	if(!subclass) {
+		os_log_debug(gSFBAudioFileLog, "SFBAudioFile unsupported format: %{public}@", formatName);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeUnknownFormatName userInfo:nil];
+		return nil;
+	}
+
+	if((self = [[subclass alloc] init]))
+		_url = url;
+
 	return self;
 }
 
@@ -189,6 +270,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
+			return subclassInfo.klass;
+	}
+
+	return nil;
+}
+
++ (Class)subclassForFormatName:(SFBAudioFileFormatName)formatName
+{
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBAudioFileFormatName subclassFormatName = [subclassInfo.klass formatName];
+		if(subclassFormatName == formatName)
 			return subclassInfo.klass;
 	}
 

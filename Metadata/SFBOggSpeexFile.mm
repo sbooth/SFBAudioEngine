@@ -21,6 +21,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.AudioEngine.File.OggSpeex";
+
 @implementation SFBOggSpeexFile
 
 + (void)load
@@ -36,6 +38,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/ogg; codecs=speex"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameOggSpeex;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -56,7 +63,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an Ogg Speex file", @"")
@@ -95,7 +102,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an Ogg Speex file", @"")

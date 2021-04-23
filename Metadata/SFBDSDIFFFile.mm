@@ -22,6 +22,8 @@
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEngine.File.DSDIFF";
+
 @implementation SFBDSDIFFFile
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dff"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameDSDIFF;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -57,7 +64,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD Interchange file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a DSD Interchange file", @"")
@@ -106,7 +113,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD Interchange file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a DSD Interchange file", @"")

@@ -22,6 +22,8 @@
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.AudioEngine.File.MonkeysAudio";
+
 @implementation SFBMonkeysAudioFile
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameMonkeysAudio;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -57,7 +64,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a Monkey's Audio file", @"")
@@ -106,7 +113,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a Monkey's Audio file", @"")

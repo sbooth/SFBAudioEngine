@@ -13,6 +13,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioEngine.File.Shorten";
+
 @implementation SFBShortenFile
 
 + (void)load
@@ -28,6 +30,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/x-shorten"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameShorten;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

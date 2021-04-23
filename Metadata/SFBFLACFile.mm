@@ -28,6 +28,8 @@
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "TagLibStringUtilities.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngine.File.FLAC";
+
 @implementation SFBFLACFile
 
 + (void)load
@@ -43,6 +45,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/flac"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameFLAC;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -63,7 +70,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
@@ -129,7 +136,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")

@@ -22,6 +22,8 @@
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngine.File.WAVE";
+
 @implementation SFBWAVEFile
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/wave"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameWAVE;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -57,7 +64,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WAVE file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not an WAVE file", @"")
@@ -106,7 +113,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WAVE file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a WAVE file", @"")

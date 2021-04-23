@@ -22,6 +22,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngine.File.MP4";
+
 @implementation SFBMP4File
 
 + (void)load
@@ -37,6 +39,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/mpeg-4"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameMP4;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -57,7 +64,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a MPEG-4 file", @"")
@@ -111,7 +118,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a MPEG-4 file", @"")

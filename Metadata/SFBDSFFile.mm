@@ -21,6 +21,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 
+SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngine.File.DSF";
+
 @implementation SFBDSFFile
 
 + (void)load
@@ -36,6 +38,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dsf"];
+}
+
++ (SFBAudioFileFormatName)formatName
+{
+	return SFBAudioFileFormatNameDSF;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
@@ -56,7 +63,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD Stream file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a DSD Stream file", @"")
@@ -102,7 +109,7 @@
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
+											 code:SFBAudioFileErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD Stream file.", @"")
 											  url:self.url
 									failureReason:NSLocalizedString(@"Not a DSD Stream file", @"")
