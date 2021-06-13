@@ -378,7 +378,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Skip ahead in the interleaved audio to the specified packet
 	AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
-	AVAudioPacketCount packetsToSkip = packet % packetsInBuffer;
+	AVAudioPacketCount packetsToSkip = (AVAudioPacketCount)(packet % packetsInBuffer);
 	AVAudioPacketCount packetsToMove = packetsInBuffer - packetsToSkip;
 
 	// Move data
