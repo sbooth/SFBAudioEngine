@@ -1,6 +1,6 @@
 [submodule "XCFrameworks"]
 	path = XCFrameworks
-	url = git@github.com:sbooth/AudioXCFrameworks.git
+	url = https://github.com/sbooth/AudioXCFrameworks.git
 [submodule "SFBAudioUtilities"]
 	path = SFBAudioUtilities
-	url = git@github.com:sbooth/SFBAudioUtilities.git
+	url = https://github.com/sbooth/SFBAudioUtilities.git
