@@ -10,11 +10,7 @@ import Combine
 struct PlayerView: View {
 	@ObservedObject	var viewModel: PlayerViewModel
 	@Environment(\.presentationMode) var presentationMode
-	@State var currentPosition: Double = 0 {
-		willSet {
-			viewModel.seek(position: newValue)
-		}
-	}
+	@State var currentPosition: Double = 0
 
 	var body: some View {
 		GeometryReader { geometry in
