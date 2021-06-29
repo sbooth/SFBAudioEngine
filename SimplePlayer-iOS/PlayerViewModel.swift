@@ -11,19 +11,8 @@ import SFBAudioEngine
 class PlayerViewModel: ObservableObject {
 	let dataModel: DataModel
 
-	@Published var currentPosition: Double = 0
-
-//	var foo: Binding = Binding(
-//		get: { return dataModel },
-//		set: {
-//		if let current = playerController.player.position?.progress {
-//			let tolerance = 0.01
-//			if abs(current - $0) >= tolerance {
-//				playerController.player.seek(position: $0)
-//			}
-
 	private let displayLinkPublisher = DisplayLinkPublisher()
-	private var bag = Set<AnyCancellable>()
+	private var cancellables = Set<AnyCancellable>()
 
 	private lazy var playbackProgressSubject = PassthroughSubject<Double, Never>()
 	var playbackProgress: AnyPublisher<Double, Never> {
@@ -40,11 +29,11 @@ class PlayerViewModel: ObservableObject {
 					self.playbackProgressSubject.send(progress)
 				}
 			}
-			.store(in: &bag)
+			.store(in: &cancellables)
 	}
 
 	deinit {
-		bag.removeAll()
+		cancellables.removeAll()
 	}
 
 	func seekBackward() {
