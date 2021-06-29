@@ -7,32 +7,23 @@
 import SwiftUI
 
 struct ContentView: View {
-	let playerController: PlayerController
-	let tracks: [Track]
-
-	init(_ playerController: PlayerController) {
-		self.playerController = playerController
-		var tracks = [Track]()
-		if let url = Bundle.main.url(forResource: "test", withExtension: "flac") {
-			tracks.append(Track(url))
-		}
-		self.tracks = tracks
-	}
+	@EnvironmentObject var model: DataModel
 
 	var body: some View {
 		return NavigationView {
-			List(tracks) { track in
-				NavigationLink(destination: PlayerView(playerController, track: track)
-					.onAppear(perform: { try? playerController.player.play(track.url) })
-					.onDisappear(perform: { playerController.player.stop() })) {
+			List(model.tracks) { track in
+				NavigationLink(destination: PlayerView(viewModel: PlayerViewModel(dataModel: model))
+								.onAppear(perform: { try? model.player.play(track.url) })
+								.onDisappear(perform: { model.player.stop() })) {
 					TrackView(track: track)
 				}
-			}.navigationBarTitle("Select a track")
+			}
+			.navigationBarTitle("Tracks")
 		}
 	}
 }
 struct ContentView_Previews: PreviewProvider {
 	static var previews: some View {
-		ContentView(PlayerController())
+		ContentView()
 	}
 }
