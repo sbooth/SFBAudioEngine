@@ -112,7 +112,7 @@ struct DecoderStateData {
 	/// The desired seek offset
 	std::atomic_int64_t 	mFrameToSeek;
 
-	//	private:
+//private:
 	/// Decodes audio from the source representation to PCM
 	id <SFBPCMDecoding> 	mDecoder;
 	/// Converts audio from the decoder's processing format to another PCM variant at the same sample rate
