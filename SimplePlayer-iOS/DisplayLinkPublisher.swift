@@ -45,7 +45,8 @@ struct DisplayLinkPublisher: Publisher {
 			guard demand != .none else {
 				return
 			}
-			_ = subscriber.receive(displayLink.targetTimestamp)
+			demand -= 1
+			demand += subscriber.receive(displayLink.targetTimestamp)
 		}
 	}
 
