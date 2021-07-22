@@ -66,7 +66,7 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 ///  7. End of audio
 ///
 /// All callbacks are performed on a dedicated notification queue.
-NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNode
+NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 /// Returns an initialized \c SFBAudioPlayerNode object for stereo audio at 44,100 Hz
 - (instancetype)init;
