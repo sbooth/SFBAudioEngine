@@ -8,7 +8,7 @@
 
 #import <memory>
 
-#include <tta++/libtta.h>
+#include <tta-cpp/libtta.h>
 
 #import "SFBTrueAudioDecoder.h"
 
