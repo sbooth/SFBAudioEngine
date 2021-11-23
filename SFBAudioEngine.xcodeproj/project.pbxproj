@@ -134,10 +134,10 @@
 		325A5E8D2444B931003138D5 /* SFBCoreAudioDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.mm */; };
 		325A5E902444D868003138D5 /* SFBModuleDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */; };
 		325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */; };
+		32673F08274C974700E46A89 /* tta-cpp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32673F07274C974700E46A89 /* tta-cpp.xcframework */; };
+		32673F09274C974700E46A89 /* tta-cpp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32673F07274C974700E46A89 /* tta-cpp.xcframework */; };
 		3267724D254B6BB80041B063 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; };
 		32677252254B6C4D0041B063 /* wavpack.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		3267747D254BA7570041B063 /* tta++.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; };
-		3267747E254BA77D0041B063 /* tta++.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3267793B254C421F0041B063 /* MAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; };
 		3267793C254C421F0041B063 /* mpg123.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267793A254C421F0041B063 /* mpg123.xcframework */; };
 		3267793D254C423E0041B063 /* MAC.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -374,7 +374,6 @@
 		32714C662551D4DF00029BD7 /* taglib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; };
 		32714C672551D4DF00029BD7 /* sndfile.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; };
 		32714C682551D4DF00029BD7 /* speex.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; };
-		32714C692551D4DF00029BD7 /* tta++.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; };
 		32714C6A2551D4DF00029BD7 /* vorbis.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; };
 		32714C6B2551D4DF00029BD7 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; };
 		32714C6D2551D4DF00029BD7 /* dumb.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677E28254D11AD0041B063 /* dumb.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -386,7 +385,6 @@
 		32714C732551D4DF00029BD7 /* sndfile.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714C742551D4DF00029BD7 /* speex.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714C752551D4DF00029BD7 /* taglib.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C762551D4DF00029BD7 /* tta++.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714C772551D4DF00029BD7 /* vorbis.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714C782551D4DF00029BD7 /* wavpack.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714D2D25521B7800029BD7 /* ogg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714B252550430A00029BD7 /* ogg.xcframework */; };
@@ -522,7 +520,6 @@
 				32714650254F262C00029BD7 /* speex.xcframework in Embed XCFrameworks */,
 				32714D3025521B7D00029BD7 /* ogg.xcframework in Embed XCFrameworks */,
 				326782F4254E66AB0041B063 /* taglib.xcframework in Embed XCFrameworks */,
-				3267747E254BA77D0041B063 /* tta++.xcframework in Embed XCFrameworks */,
 				3271448E254F1FED00029BD7 /* vorbis.xcframework in Embed XCFrameworks */,
 				32677252254B6C4D0041B063 /* wavpack.xcframework in Embed XCFrameworks */,
 			);
@@ -546,7 +543,6 @@
 				32714C742551D4DF00029BD7 /* speex.xcframework in Embed XCFrameworks */,
 				32714D2E25521B7800029BD7 /* ogg.xcframework in Embed XCFrameworks */,
 				32714C752551D4DF00029BD7 /* taglib.xcframework in Embed XCFrameworks */,
-				32714C762551D4DF00029BD7 /* tta++.xcframework in Embed XCFrameworks */,
 				32714C772551D4DF00029BD7 /* vorbis.xcframework in Embed XCFrameworks */,
 				32714C782551D4DF00029BD7 /* wavpack.xcframework in Embed XCFrameworks */,
 			);
@@ -659,8 +655,8 @@
 		325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBCoreAudioDecoder.mm; sourceTree = "<group>"; };
 		325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBModuleDecoder.h; sourceTree = "<group>"; };
 		325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBModuleDecoder.m; sourceTree = "<group>"; };
+		32673F07274C974700E46A89 /* tta-cpp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "tta-cpp.xcframework"; sourceTree = "<group>"; };
 		3267724B254B6BB80041B063 /* wavpack.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = wavpack.xcframework; sourceTree = "<group>"; };
-		3267747C254BA7570041B063 /* tta++.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "tta++.xcframework"; sourceTree = "<group>"; };
 		32677939254C421F0041B063 /* MAC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = MAC.xcframework; sourceTree = "<group>"; };
 		3267793A254C421F0041B063 /* mpg123.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = mpg123.xcframework; sourceTree = "<group>"; };
 		32677BA4254C79260041B063 /* sndfile.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = sndfile.xcframework; sourceTree = "<group>"; };
@@ -812,6 +808,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32673F09274C974700E46A89 /* tta-cpp.xcframework in Frameworks */,
 				32714C582551D4DF00029BD7 /* Accelerate.framework in Frameworks */,
 				32714C592551D4DF00029BD7 /* AudioToolbox.framework in Frameworks */,
 				32714C5B2551D4DF00029BD7 /* AVFoundation.framework in Frameworks */,
@@ -829,7 +826,6 @@
 				32714C662551D4DF00029BD7 /* taglib.xcframework in Frameworks */,
 				32714C672551D4DF00029BD7 /* sndfile.xcframework in Frameworks */,
 				32714C682551D4DF00029BD7 /* speex.xcframework in Frameworks */,
-				32714C692551D4DF00029BD7 /* tta++.xcframework in Frameworks */,
 				32714C6A2551D4DF00029BD7 /* vorbis.xcframework in Frameworks */,
 				32714C6B2551D4DF00029BD7 /* wavpack.xcframework in Frameworks */,
 			);
@@ -842,6 +838,7 @@
 				32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
+				32673F08274C974700E46A89 /* tta-cpp.xcframework in Frameworks */,
 				325A5E412440960C003138D5 /* AVFoundation.framework in Frameworks */,
 				321DB85524636A12004D66AF /* Foundation.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
@@ -857,7 +854,6 @@
 				326782F3254E66900041B063 /* taglib.xcframework in Frameworks */,
 				32677BA5254C79260041B063 /* sndfile.xcframework in Frameworks */,
 				3271464F254F261C00029BD7 /* speex.xcframework in Frameworks */,
-				3267747D254BA7570041B063 /* tta++.xcframework in Frameworks */,
 				3271448D254F1FCD00029BD7 /* vorbis.xcframework in Frameworks */,
 				3267724D254B6BB80041B063 /* wavpack.xcframework in Frameworks */,
 			);
@@ -1015,7 +1011,7 @@
 				32677BA4254C79260041B063 /* sndfile.xcframework */,
 				3271464E254F261C00029BD7 /* speex.xcframework */,
 				326782F2254E66900041B063 /* taglib.xcframework */,
-				3267747C254BA7570041B063 /* tta++.xcframework */,
+				32673F07274C974700E46A89 /* tta-cpp.xcframework */,
 				3271448C254F1FCD00029BD7 /* vorbis.xcframework */,
 				3267724B254B6BB80041B063 /* wavpack.xcframework */,
 			);
