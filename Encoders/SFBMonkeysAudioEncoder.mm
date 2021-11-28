@@ -118,6 +118,11 @@ public:
 		return ERROR_IO_WRITE;
 	}
 
+	inline virtual int SetReadWholeFile()
+	{
+		return ERROR_IO_READ;
+	}
+
 	inline virtual APE::int64 GetPosition()
 	{
 		NSInteger offset;
