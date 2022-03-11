@@ -87,7 +87,7 @@ T ** AllocateContiguous2DArray(size_t rows, size_t cols)
 	T **result = static_cast<T **>(std::malloc((rows * sizeof(T *)) + (rows * cols * sizeof(T))));
 	T *tmp = reinterpret_cast<T *>(result + rows);
 	for(size_t i = 0; i < rows; ++i)
-	result[i] = tmp + i * cols;
+		result[i] = tmp + i * cols;
 	return result;
 }
 
