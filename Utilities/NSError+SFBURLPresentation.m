@@ -13,7 +13,7 @@
 	NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
 
 	NSString *displayName = nil;
-	if([url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil])
+	if([url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil] && displayName)
 		userInfo[NSLocalizedDescriptionKey] = [NSString stringWithFormat:descriptionFormatStringForURL, displayName];
 	else
 		userInfo[NSLocalizedDescriptionKey] = [NSString stringWithFormat:descriptionFormatStringForURL, url.lastPathComponent];
