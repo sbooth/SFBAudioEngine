@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -113,6 +113,16 @@ public:
 		return ERROR_IO_READ;
 	}
 
+	inline virtual void SetReadToBuffer()
+	{
+	}
+
+	inline virtual unsigned char * GetBuffer(int * pnBufferBytes)
+	{
+#pragma unused(pnBufferBytes)
+		return nullptr;
+	}
+
 	inline virtual APE::int64 GetPosition()
 	{
 		NSInteger offset;
@@ -200,12 +210,12 @@ private:
 	_ioInterface = std::move(ioInterface);
 
 	AVAudioChannelLayout *channelLayout = nil;
-	switch(_decompressor->GetInfo(APE::APE_INFO_CHANNELS)) {
+	switch(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)) {
 		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
 		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
 		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
 		default:
-			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_decompressor->GetInfo(APE::APE_INFO_CHANNELS))];
+			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS))];
 			break;
 	}
 
@@ -215,9 +225,9 @@ private:
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
 
-	processingStreamDescription.mBitsPerChannel		= (UInt32)_decompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE);
-	processingStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::APE_INFO_SAMPLE_RATE);
-	processingStreamDescription.mChannelsPerFrame	= (UInt32)_decompressor->GetInfo(APE::APE_INFO_CHANNELS);
+	processingStreamDescription.mBitsPerChannel		= (UInt32)_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE);
+	processingStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
+	processingStreamDescription.mChannelsPerFrame	= (UInt32)_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS);
 
 	processingStreamDescription.mBytesPerPacket		= (processingStreamDescription.mBitsPerChannel / 8) * processingStreamDescription.mChannelsPerFrame;
 	processingStreamDescription.mFramesPerPacket	= 1;
@@ -232,9 +242,9 @@ private:
 
 	sourceStreamDescription.mFormatID			= kSFBAudioFormatMonkeysAudio;
 
-	sourceStreamDescription.mBitsPerChannel		= static_cast<UInt32>(_decompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE));
-	sourceStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::APE_INFO_SAMPLE_RATE);
-	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_decompressor->GetInfo(APE::APE_INFO_CHANNELS));
+	sourceStreamDescription.mBitsPerChannel		= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
+	sourceStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
+	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
@@ -256,12 +266,12 @@ private:
 
 - (AVAudioFramePosition)framePosition
 {
-	return _decompressor->GetInfo(APE::APE_DECOMPRESS_CURRENT_BLOCK);
+	return _decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_CURRENT_BLOCK);
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return _decompressor->GetInfo(APE::APE_DECOMPRESS_TOTAL_BLOCKS);
+	return _decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_TOTAL_BLOCKS);
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error

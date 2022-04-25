@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -121,6 +121,16 @@ public:
 	inline virtual int SetReadWholeFile()
 	{
 		return ERROR_IO_READ;
+	}
+
+	inline virtual void SetReadToBuffer()
+	{
+	}
+
+	inline virtual unsigned char * GetBuffer(int * pnBufferBytes)
+	{
+#pragma unused(pnBufferBytes)
+		return nullptr;
 	}
 
 	inline virtual APE::int64 GetPosition()
