@@ -460,7 +460,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 				std::memcpy(bytesToWrite, &cmd, 4);
 				std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 				std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8 );
+				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 			}
 
