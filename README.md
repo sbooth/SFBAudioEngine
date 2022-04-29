@@ -133,7 +133,7 @@ Audio properties and metadata are accessed via instances of [SFBAudioFile](Metad
 
 ## Sample Audio Players
 
-Two versions of SimplePlayer, one for macOS and one for iOS, are provided illustrate the usage of SFBAudioEngine.
+Two versions of SimplePlayer, one for macOS and one for iOS, are provided to illustrate the usage of SFBAudioEngine.
 
 ### macOS
 
