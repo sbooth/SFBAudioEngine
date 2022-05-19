@@ -154,17 +154,6 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 
 	SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.xiphComment());
 
-	if(!file.save()) {
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
-	}
-
 	// Add album art
 	for(SFBAttachedPicture *attachedPicture in self.metadata.attachedPictures) {
 		SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
@@ -195,6 +184,17 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 		}
 
 		file.addPicture(picture);
+	}
+
+	if(!file.save()) {
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+		return NO;
 	}
 
 	return YES;
