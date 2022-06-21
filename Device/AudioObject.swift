@@ -92,14 +92,14 @@ public class AudioObject: CustomDebugStringConvertible {
 				block(array)
 			}
 
-			listenerBlocks[property] = listenerBlock;
-
 			let result = AudioObjectAddPropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectAddPropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 				let userInfo = [NSLocalizedDescriptionKey: NSLocalizedString("The listener block for the property \(property.selector) on audio object 0x\(String(objectID, radix: 16, uppercase: false)) could not be added.", comment: "")]
 				throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: userInfo)
 			}
+
+			listenerBlocks[property] = listenerBlock;
 		}
 	}
 
