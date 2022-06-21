@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -70,7 +70,7 @@ public class AudioObject: CustomDebugStringConvertible {
 		var address = property.rawValue
 
 		// Remove the existing listener block, if any, for the property
-		if let listenerBlock = listenerBlocks[property] {
+		if let listenerBlock = listenerBlocks.removeValue(forKey: property) {
 			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
 			guard result == kAudioHardwareNoError else {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
