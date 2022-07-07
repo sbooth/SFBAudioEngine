@@ -601,7 +601,7 @@ static id _sharedKeySet;
 - (NSArray *)attachedPicturesOfType:(SFBAttachedPictureType)type
 {
 	NSMutableArray *pictures = [NSMutableArray array];
-	for(SFBAttachedPicture *picture in _pictures) {
+    for(SFBAttachedPicture *picture in _pictures.copy) {
 		if(picture.pictureType == type)
 			[pictures addObject:picture];
 	}

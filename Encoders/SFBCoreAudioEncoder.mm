@@ -375,7 +375,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 		format.mBytesPerFrame	= format.mBytesPerPacket / format.mFramesPerPacket;
 	}
 	// Adjust the flags for Apple Lossless and FLAC
-	else if(format.mFormatID == kAudioFormatAppleLossless || format.mFormatFlags == kAudioFormatFLAC) {
+	else if(format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
 		switch(_processingFormat.streamDescription->mBitsPerChannel) {
 			case 16:	format.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;		break;
 			case 20:	format.mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;		break;
@@ -438,7 +438,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 		}
 
 		if(audioConverter) {
-			for(NSNumber *key in audioConverterPropertySettings) {
+			for(NSNumber *key in audioConverterPropertySettings.allKeys) {
 				AudioConverterPropertyID propertyID = (AudioConverterPropertyID)key.unsignedIntValue;
 				switch(propertyID) {
 					case kAudioConverterSampleRateConverterComplexity:
