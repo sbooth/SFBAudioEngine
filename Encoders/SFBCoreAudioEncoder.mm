@@ -438,7 +438,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 		}
 
 		if(audioConverter) {
-			for(NSNumber *key in audioConverterPropertySettings.allKeys) {
+			for(NSNumber *key in audioConverterPropertySettings) {
 				AudioConverterPropertyID propertyID = (AudioConverterPropertyID)key.unsignedIntValue;
 				switch(propertyID) {
 					case kAudioConverterSampleRateConverterComplexity:
