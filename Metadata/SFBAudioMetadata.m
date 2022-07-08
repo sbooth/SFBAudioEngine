@@ -620,10 +620,11 @@ static id _sharedKeySet;
 
 - (void)removeAttachedPicturesOfType:(SFBAttachedPictureType)type
 {
-	for(SFBAttachedPicture *picture in _pictures.copy) {
-		if(picture.pictureType == type)
-			[_pictures removeObject:picture];
-	}
+	NSSet *picturesToRemove = [_pictures objectsPassingTest:^BOOL(SFBAttachedPicture *obj, BOOL *stop) {
+#pragma unused(stop)
+		return obj.pictureType == type;
+	}];
+	[_pictures minusSet:picturesToRemove];
 }
 
 - (void)removeAllAttachedPictures
