@@ -215,7 +215,7 @@ private:
 		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
 		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
 		default:
-			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS))];
+			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)))];
 			break;
 	}
 
@@ -225,9 +225,9 @@ private:
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
 
-	processingStreamDescription.mBitsPerChannel		= (UInt32)_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE);
+	processingStreamDescription.mBitsPerChannel		= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
 	processingStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
-	processingStreamDescription.mChannelsPerFrame	= (UInt32)_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS);
+	processingStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
 
 	processingStreamDescription.mBytesPerPacket		= (processingStreamDescription.mBitsPerChannel / 8) * processingStreamDescription.mChannelsPerFrame;
 	processingStreamDescription.mFramesPerPacket	= 1;
