@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -265,7 +265,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 //	}
 
 	// For mono and stereo the channel layout is assumed
-	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:header->rate channels:(AVAudioChannelCount)header->nb_channels interleaved:NO];
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:header->rate channels:(AVAudioChannelCount)header->nb_channels interleaved:YES];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
@@ -421,27 +421,18 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 								break;
 							}
 
+							// Process stereo channel, if present
+							if(_processingFormat.channelCount == 2)
+								speex_decode_stereo(buf, speexFrameSize, _stereoState);
+
 							// Normalize the values
 							float maxSampleValue = 1u << 15;
-							vDSP_vsdiv(buf, 1, &maxSampleValue, buf, 1, (vDSP_Length)speexFrameSize);
+							vDSP_vsdiv(buf, 1, &maxSampleValue, buf, 1, (vDSP_Length)speexFrameSize * _processingFormat.channelCount);
 
 							// Copy the frames from the decoding buffer to the output buffer, skipping over any frames already decoded
 
-							float * const *floatChannelData = _buffer.floatChannelData;
-
-							const float *input = buf;
-							float *output = floatChannelData[0] + _buffer.frameLength;
-							memcpy(output, input, (size_t)speexFrameSize * sizeof(float));
-
-							// Process stereo channel, if present
-							if(_processingFormat.channelCount == 2) {
-								speex_decode_stereo(buf, speexFrameSize, _stereoState);
-								vDSP_vsdiv(buf + speexFrameSize, 1, &maxSampleValue, buf + speexFrameSize, 1, (vDSP_Length)speexFrameSize);
-
-								input = buf + speexFrameSize;
-								output = floatChannelData[1] + _buffer.frameLength;
-								memcpy(output, input, (size_t)speexFrameSize * sizeof(float));
-							}
+							float *output = _buffer.floatChannelData[0] + (_buffer.frameLength * _processingFormat.channelCount);
+							memcpy(output, buf, (size_t)speexFrameSize * _processingFormat.channelCount * sizeof(float));
 
 							_buffer.frameLength = (AVAudioFrameCount)speexFrameSize;
 
