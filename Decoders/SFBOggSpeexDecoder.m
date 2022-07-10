@@ -431,7 +431,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 
 							// Copy the frames from the decoding buffer to the output buffer, skipping over any frames already decoded
 
-							float *output = _buffer.floatChannelData[0] + (_buffer.frameLength * _processingFormat.channelCount);
+							float *output = _buffer.floatChannelData[0] + (_buffer.frameLength * _buffer.stride);
 							memcpy(output, buf, (size_t)speexFrameSize * _processingFormat.channelCount * sizeof(float));
 
 							_buffer.frameLength = (AVAudioFrameCount)speexFrameSize;
