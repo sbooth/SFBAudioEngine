@@ -40,10 +40,10 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
 		return NO;
-	return [self exportUsingDecoder:decoder toURL:targetURL error:error];
+	return [self exportFromDecoder:decoder toURL:targetURL error:error];
 }
 
-+ (BOOL)exportUsingDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error
++ (BOOL)exportFromDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(targetURL != nil);
