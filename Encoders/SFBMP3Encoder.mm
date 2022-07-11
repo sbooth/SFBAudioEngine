@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -114,14 +114,6 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
-	result = lame_init_params(gfp.get());
-	if(result == -1) {
-		os_log_error(gSFBAudioEncoderLog, "lame_init_params failed");
-		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-		return NO;
-	}
-
 	// Adjust encoder settings
 
 	NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Quality];
@@ -194,7 +186,7 @@ struct ::std::default_delete<lame_global_flags> {
 				return NO;
 			}
 
-			result = lame_set_VBR_min_bitrate_kbps(gfp.get(), bitrate);
+			result = lame_set_VBR_min_bitrate_kbps(gfp.get(), lame_get_brate(gfp.get()));
 			if(result == -1) {
 				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", bitrate);
 				if(error)
@@ -224,6 +216,14 @@ struct ::std::default_delete<lame_global_flags> {
 	result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
+
+	result = lame_init_params(gfp.get());
+	if(result == -1) {
+		os_log_error(gSFBAudioEncoderLog, "lame_init_params failed");
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
