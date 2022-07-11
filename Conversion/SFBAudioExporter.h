@@ -19,7 +19,7 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 /// @param targetURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-+ (BOOL)exportFromURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error;
++ (BOOL)exportFromURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error NS_SWIFT_NAME(AudioExporter.export(_:to:));
 
 /// Exports audio to the specified URL
 /// @note The file type to create is inferred from the file extension of \c targetURL
@@ -27,7 +27,7 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 /// @param targetURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-+ (BOOL)exportFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error;
++ (BOOL)exportFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error NS_SWIFT_NAME(AudioExporter.export(_:to:));
 
 @end
 
