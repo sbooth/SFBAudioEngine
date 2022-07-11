@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -336,14 +336,16 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFor
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel;
 /// Core Audio audio converter configuration (\c NSDictionary keyed by \c NSNumber representing \c AudioConverterPropertyID with corresponding appropriately-wrapped value, typically \c NSNumber)
 ///
-///	Currently supports:
-///	\c kAudioConverterSampleRateConverterComplexity
-///	\c kAudioConverterSampleRateConverterQuality
-///	\c kAudioConverterCodecQuality
-///	\c kAudioConverterEncodeBitRate
-///	\c kAudioCodecPropertyBitRateControlMode
-///	\c kAudioCodecPropertySoundQualityForVBR
+/// Currently supports:
+/// \c kAudioConverterSampleRateConverterComplexity
+/// \c kAudioConverterSampleRateConverterQuality
+/// \c kAudioConverterCodecQuality
+/// \c kAudioConverterEncodeBitRate
+/// \c kAudioCodecPropertyBitRateControlMode
+/// \c kAudioCodecPropertySoundQualityForVBR
 /// \c kAudioCodecPropertyBitRateForVBR
+/// \c kAudioConverterPropertyDithering (macOS only)
+/// \c kAudioConverterPropertyDitherBitDepth (macOS only)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
 
 #pragma mark - Libsndfile Encoder Settings

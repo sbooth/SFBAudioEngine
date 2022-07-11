@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -450,6 +450,10 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 					case kAudioCodecPropertyBitRateControlMode:
 					case kAudioCodecPropertySoundQualityForVBR:
 					case kAudioCodecPropertyBitRateForVBR:
+#if !TARGET_OS_IPHONE
+					case kAudioConverterPropertyDithering:
+					case kAudioConverterPropertyDitherBitDepth:
+#endif
 						result = SetAudioConverterProperty<UInt32>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
 						break;
 					default:
