@@ -360,7 +360,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 	else
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; mBitsPerChannel will be zero which is probably incorrect");
 
-	SFB::CAStreamBasicDescription format;
+	SFB::CAStreamBasicDescription format{};
 
 	format.mFormatID 			= formatID;
 	format.mFormatFlags 		= formatFlags;
