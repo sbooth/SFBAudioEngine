@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -32,7 +32,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	}];
 }
 
-+ (BOOL)exportURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error
++ (BOOL)exportFromURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error
 {
 	NSParameterAssert(sourceURL != nil);
 	NSParameterAssert(targetURL != nil);
@@ -40,10 +40,10 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
 		return NO;
-	return [self exportDecoder:decoder toURL:targetURL error:error];
+	return [self exportUsingDecoder:decoder toURL:targetURL error:error];
 }
 
-+ (BOOL)exportDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error
++ (BOOL)exportUsingDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(targetURL != nil);

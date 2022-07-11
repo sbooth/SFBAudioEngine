@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -19,7 +19,7 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 /// @param targetURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-+ (BOOL)exportURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error;
++ (BOOL)exportFromURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error;
 
 /// Exports audio to the specified URL
 /// @note The file type to create is inferred from the file extension of \c targetURL
@@ -27,7 +27,7 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 /// @param targetURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-+ (BOOL)exportDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error;
++ (BOOL)exportUsingDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error;
 
 @end
 
