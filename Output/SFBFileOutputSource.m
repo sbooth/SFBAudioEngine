@@ -81,7 +81,7 @@
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error
 {
 	NSParameterAssert(buffer != NULL);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(length >= 0);
 	NSParameterAssert(bytesWritten != NULL);
 
 	size_t written = fwrite(buffer, 1, (size_t)length, _file);

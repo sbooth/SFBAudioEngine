@@ -65,7 +65,7 @@
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error
 {
 	NSParameterAssert(buffer != NULL);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(length >= 0);
 	NSParameterAssert(bytesWritten != NULL);
 
 	[_data appendBytes:buffer length:(NSUInteger)length];
