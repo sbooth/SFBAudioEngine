@@ -168,18 +168,22 @@ extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSe
 
 #pragma mark - MP3 Encoder Settings
 
-/// Set to nonzero to target bitrate instead of quality (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate;
+// Valid bitrates for MPEG 1 Layer III are 32 40 48 56 64 80 96 112 128 160 192 224 256 320
+
 /// MP3 encoding engine algorithm quality (\c NSNumber from 0 (best) to 9 (worst))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality;
-/// MP3 bitrate (\c NSNumber in kbps)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate;
-/// Set to nonzero to encode at a constant bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR;
-/// MP3 VBR quality (\c NSNumberfrom 0 (best) to < 10 (worst))
+/// Bitrate for CBR encoding (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3ConstantBitrate;
+/// Target bitrate for ABR encoding (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3AverageBitrate;
+/// Set to nonzero for VBR encoding (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseVariableBitrate;
+/// Quality setting for VBR encoding (\c NSNumberfrom 0 (best) to < 10 (worst))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality;
-/// Set to nonzero to use fast variable bitrate mode (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR;
+/// Minimum bitrate for VBR encoding (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate;
+/// Maximum bitrate for VBR encoding (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate;
 /// MP3 stereo mode (\c SFBAudioEncodingSettingsValueMP3StereoMode)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode;
 /// Set to nonzero to calculate replay gain (\c NSNumber)
