@@ -13,13 +13,13 @@
 #import "SFBMP3Encoder.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
-
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate = @"Encoding Target is Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality = @"Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate = @"Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR = @"Enable CBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR = @"Enable Fast VBR Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3ConstantBitrate = @"Constant Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3AverageBitrate = @"Average Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseVariableBitrate = @"Use Variable Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality = @"VBR Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate = @"VBR Minimum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate = @"VBR Maximum Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode = @"Stereo Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain = @"Calculate Replay Gain";
 
@@ -123,6 +123,7 @@ struct ::std::default_delete<lame_global_flags> {
 
 	// Adjust encoder settings
 
+	// Noise shaping and psychoacoustics
 	NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Quality];
 	if(quality != nil) {
 		auto quality_value = quality.intValue;
@@ -142,12 +143,69 @@ struct ::std::default_delete<lame_global_flags> {
 		}
 	}
 
-	BOOL targetIsBitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3TargetIsBitrate] boolValue];
-	if(!targetIsBitrate) {
-		auto fastVBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EnableFastVBR] boolValue];
-		result = lame_set_VBR(gfp.get(), fastVBR ? vbr_mtrh : vbr_rh);
+	// Constant bitrate encoding
+	NSNumber *cbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3ConstantBitrate];
+	if(cbr != nil) {
+		result = lame_set_VBR(gfp.get(), vbr_off);
 		if(result == -1) {
-			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(%d) failed", fastVBR ? vbr_mtrh : vbr_rh);
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
+
+		result = lame_set_brate(gfp.get(), cbr.intValue);
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", cbr.intValue);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
+	}
+
+	// Average bitrate encoding
+	NSNumber *abr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
+	if(abr != nil) {
+		if(cbr)
+			os_log_info(gSFBAudioEncoderLog, "CBR and ABR bitrates both specified; this is probably not correct");
+
+		result = lame_set_VBR(gfp.get(), vbr_abr);
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_abr) failed");
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
+
+		// values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3
+		auto intValue = abr.intValue;
+		if(intValue >= 8000)
+			intValue = (intValue + 500) / 1000;
+		if(intValue > 320)
+			intValue = 320;
+		if(intValue < 8)
+			intValue = 8;
+
+		result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", intValue);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
+	}
+
+	// Variable bitrate encoding
+	NSNumber *vbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseVariableBitrate];
+	if(vbr.boolValue) {
+		if(cbr != nil)
+			os_log_info(gSFBAudioEncoderLog, "VBR encoding and CBR bitrate both specified; this is probably not correct");
+		if(abr != nil)
+			os_log_info(gSFBAudioEncoderLog, "VBR encoding and ABR bitrate both specified; this is probably not correct");
+
+		result = lame_set_VBR(gfp.get(), vbr_default);
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
@@ -163,31 +221,12 @@ struct ::std::default_delete<lame_global_flags> {
 				return NO;
 			}
 		}
-	}
-	else {
-		auto bitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Bitrate] intValue] * 1000;
-		result = lame_set_brate(gfp.get(), bitrate);
-		if(result == -1) {
-			os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", bitrate);
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-			return NO;
-		}
 
-		auto enableCBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EnableCBR] boolValue];
-		if(enableCBR) {
-			result = lame_set_VBR(gfp.get(), vbr_off);
+		NSNumber *vbrMin = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate];
+		if(vbrMin != nil) {
+			result = lame_set_brate(gfp.get(), vbrMin.intValue);
 			if(result == -1) {
-				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
-				if(error)
-					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-				return NO;
-			}
-		}
-		else {
-			result = lame_set_VBR(gfp.get(), vbr_default);
-			if(result == -1) {
-				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
+				os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", vbrMin.intValue);
 				if(error)
 					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 				return NO;
@@ -195,7 +234,19 @@ struct ::std::default_delete<lame_global_flags> {
 
 			result = lame_set_VBR_min_bitrate_kbps(gfp.get(), lame_get_brate(gfp.get()));
 			if(result == -1) {
-				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", bitrate);
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", lame_get_brate(gfp.get()));
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				return NO;
+			}
+		}
+
+		NSNumber *vbrMax = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate];
+		if(vbrMax != nil) {
+			auto bitrate = vbrMax.intValue * 1000;
+			result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
+			if(result == -1) {
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_max_bitrate_kbps(%d) failed", bitrate);
 				if(error)
 					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 				return NO;
