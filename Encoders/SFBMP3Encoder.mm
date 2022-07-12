@@ -40,7 +40,14 @@ struct ::std::default_delete<lame_global_flags> {
 @private
 	std::unique_ptr<lame_global_flags> _gfp;
 	AVAudioFramePosition _framePosition;
+	NSInteger _id3v2TagSize;
 }
+@end
+
+@interface SFBMP3Encoder (TagWriting)
+- (BOOL)writeID3v1TagReturningError:(NSError **)error;
+- (BOOL)writeID3v2TagReturningError:(NSError **)error;
+- (BOOL)writeXingHeaderReturningError:(NSError **)error;
 @end
 
 @implementation SFBMP3Encoder
@@ -221,6 +228,8 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
+	lame_set_write_id3tag_automatic(gfp.get(), false);
+
 	result = lame_init_params(gfp.get());
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_init_params failed");
@@ -228,6 +237,9 @@ struct ::std::default_delete<lame_global_flags> {
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
+
+	if(![self writeID3v2TagReturningError:error])
+		return NO;
 
 	AudioStreamBasicDescription outputStreamDescription{};
 	outputStreamDescription.mFormatID			= kAudioFormatMPEGLayer3;
@@ -314,6 +326,84 @@ struct ::std::default_delete<lame_global_flags> {
 	NSInteger bytesWritten;
 	if(![_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] || bytesWritten != result)
 		return NO;
+
+	if(![self writeID3v1TagReturningError:error])
+		return NO;
+
+	if(![self writeXingHeaderReturningError:error])
+		return NO;
+
+	return YES;
+}
+
+@end
+
+@implementation SFBMP3Encoder (TagWriting)
+
+- (BOOL)writeID3v1TagReturningError:(NSError **)error
+{
+	auto bufsize = lame_get_id3v1_tag(_gfp.get(), NULL, 0);
+	if(bufsize > 0) {
+		auto buf = std::make_unique<unsigned char[]>(bufsize);
+		if(!buf) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
+		}
+
+		auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
+
+		NSInteger bytesWritten;
+		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+			return NO;
+	}
+
+	return YES;
+}
+
+- (BOOL)writeID3v2TagReturningError:(NSError **)error
+{
+	auto bufsize = lame_get_id3v2_tag(_gfp.get(), NULL, 0);
+	if(bufsize > 0) {
+		auto buf = std::make_unique<unsigned char[]>(bufsize);
+		if(!buf) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
+		}
+
+		auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
+
+		NSInteger bytesWritten;
+		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+			return NO;
+	}
+
+	_id3v2TagSize = (NSInteger)bufsize;
+
+	return YES;
+}
+
+- (BOOL)writeXingHeaderReturningError:(NSError **)error
+{
+	auto bufsize = lame_get_lametag_frame(_gfp.get(), NULL, 0);
+	if(bufsize > 0) {
+		auto buf = std::make_unique<unsigned char[]>(bufsize);
+		if(!buf) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
+		}
+
+		auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
+
+		if(![_outputSource seekToOffset:_id3v2TagSize error:error])
+			return NO;
+
+		NSInteger bytesWritten;
+		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+			return NO;
+	}
 
 	return YES;
 }
