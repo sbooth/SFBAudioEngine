@@ -78,7 +78,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	if(!encoder)
 		return nil;
 	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
-	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata error:error];
+	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata delegate:nil error:error];
 }
 
 - (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder
@@ -92,7 +92,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	if(!decoder)
 		return nil;
 	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
-	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata error:error];
+	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata delegate:nil error:error];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL
@@ -105,30 +105,42 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
 	if(!encoder)
 		return nil;
-	return [self initWithDecoder:decoder encoder:encoder error:error];
+	return [self initWithDecoder:decoder encoder:encoder metadata:nil delegate:nil error:error];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder
 {
-	return [self initWithDecoder:decoder encoder:encoder error:nil];
+	return [self initWithDecoder:decoder encoder:encoder metadata:nil delegate:nil error:nil];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
 {
-	return [self initWithDecoder:decoder encoder:encoder metadata:nil error:error];
+	return [self initWithDecoder:decoder encoder:encoder metadata:nil delegate:nil error:error];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata
 {
-	return [self initWithDecoder:decoder encoder:encoder metadata:metadata error:nil];
+	return [self initWithDecoder:decoder encoder:encoder metadata:metadata delegate:nil error:nil];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata error:(NSError **)error
+{
+	return [self initWithDecoder:decoder encoder:encoder metadata:metadata delegate:nil error:error];
+}
+
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata delegate:(id <SFBAudioConverterDelegate>)delegate
+{
+	return [self initWithDecoder:decoder encoder:encoder metadata:metadata delegate:delegate error:nil];
+}
+
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata delegate:(id <SFBAudioConverterDelegate>)delegate error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(encoder != nil);
 
 	if((self = [super init])) {
+		_delegate = delegate;
+
 		if(!decoder.isOpen && ![decoder openReturningError:error])
 			return nil;
 		_decoder = decoder;
@@ -144,6 +156,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 				else
 					desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate channels:decoder.processingFormat.channelCount interleaved:YES];
 			}
+
+			if([_delegate respondsToSelector:@selector(audioConverter:proposedProcessingFormatForConversion:)])
+				desiredEncodingFormat = [_delegate audioConverter:self proposedProcessingFormatForConversion:desiredEncodingFormat];
 
 			if(![encoder setSourceFormat:desiredEncodingFormat error:error])
 				return nil;
@@ -166,6 +181,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 								   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for conversion.", @"")];
 			return nil;
 		}
+
+		if([_delegate respondsToSelector:@selector(audioConverter:customizeConversionParameters:)])
+			[_delegate audioConverter:self customizeConversionParameters:_converter];
 
 		_metadata = [metadata copy];
 	}
