@@ -177,10 +177,18 @@ struct ::std::default_delete<lame_global_flags> {
 			return NO;
 		}
 
-		auto bitrate = abr.intValue * 1000;
-		result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), bitrate);
+		// values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3
+		auto intValue = abr.intValue;
+		if(intValue >= 8000)
+			intValue = (intValue + 500) / 1000;
+		if(intValue > 320)
+			intValue = 320;
+		if(intValue < 8)
+			intValue = 8;
+
+		result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
 		if(result == -1) {
-			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", bitrate);
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", intValue);
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
