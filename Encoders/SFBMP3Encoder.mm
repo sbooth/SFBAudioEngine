@@ -44,7 +44,8 @@ struct ::std::default_delete<lame_global_flags> {
 }
 @end
 
-@interface SFBMP3Encoder (TagWriting)
+@interface SFBMP3Encoder (Internal)
+- (BOOL)flushEncoderReturningError:(NSError **)error;
 - (BOOL)writeID3v1TagReturningError:(NSError **)error;
 - (BOOL)writeID3v2TagReturningError:(NSError **)error;
 - (BOOL)writeXingHeaderReturningError:(NSError **)error;
@@ -358,6 +359,24 @@ struct ::std::default_delete<lame_global_flags> {
 
 - (BOOL)finishEncodingReturningError:(NSError **)error
 {
+	if(![self flushEncoderReturningError:error])
+		return NO;
+
+	if(![self writeID3v1TagReturningError:error])
+		return NO;
+
+	if(![self writeXingHeaderReturningError:error])
+		return NO;
+
+	return YES;
+}
+
+@end
+
+@implementation SFBMP3Encoder (Internal)
+
+- (BOOL)flushEncoderReturningError:(NSError **)error
+{
 	const size_t bufsize = 7200;
 	auto buf = std::make_unique<unsigned char[]>(bufsize);
 	if(!buf) {
@@ -374,22 +393,8 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
-	NSInteger bytesWritten;
-	if(![_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] || bytesWritten != result)
-		return NO;
-
-	if(![self writeID3v1TagReturningError:error])
-		return NO;
-
-	if(![self writeXingHeaderReturningError:error])
-		return NO;
-
 	return YES;
 }
-
-@end
-
-@implementation SFBMP3Encoder (TagWriting)
 
 - (BOOL)writeID3v1TagReturningError:(NSError **)error
 {
