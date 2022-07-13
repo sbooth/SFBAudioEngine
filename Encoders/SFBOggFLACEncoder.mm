@@ -129,10 +129,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 {
 #pragma unused(encoder)
 #pragma unused(metadata)
-	NSCParameterAssert(client_data != nullptr);
-
-//	SFBOggFLACEncoder *flacEncoder = (__bridge SFBOggFLACEncoder *)client_data;
-//	SFBOutputSource *outputSource = flacEncoder->_outputSource;
+#pragma unused(client_data)
 }
 
 }
