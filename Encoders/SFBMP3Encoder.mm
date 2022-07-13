@@ -166,7 +166,7 @@ struct ::std::default_delete<lame_global_flags> {
 	// Average bitrate encoding
 	NSNumber *abr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
 	if(abr != nil) {
-		if(cbr)
+		if(cbr != nil)
 			os_log_info(gSFBAudioEncoderLog, "CBR and ABR bitrates both specified; this is probably not correct");
 
 		result = lame_set_VBR(gfp.get(), vbr_abr);
@@ -188,7 +188,7 @@ struct ::std::default_delete<lame_global_flags> {
 
 		result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
 		if(result == -1) {
-			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", intValue);
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_mean_bitrate_kbps(%d) failed", intValue);
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
