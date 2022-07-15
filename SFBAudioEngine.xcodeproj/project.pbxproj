@@ -476,6 +476,23 @@
 		32DFEC5C25698EFF005D4C39 /* SFBOggVorbisEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		32B3757B288119EA0067A4AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 32B37577288119C80067A4AE;
+			remoteInfo = XCFrameworks;
+		};
+		32B3757D288119F00067A4AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 32B37577288119C80067A4AE;
+			remoteInfo = XCFrameworks;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
 		3207313A25631560008BEDA7 /* SFBAudioConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
@@ -1410,6 +1427,23 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
+/* Begin PBXLegacyTarget section */
+		32B37577288119C80067A4AE /* XCFrameworks */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 32B3757A288119C80067A4AE /* Build configuration list for PBXLegacyTarget "XCFrameworks" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "$(SRCROOT)/XCFrameworks";
+			dependencies = (
+			);
+			name = XCFrameworks;
+			passBuildSettingsInEnvironment = 1;
+			productName = XCFrameworks;
+		};
+/* End PBXLegacyTarget section */
+
 /* Begin PBXNativeTarget section */
 		32714BAB2551D4DF00029BD7 /* iOS Framework */ = {
 			isa = PBXNativeTarget;
@@ -1423,6 +1457,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				32B3757E288119F00067A4AE /* PBXTargetDependency */,
 			);
 			name = "iOS Framework";
 			productName = Framework;
@@ -1441,6 +1476,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				32B3757C288119EA0067A4AE /* PBXTargetDependency */,
 			);
 			name = "macOS Framework";
 			productName = Framework;
@@ -1456,6 +1492,9 @@
 				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = sbooth.org;
 				TargetAttributes = {
+					32B37577288119C80067A4AE = {
+						CreatedOnToolsVersion = 13.4.1;
+					};
 					32C212D41091116D00BA2493 = {
 						LastSwiftMigration = 1140;
 					};
@@ -1476,6 +1515,7 @@
 			targets = (
 				32C212D41091116D00BA2493 /* macOS Framework */,
 				32714BAB2551D4DF00029BD7 /* iOS Framework */,
+				32B37577288119C80067A4AE /* XCFrameworks */,
 			);
 		};
 /* End PBXProject section */
@@ -1728,6 +1768,19 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		32B3757C288119EA0067A4AE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 32B37577288119C80067A4AE /* XCFrameworks */;
+			targetProxy = 32B3757B288119EA0067A4AE /* PBXContainerItemProxy */;
+		};
+		32B3757E288119F00067A4AE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 32B37577288119C80067A4AE /* XCFrameworks */;
+			targetProxy = 32B3757D288119F00067A4AE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		32714C7A2551D4DF00029BD7 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1778,6 +1831,33 @@
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		32B37578288119C80067A4AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		32B37579288119C80067A4AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -1992,6 +2072,15 @@
 			buildConfigurations = (
 				32714C7A2551D4DF00029BD7 /* Debug */,
 				32714C7B2551D4DF00029BD7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		32B3757A288119C80067A4AE /* Build configuration list for PBXLegacyTarget "XCFrameworks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32B37578288119C80067A4AE /* Debug */,
+				32B37579288119C80067A4AE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
