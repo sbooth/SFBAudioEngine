@@ -29,6 +29,8 @@ SFBAudioEngine supports most audio formats. In addition to all formats supported
 
 ## Quick Start
 
+### Playback
+
 Playing an audio file is as simple as:
 
 ~~~swift
@@ -38,6 +40,8 @@ let url = URL(fileURLWithPath: "example.flac")
 try? player.play(url)
 ~~~
 
+### Metadata
+
 Reading audio properties and metadata is similarly trivial:
 
 ~~~swift
@@ -46,6 +50,8 @@ if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
     let title = audioFile.metadata.title
 }
 ~~~
+
+### Conversion
 
 Want to convert a WAVE file to FLAC?
 
