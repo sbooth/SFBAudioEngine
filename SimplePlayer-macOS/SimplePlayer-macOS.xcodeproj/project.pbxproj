@@ -332,7 +332,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.sbooth.AudioEngine.SimplePlayer-macOS";
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer.macOS;
 				PRODUCT_NAME = SimplePlayer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS-Bridging-Header.h";
@@ -350,7 +350,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.sbooth.AudioEngine.SimplePlayer-macOS";
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer.macOS;
 				PRODUCT_NAME = SimplePlayer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS-Bridging-Header.h";
