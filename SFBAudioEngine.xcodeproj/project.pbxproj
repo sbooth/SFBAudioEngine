@@ -135,23 +135,14 @@
 		325A5E902444D868003138D5 /* SFBModuleDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */; };
 		325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */; };
 		32673F0D274C9D5C00E46A89 /* tta-cpp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32673F07274C974700E46A89 /* tta-cpp.xcframework */; };
-		32673F0E274C9D5C00E46A89 /* tta-cpp.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32673F07274C974700E46A89 /* tta-cpp.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32673F0F274C9D6300E46A89 /* tta-cpp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32673F07274C974700E46A89 /* tta-cpp.xcframework */; };
-		32673F10274C9D6300E46A89 /* tta-cpp.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32673F07274C974700E46A89 /* tta-cpp.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3267724D254B6BB80041B063 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; };
-		32677252254B6C4D0041B063 /* wavpack.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3267793B254C421F0041B063 /* MAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; };
 		3267793C254C421F0041B063 /* mpg123.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267793A254C421F0041B063 /* mpg123.xcframework */; };
-		3267793D254C423E0041B063 /* MAC.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		3267793E254C42430041B063 /* mpg123.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267793A254C421F0041B063 /* mpg123.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32677BA5254C79260041B063 /* sndfile.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; };
-		32677BA6254C79310041B063 /* sndfile.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32677C9B254CC4410041B063 /* mpc.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677C9A254CC4410041B063 /* mpc.xcframework */; };
-		32677C9C254CC4520041B063 /* mpc.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677C9A254CC4410041B063 /* mpc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32677E29254D11AD0041B063 /* dumb.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677E28254D11AD0041B063 /* dumb.xcframework */; };
-		32677E2A254D11B80041B063 /* dumb.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677E28254D11AD0041B063 /* dumb.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		326782F3254E66900041B063 /* taglib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; };
-		326782F4254E66AB0041B063 /* taglib.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3268F81B24509BAF006A5911 /* SFBAudioPlayerNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81924509BAF006A5911 /* SFBAudioPlayerNode.mm */; };
 		3268F81C24509BAF006A5911 /* SFBAudioPlayerNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F81A24509BAF006A5911 /* SFBAudioPlayerNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3268F81E245229FD006A5911 /* SFBAudioPlayerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81D245229FD006A5911 /* SFBAudioPlayerNode.swift */; };
@@ -212,13 +203,9 @@
 		326EE4322561C50B00277700 /* SFBMonkeysAudioEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 326EE42F2561C50B00277700 /* SFBMonkeysAudioEncoder.mm */; };
 		326EE4332561C50B00277700 /* SFBMonkeysAudioEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 326EE42F2561C50B00277700 /* SFBMonkeysAudioEncoder.mm */; };
 		3271423E254F10AA00029BD7 /* FLAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271423D254F10AA00029BD7 /* FLAC.xcframework */; };
-		3271423F254F10B700029BD7 /* FLAC.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271423D254F10AA00029BD7 /* FLAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3271448D254F1FCD00029BD7 /* vorbis.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; };
-		3271448E254F1FED00029BD7 /* vorbis.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3271464F254F261C00029BD7 /* speex.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; };
-		32714650254F262C00029BD7 /* speex.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714B24255042D000029BD7 /* opus.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714B23255042D000029BD7 /* opus.xcframework */; };
-		32714B272550431D00029BD7 /* opus.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32714B23255042D000029BD7 /* opus.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714BAE2551D4DF00029BD7 /* SFBInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5DF8243F8D8B003138D5 /* SFBInputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32714BAF2551D4DF00029BD7 /* SFBMemoryMappedFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E01243F8D8B003138D5 /* SFBMemoryMappedFileInputSource.h */; };
 		32714BB02551D4DF00029BD7 /* SFBAudioFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 326D3C97242CF79C002AEC52 /* SFBAudioFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -378,26 +365,11 @@
 		32714C682551D4DF00029BD7 /* speex.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; };
 		32714C6A2551D4DF00029BD7 /* vorbis.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; };
 		32714C6B2551D4DF00029BD7 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; };
-		32714C6D2551D4DF00029BD7 /* dumb.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677E28254D11AD0041B063 /* dumb.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C6E2551D4DF00029BD7 /* FLAC.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271423D254F10AA00029BD7 /* FLAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C6F2551D4DF00029BD7 /* MAC.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C702551D4DF00029BD7 /* mpc.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677C9A254CC4410041B063 /* mpc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C712551D4DF00029BD7 /* mpg123.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267793A254C421F0041B063 /* mpg123.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C722551D4DF00029BD7 /* opus.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32714B23255042D000029BD7 /* opus.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C732551D4DF00029BD7 /* sndfile.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C742551D4DF00029BD7 /* speex.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C752551D4DF00029BD7 /* taglib.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C772551D4DF00029BD7 /* vorbis.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		32714C782551D4DF00029BD7 /* wavpack.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714D2D25521B7800029BD7 /* ogg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714B252550430A00029BD7 /* ogg.xcframework */; };
-		32714D2E25521B7800029BD7 /* ogg.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32714B252550430A00029BD7 /* ogg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714D2F25521B7D00029BD7 /* ogg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714B252550430A00029BD7 /* ogg.xcframework */; };
-		32714D3025521B7D00029BD7 /* ogg.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32714B252550430A00029BD7 /* ogg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3275D9962466F3D90055308E /* SFBReplayGainAnalyzer.swift */; };
 		328501B8256AA1C4009140DE /* lame.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328501B7256AA1B6009140DE /* lame.xcframework */; };
-		328501B9256AA1C4009140DE /* lame.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 328501B7256AA1B6009140DE /* lame.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		328501BA256AA1D7009140DE /* lame.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328501B7256AA1B6009140DE /* lame.xcframework */; };
-		328501BB256AA1D7009140DE /* lame.xcframework in Embed XCFrameworks */ = {isa = PBXBuildFile; fileRef = 328501B7256AA1B6009140DE /* lame.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		328501BF256AA2A0009140DE /* SFBMP3Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 328501BD256AA2A0009140DE /* SFBMP3Encoder.h */; };
 		328501C0256AA2A0009140DE /* SFBMP3Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 328501BD256AA2A0009140DE /* SFBMP3Encoder.h */; };
 		328501C1256AA2A0009140DE /* SFBMP3Encoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 328501BE256AA2A0009140DE /* SFBMP3Encoder.mm */; };
@@ -503,57 +475,6 @@
 		32DFEC5B25698EFF005D4C39 /* SFBOggVorbisEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */; };
 		32DFEC5C25698EFF005D4C39 /* SFBOggVorbisEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		32677251254B6C370041B063 /* Embed XCFrameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				32677E2A254D11B80041B063 /* dumb.xcframework in Embed XCFrameworks */,
-				3271423F254F10B700029BD7 /* FLAC.xcframework in Embed XCFrameworks */,
-				328501B9256AA1C4009140DE /* lame.xcframework in Embed XCFrameworks */,
-				3267793D254C423E0041B063 /* MAC.xcframework in Embed XCFrameworks */,
-				32677C9C254CC4520041B063 /* mpc.xcframework in Embed XCFrameworks */,
-				3267793E254C42430041B063 /* mpg123.xcframework in Embed XCFrameworks */,
-				32714B272550431D00029BD7 /* opus.xcframework in Embed XCFrameworks */,
-				32673F0E274C9D5C00E46A89 /* tta-cpp.xcframework in Embed XCFrameworks */,
-				32677BA6254C79310041B063 /* sndfile.xcframework in Embed XCFrameworks */,
-				32714650254F262C00029BD7 /* speex.xcframework in Embed XCFrameworks */,
-				32714D3025521B7D00029BD7 /* ogg.xcframework in Embed XCFrameworks */,
-				326782F4254E66AB0041B063 /* taglib.xcframework in Embed XCFrameworks */,
-				3271448E254F1FED00029BD7 /* vorbis.xcframework in Embed XCFrameworks */,
-				32677252254B6C4D0041B063 /* wavpack.xcframework in Embed XCFrameworks */,
-			);
-			name = "Embed XCFrameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		32714C6C2551D4DF00029BD7 /* Embed XCFrameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				32714C6D2551D4DF00029BD7 /* dumb.xcframework in Embed XCFrameworks */,
-				32714C6E2551D4DF00029BD7 /* FLAC.xcframework in Embed XCFrameworks */,
-				328501BB256AA1D7009140DE /* lame.xcframework in Embed XCFrameworks */,
-				32714C6F2551D4DF00029BD7 /* MAC.xcframework in Embed XCFrameworks */,
-				32714C702551D4DF00029BD7 /* mpc.xcframework in Embed XCFrameworks */,
-				32714C712551D4DF00029BD7 /* mpg123.xcframework in Embed XCFrameworks */,
-				32714C722551D4DF00029BD7 /* opus.xcframework in Embed XCFrameworks */,
-				32673F10274C9D6300E46A89 /* tta-cpp.xcframework in Embed XCFrameworks */,
-				32714C732551D4DF00029BD7 /* sndfile.xcframework in Embed XCFrameworks */,
-				32714C742551D4DF00029BD7 /* speex.xcframework in Embed XCFrameworks */,
-				32714D2E25521B7800029BD7 /* ogg.xcframework in Embed XCFrameworks */,
-				32714C752551D4DF00029BD7 /* taglib.xcframework in Embed XCFrameworks */,
-				32714C772551D4DF00029BD7 /* vorbis.xcframework in Embed XCFrameworks */,
-				32714C782551D4DF00029BD7 /* wavpack.xcframework in Embed XCFrameworks */,
-			);
-			name = "Embed XCFrameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
@@ -1498,7 +1419,6 @@
 				32714C032551D4DF00029BD7 /* Resources */,
 				32714C062551D4DF00029BD7 /* Sources */,
 				32714C572551D4DF00029BD7 /* Frameworks */,
-				32714C6C2551D4DF00029BD7 /* Embed XCFrameworks */,
 			);
 			buildRules = (
 			);
@@ -1517,7 +1437,6 @@
 				32C212D11091116D00BA2493 /* Resources */,
 				32C212D21091116D00BA2493 /* Sources */,
 				32C212D31091116D00BA2493 /* Frameworks */,
-				32677251254B6C370041B063 /* Embed XCFrameworks */,
 			);
 			buildRules = (
 			);
