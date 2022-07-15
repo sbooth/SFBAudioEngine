@@ -99,11 +99,11 @@ Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
 
 ### macOS Framework Notes
 
-When compiling macOS targets against `SFBAudioEngine` it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by `SFBAudioEngine` are contained within `SFBAudioEngine.framework`.
+When compiling macOS targets against SFBAudioEngine it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by SFBAudioEngine are contained within `SFBAudioEngine.framework`.
 
 ### iOS Framework Notes
 
-When compiling iOS targets against `SFBAudioEngine` it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by `SFBAudioEngine` as well since iOS does not support umbrella frameworks.
+When compiling iOS targets against SFBAudioEngine it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by SFBAudioEngine as well since iOS does not support umbrella frameworks.
 
 ## Decoding
 
