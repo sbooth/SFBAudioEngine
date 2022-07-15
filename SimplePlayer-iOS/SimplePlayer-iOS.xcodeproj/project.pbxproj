@@ -178,9 +178,9 @@
 				32714CF92552001900029BD7 /* Info.plist */,
 				32714CFC2552001900029BD7 /* SimplePlayer-iOS-Bridging-Header.h */,
 				32714D0C2552003900029BD7 /* Assets.xcassets */,
-				328067CB288196B000DA17D3 /* XCFrameworks */,
 				32714D0D2552003900029BD7 /* Base.lproj */,
 				32714D152552017900029BD7 /* Preview Content */,
+				328067CB288196B000DA17D3 /* XCFrameworks */,
 				3210AB8E17B9BF8000743639 /* Products */,
 			);
 			name = CFPlayer;
