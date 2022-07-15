@@ -17,5 +17,15 @@ XCFRAMEWORKS := \
 all: $(XCFRAMEWORKS)
 .phony: all
 
+install:
+.phony: install
+
+clean:
+.phony: clean
+
+realclean:
+	$(foreach framework,$(XCFRAMEWORKS),rm -rf $(framework))
+.phony: realclean
+
 $(XCFRAMEWORKS): %.xcframework: %.xcframework.zip
 	ditto -x -k "$<" "$(dir $@)"
