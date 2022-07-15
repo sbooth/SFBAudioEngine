@@ -57,7 +57,7 @@ IOS_SCHEME ?= iOS
 BUILD_DIR ?= build
 
 # The directory for intermediate .xcarchives
-XCARCHIVE_DIR := $(BUILD_DIR)/xcarchives
+XCARCHIVE_DIR := $(BUILD_DIR)
 
 # The name of the output XCFramework
 XCFRAMEWORK := $(BUILD_DIR)/$(FRAMEWORK_NAME).xcframework
