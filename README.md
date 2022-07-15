@@ -99,10 +99,6 @@ The included `Makefile` may also be used to create the build products:
 | iOS Simulator Framework | `make build/iOS-Simulator.xcarchive` |
 | XCFramework | `make` |
 
-### SimplePlayer
-
-Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
-
 ### macOS Framework Notes
 
 When compiling macOS targets against SFBAudioEngine it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by SFBAudioEngine are contained within `SFBAudioEngine.framework`.
