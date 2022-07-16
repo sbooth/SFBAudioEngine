@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -326,7 +326,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
 		if(asbd->mBitsPerChannel == 32)
 			return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat32 interleaved:YES];
-		else if(asbd->mBitsPerChannel != 64)
+		else if(asbd->mBitsPerChannel == 64)
 			return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat64 interleaved:YES];
 	}
 	// Integer
