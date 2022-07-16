@@ -1,16 +1,16 @@
 # Versions
 
-## dumb.xcframework
-[396caa4](https://github.com/kode54/dumb/tree/396caa4d31859045ccb5ef943fd430ca4026cce8)
-
 ## FLAC.xcframework
 1.3.4
 
-## lame.xcframework
-3.100
-
 ## MAC.xcframework
 8.20
+
+## dumb.xcframework
+[396caa4](https://github.com/kode54/dumb/tree/396caa4d31859045ccb5ef943fd430ca4026cce8)
+
+## lame.xcframework
+3.100
 
 ## mpc.xcframework
 r475
