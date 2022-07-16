@@ -661,6 +661,7 @@
 		326D3C97242CF79C002AEC52 /* SFBAudioFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioFile.h; sourceTree = "<group>"; };
 		326D3C9F242D0291002AEC52 /* SFBAudioFile+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioFile+Internal.h"; sourceTree = "<group>"; };
 		326D3CAA242D1D3C002AEC52 /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
+		326EE33A2883419200ADC2A8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		326EE4282561666E00277700 /* SFBFLACEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBFLACEncoder.h; sourceTree = "<group>"; };
 		326EE4292561666E00277700 /* SFBFLACEncoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBFLACEncoder.mm; sourceTree = "<group>"; };
 		326EE42E2561C50B00277700 /* SFBMonkeysAudioEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBMonkeysAudioEncoder.h; sourceTree = "<group>"; };
@@ -983,6 +984,7 @@
 		32677249254B6BB80041B063 /* XCFrameworks */ = {
 			isa = PBXGroup;
 			children = (
+				326EE33A2883419200ADC2A8 /* README.md */,
 				32677E28254D11AD0041B063 /* dumb.xcframework */,
 				3271423D254F10AA00029BD7 /* FLAC.xcframework */,
 				328501B7256AA1B6009140DE /* lame.xcframework */,
