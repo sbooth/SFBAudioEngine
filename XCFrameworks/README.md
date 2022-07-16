@@ -22,16 +22,16 @@ r475
 1.3.5
 
 ## opus.xcframework
-libopusenc 0.2.1
-libopus 1.3.1
-opusfile 0.12
+- libopus 1.3.1
+- opusfile 0.12
+- libopusenc 0.2.1
 
 ## sndfile.xcframework
 1.1.0
 
 ## speex.xcframework
-speex 1.2.1
-speexdsp 1.2.1
+- speex 1.2.1
+- speexdsp 1.2.1
 
 ## taglib.xcframework
 
