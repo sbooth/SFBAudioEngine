@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,6 +19,34 @@
 		32714D122552004600029BD7 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714CF62551FFFA00029BD7 /* SFBAudioEngine.framework */; };
 		32714D132552004600029BD7 /* SFBAudioEngine.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 32714CF62551FFFA00029BD7 /* SFBAudioEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32714D172552017900029BD7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32714D162552017900029BD7 /* Preview Assets.xcassets */; };
+		328067EA2881970200DA17D3 /* dumb.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067CE288196D900DA17D3 /* dumb.xcframework */; };
+		328067EB2881970200DA17D3 /* dumb.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067CE288196D900DA17D3 /* dumb.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067EC2881970200DA17D3 /* FLAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D7288196D900DA17D3 /* FLAC.xcframework */; };
+		328067ED2881970200DA17D3 /* FLAC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D7288196D900DA17D3 /* FLAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067EE2881970200DA17D3 /* lame.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D0288196D900DA17D3 /* lame.xcframework */; };
+		328067EF2881970200DA17D3 /* lame.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D0288196D900DA17D3 /* lame.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067F02881970200DA17D3 /* MAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D8288196D900DA17D3 /* MAC.xcframework */; };
+		328067F12881970200DA17D3 /* MAC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D8288196D900DA17D3 /* MAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067F22881970200DA17D3 /* mpc.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067DB288196D900DA17D3 /* mpc.xcframework */; };
+		328067F32881970200DA17D3 /* mpc.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067DB288196D900DA17D3 /* mpc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067F42881970200DA17D3 /* mpg123.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D6288196D900DA17D3 /* mpg123.xcframework */; };
+		328067F52881970200DA17D3 /* mpg123.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D6288196D900DA17D3 /* mpg123.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067F62881970200DA17D3 /* ogg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067CF288196D900DA17D3 /* ogg.xcframework */; };
+		328067F72881970200DA17D3 /* ogg.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067CF288196D900DA17D3 /* ogg.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067F82881970200DA17D3 /* opus.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D5288196D900DA17D3 /* opus.xcframework */; };
+		328067F92881970200DA17D3 /* opus.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D5288196D900DA17D3 /* opus.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067FA2881970200DA17D3 /* sndfile.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D2288196D900DA17D3 /* sndfile.xcframework */; };
+		328067FB2881970200DA17D3 /* sndfile.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D2288196D900DA17D3 /* sndfile.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067FC2881970200DA17D3 /* speex.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D4288196D900DA17D3 /* speex.xcframework */; };
+		328067FD2881970200DA17D3 /* speex.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D4288196D900DA17D3 /* speex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328067FE2881970200DA17D3 /* taglib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D1288196D900DA17D3 /* taglib.xcframework */; };
+		328067FF2881970200DA17D3 /* taglib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D1288196D900DA17D3 /* taglib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328068002881970200DA17D3 /* tta-cpp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D3288196D900DA17D3 /* tta-cpp.xcframework */; };
+		328068012881970300DA17D3 /* tta-cpp.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D3288196D900DA17D3 /* tta-cpp.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328068022881970300DA17D3 /* vorbis.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D9288196D900DA17D3 /* vorbis.xcframework */; };
+		328068032881970300DA17D3 /* vorbis.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067D9288196D900DA17D3 /* vorbis.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		328068042881970300DA17D3 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328067DA288196D900DA17D3 /* wavpack.xcframework */; };
+		328068052881970300DA17D3 /* wavpack.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 328067DA288196D900DA17D3 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32EBFB8B2682097D00AACEC9 /* DataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32EBFB8A2682097D00AACEC9 /* DataModel.swift */; };
 		32EBFB8E2682143E00AACEC9 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32EBFB8D2682143E00AACEC9 /* PlayerViewModel.swift */; };
 /* End PBXBuildFile section */
@@ -54,7 +82,21 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				328067F12881970200DA17D3 /* MAC.xcframework in Embed Frameworks */,
+				328067FD2881970200DA17D3 /* speex.xcframework in Embed Frameworks */,
+				328067F52881970200DA17D3 /* mpg123.xcframework in Embed Frameworks */,
 				32714D132552004600029BD7 /* SFBAudioEngine.framework in Embed Frameworks */,
+				328067F72881970200DA17D3 /* ogg.xcframework in Embed Frameworks */,
+				328067ED2881970200DA17D3 /* FLAC.xcframework in Embed Frameworks */,
+				328067EF2881970200DA17D3 /* lame.xcframework in Embed Frameworks */,
+				328067F32881970200DA17D3 /* mpc.xcframework in Embed Frameworks */,
+				328067FF2881970200DA17D3 /* taglib.xcframework in Embed Frameworks */,
+				328068052881970300DA17D3 /* wavpack.xcframework in Embed Frameworks */,
+				328067FB2881970200DA17D3 /* sndfile.xcframework in Embed Frameworks */,
+				328067F92881970200DA17D3 /* opus.xcframework in Embed Frameworks */,
+				328068012881970300DA17D3 /* tta-cpp.xcframework in Embed Frameworks */,
+				328068032881970300DA17D3 /* vorbis.xcframework in Embed Frameworks */,
+				328067EB2881970200DA17D3 /* dumb.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -76,6 +118,20 @@
 		32714D0F2552003900029BD7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		32714D162552017900029BD7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		327E4A55245F587A00EF652D /* SimplePlayer-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SimplePlayer-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		328067CE288196D900DA17D3 /* dumb.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = dumb.xcframework; path = ../XCFrameworks/dumb.xcframework; sourceTree = "<group>"; };
+		328067CF288196D900DA17D3 /* ogg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = ogg.xcframework; path = ../XCFrameworks/ogg.xcframework; sourceTree = "<group>"; };
+		328067D0288196D900DA17D3 /* lame.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = lame.xcframework; path = ../XCFrameworks/lame.xcframework; sourceTree = "<group>"; };
+		328067D1288196D900DA17D3 /* taglib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = taglib.xcframework; path = ../XCFrameworks/taglib.xcframework; sourceTree = "<group>"; };
+		328067D2288196D900DA17D3 /* sndfile.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = sndfile.xcframework; path = ../XCFrameworks/sndfile.xcframework; sourceTree = "<group>"; };
+		328067D3288196D900DA17D3 /* tta-cpp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "tta-cpp.xcframework"; path = "../XCFrameworks/tta-cpp.xcframework"; sourceTree = "<group>"; };
+		328067D4288196D900DA17D3 /* speex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = speex.xcframework; path = ../XCFrameworks/speex.xcframework; sourceTree = "<group>"; };
+		328067D5288196D900DA17D3 /* opus.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = opus.xcframework; path = ../XCFrameworks/opus.xcframework; sourceTree = "<group>"; };
+		328067D6288196D900DA17D3 /* mpg123.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = mpg123.xcframework; path = ../XCFrameworks/mpg123.xcframework; sourceTree = "<group>"; };
+		328067D7288196D900DA17D3 /* FLAC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = FLAC.xcframework; path = ../XCFrameworks/FLAC.xcframework; sourceTree = "<group>"; };
+		328067D8288196D900DA17D3 /* MAC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MAC.xcframework; path = ../XCFrameworks/MAC.xcframework; sourceTree = "<group>"; };
+		328067D9288196D900DA17D3 /* vorbis.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = vorbis.xcframework; path = ../XCFrameworks/vorbis.xcframework; sourceTree = "<group>"; };
+		328067DA288196D900DA17D3 /* wavpack.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = wavpack.xcframework; path = ../XCFrameworks/wavpack.xcframework; sourceTree = "<group>"; };
+		328067DB288196D900DA17D3 /* mpc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = mpc.xcframework; path = ../XCFrameworks/mpc.xcframework; sourceTree = "<group>"; };
 		32EBFB8A2682097D00AACEC9 /* DataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModel.swift; sourceTree = "<group>"; };
 		32EBFB8D2682143E00AACEC9 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -85,7 +141,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				328067F02881970200DA17D3 /* MAC.xcframework in Frameworks */,
+				328067F82881970200DA17D3 /* opus.xcframework in Frameworks */,
+				328067FA2881970200DA17D3 /* sndfile.xcframework in Frameworks */,
+				328068002881970200DA17D3 /* tta-cpp.xcframework in Frameworks */,
+				328067F22881970200DA17D3 /* mpc.xcframework in Frameworks */,
 				32714D122552004600029BD7 /* SFBAudioEngine.framework in Frameworks */,
+				328067EC2881970200DA17D3 /* FLAC.xcframework in Frameworks */,
+				328067FC2881970200DA17D3 /* speex.xcframework in Frameworks */,
+				328067EA2881970200DA17D3 /* dumb.xcframework in Frameworks */,
+				328068042881970300DA17D3 /* wavpack.xcframework in Frameworks */,
+				328067F42881970200DA17D3 /* mpg123.xcframework in Frameworks */,
+				328067FE2881970200DA17D3 /* taglib.xcframework in Frameworks */,
+				328068022881970300DA17D3 /* vorbis.xcframework in Frameworks */,
+				328067EE2881970200DA17D3 /* lame.xcframework in Frameworks */,
+				328067F62881970200DA17D3 /* ogg.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,6 +180,7 @@
 				32714D0C2552003900029BD7 /* Assets.xcassets */,
 				32714D0D2552003900029BD7 /* Base.lproj */,
 				32714D152552017900029BD7 /* Preview Content */,
+				328067CB288196B000DA17D3 /* XCFrameworks */,
 				3210AB8E17B9BF8000743639 /* Products */,
 			);
 			name = CFPlayer;
@@ -148,6 +219,27 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		328067CB288196B000DA17D3 /* XCFrameworks */ = {
+			isa = PBXGroup;
+			children = (
+				328067CE288196D900DA17D3 /* dumb.xcframework */,
+				328067D7288196D900DA17D3 /* FLAC.xcframework */,
+				328067D0288196D900DA17D3 /* lame.xcframework */,
+				328067D8288196D900DA17D3 /* MAC.xcframework */,
+				328067DB288196D900DA17D3 /* mpc.xcframework */,
+				328067D6288196D900DA17D3 /* mpg123.xcframework */,
+				328067CF288196D900DA17D3 /* ogg.xcframework */,
+				328067D5288196D900DA17D3 /* opus.xcframework */,
+				328067D2288196D900DA17D3 /* sndfile.xcframework */,
+				328067D4288196D900DA17D3 /* speex.xcframework */,
+				328067D1288196D900DA17D3 /* taglib.xcframework */,
+				328067D3288196D900DA17D3 /* tta-cpp.xcframework */,
+				328067D9288196D900DA17D3 /* vorbis.xcframework */,
+				328067DA288196D900DA17D3 /* wavpack.xcframework */,
+			);
+			name = XCFrameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -182,12 +274,11 @@
 				TargetAttributes = {
 					327E4A54245F587A00EF652D = {
 						CreatedOnToolsVersion = 11.4.1;
-						ProvisioningStyle = Manual;
 					};
 				};
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "SimplePlayer-iOS" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -284,14 +375,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.sbooth.AudioEngine.SimplePlayer-iOS";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer.iOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTS_MACCATALYST = NO;
@@ -306,14 +400,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.sbooth.AudioEngine.SimplePlayer-iOS";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer.iOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTS_MACCATALYST = NO;
@@ -461,7 +558,8 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";

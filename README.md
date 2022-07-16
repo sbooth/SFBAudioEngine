@@ -29,6 +29,8 @@ SFBAudioEngine supports most audio formats. In addition to all formats supported
 
 ## Quick Start
 
+### Playback
+
 Playing an audio file is as simple as:
 
 ~~~swift
@@ -38,6 +40,8 @@ let url = URL(fileURLWithPath: "example.flac")
 try? player.play(url)
 ~~~
 
+### Metadata
+
 Reading audio properties and metadata is similarly trivial:
 
 ~~~swift
@@ -46,6 +50,8 @@ if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
     let title = audioFile.metadata.title
 }
 ~~~
+
+### Conversion
 
 Want to convert a WAVE file to FLAC?
 
@@ -79,7 +85,7 @@ macOS 10.15+ or iOS 14.0+
 
 1. `git clone https://github.com/sbooth/SFBAudioEngine.git --recurse-submodules`
 2. `cd SFBAudioEngine`
-3. `make -C XCFrameworks install`
+3. `make -C XCFrameworks`
 
 The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
 
@@ -87,15 +93,19 @@ The included `Makefile` may also be used to create the build products:
 
 | Target | `make` Command |
 | --- | --- |
-| macOS Framework | `make archive/macOS.xcarchive` |
-| macOS Catalyst Framework | `make archive/macOS-Catalyst.xcarchive` |
-| iOS Framework | `make archive/iOS.xcarchive` |
-| iOS Simulator Framework | `make archive/iOS-Simulator.xcarchive` |
+| macOS Framework | `make build/macOS.xcarchive` |
+| macOS Catalyst Framework | `make build/macOS-Catalyst.xcarchive` |
+| iOS Framework | `make build/iOS.xcarchive` |
+| iOS Simulator Framework | `make build/iOS-Simulator.xcarchive` |
 | XCFramework | `make` |
 
-### SimplePlayer
+### macOS Framework Notes
 
-Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
+When compiling macOS targets against SFBAudioEngine it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by SFBAudioEngine are contained within `SFBAudioEngine.framework`.
+
+### iOS Framework Notes
+
+When compiling iOS targets against SFBAudioEngine it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by SFBAudioEngine as well since iOS does not support umbrella frameworks.
 
 ## Decoding
 

@@ -1,4 +1,7 @@
 FRAMEWORK_NAME := SFBAudioEngine
 XCODEPROJ := SFBAudioEngine.xcodeproj
 
-include XCFrameworks/xcframework.mk
+MACOS_SCHEME := macOS Framework
+IOS_SCHEME := iOS Framework
+
+include ./xcframework.mk

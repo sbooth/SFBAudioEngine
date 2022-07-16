@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -81,23 +81,6 @@ SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettings
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle = @"Little";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianBig = @"Big";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU = @"CPU";
-
-@interface AVAudioFormat (SFBCommonFormatTransformation)
-/// Returns the specified common format with the same sample rate and channel layout as \c self
-- (nullable AVAudioFormat *)transformedToCommonFormat:(AVAudioCommonFormat)commonFormat interleaved:(BOOL)interleaved;
-@end
-
-@implementation AVAudioFormat (SFBCommonFormatTransformation)
-
-- (nullable AVAudioFormat *)transformedToCommonFormat:(AVAudioCommonFormat)commonFormat interleaved:(BOOL)interleaved
-{
-	if(self.channelLayout)
-		return [[AVAudioFormat alloc] initWithCommonFormat:commonFormat sampleRate:self.sampleRate interleaved:interleaved channelLayout:self.channelLayout];
-	else
-		return [[AVAudioFormat alloc] initWithCommonFormat:commonFormat sampleRate:self.sampleRate channels:self.channelCount interleaved:interleaved];
-}
-
-@end
 
 /// Returns the major format corresponding to \c pathExtension or \c 0 if none
 static int MajorFormatForExtension(NSString *pathExtension)
@@ -343,7 +326,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
 		if(asbd->mBitsPerChannel == 32)
 			return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat32 interleaved:YES];
-		else if(asbd->mBitsPerChannel != 64)
+		else if(asbd->mBitsPerChannel == 64)
 			return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat64 interleaved:YES];
 	}
 	// Integer
