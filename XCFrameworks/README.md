@@ -24,7 +24,7 @@ r475
 ## opus.xcframework
 - libopus 1.3.1
 - opusfile 0.12
-- libopusenc 0.2.1
+- libopusenc [0.2.1+](https://github.com/xiph/libopusenc/tree/6e0a98cc0947d131640bf6816708cd940a0b8f08)
 
 ## sndfile.xcframework
 1.1.0
