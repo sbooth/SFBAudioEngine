@@ -20,7 +20,7 @@ See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more in
 | opus.xcframework | [libopus](https://opus-codec.org) | 1.3.1 |
 | | opusfile | 0.12 |
 | | libopusenc | [0.2.1+](https://github.com/xiph/libopusenc/tree/6e0a98cc0947d131640bf6816708cd940a0b8f08) |
-| sndfile.xcframework | libsndfile | 1.1.0 |
+| sndfile.xcframework | [libsndfile](http://libsndfile.github.io/libsndfile/) | 1.1.0 |
 | speex.xcframework | [speex](https://speex.org) | 1.2.1 |
 | | speexdsp | 1.2.1 |
 | taglib.xcframework | [TagLib](https://taglib.org) | [65a6a4e](https://github.com/taglib/taglib/tree/65a6a4e225fff1288148de92721418e1c634713b) |
