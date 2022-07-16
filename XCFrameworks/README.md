@@ -9,7 +9,7 @@ See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more in
 ## Versions
 
 | XCFramework | Package | Version |
-| --- | --- |
+| --- | --- | --- |
 | FLAC.xcframework | [FLAC](https://xiph.org/flac/) | 1.3.4 |
 | MAC.xcframework | [Monkey's Audio SDK](https://monkeysaudio.com/developers.html) | 8.20 |
 | dumb.xcframework | [dumb](https://github.com/kode54/dumb) | [396caa4](https://github.com/kode54/dumb/tree/396caa4d31859045ccb5ef943fd430ca4026cce8) |
