@@ -82,23 +82,6 @@ SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettings
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianBig = @"Big";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU = @"CPU";
 
-@interface AVAudioFormat (SFBCommonFormatTransformation)
-/// Returns the specified common format with the same sample rate and channel layout as \c self
-- (nullable AVAudioFormat *)transformedToCommonFormat:(AVAudioCommonFormat)commonFormat interleaved:(BOOL)interleaved;
-@end
-
-@implementation AVAudioFormat (SFBCommonFormatTransformation)
-
-- (nullable AVAudioFormat *)transformedToCommonFormat:(AVAudioCommonFormat)commonFormat interleaved:(BOOL)interleaved
-{
-	if(self.channelLayout)
-		return [[AVAudioFormat alloc] initWithCommonFormat:commonFormat sampleRate:self.sampleRate interleaved:interleaved channelLayout:self.channelLayout];
-	else
-		return [[AVAudioFormat alloc] initWithCommonFormat:commonFormat sampleRate:self.sampleRate channels:self.channelCount interleaved:interleaved];
-}
-
-@end
-
 /// Returns the major format corresponding to \c pathExtension or \c 0 if none
 static int MajorFormatForExtension(NSString *pathExtension)
 {
