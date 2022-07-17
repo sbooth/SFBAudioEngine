@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
 
-#include <taglib/tstring.h>
+#import <taglib/tstring.h>
 
 /*! @file TagLibStringUtilities.h @brief Utilities for \c Taglib and Foundation interoperability */
 

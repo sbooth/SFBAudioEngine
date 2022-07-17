@@ -1,14 +1,13 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#include <CoreServices/CoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
-#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 
 #import <taglib/attachedpictureframe.h>
 #import <taglib/id3v2frame.h>

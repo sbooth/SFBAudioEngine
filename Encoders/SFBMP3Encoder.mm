@@ -8,7 +8,7 @@
 
 #import <memory>
 
-#include <lame/lame.h>
+#import <lame/lame.h>
 
 #import "SFBMP3Encoder.h"
 
@@ -42,9 +42,6 @@ struct ::std::default_delete<lame_global_flags> {
 	AVAudioFramePosition _framePosition;
 	NSInteger _id3v2TagSize;
 }
-@end
-
-@interface SFBMP3Encoder (Internal)
 - (BOOL)flushEncoderReturningError:(NSError **)error;
 - (BOOL)writeID3v1TagReturningError:(NSError **)error;
 - (BOOL)writeID3v2TagReturningError:(NSError **)error;
@@ -370,10 +367,6 @@ struct ::std::default_delete<lame_global_flags> {
 
 	return YES;
 }
-
-@end
-
-@implementation SFBMP3Encoder (Internal)
 
 - (BOOL)flushEncoderReturningError:(NSError **)error
 {

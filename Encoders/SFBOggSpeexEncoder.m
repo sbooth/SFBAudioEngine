@@ -1,24 +1,14 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wstrict-prototypes"
-#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
-
-#import <speex/speex.h>
-#import <speex/speex_header.h>
-#import <speex/speex_stereo.h>
-#import <speex/speex_callbacks.h>
-#import <speex/speex_preprocess.h>
-
-#pragma clang diagnostic pop
-
-#include <ogg/ogg.h>
+@import ogg;
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+@import speex;
 
 #import "SFBOggSpeexEncoder.h"
 

@@ -193,7 +193,7 @@ private:
 		return NO;
 
 	auto ioInterface = 	std::make_unique<APEIOInterface>(_inputSource);
-	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr, true));
+	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
 	if(!decompressor) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain

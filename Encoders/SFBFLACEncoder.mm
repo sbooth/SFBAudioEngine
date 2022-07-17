@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,13 +8,8 @@
 
 #import <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
-
 #import <FLAC/metadata.h>
 #import <FLAC/stream_encoder.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBFLACEncoder.h"
 
@@ -113,10 +108,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 {
 #pragma unused(encoder)
 #pragma unused(metadata)
-	NSCParameterAssert(client_data != nullptr);
-
-//	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
-//	SFBOutputSource *outputSource = flacEncoder->_outputSource;
+#pragma unused(client_data)
 }
 
 }

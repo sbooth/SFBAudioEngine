@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1220"
+   LastUpgradeVersion = "1340"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "32C212D41091116D00BA2493"
+               BlueprintIdentifier = "32714BAB2551D4DF00029BD7"
                BuildableName = "SFBAudioEngine.framework"
-               BlueprintName = "macOS"
+               BlueprintName = "iOS Framework"
                ReferencedContainer = "container:SFBAudioEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -50,9 +50,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "32C212D41091116D00BA2493"
+            BlueprintIdentifier = "32714BAB2551D4DF00029BD7"
             BuildableName = "SFBAudioEngine.framework"
-            BlueprintName = "macOS"
+            BlueprintName = "iOS Framework"
             ReferencedContainer = "container:SFBAudioEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

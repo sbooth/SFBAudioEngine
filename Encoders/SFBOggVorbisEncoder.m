@@ -1,18 +1,13 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
-
-#include <vorbis/vorbisenc.h>
-
-#pragma clang diagnostic pop
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+@import vorbis;
 
 #import "SFBOggVorbisEncoder.h"
 

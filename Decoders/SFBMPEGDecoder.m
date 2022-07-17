@@ -1,12 +1,13 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
-#import <mpg123/mpg123.h>
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+@import mpg123;
 
 #import "SFBMPEGDecoder.h"
 

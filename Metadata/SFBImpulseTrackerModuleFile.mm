@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,13 +8,9 @@
 
 #import <os/log.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 
 #import <taglib/itfile.h>
 #import <taglib/tfilestream.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBImpulseTrackerModuleFile.h"
 
