@@ -6,10 +6,10 @@
 
 #import <os/log.h>
 
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
+#import <map>
+#import <memory>
+#import <string>
+#import <vector>
 
 #import "SFBDSDIFFDecoder.h"
 

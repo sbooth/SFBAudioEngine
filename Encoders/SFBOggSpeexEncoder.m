@@ -6,18 +6,9 @@
 
 @import os.log;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-#import <speex/speex.h>
-#import <speex/speex_header.h>
-#import <speex/speex_stereo.h>
-#import <speex/speex_callbacks.h>
-#import <speex/speex_preprocess.h>
-
-#pragma clang diagnostic pop
-
-#include <ogg/ogg.h>
+@import ogg;
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+@import speex;
 
 #import "SFBOggSpeexEncoder.h"
 

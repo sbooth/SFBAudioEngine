@@ -15,7 +15,7 @@
 ##
 ##   xcframework       Builds the XCFramework.
 ##   clean             Deletes the XCFramework and build products.
-##   zip               Builds the XCFramework and compresses it.
+##   xz                Builds the XCFramework and compresses it.
 ##
 ## The following variables are optional:
 ##
@@ -62,7 +62,7 @@ XCARCHIVE_DIR := $(BUILD_DIR)
 # The name of the output XCFramework
 XCFRAMEWORK := $(BUILD_DIR)/$(FRAMEWORK_NAME).xcframework
 
-ZIP_FILE := $(XCFRAMEWORK).zip
+XZ_FILE := $(XCFRAMEWORK).tar.xz
 
 MACOS_XCARCHIVE := $(XCARCHIVE_DIR)/macOS.xcarchive
 MACOS_CATALYST_XCARCHIVE := $(XCARCHIVE_DIR)/macOS-Catalyst.xcarchive
@@ -75,11 +75,11 @@ xcframework: $(XCFRAMEWORK)
 .PHONY: xcframework
 
 clean:
-	rm -Rf "$(MACOS_XCARCHIVE)" "$(MACOS_CATALYST_XCARCHIVE)" "$(IOS_XCARCHIVE)" "$(IOS_SIMULATOR_XCARCHIVE)" "$(XCFRAMEWORK)" "$(ZIP_FILE)"
+	rm -Rf "$(MACOS_XCARCHIVE)" "$(MACOS_CATALYST_XCARCHIVE)" "$(IOS_XCARCHIVE)" "$(IOS_SIMULATOR_XCARCHIVE)" "$(XCFRAMEWORK)" "$(XZ_FILE)"
 .PHONY: clean
 
-zip: $(ZIP_FILE)
-.PHONY: zip
+xz: $(XZ_FILE)
+.PHONY: xz
 
 ifneq (0,$(MAKELEVEL))
 install: xcframework uninstall
@@ -107,6 +107,5 @@ $(XCFRAMEWORK): $(XCARCHIVES)
 	rm -Rf "$@"
 	xcodebuild -create-xcframework $(foreach xcarchive,$^,-framework "$(xcarchive)/Products/Library/Frameworks/$(FRAMEWORK_NAME).framework" -debug-symbols "$(realpath $(xcarchive)/dSYMs/$(FRAMEWORK_NAME).framework.dSYM)" ) -output "$@"
 
-$(ZIP_FILE): $(XCFRAMEWORK)
-#	rm -f "$@"
-	ditto -c -k --sequesterRsrc --keepParent "$^" "$@"
+$(XZ_FILE): $(XCFRAMEWORK)
+	cd $(BUILD_DIR) && tar cJf "$(notdir $@)" "$(notdir $<)"

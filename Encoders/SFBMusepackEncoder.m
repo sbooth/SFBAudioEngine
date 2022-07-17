@@ -1,25 +1,21 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+@import mpc.enc;
+
 #import "SFBMusepackEncoder.h"
+
+#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine.Encoder.Musepack";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @"Quality";
-
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wsign-conversion"
-
-#import <mpc/stream_encoder.h>
-
-#pragma clang diagnostic pop
 
 static size_t my_mpc_write_callback(const void * restrict ptr, size_t size, size_t nitems, void *context)
 {

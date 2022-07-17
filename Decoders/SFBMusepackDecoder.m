@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,12 +8,8 @@
 
 @import Accelerate;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-#include <mpc/mpcdec.h>
-
-#pragma clang diagnostic pop
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+@import mpc.dec;
 
 #import "SFBMusepackDecoder.h"
 

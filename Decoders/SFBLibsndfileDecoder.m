@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
-#import <sndfile/sndfile.h>
+@import sndfile;
 
 #import "SFBLibsndfileDecoder.h"
 

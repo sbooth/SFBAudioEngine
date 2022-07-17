@@ -6,10 +6,10 @@
 
 #import <os/log.h>
 
-#include <algorithm>
-#include <vector>
+#import <algorithm>
+#import <vector>
 
-#include <Accelerate/Accelerate.h>
+#import <Accelerate/Accelerate.h>
 
 #import "SFBDSDPCMDecoder.h"
 

@@ -6,7 +6,7 @@
 
 @import os.log;
 
-#include <vorbis/vorbisfile.h>
+@import vorbis;
 
 #import "SFBOggVorbisDecoder.h"
 
