@@ -8,7 +8,7 @@
 
 @import CommonCrypto;
 
-#include <wavpack/wavpack.h>
+#import <wavpack/wavpack.h>
 
 #import "SFBWavPackEncoder.h"
 

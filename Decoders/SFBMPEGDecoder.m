@@ -6,12 +6,7 @@
 
 @import os.log;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 #import <mpg123/mpg123.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBMPEGDecoder.h"
 

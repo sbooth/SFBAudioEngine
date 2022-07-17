@@ -17,7 +17,7 @@
 
 #pragma clang diagnostic pop
 
-#include <ogg/ogg.h>
+#import <ogg/ogg.h>
 
 #import "SFBOggSpeexEncoder.h"
 

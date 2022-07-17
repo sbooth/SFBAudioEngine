@@ -8,14 +8,14 @@
 
 @import Accelerate;
 
-#include <ogg/ogg.h>
+#import <ogg/ogg.h>
 
-#include <speex/speex.h>
-#include <speex/speex_bits.h>
-#include <speex/speex_callbacks.h>
-#include <speex/speex_header.h>
+#import <speex/speex.h>
+#import <speex/speex_bits.h>
+#import <speex/speex_callbacks.h>
+#import <speex/speex_header.h>
 
-#include <speex/speex_stereo.h>
+#import <speex/speex_stereo.h>
 
 #import "SFBOggSpeexDecoder.h"
 

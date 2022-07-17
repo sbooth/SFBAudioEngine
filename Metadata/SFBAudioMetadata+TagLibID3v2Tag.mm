@@ -4,7 +4,7 @@
 // MIT license
 //
 
-#include <CoreServices/CoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"

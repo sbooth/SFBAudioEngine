@@ -4,7 +4,7 @@
 // MIT license
 //
 
-#include <CoreServices/CoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 #import <taglib/mp4coverart.h>
 

@@ -6,7 +6,7 @@
 
 @import os.log;
 
-#include <dumb/dumb.h>
+#import <dumb/dumb.h>
 
 #import "SFBModuleDecoder.h"
 

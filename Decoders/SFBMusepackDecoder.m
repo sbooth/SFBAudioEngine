@@ -11,7 +11,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 
-#include <mpc/mpcdec.h>
+#import <mpc/mpcdec.h>
 
 #pragma clang diagnostic pop
 

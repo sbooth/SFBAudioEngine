@@ -9,7 +9,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 
-#include <vorbis/vorbisenc.h>
+#import <vorbis/vorbisenc.h>
 
 #pragma clang diagnostic pop
 

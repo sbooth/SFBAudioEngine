@@ -8,7 +8,7 @@
 
 #import <memory>
 
-#include <lame/lame.h>
+#import <lame/lame.h>
 
 #import "SFBMP3Encoder.h"
 
