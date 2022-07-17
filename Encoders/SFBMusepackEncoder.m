@@ -6,15 +6,23 @@
 
 @import os.log;
 
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+//@import mpc.enc;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
+
+#import <mpc/stream_encoder.h>
+
+#pragma clang diagnostic pop
+
 #import "SFBMusepackEncoder.h"
+
+#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine.Encoder.Musepack";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @"Quality";
-
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-
-@import mpc.enc;
 
 static size_t my_mpc_write_callback(const void * restrict ptr, size_t size, size_t nitems, void *context)
 {

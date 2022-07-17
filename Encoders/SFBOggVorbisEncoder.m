@@ -6,7 +6,15 @@
 
 @import os.log;
 
-@import vorbis;
+// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
+//@import vorbis;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
+#import <vorbis/vorbisenc.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBOggVorbisEncoder.h"
 
