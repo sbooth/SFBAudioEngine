@@ -7,14 +7,7 @@
 @import os.log;
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
-//@import mpg123;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-#import <mpg123/mpg123.h>
-
-#pragma clang diagnostic pop
+@import mpg123;
 
 #import "SFBMPEGDecoder.h"
 

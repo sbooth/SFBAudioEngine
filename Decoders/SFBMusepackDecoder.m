@@ -9,14 +9,7 @@
 @import Accelerate;
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
-//@import mpc.dec;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-#import <mpc/mpcdec.h>
-
-#pragma clang diagnostic pop
+@import mpc.dec;
 
 #import "SFBMusepackDecoder.h"
 

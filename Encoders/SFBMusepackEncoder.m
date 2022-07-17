@@ -7,15 +7,7 @@
 @import os.log;
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
-//@import mpc.enc;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#pragma clang diagnostic ignored "-Wdocumentation"
-
-#import <mpc/stream_encoder.h>
-
-#pragma clang diagnostic pop
+@import mpc.enc;
 
 #import "SFBMusepackEncoder.h"
 
