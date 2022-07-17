@@ -6,7 +6,7 @@
 
 @import os.log;
 
-#import <sndfile/sndfile.h>
+@import sndfile;
 
 #import "SFBLibsndfileEncoder.h"
 

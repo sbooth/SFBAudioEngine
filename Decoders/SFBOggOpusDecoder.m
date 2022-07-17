@@ -6,7 +6,7 @@
 
 @import os.log;
 
-#import <opus/opusfile.h>
+@import opus.file;
 
 #import "SFBOggOpusDecoder.h"
 

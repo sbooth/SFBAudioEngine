@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -14,12 +14,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wsign-conversion"
-
-#import <mpc/stream_encoder.h>
-
-#pragma clang diagnostic pop
+@import mpc.enc;
 
 static size_t my_mpc_write_callback(const void * restrict ptr, size_t size, size_t nitems, void *context)
 {

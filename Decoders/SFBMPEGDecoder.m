@@ -6,7 +6,7 @@
 
 @import os.log;
 
-#import <mpg123/mpg123.h>
+@import mpg123;
 
 #import "SFBMPEGDecoder.h"
 
