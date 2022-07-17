@@ -27,5 +27,5 @@ realclean:
 	$(foreach framework,$(XCFRAMEWORKS),rm -rf $(framework))
 .phony: realclean
 
-$(XCFRAMEWORKS): %.xcframework: %.xcframework.zip
-	ditto -x -k "$<" "$(dir $@)"
+$(XCFRAMEWORKS): %.xcframework: %.xcframework.tar.xz
+	tar xJf "$<"
