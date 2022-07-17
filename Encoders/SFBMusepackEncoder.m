@@ -14,7 +14,12 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
 @import mpc.enc;
+
+#pragma clang diagnostic pop
 
 static size_t my_mpc_write_callback(const void * restrict ptr, size_t size, size_t nitems, void *context)
 {

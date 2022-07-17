@@ -7,7 +7,13 @@
 @import os.log;
 
 @import ogg;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
 @import speex;
+
+#pragma clang diagnostic pop
 
 #import "SFBOggSpeexEncoder.h"
 
