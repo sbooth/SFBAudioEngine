@@ -10,18 +10,12 @@
 
 #include <ogg/ogg.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wstrict-prototypes"
-#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
-
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_callbacks.h>
 #include <speex/speex_header.h>
 
 #include <speex/speex_stereo.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBOggSpeexDecoder.h"
 
