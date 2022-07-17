@@ -6,12 +6,7 @@
 
 @import os.log;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 @import vorbis;
-
-#pragma clang diagnostic pop
 
 #import "SFBOggVorbisDecoder.h"
 
