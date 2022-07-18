@@ -12,7 +12,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// An audio converter
+/// An audio converter converts audio from one format to another through a PCM intermediate format.
+///
+/// An audio converter reads PCM audio from an audio decoder in the decoder's processing format,
+/// converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an
+/// audio encoder which performs tne final conversion to the desired format.
+///
+/// The decoder's processing format and intermediate format must both be PCM with the same number
+/// of channels but do not have to have the sample sample rate, bit depht, or channel layout.
+///
+/// @c AVAudioConverter is used to convert from the decoder's processing format
+/// to the intermediate format.
 NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 
 /// Converts audio and writes to the specified URL
@@ -101,18 +111,19 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
 /// @param decoder The decoder
 /// @param encoder The encoder
-/// @param processingFormatBlock An optional block to receive the proposed processing format and return the requested processing format.
-/// A change in processing format allows operations such as sample rate conversion or channel mapping.
-/// @param converterCustomizationBlock An optional block to receive the @c AVAudioConverter converting to and from the PCM intermediate format.
+/// @param intermediateFormatBlock An optional block to receive the proposed intermediate format and return the requested intermediate format.
+/// A change in intermediate format allows operations such as sample rate conversion or channel mapping.
 /// @param error An optional pointer to a \c NSError to receive error information
 /// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
-- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedProcessingFormat:(AVAudioFormat *(^ _Nullable)(AVAudioFormat *))processingFormatBlock intermediateConverter:(void(^ _Nullable)(AVAudioConverter *))converterCustomizationBlock error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedIntermediateFormat:(AVAudioFormat *(^ _Nullable)(AVAudioFormat *))intermediateFormatBlock error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 #pragma mark - Conversion Information
 
 /// The decoder supplying the audio to be converted
 @property (nonatomic, readonly) id <SFBPCMDecoding> decoder;
-/// The encoder processing the audio
+/// The converter producing the intermediate PCM audio
+@property (nonatomic, readonly) AVAudioConverter * intermediateConverter;
+/// The encoder receving the intermediate audio for encoding
 @property (nonatomic, readonly) id <SFBPCMEncoding> encoder;
 
 #pragma mark - Conversion
