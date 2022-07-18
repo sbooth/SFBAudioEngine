@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// An audio converter reads PCM audio from an audio decoder in the decoder's processing format,
 /// converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an
-/// audio encoder which performs tne final conversion to the desired format.
+/// audio encoder which performs the final conversion to the desired format.
 ///
 /// The decoder's processing format and intermediate format must both be PCM but do not have to
 /// have the same sample rate, bit depth, channel count, or channel layout.
