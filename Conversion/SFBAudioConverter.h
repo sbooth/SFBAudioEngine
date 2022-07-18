@@ -17,11 +17,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an
 /// audio encoder which performs tne final conversion to the desired format.
 ///
-/// The decoder's processing format and intermediate format must both be PCM with the same number
-/// of channels but do not have to have the sample sample rate, bit depht, or channel layout.
+/// The decoder's processing format and intermediate format must both be PCM but do not have to
+/// have the same sample rate, bit depth, channel count, or channel layout.
 ///
 /// @c AVAudioConverter is used to convert from the decoder's processing format
-/// to the intermediate format.
+/// to the intermediate format, performing sample rate conversion and channel mapping as required.
 NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 
 /// Converts audio and writes to the specified URL
@@ -118,8 +118,12 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 
 /// The decoder supplying the audio to be converted
 @property (nonatomic, readonly) id <SFBPCMDecoding> decoder;
-/// The converter producing the intermediate PCM audio
-@property (nonatomic, readonly) AVAudioConverter * intermediateConverter;
+/// The @c AVAudioConverter object producing the intermediate PCM audio
+///
+/// Properties such as @c channelMap, @c dither, @c downmix,
+/// @c sampleRateConverterQuality, and @c sampleRateConverterAlgorithm may be set
+/// before conversion.
+@property (nonatomic, readonly) AVAudioConverter *intermediateConverter;
 /// The encoder receving the intermediate audio for encoding
 @property (nonatomic, readonly) id <SFBPCMEncoding> encoder;
 
