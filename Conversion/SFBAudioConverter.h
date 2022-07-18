@@ -12,8 +12,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol SFBAudioConverterDelegate;
-
 /// An audio converter
 NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 
@@ -49,24 +47,73 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// @return \c YES on success, \c NO otherwise
 + (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error NS_SWIFT_NAME(AudioConverter.convert(_:using:));
 
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+/// Returns an initialized \c SFBAudioConverter object for the given URLs or \c nil on failure
+/// @param sourceURL The source URL
+/// @param destinationURL The destination URL
+/// @return An initialized \c SFBAudioConverter object for the specified URLs, or \c nil on failure
+- (nullable instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL NS_SWIFT_UNAVAILABLE("Use -initWithURL:destinationURL:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given URLs or \c nil on failure
+/// @param sourceURL The source URL
+/// @param destinationURL The destination URL
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified URLs, or \c nil on failure
+- (nullable instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error;
+
+/// Returns an initialized \c SFBAudioConverter object for the given URL and encoder or \c nil on failure
+/// @param sourceURL The source URL
+/// @param encoder The encoder
+/// @return An initialized \c SFBAudioConverter object for the specified URL and encoder, or \c nil on failure
+- (nullable instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoder:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given URL and encoder or \c nil on failure
+/// @param sourceURL The source URL
+/// @param encoder The encoder
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified URL and encoder, or \c nil on failure
+- (nullable instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
+
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and URL or \c nil on failure
+/// @param decoder The decoder
+/// @param destinationURL The destination URL
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and URL, or \c nil on failure
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:destinationURL:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and URL or \c nil on failure
+/// @param decoder The decoder
+/// @param destinationURL The destination URL
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and URL, or \c nil on failure
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error;
+
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
+
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @param processingFormatBlock An optional block to receive the proposed processing format and return the requested processing format.
+/// A change in processing format allows operations such as sample rate conversion or channel mapping.
+/// @param converterCustomizationBlock An optional block to receive the @c AVAudioConverter converting to and from the PCM intermediate format.
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedProcessingFormat:(AVAudioFormat *(^ _Nullable)(AVAudioFormat *))processingFormatBlock intermediateConverter:(void(^ _Nullable)(AVAudioConverter *))converterCustomizationBlock error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+
 #pragma mark - Conversion Information
 
 /// The decoder supplying the audio to be converted
 @property (nonatomic, readonly) id <SFBPCMDecoding> decoder;
 /// The encoder processing the audio
 @property (nonatomic, readonly) id <SFBPCMEncoding> encoder;
-/// Metadata to associate with the encoded audio
-@property (nonatomic, copy, nullable) SFBAudioMetadata *metadata;
-
-#pragma mark - Setup
-
-/// Sets up for conversion from @c decoder to @c encoder
-/// @note Not all conversion are possible.
-/// @param decoder The decoder providing the source audio
-/// @param encoder The desired encoder
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return \c YES on success, \c NO otherwise
-- (BOOL)setDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
 
 #pragma mark - Conversion
 
@@ -75,31 +122,6 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)convertReturningError:(NSError **)error NS_SWIFT_NAME(convert());
 
-#pragma mark - Delegate
-
-/// An optional delegate
-@property (nonatomic, nullable, weak) id<SFBAudioConverterDelegate> delegate;
-
-@end
-
-#pragma mark - SFBAudioConverterDelegate
-
-/// Delegate methods supported by \c SFBAudioConverter
-NS_SWIFT_NAME(AudioConverter.Delegate) @protocol SFBAudioConverterDelegate <NSObject>
-@optional
-/// Called to allow the delegate to customize the processing format used for conversion
-///
-/// A change in processing format allows operations such as sample rate conversion or channel mapping.
-/// @note The processing format must be PCM
-/// @param converter The \c SFBAudioConverter object
-/// @param format The proposed  PCM processing format
-/// @return The desired PCM processing format
-- (AVAudioFormat *)audioConverter:(SFBAudioConverter *)converter proposedProcessingFormatForConversion:(AVAudioFormat *)format;
-
-/// Called to allow the delegate to customize the conversion parameters
-/// @param converter The \c SFBAudioConverter object
-/// @param audioConverter The \c AVAudioConverter object to customize
-- (void)audioConverter:(SFBAudioConverter *)converter customizeConversionParameters:(AVAudioConverter *)audioConverter;
 @end
 
 #pragma mark - Error Information
