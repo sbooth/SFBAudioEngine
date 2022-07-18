@@ -105,6 +105,23 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return NO;
 }
 
++ (BOOL)copyMetadataFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error
+{
+	NSParameterAssert(sourceURL != nil);
+	NSParameterAssert(destinationURL != nil);
+
+	SFBAudioFile *sourceAudioFile = [SFBAudioFile audioFileWithURL:sourceURL error:error];
+	if(!sourceAudioFile)
+		return NO;
+
+	SFBAudioFile *destinationAudioFile = [SFBAudioFile audioFileWithURL:destinationURL error:error];
+	if(!destinationAudioFile)
+		return NO;
+
+	[destinationAudioFile.metadata copyMetadataFrom:sourceAudioFile.metadata];
+	return [destinationAudioFile writeMetadataReturningError:error];
+}
+
 + (instancetype)audioFileWithURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);

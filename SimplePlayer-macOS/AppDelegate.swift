@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2009 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2009 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -101,6 +101,8 @@ class AppDelegate: NSObject {
 
 			do {
 				try AudioConverter.convert(url, to: destURL)
+				// Silently fail if metadata can't be copied
+				try? AudioFile.copyMetadata(from: url, to: destURL)
 			}
 			catch let error {
 				try? FileManager.default.trashItem(at: destURL, resultingItemURL: nil)

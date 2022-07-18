@@ -8,16 +8,24 @@
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
 #import <SFBAudioEngine/SFBPCMEncoding.h>
-#import <SFBAudioEngine/SFBAudioMetadata.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// An audio converter
+/// An audio converter converts audio from one format to another through a PCM intermediate format.
+///
+/// An audio converter reads PCM audio from an audio decoder in the decoder's processing format,
+/// converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an
+/// audio encoder which performs tne final conversion to the desired format.
+///
+/// The decoder's processing format and intermediate format must both be PCM but do not have to
+/// have the same sample rate, bit depth, channel count, or channel layout.
+///
+/// @c AVAudioConverter is used to convert from the decoder's processing format
+/// to the intermediate format, performing sample rate conversion and channel mapping as required.
 NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 
 /// Converts audio and writes to the specified URL
 /// @note The file type to create is inferred from the file extension of \c destinationURL
-/// @note Metadata will be read from \c sourceURL and copied to \c destinationURL
 /// @param sourceURL The URL to convert
 /// @param destinationURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
@@ -25,7 +33,6 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 + (BOOL)convertFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error NS_SWIFT_NAME(AudioConverter.convert(_:to:));
 
 /// Converts audio using \c encoder
-/// @note Metadata will be read from \c sourceURL and copied to \c destinationURL
 /// @param sourceURL The URL to convert
 /// @param encoder The encoder processing the decoded audio
 /// @param error An optional pointer to an \c NSError object to receive error information
@@ -101,23 +108,26 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
 /// @param decoder The decoder
 /// @param encoder The encoder
-/// @param metadata An optional pointer to an \c SFBAudioMetadata object
-/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
-- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:metadata:error: instead");
-/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
-/// @param decoder The decoder
-/// @param encoder The encoder
-/// @param metadata An optional pointer to an \c SFBAudioMetadata object
+/// @param intermediateFormatBlock An optional block to receive the proposed intermediate format and return the requested intermediate format.
+/// A change in intermediate format allows operations such as sample rate conversion or channel mapping.
 /// @param error An optional pointer to a \c NSError to receive error information
 /// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
-- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedIntermediateFormat:(AVAudioFormat *(^ _Nullable)(AVAudioFormat *))intermediateFormatBlock error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+
+#pragma mark - Conversion Information
 
 /// The decoder supplying the audio to be converted
 @property (nonatomic, readonly) id <SFBPCMDecoding> decoder;
-/// The encoder processing the audio
+/// The @c AVAudioConverter object producing the intermediate PCM audio
+///
+/// Properties such as @c channelMap, @c dither, @c downmix,
+/// @c sampleRateConverterQuality, and @c sampleRateConverterAlgorithm may be set
+/// before conversion.
+@property (nonatomic, readonly) AVAudioConverter *intermediateConverter;
+/// The encoder receving the intermediate audio for encoding
 @property (nonatomic, readonly) id <SFBPCMEncoding> encoder;
-/// Metadata to associate with the encoded audio
-@property (nonatomic, nullable) SFBAudioMetadata *metadata;
+
+#pragma mark - Conversion
 
 /// Converts audio
 /// @param error An optional pointer to an \c NSError object to receive error information
@@ -125,6 +135,8 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 - (BOOL)convertReturningError:(NSError **)error NS_SWIFT_NAME(convert());
 
 @end
+
+#pragma mark - Error Information
 
 /// The \c NSErrorDomain used by \c SFBAudioConverter
 extern NSErrorDomain const SFBAudioConverterErrorDomain NS_SWIFT_NAME(AudioConverter.ErrorDomain);

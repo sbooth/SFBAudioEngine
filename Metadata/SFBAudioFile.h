@@ -70,6 +70,13 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
+/// Reads metadata from \c sourceURL and writes it to \c destinationURL
+/// @param sourceURL The source URL
+/// @param destinationURL The destination URL
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO if metadata couldn't be read or written
++ (BOOL)copyMetadataFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error;
+
 /// Returns an initialized \c SFBAudioFile object for the specified URL populated with audio properties and metadata or \c nil on failure
 /// @param url The URL
 /// @param error An optional pointer to an \c NSError object to receive error information
