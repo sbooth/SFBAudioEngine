@@ -183,9 +183,8 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 			return decodeBuffer;
 		}];
 
-		if(status == AVAudioConverterOutputStatus_Error) {
+		if(status == AVAudioConverterOutputStatus_Error)
 			return NO;
-		}
 		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
