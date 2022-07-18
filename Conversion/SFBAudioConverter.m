@@ -36,36 +36,19 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 + (BOOL)convertFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL destinationURL:destinationURL error:error];
-	if(![converter convertReturningError:error])
-		return NO;
-
-	// Silently fail if metadata can't be read or written
-	[SFBAudioFile copyMetadataFromURL:sourceURL toURL:destinationURL error:nil];
-	return YES;
+	return [converter convertReturningError:error];
 }
 
 + (BOOL)convertFromURL:(NSURL *)sourceURL usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL encoder:encoder error:error];
-	if(![converter convertReturningError:error])
-		return NO;
-
-	// Silently fail if metadata can't be read or written
-	if(converter.encoder.outputSource.url.isFileURL)
-		[SFBAudioFile copyMetadataFromURL:sourceURL toURL:converter.encoder.outputSource.url error:nil];
-	return YES;
+	return [converter convertReturningError:error];
 }
 
 + (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)destinationURL error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder destinationURL:destinationURL error:error];
-	if(![converter convertReturningError:error])
-		return NO;
-
-	// Silently fail if metadata can't be read or written
-	if(converter.decoder.inputSource.url.isFileURL)
-		[SFBAudioFile copyMetadataFromURL:converter.decoder.inputSource.url toURL:destinationURL error:nil];
-	return YES;
+	return [converter convertReturningError:error];
 }
 
 + (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
@@ -73,11 +56,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder encoder:encoder error:error];
 	if(![converter convertReturningError:error])
 		return NO;
-
-	// Silently fail if metadata can't be read or written
-	if(converter.decoder.inputSource.url.isFileURL && converter.encoder.outputSource.url.isFileURL)
-		[SFBAudioFile copyMetadataFromURL:converter.decoder.inputSource.url toURL:converter.encoder.outputSource.url error:nil];
-	return YES;
+	return [converter convertReturningError:error];
 }
 
 - (instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL

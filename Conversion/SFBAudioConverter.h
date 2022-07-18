@@ -8,7 +8,6 @@
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
 #import <SFBAudioEngine/SFBPCMEncoding.h>
-#import <SFBAudioEngine/SFBAudioMetadata.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,7 +26,6 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 
 /// Converts audio and writes to the specified URL
 /// @note The file type to create is inferred from the file extension of \c destinationURL
-/// @note Metadata will be read from \c sourceURL and copied to \c destinationURL
 /// @param sourceURL The URL to convert
 /// @param destinationURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
@@ -35,7 +33,6 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 + (BOOL)convertFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error NS_SWIFT_NAME(AudioConverter.convert(_:to:));
 
 /// Converts audio using \c encoder
-/// @note Metadata will be read from \c sourceURL and copied to \c destinationURL
 /// @param sourceURL The URL to convert
 /// @param encoder The encoder processing the decoded audio
 /// @param error An optional pointer to an \c NSError object to receive error information
