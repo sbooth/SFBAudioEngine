@@ -42,152 +42,112 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 + (BOOL)convertFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error
 {
-	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL destinationURL:destinationURL error:error];
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
+	if(!decoder)
+		return NO;
+
+	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
+	if(!encoder)
+		return NO;
+
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] init];
+
+	// Silently fail if metadata can't be read
+	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
+	converter.metadata = audioFile.metadata;
+
+	if(![converter setDecoder:decoder encoder:encoder error:error])
+		return NO;
 	return [converter convertReturningError:error];
 }
 
 + (BOOL)convertFromURL:(NSURL *)sourceURL usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
 {
-	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL encoder:encoder error:error];
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
+	if(!decoder)
+		return NO;
+
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] init];
+
+	// Silently fail if metadata can't be read
+	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
+	converter.metadata = audioFile.metadata;
+
+	if(![converter setDecoder:decoder encoder:encoder error:error])
+		return NO;
 	return [converter convertReturningError:error];
 }
 
 + (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)destinationURL error:(NSError **)error
 {
-	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder destinationURL:destinationURL error:error];
+	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
+	if(!encoder)
+		return NO;
+
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] init];
+	if(![converter setDecoder:decoder encoder:encoder error:error])
+		return NO;
 	return [converter convertReturningError:error];
 }
 
 + (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
 {
-	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder encoder:encoder error:error];
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] init];
+	if(![converter setDecoder:decoder encoder:encoder error:error])
+		return NO;
 	return [converter convertReturningError:error];
 }
 
-- (instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL
-{
-	return [self initWithURL:sourceURL destinationURL:destinationURL error:nil];
-}
-
-- (instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error
-{
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
-	if(!decoder)
-		return nil;
-	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
-	if(!encoder)
-		return nil;
-	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
-	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata delegate:nil error:error];
-}
-
-- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder
-{
-	return [self initWithURL:sourceURL encoder:encoder error:nil];
-}
-
-- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
-{
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
-	if(!decoder)
-		return nil;
-	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
-	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata delegate:nil error:error];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL
-{
-	return [self initWithDecoder:decoder destinationURL:destinationURL error:nil];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error
-{
-	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
-	if(!encoder)
-		return nil;
-	return [self initWithDecoder:decoder encoder:encoder metadata:nil delegate:nil error:error];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder
-{
-	return [self initWithDecoder:decoder encoder:encoder metadata:nil delegate:nil error:nil];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
-{
-	return [self initWithDecoder:decoder encoder:encoder metadata:nil delegate:nil error:error];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata
-{
-	return [self initWithDecoder:decoder encoder:encoder metadata:metadata delegate:nil error:nil];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata error:(NSError **)error
-{
-	return [self initWithDecoder:decoder encoder:encoder metadata:metadata delegate:nil error:error];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata delegate:(id <SFBAudioConverterDelegate>)delegate
-{
-	return [self initWithDecoder:decoder encoder:encoder metadata:metadata delegate:delegate error:nil];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata delegate:(id <SFBAudioConverterDelegate>)delegate error:(NSError **)error
+- (BOOL)setDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(encoder != nil);
 
-	if((self = [super init])) {
-		_delegate = delegate;
+	if(!decoder.isOpen && ![decoder openReturningError:error])
+		return NO;
+	_decoder = decoder;
 
-		if(!decoder.isOpen && ![decoder openReturningError:error])
-			return nil;
-		_decoder = decoder;
+	if(!encoder.isOpen) {
+		AVAudioFormat *desiredEncodingFormat = decoder.processingFormat;
 
-		if(!encoder.isOpen) {
-			AVAudioFormat *desiredEncodingFormat = decoder.processingFormat;
-
-			// Encode lossy sources as 16-bit PCM
-			if(!decoder.decodingIsLossless) {
-				AVAudioChannelLayout *decoderChannelLayout = decoder.processingFormat.channelLayout;
-				if(decoderChannelLayout)
-					desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate interleaved:YES channelLayout:decoderChannelLayout];
-				else
-					desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate channels:decoder.processingFormat.channelCount interleaved:YES];
-			}
-
-			if([_delegate respondsToSelector:@selector(audioConverter:proposedProcessingFormatForConversion:)])
-				desiredEncodingFormat = [_delegate audioConverter:self proposedProcessingFormatForConversion:desiredEncodingFormat];
-
-			if(![encoder setSourceFormat:desiredEncodingFormat error:error])
-				return nil;
-
-			encoder.estimatedFramesToEncode = decoder.frameLength;
-
-			if(![encoder openReturningError:error])
-				return nil;
-		}
-		_encoder = encoder;
-
-		_converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:encoder.processingFormat];
-		if(!_converter) {
-			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioConverterErrorDomain
-												 code:SFBAudioConverterErrorCodeFormatNotSupported
-						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
-												  url:decoder.inputSource.url
-										failureReason:NSLocalizedString(@"Unsupported file format", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for conversion.", @"")];
-			return nil;
+		// Encode lossy sources as 16-bit PCM
+		if(!decoder.decodingIsLossless) {
+			AVAudioChannelLayout *decoderChannelLayout = decoder.processingFormat.channelLayout;
+			if(decoderChannelLayout)
+				desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate interleaved:YES channelLayout:decoderChannelLayout];
+			else
+				desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate channels:decoder.processingFormat.channelCount interleaved:YES];
 		}
 
-		if([_delegate respondsToSelector:@selector(audioConverter:customizeConversionParameters:)])
-			[_delegate audioConverter:self customizeConversionParameters:_converter];
+		if([_delegate respondsToSelector:@selector(audioConverter:proposedProcessingFormatForConversion:)])
+			desiredEncodingFormat = [_delegate audioConverter:self proposedProcessingFormatForConversion:desiredEncodingFormat];
 
-		_metadata = [metadata copy];
+		if(![encoder setSourceFormat:desiredEncodingFormat error:error])
+			return NO;
+
+		encoder.estimatedFramesToEncode = decoder.frameLength;
+
+		if(![encoder openReturningError:error])
+			return NO;
 	}
-	return self;
+	_encoder = encoder;
+
+	_converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:encoder.processingFormat];
+	if(!_converter) {
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioConverterErrorDomain
+											 code:SFBAudioConverterErrorCodeFormatNotSupported
+					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
+											  url:decoder.inputSource.url
+									failureReason:NSLocalizedString(@"Unsupported file format", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for conversion.", @"")];
+		return NO;
+	}
+
+	if([_delegate respondsToSelector:@selector(audioConverter:customizeConversionParameters:)])
+		[_delegate audioConverter:self customizeConversionParameters:_converter];
+
+	return YES;
 }
 
 - (BOOL)convertReturningError:(NSError **)error
