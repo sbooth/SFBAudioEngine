@@ -4,7 +4,7 @@
 // MIT license
 //
 
-@import OSLog;
+@import os.log;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wconversion"
