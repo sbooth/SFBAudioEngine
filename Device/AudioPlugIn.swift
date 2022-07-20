@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -28,6 +28,7 @@ public class AudioPlugIn: AudioObject {
 		return (AudioObject.make(objectID) as! AudioPlugIn)
 	}
 
+	// A textual representation of this instance, suitable for debugging.
 	public override var debugDescription: String {
 		do {
 			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), [\(try deviceList().map({ $0.debugDescription }).joined(separator: ", "))]>"

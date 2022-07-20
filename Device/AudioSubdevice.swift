@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -73,6 +73,7 @@ extension AudioSubdevice {
 }
 
 extension AudioSubdevice.DriftCompensationQuality: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		switch self.rawValue {
 		case kAudioSubDeviceDriftCompensationMinQuality:			return "Minimum"

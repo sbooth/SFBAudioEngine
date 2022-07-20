@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,6 +12,7 @@ import CoreAudio
 /// This class has a single scope (`kAudioObjectPropertyScopeGlobal`), a master element (`kAudioObjectPropertyElementMaster`), and an element for each channel
 /// - remark: This class correponds to objects with base class `kAudioStreamClassID`
 public class AudioStream: AudioObject {
+	// A textual representation of this instance, suitable for debugging.
 	public override var debugDescription: String {
 		do {
 			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), \(try isActive() ? "active" : "inactive"), \(try direction() ? "output" : "input"), starting channel = \(try startingChannel()), virtual format = \(try virtualFormat()), physical format = \(try physicalFormat())>"
@@ -137,6 +138,7 @@ extension AudioStream {
 }
 
 extension AudioStream.TerminalType: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		switch self.rawValue {
 		case kAudioStreamTerminalTypeUnknown:					return "Unknown"

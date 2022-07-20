@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,6 +10,7 @@ import CoreAudio
 /// A HAL audio selector control object
 /// - remark: This class correponds to objects with base class `kAudioSelectorControlClassID`
 public class SelectorControl: AudioControl {
+	// A textual representation of this instance, suitable for debugging.
 	public override var debugDescription: String {
 		do {
 			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)), (\(try scope()), \(try element())), [\(try currentItem().map({ "'\($0.fourCC)'" }).joined(separator: ", "))]>"
@@ -74,6 +75,7 @@ extension SelectorControl {
 }
 
 extension SelectorControl.Item: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): '\(id.fourCC)' \"\(name)\" on SelectorControl 0x\(String(control.objectID, radix: 16, uppercase: false))>"

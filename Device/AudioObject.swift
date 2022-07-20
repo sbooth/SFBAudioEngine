@@ -103,6 +103,7 @@ public class AudioObject: CustomDebugStringConvertible {
 		}
 	}
 
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false))>"
 	}

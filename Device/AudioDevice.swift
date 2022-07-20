@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -61,6 +61,7 @@ public class AudioDevice: AudioObject {
 		try streamConfiguration(inScope: .output).numberBuffers > 0
 	}
 
+	// A textual representation of this instance, suitable for debugging.
 	public override var debugDescription: String {
 		do {
 			return "<\(type(of: self)): 0x\(String(objectID, radix: 16, uppercase: false)) \"\(try name())\">"
@@ -995,6 +996,7 @@ extension AudioDevice {
 }
 
 extension AudioDevice.TransportType: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		switch self.rawValue {
 		case kAudioDeviceTransportTypeUnknown:			return "Unknown"
@@ -1039,6 +1041,7 @@ extension AudioDevice {
 }
 
 extension AudioDevice.DataSource: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
@@ -1072,6 +1075,7 @@ extension AudioDevice {
 }
 
 extension AudioDevice.ClockSource: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
@@ -1098,6 +1102,7 @@ extension AudioDevice {
 }
 
 extension AudioDevice.PlayThroughDestination: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): '\(id.fourCC)' \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
@@ -1126,6 +1131,7 @@ extension AudioDevice {
 }
 
 extension AudioDevice.ChannelNominalLineLevel: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"
@@ -1154,6 +1160,7 @@ extension AudioDevice {
 }
 
 extension AudioDevice.HighPassFilterSetting: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		if let name = try? name() {
 			return "<\(type(of: self)): (\(scope), '\(id.fourCC)') \"\(name)\" on AudioDevice 0x\(String(device.objectID, radix: 16, uppercase: false))>"

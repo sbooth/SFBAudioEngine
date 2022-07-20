@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -52,6 +52,7 @@ public struct AudioHardwareIOProcStreamUsageWrapper {
 }
 
 extension AudioHardwareIOProcStreamUsageWrapper: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		return "<\(type(of: self)): mNumberStreams = \(numberStreams), mStreamIsOn = [\(streamIsOn.map({ $0 == 0 ? "Off" : "On" }).joined(separator: ", "))]>"
 	}

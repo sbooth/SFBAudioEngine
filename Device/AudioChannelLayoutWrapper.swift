@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -62,6 +62,7 @@ extension AudioChannelLayoutWrapper {
 }
 
 extension AudioChannelLayoutWrapper: CustomDebugStringConvertible {
+	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		let channelLayoutTag = tag
 		if channelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions {

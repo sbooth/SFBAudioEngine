@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,6 +10,7 @@ import CoreAudio
 /// A HAL audio stereo pan control object
 /// - remark: This class correponds to objects with base class `kAudioStereoPanControlClassID`
 public class StereoPanControl: AudioControl {
+	// A textual representation of this instance, suitable for debugging.
 	public override var debugDescription: String {
 		do {
 			let panningChannels = try self.panningChannels()
