@@ -27,8 +27,8 @@
 
 #pragma mark Initialization
 
-static void SetupFFMpeg(void) __attribute__ ((constructor));
-static void SetupFFMpeg()
+static void SetupFFmpeg(void) __attribute__ ((constructor));
+static void SetupFFmpeg()
 {
 	// Register codecs and disable logging
 	av_register_all();
