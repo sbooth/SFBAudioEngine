@@ -118,14 +118,17 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 {
 	NSMutableSet *pathExtensions = [NSMutableSet set];
 
-	// Loop through each input format
-	AVInputFormat *inputFormat = NULL;
-	while((inputFormat = av_iformat_next(inputFormat))) {
-		if(inputFormat->extensions) {
-			NSString *extensions = [NSString stringWithUTF8String:inputFormat->extensions];
-			[pathExtensions addObjectsFromArray:[extensions componentsSeparatedByString:@","]];
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		// Loop through each input format
+		AVInputFormat *inputFormat = NULL;
+		while((inputFormat = av_iformat_next(inputFormat))) {
+			if(inputFormat->extensions) {
+				NSString *extensions = [NSString stringWithUTF8String:inputFormat->extensions];
+				[pathExtensions addObjectsFromArray:[extensions componentsSeparatedByString:@","]];
+			}
 		}
-	}
+	});
 
 	return pathExtensions;
 }
@@ -134,14 +137,17 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 {
 	NSMutableSet *mimeTypes = [NSMutableSet set];
 
-	// Loop through each input format
-	AVInputFormat *inputFormat = NULL;
-	while((inputFormat = av_iformat_next(inputFormat))) {
-		if(inputFormat->mime_type) {
-			NSString *types = [NSString stringWithUTF8String:inputFormat->mime_type];
-			[mimeTypes addObjectsFromArray:[types componentsSeparatedByString:@","]];
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		// Loop through each input format
+		AVInputFormat *inputFormat = NULL;
+		while((inputFormat = av_iformat_next(inputFormat))) {
+			if(inputFormat->mime_type) {
+				NSString *types = [NSString stringWithUTF8String:inputFormat->mime_type];
+				[mimeTypes addObjectsFromArray:[types componentsSeparatedByString:@","]];
+			}
 		}
-	}
+	});
 
 	return mimeTypes;
 }
