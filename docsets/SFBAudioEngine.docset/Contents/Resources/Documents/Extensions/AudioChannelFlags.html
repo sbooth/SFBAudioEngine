@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>AudioChannelFlags Extension Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Extension/AudioChannelFlags" class="dashAnchor"></a>
+    <a title="AudioChannelFlags Extension Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (97% documented)</p>
+        <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
+        <div class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">SFBAudioEngine Reference</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        AudioChannelFlags Extension Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/AudioAggregateDevice.html">AudioAggregateDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioBox.html">AudioBox</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioClockDevice.html">AudioClockDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioControl.html">AudioControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice.html">AudioDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice/TransportType.html">– TransportType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice/DataSource.html">– DataSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice/ClockSource.html">– ClockSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice/PlayThroughDestination.html">– PlayThroughDestination</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice/ChannelNominalLineLevel.html">– ChannelNominalLineLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioDevice/HighPassFilterSetting.html">– HighPassFilterSetting</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine13AudioEndpointC">AudioEndpoint</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioEndpointDevice.html">AudioEndpointDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioObject.html">AudioObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioPlugIn.html">AudioPlugIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioStream.html">AudioStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioStream/TerminalType.html">– TerminalType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioSubdevice.html">AudioSubdevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioSubdevice/DriftCompensationQuality.html">– DriftCompensationQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioSystemObject.html">AudioSystemObject</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AudioTransportManager.html">AudioTransportManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/BooleanControl.html">BooleanControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine16ClipLightControlC">ClipLightControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine18ClockSourceControlC">ClockSourceControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine22DataDestinationControlC">DataDestinationControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine17DataSourceControlC">DataSourceControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine21HighPassFilterControlC">HighPassFilterControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine11JackControlC">JackControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine14LFEMuteControlC">LFEMuteControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine16LFEVolumeControlC">LFEVolumeControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LevelControl.html">LevelControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine16LineLevelControlC">LineLevelControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine17ListenbackControlC">ListenbackControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine11MuteControlC">MuteControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine19PhantomPowerControlC">PhantomPowerControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine18PhaseInvertControlC">PhaseInvertControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioConverter.html">SFBAudioConverter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioExporter.html">SFBAudioExporter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioFile.html">SFBAudioFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer/PlaybackState.html">– PlaybackState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackPosition.html">– PlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode/PlaybackTime.html">– PlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDDecoder.html">SFBDSDDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDPCMDecoder.html">SFBDSDPCMDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDoPDecoder.html">SFBDoPDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBInputSource.html">SFBInputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBLoopableRegionDecoder.html">SFBLoopableRegionDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBOutputSource.html">SFBOutputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBReplayGainAnalyzer.html">SFBReplayGainAnalyzer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SelectorControl.html">SelectorControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SelectorControl/Item.html">– Item</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SliderControl.html">SliderControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine11SoloControlC">SoloControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/StereoPanControl.html">StereoPanControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine15TalkbackControlC">TalkbackControl</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes.html#/s:14SFBAudioEngine13VolumeControlC">VolumeControl</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Constants.html">Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyDescription">SFBAttachedPictureKeyDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyImageData">SFBAttachedPictureKeyImageData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyType">SFBAttachedPictureKeyType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioConverterErrorDomain">SFBAudioConverterErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderErrorDomain">SFBAudioDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameCoreAudio">SFBAudioDecoderNameCoreAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameFLAC">SFBAudioDecoderNameFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameLibsndfile">SFBAudioDecoderNameLibsndfile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameMPEG">SFBAudioDecoderNameMPEG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameModule">SFBAudioDecoderNameModule</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameMonkeysAudio">SFBAudioDecoderNameMonkeysAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameMusepack">SFBAudioDecoderNameMusepack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameOggOpus">SFBAudioDecoderNameOggOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameOggSpeex">SFBAudioDecoderNameOggSpeex</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameOggVorbis">SFBAudioDecoderNameOggVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameShorten">SFBAudioDecoderNameShorten</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameTrueAudio">SFBAudioDecoderNameTrueAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameCoreAudio">SFBAudioEncoderNameCoreAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameFLAC">SFBAudioEncoderNameFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameLibsndfile">SFBAudioEncoderNameLibsndfile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameMP3">SFBAudioEncoderNameMP3</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameMonkeysAudio">SFBAudioEncoderNameMonkeysAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameMusepack">SFBAudioEncoderNameMusepack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggFLAC">SFBAudioEncoderNameOggFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggOpus">SFBAudioEncoderNameOggOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggSpeex">SFBAudioEncoderNameOggSpeex</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggVorbis">SFBAudioEncoderNameOggVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameTrueAudio">SFBAudioEncoderNameTrueAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameWavPack">SFBAudioEncoderNameWavPack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyAPECompressionLevel">SFBAudioEncodingSettingsKeyAPECompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings">SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel">SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioFileTypeID">SFBAudioEncodingSettingsKeyCoreAudioFileTypeID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioFormatFlags">SFBAudioEncodingSettingsKeyCoreAudioFormatFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioFormatID">SFBAudioEncodingSettingsKeyCoreAudioFormatID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyFLACCompressionLevel">SFBAudioEncodingSettingsKeyFLACCompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyFLACVerifyEncoding">SFBAudioEncodingSettingsKeyFLACVerifyEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyLibsndfileFileEndian">SFBAudioEncodingSettingsKeyLibsndfileFileEndian</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyLibsndfileMajorFormat">SFBAudioEncodingSettingsKeyLibsndfileMajorFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyLibsndfileSubtype">SFBAudioEncodingSettingsKeyLibsndfileSubtype</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3AverageBitrate">SFBAudioEncodingSettingsKeyMP3AverageBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3CalculateReplayGain">SFBAudioEncodingSettingsKeyMP3CalculateReplayGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3ConstantBitrate">SFBAudioEncodingSettingsKeyMP3ConstantBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3Quality">SFBAudioEncodingSettingsKeyMP3Quality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3StereoMode">SFBAudioEncodingSettingsKeyMP3StereoMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3UseVariableBitrate">SFBAudioEncodingSettingsKeyMP3UseVariableBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate">SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate">SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3VBRQuality">SFBAudioEncodingSettingsKeyMP3VBRQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMusepackQuality">SFBAudioEncodingSettingsKeyMusepackQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusBitrate">SFBAudioEncodingSettingsKeyOpusBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusBitrateMode">SFBAudioEncodingSettingsKeyOpusBitrateMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusComplexity">SFBAudioEncodingSettingsKeyOpusComplexity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusFrameDuration">SFBAudioEncodingSettingsKeyOpusFrameDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusPreserveSampleRate">SFBAudioEncodingSettingsKeyOpusPreserveSampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusSignalType">SFBAudioEncodingSettingsKeyOpusSignalType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexBitrate">SFBAudioEncodingSettingsKeySpeexBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexComplexity">SFBAudioEncodingSettingsKeySpeexComplexity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexDenoiseInput">SFBAudioEncodingSettingsKeySpeexDenoiseInput</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter">SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableABR">SFBAudioEncodingSettingsKeySpeexEnableABR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableAGC">SFBAudioEncodingSettingsKeySpeexEnableAGC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableDTX">SFBAudioEncodingSettingsKeySpeexEnableDTX</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableVAD">SFBAudioEncodingSettingsKeySpeexEnableVAD</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableVBR">SFBAudioEncodingSettingsKeySpeexEnableVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket">SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexMode">SFBAudioEncodingSettingsKeySpeexMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexQuality">SFBAudioEncodingSettingsKeySpeexQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexTargetIsBitrate">SFBAudioEncodingSettingsKeySpeexTargetIsBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate">SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisBitrate">SFBAudioEncodingSettingsKeyVorbisBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisMaxBitrate">SFBAudioEncodingSettingsKeyVorbisMaxBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisMinBitrate">SFBAudioEncodingSettingsKeyVorbisMinBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisQuality">SFBAudioEncodingSettingsKeyVorbisQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate">SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyWavPackCompressionLevel">SFBAudioEncodingSettingsKeyWavPackCompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh">SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelFast">SFBAudioEncodingSettingsValueAPECompressionLevelFast</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelHigh">SFBAudioEncodingSettingsValueAPECompressionLevelHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelInsane">SFBAudioEncodingSettingsValueAPECompressionLevelInsane</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelNormal">SFBAudioEncodingSettingsValueAPECompressionLevelNormal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianBig">SFBAudioEncodingSettingsValueLibsndfileFileEndianBig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU">SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault">SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle">SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU">SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR">SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC">SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK">SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM">SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4">SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5">SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K">SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST">SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg">SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64">SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw">SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2">SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS">SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX">SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC">SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64">SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV">SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX">SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE">SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI">SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8">SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble">SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat">SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32">SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40">SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610">SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM">SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM">SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32">SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus">SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM">SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis">SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW">SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueMP3StereoModeJointStereo">SFBAudioEncodingSettingsValueMP3StereoModeJointStereo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueMP3StereoModeMono">SFBAudioEncodingSettingsValueMP3StereoModeMono</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueMP3StereoModeStereo">SFBAudioEncodingSettingsValueMP3StereoModeStereo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR">SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR">SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusBitrateModeVBR">SFBAudioEncodingSettingsValueOpusBitrateModeVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration100ms">SFBAudioEncodingSettingsValueOpusFrameDuration100ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration10ms">SFBAudioEncodingSettingsValueOpusFrameDuration10ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration120ms">SFBAudioEncodingSettingsValueOpusFrameDuration120ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration20ms">SFBAudioEncodingSettingsValueOpusFrameDuration20ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms">SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration40ms">SFBAudioEncodingSettingsValueOpusFrameDuration40ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration5ms">SFBAudioEncodingSettingsValueOpusFrameDuration5ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration60ms">SFBAudioEncodingSettingsValueOpusFrameDuration60ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration80ms">SFBAudioEncodingSettingsValueOpusFrameDuration80ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusSignalTypeMusic">SFBAudioEncodingSettingsValueOpusSignalTypeMusic</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusSignalTypeVoice">SFBAudioEncodingSettingsValueOpusSignalTypeVoice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueSpeexModeNarrowband">SFBAudioEncodingSettingsValueSpeexModeNarrowband</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueSpeexModeUltraWideband">SFBAudioEncodingSettingsValueSpeexModeUltraWideband</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueSpeexModeWideband">SFBAudioEncodingSettingsValueSpeexModeWideband</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueWavPackCompressionLevelFast">SFBAudioEncodingSettingsValueWavPackCompressionLevelFast</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh">SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh">SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionNumber">SFBAudioEngineVersionNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionString">SFBAudioEngineVersionString</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioExporterErrorDomain">SFBAudioExporterErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileErrorDomain">SFBAudioFileErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameAIFF">SFBAudioFileFormatNameAIFF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameDSDIFF">SFBAudioFileFormatNameDSDIFF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameDSF">SFBAudioFileFormatNameDSF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameExtendedModule">SFBAudioFileFormatNameExtendedModule</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameFLAC">SFBAudioFileFormatNameFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameImpulseTrackerModule">SFBAudioFileFormatNameImpulseTrackerModule</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameMP3">SFBAudioFileFormatNameMP3</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameMP4">SFBAudioFileFormatNameMP4</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameMonkeysAudio">SFBAudioFileFormatNameMonkeysAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameMusepack">SFBAudioFileFormatNameMusepack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameOggFLAC">SFBAudioFileFormatNameOggFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameOggOpus">SFBAudioFileFormatNameOggOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameOggSpeex">SFBAudioFileFormatNameOggSpeex</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameOggVorbis">SFBAudioFileFormatNameOggVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameProTrackerModule">SFBAudioFileFormatNameProTrackerModule</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameScreamTracker3Module">SFBAudioFileFormatNameScreamTracker3Module</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameShorten">SFBAudioFileFormatNameShorten</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameTrueAudio">SFBAudioFileFormatNameTrueAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameWAVE">SFBAudioFileFormatNameWAVE</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileFormatNameWavPack">SFBAudioFileFormatNameWavPack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAdditionalMetadata">SFBAudioMetadataKeyAdditionalMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtist">SFBAudioMetadataKeyAlbumArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtistSortOrder">SFBAudioMetadataKeyAlbumArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitle">SFBAudioMetadataKeyAlbumTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitleSortOrder">SFBAudioMetadataKeyAlbumTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtist">SFBAudioMetadataKeyArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtistSortOrder">SFBAudioMetadataKeyArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAttachedPictures">SFBAudioMetadataKeyAttachedPictures</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyBPM">SFBAudioMetadataKeyBPM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComment">SFBAudioMetadataKeyComment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyCompilation">SFBAudioMetadataKeyCompilation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposer">SFBAudioMetadataKeyComposer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposerSortOrder">SFBAudioMetadataKeyComposerSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscNumber">SFBAudioMetadataKeyDiscNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscTotal">SFBAudioMetadataKeyDiscTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenre">SFBAudioMetadataKeyGenre</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenreSortOrder">SFBAudioMetadataKeyGenreSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGrouping">SFBAudioMetadataKeyGrouping</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyISRC">SFBAudioMetadataKeyISRC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyLyrics">SFBAudioMetadataKeyLyrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMCN">SFBAudioMetadataKeyMCN</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzRecordingID">SFBAudioMetadataKeyMusicBrainzRecordingID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzReleaseID">SFBAudioMetadataKeyMusicBrainzReleaseID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyRating">SFBAudioMetadataKeyRating</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReleaseDate">SFBAudioMetadataKeyReleaseDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumGain">SFBAudioMetadataKeyReplayGainAlbumGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumPeak">SFBAudioMetadataKeyReplayGainAlbumPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainReferenceLoudness">SFBAudioMetadataKeyReplayGainReferenceLoudness</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackGain">SFBAudioMetadataKeyReplayGainTrackGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackPeak">SFBAudioMetadataKeyReplayGainTrackPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitle">SFBAudioMetadataKeyTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitleSortOrder">SFBAudioMetadataKeyTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackNumber">SFBAudioMetadataKeyTrackNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackTotal">SFBAudioMetadataKeyTrackTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerNodeErrorDomain">SFBAudioPlayerNodeErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitrate">SFBAudioPropertiesKeyBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitsPerChannel">SFBAudioPropertiesKeyBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyChannelCount">SFBAudioPropertiesKeyChannelCount</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyDuration">SFBAudioPropertiesKeyDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFormatName">SFBAudioPropertiesKeyFormatName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFrameLength">SFBAudioPropertiesKeyFrameLength</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderNameDSDIFF">SFBDSDDecoderNameDSDIFF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderNameDSF">SFBDSDDecoderNameDSF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBInputSourceErrorDomain">SFBInputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBOutputSourceErrorDomain">SFBOutputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerGainKey">SFBReplayGainAnalyzerGainKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBUnknownTime">SFBUnknownTime</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioConverterErrorCode.html">SFBAudioConverterErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioDecoderErrorCode.html">SFBAudioDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioEncoderErrorCode.html">SFBAudioEncoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioExporterErrorCode.html">SFBAudioExporterErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerNodeErrorCode.html">SFBAudioPlayerNodeErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerPlaybackState.html">SFBAudioPlayerPlaybackState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceFlags.html">SFBInputSourceFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBOutputSourceErrorCode.html">SFBOutputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBReplayGainAnalyzerErrorCode.html">SFBReplayGainAnalyzerErrorCode</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioEncoding.html">SFBAudioEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerDelegate.html">SFBAudioPlayerDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBDSDDecoding.html">SFBDSDDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMEncoding.html">SFBPCMEncoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Type%20Definitions.html">Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioDecoder.h@T@SFBAudioDecoderName">SFBAudioDecoderName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncoderName">SFBAudioEncoderName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoding.h@T@SFBAudioEncodingSettingsKey">SFBAudioEncodingSettingsKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoding.h@T@SFBAudioEncodingSettingsValue">SFBAudioEncodingSettingsValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueAPECompressionLevel">SFBAudioEncodingSettingsValueAPECompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueLibsndfileFileEndian">SFBAudioEncodingSettingsValueLibsndfileFileEndian</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueLibsndfileMajorFormat">SFBAudioEncodingSettingsValueLibsndfileMajorFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueLibsndfileSubtype">SFBAudioEncodingSettingsValueLibsndfileSubtype</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueMP3StereoMode">SFBAudioEncodingSettingsValueMP3StereoMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueOpusBitrateMode">SFBAudioEncodingSettingsValueOpusBitrateMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueOpusFrameDuration">SFBAudioEncodingSettingsValueOpusFrameDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueOpusSignalType">SFBAudioEncodingSettingsValueOpusSignalType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueSpeexMode">SFBAudioEncodingSettingsValueSpeexMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueWavPackCompressionLevel">SFBAudioEncodingSettingsValueWavPackCompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioFile.h@T@SFBAudioFileFormatName">SFBAudioFileFormatName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerAVAudioEngineBlock">SFBAudioPlayerAVAudioEngineBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackPosition">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackTime">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackPosition">SFBAudioPlayerPlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackTime">SFBAudioPlayerPlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioProperties.h@T@SFBAudioPropertiesKey">SFBAudioPropertiesKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBDSDDecoder.h@T@SFBDSDDecoderName">SFBDSDDecoderName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/AudioBufferListWrapper.html">AudioBufferListWrapper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AudioChannelLayoutWrapper.html">AudioChannelLayoutWrapper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AudioHardwareIOProcStreamUsageWrapper.html">AudioHardwareIOProcStreamUsageWrapper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AudioObjectSelector.html">AudioObjectSelector</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/PropertyAddress.html">PropertyAddress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/PropertyElement.html">PropertyElement</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/PropertyQualifier.html">PropertyQualifier</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/PropertyScope.html">PropertyScope</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/PropertySelector.html">PropertySelector</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ReplayGain.html">ReplayGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackTime.html">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioBuffer.html">AudioBuffer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioChannelBitmap.html">AudioChannelBitmap</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioChannelDescription.html">AudioChannelDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioChannelFlags.html">AudioChannelFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioChannelLabel.html">AudioChannelLabel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioChannelLayout.html">AudioChannelLayout</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioChannelLayoutTag.html">AudioChannelLayoutTag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioHardwareIOProcStreamUsage.html">AudioHardwareIOProcStreamUsage</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioObjectPropertyAddress.html">AudioObjectPropertyAddress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioStreamBasicDescription.html">AudioStreamBasicDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AudioStreamBasicDescription/CommonPCMFormat.html">– CommonPCMFormat</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:14SFBAudioEngine23audioObjectPropertySize_4from9qualifierSiAA0E7AddressV_s6UInt32VAA0E9QualifierVSgtKF">audioObjectPropertySize(_:from:qualifier:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:14SFBAudioEngine22getAudioObjectProperty_4from11elementType9qualifierSayxGAA0F7AddressV_s6UInt32VxmAA0F9QualifierVSgtKlF">getAudioObjectProperty(_:from:elementType:qualifier:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:14SFBAudioEngine22getAudioObjectProperty_4from4type9qualifierxAA0F7AddressV_s6UInt32VxmAA0F9QualifierVSgtKRlzClF">getAudioObjectProperty(_:from:type:qualifier:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:14SFBAudioEngine22getAudioObjectProperty_4from4type9qualifier12initialValuexAA0F7AddressV_s6UInt32VxmAA0F9QualifierVSgxtKSjRzlF">getAudioObjectProperty(_:from:type:qualifier:initialValue:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:14SFBAudioEngine23readAudioObjectProperty_4from4into4size9qualifieryAA0F7AddressV_s6UInt32VSpyxGSiAA0F9QualifierVSgtKlF">readAudioObjectProperty(_:from:into:size:qualifier:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Functions.html#/s:14SFBAudioEngine24writeAudioObjectProperty_2on4from4size9qualifieryAA0F7AddressV_s6UInt32VSPyxGSiAA0F9QualifierVSgtKlF">writeAudioObjectProperty(_:on:from:size:qualifier:)</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>AudioChannelFlags</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AudioChannelFlags</span></code></pre>
+
+                </div>
+              </div>
+            
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:So17AudioChannelFlagsV14SFBAudioEngineE07channelC11DescriptionSSvp"></a>
+                    <a name="//apple_ref/swift/Property/channelFlagsDescription" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So17AudioChannelFlagsV14SFBAudioEngineE07channelC11DescriptionSSvp">channelFlagsDescription</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the names of the flags in <code>self</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">channelFlagsDescription</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© 2006 - 2022 <a class="link" href="https://sbooth.org" target="_blank" rel="external noopener">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external noopener">MIT License</a>.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</html>

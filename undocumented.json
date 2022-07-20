@@ -1,204 +1,288 @@
 {
   "warnings": [
     {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/AudioBox.swift",
+      "line": 31,
+      "symbol": "AudioBox.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/AudioControl.swift",
+      "line": 15,
+      "symbol": "AudioControl.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/AudioDevice.swift",
+      "line": 64,
+      "symbol": "AudioDevice.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/AudioPlugIn.swift",
+      "line": 31,
+      "symbol": "AudioPlugIn.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/AudioStream.swift",
+      "line": 15,
+      "symbol": "AudioStream.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/AudioTransportManager.swift",
+      "line": 31,
+      "symbol": "AudioTransportManager.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/BooleanControl.swift",
+      "line": 13,
+      "symbol": "BooleanControl.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/LevelControl.swift",
+      "line": 13,
+      "symbol": "LevelControl.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/SelectorControl.swift",
+      "line": 13,
+      "symbol": "SelectorControl.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/SliderControl.swift",
+      "line": 13,
+      "symbol": "SliderControl.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/Device/StereoPanControl.swift",
+      "line": 13,
+      "symbol": "StereoPanControl.debugDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
       "file": "/Users/sbooth/Development/SFBAudioEngine/Player/SFBAudioPlayer.swift",
-      "line": 9,
+      "line": 10,
       "symbol": "SFBAudioPlayer.PlaybackPosition",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/sbooth/Development/SFBAudioEngine/Player/SFBAudioPlayer.swift",
-      "line": 10,
+      "line": 11,
       "symbol": "SFBAudioPlayer.PlaybackTime",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
+      "file": "/Users/sbooth/Development/SFBAudioEngine/SFBAudioUtilities/AudioChannelLayout+SFBExtensions.swift",
+      "line": 26,
+      "symbol": "AudioChannelDescription.channelDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAttachedPicture.h",
-      "line": 70,
+      "line": 71,
       "symbol": "SFBAttachedPicture.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAttachedPicture.h",
-      "line": 71,
+      "line": 72,
       "symbol": "SFBAttachedPicture.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioConverter.h",
-      "line": 49,
+      "line": 57,
       "symbol": "SFBAudioConverter.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioConverter.h",
-      "line": 50,
+      "line": 58,
       "symbol": "SFBAudioConverter.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioDecoder.h",
-      "line": 59,
+      "line": 60,
       "symbol": "SFBAudioDecoder.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioDecoder.h",
-      "line": 60,
+      "line": 61,
       "symbol": "SFBAudioDecoder.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEncoder.h",
-      "line": 57,
+      "line": 58,
       "symbol": "SFBAudioEncoder.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEncoder.h",
-      "line": 58,
+      "line": 59,
       "symbol": "SFBAudioEncoder.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEngineTypes.h",
-      "line": 13,
+      "line": 14,
       "symbol": "",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEngineTypes.h",
-      "line": 39,
+      "line": 40,
       "symbol": "",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEngineTypes.h",
-      "line": 51,
+      "line": 52,
       "symbol": "",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEngineTypes.h",
-      "line": 67,
+      "line": 68,
       "symbol": "",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioEngineTypes.h",
-      "line": 84,
+      "line": 85,
       "symbol": "",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioFile.h",
-      "line": 34,
+      "line": 86,
       "symbol": "SFBAudioFile.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioFile.h",
-      "line": 35,
+      "line": 87,
       "symbol": "SFBAudioFile.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioPlayerNode.h",
-      "line": 24,
+      "line": 25,
       "symbol": "SFBAudioPlayerNodePlaybackPosition",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioPlayerNode.h",
-      "line": 33,
+      "line": 34,
       "symbol": "SFBAudioPlayerNodePlaybackTime",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioPlayerNode.h",
-      "line": 83,
+      "line": 84,
       "symbol": "SFBAudioPlayerNode.-initWithRenderBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBAudioPlayerNode.h",
-      "line": 84,
+      "line": 85,
       "symbol": "SFBAudioPlayerNode.-initWithFormat:renderBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBDSDDecoder.h",
-      "line": 37,
+      "line": 38,
       "symbol": "SFBDSDDecoder.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBDSDDecoder.h",
-      "line": 38,
+      "line": 39,
       "symbol": "SFBDSDDecoder.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBDSDPCMDecoder.h",
-      "line": 14,
+      "line": 15,
       "symbol": "SFBDSDPCMDecoder.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBDSDPCMDecoder.h",
-      "line": 15,
+      "line": 16,
       "symbol": "SFBDSDPCMDecoder.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBDoPDecoder.h",
-      "line": 15,
+      "line": 16,
       "symbol": "SFBDoPDecoder.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBDoPDecoder.h",
-      "line": 16,
+      "line": 17,
       "symbol": "SFBDoPDecoder.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBLoopableRegionDecoder.h",
-      "line": 13,
+      "line": 14,
       "symbol": "SFBLoopableRegionDecoder.+new",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "./build/Debug/SFBAudioEngine.framework/Headers/SFBLoopableRegionDecoder.h",
-      "line": 14,
+      "line": 15,
       "symbol": "SFBLoopableRegionDecoder.-init",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
