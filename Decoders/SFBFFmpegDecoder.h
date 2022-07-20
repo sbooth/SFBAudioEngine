@@ -1,7 +1,8 @@
-/*
- * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
- * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
- */
+//
+// Copyright (c) 2013 - 2022 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/SFBAudioEngine
+// MIT license
+//
 
 #import "SFBAudioDecoder+Internal.h"
 

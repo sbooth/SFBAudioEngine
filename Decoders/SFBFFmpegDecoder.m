@@ -1,7 +1,8 @@
-/*
- * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
- * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
- */
+//
+// Copyright (c) 2013 - 2022 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/SFBAudioEngine
+// MIT license
+//
 
 @import OSLog;
 
@@ -404,7 +405,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	// Set up the source format
 	AudioStreamBasicDescription format = {0};
 
-	format.mFormatID			= 'LBAV';
+	format.mFormatID			= 'FFMP';
 	format.mSampleRate			= _processingFormat.streamDescription->mSampleRate;
 	format.mChannelsPerFrame	= _processingFormat.streamDescription->mChannelsPerFrame;
 	format.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
