@@ -7,7 +7,9 @@
 import Foundation
 
 extension AudioPlayer {
+	/// Playback position information for `AudioPlayer`
 	public typealias PlaybackPosition = AudioPlayerNode.PlaybackPosition
+	/// Playback time information for `AudioPlayer`
 	public typealias PlaybackTime = AudioPlayerNode.PlaybackTime
 
 	/// Returns the frame position in the current decoder or `nil` if the current decoder is `nil`
