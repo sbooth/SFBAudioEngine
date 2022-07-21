@@ -137,7 +137,7 @@ Encoders don't support arbitrary input formats. The processing format used by an
 
 [SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion operations. An audio converter reads PCM audio from an audio decoder in the decoder's processing format, converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an audio encoder which performs the final conversion to the desired format.
 
-The decoder's processing format and intermediate format must both be PCM but do not have to have the same sample rate, bit depth, channel count, or channel layout.
+The decoder's processing format and the intermediate format must both be PCM but do not have to have the same sample rate, bit depth, channel count, or channel layout.
 
 ## Properties and Metadata
 
