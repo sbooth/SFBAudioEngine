@@ -114,20 +114,21 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 + (NSSet *)supportedPathExtensions
 {
-	static NSMutableSet *pathExtensions = nil;
+	static NSSet *pathExtensions = nil;
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		pathExtensions = [NSMutableSet set];
+		NSMutableSet *inputFormatExtensions = [NSMutableSet set];
 		// Loop through each input format
 		void *opaque = NULL;
 		const AVInputFormat *inputFormat = NULL;
 		while((inputFormat = av_demuxer_iterate(&opaque))) {
 			if(inputFormat->extensions) {
 				NSString *extensions = [NSString stringWithUTF8String:inputFormat->extensions];
-				[pathExtensions addObjectsFromArray:[extensions componentsSeparatedByString:@","]];
+				[inputFormatExtensions addObjectsFromArray:[extensions componentsSeparatedByString:@","]];
 			}
 		}
+		pathExtensions = [inputFormatExtensions copy];
 	});
 
 	return pathExtensions;
@@ -135,20 +136,21 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 + (NSSet *)supportedMIMETypes
 {
-	static NSMutableSet *mimeTypes = nil;
+	static NSSet *mimeTypes = nil;
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		mimeTypes = [NSMutableSet set];
+		NSMutableSet *inputFormatMIMETypes = [NSMutableSet set];
 		// Loop through each input format
 		void *opaque = NULL;
 		const AVInputFormat *inputFormat = NULL;
 		while((inputFormat = av_demuxer_iterate(&opaque))) {
 			if(inputFormat->mime_type) {
 				NSString *types = [NSString stringWithUTF8String:inputFormat->mime_type];
-				[mimeTypes addObjectsFromArray:[types componentsSeparatedByString:@","]];
+				[inputFormatMIMETypes addObjectsFromArray:[types componentsSeparatedByString:@","]];
 			}
 		}
+		mimeTypes = [inputFormatMIMETypes copy];
 	});
 
 	return mimeTypes;
