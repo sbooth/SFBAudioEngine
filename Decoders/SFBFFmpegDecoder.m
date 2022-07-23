@@ -30,8 +30,6 @@
 static void SetupFFmpeg(void) __attribute__ ((constructor));
 static void SetupFFmpeg()
 {
-	// Register codecs and disable logging
-	av_register_all();
 	av_log_set_level(AV_LOG_QUIET);
 }
 
@@ -116,13 +114,15 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 + (NSSet *)supportedPathExtensions
 {
-	NSMutableSet *pathExtensions = [NSMutableSet set];
+	static NSMutableSet *pathExtensions = nil;
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
+		pathExtensions = [NSMutableSet set];
 		// Loop through each input format
-		AVInputFormat *inputFormat = NULL;
-		while((inputFormat = av_iformat_next(inputFormat))) {
+		void *opaque = NULL;
+		const AVInputFormat *inputFormat = NULL;
+		while((inputFormat = av_demuxer_iterate(&opaque))) {
 			if(inputFormat->extensions) {
 				NSString *extensions = [NSString stringWithUTF8String:inputFormat->extensions];
 				[pathExtensions addObjectsFromArray:[extensions componentsSeparatedByString:@","]];
@@ -135,13 +135,15 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 + (NSSet *)supportedMIMETypes
 {
-	NSMutableSet *mimeTypes = [NSMutableSet set];
+	static NSMutableSet *mimeTypes = nil;
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
+		mimeTypes = [NSMutableSet set];
 		// Loop through each input format
-		AVInputFormat *inputFormat = NULL;
-		while((inputFormat = av_iformat_next(inputFormat))) {
+		void *opaque = NULL;
+		const AVInputFormat *inputFormat = NULL;
+		while((inputFormat = av_demuxer_iterate(&opaque))) {
 			if(inputFormat->mime_type) {
 				NSString *types = [NSString stringWithUTF8String:inputFormat->mime_type];
 				[mimeTypes addObjectsFromArray:[types componentsSeparatedByString:@","]];
@@ -197,7 +199,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		if(error)
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -216,7 +218,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		if(error)
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -226,7 +228,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	}
 
 	// Use the best audio stream present in the file
-	AVCodec *codec = NULL;
+	const AVCodec *codec = NULL;
 	result = av_find_best_stream(_formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
 	if(result == AVERROR_STREAM_NOT_FOUND || !codec) {
 		char errbuf [ERRBUF_SIZE];
@@ -240,7 +242,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -260,7 +262,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -287,7 +289,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -296,19 +298,28 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		return NO;
 	}
 
+	AVAudioChannelCount channelCount = (AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->ch_layout.nb_channels;
+
 	AVAudioChannelLayout *channelLayout = nil;
-	if(_formatContext->streams[_streamIndex]->codecpar->channel_layout) {
+	if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
+		// nothing to do; leave channelLayout nil
+		;
+	else if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_NATIVE) {
 		AudioChannelLayout layout = {0};
 		layout.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap;
-		layout.mChannelBitmap = (AudioChannelBitmap)_formatContext->streams[_streamIndex]->codecpar->channel_layout;
+		layout.mChannelBitmap = (AudioChannelBitmap)_formatContext->streams[_streamIndex]->codecpar->ch_layout.u.mask;
 		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&layout];
 
 		// Sanity check
-		if(channelLayout.channelCount != (AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels) {
-			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between channelLayout.channelCount (%u) and codec_par->channels (%u)", channelLayout.channelCount, _formatContext->streams[_streamIndex]->codecpar->channels);
+		if(channelLayout.channelCount != channelCount) {
+			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between channelLayout.channelCount (%u) and codec_par->ch_layout.nb_channels (%u)", channelLayout.channelCount, channelCount);
 			channelLayout = nil;
 		}
 	}
+	else if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_CUSTOM)
+		os_log_error(gSFBAudioDecoderLog, "ffmpeg custom channel layouts not (yet) suported");
+	else
+		os_log_error(gSFBAudioDecoderLog, "Unsupported channel layout order %u", _formatContext->streams[_streamIndex]->codecpar->ch_layout.order);
 
 	// Generate PCM output
 	switch(_formatContext->streams[_streamIndex]->codecpar->format) {
@@ -318,7 +329,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 			format.mFormatID			= kAudioFormatLinearPCM;
 
 			format.mSampleRate			= _formatContext->streams[_streamIndex]->codecpar->sample_rate;
-			format.mChannelsPerFrame	= (UInt32)_formatContext->streams[_streamIndex]->codecpar->channels;
+			format.mChannelsPerFrame	= (UInt32)channelCount;
 
 			format.mFormatFlags			= kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
 			format.mBitsPerChannel		= 8;
@@ -335,7 +346,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 			format.mFormatID			= kAudioFormatLinearPCM;
 
 			format.mSampleRate			= _formatContext->streams[_streamIndex]->codecpar->sample_rate;
-			format.mChannelsPerFrame	= (UInt32)_formatContext->streams[_streamIndex]->codecpar->channels;
+			format.mChannelsPerFrame	= (UInt32)channelCount;
 
 			format.mFormatFlags			= kAudioFormatFlagIsPacked;
 			format.mBitsPerChannel		= 8;
@@ -351,56 +362,56 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:NO channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:NO];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:NO];
 			break;
 
 		case AV_SAMPLE_FMT_S16:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:YES channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:YES];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:YES];
 			break;
 
 		case AV_SAMPLE_FMT_S32P:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:NO channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:NO];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:NO];
 			break;
 
 		case AV_SAMPLE_FMT_S32:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:YES channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:YES];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:YES];
 			break;
 
 		case AV_SAMPLE_FMT_FLTP:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:NO channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:NO];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:NO];
 			break;
 
 		case AV_SAMPLE_FMT_FLT:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:YES channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:YES];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:YES];
 			break;
 
 		case AV_SAMPLE_FMT_DBLP:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:NO channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:NO];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:NO];
 			break;
 
 		case AV_SAMPLE_FMT_DBL:
 			if(channelLayout)
 				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate interleaved:YES channelLayout:channelLayout];
 			else
-				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:(AVAudioChannelCount)_formatContext->streams[_streamIndex]->codecpar->channels interleaved:YES];
+				_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_formatContext->streams[_streamIndex]->codecpar->sample_rate channels:channelCount interleaved:YES];
 			break;
 
 		default:
@@ -495,7 +506,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_buffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer readingFromOffset:0 frameLength:framesRemaining];
 		[_buffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;
@@ -559,12 +570,11 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 - (int)readFrame
 {
-	AVPacket packet;
-	av_init_packet(&packet);
-	packet.data = NULL;
-	packet.size = 0;
+	AVPacket *packet = av_packet_alloc();
+	if(!packet)
+		return AVERROR(ENOMEM);
 
-	int result = av_read_frame(_formatContext, &packet);
+	int result = av_read_frame(_formatContext, packet);
 
 	// EOF reached?
 	if(result == AVERROR_EOF) {
@@ -579,7 +589,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	}
 	// Send the packet with the compressed data to the decoder
 	else {
-		result = avcodec_send_packet(_codecContext, &packet);
+		result = avcodec_send_packet(_codecContext, packet);
 
 		// Decoder has been flushed
 		if(result == AVERROR_EOF) {
@@ -597,7 +607,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		}
 	}
 
-	av_packet_unref(&packet);
+	av_packet_free(&packet);
 
 	return result;
 }
