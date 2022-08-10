@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -86,8 +86,11 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
 	NSParameterAssert(offset >= 0);
-	if((NSUInteger)offset >= _data.length)
+	if((NSUInteger)offset > _data.length) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
+	}
 
 	_pos = (NSUInteger)offset;
 	return YES;
