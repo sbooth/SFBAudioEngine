@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -102,7 +102,7 @@
 {
 	NSParameterAssert(offset >= 0);
 
-	if((NSUInteger)offset >= _data.length)
+	if((NSUInteger)offset > _data.length)
 		[_data increaseLengthBy:((NSUInteger)offset - _data.length + 1)];
 
 	_pos = (NSUInteger)offset;
