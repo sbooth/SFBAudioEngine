@@ -119,6 +119,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 		return NO;
 
 	[destinationAudioFile.metadata copyMetadataFrom:sourceAudioFile.metadata];
+	[destinationAudioFile.metadata copyAttachedPicturesFrom:sourceAudioFile.metadata];
+
 	return [destinationAudioFile writeMetadataReturningError:error];
 }
 
