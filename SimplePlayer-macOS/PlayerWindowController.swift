@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2009 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2009 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -24,8 +24,7 @@ struct PlaylistItem: Identifiable {
 		if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
 			self.properties = audioFile.properties
 			self.metadata = audioFile.metadata
-		}
-		else {
+		} else {
 			self.properties = AudioProperties()
 			self.metadata = AudioMetadata()
 		}
@@ -36,8 +35,7 @@ struct PlaylistItem: Identifiable {
 		let pathExtension = url.pathExtension.lowercased()
 		if AudioDecoder.handlesPaths(withExtension: pathExtension) {
 			return try AudioDecoder(url: url)
-		}
-		else if DSDDecoder.handlesPaths(withExtension: pathExtension) {
+		} else if DSDDecoder.handlesPaths(withExtension: pathExtension) {
 			let dsdDecoder = try DSDDecoder(url: url)
 			return enableDoP ? try DoPDecoder(decoder: dsdDecoder) : try DSDPCMDecoder(decoder: dsdDecoder)
 		}
@@ -156,8 +154,7 @@ class PlayerWindowController: NSWindowController {
 	@IBAction func play(_ sender: AnyObject?) {
 		do {
 			try player.play()
-		}
-		catch let error {
+		} catch let error {
 			NSApp.presentError(error)
 		}
 	}
@@ -173,8 +170,7 @@ class PlayerWindowController: NSWindowController {
 	@IBAction func playPause(_ sender: AnyObject?) {
 		do {
 			try player.togglePlayPause()
-		}
-		catch let error {
+		} catch let error {
 			NSApp.presentError(error)
 		}
 	}
@@ -245,8 +241,7 @@ class PlayerWindowController: NSWindowController {
 			if let decoder = try item.decoder() {
 				try player.play(decoder)
 			}
-		}
-		catch let error {
+		} catch let error {
 			NSApp.presentError(error)
 		}
 	}
@@ -405,15 +400,13 @@ class PlayerWindowController: NSWindowController {
 		if let url = decoder.inputSource.url, let metadata = item(for: url)?.metadata {
 			if let picture = metadata.attachedPictures.randomElement() {
 				albumArt.image = picture.image
-			}
-			else {
+			} else {
 				albumArt.image = nil
 			}
 
 			title.stringValue = metadata.title ?? ""
 			artist.stringValue = metadata.artist ?? ""
-		}
-		else {
+		} else {
 			albumArt.image = NSImage(named: "NSApplicationIcon")
 			title.stringValue = ""
 			artist.stringValue = ""
@@ -443,8 +436,7 @@ class PlayerWindowController: NSWindowController {
 					devicePopUpButton.select(deviceMenuItem)
 				}
 			}
-		}
-		catch let error {
+		} catch let error {
 			NSApp.presentError(error)
 		}
 	}
@@ -464,8 +456,7 @@ class PlayerWindowController: NSWindowController {
 					try player.enqueue(decoder, immediate: true)
 				}
 			}
-		}
-		catch let error {
+		} catch let error {
 			NSApp.presentError(error)
 		}
 	}
@@ -501,35 +492,27 @@ extension PlayerWindowController: NSMenuItemValidation {
 	func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
 		if menuItem.action == #selector(PlayerWindowController.play(_:)) {
 			return !player.isPlaying
-		}
-		else if menuItem.action == #selector(PlayerWindowController.pause(_:)) {
+		} else if menuItem.action == #selector(PlayerWindowController.pause(_:)) {
 			return !player.isPaused
-		}
-		else if menuItem.action == #selector(PlayerWindowController.stop(_:)) {
+		} else if menuItem.action == #selector(PlayerWindowController.stop(_:)) {
 			return !player.isStopped
-		}
-		else if menuItem.action == #selector(PlayerWindowController.playPause(_:)) {
+		} else if menuItem.action == #selector(PlayerWindowController.playPause(_:)) {
 			let playbackState = player.playbackState
 			if playbackState == .playing {
 				menuItem.title = "Pause"
 				return true
-			}
-			else if playbackState == .paused {
+			} else if playbackState == .paused {
 				menuItem.title = "Resume"
 				return true
-			}
-			else {
+			} else {
 				menuItem.title = "Play"
 				return false
 			}
-		}
-		else if menuItem.action == #selector(PlayerWindowController.playNextItem(_:)) {
+		} else if menuItem.action == #selector(PlayerWindowController.playNextItem(_:)) {
 			return nextItem != nil
-		}
-		else if menuItem.action == #selector(PlayerWindowController.playPreviousItem(_:)) {
+		} else if menuItem.action == #selector(PlayerWindowController.playPreviousItem(_:)) {
 			return previousItem != nil
-		}
-		else if menuItem.action == #selector(PlayerWindowController.delete(_:)) {
+		} else if menuItem.action == #selector(PlayerWindowController.delete(_:)) {
 			return !selectedItems.isEmpty
 		}
 
@@ -561,8 +544,7 @@ extension PlayerWindowController: AudioPlayer.Delegate {
 					if let decoder = try playlist[nextIndex].decoder() {
 						try player.enqueue(decoder)
 					}
-				}
-				catch let error {
+				} catch let error {
 					DispatchQueue.main.async {
 						NSApp.presentError(error)
 					}

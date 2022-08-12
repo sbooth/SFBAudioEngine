@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -26,8 +26,7 @@ struct Track: Identifiable {
 		if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
 			self.properties = audioFile.properties
 			self.metadata = audioFile.metadata
-		}
-		else {
+		} else {
 			self.properties = AudioProperties()
 			self.metadata = AudioMetadata()
 		}
@@ -38,8 +37,7 @@ struct Track: Identifiable {
 		let pathExtension = url.pathExtension.lowercased()
 		if AudioDecoder.handlesPaths(withExtension: pathExtension) {
 			return try AudioDecoder(url: url)
-		}
-		else if DSDDecoder.handlesPaths(withExtension: pathExtension) {
+		} else if DSDDecoder.handlesPaths(withExtension: pathExtension) {
 			let dsdDecoder = try DSDDecoder(url: url)
 			return enableDoP ? try DoPDecoder(decoder: dsdDecoder) : try DSDPCMDecoder(decoder: dsdDecoder)
 		}

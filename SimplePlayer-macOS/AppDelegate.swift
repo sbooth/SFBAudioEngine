@@ -71,8 +71,7 @@ class AppDelegate: NSObject {
 				alert.messageText = "Replay Gain Analysis Complete"
 				alert.informativeText = "Check log for details."
 				alert.runModal()
-			}
-			catch let error {
+			} catch let error {
 				NSApp.presentError(error)
 			}
 		}
@@ -103,8 +102,7 @@ class AppDelegate: NSObject {
 				try AudioConverter.convert(url, to: destURL)
 				// Silently fail if metadata can't be copied
 				try? AudioFile.copyMetadata(from: url, to: destURL)
-			}
-			catch let error {
+			} catch let error {
 				try? FileManager.default.trashItem(at: destURL, resultingItemURL: nil)
 				NSApp.presentError(error)
 			}
