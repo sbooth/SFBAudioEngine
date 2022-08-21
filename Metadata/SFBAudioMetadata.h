@@ -30,16 +30,16 @@ typedef NSString * SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata
 // Basic metadata dictionary keys
 /// Title (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitle;
-/// Album title (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;
 /// Artist (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtist;
+/// Album title (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;
 /// Album artist (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist;
-/// Genre (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;
 /// Composer (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposer;
+/// Genre (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;
 /// Release date (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate;
 /// Compilation flag (\c NSNumber)
@@ -72,10 +72,10 @@ extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID;
 // Sorting dictionary keys
 /// Title sort order (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder;
-/// Album title sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;
 /// Artist sort order (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder;
+/// Album title sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;
 /// Album artist sort order (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder;
 /// Composer sort order (\c NSString)
@@ -122,26 +122,23 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The title
 @property (nonatomic, nullable) NSString *title;
 
-/// The album title
-@property (nonatomic, nullable) NSString *albumTitle;
-
 /// The artist
 @property (nonatomic, nullable) NSString *artist;
+
+/// The album title
+@property (nonatomic, nullable) NSString *albumTitle;
 
 /// The album artist
 @property (nonatomic, nullable) NSString *albumArtist;
 
-/// The genre
-@property (nonatomic, nullable) NSString *genre;
-
 /// The composer
 @property (nonatomic, nullable) NSString *composer;
 
+/// The genre
+@property (nonatomic, nullable) NSString *genre;
+
 /// The release date
 @property (nonatomic, nullable) NSString *releaseDate;
-
-/// The compilation flag
-@property (nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
 
 /// The track number
 @property (nonatomic, nullable) NSNumber *trackNumber NS_REFINED_FOR_SWIFT;
@@ -155,17 +152,20 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The disc total
 @property (nonatomic, nullable) NSNumber *discTotal NS_REFINED_FOR_SWIFT;
 
-/// The lyrics
-@property (nonatomic, nullable) NSString *lyrics;
-
-/// The Beats per minute (BPM)
-@property (nonatomic, nullable) NSNumber *bpm NS_REFINED_FOR_SWIFT;
+/// The compilation flag
+@property (nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
 
 /// The rating
 @property (nonatomic, nullable) NSNumber *rating NS_REFINED_FOR_SWIFT;
 
+/// The Beats per minute (BPM)
+@property (nonatomic, nullable) NSNumber *bpm NS_REFINED_FOR_SWIFT;
+
 /// The comment
 @property (nonatomic, nullable) NSString *comment;
+
+/// The lyrics
+@property (nonatomic, nullable) NSString *lyrics;
 
 /// The Media Catalog Number (MCN)
 @property (nonatomic, nullable) NSString *mcn;
@@ -184,11 +184,11 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The title sort order
 @property (nonatomic, nullable) NSString *titleSortOrder;
 
-/// The album title sort order
-@property (nonatomic, nullable) NSString *albumTitleSortOrder;
-
 /// The artist sort order
 @property (nonatomic, nullable) NSString *artistSortOrder;
+
+/// The album title sort order
+@property (nonatomic, nullable) NSString *albumTitleSortOrder;
 
 /// The album artist sort order
 @property (nonatomic, nullable) NSString *albumArtistSortOrder;

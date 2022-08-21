@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -7,16 +7,6 @@
 import Foundation
 
 extension AudioMetadata {
-	/// The compilation flag
-	public var compilation: Bool? {
-		get {
-			__compilation?.boolValue
-		}
-		set {
-			__compilation = newValue != nil ? newValue! as NSNumber : nil
-		}
-	}
-
 	/// The track number
 	public var trackNumber: Int? {
 		get {
@@ -57,13 +47,13 @@ extension AudioMetadata {
 		}
 	}
 
-	/// The Beats per minute (BPM)
-	public var bpm: Int? {
+	/// The compilation flag
+	public var isCompilation: Bool? {
 		get {
-			__bpm?.intValue
+			__compilation?.boolValue
 		}
 		set {
-			__bpm = newValue != nil ? newValue! as NSNumber : nil
+			__compilation = newValue != nil ? newValue! as NSNumber : nil
 		}
 	}
 
@@ -74,6 +64,16 @@ extension AudioMetadata {
 		}
 		set {
 			__rating = newValue != nil ? newValue! as NSNumber : nil
+		}
+	}
+
+	/// The beats per minute (BPM)
+	public var bpm: Int? {
+		get {
+			__bpm?.intValue
+		}
+		set {
+			__bpm = newValue != nil ? newValue! as NSNumber : nil
 		}
 	}
 
