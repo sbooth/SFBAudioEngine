@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 		if(properties->bitsPerSample())
-			propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(properties->bitsPerSample());
+			propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
 		switch(properties->codec()) {
 			case TagLib::MP4::AudioProperties::AAC:
 				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"AAC";

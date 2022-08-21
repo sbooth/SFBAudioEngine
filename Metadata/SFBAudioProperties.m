@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,7 +10,7 @@
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName			= @"Format Name";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength		= @"Frame Length";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount		= @"Channel Count";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel		= @"Bits Per Channel";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth			= @"Bit Depth";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate			= @"Sample Rate";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration			= @"Duration";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
@@ -38,7 +38,7 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 		dictionary[SFBAudioPropertiesKeyFormatName] 		= dictionaryRepresentation[SFBAudioPropertiesKeyFormatName];
 		dictionary[SFBAudioPropertiesKeyFrameLength] 		= dictionaryRepresentation[SFBAudioPropertiesKeyFrameLength];
 		dictionary[SFBAudioPropertiesKeyChannelCount] 		= dictionaryRepresentation[SFBAudioPropertiesKeyChannelCount];
-		dictionary[SFBAudioPropertiesKeyBitsPerChannel] 	= dictionaryRepresentation[SFBAudioPropertiesKeyBitsPerChannel];
+		dictionary[SFBAudioPropertiesKeyBitDepth] 			= dictionaryRepresentation[SFBAudioPropertiesKeyBitDepth];
 		dictionary[SFBAudioPropertiesKeySampleRate] 		= dictionaryRepresentation[SFBAudioPropertiesKeySampleRate];
 		dictionary[SFBAudioPropertiesKeyDuration] 			= dictionaryRepresentation[SFBAudioPropertiesKeyDuration];
 		dictionary[SFBAudioPropertiesKeyBitrate] 			= dictionaryRepresentation[SFBAudioPropertiesKeyBitrate];
@@ -68,9 +68,9 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 	return [_properties objectForKey:SFBAudioPropertiesKeyChannelCount];
 }
 
-- (NSNumber *)bitsPerChannel
+- (NSNumber *)bitDepth
 {
-	return [_properties objectForKey:SFBAudioPropertiesKeyBitsPerChannel];
+	return [_properties objectForKey:SFBAudioPropertiesKeyBitDepth];
 }
 
 - (NSNumber *)sampleRate

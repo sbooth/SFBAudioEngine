@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,8 +18,8 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength;
 /// The number of channels (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount;
-/// The number of bits per channel (\c NSNumber
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel;
+/// The audio bit depth (\c NSNumber
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth;
 /// The sample rate (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate;
 /// The duration (\c NSNumber)
@@ -46,8 +46,8 @@ NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopyi
 /// The number of channels
 @property (nonatomic, nullable, readonly) NSNumber *channelCount NS_REFINED_FOR_SWIFT;
 
-/// The number of bits per channel
-@property (nonatomic, nullable, readonly) NSNumber *bitsPerChannel NS_REFINED_FOR_SWIFT;
+/// The audio bit depth
+@property (nonatomic, nullable, readonly) NSNumber *bitDepth NS_REFINED_FOR_SWIFT;
 
 /// The sample rate in Hz
 @property (nonatomic, nullable, readonly) NSNumber *sampleRate NS_REFINED_FOR_SWIFT;
