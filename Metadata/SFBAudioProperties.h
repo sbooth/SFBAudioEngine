@@ -20,11 +20,11 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength;
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount;
 /// The audio bit depth (\c NSNumber
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth;
-/// The sample rate (\c NSNumber)
+/// The sample rate in Hz (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate;
-/// The duration (\c NSNumber)
+/// The duration in seconds (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration;
-/// The audio bitrate (\c NSNumber)
+/// The audio bitrate in KiB/sec (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;
 
 /// Class providing information on basic audio properties
