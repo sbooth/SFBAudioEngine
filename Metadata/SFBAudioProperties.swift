@@ -17,8 +17,8 @@ extension AudioProperties {
 	}
 
 	/// The audio bit depth
-	public var bitsDepth: Int? {
-		__bitsPerChannel?.intValue
+	public var bitDepth: Int? {
+		__bitDepth?.intValue
 	}
 
 	/// The sample rate in Hz
