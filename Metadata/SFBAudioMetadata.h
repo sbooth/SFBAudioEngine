@@ -140,6 +140,9 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The release date
 @property (nonatomic, nullable) NSString *releaseDate;
 
+/// The compilation flag
+@property (nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
+
 /// The track number
 @property (nonatomic, nullable) NSNumber *trackNumber NS_REFINED_FOR_SWIFT;
 
@@ -152,20 +155,17 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The disc total
 @property (nonatomic, nullable) NSNumber *discTotal NS_REFINED_FOR_SWIFT;
 
-/// The compilation flag
-@property (nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
-
-/// The rating
-@property (nonatomic, nullable) NSNumber *rating NS_REFINED_FOR_SWIFT;
+/// The lyrics
+@property (nonatomic, nullable) NSString *lyrics;
 
 /// The Beats per minute (BPM)
 @property (nonatomic, nullable) NSNumber *bpm NS_REFINED_FOR_SWIFT;
 
+/// The rating
+@property (nonatomic, nullable) NSNumber *rating NS_REFINED_FOR_SWIFT;
+
 /// The comment
 @property (nonatomic, nullable) NSString *comment;
-
-/// The lyrics
-@property (nonatomic, nullable) NSString *lyrics;
 
 /// The Media Catalog Number (MCN)
 @property (nonatomic, nullable) NSString *mcn;
