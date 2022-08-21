@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -30,16 +30,16 @@ typedef NSString * SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata
 // Basic metadata dictionary keys
 /// Title (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitle;
-/// Album title (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;
 /// Artist (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtist;
+/// Album title (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;
 /// Album artist (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist;
-/// Genre (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;
 /// Composer (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposer;
+/// Genre (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;
 /// Release date (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate;
 /// Compilation flag (\c NSNumber)
@@ -72,10 +72,10 @@ extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID;
 // Sorting dictionary keys
 /// Title sort order (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder;
-/// Album title sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;
 /// Artist sort order (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder;
+/// Album title sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;
 /// Album artist sort order (\c NSString)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder;
 /// Composer sort order (\c NSString)
@@ -122,20 +122,20 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The title
 @property (nonatomic, nullable) NSString *title;
 
-/// The album title
-@property (nonatomic, nullable) NSString *albumTitle;
-
 /// The artist
 @property (nonatomic, nullable) NSString *artist;
+
+/// The album title
+@property (nonatomic, nullable) NSString *albumTitle;
 
 /// The album artist
 @property (nonatomic, nullable) NSString *albumArtist;
 
-/// The genre
-@property (nonatomic, nullable) NSString *genre;
-
 /// The composer
 @property (nonatomic, nullable) NSString *composer;
+
+/// The genre
+@property (nonatomic, nullable) NSString *genre;
 
 /// The release date
 @property (nonatomic, nullable) NSString *releaseDate;
@@ -184,11 +184,11 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// The title sort order
 @property (nonatomic, nullable) NSString *titleSortOrder;
 
-/// The album title sort order
-@property (nonatomic, nullable) NSString *albumTitleSortOrder;
-
 /// The artist sort order
 @property (nonatomic, nullable) NSString *artistSortOrder;
+
+/// The album title sort order
+@property (nonatomic, nullable) NSString *albumTitleSortOrder;
 
 /// The album artist sort order
 @property (nonatomic, nullable) NSString *albumArtistSortOrder;

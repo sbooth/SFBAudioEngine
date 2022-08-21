@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,7 +8,7 @@ import Foundation
 
 extension AudioMetadata {
 	/// The compilation flag
-	public var compilation: Bool? {
+	public var isCompilation: Bool? {
 		get {
 			__compilation?.boolValue
 		}
@@ -57,7 +57,7 @@ extension AudioMetadata {
 		}
 	}
 
-	/// The Beats per minute (BPM)
+	/// The beats per minute (BPM)
 	public var bpm: Int? {
 		get {
 			__bpm?.intValue

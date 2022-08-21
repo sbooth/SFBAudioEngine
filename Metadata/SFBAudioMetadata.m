@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,11 +8,11 @@
 
 // Key names for the metadata dictionary
 SFBAudioMetadataKey const SFBAudioMetadataKeyTitle							= @"Title";
-SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle						= @"Album Title";
 SFBAudioMetadataKey const SFBAudioMetadataKeyArtist							= @"Artist";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle						= @"Album Title";
 SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist					= @"Album Artist";
-SFBAudioMetadataKey const SFBAudioMetadataKeyGenre							= @"Genre";
 SFBAudioMetadataKey const SFBAudioMetadataKeyComposer						= @"Composer";
+SFBAudioMetadataKey const SFBAudioMetadataKeyGenre							= @"Genre";
 SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate					= @"Date";
 SFBAudioMetadataKey const SFBAudioMetadataKeyCompilation					= @"Compilation";
 SFBAudioMetadataKey const SFBAudioMetadataKeyTrackNumber					= @"Track Number";
@@ -29,8 +29,8 @@ SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzReleaseID			= @"MusicBra
 SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID			= @"MusicBrainz Recording ID";
 
 SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder					= @"Title Sort Order";
-SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder			= @"Album Title Sort Order";
 SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder				= @"Artist Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder			= @"Album Title Sort Order";
 SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder			= @"Album Artist Sort Order";
 SFBAudioMetadataKey const SFBAudioMetadataKeyComposerSortOrder				= @"Composer Sort Order";
 SFBAudioMetadataKey const SFBAudioMetadataKeyGenreSortOrder					= @"Genre Sort Order";
@@ -66,11 +66,11 @@ static id _sharedKeySet;
 	dispatch_once(&onceToken, ^{
 		_sharedKeySet = [NSDictionary sharedKeySetForKeys:@[
 			SFBAudioMetadataKeyTitle,
-			SFBAudioMetadataKeyAlbumTitle,
 			SFBAudioMetadataKeyArtist,
+			SFBAudioMetadataKeyAlbumTitle,
 			SFBAudioMetadataKeyAlbumArtist,
-			SFBAudioMetadataKeyGenre,
 			SFBAudioMetadataKeyComposer,
+			SFBAudioMetadataKeyGenre,
 			SFBAudioMetadataKeyReleaseDate,
 			SFBAudioMetadataKeyCompilation,
 			SFBAudioMetadataKeyTrackNumber,
@@ -146,16 +146,6 @@ static id _sharedKeySet;
 	[_metadata setValue:title forKey:SFBAudioMetadataKeyTitle];
 }
 
-- (NSString *)albumTitle
-{
-	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumTitle];
-}
-
-- (void)setAlbumTitle:(NSString *)albumTitle
-{
-	[_metadata setValue:albumTitle forKey:SFBAudioMetadataKeyAlbumTitle];
-}
-
 - (NSString *)artist
 {
 	return [_metadata objectForKey:SFBAudioMetadataKeyArtist];
@@ -164,6 +154,16 @@ static id _sharedKeySet;
 - (void)setArtist:(NSString *)artist
 {
 	[_metadata setValue:artist forKey:SFBAudioMetadataKeyArtist];
+}
+
+- (NSString *)albumTitle
+{
+	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumTitle];
+}
+
+- (void)setAlbumTitle:(NSString *)albumTitle
+{
+	[_metadata setValue:albumTitle forKey:SFBAudioMetadataKeyAlbumTitle];
 }
 
 - (NSString *)albumArtist
@@ -176,16 +176,6 @@ static id _sharedKeySet;
 	[_metadata setValue:albumArtist forKey:SFBAudioMetadataKeyAlbumArtist];
 }
 
-- (NSString *)genre
-{
-	return [_metadata objectForKey:SFBAudioMetadataKeyGenre];
-}
-
-- (void)setGenre:(NSString *)genre
-{
-	[_metadata setValue:genre forKey:SFBAudioMetadataKeyGenre];
-}
-
 - (NSString *)composer
 {
 	return [_metadata objectForKey:SFBAudioMetadataKeyComposer];
@@ -194,6 +184,16 @@ static id _sharedKeySet;
 - (void)setComposer:(NSString *)composer
 {
 	[_metadata setValue:composer forKey:SFBAudioMetadataKeyComposer];
+}
+
+- (NSString *)genre
+{
+	return [_metadata objectForKey:SFBAudioMetadataKeyGenre];
+}
+
+- (void)setGenre:(NSString *)genre
+{
+	[_metadata setValue:genre forKey:SFBAudioMetadataKeyGenre];
 }
 
 - (NSString *)releaseDate
@@ -342,19 +342,10 @@ static id _sharedKeySet;
 {
 	return [_metadata objectForKey:SFBAudioMetadataKeyTitleSortOrder];
 }
+
 - (void)setTitleSortOrder:(NSString *)titleSortOrder
 {
 	[_metadata setValue:titleSortOrder forKey:SFBAudioMetadataKeyTitleSortOrder];
-}
-
-- (NSString *)albumTitleSortOrder
-{
-	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
-}
-
-- (void)setAlbumTitleSortOrder:(NSString *)albumTitleSortOrder
-{
-	[_metadata setValue:albumTitleSortOrder forKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
 }
 
 - (NSString *)artistSortOrder
@@ -365,6 +356,16 @@ static id _sharedKeySet;
 - (void)setArtistSortOrder:(NSString *)artistSortOrder
 {
 	[_metadata setValue:artistSortOrder forKey:SFBAudioMetadataKeyArtistSortOrder];
+}
+
+- (NSString *)albumTitleSortOrder
+{
+	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
+}
+
+- (void)setAlbumTitleSortOrder:(NSString *)albumTitleSortOrder
+{
+	[_metadata setValue:albumTitleSortOrder forKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
 }
 
 - (NSString *)albumArtistSortOrder
@@ -479,11 +480,11 @@ static id _sharedKeySet;
 {
 	if(kind & SFBAudioMetadataKindBasic) {
 		self.title = metadata.title;
-		self.albumTitle = metadata.albumTitle;
 		self.artist = metadata.artist;
+		self.albumTitle = metadata.albumTitle;
 		self.albumArtist = metadata.albumArtist;
-		self.genre = metadata.genre;
 		self.composer = metadata.composer;
+		self.genre = metadata.genre;
 		self.releaseDate = metadata.releaseDate;
 		self.compilation = metadata.compilation;
 		self.trackNumber = metadata.trackNumber;
@@ -502,8 +503,8 @@ static id _sharedKeySet;
 
 	if(kind & SFBAudioMetadataKindSorting) {
 		self.titleSortOrder = metadata.titleSortOrder;
-		self.albumTitleSortOrder = metadata.albumTitleSortOrder;
 		self.artistSortOrder = metadata.artistSortOrder;
+		self.albumTitleSortOrder = metadata.albumTitleSortOrder;
 		self.albumArtistSortOrder = metadata.albumArtistSortOrder;
 		self.composerSortOrder = metadata.composerSortOrder;
 		self.genreSortOrder = metadata.genreSortOrder;
@@ -533,11 +534,11 @@ static id _sharedKeySet;
 {
 	if(kind & SFBAudioMetadataKindBasic) {
 		self.title = nil;
-		self.albumTitle = nil;
 		self.artist = nil;
+		self.albumTitle = nil;
 		self.albumArtist = nil;
-		self.genre = nil;
 		self.composer = nil;
+		self.genre = nil;
 		self.releaseDate = nil;
 		self.compilation = nil;
 		self.trackNumber = nil;
@@ -556,8 +557,8 @@ static id _sharedKeySet;
 
 	if(kind & SFBAudioMetadataKindSorting) {
 		self.titleSortOrder = nil;
-		self.albumTitleSortOrder = nil;
 		self.artistSortOrder = nil;
+		self.albumTitleSortOrder = nil;
 		self.albumArtistSortOrder = nil;
 		self.composerSortOrder = nil;
 		self.genreSortOrder = nil;
@@ -647,11 +648,11 @@ static id _sharedKeySet;
 - (void)setFromDictionaryRepresentation:(NSDictionary *)dictionary
 {
 	self.title = dictionary[SFBAudioMetadataKeyTitle];
-	self.albumTitle = dictionary[SFBAudioMetadataKeyAlbumTitle];
 	self.artist = dictionary[SFBAudioMetadataKeyArtist];
+	self.albumTitle = dictionary[SFBAudioMetadataKeyAlbumTitle];
 	self.albumArtist = dictionary[SFBAudioMetadataKeyAlbumArtist];
-	self.genre = dictionary[SFBAudioMetadataKeyGenre];
 	self.composer = dictionary[SFBAudioMetadataKeyComposer];
+	self.genre = dictionary[SFBAudioMetadataKeyGenre];
 	self.releaseDate = dictionary[SFBAudioMetadataKeyReleaseDate];
 	self.compilation = dictionary[SFBAudioMetadataKeyCompilation];
 	self.trackNumber = dictionary[SFBAudioMetadataKeyTrackNumber];
@@ -668,8 +669,8 @@ static id _sharedKeySet;
 	self.musicBrainzRecordingID = dictionary[SFBAudioMetadataKeyMusicBrainzRecordingID];
 
 	self.titleSortOrder = dictionary[SFBAudioMetadataKeyTitleSortOrder];
-	self.albumTitleSortOrder = dictionary[SFBAudioMetadataKeyAlbumTitleSortOrder];
 	self.artistSortOrder = dictionary[SFBAudioMetadataKeyArtistSortOrder];
+	self.albumTitleSortOrder = dictionary[SFBAudioMetadataKeyAlbumTitleSortOrder];
 	self.albumArtistSortOrder = dictionary[SFBAudioMetadataKeyAlbumArtistSortOrder];
 	self.composerSortOrder = dictionary[SFBAudioMetadataKeyComposerSortOrder];
 	self.genreSortOrder = dictionary[SFBAudioMetadataKeyGenreSortOrder];
