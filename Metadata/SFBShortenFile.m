@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -52,7 +52,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 	AVAudioFormat *format = decoder.processingFormat;
 	[propertiesDictionary setObject:@(format.sampleRate) forKey:SFBAudioPropertiesKeySampleRate];
 	[propertiesDictionary setObject:@(format.channelCount) forKey:SFBAudioPropertiesKeyChannelCount];
-	[propertiesDictionary setObject:@(format.streamDescription->mBitsPerChannel) forKey:SFBAudioPropertiesKeyBitsPerChannel];
+	[propertiesDictionary setObject:@(format.streamDescription->mBitsPerChannel) forKey:SFBAudioPropertiesKeyBitDepth];
 	[propertiesDictionary setObject:@(decoder.frameLength) forKey:SFBAudioPropertiesKeyFrameLength];
 	[propertiesDictionary setObject:@(decoder.frameLength / format.sampleRate) forKey:SFBAudioPropertiesKeyDuration];
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -16,8 +16,8 @@ extension AudioProperties {
 		__channelCount?.uint32Value
 	}
 
-	/// The number of bits per channel
-	public var bitsPerChannel: Int? {
+	/// The audio bit depth
+	public var bitsDepth: Int? {
 		__bitsPerChannel?.intValue
 	}
 
