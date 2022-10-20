@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -79,7 +79,13 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// @note \c format must be standard
 /// @param format The format supplied by the render block
 /// @return An initialized \c SFBAudioPlayerNode object or \c nil if memory or resource allocation failed
-- (instancetype)initWithFormat:(AVAudioFormat *)format NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithFormat:(AVAudioFormat *)format;
+/// Returns an initialized \c SFBAudioPlayerNode object
+/// @note \c format must be standard
+/// @param format The format supplied by the render block
+/// @param ringBufferSize The desired minimum ring buffer size, in frames.
+/// @return An initialized \c SFBAudioPlayerNode object or \c nil if memory or resource allocation failed
+- (instancetype)initWithFormat:(AVAudioFormat *)format ringBufferSize:(uint32_t)ringBufferSize NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithRenderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;
 - (instancetype)initWithFormat:(AVAudioFormat *)format renderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;

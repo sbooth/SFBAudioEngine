@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -365,6 +365,11 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 
 - (instancetype)initWithFormat:(AVAudioFormat *)format
 {
+	return [self initWithFormat:format ringBufferSize:kRingBufferFrameCapacity];
+}
+
+- (instancetype)initWithFormat:(AVAudioFormat *)format ringBufferSize:(uint32_t)ringBufferSize
+{
 	NSParameterAssert(format != nil);
 	NSParameterAssert(format.isStandard);
 
@@ -520,7 +525,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 
 		// Allocate the audio ring buffer and the rendering events ring buffer
 		_renderingFormat = format;
-		if(!_audioRingBuffer.Allocate(*(_renderingFormat.streamDescription), kRingBufferFrameCapacity)) {
+		if(!_audioRingBuffer.Allocate(*(_renderingFormat.streamDescription), ringBufferSize)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
 			return nil;
 		}
