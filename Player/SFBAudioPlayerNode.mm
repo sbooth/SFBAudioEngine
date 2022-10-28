@@ -594,7 +594,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 							}
 						}
 						else
-							os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
+							os_log_error(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted");
 						break;
 
 					case eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete:
@@ -635,7 +635,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 							dispatch_source_merge_data(self->_collector, 1);
 						}
 						else
-							os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
+							os_log_error(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete");
 						break;
 
 					case eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio:
@@ -660,7 +660,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 							}
 						}
 						else
-							os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
+							os_log_error(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio");
 						break;
 				}
 			}
