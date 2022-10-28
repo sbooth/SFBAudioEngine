@@ -326,7 +326,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 	/// Queue used for sending delegate messages
 	dispatch_queue_t				_notificationQueue;
 
-	/// DIspatch source processing render events from \c _renderEventsRingBuffer
+	/// Dispatch source processing render events from \c _renderEventsRingBuffer
 	dispatch_source_t				_renderEventsProcessor;
 
 	/// Dispatch source deleting deocder state data with \c eMarkedForRemovalFlag
