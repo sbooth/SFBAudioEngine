@@ -17,13 +17,18 @@ extension AudioHardwareIOProcStreamUsage {
 }
 
 /// A thin wrapper around a variable-length `AudioHardwareIOProcStreamUsage` structure
-public struct AudioHardwareIOProcStreamUsageWrapper {
+public class AudioHardwareIOProcStreamUsageWrapper {
 	/// The underlying memory
 	let ptr: UnsafePointer<UInt8>
 
-	/// Creates a new `AudioHardwareIOProcStreamUsage` instance wrapping `mem`
+	/// Creates a new `AudioHardwareIOProcStreamUsage` instance
+	/// - note: The returned object assumes ownership of `mem`
 	init(_ mem: UnsafePointer<UInt8>) {
 		ptr = mem
+	}
+
+	deinit {
+		ptr.deallocate()
 	}
 
 	/// Returns the stream usage's `mIOProc`

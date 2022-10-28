@@ -339,10 +339,12 @@ extension AudioDevice {
 		let property = PropertyAddress(PropertySelector(kAudioDevicePropertyStreamConfiguration), scope: scope)
 		let dataSize = try audioObjectPropertySize(property, from: objectID)
 		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
-		defer {
+		do {
+			try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+		} catch let error {
 			mem.deallocate()
+			throw error
 		}
-		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
 		return AudioBufferListWrapper(mem)
 	}
 
@@ -353,11 +355,13 @@ extension AudioDevice {
 		let property = PropertyAddress(PropertySelector(kAudioDevicePropertyIOProcStreamUsage), scope: scope)
 		let dataSize = try audioObjectPropertySize(property, from: objectID)
 		let mem = UnsafeMutablePointer<UInt8>.allocate(capacity: dataSize)
-		defer {
-			mem.deallocate()
-		}
 		UnsafeMutableRawPointer(mem).assumingMemoryBound(to: AudioHardwareIOProcStreamUsage.self).pointee.mIOProc = ioProc
-		try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+		do {
+			try readAudioObjectProperty(property, from: objectID, into: mem, size: dataSize)
+		} catch let error {
+			mem.deallocate()
+			throw error
+		}
 		return AudioHardwareIOProcStreamUsageWrapper(mem)
 	}
 	/// Sets IOProc stream usage
