@@ -542,9 +542,9 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 		}
 #endif
 		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-		_notificationQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", attr);
+		_notificationQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
 		if(!_notificationQueue) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create_with_target failed");
 			return nil;
 		}
 
