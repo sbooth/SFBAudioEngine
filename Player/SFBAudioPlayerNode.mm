@@ -546,7 +546,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 			return nil;
 		}
 
-		// Set up notification support
+		// Set up render events processing for delegate notifications
 		_renderEventsProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
 		if(!_renderEventsProcessor) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
