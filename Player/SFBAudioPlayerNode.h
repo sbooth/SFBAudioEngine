@@ -37,23 +37,25 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
 /// An \c AVAudioSourceNode supporting gapless playback for PCM formats
 ///
-/// The output format of \c SFBAudioPlayerNode is specified at object initialization and cannot be changed. The output format must be
-/// the standard format, deinterleaved native-endian 32-bit floating point PCM, at any sample rate with any number of channels.
+/// The output format of \c SFBAudioPlayerNode is specified at object initialization and cannot be changed. The output
+/// format must be the standard format (deinterleaved native-endian 32-bit floating point PCM) at any sample rate with
+/// any number of channels.
 ///
-/// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding (decoders) and supports audio at the same sample rate
-/// and with the same number of channels as the output format. \c SFBAudioPlayerNode supports seeking when supported by the decoder.
+/// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding (decoders) and supports audio at the
+/// same sample rate and with the same number of channels as the output format. \c SFBAudioPlayerNode supports seeking
+/// when supported by the decoder.
 ///
-/// \c SFBAudioPlayerNode maintains a current decoder and a queue of pending decoders. The current decoder is the decoder
-/// that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are automatically dequeued and become current when
-/// the final frame of the current decoder is pushed in the render block.
+/// \c SFBAudioPlayerNode maintains a current decoder and a queue of pending decoders. The current decoder is the
+/// decoder that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are
+/// automatically dequeued and become current when the final frame of the current decoder is pushed in the render block.
 ///
-/// \c SFBAudioPlayerNode decodes audio in a high priority (non-realtime) thread into a ring buffer and renders on demand.
-/// Rendering occurs in a realtime thread when the render block is called; the render block always supplies audio.
-/// When playback is paused or insufficient audio is available the render block outputs silence.
+/// \c SFBAudioPlayerNode decodes audio in a high-priority non-realtime thread into a ring buffer and renders on
+/// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
+/// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
-/// Since decoding and rendering are distinct operations performed in separate threads, a GCD timer on the background queue is
-/// used for garbage collection. This is necessary because state data created in the decoding thread needs to live until
-/// rendering is complete, which cannot occur until after decoding is complete.
+/// Since decoding and rendering are distinct operations performed in separate threads, a GCD timer on the background
+/// queue is used for garbage collection. This is necessary because state data created in the decoding thread needs to
+/// live until rendering is complete, which cannot occur until after decoding is complete.
 ///
 /// \c SFBAudioPlayerNode supports delegate-based callbacks for the following events:
 ///
