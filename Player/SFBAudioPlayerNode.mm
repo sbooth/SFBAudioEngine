@@ -329,7 +329,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 	/// Dispatch source processing render events from \c _renderEventsRingBuffer
 	dispatch_source_t				_renderEventsProcessor;
 
-	/// Dispatch source deleting deocder state data with \c eMarkedForRemovalFlag
+	/// Dispatch source deleting decoder state data with \c eMarkedForRemovalFlag
 	dispatch_source_t				_collector;
 
 	// Shared state accessed from multiple threads/queues
