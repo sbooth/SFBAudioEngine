@@ -8,13 +8,18 @@ import Foundation
 import CoreAudio
 
 /// A thin wrapper around a variable-length `AudioBufferList` structure
-public struct AudioBufferListWrapper {
+public class AudioBufferListWrapper {
 	/// The underlying memory
 	let ptr: UnsafePointer<UInt8>
 
-	/// Creates a new `AudioBufferListWrapper` instance wrapping `mem`
+	/// Creates a new `AudioBufferListWrapper` instance
+	/// - note: The returned object assumes ownership of `mem`
 	init(_ mem: UnsafePointer<UInt8>) {
 		ptr = mem
+	}
+
+	deinit {
+		ptr.deallocate()
 	}
 
 	/// Returns the buffer list's `mNumberBuffers`
