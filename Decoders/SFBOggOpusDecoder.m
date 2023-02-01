@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -28,7 +28,7 @@ static int read_callback(void *stream, unsigned char *ptr, int nbytes)
 	return (int)bytesRead;
 }
 
-static 	int seek_callback(void *stream, opus_int64 offset, int whence)
+static int seek_callback(void *stream, opus_int64 offset, int whence)
 {
 	NSCParameterAssert(stream != NULL);
 
@@ -57,7 +57,7 @@ static 	int seek_callback(void *stream, opus_int64 offset, int whence)
 	return ![decoder->_inputSource seekToOffset:offset error:nil];
 }
 
-static 	opus_int64 tell_callback(void *stream)
+static opus_int64 tell_callback(void *stream)
 {
 	NSCParameterAssert(stream != NULL);
 
