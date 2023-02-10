@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -399,10 +399,8 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	if(FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR)
 		result = FLAC__stream_decoder_flush(_flac.get());
 
-	if(result) {
+	if(result)
 		_framePosition = frame;
-		_frameBuffer.frameLength = 0;
-	}
 
 	return result != 0;
 }
