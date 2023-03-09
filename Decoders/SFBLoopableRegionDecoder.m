@@ -54,7 +54,7 @@
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource error:error];
 	if(!decoder || !decoder.supportsSeeking)
 		return nil;
-	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength error:error];
+	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength repeatCount:repeatCount error:error];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
@@ -180,11 +180,13 @@
 		framesRemaining -= _buffer.frameLength;
 
 		// If this pass is finished, seek to the beginning of the region in preparation for the next read
-		if(_repeatCount && _frameLength == (_framesDecoded / _frameLength)) {
-			// Only seek to the beginning of the region if more passes remain
-			if((_framesDecoded / _frameLength) < (_repeatCount + 1)) {
-				if(![_decoder seekToFrame:_framePosition error:error])
-					return NO;
+		if( _repeatCount ) {
+			if ( _framesDecoded > 0 && _framesDecoded % _frameLength == 0 ) {
+				// Only seek to the beginning of the region if more passes remain
+				if((_framesDecoded / _frameLength) < _repeatCount + 1 ) {
+					if(![_decoder seekToFrame:_framePosition error:error])
+						return NO;
+				}
 			}
 		}
 	}
