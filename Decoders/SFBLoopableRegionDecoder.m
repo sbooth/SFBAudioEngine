@@ -180,13 +180,11 @@
 		framesRemaining -= _buffer.frameLength;
 
 		// If this pass is finished, seek to the beginning of the region in preparation for the next read
-		if( _repeatCount ) {
-			if ( _framesDecoded > 0 && _framesDecoded % _frameLength == 0 ) {
-				// Only seek to the beginning of the region if more passes remain
-				if((_framesDecoded / _frameLength) < _repeatCount + 1 ) {
-					if(![_decoder seekToFrame:_framePosition error:error])
-						return NO;
-				}
+		if(_repeatCount && _frameLength == (_framesDecoded / _frameLength)) {
+			// Only seek to the beginning of the region if more passes remain
+			if((_framesDecoded / _frameLength) < (_repeatCount + 1)) {
+				if(![_decoder seekToFrame:_framePosition error:error])
+					return NO;
 			}
 		}
 	}
