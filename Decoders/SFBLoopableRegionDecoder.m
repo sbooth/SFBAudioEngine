@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -54,7 +54,7 @@
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource error:error];
 	if(!decoder || !decoder.supportsSeeking)
 		return nil;
-	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength error:error];
+	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength repeatCount:repeatCount error:error];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
