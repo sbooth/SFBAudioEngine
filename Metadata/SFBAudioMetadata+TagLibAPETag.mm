@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -188,6 +188,7 @@ void SFB::Audio::SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::
 	SetAPETagBoolean(tag, "COMPILATION", metadata.compilation);
 	SetAPETagNumber(tag, "DISCNUMBER", metadata.discNumber);
 	SetAPETagNumber(tag, "DISCTOTAL", metadata.discTotal);
+	SetAPETag(tag, "LYRICS", metadata.lyrics);
 	SetAPETagNumber(tag, "BPM", metadata.bpm);
 	SetAPETagNumber(tag, "RATING", metadata.rating);
 	SetAPETag(tag, "ISRC", metadata.isrc);
