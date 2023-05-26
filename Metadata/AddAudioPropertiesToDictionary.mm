@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,8 +12,8 @@ void SFB::Audio::AddAudioPropertiesToDictionary(const TagLib::AudioProperties *p
 	NSCParameterAssert(properties != nil);
 	NSCParameterAssert(dictionary != nil);
 
-	if(properties->length())
-		dictionary[SFBAudioPropertiesKeyDuration] = @(properties->length());
+	if(properties->lengthInMilliseconds())
+		dictionary[SFBAudioPropertiesKeyDuration] = @(properties->lengthInMilliseconds() / 1000.0);
 
 	if(properties->channels())
 		dictionary[SFBAudioPropertiesKeyChannelCount] = @(properties->channels());
