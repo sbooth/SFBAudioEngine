@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,7 +18,7 @@ NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecod
 os_log_t gSFBDSDDecoderLog = NULL;
 
 static void SFBCreateDSDDecoderLog(void) __attribute__ ((constructor));
-static void SFBCreateDSDDecoderLog()
+static void SFBCreateDSDDecoderLog(void)
 {
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{

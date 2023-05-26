@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -19,7 +19,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Dec
 // ========================================
 // Initialization
 static void Setupmpg123(void) __attribute__ ((constructor));
-static void Setupmpg123()
+static void Setupmpg123(void)
 {
 	// What happens if this fails?
 	int result = mpg123_init();
@@ -28,7 +28,7 @@ static void Setupmpg123()
 }
 
 static void Teardownmpg123(void) __attribute__ ((destructor));
-static void Teardownmpg123()
+static void Teardownmpg123(void)
 {
 	mpg123_exit();
 }
