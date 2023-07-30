@@ -276,30 +276,41 @@ extension AudioDevice {
 
 	/// Returns `true` if the device is hogged and the current process is the owner
 	public func isHogOwner() throws -> Bool {
-		return try hogMode() != getpid()
+		return try hogMode() == getpid()
 	}
 
 	/// Takes hog mode
 	public func startHogging() throws {
-		os_log(.info, log: audioObjectLog, "Taking hog mode for device 0x%x", objectID)
-
 		let hogpid = try hogMode()
-		if hogpid != -1 {
-			os_log(.error, log: audioObjectLog, "Device is already hogged by pid: %d", hogpid)
+
+		guard hogpid != getpid() else {
+			os_log(.debug, log: audioObjectLog, "Ignoring request to take hog mode on already-hogged device 0x%x", objectID)
+			return
 		}
 
-		try setHogMode(getpid())
+		if hogpid != -1 {
+			os_log(.error, log: audioObjectLog, "Device 0x%x is already hogged by pid %d", objectID, hogpid)
+		}
+
+		os_log(.info, log: audioObjectLog, "Taking hog mode for device 0x%x", objectID)
+		// The passed value is ignored
+		try setHogMode(1)
 	}
 
-	/// Releases hog mode
+	/// Releases hog mode if the device is hogged and the current process is the owner
 	public func stopHogging() throws {
-		os_log(.info, log: audioObjectLog, "Releasing hog mode for device 0x%x", objectID)
-
 		let hogpid = try hogMode()
-		if hogpid != getpid() {
-			os_log(.error, log: audioObjectLog, "Device is hogged by pid: %d", hogpid)
+
+		guard hogpid != -1 else {
+			os_log(.debug, log: audioObjectLog, "Ignoring request to release hog mode on non-hogged device 0x%x", objectID)
+			return
 		}
 
+		if hogpid != getpid() {
+			os_log(.error, log: audioObjectLog, "Device 0x%x is hogged by pid %d", objectID, hogpid)
+		}
+
+		os_log(.info, log: audioObjectLog, "Releasing hog mode for device 0x%x", objectID)
 		try setHogMode(-1)
 	}
 
