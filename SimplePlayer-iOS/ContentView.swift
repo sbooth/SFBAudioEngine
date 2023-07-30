@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,7 +13,11 @@ struct ContentView: View {
 		return NavigationView {
 			List(model.tracks) { track in
 				NavigationLink(destination: PlayerView(viewModel: PlayerViewModel(dataModel: model))
-								.onAppear(perform: { try? model.player.play(track.url) })
+								.onAppear(perform: {
+									if let decoder = try? track.decoder() {
+										try? model.player.play(decoder)
+									}
+								})
 								.onDisappear(perform: { model.player.stop() })) {
 					TrackView(track: track)
 				}
@@ -25,5 +29,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
 	static var previews: some View {
 		ContentView()
+			.environmentObject(DataModel())
 	}
 }

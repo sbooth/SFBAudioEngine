@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,7 @@ NSErrorDomain const SFBOutputSourceErrorDomain = @"org.sbooth.AudioEngine.Output
 os_log_t gSFBOutputSourceLog = NULL;
 
 static void SFBCreateOutputSourceLog(void) __attribute__ ((constructor));
-static void SFBCreateOutputSourceLog()
+static void SFBCreateOutputSourceLog(void)
 {
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
