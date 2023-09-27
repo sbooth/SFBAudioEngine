@@ -1,10 +1,10 @@
 //
-// Copyright (c) 2009 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2009 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-import Cocoa
+import AppKit
 
 /// An item in a playlist
 struct PlaylistItem: Identifiable {
