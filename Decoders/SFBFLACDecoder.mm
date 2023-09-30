@@ -18,6 +18,12 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
 
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize = @"Minimum Block Size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize = @"Maximum Block Size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize = @"Minimum Frame Size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize = @"Maximum Frame Size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum = @"MD5 Sum";
+
 template <>
 struct ::std::default_delete<FLAC__StreamDecoder> {
 	default_delete() = default;
@@ -315,6 +321,15 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize: @(_streamInfo.min_blocksize),
+		SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize: @(_streamInfo.max_blocksize),
+		SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize: @(_streamInfo.min_framesize),
+		SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize: @(_streamInfo.max_framesize),
+		SFBAudioDecodingPropertiesKeyFLACMD5Sum: [[NSData alloc] initWithBytes:_streamInfo.md5sum length:16],
+	};
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];

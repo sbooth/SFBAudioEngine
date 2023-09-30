@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -11,6 +11,11 @@
 #import <SFBAudioEngine/SFBInputSource.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+/// A key in an audio decoder's properties dictionary
+typedef NSString * SFBAudioDecodingPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecodingPropertiesKey);
+/// A value in an audio decoder's properties dictionary
+typedef id SFBAudioDecodingPropertiesValue NS_SWIFT_NAME(AudioDecodingPropertiesValue);
 
 /// Protocol defining the interface for audio decoders
 NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
@@ -30,6 +35,9 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 /// \c YES if decoding allows the original signal to be perfectly reconstructed
 @property (nonatomic, readonly) BOOL decodingIsLossless;
+
+/// Returns a dictionary containing file-specific properties
+@property (nonatomic, readonly) NSDictionary<SFBAudioDecodingPropertiesKey, SFBAudioDecodingPropertiesValue> *properties;
 
 #pragma mark - Setup and Teardown
 

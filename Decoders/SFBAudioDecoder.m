@@ -35,6 +35,7 @@ static void SFBCreateAudioDecoderLog(void)
 @synthesize inputSource = _inputSource;
 @synthesize sourceFormat = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
+@synthesize properties = _properties;
 
 @dynamic decodingIsLossless;
 @dynamic framePosition;
