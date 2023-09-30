@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -96,7 +96,10 @@ public struct PropertyElement: RawRepresentable, ExpressibleByIntegerLiteral, Ex
 }
 
 extension PropertyElement {
+	/// Main element
+	public static let main 		= PropertyElement(kAudioObjectPropertyElementMain)
 	/// Master element
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "main")
 	public static let master 	= PropertyElement(kAudioObjectPropertyElementMaster)
 	/// Wildcard element
 	public static let wildcard 	= PropertyElement(kAudioObjectPropertyElementWildcard)
@@ -143,7 +146,7 @@ public struct PropertyAddress: RawRepresentable {
 	/// - parameter selector: The desired selector
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public init(_ selector: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) {
+	public init(_ selector: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .main) {
 		self.rawValue = AudioObjectPropertyAddress(mSelector: selector.rawValue, mScope: scope.rawValue, mElement: element.rawValue)
 	}
 }
@@ -332,7 +335,7 @@ extension PropertyScope: CustomStringConvertible {
 
 extension PropertyElement: CustomStringConvertible {
 	public var description: String {
-		return rawValue == kAudioObjectPropertyElementMaster ? "master" : "\(rawValue)"
+		return rawValue == kAudioObjectPropertyElementMain ? "main" : "\(rawValue)"
 	}
 }
 

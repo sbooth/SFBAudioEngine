@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -24,14 +24,20 @@ public class AudioObject: CustomDebugStringConvertible {
 	/// Registered audio object property listeners
 	private var listenerBlocks = [PropertyAddress: AudioObjectPropertyListenerBlock]()
 
-	deinit {
+	/// Removes all property listeners
+	/// - note: Errors are logged but otherwise ignored
+	func removeAllPropertyListeners() {
 		for (property, listenerBlock) in listenerBlocks {
 			var address = property.rawValue
-			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
+			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, .global(qos: .background), listenerBlock)
 			if result != kAudioHardwareNoError {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 			}
 		}
+	}
+
+	deinit {
+		removeAllPropertyListeners()
 	}
 
 	/// Returns `true` if `self` has `property`
@@ -202,6 +208,14 @@ extension AudioObject {
 // MARK: - Base Audio Object Properties
 
 extension AudioObject {
+	/// Returns the bundle ID of the plug-in that instantiated the object
+	/// - remark: This corresponds to the property `kAudioObjectPropertyCreator`
+	public func creator() throws -> String {
+		return try getProperty(PropertyAddress(kAudioObjectPropertyCreator), type: CFString.self) as String
+	}
+
+	// kAudioObjectPropertyListenerAdded and kAudioObjectPropertyListenerRemoved omitted
+
 	/// Returns the base class of the underlying HAL audio object
 	/// - remark: This corresponds to the property `kAudioObjectPropertyBaseClass`
 	public func baseClass() throws -> AudioClassID {
@@ -490,7 +504,7 @@ extension AudioObject {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public func hasSelector(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -499,7 +513,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -509,7 +523,7 @@ extension AudioObject {
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioObject>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
 	}
 }
@@ -517,6 +531,10 @@ extension AudioObject {
 extension AudioObjectSelector where T == AudioObject {
 	/// The wildcard property selector `kAudioObjectPropertySelectorWildcard`
 	public static let wildcard = AudioObjectSelector(kAudioObjectPropertySelectorWildcard)
+
+	/// The property selector `kAudioObjectPropertyCreator`
+	public static let creator = AudioObjectSelector(kAudioObjectPropertyCreator)
+	// kAudioObjectPropertyListenerAdded and kAudioObjectPropertyListenerRemoved omitted
 
 	/// The property selector `kAudioObjectPropertyBaseClass`
 	public static let baseClass = AudioObjectSelector(kAudioObjectPropertyBaseClass)

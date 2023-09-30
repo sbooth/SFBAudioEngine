@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -98,8 +98,15 @@ extension AudioSystemObject {
 		return objectID
 	}
 
+	/// Returns `true` if the current process contains the main instance of the HAL
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessIsMain`
+	public func processIsMain() throws -> Bool {
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessIsMain), type: UInt32.self) != 0
+	}
+
 	/// Returns `true` if the current process contains the master HAL instance
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessIsMaster`
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "processIsMain")
 	public func processIsMaster() throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessIsMaster), type: UInt32.self) != 0
 	}
@@ -114,6 +121,17 @@ extension AudioSystemObject {
 	/// - remark: This corresponds to the property `kAudioHardwarePropertyUserIDChanged`
 	public func setUserIDChanged() throws {
 		try setProperty(PropertyAddress(kAudioHardwarePropertyUserIDChanged), to: UInt32(1))
+	}
+
+	/// Returns `true` if all data coming into the process for all devices will be silent
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessInputMute`
+	public func processInputMute() throws -> Bool {
+		return try getProperty(PropertyAddress(kAudioHardwarePropertyProcessInputMute), type: UInt32.self) != 0
+	}
+	/// Sets whether all data coming into the process for all devices will be silent
+	/// - remark: This corresponds to the property `kAudioHardwarePropertyProcessInputMute`
+	public func setProcessInputMute(_ value: Bool) throws {
+		try setProperty(PropertyAddress(kAudioHardwarePropertyProcessInputMute), to: UInt32(value ? 1 : 0))
 	}
 
 	/// Returns `true` if the process will be heard
@@ -230,12 +248,17 @@ extension AudioObjectSelector where T == AudioSystemObject {
 	public static let clockDeviceList = AudioObjectSelector(kAudioHardwarePropertyClockDeviceList)
 	/// The property selector `kAudioHardwarePropertyTranslateUIDToClockDevice`
 	public static let translateUIDToClockDevice = AudioObjectSelector(kAudioHardwarePropertyTranslateUIDToClockDevice)
+	/// The property selector `kAudioHardwarePropertyProcessIsMain`
+	public static let processIsMain = AudioObjectSelector(kAudioHardwarePropertyProcessIsMain)
 	/// The property selector `kAudioHardwarePropertyProcessIsMaster`
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "processIsMain")
 	public static let processIsMaster = AudioObjectSelector(kAudioHardwarePropertyProcessIsMaster)
 	/// The property selector `kAudioHardwarePropertyIsInitingOrExiting`
 	public static let isInitingOrExiting = AudioObjectSelector(kAudioHardwarePropertyIsInitingOrExiting)
 	/// The property selector `kAudioHardwarePropertyUserIDChanged`
 	public static let userIDChanged = AudioObjectSelector(kAudioHardwarePropertyUserIDChanged)
+	/// The property selector `kAudioHardwarePropertyProcessInputMute`
+	public static let processInputMute = AudioObjectSelector(kAudioHardwarePropertyProcessInputMute)
 	/// The property selector `kAudioHardwarePropertyProcessIsAudible`
 	public static let processIsAudible = AudioObjectSelector(kAudioHardwarePropertyProcessIsAudible)
 	/// The property selector `kAudioHardwarePropertySleepingIsAllowed`

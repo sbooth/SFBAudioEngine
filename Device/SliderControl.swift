@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -35,8 +35,10 @@ extension SliderControl {
 
 	/// Returns the available control values
 	/// - remark: This corresponds to the property `kAudioSliderControlPropertyRange`
-	public func range() throws -> [UInt32] {
-		return try getProperty(PropertyAddress(kAudioSliderControlPropertyRange), elementType: UInt32.self)
+	public func range() throws -> ClosedRange<UInt32> {
+		let value = try getProperty(PropertyAddress(kAudioSliderControlPropertyRange), elementType: UInt32.self)
+		precondition(value.count == 2, "Unexpected array length for kAudioSliderControlPropertyRange")
+		return value[0] ... value[1]
 	}
 }
 

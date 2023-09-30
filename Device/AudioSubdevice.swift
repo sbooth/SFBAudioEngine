@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -46,20 +46,15 @@ extension AudioSubdevice {
 	/// A thin wrapper around a HAL audio subdevice drift compensation quality setting
 	public struct DriftCompensationQuality: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Minimum quality
-		@available(macOS 13.0, *)
-		public static let min 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMinQuality)
+		public static let min 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationMinQuality)
 		/// Low quality
-		@available(macOS 13.0, *)
-		public static let low 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationLowQuality)
+		public static let low 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationLowQuality)
 		/// Medium quality
-		@available(macOS 13.0, *)
-		public static let medium 	= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMediumQuality)
+		public static let medium 	= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationMediumQuality)
 		/// High quality
-		@available(macOS 13.0, *)
-		public static let high 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationHighQuality)
+		public static let high 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationHighQuality)
 		/// Maximum quality
-		@available(macOS 13.0, *)
-		public static let max 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMaxQuality)
+		public static let max 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationMaxQuality)
 
 		public let rawValue: UInt32
 
@@ -80,17 +75,13 @@ extension AudioSubdevice {
 extension AudioSubdevice.DriftCompensationQuality: CustomDebugStringConvertible {
 	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
-		if #available(macOS 13.0, *) {
-			switch self.rawValue {
-			case kAudioSubDeviceDriftCompensationMinQuality:			return "Minimum"
-			case kAudioSubDeviceDriftCompensationLowQuality:			return "Low"
-			case kAudioSubDeviceDriftCompensationMediumQuality: 		return "Medium"
-			case kAudioSubDeviceDriftCompensationHighQuality:			return "High"
-			case kAudioSubDeviceDriftCompensationMaxQuality:			return "Maximum"
-			default:													return "\(self.rawValue)"
-			}
-		} else {
-			return "\(self.rawValue)"
+		switch self.rawValue {
+		case kAudioAggregateDriftCompensationMinQuality:			return "Minimum"
+		case kAudioAggregateDriftCompensationLowQuality:			return "Low"
+		case kAudioAggregateDriftCompensationMediumQuality: 		return "Medium"
+		case kAudioAggregateDriftCompensationHighQuality:			return "High"
+		case kAudioAggregateDriftCompensationMaxQuality:			return "Maximum"
+		default:													return "\(self.rawValue)"
 		}
 	}
 }
@@ -100,7 +91,7 @@ extension AudioSubdevice {
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public func hasSelector(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -109,7 +100,7 @@ extension AudioSubdevice {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -119,7 +110,7 @@ extension AudioSubdevice {
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .master, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
 	}
 }
