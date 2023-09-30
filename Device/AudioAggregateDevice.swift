@@ -6,10 +6,41 @@
 
 import Foundation
 import CoreAudio
+import os.log
 
 /// A HAL audio aggregate device object
 /// - remark: This class correponds to objects with the base class `kAudioAggregateDeviceClassID`
 public class AudioAggregateDevice: AudioDevice {
+	/// Creates and returns a new `AudioAggregateDevice` using the provided description
+	/// - parameter description: A dictionary specifying how to build the `AudioAggregateDevice`
+	/// - returns: A newly-created `AudioAggregateDevice`
+	/// - throws: An error if the `AudioAggregateDevice` could not be created
+	public static func create(description: [AnyHashable: Any]) throws -> AudioAggregateDevice {
+		var objectID: AudioObjectID = kAudioObjectUnknown
+		let result = AudioHardwareCreateAggregateDevice(description as CFDictionary, &objectID)
+		guard result == kAudioHardwareNoError else {
+			os_log(.error, log: audioObjectLog, "AudioHardwareCreateAggregateDevice (%{public}@) failed: '%{public}@'", description, UInt32(result).fourCC)
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+		}
+		return AudioAggregateDevice(objectID)
+	}
+
+	public func destroy() throws {
+		removeAllPropertyListeners()
+	}
+
+	/// Destroys `device`
+	/// - note: Futher use of `device` following this function is undefined
+	/// - parameter device: The `AudioAggregateDevice` to destroy
+	/// - throws: An error if the `AudioAggregateDevice` could not be destroyed
+	public static func destroy(_ device: AudioAggregateDevice) throws {
+		let result = AudioHardwareDestroyAggregateDevice(device.objectID)
+		guard result == kAudioHardwareNoError else {
+			os_log(.error, log: audioObjectLog, "AudioHardwareDestroyAggregateDevice (0x%x) failed: '%{public}@'", device.objectID, UInt32(result).fourCC)
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(result), userInfo: nil)
+		}
+		device.removeAllPropertyListeners()
+	}
 }
 
 extension AudioAggregateDevice {
