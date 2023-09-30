@@ -46,20 +46,15 @@ extension AudioSubdevice {
 	/// A thin wrapper around a HAL audio subdevice drift compensation quality setting
 	public struct DriftCompensationQuality: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Minimum quality
-		@available(macOS 13.0, *)
-		public static let min 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMinQuality)
+		public static let min 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationMinQuality)
 		/// Low quality
-		@available(macOS 13.0, *)
-		public static let low 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationLowQuality)
+		public static let low 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationLowQuality)
 		/// Medium quality
-		@available(macOS 13.0, *)
-		public static let medium 	= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMediumQuality)
+		public static let medium 	= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationMediumQuality)
 		/// High quality
-		@available(macOS 13.0, *)
-		public static let high 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationHighQuality)
+		public static let high 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationHighQuality)
 		/// Maximum quality
-		@available(macOS 13.0, *)
-		public static let max 		= DriftCompensationQuality(rawValue: kAudioSubDeviceDriftCompensationMaxQuality)
+		public static let max 		= DriftCompensationQuality(rawValue: kAudioAggregateDriftCompensationMaxQuality)
 
 		public let rawValue: UInt32
 
@@ -80,17 +75,13 @@ extension AudioSubdevice {
 extension AudioSubdevice.DriftCompensationQuality: CustomDebugStringConvertible {
 	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
-		if #available(macOS 13.0, *) {
-			switch self.rawValue {
-			case kAudioSubDeviceDriftCompensationMinQuality:			return "Minimum"
-			case kAudioSubDeviceDriftCompensationLowQuality:			return "Low"
-			case kAudioSubDeviceDriftCompensationMediumQuality: 		return "Medium"
-			case kAudioSubDeviceDriftCompensationHighQuality:			return "High"
-			case kAudioSubDeviceDriftCompensationMaxQuality:			return "Maximum"
-			default:													return "\(self.rawValue)"
-			}
-		} else {
-			return "\(self.rawValue)"
+		switch self.rawValue {
+		case kAudioAggregateDriftCompensationMinQuality:			return "Minimum"
+		case kAudioAggregateDriftCompensationLowQuality:			return "Low"
+		case kAudioAggregateDriftCompensationMediumQuality: 		return "Medium"
+		case kAudioAggregateDriftCompensationHighQuality:			return "High"
+		case kAudioAggregateDriftCompensationMaxQuality:			return "Maximum"
+		default:													return "\(self.rawValue)"
 		}
 	}
 }
