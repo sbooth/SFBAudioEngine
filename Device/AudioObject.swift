@@ -24,14 +24,20 @@ public class AudioObject: CustomDebugStringConvertible {
 	/// Registered audio object property listeners
 	private var listenerBlocks = [PropertyAddress: AudioObjectPropertyListenerBlock]()
 
-	deinit {
+	/// Removes all property listeners
+	/// - note: Errors are logged but otherwise ignored
+	func removeAllPropertyListeners() {
 		for (property, listenerBlock) in listenerBlocks {
 			var address = property.rawValue
-			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, DispatchQueue.global(qos: .background), listenerBlock)
+			let result = AudioObjectRemovePropertyListenerBlock(objectID, &address, .global(qos: .background), listenerBlock)
 			if result != kAudioHardwareNoError {
 				os_log(.error, log: audioObjectLog, "AudioObjectRemovePropertyListenerBlock (0x%x, %{public}@) failed: '%{public}@'", objectID, property.description, UInt32(result).fourCC)
 			}
 		}
+	}
+
+	deinit {
+		removeAllPropertyListeners()
 	}
 
 	/// Returns `true` if `self` has `property`
