@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -202,6 +202,14 @@ extension AudioObject {
 // MARK: - Base Audio Object Properties
 
 extension AudioObject {
+	/// Returns the bundle ID of the plug-in that instantiated the object
+	/// - remark: This corresponds to the property `kAudioObjectPropertyCreator`
+	public func creator() throws -> String {
+		return try getProperty(PropertyAddress(kAudioObjectPropertyCreator), type: CFString.self) as String
+	}
+
+	// kAudioObjectPropertyListenerAdded and kAudioObjectPropertyListenerRemoved omitted
+
 	/// Returns the base class of the underlying HAL audio object
 	/// - remark: This corresponds to the property `kAudioObjectPropertyBaseClass`
 	public func baseClass() throws -> AudioClassID {
@@ -517,6 +525,10 @@ extension AudioObject {
 extension AudioObjectSelector where T == AudioObject {
 	/// The wildcard property selector `kAudioObjectPropertySelectorWildcard`
 	public static let wildcard = AudioObjectSelector(kAudioObjectPropertySelectorWildcard)
+
+	/// The property selector `kAudioObjectPropertyCreator`
+	public static let creator = AudioObjectSelector(kAudioObjectPropertyCreator)
+	// kAudioObjectPropertyListenerAdded and kAudioObjectPropertyListenerRemoved omitted
 
 	/// The property selector `kAudioObjectPropertyBaseClass`
 	public static let baseClass = AudioObjectSelector(kAudioObjectPropertyBaseClass)
