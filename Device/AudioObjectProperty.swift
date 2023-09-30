@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -96,7 +96,10 @@ public struct PropertyElement: RawRepresentable, ExpressibleByIntegerLiteral, Ex
 }
 
 extension PropertyElement {
+	/// Main element
+	public static let main 		= PropertyElement(kAudioObjectPropertyElementMain)
 	/// Master element
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "main")
 	public static let master 	= PropertyElement(kAudioObjectPropertyElementMaster)
 	/// Wildcard element
 	public static let wildcard 	= PropertyElement(kAudioObjectPropertyElementWildcard)
