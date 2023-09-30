@@ -404,6 +404,18 @@ extension AudioDevice {
 		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIOThreadOSWorkgroup), from: objectID, into: &value)
 		return value!.takeRetainedValue() as WorkGroup
 	}
+
+	/// Returns `true` if the current process's audio will be zeroed out by the system
+	/// - remark: This corresponds to the property `kAudioDevicePropertyProcessMute`
+	public func processMute() throws -> Bool {
+		return try getProperty(PropertyAddress(kAudioDevicePropertyProcessMute), type: UInt32.self) != 0
+	}
+	// TODO: Verify this property is writable
+	/// Sets whether the current process's audio will be zeroed out by the system
+	/// - remark: This corresponds to the property `kAudioDevicePropertyProcessMute`
+	public func setProcessMute(_ value: Bool) throws {
+		try setProperty(PropertyAddress(kAudioDevicePropertyProcessMute), to: value ? 1 : 0)
+	}
 }
 
 // MARK: - Audio Device Properties Implemented by Audio Controls
@@ -960,6 +972,23 @@ extension AudioDevice {
 	public func setSubMute(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
 		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertySubMute), scope: scope, element: element), to: UInt32(value ? 1 : 0))
 	}
+
+	/// Returns `true` if voice activity detection is enabled on `element`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyVoiceActivityDetectionEnable`
+	public func voiceActivityDetectionEnable(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyVoiceActivityDetectionEnable), scope: scope, element: element), type: UInt32.self) != 0
+	}
+	/// Sets whether voice activity detection is enabled on `element`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyVoiceActivityDetectionEnable`
+	public func setVoiceActivityDetectionEnable(_ value: Bool, inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws {
+		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyVoiceActivityDetectionEnable), scope: scope, element: element), to: UInt32(value ? 1 : 0))
+	}
+
+	/// Returns `true` if a voice is detected on `element`
+	/// - remark: This corresponds to the property `kAudioDevicePropertyVoiceActivityDetectionState`
+	public func voiceActivityDetectionState(inScope scope: PropertyScope, onElement element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyVoiceActivityDetectionState), scope: scope, element: element), type: UInt32.self) != 0
+	}
 }
 
 extension AudioDevice {
@@ -993,6 +1022,13 @@ extension AudioDevice {
 		public static let avb 				= TransportType(rawValue: kAudioDeviceTransportTypeAVB)
 		/// Thunderbolt
 		public static let thunderbolt 		= TransportType(rawValue: kAudioDeviceTransportTypeThunderbolt)
+		/// Continuity Capture Wired
+		public static let continuityCaptureWired 		= TransportType(rawValue: kAudioDeviceTransportTypeContinuityCaptureWired)
+		/// Continuity Capture Wireless
+		public static let continuityCaptureWireless 	= TransportType(rawValue: kAudioDeviceTransportTypeContinuityCaptureWireless)
+		/// Continuity Capture
+		@available(macOS, introduced: 13.0, deprecated: 13.0, message: "Please use .continuityCaptureWired and .continuityCaptureWireless to describe Continuity Capture devices.")
+		public static let continuityCapture 			= TransportType(rawValue: kAudioDeviceTransportTypeContinuityCapture)
 
 		public let rawValue: UInt32
 
@@ -1028,6 +1064,12 @@ extension AudioDevice.TransportType: CustomDebugStringConvertible {
 		case kAudioDeviceTransportTypeAirPlay:			return "AirPlay"
 		case kAudioDeviceTransportTypeAVB:				return "AVB"
 		case kAudioDeviceTransportTypeThunderbolt: 		return "Thunderbolt"
+			// kAudioDeviceTransportTypeContinuityCaptureWired
+		case 0x63637764 /* 'ccwd' */: 					return "Continuity Capture Wired"
+			// kAudioDeviceTransportTypeContinuityCaptureWireless
+		case 0x6363776c /* 'ccwl' */: 					return "Continuity Capture Wireless"
+			// kAudioDeviceTransportTypeContinuityCapture
+		case 0x63636170 /* 'ccap' */: 			return "Continuity Capture"
 		default:										return "\(self.rawValue)"
 		}
 	}
@@ -1291,6 +1333,8 @@ extension AudioObjectSelector where T == AudioDevice {
 	public static let clockDevice = AudioObjectSelector(kAudioDevicePropertyClockDevice)
 	/// The property selector `kAudioDevicePropertyIOThreadOSWorkgroup`
 	public static let ioThreadOSWorkgroup = AudioObjectSelector(kAudioDevicePropertyIOThreadOSWorkgroup)
+	/// The property selector `kAudioDevicePropertyProcessMute`
+	public static let processMute = AudioObjectSelector(kAudioDevicePropertyProcessMute)
 
 	/// The property selector `kAudioDevicePropertyJackIsConnected`
 	public static let jackIsConnected = AudioObjectSelector(kAudioDevicePropertyJackIsConnected)
@@ -1386,4 +1430,8 @@ extension AudioObjectSelector where T == AudioDevice {
 	public static let subVolumeDecibelsToScalar = AudioObjectSelector(kAudioDevicePropertySubVolumeDecibelsToScalar)
 	/// The property selector `kAudioDevicePropertySubMute`
 	public static let subMute = AudioObjectSelector(kAudioDevicePropertySubMute)
+	/// The property selector `kAudioDevicePropertyVoiceActivityDetectionEnable`
+	public static let voiceActivityDetectionEnable = AudioObjectSelector(kAudioDevicePropertyVoiceActivityDetectionEnable)
+	/// The property selector `kAudioDevicePropertyVoiceActivityDetectionState`
+	public static let voiceActivityDetectionState = AudioObjectSelector(kAudioDevicePropertyVoiceActivityDetectionState)
 }
