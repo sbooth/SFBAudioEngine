@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -38,8 +38,12 @@ class DataModel: NSObject, ObservableObject {
 	func load() {
 		DispatchQueue.global(qos: .background).async {
 			var tracks: [Track] = []
-			if let url = Bundle.main.url(forResource: "test", withExtension: "flac") {
-				tracks.append(Track(url: url))
+			for pathExtension in AudioDecoder.supportedPathExtensions {
+				if let urls = Bundle.main.urls(forResourcesWithExtension: pathExtension, subdirectory: nil) {
+					for url in urls {
+						tracks.append(Track(url: url))
+					}
+				}
 			}
 			DispatchQueue.main.async {
 				self.tracks = tracks
