@@ -401,20 +401,19 @@ extension AudioDevice {
 	@available(macOS 11.0, *)
 	public func ioThreadOSWorkgroup(inScope scope: PropertyScope = .global) throws -> WorkGroup {
 		var value: Unmanaged<os_workgroup_t>?
-		try readAudioObjectProperty(PropertyAddress(kAudioDevicePropertyIOThreadOSWorkgroup), from: objectID, into: &value)
+		try readAudioObjectProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyIOThreadOSWorkgroup), scope: scope), from: objectID, into: &value)
 		return value!.takeRetainedValue() as WorkGroup
 	}
 
 	/// Returns `true` if the current process's audio will be zeroed out by the system
 	/// - remark: This corresponds to the property `kAudioDevicePropertyProcessMute`
-	public func processMute() throws -> Bool {
-		return try getProperty(PropertyAddress(kAudioDevicePropertyProcessMute), type: UInt32.self) != 0
+	public func processMute(inScope scope: PropertyScope = .global) throws -> Bool {
+		return try getProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyProcessMute), scope: scope), type: UInt32.self) != 0
 	}
-	// TODO: Verify this property is writable
 	/// Sets whether the current process's audio will be zeroed out by the system
 	/// - remark: This corresponds to the property `kAudioDevicePropertyProcessMute`
-	public func setProcessMute(_ value: Bool) throws {
-		try setProperty(PropertyAddress(kAudioDevicePropertyProcessMute), to: value ? 1 : 0)
+	public func setProcessMute(_ value: Bool, scope: PropertyScope = .global) throws {
+		try setProperty(PropertyAddress(PropertySelector(kAudioDevicePropertyProcessMute), scope: scope), to: value ? 1 : 0)
 	}
 }
 
