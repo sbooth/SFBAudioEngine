@@ -76,7 +76,7 @@ extension AudioBox {
 
 	/// Returns `true` if the box is protected
 	/// - remark: This corresponds to the property `kAudioBoxPropertyIsProtected`
-	public func protected() throws -> Bool {
+	public func isProtected() throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioBoxPropertyIsProtected), type: UInt32.self) != 0
 	}
 
