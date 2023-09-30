@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -74,10 +74,22 @@ extension AudioBox {
 		return try getProperty(PropertyAddress(kAudioBoxPropertyHasMIDI), type: UInt32.self) != 0
 	}
 
+	/// Returns `true` if the box is protected
+	/// - remark: This corresponds to the property `kAudioBoxPropertyIsProtected`
+	public func protected() throws -> Bool {
+		return try getProperty(PropertyAddress(kAudioBoxPropertyIsProtected), type: UInt32.self) != 0
+	}
+
 	/// Returns `true` if the box is acquired
 	/// - remark: This corresponds to the property `kAudioBoxPropertyAcquired`
 	public func acquired() throws -> Bool {
 		return try getProperty(PropertyAddress(kAudioBoxPropertyAcquired), type: UInt32.self) != 0
+	}
+
+	/// Returns the reason an attempt to acquire the box failed
+	/// - remark: This corresponds to the property `kAudioBoxPropertyAcquisitionFailed`
+	public func acquisitionFailed() throws -> OSStatus {
+		return try getProperty(PropertyAddress(kAudioBoxPropertyAcquisitionFailed), type: OSStatus.self)
 	}
 
 	/// Returns the audio devices provided by the box
@@ -127,8 +139,12 @@ extension AudioObjectSelector where T == AudioBox {
 	public static let hasVideo = AudioObjectSelector(kAudioBoxPropertyHasVideo)
 	/// The property selector `kAudioBoxPropertyHasMIDI`
 	public static let hasMIDI = AudioObjectSelector(kAudioBoxPropertyHasMIDI)
+	/// The property selector `kAudioBoxPropertyIsProtected`
+	public static let isProtected = AudioObjectSelector(kAudioBoxPropertyIsProtected)
 	/// The property selector `kAudioBoxPropertyAcquired`
 	public static let acquired = AudioObjectSelector(kAudioBoxPropertyAcquired)
+	/// The property selector `kAudioBoxPropertyAcquisitionFailed`
+	public static let acquisitionFailed = AudioObjectSelector(kAudioBoxPropertyAcquisitionFailed)
 	/// The property selector `kAudioBoxPropertyDeviceList`
 	public static let deviceList = AudioObjectSelector(kAudioBoxPropertyDeviceList)
 	/// The property selector `kAudioBoxPropertyClockDeviceList`
