@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -75,11 +75,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 		SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-	auto tag = file.tag();
-	if(tag) {
-		[metadata addMetadataFromTagLibXiphComment:tag];
-		[metadata addAlbumArtFromTagLibFLACPictureList:tag->pictureList()];
-	}
+	if(file.tag())
+		[metadata addMetadataFromTagLibXiphComment:file.tag()];
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
 	self.metadata = metadata;

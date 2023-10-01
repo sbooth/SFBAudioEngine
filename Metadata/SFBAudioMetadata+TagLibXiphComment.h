@@ -13,7 +13,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBAudioMetadata (TagLibXiphComment)
+/// Adds metadata and album art from @c tag to @c self
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag;
+/// Adds album art from @c pictureList to @c self
 - (void)addAlbumArtFromTagLibFLACPictureList:(TagLib::List<TagLib::FLAC::Picture *>)pictureList;
 @end
 

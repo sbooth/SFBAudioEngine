@@ -75,11 +75,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 		SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-	auto tag = file.tag();
-	if(tag) {
-		[metadata addMetadataFromTagLibXiphComment:tag];
-		[metadata addAlbumArtFromTagLibFLACPictureList:tag->pictureList()];
-	}
+	if(file.tag())
+		[metadata addMetadataFromTagLibXiphComment:file.tag()];
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
 	self.metadata = metadata;
