@@ -163,4 +163,59 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTota
 /// FLAC MD5 sum (\c NSData)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum;
 
+#pragma mark - Musepack Decoder Properties
+
+/// Musepack sample frequency in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency;
+/// Musepack number of channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackChannels;
+/// Musepack stream version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackStreamVersion;
+/// Musepack bitrate in bits per second (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBitrate;
+/// Musepack average bitrate in bits per second (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAverageBitrate;
+/// Musepack maximum band index used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMaximumBandIndex;
+/// Musepack mid/side stereo (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMidSideStereo;
+/// Musepack supports fast seeking (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeystreamInfoMusepackFastSeek;
+/// Musepack block power (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBlockPower;
+
+/// Musepack title ReplayGain (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitleGain;
+/// Musepack album ReplayGain (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumGain;
+/// Musepack peak album loudness level (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumPeak;
+/// Musepack peak title loudness level (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitlePeak;
+
+/// Musepack true gapless (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackIsTrueGapless;
+/// Musepack number of samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSamples;
+/// Musepack number of leading samples that must be skipped (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBeginningSilence;
+
+/// Musepack version of encoder used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoderVersion;
+/// Musepack encoder name (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoder;
+/// Musepack PNS used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackPNS;
+/// Musepack quality profile (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfile;
+/// Musepack name of profile (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfileName;
+
+/// Musepack byte offset of header position (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackHeaderPosition;
+/// Musepack byte offset to file tags (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffset;
+/// Musepack total file length in bytes (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength;
+
 NS_ASSUME_NONNULL_END
