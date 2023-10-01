@@ -36,7 +36,8 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// \c YES if decoding allows the original signal to be perfectly reconstructed
 @property (nonatomic, readonly) BOOL decodingIsLossless;
 
-/// Returns a dictionary containing file-specific properties
+/// Returns a dictionary containing decoder-specific properties
+/// - note: Properties are read when the decoder is opened
 @property (nonatomic, readonly) NSDictionary<SFBAudioDecodingPropertiesKey, SFBAudioDecodingPropertiesValue> *properties;
 
 #pragma mark - Setup and Teardown
