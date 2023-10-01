@@ -22,6 +22,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBloc
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize = @"Maximum Block Size";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize = @"Minimum Frame Size";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize = @"Maximum Frame Size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACSampleRate = @"Sample Rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACChannels = @"Channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACBitsPerSample = @"Bits Per Sample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTotalSamples = @"Total Samples";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum = @"MD5 Sum";
 
 template <>
@@ -328,6 +332,10 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize: @(_streamInfo.max_blocksize),
 		SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize: @(_streamInfo.min_framesize),
 		SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize: @(_streamInfo.max_framesize),
+		SFBAudioDecodingPropertiesKeyFLACSampleRate: @(_streamInfo.sample_rate),
+		SFBAudioDecodingPropertiesKeyFLACChannels: @(_streamInfo.channels),
+		SFBAudioDecodingPropertiesKeyFLACBitsPerSample: @(_streamInfo.bits_per_sample),
+		SFBAudioDecodingPropertiesKeyFLACTotalSamples: @(_streamInfo.total_samples),
 		SFBAudioDecodingPropertiesKeyFLACMD5Sum: [[NSData alloc] initWithBytes:_streamInfo.md5sum length:16],
 	};
 
