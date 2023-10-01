@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -100,17 +100,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 		[metadata addMetadataFromTagLibXiphComment:file.xiphComment()];
 
 	// Add album art
-	for(auto iter : file.pictureList()) {
-		NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
-
-		NSString *description = nil;
-		if(!iter->description().isEmpty())
-			description = [NSString stringWithUTF8String:iter->description().toCString(true)];
-
-		[metadata attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
-																	 type:(SFBAttachedPictureType)iter->type()
-															  description:description]];
-	}
+	[metadata addAlbumArtFromTagLibFLACPictureList:file.pictureList()];
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
 	self.metadata = metadata;

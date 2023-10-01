@@ -138,11 +138,9 @@ TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 	}
 }
 
-- (void)addAlbumArtFromTagLibXiphComment:(TagLib::Ogg::XiphComment *)tag
+- (void)addAlbumArtFromTagLibFLACPictureList:(TagLib::List<TagLib::FLAC::Picture *>)pictureList
 {
-	NSParameterAssert(tag != nil);
-
-	for(auto iter : tag->pictureList()) {
+	for(auto iter : pictureList) {
 		NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
 		NSString *description = nil;

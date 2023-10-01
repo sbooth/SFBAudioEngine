@@ -78,7 +78,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 	auto tag = file.tag();
 	if(tag) {
 		[metadata addMetadataFromTagLibXiphComment:tag];
-		[metadata addAlbumArtFromTagLibXiphComment:tag];
+		[metadata addAlbumArtFromTagLibFLACPictureList:tag->pictureList()];
 	}
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];

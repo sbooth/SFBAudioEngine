@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBAudioMetadata (TagLibXiphComment)
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag;
-- (void)addAlbumArtFromTagLibXiphComment:(TagLib::Ogg::XiphComment *)tag;
+- (void)addAlbumArtFromTagLibFLACPictureList:(TagLib::List<TagLib::FLAC::Picture *>)pictureList;
 @end
 
 namespace SFB {
