@@ -200,7 +200,7 @@ static opus_int64 tell_callback(void *stream)
 		SFBAudioDecodingPropertiesKeyOggOpusMappingFamily: @(header->mapping_family),
 		SFBAudioDecodingPropertiesKeyOggOpusStreamCount: @(header->stream_count),
 		SFBAudioDecodingPropertiesKeyOggOpusCoupledCount: @(header->coupled_count),
-		SFBAudioDecodingPropertiesKeyOggOpusMapping: [[NSData alloc] initWithBytes:header->mapping length:header->channel_count],
+		SFBAudioDecodingPropertiesKeyOggOpusMapping: [[NSData alloc] initWithBytes:header->mapping length:(NSUInteger)header->channel_count],
 	};
 
 	return YES;
