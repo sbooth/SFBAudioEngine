@@ -137,6 +137,9 @@ TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 			[additionalMetadata setObject:value forKey:key];
 	}
 
+	if(additionalMetadata.count)
+		self.additionalMetadata = additionalMetadata;
+
 	[self addAlbumArtFromTagLibFLACPictureList:const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()];
 }
 
