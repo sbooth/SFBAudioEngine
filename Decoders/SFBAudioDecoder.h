@@ -218,4 +218,25 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepack
 /// Musepack total file length in bytes (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength;
 
+#pragma mark - Ogg Opus Decoder Properties
+
+/// Ogg Opus format version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion;
+/// Ogg Opus channel count (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount;
+/// Ogg Opus number of samples to discard from the beginning of the stream (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip;
+/// Ogg Opus sample rate of the original input (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate;
+/// Ogg Opus gain to apply to decoded output in dB (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain;
+/// Ogg Opus channel mapping family (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily;
+/// Ogg Opus number of Opus streams in each Ogg packet (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount;
+/// Ogg Opus number of coupled Opus streams in each Ogg packet (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount;
+/// Ogg Opus mapping from coded stream channels to output channels (\c NSData)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping;
+
 NS_ASSUME_NONNULL_END
