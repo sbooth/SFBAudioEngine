@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -135,6 +135,23 @@ TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 		// Put all unknown tags into the additional metadata
 		else
 			[additionalMetadata setObject:value forKey:key];
+	}
+}
+
+- (void)addAlbumArtFromTagLibXiphComment:(TagLib::Ogg::XiphComment *)tag
+{
+	NSParameterAssert(tag != nil);
+
+	for(auto iter : tag->pictureList()) {
+		NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
+
+		NSString *description = nil;
+		if(!iter->description().isEmpty())
+			description = [NSString stringWithUTF8String:iter->description().toCString(true)];
+
+		[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
+																	 type:(SFBAttachedPictureType)iter->type()
+															  description:description]];
 	}
 }
 
