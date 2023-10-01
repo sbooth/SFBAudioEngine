@@ -202,13 +202,13 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepack
 
 /// Musepack version of encoder used (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoderVersion;
-/// Musepack encoder name (\c NSNumber)
+/// Musepack encoder name (\c NSString)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoder;
 /// Musepack PNS used (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackPNS;
 /// Musepack quality profile (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfile;
-/// Musepack name of profile (\c NSNumber)
+/// Musepack name of profile (\c NSString)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfileName;
 
 /// Musepack byte offset of header position (\c NSNumber)
