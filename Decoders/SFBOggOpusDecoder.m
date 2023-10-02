@@ -15,15 +15,15 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion = @"Version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount = @"Channel Count";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip = @"Pre-Skip";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate = @"Input Sample Rate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain = @"Output Gain";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily = @"Mapping Family";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount = @"Stream Count";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount = @"Coupled Count";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping = @"Mapping";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion = @"version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount = @"channel_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip = @"pre_skip";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate = @"input_sample_rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain = @"output_gain";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily = @"mapping_family";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount = @"stream_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount = @"coupled_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping = @"mapping";
 
 #define OPUS_SAMPLE_RATE 48000
 

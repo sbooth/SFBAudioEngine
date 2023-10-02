@@ -284,4 +284,33 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusC
 /// Ogg Opus mapping from coded stream channels to output channels (\c NSData)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping;
 
+#pragma mark - Ogg Speex Decoder Properties
+
+/// Ogg Speex Speex string, always @c "Speex   "  (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString;
+/// Ogg Speex Speex version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion;
+/// Ogg Speex Speex version ID (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersionID;
+/// Ogg Speex total size of the header (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize;
+/// Ogg Speex sampling rate (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexRate;
+/// Ogg Speex mode used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexMode;
+/// Ogg Speex version ID of the bitstream (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexModeBitstreamVersion;
+/// Ogg Speex number of channels encoded (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels;
+/// Ogg Speex bitrate used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexBitrate;
+/// Ogg Speex size of frames (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFrameSize;
+/// Ogg Speex whether encoding is VBR (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexVBR;
+/// Ogg Speex number of frames stored per Ogg packet (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFramesPerPacket;
+/// Ogg Speex number of additional headers after the comments (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders;
+
 NS_ASSUME_NONNULL_END
