@@ -209,9 +209,9 @@ void SFB::Audio::SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::
 	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.replayGainAlbumPeak, @"%1.8f");
 
 	// Album art
-	if(setAlbumArt) {
-		tag->removeAllPictures();
+	tag->removeAllPictures();
 
+	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
 			auto picture = ConvertAttachedPictureToFLACPicture(attachedPicture);
 			if(picture)
