@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -21,6 +21,32 @@
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion = @"APE_INFO_FILE_VERSION";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel = @"APE_INFO_COMPRESSION_LEVEL";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFormatFlags = @"APE_INFO_FORMAT_FLAGS";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate = @"APE_INFO_SAMPLE_RATE";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBitsPerSample = @"APE_INFO_BITS_PER_SAMPLE";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBytesPerSample = @"APE_INFO_BYTES_PER_SAMPLE";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioChannels = @"APE_INFO_CHANNELS";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlockAlignment = @"APE_INFO_BLOCK_ALIGN";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlocksPerFrame = @"APE_INFO_BLOCKS_PER_FRAME";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFinalFrameBlocks = @"APE_INFO_FINAL_FRAME_BLOCKS";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalFrames = @"APE_INFO_TOTAL_FRAMES";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVHeaderBytes = @"APE_INFO_WAV_HEADER_BYTES";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTerminatingBytes = @"APE_INFO_WAV_TERMINATING_BYTES";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVDataBytes = @"APE_INFO_WAV_DATA_BYTES";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes = @"APE_INFO_WAV_TOTAL_BYTES";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes = @"APE_INFO_APE_TOTAL_BYTES";
+//SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks = @"APE_INFO_TOTAL_BLOCKS";
+//SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds = @"APE_INFO_LENGTH_MS";
+//SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate = @"APE_INFO_AVERAGE_BITRATE";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioDecompressedBitrate = @"APE_INFO_DECOMPRESSED_BITRATE";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPL = @"APE_INFO_APL";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks = @"APE_DECOMPRESS_TOTAL_BLOCKS";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds = @"APE_DECOMPRESS_LENGTH_MS";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate = @"APE_DECOMPRESS_AVERAGE_BITRATE";
 
 namespace {
 
@@ -247,6 +273,50 @@ private:
 	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FILE_VERSION)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_COMPRESSION_LEVEL)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioFormatFlags: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FORMAT_FLAGS)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioBitsPerSample: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioBytesPerSample: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BYTES_PER_SAMPLE)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioChannels: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioBlockAlignment: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BLOCK_ALIGN)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioBlocksPerFrame: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BLOCKS_PER_FRAME)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioFinalFrameBlocks: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FINAL_FRAME_BLOCKS)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioTotalFrames: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_FRAMES)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioWAVHeaderBytes: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_HEADER_BYTES)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTerminatingBytes: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TERMINATING_BYTES)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioWAVDataBytes: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_DATA_BYTES)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TOTAL_BYTES)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APE_TOTAL_BYTES)),
+//		SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_BLOCKS)),
+//		SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_LENGTH_MS)),
+//		SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_AVERAGE_BITRATE)),
+		// APE_INFO_FRAME_BITRATE
+		SFBAudioDecodingPropertiesKeyMonkeysAudioDecompressedBitrate: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_DECOMPRESSED_BITRATE)),
+		// APE_INFO_PEAK_LEVEL
+		// APE_INFO_SEEK_BIT
+		// APE_INFO_SEEK_BYTE
+		// APE_INFO_WAV_HEADER_DATA
+		// APE_INFO_WAV_TERMINATING_DATA
+		// APE_INFO_WAVEFORMATEX
+		// APE_INFO_IO_SOURCE
+		// APE_INFO_FRAME_BYTES
+		// APE_INFO_FRAME_BLOCKS
+		// APE_INFO_TAG
+		SFBAudioDecodingPropertiesKeyMonkeysAudioAPL: _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APL) ? @YES : @NO,
+
+		// APE_DECOMPRESS_CURRENT_BLOCK
+		// APE_DECOMPRESS_CURRENT_MS
+		SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_TOTAL_BLOCKS)),
+		SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_LENGTH_MS)),
+		// APE_DECOMPRESS_CURRENT_BITRATE
+		SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate: @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_AVERAGE_BITRATE)),
+		// APE_DECOMPRESS_CURRENT_FRAME
+	};
 
 	return YES;
 }
