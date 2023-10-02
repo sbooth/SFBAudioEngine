@@ -313,4 +313,21 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeex
 /// Ogg Speex number of additional headers after the comments (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders;
 
+#pragma mark - Ogg Vorbis Decoder Properties
+
+/// Ogg Vorbis version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion;
+/// Ogg Vorbis channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisChannels;
+/// Ogg Vorbis sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisRate;
+/// Ogg Vorbis bitrate upper limit (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateUpper;
+/// Ogg Vorbis nominal bitrate (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateNominal;
+/// Ogg Vorbis bitrate lower limit (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateLower;
+/// Ogg Vorbis bitrate window (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow;
+
 NS_ASSUME_NONNULL_END

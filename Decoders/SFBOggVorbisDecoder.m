@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -14,6 +14,14 @@
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion = @"version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisChannels = @"channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisRate = @"rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateUpper = @"bitrate_upper";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateNominal = @"bitrate_nominal";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateLower = @"bitrate_lower";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow = @"bitrate_window";
 
 static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
@@ -185,6 +193,17 @@ static long tell_func_callback(void *datasource)
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)ovInfo->channels;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyOggVorbisVersion: @(ovInfo->version),
+		SFBAudioDecodingPropertiesKeyOggVorbisChannels: @(ovInfo->channels),
+		SFBAudioDecodingPropertiesKeyOggVorbisRate: @(ovInfo->rate),
+		SFBAudioDecodingPropertiesKeyOggVorbisBitrateUpper: @(ovInfo->bitrate_upper),
+		SFBAudioDecodingPropertiesKeyOggVorbisBitrateNominal: @(ovInfo->bitrate_nominal),
+		SFBAudioDecodingPropertiesKeyOggVorbisBitrateLower: @(ovInfo->bitrate_lower),
+		SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow: @(ovInfo->bitrate_window),
+	};
 
 	return YES;
 }
