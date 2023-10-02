@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,24 +13,6 @@
 #import "SFBCFWrapper.hpp"
 
 #import "TagLibStringUtilities.h"
-
-namespace {
-
-TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
-{
-	NSData *data = [NSData dataWithBytesNoCopy:reinterpret_cast<void *>(const_cast<char *>(input.data())) length:static_cast<NSUInteger>(input.size()) freeWhenDone:NO];
-	NSData *decoded = [[NSData alloc] initWithBase64EncodedData:data options:0];
-	return { static_cast<const char *>(decoded.bytes), static_cast<size_t>(decoded.length) };
-}
-
-TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
-{
-	NSData *data = [NSData dataWithBytesNoCopy:reinterpret_cast<void *>(const_cast<char *>(input.data())) length:static_cast<NSUInteger>(input.size()) freeWhenDone:NO];
-	NSData *encoded = [data base64EncodedDataWithOptions:0];
-	return { static_cast<const char *>(encoded.bytes), static_cast<size_t>(encoded.length) };
-}
-
-}
 
 @implementation SFBAudioMetadata (TagLibXiphComment)
 
@@ -109,32 +91,28 @@ TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 			self.replayGainAlbumGain = @(value.doubleValue);
 		else if([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame)
 			self.replayGainAlbumPeak = @(value.doubleValue);
-		else if([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame) {
-			// Handle embedded pictures
-			for(auto blockIterator : it.second) {
-				auto encodedBlock = blockIterator.data(TagLib::String::UTF8);
-
-				// Decode the Base-64 encoded data
-				auto decodedBlock = DecodeBase64(encodedBlock);
-
-				// Create the picture
-				TagLib::FLAC::Picture picture;
-				picture.parse(decodedBlock);
-
-				NSData *imageData = [NSData dataWithBytes:picture.data().data() length:picture.data().size()];
-
-				NSString *description = nil;
-				if(!picture.description().isEmpty())
-					description = [NSString stringWithUTF8String:picture.description().toCString(true)];
-
-				[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
-																			 type:(SFBAttachedPictureType)picture.type()
-																	  description:description]];
-			}
-		}
+		// TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
+		else if([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame || [key caseInsensitiveCompare:@"COVERART"] == NSOrderedSame)
+			;
 		// Put all unknown tags into the additional metadata
 		else
 			[additionalMetadata setObject:value forKey:key];
+	}
+
+	if(additionalMetadata.count)
+		self.additionalMetadata = additionalMetadata;
+
+	// Add the pictures parsed by TagLib from the "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments
+	for(auto iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
+		NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
+
+		NSString *description = nil;
+		if(!iter->description().isEmpty())
+			description = [NSString stringWithUTF8String:iter->description().toCString(true)];
+
+		[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
+																	 type:(SFBAttachedPictureType)iter->type()
+															  description:description]];
 	}
 }
 
@@ -231,39 +209,47 @@ void SFB::Audio::SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::
 	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.replayGainAlbumPeak, @"%1.8f");
 
 	// Album art
+	tag->removeAllPictures();
+
 	if(setAlbumArt) {
-		tag->removeFields("METADATA_BLOCK_PICTURE");
-
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
-			if(!imageSource)
-				continue;
-
-			TagLib::FLAC::Picture picture;
-			picture.setData(TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
-			picture.setType((TagLib::FLAC::Picture::Type)attachedPicture.pictureType);
-			if(attachedPicture.pictureDescription)
-				picture.setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
-
-			// Convert the image's UTI into a MIME type
-			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-			if(mimeType)
-				picture.setMimeType(TagLib::StringFromNSString(mimeType));
-
-			// Flesh out the height, width, and depth
-			NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
-			if(imagePropertiesDictionary) {
-				NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
-				NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
-				NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
-
-				picture.setHeight(imageHeight.intValue);
-				picture.setWidth(imageWidth.intValue);
-				picture.setColorDepth(imageDepth.intValue);
-			}
-
-			TagLib::ByteVector encodedBlock = EncodeBase64(picture.render());
-			tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
+			auto picture = ConvertAttachedPictureToFLACPicture(attachedPicture);
+			if(picture)
+				tag->addPicture(picture.release());
 		}
 	}
+}
+
+std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture)
+{
+	NSCParameterAssert(attachedPicture != nil);
+
+	SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+	if(!imageSource)
+		return nullptr;
+
+	auto picture = std::make_unique<TagLib::FLAC::Picture>();
+	picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<size_t>(attachedPicture.imageData.length)));
+	picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
+	if(attachedPicture.pictureDescription)
+		picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
+
+	// Convert the image's UTI into a MIME type
+	NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+	if(mimeType)
+		picture->setMimeType(TagLib::StringFromNSString(mimeType));
+
+	// Flesh out the height, width, and depth
+	NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+	if(imagePropertiesDictionary) {
+		NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
+		NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
+		NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
+
+		picture->setHeight(imageHeight.intValue);
+		picture->setWidth(imageWidth.intValue);
+		picture->setColorDepth(imageDepth.intValue);
+	}
+
+	return picture;
 }
