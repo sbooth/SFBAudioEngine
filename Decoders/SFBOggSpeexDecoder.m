@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,6 +17,20 @@
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString = @"speex_string";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion = @"speex_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersionID = @"speex_version_id";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize = @"header_size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexRate = @"rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexMode = @"mode";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexModeBitstreamVersion = @"mode_bitstream_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels = @"nb_channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexBitrate = @"bitrate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFrameSize = @"frame_size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexVBR = @"vbr";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFramesPerPacket = @"frames_per_packet";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders = @"extra_headers";
 
 #define READ_SIZE_BYTES 4096
 
@@ -264,6 +278,25 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)header->nb_channels;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyOggSpeexSpeexString: [[NSString alloc] initWithCString:header->speex_string length:SPEEX_HEADER_STRING_LENGTH],
+		SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion: [[NSString alloc] initWithCString:header->speex_version length:SPEEX_HEADER_VERSION_LENGTH],
+		SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersionID: @(header->speex_version_id),
+		SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize: @(header->header_size),
+		SFBAudioDecodingPropertiesKeyOggSpeexRate: @(header->rate),
+		SFBAudioDecodingPropertiesKeyOggSpeexMode: @(header->mode),
+		SFBAudioDecodingPropertiesKeyOggSpeexModeBitstreamVersion: @(header->mode_bitstream_version),
+		SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels: @(header->nb_channels),
+		SFBAudioDecodingPropertiesKeyOggSpeexBitrate: @(header->bitrate),
+		SFBAudioDecodingPropertiesKeyOggSpeexFrameSize: @(header->frame_size),
+		SFBAudioDecodingPropertiesKeyOggSpeexVBR: header->vbr ? @YES : @NO,
+		SFBAudioDecodingPropertiesKeyOggSpeexFramesPerPacket: @(header->frames_per_packet),
+		SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders: @(header->extra_headers),
+//		SFBAudioDecodingPropertiesKeyOggSpeexReserved1: @(header->reserved1),
+//		SFBAudioDecodingPropertiesKeyOggSpeexReserved2: @(header->reserved2),
+	};
 
 	speex_header_free(header);
 
