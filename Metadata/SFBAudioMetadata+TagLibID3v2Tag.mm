@@ -238,17 +238,13 @@
 
 			float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 
-			if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
-				if((int)volumeAdjustment)
+			if(volumeAdjustment != 0.f) {
+				if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification())
 					self.replayGainTrackGain = @(volumeAdjustment);
-			}
-			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
-				if((int)volumeAdjustment)
+				else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification())
 					self.replayGainAlbumGain = @(volumeAdjustment);
-			}
-			// Fall back to track gain if identification is not specified
-			else {
-				if((int)volumeAdjustment)
+				// Fall back to track gain if identification is not specified
+				else
 					self.replayGainTrackGain = @(volumeAdjustment);
 			}
 		}
