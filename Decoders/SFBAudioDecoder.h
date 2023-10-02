@@ -330,4 +330,17 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbi
 /// Ogg Vorbis bitrate window (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow;
 
+#pragma mark - True Audio Decoder Properties
+
+/// True Audio format (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat;
+/// True Audio number of channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioNumberChannels;
+/// True Audio bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioBitsPerSample;
+/// True Audio sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSampleRate;
+/// True Audio number of samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples;
+
 NS_ASSUME_NONNULL_END
