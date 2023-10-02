@@ -155,7 +155,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 
 	SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.xiphComment(), false);
 
-	// Save album art as FLAC picture metadata blocks (https://xiph.org/flac/format.html#metadata_block_picture)
+	file.removePictures();
+
 	for(SFBAttachedPicture *attachedPicture in self.metadata.attachedPictures) {
 		auto picture = SFB::Audio::ConvertAttachedPictureToFLACPicture(attachedPicture);
 		if(picture)
