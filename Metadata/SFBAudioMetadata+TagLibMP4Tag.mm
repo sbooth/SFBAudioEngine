@@ -1,8 +1,10 @@
 //
-// Copyright (c) 2010 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
+
+#import <cstdio>
 
 #import <CoreServices/CoreServices.h>
 
@@ -92,35 +94,35 @@
 	if(tag->contains("---:com.apple.iTunes:replaygain_reference_loudness")) {
 		auto s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toString();
 		float f;
-		if(::sscanf(s.toCString(), "%f", &f) == 1)
+		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainReferenceLoudness = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_track_gain")) {
 		auto s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toString();
 		float f;
-		if(::sscanf(s.toCString(), "%f", &f) == 1)
+		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainTrackGain = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_track_peak")) {
 		auto s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toString();
 		float f;
-		if(::sscanf(s.toCString(), "%f", &f) == 1)
+		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainTrackPeak = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_album_gain")) {
 		auto s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toString();
 		float f;
-		if(::sscanf(s.toCString(), "%f", &f) == 1)
+		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainAlbumGain = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_album_peak")) {
 		auto s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toString();
 		float f;
-		if(::sscanf(s.toCString(), "%f", &f) == 1)
+		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainAlbumPeak = @(f);
 	}
 }
@@ -173,7 +175,7 @@ namespace {
 		if(value == nil)
 			tag->removeItem(key);
 		else
-			tag->setItem(key, TagLib::MP4::Item((int)value.boolValue));
+			tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
 	}
 
 	void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber *value, NSString *format = nil)
@@ -256,4 +258,6 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 
 		tag->setItem("covr", list);
 	}
+	else
+		tag->removeItem("covr");
 }

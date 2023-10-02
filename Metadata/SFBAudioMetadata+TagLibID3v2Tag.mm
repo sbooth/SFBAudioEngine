@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -238,17 +238,13 @@
 
 			float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 
-			if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
-				if((int)volumeAdjustment)
+			if(volumeAdjustment != 0.f) {
+				if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification())
 					self.replayGainTrackGain = @(volumeAdjustment);
-			}
-			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
-				if((int)volumeAdjustment)
+				else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification())
 					self.replayGainAlbumGain = @(volumeAdjustment);
-			}
-			// Fall back to track gain if identification is not specified
-			else {
-				if((int)volumeAdjustment)
+				// Fall back to track gain if identification is not specified
+				else
 					self.replayGainTrackGain = @(volumeAdjustment);
 			}
 		}
@@ -548,9 +544,9 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 	}
 
 	// Album art
-	if(setAlbumArt) {
-		tag->removeFrames("APIC");
+	tag->removeFrames("APIC");
 
+	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
 			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
 			if(!imageSource)

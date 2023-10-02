@@ -217,10 +217,10 @@ void SFB::Audio::SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::
 	SetAPETagDoubleWithFormat(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.replayGainAlbumPeak, @"%1.8f");
 
 	// Album art
-	if(setAlbumArt) {
-		tag->removeItem("Cover Art (Front)");
-		tag->removeItem("Cover Art (Back)");
+	tag->removeItem("Cover Art (Front)");
+	tag->removeItem("Cover Art (Back)");
 
+	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
 			// APE can handle front and back covers natively
 			if(SFBAttachedPictureTypeFrontCover == attachedPicture.pictureType || SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {

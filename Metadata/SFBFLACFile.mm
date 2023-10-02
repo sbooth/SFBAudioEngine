@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -99,7 +99,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 	if(file.hasXiphComment())
 		[metadata addMetadataFromTagLibXiphComment:file.xiphComment()];
 
-	// Add album art
+	// Add album art from FLAC picture metadata blocks (https://xiph.org/flac/format.html#metadata_block_picture)
+	// This is in addition to any album art read from the ID3v2 tag or Xiph comment
 	for(auto iter : file.pictureList()) {
 		NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
@@ -108,8 +109,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 			description = [NSString stringWithUTF8String:iter->description().toCString(true)];
 
 		[metadata attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
-																	 type:(SFBAttachedPictureType)iter->type()
-															  description:description]];
+																		 type:(SFBAttachedPictureType)iter->type()
+																  description:description]];
 	}
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
@@ -144,45 +145,22 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 	}
 
 	// ID3v1 and ID3v2 tags are only written if present, but a Xiph comment is always written
+	// Album art is only saved as FLAC picture metadata blocks, not to the ID3v2 tag or Xiph comment
 
 	if(file.hasID3v1Tag())
 		SFB::Audio::SetID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
 
 	if(file.hasID3v2Tag())
-		SFB::Audio::SetID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
+		SFB::Audio::SetID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(), false);
 
-	SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.xiphComment());
+	SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.xiphComment(), false);
 
-	// Add album art
+	file.removePictures();
+
 	for(SFBAttachedPicture *attachedPicture in self.metadata.attachedPictures) {
-		SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
-		if(!imageSource)
-			continue;
-
-		TagLib::FLAC::Picture *picture = new TagLib::FLAC::Picture();
-		picture->setData(TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
-		picture->setType((TagLib::FLAC::Picture::Type)attachedPicture.pictureType);
-		if(attachedPicture.pictureDescription)
-			picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
-
-		// Convert the image's UTI into a MIME type
-		NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-		if(mimeType)
-			picture->setMimeType(TagLib::StringFromNSString(mimeType));
-
-		// Flesh out the height, width, and depth
-		NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
-		if(imagePropertiesDictionary) {
-			NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
-			NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
-			NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
-
-			picture->setHeight(imageHeight.intValue);
-			picture->setWidth(imageWidth.intValue);
-			picture->setColorDepth(imageDepth.intValue);
-		}
-
-		file.addPicture(picture);
+		auto picture = SFB::Audio::ConvertAttachedPictureToFLACPicture(attachedPicture);
+		if(picture)
+			file.addPicture(picture.release());
 	}
 
 	if(!file.save()) {

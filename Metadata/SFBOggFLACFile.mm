@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -31,7 +31,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioE
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"ogg", @"oga"]];
+	return [NSSet setWithObject:@"oga"];
 }
 
 + (NSSet *)supportedMIMETypes
