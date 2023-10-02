@@ -281,8 +281,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
 	// Populate codec properties
 	_properties = @{
-		SFBAudioDecodingPropertiesKeyOggSpeexSpeexString: [[NSString alloc] initWithCString:header->speex_string length:SPEEX_HEADER_STRING_LENGTH],
-		SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion: [[NSString alloc] initWithCString:header->speex_version length:SPEEX_HEADER_VERSION_LENGTH],
+		SFBAudioDecodingPropertiesKeyOggSpeexSpeexString: [[NSString alloc] initWithBytes:header->speex_string length:SPEEX_HEADER_STRING_LENGTH encoding:NSASCIIStringEncoding],
+		SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion: [[NSString alloc] initWithBytes:header->speex_version length:SPEEX_HEADER_VERSION_LENGTH encoding:NSASCIIStringEncoding],
 		SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersionID: @(header->speex_version_id),
 		SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize: @(header->header_size),
 		SFBAudioDecodingPropertiesKeyOggSpeexRate: @(header->rate),
