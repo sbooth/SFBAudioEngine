@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,7 @@ import CoreAudio
 
 /// A HAL audio stream object
 ///
-/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`), a master element (`kAudioObjectPropertyElementMaster`), and an element for each channel
+/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`), a main element (`kAudioObjectPropertyElementMain`), and an element for each channel
 /// - remark: This class correponds to objects with base class `kAudioStreamClassID`
 public class AudioStream: AudioObject {
 	// A textual representation of this instance, suitable for debugging.
