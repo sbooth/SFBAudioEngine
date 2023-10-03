@@ -70,6 +70,7 @@ extension AudioAggregateDevice {
 
 	/// Returns the master subdevice
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyMasterSubDevice`
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "mainSubdevice")
 	public func masterSubdevice() throws -> AudioDevice {
 		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyMasterSubDevice), type: AudioObjectID.self)) as! AudioDevice
 	}
