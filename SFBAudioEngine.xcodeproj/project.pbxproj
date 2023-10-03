@@ -415,7 +415,7 @@
 		32C09BDF253B4EFB00A1932C /* SFBShortenDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32C09BDD253B4EFB00A1932C /* SFBShortenDecoder.mm */; };
 		32D73969259A771300C0E3F6 /* AudioTransportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73956259A771300C0E3F6 /* AudioTransportManager.swift */; };
 		32D7396A259A771300C0E3F6 /* LevelControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73957259A771300C0E3F6 /* LevelControl.swift */; };
-		32D7396B259A771300C0E3F6 /* AudioSubdevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73958259A771300C0E3F6 /* AudioSubdevice.swift */; };
+		32D7396B259A771300C0E3F6 /* AudioSubDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73958259A771300C0E3F6 /* AudioSubDevice.swift */; };
 		32D7396C259A771300C0E3F6 /* AudioClockDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73959259A771300C0E3F6 /* AudioClockDevice.swift */; };
 		32D7396D259A771300C0E3F6 /* AudioObjectProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395A259A771300C0E3F6 /* AudioObjectProperty.swift */; };
 		32D7396E259A771300C0E3F6 /* AudioEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395B259A771300C0E3F6 /* AudioEndpoint.swift */; };
@@ -738,7 +738,7 @@
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32D73956259A771300C0E3F6 /* AudioTransportManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioTransportManager.swift; sourceTree = "<group>"; };
 		32D73957259A771300C0E3F6 /* LevelControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LevelControl.swift; sourceTree = "<group>"; };
-		32D73958259A771300C0E3F6 /* AudioSubdevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioSubdevice.swift; sourceTree = "<group>"; };
+		32D73958259A771300C0E3F6 /* AudioSubDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioSubDevice.swift; sourceTree = "<group>"; };
 		32D73959259A771300C0E3F6 /* AudioClockDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioClockDevice.swift; sourceTree = "<group>"; };
 		32D7395A259A771300C0E3F6 /* AudioObjectProperty.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioObjectProperty.swift; sourceTree = "<group>"; };
 		32D7395B259A771300C0E3F6 /* AudioEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioEndpoint.swift; sourceTree = "<group>"; };
@@ -1018,7 +1018,7 @@
 				32D7395F259A771300C0E3F6 /* AudioStream.swift */,
 				32D7395E259A771300C0E3F6 /* AudioSystemObject.swift */,
 				32D73962259A771300C0E3F6 /* AudioAggregateDevice.swift */,
-				32D73958259A771300C0E3F6 /* AudioSubdevice.swift */,
+				32D73958259A771300C0E3F6 /* AudioSubDevice.swift */,
 				32D73956259A771300C0E3F6 /* AudioTransportManager.swift */,
 				32D73966259A771300C0E3F6 /* BooleanControl.swift */,
 				32D73957259A771300C0E3F6 /* LevelControl.swift */,
@@ -1793,7 +1793,7 @@
 				325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */,
 				3229C5AF25CF5D71002395CD /* AudioChannelLayout+SFBExtensions.swift in Sources */,
 				32DBB6F7256D65D40002DEAA /* SFBOggFLACEncoder.mm in Sources */,
-				32D7396B259A771300C0E3F6 /* AudioSubdevice.swift in Sources */,
+				32D7396B259A771300C0E3F6 /* AudioSubDevice.swift in Sources */,
 				32BC09AD2426536D008BB695 /* SFBAudioMetadata+TagLibXiphComment.mm in Sources */,
 				32D7396A259A771300C0E3F6 /* LevelControl.swift in Sources */,
 				321296822449C4B90008DC93 /* SFBWavPackDecoder.m in Sources */,

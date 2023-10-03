@@ -464,7 +464,7 @@ extension AudioObject {
 			case kAudioAggregateDeviceClassID: 	return AudioAggregateDevice(objectID)
 			case kAudioEndPointDeviceClassID:	return AudioEndpointDevice(objectID)
 			case kAudioEndPointClassID:			return AudioEndpoint(objectID)
-			case kAudioSubDeviceClassID:		return AudioSubdevice(objectID)
+			case kAudioSubDeviceClassID:		return AudioSubDevice(objectID)
 			default:
 				os_log(.debug, log: audioObjectLog, "Unknown audio device class '%{public}@'", objectClass.fourCC)
 				return AudioDevice(objectID)

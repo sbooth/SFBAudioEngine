@@ -9,10 +9,10 @@ import CoreAudio
 
 /// A HAL audio subdevice
 /// - remark: This class correponds to objects with base class `kAudioSubDeviceClassID`
-public class AudioSubdevice: AudioDevice {
+public class AudioSubDevice: AudioDevice {
 }
 
-extension AudioSubdevice {
+extension AudioSubDevice {
 	/// Returns the extra latency
 	/// - remark: This corresponds to the property `kAudioSubDevicePropertyExtraLatency`
 	public func extraLatency() throws -> Double {
@@ -42,7 +42,7 @@ extension AudioSubdevice {
 	}
 }
 
-extension AudioSubdevice {
+extension AudioSubDevice {
 	/// A thin wrapper around a HAL audio subdevice drift compensation quality setting
 	public struct DriftCompensationQuality: RawRepresentable, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
 		/// Minimum quality
@@ -72,7 +72,7 @@ extension AudioSubdevice {
 	}
 }
 
-extension AudioSubdevice.DriftCompensationQuality: CustomDebugStringConvertible {
+extension AudioSubDevice.DriftCompensationQuality: CustomDebugStringConvertible {
 	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		switch self.rawValue {
@@ -86,12 +86,12 @@ extension AudioSubdevice.DriftCompensationQuality: CustomDebugStringConvertible 
 	}
 }
 
-extension AudioSubdevice {
+extension AudioSubDevice {
 	/// Returns `true` if `self` has `selector` in `scope` on `element`
 	/// - parameter selector: The selector of the desired property
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	public func hasSelector(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) -> Bool {
+	public func hasSelector(_ selector: AudioObjectSelector<AudioSubDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) -> Bool {
 		return hasProperty(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -100,7 +100,7 @@ extension AudioSubdevice {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - throws: An error if `self` does not have the requested property
-	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) throws -> Bool {
+	public func isSelectorSettable(_ selector: AudioObjectSelector<AudioSubDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main) throws -> Bool {
 		return try isPropertySettable(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element))
 	}
 
@@ -110,12 +110,12 @@ extension AudioSubdevice {
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
 	/// - throws: An error if the property listener could not be registered
-	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioSubdevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main, perform block: PropertyChangeNotificationBlock?) throws {
+	public func whenSelectorChanges(_ selector: AudioObjectSelector<AudioSubDevice>, inScope scope: PropertyScope = .global, onElement element: PropertyElement = .main, perform block: PropertyChangeNotificationBlock?) throws {
 		try whenPropertyChanges(PropertyAddress(PropertySelector(selector.rawValue), scope: scope, element: element), perform: block)
 	}
 }
 
-extension AudioObjectSelector where T == AudioSubdevice {
+extension AudioObjectSelector where T == AudioSubDevice {
 	/// The property selector `kAudioSubDevicePropertyExtraLatency`
 	public static let extraLatency = AudioObjectSelector(kAudioSubDevicePropertyExtraLatency)
 	/// The property selector `kAudioSubDevicePropertyDriftCompensation`
