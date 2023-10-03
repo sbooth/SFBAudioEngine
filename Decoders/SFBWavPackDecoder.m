@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,6 +13,22 @@
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode = @"WavpackGetMode";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackQualifyMode = @"WavpackGetQualifyMode";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion = @"WavpackGetVersion";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat = @"WavpackGetFileFormat";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamples = @"WavpackGetNumSamples64";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame = @"WavpackGetNumSamplesInFrame";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackSampleRate = @"WavpackGetSampleRate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate = @"WavpackGetNativeSampleRate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample = @"WavpackGetBitsPerSample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample = @"WavpackGetBytesPerSample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels = @"WavpackGetNumChannels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackChannelMask = @"WavpackGetChannelMask";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackReducedChannels = @"WavpackGetReducedChannels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFloatNormExponent = @"WavpackGetFloatNormExp";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio = @"WavpackGetRatio";
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -245,6 +261,25 @@ static int can_seek_callback(void *id)
 	sourceStreamDescription.mBytesPerPacket		= (UInt32)WavpackGetBytesPerSample(_wpc);
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyWavPackMode: @(WavpackGetMode(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackQualifyMode: @(WavpackGetQualifyMode(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackVersion: @(WavpackGetVersion(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackFileFormat: @(WavpackGetFileFormat(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackNumberSamples: @(WavpackGetNumSamples64(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame: @(WavpackGetNumSamplesInFrame(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackSampleRate: @(WavpackGetSampleRate(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate: @(WavpackGetNativeSampleRate(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackBitsPerSample: @(WavpackGetBitsPerSample(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackBytesPerSample: @(WavpackGetBytesPerSample(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackNumberChannels: @(WavpackGetNumChannels(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackChannelMask: @(WavpackGetChannelMask(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackReducedChannels: @(WavpackGetReducedChannels(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackFloatNormExponent: @(WavpackGetFloatNormExp(_wpc)),
+		SFBAudioDecodingPropertiesKeyWavPackRatio: @(WavpackGetRatio(_wpc)),
+	};
 
 	_buffer = malloc(sizeof(int32_t) * (size_t)BUFFER_SIZE_FRAMES * (size_t)WavpackGetNumChannels(_wpc));
 	if(!_buffer) {

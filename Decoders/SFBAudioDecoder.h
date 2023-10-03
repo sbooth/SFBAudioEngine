@@ -330,6 +330,23 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbi
 /// Ogg Vorbis bitrate window (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow;
 
+#pragma mark - Shorten Decoder Properties
+
+/// Shorten version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion;
+/// Shorten internal file type (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType;
+/// Shorten number channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels;
+/// Shorten block size (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize;
+/// Shorten sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate;
+/// Shorten bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBitsPerSample;
+/// Shorten big endian (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian;
+
 #pragma mark - True Audio Decoder Properties
 
 /// True Audio format (\c NSNumber)
@@ -342,5 +359,38 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudi
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSampleRate;
 /// True Audio number of samples (\c NSNumber)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples;
+
+#pragma mark - WavPack Decoder Properties
+
+/// WavPack mode (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode;
+/// WavPack qualify mode (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackQualifyMode;
+/// WavPack version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion;
+/// WavPack file format (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat;
+/// WavPack number samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamples;
+/// WavPack number samples in frame (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame;
+/// WavPack sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackSampleRate;
+/// WavPack native sample rate (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate;
+/// WavPack bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample;
+/// WavPack bytes per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample;
+/// WavPack number channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels;
+/// WavPack channel mask (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackChannelMask;
+/// WavPack reduced channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackReducedChannels;
+/// WavPack float normalization exponent (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFloatNormExponent;
+/// WavPack compression ratio (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio;
 
 NS_ASSUME_NONNULL_END
