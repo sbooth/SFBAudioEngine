@@ -62,8 +62,15 @@ extension AudioAggregateDevice {
 		return try getProperty(PropertyAddress(kAudioAggregateDevicePropertyComposition), type: CFDictionary.self) as! [AnyHashable: Any]
 	}
 
+	/// Returns the main subdevice
+	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyMainSubDevice`
+	public func mainSubdevice() throws -> AudioDevice {
+		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyMainSubDevice), type: AudioObjectID.self)) as! AudioDevice
+	}
+
 	/// Returns the master subdevice
 	/// - remark: This corresponds to the property `kAudioAggregateDevicePropertyMasterSubDevice`
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "mainSubdevice")
 	public func masterSubdevice() throws -> AudioDevice {
 		return AudioObject.make(try getProperty(PropertyAddress(kAudioAggregateDevicePropertyMasterSubDevice), type: AudioObjectID.self)) as! AudioDevice
 	}
@@ -132,7 +139,10 @@ extension AudioObjectSelector where T == AudioAggregateDevice {
 	public static let activeSubDeviceList = AudioObjectSelector(kAudioAggregateDevicePropertyActiveSubDeviceList)
 	/// The property selector `kAudioAggregateDevicePropertyComposition`
 	public static let composition = AudioObjectSelector(kAudioAggregateDevicePropertyComposition)
+	/// The property selector `kAudioAggregateDevicePropertyMainSubDevice`
+	public static let mainSubDevice = AudioObjectSelector(kAudioAggregateDevicePropertyMainSubDevice)
 	/// The property selector `kAudioAggregateDevicePropertyMasterSubDevice`
+	@available(macOS, introduced: 10.0, deprecated: 12.0, renamed: "mainSubDevice")
 	public static let masterSubDevice = AudioObjectSelector(kAudioAggregateDevicePropertyMasterSubDevice)
 	/// The property selector `kAudioAggregateDevicePropertyClockDevice`
 	public static let clockDevice = AudioObjectSelector(kAudioAggregateDevicePropertyClockDevice)

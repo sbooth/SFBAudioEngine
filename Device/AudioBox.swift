@@ -9,7 +9,7 @@ import CoreAudio
 
 /// A HAL audio box object
 ///
-/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMaster`)
+/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMain`)
 /// - remark: This class correponds to objects with base class `kAudioBoxClassID`
 public class AudioBox: AudioObject {
 	/// Returns the available audio boxes
