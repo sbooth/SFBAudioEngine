@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -526,7 +526,7 @@ std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, c
 						return nullptr;
 					}
 
-					if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
+					if(![inputSource seekToOffset:(offset + static_cast<NSInteger>(localChunkDataSize)) error:nil]) {
 						os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
 						return nullptr;
 					}
@@ -565,7 +565,7 @@ std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFBInputSource *inputS
 	result->mDataOffset = offset;
 
 	// Skip the data
-	if(![inputSource seekToOffset:(offset + (NSInteger)chunkDataSize) error:nil]) {
+	if(![inputSource seekToOffset:(offset + static_cast<NSInteger>(chunkDataSize)) error:nil]) {
 		os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
 		return nullptr;
 	}
@@ -641,7 +641,7 @@ std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, con
 						return nullptr;
 					}
 
-					if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
+					if(![inputSource seekToOffset:(offset + static_cast<NSInteger>(localChunkDataSize)) error:nil]) {
 						os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
 						return nullptr;
 					}
@@ -795,7 +795,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
-	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
+	_packetCount = static_cast<AVAudioFramePosition>(soundDataChunk->mDataSize - 12) / (kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;

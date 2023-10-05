@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,7 @@ import CoreAudio
 
 /// A HAL audio transport manager object
 ///
-/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMaster`)
+/// This class has a single scope (`kAudioObjectPropertyScopeGlobal`) and a single element (`kAudioObjectPropertyElementMain`)
 /// - remark: This class correponds to objects with base class `kAudioTransportManagerClassID`
 public class AudioTransportManager: AudioPlugIn {
 	/// Returns the available audio transport managers
