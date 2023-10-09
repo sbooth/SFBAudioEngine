@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -439,7 +439,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 
 		if(audioConverter) {
 			for(NSNumber *key in audioConverterPropertySettings) {
-				AudioConverterPropertyID propertyID = (AudioConverterPropertyID)key.unsignedIntValue;
+				AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
 				switch(propertyID) {
 					case kAudioConverterSampleRateConverterComplexity:
 						result = SetAudioConverterProperty<OSType>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
