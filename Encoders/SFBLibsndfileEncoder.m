@@ -7,7 +7,7 @@
 @import os.log;
 
 @import sndfile;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBLibsndfileEncoder.h"
 

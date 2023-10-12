@@ -10,7 +10,7 @@
 
 @import ogg;
 @import speex;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBOggSpeexDecoder.h"
 

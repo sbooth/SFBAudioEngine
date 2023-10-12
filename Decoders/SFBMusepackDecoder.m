@@ -10,7 +10,7 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import mpc.dec;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBMusepackDecoder.h"
 

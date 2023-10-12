@@ -100,11 +100,7 @@
 		32351A2B2AD7782F00B3ADB9 /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32351A292AD7782500B3ADB9 /* AVFAudio.framework */; };
 		325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 325116CB2423B15200B02926 /* SFBAttachedPicture.m */; };
 		325326902AD74E0600B0DC92 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3253268F2AD74E0600B0DC92 /* CXXAudioUtilities */; };
-		325326972AD750DA00B0DC92 /* AVFAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 325326962AD750DA00B0DC92 /* AVFAudioUtilities */; };
 		325326992AD750DA00B0DC92 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 325326982AD750DA00B0DC92 /* CXXAudioUtilities */; };
-		3253269B2AD750DA00B0DC92 /* CoreAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3253269A2AD750DA00B0DC92 /* CoreAudioUtilities */; };
-		3253269D2AD750E500B0DC92 /* AVFAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3253269C2AD750E500B0DC92 /* AVFAudioUtilities */; };
-		3253269F2AD750E500B0DC92 /* CoreAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3253269E2AD750E500B0DC92 /* CoreAudioUtilities */; };
 		325326A12AD750E500B0DC92 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 325326A02AD750E500B0DC92 /* CXXAudioUtilities */; };
 		32569570256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
 		32569571256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
@@ -387,6 +383,10 @@
 		32BC09F524278B24008BB695 /* SFBAIFFFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BC09F324278B23008BB695 /* SFBAIFFFile.h */; };
 		32C09BDE253B4EFB00A1932C /* SFBShortenDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C09BDC253B4EFB00A1932C /* SFBShortenDecoder.h */; };
 		32C09BDF253B4EFB00A1932C /* SFBShortenDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32C09BDD253B4EFB00A1932C /* SFBShortenDecoder.mm */; };
+		32C648A12AD85510002AF4C0 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A02AD85510002AF4C0 /* AVFAudioExtensions */; };
+		32C648A32AD85510002AF4C0 /* CoreAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A22AD85510002AF4C0 /* CoreAudioExtensions */; };
+		32C648A52AD8551C002AF4C0 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */; };
+		32C648A72AD8551C002AF4C0 /* CoreAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A62AD8551C002AF4C0 /* CoreAudioExtensions */; };
 		32D73969259A771300C0E3F6 /* AudioTransportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73956259A771300C0E3F6 /* AudioTransportManager.swift */; };
 		32D7396A259A771300C0E3F6 /* LevelControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73957259A771300C0E3F6 /* LevelControl.swift */; };
 		32D7396B259A771300C0E3F6 /* AudioSubdevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73958259A771300C0E3F6 /* AudioSubdevice.swift */; };
@@ -754,19 +754,19 @@
 				325326A12AD750E500B0DC92 /* CXXAudioUtilities in Frameworks */,
 				32673F0F274C9D6300E46A89 /* tta-cpp.xcframework in Frameworks */,
 				32714C5C2551D4DF00029BD7 /* Foundation.framework in Frameworks */,
+				32C648A52AD8551C002AF4C0 /* AVFAudioExtensions in Frameworks */,
+				32C648A72AD8551C002AF4C0 /* CoreAudioExtensions in Frameworks */,
 				32714C5D2551D4DF00029BD7 /* CoreAudio.framework in Frameworks */,
 				32714C5E2551D4DF00029BD7 /* CoreServices.framework in Frameworks */,
 				32714C5F2551D4DF00029BD7 /* dumb.xcframework in Frameworks */,
 				32714C602551D4DF00029BD7 /* FLAC.xcframework in Frameworks */,
 				328501BA256AA1D7009140DE /* lame.xcframework in Frameworks */,
-				3253269D2AD750E500B0DC92 /* AVFAudioUtilities in Frameworks */,
 				32351A2B2AD7782F00B3ADB9 /* AVFAudio.framework in Frameworks */,
 				32714C612551D4DF00029BD7 /* MAC.xcframework in Frameworks */,
 				32714C622551D4DF00029BD7 /* mpc.xcframework in Frameworks */,
 				32714C632551D4DF00029BD7 /* mpg123.xcframework in Frameworks */,
 				32714D2D25521B7800029BD7 /* ogg.xcframework in Frameworks */,
 				32714C652551D4DF00029BD7 /* opus.xcframework in Frameworks */,
-				3253269F2AD750E500B0DC92 /* CoreAudioUtilities in Frameworks */,
 				32714C662551D4DF00029BD7 /* taglib.xcframework in Frameworks */,
 				32714C672551D4DF00029BD7 /* sndfile.xcframework in Frameworks */,
 				32714C682551D4DF00029BD7 /* speex.xcframework in Frameworks */,
@@ -792,15 +792,15 @@
 				322249D82AD6F097009C1F3A /* AVFAudio.framework in Frameworks */,
 				321388C12881B58900EC5F63 /* opus.xcframework in Frameworks */,
 				321388BB2881B58900EC5F63 /* mpc.xcframework in Frameworks */,
+				32C648A32AD85510002AF4C0 /* CoreAudioExtensions in Frameworks */,
 				321388C52881B58900EC5F63 /* speex.xcframework in Frameworks */,
-				325326972AD750DA00B0DC92 /* AVFAudioUtilities in Frameworks */,
 				321DB85524636A12004D66AF /* Foundation.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
 				321388CB2881B58A00EC5F63 /* vorbis.xcframework in Frameworks */,
 				321388BF2881B58900EC5F63 /* ogg.xcframework in Frameworks */,
-				3253269B2AD750DA00B0DC92 /* CoreAudioUtilities in Frameworks */,
 				321DB854246369E7004D66AF /* CoreServices.framework in Frameworks */,
 				325326992AD750DA00B0DC92 /* CXXAudioUtilities in Frameworks */,
+				32C648A12AD85510002AF4C0 /* AVFAudioExtensions in Frameworks */,
 				3221A3302AD5A54C00DD6CF3 /* CXXAudioUtilities in Frameworks */,
 				321388B72881B58900EC5F63 /* lame.xcframework in Frameworks */,
 				321388C32881B58900EC5F63 /* sndfile.xcframework in Frameworks */,
@@ -1432,9 +1432,9 @@
 			);
 			name = "iOS Framework";
 			packageProductDependencies = (
-				3253269C2AD750E500B0DC92 /* AVFAudioUtilities */,
-				3253269E2AD750E500B0DC92 /* CoreAudioUtilities */,
 				325326A02AD750E500B0DC92 /* CXXAudioUtilities */,
+				32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */,
+				32C648A62AD8551C002AF4C0 /* CoreAudioExtensions */,
 			);
 			productName = Framework;
 			productReference = 32714C7C2551D4DF00029BD7 /* SFBAudioEngine.framework */;
@@ -1459,9 +1459,9 @@
 			packageProductDependencies = (
 				3221A32F2AD5A54C00DD6CF3 /* CXXAudioUtilities */,
 				3253268F2AD74E0600B0DC92 /* CXXAudioUtilities */,
-				325326962AD750DA00B0DC92 /* AVFAudioUtilities */,
 				325326982AD750DA00B0DC92 /* CXXAudioUtilities */,
-				3253269A2AD750DA00B0DC92 /* CoreAudioUtilities */,
+				32C648A02AD85510002AF4C0 /* AVFAudioExtensions */,
+				32C648A22AD85510002AF4C0 /* CoreAudioExtensions */,
 			);
 			productName = Framework;
 			productReference = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */;
@@ -2122,35 +2122,35 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = CXXAudioUtilities;
 		};
-		325326962AD750DA00B0DC92 /* AVFAudioUtilities */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = AVFAudioUtilities;
-		};
 		325326982AD750DA00B0DC92 /* CXXAudioUtilities */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
 			productName = CXXAudioUtilities;
 		};
-		3253269A2AD750DA00B0DC92 /* CoreAudioUtilities */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = CoreAudioUtilities;
-		};
-		3253269C2AD750E500B0DC92 /* AVFAudioUtilities */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = AVFAudioUtilities;
-		};
-		3253269E2AD750E500B0DC92 /* CoreAudioUtilities */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = CoreAudioUtilities;
-		};
 		325326A02AD750E500B0DC92 /* CXXAudioUtilities */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
 			productName = CXXAudioUtilities;
+		};
+		32C648A02AD85510002AF4C0 /* AVFAudioExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
+			productName = AVFAudioExtensions;
+		};
+		32C648A22AD85510002AF4C0 /* CoreAudioExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
+			productName = CoreAudioExtensions;
+		};
+		32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
+			productName = AVFAudioExtensions;
+		};
+		32C648A62AD8551C002AF4C0 /* CoreAudioExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
+			productName = CoreAudioExtensions;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

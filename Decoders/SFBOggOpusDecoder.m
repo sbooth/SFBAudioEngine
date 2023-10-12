@@ -7,7 +7,7 @@
 @import os.log;
 
 @import opus.file;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBOggOpusDecoder.h"
 

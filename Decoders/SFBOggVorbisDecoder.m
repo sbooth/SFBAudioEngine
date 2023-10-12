@@ -7,7 +7,7 @@
 @import os.log;
 
 @import vorbis;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBOggVorbisDecoder.h"
 

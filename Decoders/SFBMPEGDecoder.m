@@ -8,7 +8,7 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import mpg123;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBMPEGDecoder.h"
 

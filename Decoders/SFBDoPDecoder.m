@@ -6,7 +6,7 @@
 
 @import os.log;
 
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBDoPDecoder.h"
 

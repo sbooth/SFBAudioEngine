@@ -8,7 +8,7 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import vorbis;
-@import AVFAudioUtilities;
+@import AVFAudioExtensions;
 
 #import "SFBOggVorbisEncoder.h"
 
