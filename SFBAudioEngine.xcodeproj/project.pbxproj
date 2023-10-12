@@ -11,7 +11,6 @@
 		32073139256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3207313B25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
 		3207313C25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
-		32096C89259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */; };
 		3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D71409BA26001F9A60 /* CoreAudio.framework */; };
 		321296812449C4B90008DC93 /* SFBWavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3212967F2449C4B90008DC93 /* SFBWavPackDecoder.h */; };
 		321296822449C4B90008DC93 /* SFBWavPackDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 321296802449C4B90008DC93 /* SFBWavPackDecoder.m */; };
@@ -74,8 +73,6 @@
 		321DB854246369E7004D66AF /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321DB853246369E7004D66AF /* CoreServices.framework */; };
 		321DB85524636A12004D66AF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3296828617B9D69400B3CDB4 /* Foundation.framework */; };
 		3221A3302AD5A54C00DD6CF3 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3221A32F2AD5A54C00DD6CF3 /* CXXAudioUtilities */; };
-		322249D82AD6F097009C1F3A /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322249D72AD6F097009C1F3A /* AVFAudio.framework */; };
-		322249D92AD6F0A5009C1F3A /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322249D72AD6F097009C1F3A /* AVFAudio.framework */; };
 		322859BA242417B10080B500 /* SFBAudioMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859B8242417B10080B500 /* SFBAudioMetadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		322859BB242417B10080B500 /* SFBAudioMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = 322859B9242417B10080B500 /* SFBAudioMetadata.m */; };
 		322859CC2425519A0080B500 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859CA2425519A0080B500 /* AddAudioPropertiesToDictionary.h */; };
@@ -384,30 +381,7 @@
 		32C09BDE253B4EFB00A1932C /* SFBShortenDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C09BDC253B4EFB00A1932C /* SFBShortenDecoder.h */; };
 		32C09BDF253B4EFB00A1932C /* SFBShortenDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32C09BDD253B4EFB00A1932C /* SFBShortenDecoder.mm */; };
 		32C648A12AD85510002AF4C0 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A02AD85510002AF4C0 /* AVFAudioExtensions */; };
-		32C648A32AD85510002AF4C0 /* CoreAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A22AD85510002AF4C0 /* CoreAudioExtensions */; };
 		32C648A52AD8551C002AF4C0 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */; };
-		32C648A72AD8551C002AF4C0 /* CoreAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A62AD8551C002AF4C0 /* CoreAudioExtensions */; };
-		32D73969259A771300C0E3F6 /* AudioTransportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73956259A771300C0E3F6 /* AudioTransportManager.swift */; };
-		32D7396A259A771300C0E3F6 /* LevelControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73957259A771300C0E3F6 /* LevelControl.swift */; };
-		32D7396B259A771300C0E3F6 /* AudioSubdevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73958259A771300C0E3F6 /* AudioSubdevice.swift */; };
-		32D7396C259A771300C0E3F6 /* AudioClockDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73959259A771300C0E3F6 /* AudioClockDevice.swift */; };
-		32D7396D259A771300C0E3F6 /* AudioObjectProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395A259A771300C0E3F6 /* AudioObjectProperty.swift */; };
-		32D7396E259A771300C0E3F6 /* AudioEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395B259A771300C0E3F6 /* AudioEndpoint.swift */; };
-		32D7396F259A771300C0E3F6 /* AudioControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395C259A771300C0E3F6 /* AudioControl.swift */; };
-		32D73970259A771300C0E3F6 /* AudioDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395D259A771300C0E3F6 /* AudioDevice.swift */; };
-		32D73971259A771300C0E3F6 /* AudioSystemObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395E259A771300C0E3F6 /* AudioSystemObject.swift */; };
-		32D73972259A771300C0E3F6 /* AudioStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7395F259A771300C0E3F6 /* AudioStream.swift */; };
-		32D73973259A771300C0E3F6 /* StereoPanControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73960259A771300C0E3F6 /* StereoPanControl.swift */; };
-		32D73974259A771300C0E3F6 /* AudioBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73961259A771300C0E3F6 /* AudioBox.swift */; };
-		32D73975259A771300C0E3F6 /* AudioAggregateDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73962259A771300C0E3F6 /* AudioAggregateDevice.swift */; };
-		32D73976259A771300C0E3F6 /* AudioPlugIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73963259A771300C0E3F6 /* AudioPlugIn.swift */; };
-		32D73977259A771300C0E3F6 /* AudioObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73964259A771300C0E3F6 /* AudioObject.swift */; };
-		32D73978259A771300C0E3F6 /* SliderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73965259A771300C0E3F6 /* SliderControl.swift */; };
-		32D73979259A771300C0E3F6 /* BooleanControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73966259A771300C0E3F6 /* BooleanControl.swift */; };
-		32D7397A259A771300C0E3F6 /* SelectorControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73967259A771300C0E3F6 /* SelectorControl.swift */; };
-		32D7397B259A771300C0E3F6 /* AudioEndpointDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D73968259A771300C0E3F6 /* AudioEndpointDevice.swift */; };
-		32D7399E259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7399D259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift */; };
-		32D739A0259D844500C0E3F6 /* AudioBufferListWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7399F259D844500C0E3F6 /* AudioBufferListWrapper.swift */; };
 		32D740BF255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */; };
 		32D740C0255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */; };
 		32D740C1255F6D91004D3C1A /* SFBPCMEncoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D740B0255F6D91004D3C1A /* SFBPCMEncoding.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -511,7 +485,6 @@
 /* Begin PBXFileReference section */
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
 		3207313A25631560008BEDA7 /* SFBAudioConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
-		32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioHardwareIOProcStreamUsageWrapper.swift; sourceTree = "<group>"; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3212967F2449C4B90008DC93 /* SFBWavPackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBWavPackDecoder.h; sourceTree = "<group>"; };
 		321296802449C4B90008DC93 /* SFBWavPackDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBWavPackDecoder.m; sourceTree = "<group>"; };
@@ -544,7 +517,6 @@
 		321296DD244CAB840008DC93 /* SFBDSDPCMDecoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBDSDPCMDecoder.mm; sourceTree = "<group>"; };
 		321296DE244CAB840008DC93 /* SFBDSDPCMDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBDSDPCMDecoder.h; sourceTree = "<group>"; };
 		321DB853246369E7004D66AF /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		322249D72AD6F097009C1F3A /* AVFAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFAudio.framework; path = System/Library/Frameworks/AVFAudio.framework; sourceTree = SDKROOT; };
 		322859B8242417B10080B500 /* SFBAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioMetadata.h; sourceTree = "<group>"; };
 		322859B9242417B10080B500 /* SFBAudioMetadata.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioMetadata.m; sourceTree = "<group>"; };
 		322859BC24241D780080B500 /* SFBWavPackFile.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBWavPackFile.mm; sourceTree = "<group>"; };
@@ -693,27 +665,6 @@
 		32C09BDC253B4EFB00A1932C /* SFBShortenDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBShortenDecoder.h; sourceTree = "<group>"; };
 		32C09BDD253B4EFB00A1932C /* SFBShortenDecoder.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBShortenDecoder.mm; sourceTree = "<group>"; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		32D73956259A771300C0E3F6 /* AudioTransportManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioTransportManager.swift; sourceTree = "<group>"; };
-		32D73957259A771300C0E3F6 /* LevelControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LevelControl.swift; sourceTree = "<group>"; };
-		32D73958259A771300C0E3F6 /* AudioSubdevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioSubdevice.swift; sourceTree = "<group>"; };
-		32D73959259A771300C0E3F6 /* AudioClockDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioClockDevice.swift; sourceTree = "<group>"; };
-		32D7395A259A771300C0E3F6 /* AudioObjectProperty.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioObjectProperty.swift; sourceTree = "<group>"; };
-		32D7395B259A771300C0E3F6 /* AudioEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioEndpoint.swift; sourceTree = "<group>"; };
-		32D7395C259A771300C0E3F6 /* AudioControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioControl.swift; sourceTree = "<group>"; };
-		32D7395D259A771300C0E3F6 /* AudioDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioDevice.swift; sourceTree = "<group>"; };
-		32D7395E259A771300C0E3F6 /* AudioSystemObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioSystemObject.swift; sourceTree = "<group>"; };
-		32D7395F259A771300C0E3F6 /* AudioStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioStream.swift; sourceTree = "<group>"; };
-		32D73960259A771300C0E3F6 /* StereoPanControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StereoPanControl.swift; sourceTree = "<group>"; };
-		32D73961259A771300C0E3F6 /* AudioBox.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioBox.swift; sourceTree = "<group>"; };
-		32D73962259A771300C0E3F6 /* AudioAggregateDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioAggregateDevice.swift; sourceTree = "<group>"; };
-		32D73963259A771300C0E3F6 /* AudioPlugIn.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlugIn.swift; sourceTree = "<group>"; };
-		32D73964259A771300C0E3F6 /* AudioObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioObject.swift; sourceTree = "<group>"; };
-		32D73965259A771300C0E3F6 /* SliderControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SliderControl.swift; sourceTree = "<group>"; };
-		32D73966259A771300C0E3F6 /* BooleanControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BooleanControl.swift; sourceTree = "<group>"; };
-		32D73967259A771300C0E3F6 /* SelectorControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectorControl.swift; sourceTree = "<group>"; };
-		32D73968259A771300C0E3F6 /* AudioEndpointDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioEndpointDevice.swift; sourceTree = "<group>"; };
-		32D7399D259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioChannelLayoutWrapper.swift; sourceTree = "<group>"; };
-		32D7399F259D844500C0E3F6 /* AudioBufferListWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBufferListWrapper.swift; sourceTree = "<group>"; };
 		32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioEncoder.m; sourceTree = "<group>"; };
 		32D740B0255F6D91004D3C1A /* SFBPCMEncoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBPCMEncoding.h; sourceTree = "<group>"; };
 		32D740B1255F6D91004D3C1A /* SFBAudioEncoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioEncoding.h; sourceTree = "<group>"; };
@@ -755,7 +706,6 @@
 				32673F0F274C9D6300E46A89 /* tta-cpp.xcframework in Frameworks */,
 				32714C5C2551D4DF00029BD7 /* Foundation.framework in Frameworks */,
 				32C648A52AD8551C002AF4C0 /* AVFAudioExtensions in Frameworks */,
-				32C648A72AD8551C002AF4C0 /* CoreAudioExtensions in Frameworks */,
 				32714C5D2551D4DF00029BD7 /* CoreAudio.framework in Frameworks */,
 				32714C5E2551D4DF00029BD7 /* CoreServices.framework in Frameworks */,
 				32714C5F2551D4DF00029BD7 /* dumb.xcframework in Frameworks */,
@@ -770,7 +720,6 @@
 				32714C662551D4DF00029BD7 /* taglib.xcframework in Frameworks */,
 				32714C672551D4DF00029BD7 /* sndfile.xcframework in Frameworks */,
 				32714C682551D4DF00029BD7 /* speex.xcframework in Frameworks */,
-				322249D92AD6F0A5009C1F3A /* AVFAudio.framework in Frameworks */,
 				32714C6A2551D4DF00029BD7 /* vorbis.xcframework in Frameworks */,
 				32714C6B2551D4DF00029BD7 /* wavpack.xcframework in Frameworks */,
 			);
@@ -789,10 +738,8 @@
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
 				321388B32881B58900EC5F63 /* dumb.xcframework in Frameworks */,
-				322249D82AD6F097009C1F3A /* AVFAudio.framework in Frameworks */,
 				321388C12881B58900EC5F63 /* opus.xcframework in Frameworks */,
 				321388BB2881B58900EC5F63 /* mpc.xcframework in Frameworks */,
-				32C648A32AD85510002AF4C0 /* CoreAudioExtensions in Frameworks */,
 				321388C52881B58900EC5F63 /* speex.xcframework in Frameworks */,
 				321DB85524636A12004D66AF /* Foundation.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
@@ -820,7 +767,6 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				32677249254B6BB80041B063 /* XCFrameworks */,
 				3210AB8E17B9BF8000743639 /* Products */,
-				32351A2D2AD77DEE00B3ADB9 /* Recovered References */,
 			);
 			name = CFPlayer;
 			sourceTree = "<group>";
@@ -924,14 +870,6 @@
 			path = Player;
 			sourceTree = "<group>";
 		};
-		32351A2D2AD77DEE00B3ADB9 /* Recovered References */ = {
-			isa = PBXGroup;
-			children = (
-				322249D72AD6F097009C1F3A /* AVFAudio.framework */,
-			);
-			name = "Recovered References";
-			sourceTree = "<group>";
-		};
 		32677249254B6BB80041B063 /* XCFrameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -952,35 +890,6 @@
 				3267724B254B6BB80041B063 /* wavpack.xcframework */,
 			);
 			path = XCFrameworks;
-			sourceTree = "<group>";
-		};
-		3268F83C24548A81006A5911 /* Device */ = {
-			isa = PBXGroup;
-			children = (
-				32D7395A259A771300C0E3F6 /* AudioObjectProperty.swift */,
-				32D73964259A771300C0E3F6 /* AudioObject.swift */,
-				32D73961259A771300C0E3F6 /* AudioBox.swift */,
-				32D73959259A771300C0E3F6 /* AudioClockDevice.swift */,
-				32D7395C259A771300C0E3F6 /* AudioControl.swift */,
-				32D7395D259A771300C0E3F6 /* AudioDevice.swift */,
-				32D7395B259A771300C0E3F6 /* AudioEndpoint.swift */,
-				32D73968259A771300C0E3F6 /* AudioEndpointDevice.swift */,
-				32D73963259A771300C0E3F6 /* AudioPlugIn.swift */,
-				32D7395F259A771300C0E3F6 /* AudioStream.swift */,
-				32D7395E259A771300C0E3F6 /* AudioSystemObject.swift */,
-				32D73962259A771300C0E3F6 /* AudioAggregateDevice.swift */,
-				32D73958259A771300C0E3F6 /* AudioSubdevice.swift */,
-				32D73956259A771300C0E3F6 /* AudioTransportManager.swift */,
-				32D73966259A771300C0E3F6 /* BooleanControl.swift */,
-				32D73957259A771300C0E3F6 /* LevelControl.swift */,
-				32D73967259A771300C0E3F6 /* SelectorControl.swift */,
-				32D73965259A771300C0E3F6 /* SliderControl.swift */,
-				32D73960259A771300C0E3F6 /* StereoPanControl.swift */,
-				32D7399F259D844500C0E3F6 /* AudioBufferListWrapper.swift */,
-				32D7399D259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift */,
-				32096C88259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift */,
-			);
-			path = Device;
 			sourceTree = "<group>";
 		};
 		3268F8612455B527006A5911 /* Analysis */ = {
@@ -1020,7 +929,6 @@
 				3268F86F2455B611006A5911 /* README.md */,
 				325A5E842443839F003138D5 /* LICENSE.txt */,
 				322B5D76108C210400CA9BDE /* Player */,
-				3268F83C24548A81006A5911 /* Device */,
 				322B5B9D108BA7E400CA9BDE /* Decoders */,
 				32D740AE255F6D91004D3C1A /* Encoders */,
 				32D65528115FC570002B275C /* Input */,
@@ -1434,7 +1342,6 @@
 			packageProductDependencies = (
 				325326A02AD750E500B0DC92 /* CXXAudioUtilities */,
 				32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */,
-				32C648A62AD8551C002AF4C0 /* CoreAudioExtensions */,
 			);
 			productName = Framework;
 			productReference = 32714C7C2551D4DF00029BD7 /* SFBAudioEngine.framework */;
@@ -1461,7 +1368,6 @@
 				3253268F2AD74E0600B0DC92 /* CXXAudioUtilities */,
 				325326982AD750DA00B0DC92 /* CXXAudioUtilities */,
 				32C648A02AD85510002AF4C0 /* AVFAudioExtensions */,
-				32C648A22AD85510002AF4C0 /* CoreAudioExtensions */,
 			);
 			productName = Framework;
 			productReference = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */;
@@ -1630,7 +1536,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				325A5E89244493B9003138D5 /* SFBMPEGDecoder.m in Sources */,
-				32D7397B259A771300C0E3F6 /* AudioEndpointDevice.swift in Sources */,
 				326D3CAF242D2A21002AEC52 /* SFBDSDIFFFile.mm in Sources */,
 				322859BB242417B10080B500 /* SFBAudioMetadata.m in Sources */,
 				321296DF244CAB840008DC93 /* SFBDSDPCMDecoder.mm in Sources */,
@@ -1645,45 +1550,30 @@
 				326D3CC3242D2A21002AEC52 /* SFBOggSpeexFile.mm in Sources */,
 				326D3CBD242D2A21002AEC52 /* SFBMusepackFile.mm in Sources */,
 				326D3C95242CE9D1002AEC52 /* SFBAudioProperties.m in Sources */,
-				32D73979259A771300C0E3F6 /* BooleanControl.swift in Sources */,
-				32D73971259A771300C0E3F6 /* AudioSystemObject.swift in Sources */,
 				321296862449FC700008DC93 /* SFBTrueAudioDecoder.mm in Sources */,
-				32D73978259A771300C0E3F6 /* SliderControl.swift in Sources */,
 				326D3CB9242D2A21002AEC52 /* SFBMonkeysAudioFile.mm in Sources */,
 				322859CD2425519A0080B500 /* AddAudioPropertiesToDictionary.mm in Sources */,
 				3212969E244A60680008DC93 /* SFBLibsndfileDecoder.m in Sources */,
 				322A916325725637006795AA /* SFBLibsndfileEncoder.m in Sources */,
 				321296DC244C8F700008DC93 /* SFBDoPDecoder.m in Sources */,
-				32D73974259A771300C0E3F6 /* AudioBox.swift in Sources */,
-				32D739A0259D844500C0E3F6 /* AudioBufferListWrapper.swift in Sources */,
 				325A5E3E24408C8D003138D5 /* SFBAudioPlayer.mm in Sources */,
 				326D3CC9242D2A21002AEC52 /* SFBScreamTracker3ModuleFile.mm in Sources */,
 				32DD9D7E257BCF8A00B47CFD /* SFBOggOpusEncoder.mm in Sources */,
 				322859D8242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,
-				32D73972259A771300C0E3F6 /* AudioStream.swift in Sources */,
-				32D73970259A771300C0E3F6 /* AudioDevice.swift in Sources */,
-				32096C89259EDA5C004F0120 /* AudioHardwareIOProcStreamUsageWrapper.swift in Sources */,
-				32D73976259A771300C0E3F6 /* AudioPlugIn.swift in Sources */,
 				325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */,
 				325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */,
-				32D7399E259D835600C0E3F6 /* AudioChannelLayoutWrapper.swift in Sources */,
-				32D73975259A771300C0E3F6 /* AudioAggregateDevice.swift in Sources */,
 				326EE4322561C50B00277700 /* SFBMonkeysAudioEncoder.mm in Sources */,
 				322A9142256EEF71006795AA /* SFBCoreAudioEncoder.mm in Sources */,
 				328501CC256AF4DC009140DE /* SFBOggSpeexEncoder.m in Sources */,
-				32D7396C259A771300C0E3F6 /* AudioClockDevice.swift in Sources */,
-				32D7396F259A771300C0E3F6 /* AudioControl.swift in Sources */,
 				326D3CB1242D2A21002AEC52 /* SFBDSFFile.mm in Sources */,
 				32DA679325360D8A004BE933 /* SFBAudioMetadata.swift in Sources */,
 				32D740CB255F6D91004D3C1A /* SFBFileOutputSource.m in Sources */,
 				326D3CCB242D2A21002AEC52 /* SFBTrueAudioFile.mm in Sources */,
 				3207313B25631560008BEDA7 /* SFBAudioConverter.m in Sources */,
-				32D7397A259A771300C0E3F6 /* SelectorControl.swift in Sources */,
 				325A5E09243F8D8B003138D5 /* SFBFileContentsInputSource.m in Sources */,
 				32DFEC5925698EFF005D4C39 /* SFBOggVorbisEncoder.m in Sources */,
 				326D3CC1242D2A21002AEC52 /* SFBOggOpusFile.mm in Sources */,
 				32D740D7255F6D91004D3C1A /* SFBOutputSource.m in Sources */,
-				32D73977259A771300C0E3F6 /* AudioObject.swift in Sources */,
 				326EE42C2561666E00277700 /* SFBFLACEncoder.mm in Sources */,
 				326D3C98242CF79C002AEC52 /* SFBAudioFile.m in Sources */,
 				32D740CD255F6D91004D3C1A /* SFBMutableDataOutputSource.m in Sources */,
@@ -1696,14 +1586,12 @@
 				326D3CCF242D2A21002AEC52 /* SFBWavPackFile.mm in Sources */,
 				326D3CC7242D2A21002AEC52 /* SFBProTrackerModuleFile.mm in Sources */,
 				32DFEC4E2568B07E005D4C39 /* SFBTrueAudioEncoder.mm in Sources */,
-				32D7396E259A771300C0E3F6 /* AudioEndpoint.swift in Sources */,
 				32DA679025360B94004BE933 /* SFBAudioProperties.swift in Sources */,
 				32129696244A3E090008DC93 /* SFBOggOpusDecoder.m in Sources */,
 				32129692244A2AD80008DC93 /* SFBOggVorbisDecoder.m in Sources */,
 				325A5E0C243F8D8B003138D5 /* SFBHTTPInputSource.m in Sources */,
 				326D3CBF242D2A21002AEC52 /* SFBOggFLACFile.mm in Sources */,
 				326D3CB7242D2A21002AEC52 /* SFBImpulseTrackerModuleFile.mm in Sources */,
-				32D7396D259A771300C0E3F6 /* AudioObjectProperty.swift in Sources */,
 				322859D4242554040080B500 /* SFBAudioMetadata+TagLibTag.mm in Sources */,
 				3268F81E245229FD006A5911 /* SFBAudioPlayerNode.swift in Sources */,
 				32C09BDF253B4EFB00A1932C /* SFBShortenDecoder.mm in Sources */,
@@ -1714,18 +1602,14 @@
 				326D3CC5242D2A21002AEC52 /* SFBOggVorbisFile.mm in Sources */,
 				321296D7244C731B0008DC93 /* SFBDSDIFFDecoder.mm in Sources */,
 				325A5E8024434123003138D5 /* SFBAudioPlayer.swift in Sources */,
-				32D73969259A771300C0E3F6 /* AudioTransportManager.swift in Sources */,
 				321296B0244B459B0008DC93 /* SFBDSDDecoder.m in Sources */,
-				32D73973259A771300C0E3F6 /* StereoPanControl.swift in Sources */,
 				32D740BF255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */,
 				325A5E08243F8D8B003138D5 /* SFBInputSource.m in Sources */,
 				3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */,
 				326D3CCD242D2A21002AEC52 /* SFBWAVEFile.mm in Sources */,
 				325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */,
 				32DBB6F7256D65D40002DEAA /* SFBOggFLACEncoder.mm in Sources */,
-				32D7396B259A771300C0E3F6 /* AudioSubdevice.swift in Sources */,
 				32BC09AD2426536D008BB695 /* SFBAudioMetadata+TagLibXiphComment.mm in Sources */,
-				32D7396A259A771300C0E3F6 /* LevelControl.swift in Sources */,
 				321296822449C4B90008DC93 /* SFBWavPackDecoder.m in Sources */,
 				3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */,
 				325A5E1B243F8DC0003138D5 /* SFBAudioDecoder.m in Sources */,
@@ -2137,20 +2021,10 @@
 			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
 			productName = AVFAudioExtensions;
 		};
-		32C648A22AD85510002AF4C0 /* CoreAudioExtensions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = CoreAudioExtensions;
-		};
 		32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
 			productName = AVFAudioExtensions;
-		};
-		32C648A62AD8551C002AF4C0 /* CoreAudioExtensions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = CoreAudioExtensions;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
