@@ -5,6 +5,7 @@
 //
 
 import AppKit
+import CAAudioHardware
 
 /// An item in a playlist
 struct PlaylistItem: Identifiable {
@@ -106,7 +107,7 @@ class PlayerWindowController: NSWindowController {
 		updateDeviceMenu()
 
 		// Create a repeating timer to update the UI with the player's playback position
-		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+		timer = DispatchSource.makeTimerSource(queue: .main)
 		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(100))
 
 		timer.setEventHandler {
