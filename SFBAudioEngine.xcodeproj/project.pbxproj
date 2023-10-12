@@ -127,6 +127,8 @@
 		322A916225725637006795AA /* SFBLibsndfileEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A915F25725637006795AA /* SFBLibsndfileEncoder.h */; };
 		322A916325725637006795AA /* SFBLibsndfileEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A916025725637006795AA /* SFBLibsndfileEncoder.m */; };
 		322A916425725637006795AA /* SFBLibsndfileEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A916025725637006795AA /* SFBLibsndfileEncoder.m */; };
+		32351A2A2AD7782500B3ADB9 /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32351A292AD7782500B3ADB9 /* AVFAudio.framework */; };
+		32351A2B2AD7782F00B3ADB9 /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32351A292AD7782500B3ADB9 /* AVFAudio.framework */; };
 		325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 325116CB2423B15200B02926 /* SFBAttachedPicture.m */; };
 		32569570256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
 		32569571256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
@@ -152,7 +154,6 @@
 		325A5E1B243F8DC0003138D5 /* SFBAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E16243F8DC0003138D5 /* SFBAudioDecoder.m */; };
 		325A5E3E24408C8D003138D5 /* SFBAudioPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E3C24408C8D003138D5 /* SFBAudioPlayer.mm */; };
 		325A5E3F24408C8D003138D5 /* SFBAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E3D24408C8D003138D5 /* SFBAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		325A5E412440960C003138D5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325A5E402440960C003138D5 /* AVFoundation.framework */; };
 		325A5E8024434123003138D5 /* SFBAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E4A24422F6C003138D5 /* SFBAudioPlayer.swift */; };
 		325A5E83244342B5003138D5 /* SFBAudioEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E812443420C003138D5 /* SFBAudioEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		325A5E85244383AD003138D5 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 325A5E842443839F003138D5 /* LICENSE.txt */; };
@@ -366,7 +367,6 @@
 		32714C562551D4DF00029BD7 /* SFBInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32DB245894ED002BC014 /* SFBInputSource.swift */; };
 		32714C582551D4DF00029BD7 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A1012016A50C2400EC1F9C /* Accelerate.framework */; };
 		32714C592551D4DF00029BD7 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */; };
-		32714C5B2551D4DF00029BD7 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325A5E402440960C003138D5 /* AVFoundation.framework */; };
 		32714C5C2551D4DF00029BD7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3296828617B9D69400B3CDB4 /* Foundation.framework */; };
 		32714C5D2551D4DF00029BD7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D71409BA26001F9A60 /* CoreAudio.framework */; };
 		32714C5E2551D4DF00029BD7 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321DB853246369E7004D66AF /* CoreServices.framework */; };
@@ -604,6 +604,7 @@
 		322A9144256EFF53006795AA /* SFBAudioEngineTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBAudioEngineTypes.h; sourceTree = "<group>"; };
 		322A915F25725637006795AA /* SFBLibsndfileEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBLibsndfileEncoder.h; sourceTree = "<group>"; };
 		322A916025725637006795AA /* SFBLibsndfileEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLibsndfileEncoder.m; sourceTree = "<group>"; };
+		32351A292AD7782500B3ADB9 /* AVFAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFAudio.framework; path = System/Library/Frameworks/AVFAudio.framework; sourceTree = SDKROOT; };
 		325116CB2423B15200B02926 /* SFBAttachedPicture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAttachedPicture.m; sourceTree = "<group>"; };
 		3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBOggOpusEncoder.h; sourceTree = "<group>"; };
 		3259D16325D987D2005F636F /* SFBAudioFileWrapper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SFBAudioFileWrapper.hpp; sourceTree = "<group>"; };
@@ -794,7 +795,6 @@
 			files = (
 				32714C582551D4DF00029BD7 /* Accelerate.framework in Frameworks */,
 				32714C592551D4DF00029BD7 /* AudioToolbox.framework in Frameworks */,
-				32714C5B2551D4DF00029BD7 /* AVFoundation.framework in Frameworks */,
 				32673F0F274C9D6300E46A89 /* tta-cpp.xcframework in Frameworks */,
 				32714C5C2551D4DF00029BD7 /* Foundation.framework in Frameworks */,
 				32714C5D2551D4DF00029BD7 /* CoreAudio.framework in Frameworks */,
@@ -802,6 +802,7 @@
 				32714C5F2551D4DF00029BD7 /* dumb.xcframework in Frameworks */,
 				32714C602551D4DF00029BD7 /* FLAC.xcframework in Frameworks */,
 				328501BA256AA1D7009140DE /* lame.xcframework in Frameworks */,
+				32351A2B2AD7782F00B3ADB9 /* AVFAudio.framework in Frameworks */,
 				32714C612551D4DF00029BD7 /* MAC.xcframework in Frameworks */,
 				32714C622551D4DF00029BD7 /* mpc.xcframework in Frameworks */,
 				32714C632551D4DF00029BD7 /* mpg123.xcframework in Frameworks */,
@@ -819,13 +820,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32351A2A2AD7782500B3ADB9 /* AVFAudio.framework in Frameworks */,
 				321388CD2881B58A00EC5F63 /* wavpack.xcframework in Frameworks */,
 				321388C92881B58A00EC5F63 /* tta-cpp.xcframework in Frameworks */,
 				321388B92881B58900EC5F63 /* MAC.xcframework in Frameworks */,
 				32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
-				325A5E412440960C003138D5 /* AVFoundation.framework in Frameworks */,
 				321388B32881B58900EC5F63 /* dumb.xcframework in Frameworks */,
 				321388C12881B58900EC5F63 /* opus.xcframework in Frameworks */,
 				321388BB2881B58900EC5F63 /* mpc.xcframework in Frameworks */,
@@ -870,6 +871,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				32351A292AD7782500B3ADB9 /* AVFAudio.framework */,
 				32A1012016A50C2400EC1F9C /* Accelerate.framework */,
 				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,
 				32AEB2D61409BA26001F9A60 /* AudioUnit.framework */,
