@@ -5,7 +5,7 @@
 //
 
 import Foundation
-import CoreAudio
+import CoreAudioTypes
 @_implementationOnly import CoreAudioUtilities
 
 /// A thin wrapper around a variable-length `AudioChannelLayout` structure
