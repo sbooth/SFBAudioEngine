@@ -7,10 +7,10 @@
 @import os.log;
 
 @import opus.file;
+@import AVFAudioUtilities;
 
 #import "SFBOggOpusDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";

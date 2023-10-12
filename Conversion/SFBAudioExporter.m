@@ -1,16 +1,17 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
+@import AVFAudioUtilities;
+
 #import "SFBAudioExporter.h"
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
-#import "AVAudioFormat+SFBFormatTransformation.h"
 
 // NSError domain for SFBAudioExporter
 NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.AudioExporter";

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -74,7 +74,7 @@ CF_ENUM(int) {
 
 #ifdef __OBJC__
 
-#import <AVFoundation/AVFoundation.h>
+#import <AVFAudio/AVFAudio.h>
 
 #pragma mark - Constants for Unknowns
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,10 +8,9 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import vorbis;
+@import AVFAudioUtilities;
 
 #import "SFBOggVorbisEncoder.h"
-
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
 

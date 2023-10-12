@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,10 +8,9 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import mpc.enc;
+@import AVFAudioUtilities;
 
 #import "SFBMusepackEncoder.h"
-
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine.Encoder.Musepack";
 

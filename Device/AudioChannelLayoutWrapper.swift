@@ -1,11 +1,12 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 import Foundation
 import CoreAudio
+@_implementationOnly import CoreAudioUtilities
 
 /// A thin wrapper around a variable-length `AudioChannelLayout` structure
 public struct AudioChannelLayoutWrapper {
@@ -52,7 +53,7 @@ public struct AudioChannelLayoutWrapper {
 	}
 }
 
-import AVFoundation
+import AVFAudio
 
 extension AudioChannelLayoutWrapper {
 	/// Returns `self` converted to an `AVAudioChannelLayout`object

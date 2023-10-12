@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,10 +10,10 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import mpc.dec;
+@import AVFAudioUtilities;
 
 #import "SFBMusepackDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";

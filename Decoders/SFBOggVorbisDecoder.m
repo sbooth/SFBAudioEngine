@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -7,10 +7,10 @@
 @import os.log;
 
 @import vorbis;
+@import AVFAudioUtilities;
 
 #import "SFBOggVorbisDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
