@@ -5,8 +5,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <CoreAudio/CoreAudio.h>
 #import <AVFAudio/AVFAudio.h>
+#if TARGET_OS_OSX
+#import <CoreAudio/CoreAudio.h>
+#endif
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
 

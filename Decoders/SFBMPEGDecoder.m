@@ -8,10 +8,10 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import mpg123;
+@import AVFAudioExtensions;
 
 #import "SFBMPEGDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";

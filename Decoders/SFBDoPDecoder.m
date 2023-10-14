@@ -1,14 +1,15 @@
 //
-// Copyright (c) 2014 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
+@import AVFAudioExtensions;
+
 #import "SFBDoPDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"

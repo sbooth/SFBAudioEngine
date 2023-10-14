@@ -6,9 +6,10 @@
 
 @import os.log;
 
+@import AVFAudioExtensions;
+
 #import "SFBLoopableRegionDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "SFBAudioDecoder+Internal.h"
 
 @interface SFBLoopableRegionDecoder ()
