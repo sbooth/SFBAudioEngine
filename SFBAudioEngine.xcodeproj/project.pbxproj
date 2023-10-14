@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -436,6 +436,8 @@
 		32DFEC5A25698EFF005D4C39 /* SFBOggVorbisEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32DFEC5725698EFF005D4C39 /* SFBOggVorbisEncoder.m */; };
 		32DFEC5B25698EFF005D4C39 /* SFBOggVorbisEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */; };
 		32DFEC5C25698EFF005D4C39 /* SFBOggVorbisEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */; };
+		32E863B52ADB37E0005DDCA4 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */; platformFilters = (macos, ); };
+		32E863BC2ADB380F005DDCA4 /* Tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32E863BB2ADB380F005DDCA4 /* Tests.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -452,6 +454,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 32B37577288119C80067A4AE;
 			remoteInfo = XCFrameworks;
+		};
+		32E863B62ADB37E0005DDCA4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 32C212D41091116D00BA2493;
+			remoteInfo = "macOS Framework";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -693,6 +702,8 @@
 		32DFEC472568B07E005D4C39 /* SFBTrueAudioEncoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBTrueAudioEncoder.mm; sourceTree = "<group>"; };
 		32DFEC5725698EFF005D4C39 /* SFBOggVorbisEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBOggVorbisEncoder.m; sourceTree = "<group>"; };
 		32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBOggVorbisEncoder.h; sourceTree = "<group>"; };
+		32E863B12ADB37E0005DDCA4 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		32E863BB2ADB380F005DDCA4 /* Tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Tests.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -757,6 +768,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		32E863AE2ADB37E0005DDCA4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32E863B52ADB37E0005DDCA4 /* SFBAudioEngine.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -764,6 +783,7 @@
 			isa = PBXGroup;
 			children = (
 				32AEB27B1409AC84001F9A60 /* SFBAudioEngine */,
+				32E863B22ADB37E0005DDCA4 /* Tests */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				32677249254B6BB80041B063 /* XCFrameworks */,
 				3210AB8E17B9BF8000743639 /* Products */,
@@ -801,6 +821,7 @@
 			children = (
 				3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */,
 				32714C7C2551D4DF00029BD7 /* SFBAudioEngine.framework */,
+				32E863B12ADB37E0005DDCA4 /* Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1036,6 +1057,14 @@
 				32D740B7255F6D91004D3C1A /* SFBMutableDataOutputSource.m */,
 			);
 			path = Output;
+			sourceTree = "<group>";
+		};
+		32E863B22ADB37E0005DDCA4 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				32E863BB2ADB380F005DDCA4 /* Tests.mm */,
+			);
+			path = Tests;
 			sourceTree = "<group>";
 		};
 		32EA67F5112BC4AE006C26F1 /* Metadata */ = {
@@ -1373,6 +1402,24 @@
 			productReference = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		32E863B02ADB37E0005DDCA4 /* Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32E863B82ADB37E0005DDCA4 /* Build configuration list for PBXNativeTarget "Tests" */;
+			buildPhases = (
+				32E863AD2ADB37E0005DDCA4 /* Sources */,
+				32E863AE2ADB37E0005DDCA4 /* Frameworks */,
+				32E863AF2ADB37E0005DDCA4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				32E863B72ADB37E0005DDCA4 /* PBXTargetDependency */,
+			);
+			name = Tests;
+			productName = Tests;
+			productReference = 32E863B12ADB37E0005DDCA4 /* Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1389,6 +1436,9 @@
 					};
 					32C212D41091116D00BA2493 = {
 						LastSwiftMigration = 1140;
+					};
+					32E863B02ADB37E0005DDCA4 = {
+						CreatedOnToolsVersion = 15.0;
 					};
 				};
 			};
@@ -1411,6 +1461,7 @@
 				32C212D41091116D00BA2493 /* macOS Framework */,
 				32714BAB2551D4DF00029BD7 /* iOS Framework */,
 				32B37577288119C80067A4AE /* XCFrameworks */,
+				32E863B02ADB37E0005DDCA4 /* Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -1431,6 +1482,13 @@
 			files = (
 				3268F8702455B611006A5911 /* README.md in Resources */,
 				325A5E85244383AD003138D5 /* LICENSE.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		32E863AF2ADB37E0005DDCA4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1625,6 +1683,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		32E863AD2ADB37E0005DDCA4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32E863BC2ADB380F005DDCA4 /* Tests.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1637,6 +1703,14 @@
 			isa = PBXTargetDependency;
 			target = 32B37577288119C80067A4AE /* XCFrameworks */;
 			targetProxy = 32B3757D288119F00067A4AE /* PBXContainerItemProxy */;
+		};
+		32E863B72ADB37E0005DDCA4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilters = (
+				macos,
+			);
+			target = 32C212D41091116D00BA2493 /* macOS Framework */;
+			targetProxy = 32E863B62ADB37E0005DDCA4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1783,6 +1857,58 @@
 				PRODUCT_NAME = SFBAudioEngine;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		32E863B92ADB37E0005DDCA4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		32E863BA2ADB37E0005DDCA4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1971,6 +2097,15 @@
 			buildConfigurations = (
 				32C212D71091116D00BA2493 /* Debug */,
 				32C212D81091116D00BA2493 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		32E863B82ADB37E0005DDCA4 /* Build configuration list for PBXNativeTarget "Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32E863B92ADB37E0005DDCA4 /* Debug */,
+				32E863BA2ADB37E0005DDCA4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
