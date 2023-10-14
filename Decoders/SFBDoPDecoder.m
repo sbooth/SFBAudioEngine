@@ -6,9 +6,10 @@
 
 @import os.log;
 
+@import AVFAudioExtensions;
+
 #import "SFBDoPDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"

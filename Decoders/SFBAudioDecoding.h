@@ -5,7 +5,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AVFoundation/AVFoundation.h>
+#import <AVFAudio/AVFAudio.h>
 
 #import <SFBAudioEngine/SFBAudioEngineTypes.h>
 #import <SFBAudioEngine/SFBInputSource.h>

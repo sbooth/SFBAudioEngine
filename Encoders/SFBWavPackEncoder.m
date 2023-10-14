@@ -1,11 +1,12 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
+@import AudioToolbox;
 @import CommonCrypto;
 
 @import wavpack;

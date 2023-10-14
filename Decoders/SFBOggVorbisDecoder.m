@@ -7,10 +7,10 @@
 @import os.log;
 
 @import vorbis;
+@import AVFAudioExtensions;
 
 #import "SFBOggVorbisDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";

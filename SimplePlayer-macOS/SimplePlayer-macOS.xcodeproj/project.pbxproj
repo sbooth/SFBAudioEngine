@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3219C7CD2AD8691A004C16C5 /* CAAudioHardware in Frameworks */ = {isa = PBXBuildFile; productRef = 3219C7CC2AD8691A004C16C5 /* CAAudioHardware */; };
 		32714CC12551FED700029BD7 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32714CB92551FED700029BD7 /* MainMenu.xib */; };
 		32714CC32551FED700029BD7 /* SFBDummyClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 32714CBC2551FED700029BD7 /* SFBDummyClass.m */; };
 		32714CC42551FED700029BD7 /* PlayerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32714CBD2551FED700029BD7 /* PlayerWindow.xib */; };
@@ -73,6 +74,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32714CEC2551FF9400029BD7 /* SFBAudioEngine.framework in Frameworks */,
+				3219C7CD2AD8691A004C16C5 /* CAAudioHardware in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,6 +147,9 @@
 			dependencies = (
 			);
 			name = SimplePlayer;
+			packageProductDependencies = (
+				3219C7CC2AD8691A004C16C5 /* CAAudioHardware */,
+			);
 			productName = SimplePlayer;
 			productReference = 3210AB8D17B9BF8000743639 /* SimplePlayer.app */;
 			productType = "com.apple.product-type.application";
@@ -155,7 +160,8 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 				ORGANIZATIONNAME = sbooth.org;
 				TargetAttributes = {
 					3252E83A10CC9E4500F1AA23 = {
@@ -172,6 +178,9 @@
 				Base,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* CFPlayer */;
+			packageReferences = (
+				3219C7CB2AD8691A004C16C5 /* XCRemoteSwiftPackageReference "CAAudioHardware" */,
+			);
 			productRefGroup = 3210AB8E17B9BF8000743639 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -236,6 +245,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -254,6 +264,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -303,9 +314,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -382,9 +395,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
@@ -439,6 +454,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3219C7CB2AD8691A004C16C5 /* XCRemoteSwiftPackageReference "CAAudioHardware" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sbooth/CAAudioHardware";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3219C7CC2AD8691A004C16C5 /* CAAudioHardware */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3219C7CB2AD8691A004C16C5 /* XCRemoteSwiftPackageReference "CAAudioHardware" */;
+			productName = CAAudioHardware;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
 }

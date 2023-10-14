@@ -10,10 +10,10 @@
 
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import mpc.dec;
+@import AVFAudioExtensions;
 
 #import "SFBMusepackDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";

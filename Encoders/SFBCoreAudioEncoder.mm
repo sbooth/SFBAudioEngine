@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -16,6 +16,7 @@
 #import "SFBCAStreamBasicDescription.hpp"
 #import "SFBExtAudioFileWrapper.hpp"
 
+#import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
@@ -324,9 +325,22 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 		fileType = static_cast<AudioFileTypeID>(fileTypeSetting.unsignedIntValue);
 	else {
 		auto typesForExtension = AudioFileTypeIDsForExtension(_outputSource.url.pathExtension);
+		if(typesForExtension.empty()) {
+			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set and extension \"%{public}@\" has no known AudioFileTypeID", _outputSource.url.pathExtension);
+
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
+												 code:SFBAudioEncoderErrorCodeInvalidFormat
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is an unknown type.", @"")
+												  url:_outputSource.url
+										failureReason:NSLocalizedString(@"Unknown file type", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file's extension does not match any known file type.", @"")];
+
+			return NO;
+		}
+
 		// There is no way to determine caller intent and select the most appropriate type; just use the first one
-		if(!typesForExtension.empty())
-			fileType = typesForExtension[0];
+		fileType = typesForExtension[0];
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set: guessed '%{public}.4s' based on extension \"%{public}@\"", SFBCStringForOSType(fileType), _outputSource.url.pathExtension);
 	}
 
@@ -336,13 +350,24 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 		formatID = static_cast<AudioFormatID>(formatIDSetting.unsignedIntValue);
 	else {
 		auto availableFormatIDs = AudioFormatIDsForFileTypeID(fileType, true);
-		// There is no way to determine caller intent and select the most appropriate format; use PCM if available, otherwise use the first one
-		if(!availableFormatIDs.empty()) {
-			formatID = availableFormatIDs[0];
-			auto result = std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
-			if(result != std::cend(availableFormatIDs))
-				formatID = *result;
+		if(availableFormatIDs.empty()) {
+			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set and file type '%{public}.4s' has no known AudioFormatID", SFBCStringForOSType(fileType));
+
+			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
+											 code:SFBAudioEncoderErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is an unsupported audio format.", @"")
+											  url:_outputSource.url
+									failureReason:NSLocalizedString(@"Unsupported audio format", @"")
+							   recoverySuggestion:NSLocalizedString(@"There are no supported audio formats for encoding files of this type.", @"")];
+
+			return NO;
 		}
+
+		// There is no way to determine caller intent and select the most appropriate format; use PCM if available, otherwise use the first one
+		formatID = availableFormatIDs[0];
+		auto result = std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
+		if(result != std::cend(availableFormatIDs))
+			formatID = *result;
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set: guessed '%{public}.4s' based on format '%{public}.4s'", SFBCStringForOSType(formatID), SFBCStringForOSType(fileType));
 	}
 
@@ -439,7 +464,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 
 		if(audioConverter) {
 			for(NSNumber *key in audioConverterPropertySettings) {
-				AudioConverterPropertyID propertyID = (AudioConverterPropertyID)key.unsignedIntValue;
+				AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
 				switch(propertyID) {
 					case kAudioConverterSampleRateConverterComplexity:
 						result = SetAudioConverterProperty<OSType>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);

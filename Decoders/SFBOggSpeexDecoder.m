@@ -10,10 +10,10 @@
 
 @import ogg;
 @import speex;
+@import AVFAudioExtensions;
 
 #import "SFBOggSpeexDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
