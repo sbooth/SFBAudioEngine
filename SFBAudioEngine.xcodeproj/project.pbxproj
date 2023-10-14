@@ -1991,7 +1991,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sbooth/SFBAudioUtilities";
 			requirement = {
-				branch = spm;
+				branch = main;
 				kind = branch;
 			};
 		};
