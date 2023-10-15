@@ -6,6 +6,7 @@
 
 import AppKit
 import CAAudioHardware
+import SFBAudioEngine
 
 /// An item in a playlist
 struct PlaylistItem: Identifiable {
