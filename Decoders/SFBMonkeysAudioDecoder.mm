@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -65,23 +65,23 @@ public:
 		return ERROR_IO_WRITE;
 	}
 
-	virtual APE::int64 PerformSeek()
+	virtual int Seek(APE::int64 nPosition, APE::SeekMethod nMethod)
 	{
 		if(!mInputSource.supportsSeeking)
 			return ERROR_IO_READ;
 
-		NSInteger offset = m_nSeekPosition;
-		switch(m_nSeekMethod) {
-			case SEEK_SET:
+		NSInteger offset = nPosition;
+		switch(nMethod) {
+			case APE::SeekFileBegin:
 				// offset remains unchanged
 				break;
-			case SEEK_CUR: {
+			case APE::SeekFileCurrent: {
 				NSInteger inputSourceOffset;
 				if([mInputSource getOffset:&inputSourceOffset error:nil])
 					offset += inputSourceOffset;
 				break;
 			}
-			case SEEK_END: {
+			case APE::SeekFileEnd: {
 				NSInteger inputSourceLength;
 				if([mInputSource getLength:&inputSourceLength error:nil])
 					offset += inputSourceLength;
@@ -289,7 +289,7 @@ private:
 		return YES;
 
 	int64_t blocksRead = 0;
-	if(_decompressor->GetData(static_cast<char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
+	if(_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
 		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
 		return NO;
 	}
