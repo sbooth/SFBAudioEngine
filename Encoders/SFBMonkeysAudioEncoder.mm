@@ -77,23 +77,23 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	virtual APE::int64 PerformSeek()
+	virtual int Seek(APE::int64 nPosition, APE::SeekMethod nMethod)
 	{
 		if(!mOutputSource.supportsSeeking)
 			return ERROR_IO_READ;
 
-		NSInteger offset = m_nSeekPosition;
-		switch(m_nSeekMethod) {
-			case SEEK_SET:
+		NSInteger offset = nPosition;
+		switch(nMethod) {
+			case APE::SeekFileBegin:
 				// offset remains unchanged
 				break;
-			case SEEK_CUR: {
+			case APE::SeekFileCurrent: {
 				NSInteger inputSourceOffset;
 				if([mOutputSource getOffset:&inputSourceOffset error:nil])
 					offset += inputSourceOffset;
 				break;
 			}
-			case SEEK_END: {
+			case APE::SeekFileEnd: {
 				NSInteger inputSourceLength;
 				if([mOutputSource getLength:&inputSourceLength error:nil])
 					offset += inputSourceLength;
@@ -267,14 +267,19 @@ private:
 	_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
 	_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 
-	int compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
+	int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
 	SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
 	if(level != nil) {
-		if(level == SFBAudioEncodingSettingsValueAPECompressionLevelFast)				compressionLevel = MAC_COMPRESSION_LEVEL_FAST;
-		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal)		compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
-		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh)			compressionLevel = MAC_COMPRESSION_LEVEL_HIGH;
-		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh)		compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;
-		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane)		compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;
+		if(level == SFBAudioEncodingSettingsValueAPECompressionLevelFast)				
+			compressionLevel = APE_COMPRESSION_LEVEL_FAST;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal)		
+			compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh)			
+			compressionLevel = APE_COMPRESSION_LEVEL_HIGH;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh)		
+			compressionLevel = APE_COMPRESSION_LEVEL_EXTRA_HIGH;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane)		
+			compressionLevel = APE_COMPRESSION_LEVEL_INSANE;
 		else
 			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown APE compression level: %{public}@", level);
 	}
