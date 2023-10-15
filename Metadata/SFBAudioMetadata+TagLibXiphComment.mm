@@ -7,6 +7,7 @@
 #import <os/log.h>
 
 #import <CoreServices/CoreServices.h>
+#import <ImageIO/ImageIO.h>
 
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 

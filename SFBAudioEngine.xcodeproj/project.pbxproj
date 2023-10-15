@@ -367,6 +367,8 @@
 		3294A6FA2445FA2D00841138 /* SFBLoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */; };
 		32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A1012016A50C2400EC1F9C /* Accelerate.framework */; };
+		32ABE2142ADC4674008A4590 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32ABE2132ADC4674008A4590 /* ImageIO.framework */; };
+		32ABE2152ADC467B008A4590 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32ABE2132ADC4674008A4590 /* ImageIO.framework */; };
 		32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32DB245894ED002BC014 /* SFBInputSource.swift */; };
 		32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */; };
 		32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D61409BA26001F9A60 /* AudioUnit.framework */; };
@@ -616,6 +618,7 @@
 		3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLoopableRegionDecoder.m; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		32A1012016A50C2400EC1F9C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
+		32ABE2132ADC4674008A4590 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		32AE32DB245894ED002BC014 /* SFBInputSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBInputSource.swift; sourceTree = "<group>"; };
 		32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
 		32AEB2D61409BA26001F9A60 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
@@ -721,6 +724,7 @@
 				32714C672551D4DF00029BD7 /* sndfile.xcframework in Frameworks */,
 				32714C682551D4DF00029BD7 /* speex.xcframework in Frameworks */,
 				32714C6A2551D4DF00029BD7 /* vorbis.xcframework in Frameworks */,
+				32ABE2152ADC467B008A4590 /* ImageIO.framework in Frameworks */,
 				32714C6B2551D4DF00029BD7 /* wavpack.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -737,6 +741,7 @@
 				32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
+				32ABE2142ADC4674008A4590 /* ImageIO.framework in Frameworks */,
 				321388B32881B58900EC5F63 /* dumb.xcframework in Frameworks */,
 				321388C12881B58900EC5F63 /* opus.xcframework in Frameworks */,
 				321388BB2881B58900EC5F63 /* mpc.xcframework in Frameworks */,
@@ -784,6 +789,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				32ABE2132ADC4674008A4590 /* ImageIO.framework */,
 				32351A292AD7782500B3ADB9 /* AVFAudio.framework */,
 				32A1012016A50C2400EC1F9C /* Accelerate.framework */,
 				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,

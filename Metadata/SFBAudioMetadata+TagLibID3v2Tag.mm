@@ -5,6 +5,7 @@
 //
 
 #import <CoreServices/CoreServices.h>
+#import <ImageIO/ImageIO.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"

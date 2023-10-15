@@ -7,6 +7,7 @@
 #import <cstdio>
 
 #import <CoreServices/CoreServices.h>
+#import <ImageIO/ImageIO.h>
 
 #import <taglib/mp4coverart.h>
 
