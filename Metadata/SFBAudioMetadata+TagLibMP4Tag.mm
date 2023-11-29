@@ -28,11 +28,11 @@
 	[self addMetadataFromTagLibTag:tag];
 
 	if(tag->contains("aART"))
-		self.albumArtist = [NSString stringWithUTF8String:tag->item("aART").toString().toCString(true)];
+		self.albumArtist = [NSString stringWithUTF8String:tag->item("aART").toStringList().toString().toCString(true)];
 	if(tag->contains("\251wrt"))
-		self.composer = [NSString stringWithUTF8String:tag->item("\251wrt").toString().toCString(true)];
+		self.composer = [NSString stringWithUTF8String:tag->item("\251wrt").toStringList().toString().toCString(true)];
 	if(tag->contains("\251day"))
-		self.releaseDate = [NSString stringWithUTF8String:tag->item("\251day").toString().toCString(true)];
+		self.releaseDate = [NSString stringWithUTF8String:tag->item("\251day").toStringList().toString().toCString(true)];
 
 	if(tag->contains("trkn")) {
 		auto track = tag->item("trkn").toIntPair();
@@ -58,22 +58,22 @@
 			self.bpm = @(bpm);
 	}
 	if(tag->contains("\251lyr"))
-		self.lyrics = [NSString stringWithUTF8String:tag->item("\251lyr").toString().toCString(true)];
+		self.lyrics = [NSString stringWithUTF8String:tag->item("\251lyr").toStringList().toString().toCString(true)];
 
 	// Sorting
 	if(tag->contains("sonm"))
-		self.titleSortOrder = [NSString stringWithUTF8String:tag->item("sonm").toString().toCString(true)];
+		self.titleSortOrder = [NSString stringWithUTF8String:tag->item("sonm").toStringList().toString().toCString(true)];
 	if(tag->contains("soal"))
-		self.albumTitleSortOrder = [NSString stringWithUTF8String:tag->item("soal").toString().toCString(true)];
+		self.albumTitleSortOrder = [NSString stringWithUTF8String:tag->item("soal").toStringList().toString().toCString(true)];
 	if(tag->contains("soar"))
-		self.artistSortOrder = [NSString stringWithUTF8String:tag->item("soar").toString().toCString(true)];
+		self.artistSortOrder = [NSString stringWithUTF8String:tag->item("soar").toStringList().toString().toCString(true)];
 	if(tag->contains("soaa"))
-		self.albumArtistSortOrder = [NSString stringWithUTF8String:tag->item("soaa").toString().toCString(true)];
+		self.albumArtistSortOrder = [NSString stringWithUTF8String:tag->item("soaa").toStringList().toString().toCString(true)];
 	if(tag->contains("soco"))
-		self.composerSortOrder = [NSString stringWithUTF8String:tag->item("soco").toString().toCString(true)];
+		self.composerSortOrder = [NSString stringWithUTF8String:tag->item("soco").toStringList().toString().toCString(true)];
 
 	if(tag->contains("\251grp"))
-		self.lyrics = [NSString stringWithUTF8String:tag->item("\251grp").toString().toCString(true)];
+		self.lyrics = [NSString stringWithUTF8String:tag->item("\251grp").toStringList().toString().toCString(true)];
 
 	// Album art
 	if(tag->contains("covr")) {
@@ -86,42 +86,42 @@
 
 	// MusicBrainz
 	if(tag->contains("---:com.apple.iTunes:MusicBrainz Album Id"))
-		self.musicBrainzReleaseID = [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id").toString().toCString(true)];
+		self.musicBrainzReleaseID = [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id").toStringList().toString().toCString(true)];
 
 	if(tag->contains("---:com.apple.iTunes:MusicBrainz Track Id"))
-		self.musicBrainzRecordingID = [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id").toString().toCString(true)];
+		self.musicBrainzRecordingID = [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id").toStringList().toString().toCString(true)];
 
 	// ReplayGain
 	if(tag->contains("---:com.apple.iTunes:replaygain_reference_loudness")) {
-		auto s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toString();
+		auto s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
 		float f;
 		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainReferenceLoudness = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_track_gain")) {
-		auto s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toString();
+		auto s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
 		float f;
 		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainTrackGain = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_track_peak")) {
-		auto s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toString();
+		auto s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
 		float f;
 		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainTrackPeak = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_album_gain")) {
-		auto s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toString();
+		auto s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
 		float f;
 		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainAlbumGain = @(f);
 	}
 
 	if(tag->contains("---:com.apple.iTunes:replaygain_album_peak")) {
-		auto s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toString();
+		auto s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
 		float f;
 		if(std::sscanf(s.toCString(), "%f", &f) == 1)
 			self.replayGainAlbumPeak = @(f);
@@ -253,7 +253,7 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 					type = TagLib::MP4::CoverArt::CoverArt::JPEG;
 			}
 
-			auto picture = TagLib::MP4::CoverArt(type, TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
+			auto picture = TagLib::MP4::CoverArt(type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 			list.append(picture);
 		}
 
