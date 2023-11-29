@@ -23,7 +23,7 @@ See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more in
 | sndfile.xcframework | [libsndfile](http://libsndfile.github.io/libsndfile/) | [1.2.2](https://github.com/libsndfile/libsndfile/releases/tag/1.2.2) |
 | speex.xcframework | [speex](https://speex.org) | [1.2.1](https://gitlab.xiph.org/xiph/speex/-/releases/Speex-1.2.1) |
 | | speexdsp | [1.2.1](https://gitlab.xiph.org/xiph/speexdsp/-/releases/SpeexDSP-1.2.1) |
-| taglib.xcframework | [TagLib](https://taglib.org) | [65a6a4e](https://github.com/taglib/taglib/tree/65a6a4e225fff1288148de92721418e1c634713b) |
+| taglib.xcframework | [TagLib](https://taglib.org) | [3d67b13](https://github.com/taglib/taglib/tree/3d67b139e48bfa020ea43bf43ca925c1e711cfd6) |
 | tta-cpp.xcframework | [tta++](https://sourceforge.net/projects/tta/) | 2.3 |
 | vorbis.xcframework | [libvorbis](https://www.xiph.org/vorbis/) | [1.3.7](https://gitlab.xiph.org/xiph/vorbis/-/releases/v1.3.7) |
 | wavpack.xcframework | [WavPack](https://www.wavpack.com/index.html) | [5.6.0](https://github.com/dbry/WavPack/releases/tag/5.6.0) |
