@@ -459,7 +459,7 @@
 			repositoryURL = "https://github.com/sbooth/CAAudioHardware";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
+				minimumVersion = 0.4.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

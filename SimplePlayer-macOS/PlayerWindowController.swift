@@ -95,10 +95,8 @@ class PlayerWindowController: NSWindowController {
 	override func windowDidLoad() {
 		player.delegate = self
 
-		try? AudioSystemObject.instance.whenSelectorChanges(.devices) { _ in
-			DispatchQueue.main.async {
-				self.updateDeviceMenu()
-			}
+		try? AudioSystemObject.instance.whenSelectorChanges(.devices, on: .main) { _ in
+			self.updateDeviceMenu()
 		}
 
 		if let uid = UserDefaults.standard.object(forKey: "deviceUID") as? String, let deviceID = try? AudioSystemObject.instance.deviceID(forUID: uid) {
