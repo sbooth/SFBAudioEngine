@@ -618,15 +618,14 @@ enum eAudioPlayerFlags : unsigned int {
 				dispatch_async_and_wait(_engineQueue, ^{
 					NSError *error = nil;
 					_engineIsRunning = [_engine startAndReturnError:&error];
-					if(!_engineIsRunning) {
+					if(!_engineIsRunning)
 						os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
-					}
 				});
 			}
 			break;
 
 		default:
-			os_log_error(_audioPlayerLog, "Unknown value %lu for AVAudioSessionInterruptionTypeKey", (unsigned long)interruptionType);
+			os_log_error(_audioPlayerLog, "Unknown value %lu for AVAudioSessionInterruptionTypeKey", static_cast<unsigned long>(interruptionType));
 			break;
 	}
 }
