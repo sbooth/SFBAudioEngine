@@ -57,7 +57,8 @@ enum eAudioPlayerFlags : unsigned int {
 - (void)clearInternalDecoderQueue;
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
 - (id <SFBPCMDecoding>)popDecoderFromInternalQueue;
-- (void)handleInterruption:(NSNotification *)notification;
+- (void)handleAudioEngineConfigurationChange:(NSNotification *)notification;
+- (void)handleAudioSessionInterruption:(NSNotification *)notification;
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
 - (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
@@ -81,7 +82,10 @@ enum eAudioPlayerFlags : unsigned int {
 		}
 
 		// Register for configuration change notifications
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleAudioEngineConfigurationChange:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
+
+		// Register for audio session interruption notifications
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleAudioSessionInterruption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
 	}
 	return self;
 }
@@ -545,7 +549,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 #pragma mark - Internals
 
-- (void)handleInterruption:(NSNotification *)notification
+- (void)handleAudioEngineConfigurationChange:(NSNotification *)notification
 {
 	NSAssert([notification object] == _engine, @"AVAudioEngineConfigurationChangeNotification received for incorrect AVAudioEngine instance");
 	os_log_debug(_audioPlayerLog, "Received AVAudioEngineConfigurationChangeNotification");
@@ -594,6 +598,37 @@ enum eAudioPlayerFlags : unsigned int {
 
 	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
 		[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
+}
+
+- (void)handleAudioSessionInterruption:(NSNotification *)notification
+{
+	NSUInteger interruptionType = [[[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+	switch(interruptionType) {
+		case AVAudioSessionInterruptionTypeBegan:
+			os_log_debug(_audioPlayerLog, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
+			[self pause];
+			break;
+
+		case AVAudioSessionInterruptionTypeEnded:
+			os_log_debug(_audioPlayerLog, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
+
+			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
+			// However, _engineIsRunning isn't updated and will indicate if the engine was running before the interruption
+			if(_engineIsRunning) {
+				dispatch_async_and_wait(_engineQueue, ^{
+					NSError *error = nil;
+					_engineIsRunning = [_engine startAndReturnError:&error];
+					if(!_engineIsRunning) {
+						os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
+					}
+				});
+			}
+			break;
+
+		default:
+			os_log_error(_audioPlayerLog, "Unknown value %lu for AVAudioSessionInterruptionTypeKey", (unsigned long)interruptionType);
+			break;
+	}
 }
 
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
