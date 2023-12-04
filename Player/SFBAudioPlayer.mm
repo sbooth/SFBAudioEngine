@@ -58,7 +58,9 @@ enum eAudioPlayerFlags : unsigned int {
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
 - (id <SFBPCMDecoding>)popDecoderFromInternalQueue;
 - (void)handleAudioEngineConfigurationChange:(NSNotification *)notification;
+#if TARGET_OS_IPHONE
 - (void)handleAudioSessionInterruption:(NSNotification *)notification;
+#endif
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
 - (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
@@ -84,8 +86,10 @@ enum eAudioPlayerFlags : unsigned int {
 		// Register for configuration change notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleAudioEngineConfigurationChange:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
 
+#if TARGET_OS_IPHONE
 		// Register for audio session interruption notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleAudioSessionInterruption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
+#endif
 	}
 	return self;
 }
@@ -600,6 +604,7 @@ enum eAudioPlayerFlags : unsigned int {
 		[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
 }
 
+#if TARGET_OS_IPHONE
 - (void)handleAudioSessionInterruption:(NSNotification *)notification
 {
 	NSUInteger interruptionType = [[[notification userInfo] objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
@@ -629,6 +634,7 @@ enum eAudioPlayerFlags : unsigned int {
 			break;
 	}
 }
+#endif
 
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
