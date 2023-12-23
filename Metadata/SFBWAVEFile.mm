@@ -108,7 +108,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 		return NO;
 	}
 
-	TagLib::RIFF::WAV::File file(&stream);
+	TagLib::RIFF::WAV::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

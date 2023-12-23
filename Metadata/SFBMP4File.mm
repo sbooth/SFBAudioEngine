@@ -113,7 +113,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 		return NO;
 	}
 
-	TagLib::MP4::File file(&stream);
+	TagLib::MP4::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
