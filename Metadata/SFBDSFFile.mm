@@ -104,7 +104,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
 		return NO;
 	}
 
-	TagLib::DSF::File file(&stream);
+	TagLib::DSF::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

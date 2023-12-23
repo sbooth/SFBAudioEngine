@@ -104,7 +104,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameAIFF = @"org.sbooth.AudioEngi
 		return NO;
 	}
 
-	TagLib::RIFF::AIFF::File file(&stream);
+	TagLib::RIFF::AIFF::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
