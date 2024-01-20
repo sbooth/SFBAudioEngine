@@ -1,4 +1,4 @@
-name: Build SFBAudioEngine for all supported architectures
+name: Xcode - Build and Analyze
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build and analyze using xcodebuild for all supported architectures
     runs-on: macos-latest
 
     steps:
@@ -16,9 +16,31 @@ jobs:
         uses: actions/checkout@v3
       - name: Decompress dependencies
         run: make -C XCFrameworks
-      - name: Build macOS framework
-        run: |
+      - name: Build for macOS
+        env:
           project="SFBAudioEngine.xcodeproj"
           scheme="macOS Framework"
           destination="generic/platform=macOS"
+        run: |
+          xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for iOS
+        env:
+          project="SFBAudioEngine.xcodeproj"
+          scheme="iOS Framework"
+          destination="generic/platform=iOS"
+        run: |
+          xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for Mac Catalyst
+        env:
+          project="SFBAudioEngine.xcodeproj"
+          scheme="iOS Framework"
+          destination="platform=macOS,variant=Mac Catalyst"
+        run: |
+          xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for iOS Simulator
+        env:
+          project="SFBAudioEngine.xcodeproj"
+          scheme="iOS Framework"
+          destination="generic/platform=iOS Simulator"
+        run: |
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
