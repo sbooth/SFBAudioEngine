@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -76,8 +76,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 		auto properties = file.audioProperties();
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-		if(properties->sampleWidth())
-			propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->sampleWidth());
+		if(properties->bitsPerSample())
+			propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
 		if(properties->sampleFrames())
 			propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
 	}
@@ -108,7 +108,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 		return NO;
 	}
 
-	TagLib::RIFF::WAV::File file(&stream);
+	TagLib::RIFF::WAV::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -79,10 +79,10 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 		if(properties->bitsPerSample())
 			propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
 		switch(properties->codec()) {
-			case TagLib::MP4::AudioProperties::AAC:
+			case TagLib::MP4::Properties::Codec::AAC:
 				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"AAC";
 				break;
-			case TagLib::MP4::AudioProperties::ALAC:
+			case TagLib::MP4::Properties::Codec::ALAC:
 				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Apple Lossless";
 				break;
 			default:
@@ -113,7 +113,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 		return NO;
 	}
 
-	TagLib::MP4::File file(&stream);
+	TagLib::MP4::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2021 - 2022 Stephen F. Booth <stephen@sbooth.name>
+## Copyright (c) 2021 - 2023 Stephen F. Booth <stephen@sbooth.name>
 ## MIT license
 ##
 
@@ -15,7 +15,11 @@
 ##
 ##   xcframework       Builds the XCFramework.
 ##   clean             Deletes the XCFramework and build products.
-##   xz                Builds the XCFramework and compresses it.
+##   xz                Builds the XCFramework and compresses it to
+##                     an XZ archive using `tar`.
+##   zip               Builds the XCFramework and compresses it to
+##                     a PKZip archive using `ditto`.
+##                     This is similar to Finder's "Compress" functionality.
 ##
 ## The following variables are optional:
 ##
@@ -63,6 +67,7 @@ XCARCHIVE_DIR := $(BUILD_DIR)
 XCFRAMEWORK := $(BUILD_DIR)/$(FRAMEWORK_NAME).xcframework
 
 XZ_FILE := $(XCFRAMEWORK).tar.xz
+ZIP_FILE := $(XCFRAMEWORK).zip
 
 MACOS_XCARCHIVE := $(XCARCHIVE_DIR)/macOS.xcarchive
 MACOS_CATALYST_XCARCHIVE := $(XCARCHIVE_DIR)/macOS-Catalyst.xcarchive
@@ -80,6 +85,9 @@ clean:
 
 xz: $(XZ_FILE)
 .PHONY: xz
+
+zip: $(ZIP_FILE)
+.PHONY: zip
 
 ifneq (0,$(MAKELEVEL))
 install: xcframework uninstall
@@ -108,4 +116,7 @@ $(XCFRAMEWORK): $(XCARCHIVES)
 	xcodebuild -create-xcframework $(foreach xcarchive,$^,-framework "$(xcarchive)/Products/Library/Frameworks/$(FRAMEWORK_NAME).framework" -debug-symbols "$(realpath $(xcarchive)/dSYMs/$(FRAMEWORK_NAME).framework.dSYM)" ) -output "$@"
 
 $(XZ_FILE): $(XCFRAMEWORK)
-	cd $(BUILD_DIR) && tar cJf "$(notdir $@)" "$(notdir $<)"
+	cd $(BUILD_DIR) && tar --create --xz --file "$(notdir $@)" "$(notdir $<)"
+
+$(ZIP_FILE): $(XCFRAMEWORK)
+	cd $(BUILD_DIR) && ditto -c -k --sequesterRsrc --keepParent "$(notdir $<)" "$(notdir $@)"

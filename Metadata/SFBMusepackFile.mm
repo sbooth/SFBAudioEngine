@@ -106,7 +106,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
 		return NO;
 	}
 
-	TagLib::MPC::File file(&stream);
+	TagLib::MPC::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

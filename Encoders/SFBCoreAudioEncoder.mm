@@ -353,12 +353,13 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 		if(availableFormatIDs.empty()) {
 			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set and file type '%{public}.4s' has no known AudioFormatID", SFBCStringForOSType(fileType));
 
-			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
-											 code:SFBAudioEncoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is an unsupported audio format.", @"")
-											  url:_outputSource.url
-									failureReason:NSLocalizedString(@"Unsupported audio format", @"")
-							   recoverySuggestion:NSLocalizedString(@"There are no supported audio formats for encoding files of this type.", @"")];
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
+												 code:SFBAudioEncoderErrorCodeInvalidFormat
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is an unsupported audio format.", @"")
+												  url:_outputSource.url
+										failureReason:NSLocalizedString(@"Unsupported audio format", @"")
+								   recoverySuggestion:NSLocalizedString(@"There are no supported audio formats for encoding files of this type.", @"")];
 
 			return NO;
 		}
