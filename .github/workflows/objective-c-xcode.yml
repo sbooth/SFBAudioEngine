@@ -17,30 +17,26 @@ jobs:
       - name: Decompress dependencies
         run: make -C XCFrameworks
       - name: Build for macOS
-        env:
+        run: |
           project="SFBAudioEngine.xcodeproj"
           scheme="macOS Framework"
           destination="generic/platform=macOS"
-        run: |
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for iOS
-        env:
+        run: |
           project="SFBAudioEngine.xcodeproj"
           scheme="iOS Framework"
           destination="generic/platform=iOS"
-        run: |
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for Mac Catalyst
-        env:
+        run: |
           project="SFBAudioEngine.xcodeproj"
           scheme="iOS Framework"
           destination="platform=macOS,variant=Mac Catalyst"
-        run: |
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for iOS Simulator
-        env:
+        run: |
           project="SFBAudioEngine.xcodeproj"
           scheme="iOS Framework"
           destination="generic/platform=iOS Simulator"
-        run: |
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
