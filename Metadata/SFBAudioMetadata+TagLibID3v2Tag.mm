@@ -5,6 +5,7 @@
 //
 
 #import <CoreServices/CoreServices.h>
+#import <ImageIO/ImageIO.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -86,13 +87,14 @@
 		TagLib::String s = frameList.front()->toString();
 
 		bool ok;
-		size_t pos = s.find("/", 0);
-		if(TagLib::String::npos() != pos) {
-			int trackNum = s.substr(0, pos).toInt(&ok);
+		auto pos = s.find("/", 0);
+		if(-1 != pos) {
+			auto upos = static_cast<unsigned int>(pos);
+			int trackNum = s.substr(0, upos).toInt(&ok);
 			if(ok)
 				self.trackNumber = @(trackNum);
 
-			int trackTotal = s.substr(pos + 1).toInt(&ok);
+			int trackTotal = s.substr(upos + 1).toInt(&ok);
 			if(ok)
 				self.trackTotal = @(trackTotal);
 		}
@@ -110,13 +112,14 @@
 		TagLib::String s = frameList.front()->toString();
 
 		bool ok;
-		size_t pos = s.find("/", 0);
-		if(TagLib::String::npos() != pos) {
-			int discNum = s.substr(0, pos).toInt(&ok);
+		auto pos = s.find("/", 0);
+		if(-1 != pos) {
+			auto upos = static_cast<unsigned int>(pos);
+			int discNum = s.substr(0, upos).toInt(&ok);
 			if(ok)
 				self.discNumber = @(discNum);
 
-			int discTotal = s.substr(pos + 1).toInt(&ok);
+			int discTotal = s.substr(upos + 1).toInt(&ok);
 			if(ok)
 				self.discTotal = @(discTotal);
 		}
@@ -559,7 +562,7 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 			if(mimeType)
 				frame->setMimeType(TagLib::StringFromNSString(mimeType));
 
-			frame->setPicture(TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
+			frame->setPicture(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 			frame->setType((TagLib::ID3v2::AttachedPictureFrame::Type)attachedPicture.pictureType);
 			if(attachedPicture.pictureDescription)
 				frame->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));

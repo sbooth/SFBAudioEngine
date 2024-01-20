@@ -235,7 +235,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 /// Returns \c kHALOutputParam_Volume on \c channel for \c AVAudioEngine.outputNode.audioUnit or \c NaN on error
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;
-/// Sets \c kHALOutputParam_Volume on channel \c 0 for \c AVAudioEngine.outputNode.audioUnit
+/// Sets \c kHALOutputParam_Volume on \c channel for \c AVAudioEngine.outputNode.audioUnit
 /// @param volume The desired volume
 /// @param channel The channel to adjust
 /// @param error An optional pointer to an \c NSError object to receive error information

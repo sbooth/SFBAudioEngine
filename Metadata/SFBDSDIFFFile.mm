@@ -108,7 +108,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
 		return NO;
 	}
 
-	TagLib::DSDIFF::File file(&stream);
+	TagLib::DSDIFF::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

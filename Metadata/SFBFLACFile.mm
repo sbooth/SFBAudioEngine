@@ -65,7 +65,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 		return NO;
 	}
 
-	TagLib::FLAC::File file(&stream);
+	TagLib::FLAC::File file(&stream, TagLib::ID3v2::FrameFactory::instance());
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
@@ -132,7 +132,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 		return NO;
 	}
 
-	TagLib::FLAC::File file(&stream);
+	TagLib::FLAC::File file(&stream, TagLib::ID3v2::FrameFactory::instance());
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
