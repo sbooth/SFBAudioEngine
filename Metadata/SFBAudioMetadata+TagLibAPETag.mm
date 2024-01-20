@@ -109,11 +109,12 @@
 			 */
 			if([key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame || [key caseInsensitiveCompare:@"Cover Art (Back)"] == NSOrderedSame) {
 				auto binaryData = item.binaryData();
-				size_t pos = binaryData.find('\0');
-				if(TagLib::ByteVector::npos() != pos && 3 < binaryData.size()) {
-					NSData *imageData = [NSData dataWithBytes:binaryData.mid(pos + 1).data() length:(binaryData.size() - pos - 1)];
+				auto pos = binaryData.find('\0');
+				if(-1 != pos && 3 < binaryData.size()) {
+					auto upos = static_cast<unsigned int>(pos);
+					NSData *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data() length:(binaryData.size() - upos - 1)];
 					SFBAttachedPictureType type = [key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame ? SFBAttachedPictureTypeFrontCover : SFBAttachedPictureTypeBackCover;
-					NSString *description = [NSString stringWithUTF8String:TagLib::String(binaryData.mid(0, pos), TagLib::String::UTF8).toCString(true)];
+					NSString *description = [NSString stringWithUTF8String:TagLib::String(binaryData.mid(0, upos), TagLib::String::UTF8).toCString(true)];
 					[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData type:type description:description]];
 				}
 			}
@@ -229,7 +230,7 @@ void SFB::Audio::SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::
 				if(attachedPicture.pictureDescription)
 					data.append(TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
 				data.append('\0');
-				data.append(TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
+				data.append(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 
 				if(SFBAttachedPictureTypeFrontCover == attachedPicture.pictureType)
 					tag->setData("Cover Art (Front)", data);

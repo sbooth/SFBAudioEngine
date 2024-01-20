@@ -230,7 +230,7 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 		return nullptr;
 
 	auto picture = std::make_unique<TagLib::FLAC::Picture>();
-	picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<size_t>(attachedPicture.imageData.length)));
+	picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 	picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
 	if(attachedPicture.pictureDescription)
 		picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));

@@ -108,7 +108,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
 		return NO;
 	}
 
-	TagLib::WavPack::File file(&stream);
+	TagLib::WavPack::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
