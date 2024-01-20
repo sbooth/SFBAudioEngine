@@ -1,4 +1,4 @@
-name: Xcode - Build and Analyze
+name: Build SFBAudioEngine XCFramework
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and analyze default scheme using xcodebuild
+    name: Build
     runs-on: macos-latest
 
     steps:
