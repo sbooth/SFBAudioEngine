@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -386,10 +386,10 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 		// ========================================
 		// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
 		if(!(self->_flags.load() & eAudioPlayerNodeFlagIsPlaying) || self->_flags.load() & eAudioPlayerNodeFlagOutputIsMuted || framesAvailableToRead == 0) {
-			size_t byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteSize(frameCount);
+			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteSize(frameCount);
 			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
-				outputData->mBuffers[i].mDataByteSize = static_cast<UInt32>(byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize = byteCountToZero;
 			}
 
 			*isSilence = YES;
@@ -411,8 +411,10 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 			auto framesOfSilence = frameCount - framesRead;
 			auto byteCountToSkip = self->_audioRingBuffer.Format().FrameCountToByteSize(framesRead);
 			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
-			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 				std::memset(static_cast<int8_t *>(outputData->mBuffers[i].mData) + byteCountToSkip, 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
+			}
 		}
 
 		// ========================================
