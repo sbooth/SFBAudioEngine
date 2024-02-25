@@ -1,6 +1,6 @@
 # SFBAudioEngine
 
-SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and iOS. SFBAudioEngine supports:
+SFBAudioEngine is a toolbox of powerful audio functionality for macOS, iOS, and tvOS. SFBAudioEngine supports:
 
 * [Audio decoding](#decoding)
 * [Audio playback](#playback)
@@ -79,7 +79,7 @@ try AudioConverter.convert(inputURL, using: encoder)
 
 ## Requirements
 
-macOS 10.15+ or iOS 14.0+
+macOS 10.15+, iOS 14.0+, or tvOS 14.0+
 
 ## Building SFBAudioEngine
 
@@ -87,7 +87,7 @@ macOS 10.15+ or iOS 14.0+
 2. `cd SFBAudioEngine`
 3. `make -C XCFrameworks`
 
-The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
+The project file contains targets for macOS, iOS, and tvOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
 
 The included `Makefile` may also be used to create the build products:
 
@@ -97,15 +97,17 @@ The included `Makefile` may also be used to create the build products:
 | macOS Catalyst Framework | `make build/macOS-Catalyst.xcarchive` |
 | iOS Framework | `make build/iOS.xcarchive` |
 | iOS Simulator Framework | `make build/iOS-Simulator.xcarchive` |
+| tvOS Framework | `make build/tvOS.xcarchive` |
+| tvOS Simulator Framework | `make build/tvOS-Simulator.xcarchive` |
 | XCFramework | `make` |
 
 ### macOS Framework Notes
 
 When compiling macOS targets against SFBAudioEngine it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by SFBAudioEngine are contained within `SFBAudioEngine.framework`.
 
-### iOS Framework Notes
+### iOS/tvOS Framework Notes
 
-When compiling iOS targets against SFBAudioEngine it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by SFBAudioEngine as well since iOS does not support umbrella frameworks.
+When compiling iOS or tvOS targets against SFBAudioEngine it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by SFBAudioEngine as well since iOS and tvOS do not support umbrella frameworks.
 
 ## Decoding
 
