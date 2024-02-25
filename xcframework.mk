@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2021 - 2023 Stephen F. Booth <stephen@sbooth.name>
+## Copyright (c) 2021 - 2024 Stephen F. Booth <stephen@sbooth.name>
 ## MIT license
 ##
 
@@ -25,8 +25,10 @@
 ##
 ##   MACOS_SCHEME      The scheme building the macOS framework target.
 ##                     If not set the default is "macOS".
-##   IOS_SCHEME        The scheme building the isOS framework target.
+##   IOS_SCHEME        The scheme building the iOS framework target.
 ##                     If not set the default is "iOS".
+##   TVOS_SCHEME       The scheme building the tvOS framework target.
+##                     If not set the default is "tvOS".
 ##   BUILD_DIR         The directory where the build products should
 ##                     be written. If not set the default is "build".
 ##
@@ -56,6 +58,8 @@
 MACOS_SCHEME ?= macOS
 # The default name of the scheme that builds the framework for iOS
 IOS_SCHEME ?= iOS
+# The default name of the scheme that builds the framework for tvOS
+TVOS_SCHEME ?= tvOS
 
 # Build products directory
 BUILD_DIR ?= build
@@ -73,14 +77,16 @@ MACOS_XCARCHIVE := $(XCARCHIVE_DIR)/macOS.xcarchive
 MACOS_CATALYST_XCARCHIVE := $(XCARCHIVE_DIR)/macOS-Catalyst.xcarchive
 IOS_XCARCHIVE := $(XCARCHIVE_DIR)/iOS.xcarchive
 IOS_SIMULATOR_XCARCHIVE := $(XCARCHIVE_DIR)/iOS-Simulator.xcarchive
+TVOS_XCARCHIVE := $(XCARCHIVE_DIR)/tvOS.xcarchive
+TVOS_SIMULATOR_XCARCHIVE := $(XCARCHIVE_DIR)/tvOS-Simulator.xcarchive
 
-XCARCHIVES := $(MACOS_XCARCHIVE) $(MACOS_CATALYST_XCARCHIVE) $(IOS_XCARCHIVE) $(IOS_SIMULATOR_XCARCHIVE)
+XCARCHIVES := $(MACOS_XCARCHIVE) $(MACOS_CATALYST_XCARCHIVE) $(IOS_XCARCHIVE) $(IOS_SIMULATOR_XCARCHIVE) $(TVOS_XCARCHIVE) $(TVOS_SIMULATOR_XCARCHIVE)
 
 xcframework: $(XCFRAMEWORK)
 .PHONY: xcframework
 
 clean:
-	rm -Rf "$(MACOS_XCARCHIVE)" "$(MACOS_CATALYST_XCARCHIVE)" "$(IOS_XCARCHIVE)" "$(IOS_SIMULATOR_XCARCHIVE)" "$(XCFRAMEWORK)" "$(XZ_FILE)"
+	rm -Rf "$(MACOS_XCARCHIVE)" "$(MACOS_CATALYST_XCARCHIVE)" "$(IOS_XCARCHIVE)" "$(IOS_SIMULATOR_XCARCHIVE)" "$(TVOS_XCARCHIVE)" "$(TVOS_SIMULATOR_XCARCHIVE)" "$(XCFRAMEWORK)" "$(XZ_FILE)"
 .PHONY: clean
 
 xz: $(XZ_FILE)
@@ -110,6 +116,12 @@ $(IOS_XCARCHIVE): $(XCODEPROJ)
 
 $(IOS_SIMULATOR_XCARCHIVE): $(XCODEPROJ)
 	xcodebuild archive -project "$(XCODEPROJ)" -scheme "$(IOS_SCHEME)" -destination "generic/platform=iOS Simulator" -archivePath "$(basename $@)"
+
+$(TVOS_XCARCHIVE): $(XCODEPROJ)
+	xcodebuild archive -project "$(XCODEPROJ)" -scheme "$(TVOS_SCHEME)" -destination generic/platform=tvOS -archivePath "$(basename $@)"
+
+$(TVOS_SIMULATOR_XCARCHIVE): $(XCODEPROJ)
+	xcodebuild archive -project "$(XCODEPROJ)" -scheme "$(TVOS_SCHEME)" -destination "generic/platform=tvOS Simulator" -archivePath "$(basename $@)"
 
 $(XCFRAMEWORK): $(XCARCHIVES)
 	rm -Rf "$@"
