@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -61,7 +61,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 		return NO;
 	}
 
-	TagLib::MPEG::File file(&stream, TagLib::ID3v2::FrameFactory::instance());
+	TagLib::MPEG::File file(&stream);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
@@ -138,7 +138,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 		return NO;
 	}
 
-	TagLib::MPEG::File file(&stream, TagLib::ID3v2::FrameFactory::instance(), false);
+	TagLib::MPEG::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
