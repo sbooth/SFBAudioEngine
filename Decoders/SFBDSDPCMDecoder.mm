@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2018 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -366,6 +366,11 @@ private:
 - (BOOL)decodingIsLossless
 {
 	return NO;
+}
+
+- (NSDictionary *)properties
+{
+	return _decoder.properties;
 }
 
 - (BOOL)openReturningError:(NSError **)error

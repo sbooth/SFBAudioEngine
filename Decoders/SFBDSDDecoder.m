@@ -34,8 +34,9 @@ static void SFBCreateDSDDecoderLog(void)
 @implementation SFBDSDDecoder
 
 @synthesize inputSource = _inputSource;
-@synthesize processingFormat = _processingFormat;
 @synthesize sourceFormat = _sourceFormat;
+@synthesize processingFormat = _processingFormat;
+@synthesize properties = _properties;
 
 @dynamic decodingIsLossless;
 @dynamic packetPosition;

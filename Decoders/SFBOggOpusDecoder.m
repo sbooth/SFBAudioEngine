@@ -15,6 +15,16 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
 
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion = @"version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount = @"channel_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip = @"pre_skip";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate = @"input_sample_rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain = @"output_gain";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily = @"mapping_family";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount = @"stream_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount = @"coupled_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping = @"mapping";
+
 #define OPUS_SAMPLE_RATE 48000
 
 static int read_callback(void *stream, unsigned char *ptr, int nbytes)
@@ -179,6 +189,19 @@ static opus_int64 tell_callback(void *stream)
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)header->channel_count;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyOggOpusVersion: @(header->version),
+		SFBAudioDecodingPropertiesKeyOggOpusChannelCount: @(header->channel_count),
+		SFBAudioDecodingPropertiesKeyOggOpusPreSkip: @(header->pre_skip),
+		SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate: @(header->input_sample_rate),
+		SFBAudioDecodingPropertiesKeyOggOpusOutputGain: @(header->output_gain),
+		SFBAudioDecodingPropertiesKeyOggOpusMappingFamily: @(header->mapping_family),
+		SFBAudioDecodingPropertiesKeyOggOpusStreamCount: @(header->stream_count),
+		SFBAudioDecodingPropertiesKeyOggOpusCoupledCount: @(header->coupled_count),
+		SFBAudioDecodingPropertiesKeyOggOpusMapping: [[NSData alloc] initWithBytes:header->mapping length:(NSUInteger)header->channel_count],
+	};
 
 	return YES;
 }

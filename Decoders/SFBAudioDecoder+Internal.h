@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -19,6 +19,7 @@ extern os_log_t gSFBAudioDecoderLog;
 @protected
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
+	NSDictionary *_properties;
 }
 /// Returns the decoder name
 @property (class, nonatomic, readonly) SFBAudioDecoderName decoderName;
