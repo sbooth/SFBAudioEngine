@@ -522,7 +522,10 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 			return nil;
 		}
 
-		_renderEventsRingBuffer.Allocate(256);
+		if(!_renderEventsRingBuffer.Allocate(256)) {
+			os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Allocate() failed");
+			return nil;
+		}
 
 #if 0
 		// See the comments in SFBAudioPlayer -configureEngineForGaplessPlaybackOfFormat:
