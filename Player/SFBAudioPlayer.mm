@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -770,7 +770,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice
 		double ratio = format.sampleRate / outputFormat.sampleRate;
-		AVAudioFrameCount maximumFramesToRender = (AVAudioFrameCount)ceil(512 * ratio);
+		auto maximumFramesToRender = static_cast<AUAudioFrameCount>(ceil(512 * ratio));
 
 		AUAudioUnit *audioUnit = _playerNode.AUAudioUnit;
 		if(audioUnit.maximumFramesToRender < maximumFramesToRender) {
