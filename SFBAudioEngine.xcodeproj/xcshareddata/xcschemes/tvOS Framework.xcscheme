@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "328F610E2B8BD3DB006C3ECF"
-               BuildableName = "tvOS Framework.framework"
+               BuildableName = "SFBAudioEngine.framework"
                BlueprintName = "tvOS Framework"
                ReferencedContainer = "container:SFBAudioEngine.xcodeproj">
             </BuildableReference>
@@ -50,7 +50,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "328F610E2B8BD3DB006C3ECF"
-            BuildableName = "tvOS Framework.framework"
+            BuildableName = "SFBAudioEngine.framework"
             BlueprintName = "tvOS Framework"
             ReferencedContainer = "container:SFBAudioEngine.xcodeproj">
          </BuildableReference>
