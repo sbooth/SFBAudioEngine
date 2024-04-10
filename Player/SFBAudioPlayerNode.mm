@@ -151,6 +151,7 @@ public:
 
 		if(mDecodeBuffer.frameLength == 0) {
 			mFlags.fetch_or(eDecodingCompleteFlag);
+			buffer.frameLength = 0;
 			return true;
 		}
 
@@ -443,7 +444,7 @@ inline double ConvertHostTicksToNanos(uint64_t t) noexcept
 		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize);
 		while(decoderState) {
 			AVAudioFrameCount decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
-			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
+			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
 			if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
 				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
