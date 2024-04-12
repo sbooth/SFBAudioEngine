@@ -241,7 +241,7 @@ public:
 uint64_t DecoderStateData::sSequenceNumber = 0;
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
-#pragma mark - PlayerNodeState
+#pragma mark - PlayerNodeImpl
 
 /// SFBAudioPlayerNode implementation
 struct PlayerNodeImpl
@@ -451,11 +451,15 @@ public:
 				if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
 					continue;
 
-				// See comment in -decoderThreadEntry on why I believe it's safe to use store() and not a CAS loop
 				os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-				_decoderStateArray[i].store(nullptr);
-				delete decoderState;
+				delete _decoderStateArray[i].exchange(nullptr);
 			}
+		});
+
+		// The collector's cancel handler is responsible for deleting all decoder state data
+		dispatch_source_set_cancel_handler(_collector, ^{
+			for(size_t i = 0; i < kDecoderStateArraySize; ++i)
+				delete _decoderStateArray[i].exchange(nullptr);
 		});
 
 		// Start collecting
@@ -474,6 +478,8 @@ public:
 
 	~PlayerNodeImpl()
 	{
+//		dispatch_source_cancel(_renderEventsProcessor);
+
 		ClearQueue();
 		CancelCurrentDecoder();
 
@@ -481,8 +487,7 @@ public:
 		dispatch_semaphore_signal(_decodingSemaphore);
 		_decodingThread.join();
 
-		for(size_t i = 0; i < kDecoderStateArraySize; ++i)
-			delete _decoderStateArray[i].exchange(nullptr);
+		dispatch_source_cancel(_collector);
 	}
 
 #pragma mark - Playback Control
