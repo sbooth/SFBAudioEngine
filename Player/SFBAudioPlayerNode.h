@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -53,7 +53,7 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
-/// Since decoding and rendering are distinct operations performed in separate threads, a GCD timer on the background
+/// Since decoding and rendering are distinct operations performed in separate threads, a GCD source on a background
 /// queue is used for garbage collection. This is necessary because state data created in the decoding thread needs to
 /// live until rendering is complete, which cannot occur until after decoding is complete.
 ///
