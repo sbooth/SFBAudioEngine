@@ -138,7 +138,7 @@ struct DecoderState {
 	/// The desired seek offset
 	std::atomic_int64_t 	mFrameToSeek 		= kInvalidFramePosition;
 
-	friend struct PlayerNodeImpl;
+	friend struct AudioPlayerNode;
 
 private:
 	/// Decodes audio from the source representation to PCM
@@ -257,9 +257,9 @@ void collector_finalizer_f(void *context)
 }
 
 /// SFBAudioPlayerNode implementation
-struct PlayerNodeImpl
+struct AudioPlayerNode
 {
-	using unique_ptr = std::unique_ptr<PlayerNodeImpl>;
+	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
 
 	static const AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
 
@@ -298,11 +298,13 @@ private:
 	DecoderStateArray 				*mDecoderStateArray 		= nullptr;
 
 public:
-	PlayerNodeImpl(AVAudioFormat *format, uint32_t ringBufferSize)
+	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 	: mRenderingFormat(format)
 	{
 		NSCParameterAssert(format != nil);
 		NSCParameterAssert(format.isStandard);
+
+		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode %p> created with render block format %{public}@", this, mRenderingFormat);
 
 		// mFlags is used in the render block so must be lock free
 		assert(mFlags.is_lock_free());
@@ -636,7 +638,7 @@ public:
 
 		// Launch the decoding thread
 		try {
-			mDecodingThread = std::thread(&PlayerNodeImpl::DecoderThreadEntry, this);
+			mDecodingThread = std::thread(&AudioPlayerNode::DecoderThreadEntry, this);
 		}
 
 		catch(const std::exception& e) {
@@ -645,7 +647,7 @@ public:
 		}
 	}
 
-	~PlayerNodeImpl()
+	~AudioPlayerNode()
 	{
 		ClearQueue();
 		CancelCurrentDecoder();
@@ -1022,7 +1024,7 @@ private:
 		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.DecoderThread");
 		pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
-		os_log_debug(_audioPlayerNodeLog, "Decoder thread starting");
+		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode %p> decoder thread started", this);
 
 		while(!(mFlags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 			// Dequeue and process the next decoder
@@ -1205,8 +1207,6 @@ private:
 			else
 				dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 		}
-
-		os_log_debug(_audioPlayerNodeLog, "Decoder thread terminating");
 	}
 };
 
@@ -1217,7 +1217,7 @@ private:
 @interface SFBAudioPlayerNode ()
 {
 @private
-	PlayerNodeImpl::unique_ptr _impl;
+	AudioPlayerNode::unique_ptr _impl;
 }
 @end
 
@@ -1243,10 +1243,10 @@ private:
 	NSParameterAssert(format != nil);
 	NSParameterAssert(format.isStandard);
 
-	std::unique_ptr<PlayerNodeImpl> impl;
+	std::unique_ptr<AudioPlayerNode> impl;
 
 	try {
-		impl = std::make_unique<PlayerNodeImpl>(format, ringBufferSize);
+		impl = std::make_unique<AudioPlayerNode>(format, ringBufferSize);
 	}
 
 	catch(const std::exception& e) {
