@@ -1316,6 +1316,16 @@ private:
 	return _impl->EnqueueDecoder(decoder, false, error);
 }
 
+- (id <SFBPCMDecoding>)dequeueDecoder
+{
+	return _impl->DequeueDecoder();
+}
+
+- (id<SFBPCMDecoding>)currentDecoder
+{
+	return _impl->CurrentDecoder();
+}
+
 - (void)cancelCurrentDecoder
 {
 	_impl->CancelCurrentDecoder();
@@ -1331,11 +1341,7 @@ private:
 	return _impl->QueueIsEmpty();
 }
 
-- (id <SFBPCMDecoding>)dequeueDecoder
-{
-	return _impl->DequeueDecoder();
-}
-
+// AVAudioNode override
 - (void)reset
 {
 	[super reset];
@@ -1366,7 +1372,7 @@ private:
 	_impl->TogglePlayPause();
 }
 
-#pragma mark - Player State
+#pragma mark - State
 
 - (BOOL)isPlaying
 {
@@ -1376,11 +1382,6 @@ private:
 - (BOOL)isReady
 {
 	return _impl->IsReady();
-}
-
-- (id<SFBPCMDecoding>)currentDecoder
-{
-	return _impl->CurrentDecoder();
 }
 
 #pragma mark - Playback Properties

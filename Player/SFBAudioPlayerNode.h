@@ -128,16 +128,21 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// @return \c YES if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
+/// Removes and returns the next decoder from the decoder queue
+/// @return The next decoder from the decoder queue or \c nil if none
+- (nullable id <SFBPCMDecoding>)dequeueDecoder;
+
+/// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
+/// @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
 /// Cancels the current decoder
 - (void)cancelCurrentDecoder;
+
 /// Empties the decoder queue
 - (void)clearQueue;
 
 /// Returns \c YES if the decoder queue is empty
 @property (nonatomic, readonly) BOOL queueIsEmpty;
-/// Removes and returns the next decoder from the decoder queue
-/// @return The next decoder from the decoder queue or \c nil if none
-- (nullable id <SFBPCMDecoding>)dequeueDecoder;
 
 #pragma mark - Playback Control
 
@@ -157,9 +162,6 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
  /// Returns \c YES if a decoder is available to supply audio for the next render cycle
 @property (nonatomic, readonly) BOOL isReady;
-/// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
-/// @warning Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
 
 #pragma mark - Playback Properties
 
