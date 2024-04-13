@@ -5,6 +5,7 @@
 //
 
 #import <algorithm>
+#import <array>
 #import <atomic>
 #import <cmath>
 #import <mutex>
