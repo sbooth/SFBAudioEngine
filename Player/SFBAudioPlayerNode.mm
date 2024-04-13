@@ -687,12 +687,6 @@ public:
 		return decoderState ? true : false;
 	}
 
-	id<SFBPCMDecoding> CurrentDecoder() const noexcept
-	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-		return decoderState ? decoderState->mDecoder : nil;
-	}
-
 #pragma mark - Playback Properties
 
 	SFBAudioPlayerNodePlaybackPosition PlaybackPosition() const noexcept
@@ -853,7 +847,16 @@ public:
 		return decoderState ? decoderState->mDecoder.supportsSeeking : false;
 	}
 
-#pragma mark - Internals
+#pragma mark - Format Information
+
+	inline bool SupportsFormat(AVAudioFormat *format) const noexcept
+	{
+		// Gapless playback requires the same number of channels at the same sample rate as the ring buffer
+		auto renderingFormat = mAudioRingBuffer.Format();
+		return format.channelCount == renderingFormat.ChannelCount() && format.sampleRate == renderingFormat.mSampleRate;
+	}
+
+#pragma mark - Queue Management
 
 	bool EnqueueDecoder(id <SFBPCMDecoding>decoder, bool reset, NSError **error) noexcept
 	{
@@ -895,16 +898,22 @@ public:
 		return true;
 	}
 
-#pragma mark - Format Information
-
-	inline bool SupportsFormat(AVAudioFormat *format) const noexcept
+	id <SFBPCMDecoding> DequeueDecoder() noexcept
 	{
-		// Gapless playback requires the same number of channels at the same sample rate as the ring buffer
-		auto renderingFormat = mAudioRingBuffer.Format();
-		return format.channelCount == renderingFormat.ChannelCount() && format.sampleRate == renderingFormat.mSampleRate;
+		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+		id <SFBPCMDecoding> decoder = nil;
+		if(!mQueuedDecoders.empty()) {
+			decoder = mQueuedDecoders.front();
+			mQueuedDecoders.pop();
+		}
+		return decoder;
 	}
 
-#pragma mark Queue Management
+	id<SFBPCMDecoding> CurrentDecoder() const noexcept
+	{
+		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		return decoderState ? decoderState->mDecoder : nil;
+	}
 
 	void CancelCurrentDecoder() noexcept
 	{
@@ -926,17 +935,6 @@ public:
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
 		return mQueuedDecoders.empty();
-	}
-
-	id <SFBPCMDecoding> DequeueDecoder() noexcept
-	{
-		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-		id <SFBPCMDecoding> decoder = nil;
-		if(!mQueuedDecoders.empty()) {
-			decoder = mQueuedDecoders.front();
-			mQueuedDecoders.pop();
-		}
-		return decoder;
 	}
 
 	void Reset() noexcept
