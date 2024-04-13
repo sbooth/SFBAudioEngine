@@ -106,14 +106,14 @@ const size_t 				kDecoderStateArraySize		= 8;
 
 #pragma mark - Decoder State
 
-/// State data for tracking/syncing decoding progress
-struct DecoderStateData {
-	using atomic_ptr = std::atomic<DecoderStateData *>;
+/// State for tracking/syncing decoding progress
+struct DecoderState {
+	using atomic_ptr = std::atomic<DecoderState *>;
 
 	static const AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
 	static const int64_t			kInvalidFramePosition 	= -1;
 
-	enum eDecoderStateDataFlags : unsigned int {
+	enum eDecoderStateFlags : unsigned int {
 		eCancelDecodingFlag		= 1u << 0,
 		eDecodingStartedFlag	= 1u << 1,
 		eDecodingCompleteFlag	= 1u << 2,
@@ -152,7 +152,7 @@ private:
 	static uint64_t			sSequenceNumber;
 
 public:
-	DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
+	DecoderState(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
 	: mFrameLength(decoder.frameLength), mDecoder(decoder)
 	{
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
@@ -239,16 +239,16 @@ public:
 
 };
 
-uint64_t DecoderStateData::sSequenceNumber = 0;
+uint64_t DecoderState::sSequenceNumber = 0;
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
 #pragma mark - PlayerNodeImpl
 
-using DecoderStateDataArray = std::array<DecoderStateData::atomic_ptr, kDecoderStateArraySize>;
+using DecoderStateArray = std::array<DecoderState::atomic_ptr, kDecoderStateArraySize>;
 
 void collector_finalizer_f(void *context)
 {
-	auto decoderStateArray = static_cast<DecoderStateDataArray *>(context);
+	auto decoderStateArray = static_cast<DecoderStateArray *>(context);
 
 	for(auto& atomic_ptr : *decoderStateArray)
 		delete atomic_ptr.exchange(nullptr);
@@ -295,7 +295,7 @@ private:
 	std::atomic_uint 				mFlags 						= 0;
 	SFB::AudioRingBuffer			mAudioRingBuffer;
 	SFB::RingBuffer					mRenderEventsRingBuffer;
-	DecoderStateDataArray 			*mDecoderStateArray 		= nullptr;
+	DecoderStateArray 				*mDecoderStateArray 		= nullptr;
 
 public:
 	PlayerNodeImpl(AVAudioFormat *format, uint32_t ringBufferSize)
@@ -389,8 +389,8 @@ public:
 				AVAudioFrameCount decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
 				AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
-				if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
-					decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
+				if(!(decoderState->mFlags.load() & DecoderState::eRenderingStartedFlag)) {
+					decoderState->mFlags.fetch_or(DecoderState::eRenderingStartedFlag);
 
 					// Schedule the rendering started notification
 					const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted;
@@ -408,8 +408,8 @@ public:
 				decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
 				framesRemainingToDistribute -= framesFromThisDecoder;
 
-				if((decoderState->mFlags.load() & DecoderStateData::eDecodingCompleteFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
-					decoderState->mFlags.fetch_or(DecoderStateData::eRenderingCompleteFlag);
+				if((decoderState->mFlags.load() & DecoderState::eDecodingCompleteFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
+					decoderState->mFlags.fetch_or(DecoderState::eRenderingCompleteFlag);
 
 					// Schedule the rendering complete notification
 					const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete;
@@ -559,7 +559,7 @@ public:
 							}
 
 							// The last action performed with a decoder that has completed rendering is this notification
-							decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+							decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemovalFlag);
 							dispatch_source_merge_data(mCollector, 1);
 						}
 						else
@@ -605,7 +605,7 @@ public:
 		}
 
 		// Allocate and initialize the decoder state data array
-		mDecoderStateArray = new DecoderStateDataArray;
+		mDecoderStateArray = new DecoderStateArray;
 		for(auto& atomic_ptr : *mDecoderStateArray)
 			atomic_ptr.store(nullptr);
 
@@ -623,7 +623,7 @@ public:
 		dispatch_source_set_event_handler(mCollector, ^{
 			for(auto& atomic_ptr : *mDecoderStateArray) {
 				auto decoderState = atomic_ptr.load();
-				if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
+				if(!decoderState || !(decoderState->mFlags.load() & DecoderState::eMarkedForRemovalFlag))
 					continue;
 
 				os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
@@ -893,7 +893,7 @@ public:
 			ClearQueue();
 			auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 			if(decoderState)
-				decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
+				decoderState->mFlags.fetch_or(DecoderState::eCancelDecodingFlag);
 		}
 
 		{
@@ -927,7 +927,7 @@ public:
 	{
 		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(decoderState) {
-			decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
+			decoderState->mFlags.fetch_or(DecoderState::eCancelDecodingFlag);
 			dispatch_semaphore_signal(mDecodingSemaphore);
 		}
 	}
@@ -954,16 +954,16 @@ public:
 private:
 
 	/// Returns the decoder with the smallest sequence number that has not completed rendering and has not been marked for removal
-	DecoderStateData * GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
+	DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 	{
-		DecoderStateData *result = nullptr;
+		DecoderState *result = nullptr;
 		for(auto& atomic_ptr : *mDecoderStateArray) {
 			auto decoderState = atomic_ptr.load();
 			if(!decoderState)
 				continue;
 
 			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
+			if(flags & DecoderState::eMarkedForRemovalFlag || flags & DecoderState::eRenderingCompleteFlag)
 				continue;
 
 			if(!result)
@@ -976,16 +976,16 @@ private:
 	}
 
 	/// Returns the decoder with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
-	DecoderStateData * GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
+	DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
-		DecoderStateData *result = nullptr;
+		DecoderState *result = nullptr;
 		for(auto& atomic_ptr : *mDecoderStateArray) {
 			auto decoderState = atomic_ptr.load();
 			if(!decoderState)
 				continue;
 
 			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
+			if(flags & DecoderState::eMarkedForRemovalFlag || flags & DecoderState::eRenderingCompleteFlag)
 				continue;
 
 			if(!result && decoderState->mSequenceNumber > sequenceNumber)
@@ -998,14 +998,14 @@ private:
 	}
 
 	/// Returns the decoder with the sequence number equal to \c sequenceNumber that has not been marked for removal
-	DecoderStateData * GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
+	DecoderState * GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		for(auto& atomic_ptr : *mDecoderStateArray) {
 			auto decoderState = atomic_ptr.load();
 			if(!decoderState)
 				continue;
 
-			if(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag)
+			if(decoderState->mFlags.load() & DecoderState::eMarkedForRemovalFlag)
 				continue;
 
 			if(decoderState->mSequenceNumber == sequenceNumber)
@@ -1029,7 +1029,7 @@ private:
 			id <SFBPCMDecoding> decoder = DequeueDecoder();
 			if(decoder) {
 				// Create the decoder state
-				auto decoderState = new (std::nothrow) DecoderStateData(decoder, mRenderingFormat, kRingBufferChunkSize);
+				auto decoderState = new (std::nothrow) DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
 				if(!decoderState) {
 					os_log_error(_audioPlayerNodeLog, "Unable to allocate decoder state data");
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
@@ -1092,7 +1092,7 @@ private:
 				} while(!stored);
 
 				// In the event the render block output format and decoder processing
-				// format don't match, conversion will be performed in DecoderStateData::DecodeAudio()
+				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
 
 				os_log_debug(_audioPlayerNodeLog, "Dequeued decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 				os_log_debug(_audioPlayerNodeLog, "Processing format: %{public}@", decoderState->mDecoder.processingFormat);
@@ -1101,7 +1101,7 @@ private:
 
 				while(!(mFlags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 					// If a seek is pending reset the ring buffer
-					if(decoderState->mFrameToSeek.load() != DecoderStateData::kInvalidFramePosition)
+					if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
 						mFlags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
@@ -1120,7 +1120,7 @@ private:
 							mFlags.fetch_or(eAudioPlayerNodeFlagOutputIsMuted);
 
 						// Perform seek if one is pending
-						if(decoderState->mFrameToSeek.load() != DecoderStateData::kInvalidFramePosition)
+						if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
 							decoderState->PerformSeek();
 
 						// Reset() is not thread safe but the rendering thread is outputting silence
@@ -1134,11 +1134,11 @@ private:
 					auto framesAvailableToWrite = mAudioRingBuffer.FramesAvailableToWrite();
 
 					// Force writes to the ring buffer to be at least kRingBufferChunkSize
-					if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag)) {
-						if(!(decoderState->mFlags.load() & DecoderStateData::eDecodingStartedFlag)) {
+					if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderState::eCancelDecodingFlag)) {
+						if(!(decoderState->mFlags.load() & DecoderState::eDecodingStartedFlag)) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-							decoderState->mFlags.fetch_or(DecoderStateData::eDecodingStartedFlag);
+							decoderState->mFlags.fetch_or(DecoderState::eDecodingStartedFlag);
 
 							// Perform the decoding started notification
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)])
@@ -1162,7 +1162,7 @@ private:
 						if(framesWritten != buffer.frameLength)
 							os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Write() failed");
 
-						if(decoderState->mFlags.load() & DecoderStateData::eDecodingCompleteFlag) {
+						if(decoderState->mFlags.load() & DecoderState::eDecodingCompleteFlag) {
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
@@ -1178,14 +1178,14 @@ private:
 							break;
 						}
 					}
-					else if(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag) {
+					else if(decoderState->mFlags.load() & DecoderState::eCancelDecodingFlag) {
 						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-						BOOL partiallyRendered = (decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag) ? YES : NO;
+						BOOL partiallyRendered = (decoderState->mFlags.load() & DecoderState::eRenderingStartedFlag) ? YES : NO;
 						id<SFBPCMDecoding> canceledDecoder = decoderState->mDecoder;
 
 						mFlags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
-						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+						decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemovalFlag);
 						dispatch_source_merge_data(mCollector, 1);
 
 						// Perform the decoding cancelled notification
