@@ -270,6 +270,9 @@ struct PlayerNodeImpl
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
+	/// The format of the audio supplied by \c mRenderBlock
+	AVAudioFormat 					*mRenderingFormat		= nil;
+
 	/// The lock used to protect access to \c mQueuedDecoders
 	mutable SFB::UnfairLock			mQueueLock;
 	/// Decoders enqueued for playback
@@ -296,6 +299,7 @@ private:
 
 public:
 	PlayerNodeImpl(AVAudioFormat *format, uint32_t ringBufferSize)
+	: mRenderingFormat(format)
 	{
 		NSCParameterAssert(format != nil);
 		NSCParameterAssert(format.isStandard);
@@ -445,7 +449,7 @@ public:
 		};
 
 		// Allocate the audio ring buffer and the rendering events ring buffer
-		if(!mAudioRingBuffer.Allocate(*(format.streamDescription), ringBufferSize)) {
+		if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
 			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate() failed");
 		}
@@ -849,11 +853,15 @@ public:
 
 #pragma mark - Format Information
 
+	inline AVAudioFormat * RenderingFormat() const noexcept
+	{
+		return mRenderingFormat;
+	}
+
 	inline bool SupportsFormat(AVAudioFormat *format) const noexcept
 	{
-		// Gapless playback requires the same number of channels at the same sample rate as the ring buffer
-		auto renderingFormat = mAudioRingBuffer.Format();
-		return format.channelCount == renderingFormat.ChannelCount() && format.sampleRate == renderingFormat.mSampleRate;
+		// Gapless playback requires the same number of channels at the same sample rate
+		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate;
 	}
 
 #pragma mark - Queue Management
@@ -1016,14 +1024,12 @@ private:
 
 		os_log_debug(_audioPlayerNodeLog, "Decoder thread starting");
 
-		AVAudioFormat *renderingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&mAudioRingBuffer.Format()];
-
 		while(!(mFlags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 			// Dequeue and process the next decoder
 			id <SFBPCMDecoding> decoder = DequeueDecoder();
 			if(decoder) {
 				// Create the decoder state
-				auto decoderState = new (std::nothrow) DecoderStateData(decoder, renderingFormat, kRingBufferChunkSize);
+				auto decoderState = new (std::nothrow) DecoderStateData(decoder, mRenderingFormat, kRingBufferChunkSize);
 				if(!decoderState) {
 					os_log_error(_audioPlayerNodeLog, "Unable to allocate decoder state data");
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
@@ -1091,7 +1097,7 @@ private:
 				os_log_debug(_audioPlayerNodeLog, "Dequeued decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 				os_log_debug(_audioPlayerNodeLog, "Processing format: %{public}@", decoderState->mDecoder.processingFormat);
 
-				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat frameCapacity:kRingBufferChunkSize];
+				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 
 				while(!(mFlags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 					// If a seek is pending reset the ring buffer
@@ -1248,11 +1254,8 @@ private:
 	}
 
 	if((self = [super initWithFormat:format renderBlock:impl->mRenderBlock])) {
-		os_log_info(_audioPlayerNodeLog, "Render block format: %{public}@", format);
-
 		_impl = std::move(impl);
 		_impl->mNode = self;
-		_renderingFormat = format;
 
 #if 0
 		// See the comments in SFBAudioPlayer -configureEngineForGaplessPlaybackOfFormat:
@@ -1274,6 +1277,11 @@ private:
 }
 
 #pragma mark - Format Information
+
+- (AVAudioFormat *)renderingFormat
+{
+	return _impl->RenderingFormat();
+}
 
 - (BOOL)supportsFormat:(AVAudioFormat *)format
 {
