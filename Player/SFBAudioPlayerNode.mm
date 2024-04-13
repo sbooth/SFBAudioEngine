@@ -285,8 +285,8 @@ private:
 	/// Queue used for sending delegate messages
 	dispatch_queue_t				mNotificationQueue;
 
-	/// Dispatch source processing render events from \c mRenderEventsRingBuffer
-	dispatch_source_t				mRenderEventsProcessor;
+	/// Dispatch source processing render events from \c mRenderEventRingBuffer
+	dispatch_source_t				mRenderEventProcessor;
 
 	/// Dispatch source deleting decoder state data with \c eMarkedForRemovalFlag
 	dispatch_source_t				mCollector;
@@ -294,7 +294,7 @@ private:
 	// Shared state accessed from multiple threads/queues
 	std::atomic_uint 				mFlags 						= 0;
 	SFB::AudioRingBuffer			mAudioRingBuffer;
-	SFB::RingBuffer					mRenderEventsRingBuffer;
+	SFB::RingBuffer					mRenderEventRingBuffer;
 	DecoderStateArray 				*mDecoderStateArray 		= nullptr;
 
 public:
@@ -401,8 +401,8 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mRenderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
-					dispatch_source_merge_data(mRenderEventsProcessor, 1);
+					mRenderEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
+					dispatch_source_merge_data(mRenderEventProcessor, 1);
 				}
 
 				decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
@@ -420,8 +420,8 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mRenderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
-					dispatch_source_merge_data(mRenderEventsProcessor, 1);
+					mRenderEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
+					dispatch_source_merge_data(mRenderEventProcessor, 1);
 				}
 
 				if(framesRemainingToDistribute == 0)
@@ -441,20 +441,20 @@ public:
 				uint8_t bytesToWrite [4 + 8];
 				std::memcpy(bytesToWrite, &cmd, 4);
 				std::memcpy(bytesToWrite + 4, &hostTime, 8);
-				mRenderEventsRingBuffer.Write(bytesToWrite, 4 + 8);
-				dispatch_source_merge_data(mRenderEventsProcessor, 1);
+				mRenderEventRingBuffer.Write(bytesToWrite, 4 + 8);
+				dispatch_source_merge_data(mRenderEventProcessor, 1);
 			}
 
 			return noErr;
 		};
 
-		// Allocate the audio ring buffer and the rendering events ring buffer
+		// Allocate the audio ring buffer and the render event ring buffer
 		if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
 			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate() failed");
 		}
 
-		if(!mRenderEventsRingBuffer.Allocate(256)) {
+		if(!mRenderEventRingBuffer.Allocate(256)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Allocate() failed");
 			throw std::runtime_error("SFB::RingBuffer::Allocate() failed");
 		}
@@ -473,25 +473,25 @@ public:
 			throw std::runtime_error("dispatch_semaphore_create failed");
 		}
 
-		// Set up render events processing for delegate notifications
-		mRenderEventsProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
-		if(!mRenderEventsProcessor) {
+		// Set up render event processing for delegate notifications
+		mRenderEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
+		if(!mRenderEventProcessor) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
 		// MARK: Render Event Processing
-		dispatch_source_set_event_handler(mRenderEventsProcessor, ^{
-			while(mRenderEventsRingBuffer.BytesAvailableToRead() >= 4) {
+		dispatch_source_set_event_handler(mRenderEventProcessor, ^{
+			while(mRenderEventRingBuffer.BytesAvailableToRead() >= 4) {
 				uint32_t cmd;
-				/*auto bytesRead =*/ mRenderEventsRingBuffer.Read(&cmd, 4);
+				/*auto bytesRead =*/ mRenderEventRingBuffer.Read(&cmd, 4);
 
 				switch(cmd) {
 					case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
-						if(mRenderEventsRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
+						if(mRenderEventRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
 							uint64_t sequenceNumber, hostTime;
-							/*bytesRead =*/ mRenderEventsRingBuffer.Read(&sequenceNumber, 8);
-							/*bytesRead =*/ mRenderEventsRingBuffer.Read(&hostTime, 8);
+							/*bytesRead =*/ mRenderEventRingBuffer.Read(&sequenceNumber, 8);
+							/*bytesRead =*/ mRenderEventRingBuffer.Read(&hostTime, 8);
 
 							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
@@ -526,10 +526,10 @@ public:
 						break;
 
 					case eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete:
-						if(mRenderEventsRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
+						if(mRenderEventRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
 							uint64_t sequenceNumber, hostTime;
-							/*bytesRead =*/ mRenderEventsRingBuffer.Read(&sequenceNumber, 8);
-							/*bytesRead =*/ mRenderEventsRingBuffer.Read(&hostTime, 8);
+							/*bytesRead =*/ mRenderEventRingBuffer.Read(&sequenceNumber, 8);
+							/*bytesRead =*/ mRenderEventRingBuffer.Read(&hostTime, 8);
 
 							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
@@ -567,9 +567,9 @@ public:
 						break;
 
 					case eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio:
-						if(mRenderEventsRingBuffer.BytesAvailableToRead() >= 8) {
+						if(mRenderEventRingBuffer.BytesAvailableToRead() >= 8) {
 							uint64_t hostTime;
-							/*bytesRead =*/ mRenderEventsRingBuffer.Read(&hostTime, 8);
+							/*bytesRead =*/ mRenderEventRingBuffer.Read(&hostTime, 8);
 
 							os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
 
@@ -595,7 +595,7 @@ public:
 		});
 
 		// Start processing render events
-		dispatch_activate(mRenderEventsProcessor);
+		dispatch_activate(mRenderEventProcessor);
 
 		// Set up the collector
 		mCollector = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
