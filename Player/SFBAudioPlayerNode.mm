@@ -293,7 +293,7 @@ public:
 		NSCParameterAssert(format != nil);
 		NSCParameterAssert(format.isStandard);
 
-		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode %p> created with render block format %{public}@", this, mRenderingFormat);
+		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> created with render block format %{public}@", this, mRenderingFormat);
 
 		// mFlags is used in the render block so must be lock free
 		assert(mFlags.is_lock_free());
@@ -496,7 +496,7 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for \"%{public}@\"", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)])
 								dispatch_async_and_wait(mNotificationQueue, ^{
@@ -511,7 +511,7 @@ public:
 									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
 									if(abs(delta) > tolerance)
-										os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
+										os_log_debug(_audioPlayerNodeLog, "Rendering started notification for %{public}@ arrived %.2f msec %s", decoder, delta, delta > 0 ? "late" : "early");
 #endif
 
 									[mNode.delegate audioPlayerNode:mNode renderingStarted:decoder];
@@ -534,7 +534,7 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for \"%{public}@\"", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingComplete:)]) {
 								// Store a strong reference to `decoderState->mDecoder` for use in the notification block
@@ -548,7 +548,7 @@ public:
 									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
 									if(abs(delta) > tolerance)
-										os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
+										os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for %{public}@ arrived %.2f msec %s", decoder, delta, delta > 0 ? "late" : "early");
 #endif
 
 									[mNode.delegate audioPlayerNode:mNode renderingComplete:decoder];
@@ -835,8 +835,6 @@ public:
 	{
 		NSCParameterAssert(decoder != nil);
 
-		os_log_info(_audioPlayerNodeLog, "Enqueuing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
-
 		if(!decoder.isOpen && ![decoder openReturningError:error])
 			return false;
 
@@ -860,6 +858,8 @@ public:
 			if(decoderState)
 				decoderState->mFlags.fetch_or(DecoderState::eCancelDecoding);
 		}
+
+		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
@@ -990,12 +990,12 @@ private:
 		dispatch_group_async(mCollectorGroup, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
 			for(auto& atomic_ptr : mActiveDecoders) {
 				if(atomic_ptr.load() == decoderState) {
-					os_log_debug(_audioPlayerNodeLog, "Deleting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+					os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %@", decoderState->mDecoder);
 					delete atomic_ptr.exchange(nullptr);
 					return;
 				}
 			}
-			os_log_error(_audioPlayerNodeLog, "<AudioPlayerNode %p> <DecoderState %p> not found in mActiveDecoders", this, decoderState);
+			os_log_error(_audioPlayerNodeLog, "<AudioPlayerNode: %p> <DecoderState: %p> not found in mActiveDecoders", this, decoderState);
 		});
 	}
 
@@ -1006,7 +1006,7 @@ private:
 		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.DecoderThread");
 		pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
-		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode %p> decoder thread started", this);
+		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> decoder thread started", this);
 
 		while(!(mFlags.load() & eStopDecoderThread)) {
 			// Dequeue and process the next decoder
@@ -1078,7 +1078,7 @@ private:
 				// In the event the render block output format and decoder processing
 				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
 
-				os_log_debug(_audioPlayerNodeLog, "Dequeued decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@", decoderState->mDecoder);
 				os_log_debug(_audioPlayerNodeLog, "Processing format: %{public}@", decoderState->mDecoder.processingFormat);
 
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
@@ -1120,7 +1120,7 @@ private:
 					// Force writes to the ring buffer to be at least kRingBufferChunkSize
 					if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderState::eCancelDecoding)) {
 						if(!(decoderState->mFlags.load() & DecoderState::eDecodingStarted)) {
-							os_log_debug(_audioPlayerNodeLog, "Decoding started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
 							decoderState->mFlags.fetch_or(DecoderState::eDecodingStarted);
 
@@ -1157,13 +1157,13 @@ private:
 									[mNode.delegate audioPlayerNode:mNode decodingComplete:decoderState->mDecoder];
 								});
 
-							os_log_debug(_audioPlayerNodeLog, "Decoding complete for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
 
 							break;
 						}
 					}
 					else if(decoderState->mFlags.load() & DecoderState::eCancelDecoding) {
-						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
 						BOOL partiallyRendered = (decoderState->mFlags.load() & DecoderState::eRenderingStarted) ? YES : NO;
 						id<SFBPCMDecoding> canceledDecoder = decoderState->mDecoder;
@@ -1191,7 +1191,7 @@ private:
 				dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 		}
 
-		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode %p> decoder thread exiting", this);
+		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> decoder thread exiting", this);
 	}
 };
 
