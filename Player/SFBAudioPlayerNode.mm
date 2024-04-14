@@ -242,7 +242,7 @@ public:
 uint64_t DecoderState::sSequenceNumber = 0;
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
-#pragma mark - PlayerNodeImpl
+#pragma mark - AudioPlayerNode
 
 using DecoderStateArray = std::array<DecoderState::atomic_ptr, kDecoderStateArraySize>;
 
