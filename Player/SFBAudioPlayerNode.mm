@@ -8,6 +8,7 @@
 #import <array>
 #import <atomic>
 #import <cmath>
+#import <memory>
 #import <mutex>
 #import <queue>
 #import <thread>
@@ -492,7 +493,7 @@ public:
 
 							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
-								os_log_error(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
 								break;
 							}
 
@@ -519,7 +520,7 @@ public:
 							}
 						}
 						else
-							os_log_error(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted");
+							os_log_fault(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted");
 						break;
 
 					case eRenderEventRingBufferCommandRenderingComplete:
@@ -530,7 +531,7 @@ public:
 
 							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
-								os_log_error(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
 								break;
 							}
 
@@ -561,7 +562,7 @@ public:
 							RemoveAndDeleteDecoderState(decoderState);
 						}
 						else
-							os_log_error(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete");
+							os_log_fault(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete");
 						break;
 
 					case eRenderEventRingBufferCommandEndOfAudio:
@@ -586,7 +587,7 @@ public:
 							}
 						}
 						else
-							os_log_error(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio");
+							os_log_fault(_audioPlayerNodeLog, "Missing data for eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio");
 						break;
 				}
 			}
@@ -995,7 +996,7 @@ private:
 					return;
 				}
 			}
-			os_log_error(_audioPlayerNodeLog, "<AudioPlayerNode: %p> <DecoderState: %p> not found in mActiveDecoders", this, decoderState);
+			os_log_fault(_audioPlayerNodeLog, "<AudioPlayerNode: %p> <DecoderState: %p> not found in mActiveDecoders", this, decoderState);
 		});
 	}
 
@@ -1003,7 +1004,7 @@ private:
 
 	void DecoderThreadEntry() noexcept
 	{
-		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.DecoderThread");
+		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.Decoder");
 		pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
 		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> decoder thread started", this);
