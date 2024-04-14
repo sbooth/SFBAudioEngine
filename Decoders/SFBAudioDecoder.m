@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -275,6 +275,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
+}
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];
 }
 
 @end
