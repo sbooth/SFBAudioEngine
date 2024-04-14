@@ -53,10 +53,6 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
-/// Since decoding and rendering are distinct operations performed in separate threads, a GCD source on a background
-/// queue is used for garbage collection. This is necessary because state data created in the decoding thread needs to
-/// live until rendering is complete, which cannot occur until after decoding is complete.
-///
 /// \c SFBAudioPlayerNode supports delegate-based callbacks for the following events:
 ///
 ///  1. Decoding started
