@@ -1097,7 +1097,7 @@ private:
 						if(mNode.engine.isRunning) {
 							mFlags.fetch_or(eMuteRequested);
 
-							// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
+							// The rendering thread will clear eMuteRequested when the current render cycle completes
 							while(mFlags.load() & eMuteRequested)
 								dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
 						}
@@ -1174,7 +1174,7 @@ private:
 
 						RemoveAndDeleteDecoderState(decoderState);
 
-						// Perform the decoding cancelled notification
+						// Perform the decoding canceled notification
 						if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
 							dispatch_async_and_wait(mNotificationQueue, ^{
 								[mNode.delegate audioPlayerNode:mNode decodingCanceled:canceledDecoder partiallyRendered:partiallyRendered];
