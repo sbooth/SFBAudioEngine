@@ -8,6 +8,7 @@
 #import <array>
 #import <atomic>
 #import <cmath>
+#import <exception>
 #import <memory>
 #import <mutex>
 #import <queue>
@@ -89,6 +90,7 @@ os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPla
 /// State for tracking/syncing decoding progress
 struct DecoderState {
 	using atomic_ptr = std::atomic<DecoderState *>;
+	static_assert(atomic_ptr::is_always_lock_free, "Lock-free std::atomic<DecoderState *> required");
 
 	static const AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
 	static const int64_t			kInvalidFramePosition 	= -1;
@@ -131,13 +133,25 @@ struct DecoderState {
 	DecoderState(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
 	: mFrameLength(decoder.frameLength), mDecoder(decoder)
 	{
+		NSCParameterAssert(decoder != nil);
+		NSCParameterAssert(format != nil);
+		NSCParameterAssert(format.streamDescription->mFormatID == kAudioFormatLinearPCM);
+		NSCParameterAssert(frameCapacity > 0);
+
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
+		if(!mConverter) {
+			os_log_error(_audioPlayerNodeLog, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", mDecoder.processingFormat, format);
+			throw std::runtime_error("Error creating AVAudioConverter");
+		}
+
 		// The logic in this class assumes no SRC is performed by mConverter
 		assert(mConverter.inputFormat.sampleRate == mConverter.outputFormat.sampleRate);
-		mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:frameCapacity];
 
-		AVAudioFramePosition framePosition = decoder.framePosition;
-		if(framePosition != 0) {
+		mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:frameCapacity];
+		if(!mDecodeBuffer)
+			throw std::system_error(std::error_code(ENOMEM, std::generic_category()));
+
+		if(AVAudioFramePosition framePosition = decoder.framePosition; framePosition != 0) {
 			mFramesDecoded.store(framePosition);
 			mFramesConverted.store(framePosition);
 			mFramesRendered.store(framePosition);
@@ -231,8 +245,7 @@ DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStat
 		if(!decoderState)
 			continue;
 
-		auto flags = decoderState->mFlags.load();
-		if(flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
+		if(auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
 			continue;
 
 		if(!result)
@@ -253,8 +266,7 @@ DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateAr
 		if(!decoderState)
 			continue;
 
-		auto flags = decoderState->mFlags.load();
-		if(flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
+		if(auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
 			continue;
 
 		if(!result && decoderState->mSequenceNumber > sequenceNumber)
@@ -274,7 +286,7 @@ DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decode
 		if(!decoderState)
 			continue;
 
-		if(decoderState->mFlags.load() & DecoderState::eMarkedForRemoval)
+		if(auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval)
 			continue;
 
 		if(decoderState->mSequenceNumber == sequenceNumber)
@@ -368,6 +380,7 @@ private:
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
+	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
@@ -377,9 +390,6 @@ public:
 		NSCParameterAssert(format.isStandard);
 
 		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> created with render block format %{public}@", this, mRenderingFormat);
-
-		// mFlags is used in the render block so must be lock free
-		assert(mFlags.is_lock_free());
 
 		// MARK: Rendering
 		mRenderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
@@ -790,9 +800,6 @@ public:
 		for(auto& atomic_ptr : *mActiveDecoders)
 			atomic_ptr.store(nullptr);
 
-		// `mActiveDecoders` is used in the render block so must be lock free
-		assert(mActiveDecoders->at(0).is_lock_free());
-
 		// The collector takes ownership of `mActiveDecoders` and the finalizer is responsible
 		// for deleting any allocated decoder state it contains as well as the array itself
 		dispatch_set_context(mCollector, mActiveDecoders);
@@ -900,8 +907,7 @@ public:
 		int64_t framePosition = decoderState->FramePosition();
 		int64_t frameLength = decoderState->FrameLength();
 
-		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		if(sampleRate > 0) {
+		if(double sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
 			if(framePosition != SFBUnknownFramePosition)
 				playbackTime.currentTime = framePosition / sampleRate;
 			if(frameLength != SFBUnknownFrameLength)
@@ -928,8 +934,7 @@ public:
 
 		if(playbackTime) {
 			SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
-			double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-			if(sampleRate > 0) {
+			if(double sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
 				if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 					currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
 				if(currentPlaybackPosition.frameLength != SFBUnknownFrameLength)
@@ -954,7 +959,7 @@ public:
 
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 		AVAudioFramePosition framePosition = decoderState->FramePosition();
-		AVAudioFramePosition targetFrame = framePosition + (AVAudioFramePosition)(secondsToSkip * sampleRate);
+		AVAudioFramePosition targetFrame = framePosition + static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
 		if(targetFrame >= decoderState->FrameLength())
 			targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
@@ -973,7 +978,7 @@ public:
 
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 		AVAudioFramePosition framePosition = decoderState->FramePosition();
-		AVAudioFramePosition targetFrame = framePosition - (AVAudioFramePosition)(secondsToSkip * sampleRate);
+		AVAudioFramePosition targetFrame = framePosition - static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
 		if(targetFrame < 0)
 			targetFrame = 0;
@@ -991,7 +996,7 @@ public:
 			return false;
 
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		AVAudioFramePosition targetFrame = (AVAudioFramePosition)(timeInSeconds * sampleRate);
+		AVAudioFramePosition targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
 
 		if(targetFrame >= decoderState->FrameLength())
 			targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
@@ -1076,8 +1081,7 @@ public:
 
 		if(reset) {
 			ClearQueue();
-			auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-			if(decoderState)
+			if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState)
 				decoderState->mFlags.fetch_or(DecoderState::eCancelDecoding);
 		}
 
@@ -1112,8 +1116,7 @@ public:
 
 	void CancelCurrentDecoder() noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-		if(decoderState) {
+		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
 			decoderState->mFlags.fetch_or(DecoderState::eCancelDecoding);
 			dispatch_semaphore_signal(mDecodingSemaphore);
 		}
@@ -1169,12 +1172,16 @@ private:
 
 		while(!(mFlags.load() & eStopDecoderThread)) {
 			// Dequeue and process the next decoder
-			id <SFBPCMDecoding> decoder = DequeueDecoder();
-			if(decoder) {
+			if(id <SFBPCMDecoding> decoder = DequeueDecoder(); decoder) {
 				// Create the decoder state
-				auto decoderState = new (std::nothrow) DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
-				if(!decoderState) {
-					os_log_error(_audioPlayerNodeLog, "Unable to allocate decoder state data");
+				DecoderState *decoderState = nullptr;
+
+				try {
+					decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
+				}
+
+				catch(const std::exception& e) {
+					os_log_error(_audioPlayerNodeLog, "Error creating decoder state: %{public}s", e.what());
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
 						auto node = mNode;
 
