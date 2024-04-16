@@ -1318,7 +1318,7 @@ private:
 
 								dispatch_group_enter(mNotificationGroup);
 								dispatch_async_and_wait(mNotificationQueue, ^{
-									[mNode.delegate audioPlayerNode:mNode encounteredError:error];
+									[node.delegate audioPlayerNode:mNode encounteredError:error];
 									dispatch_group_leave(mNotificationGroup);
 								});
 							}
