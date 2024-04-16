@@ -352,7 +352,7 @@ private:
 	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
 
 	/// Queue used for sending delegate messages
-	dispatch_queue_t				mNotificationQueue 		= nullptr;
+	dispatch_queue_t				mNotifierQueue 		= nullptr;
 
 	/// Dispatch group  used to track in-progress notifications
 	dispatch_group_t 				mNotificationGroup 		= nullptr;
@@ -548,8 +548,8 @@ public:
 
 		// Create the dispatch queue used for sending delegate messages
 		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-		mNotificationQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
-		if(!mNotificationQueue) {
+		mNotifierQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Notifier", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		if(!mNotifierQueue) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create_with_target failed");
 			throw std::runtime_error("dispatch_queue_create_with_target failed");
 		}
@@ -642,7 +642,7 @@ public:
 								auto node = mNode;
 
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_async_and_wait(mNotifierQueue, ^{
 									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:(partiallyRendered ? YES : NO)];
 									dispatch_group_leave(mNotificationGroup);
 								});
@@ -670,7 +670,7 @@ public:
 								auto node = mNode;
 
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_async_and_wait(mNotifierQueue, ^{
 									[node.delegate audioPlayerNode:node renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
 									dispatch_group_leave(mNotificationGroup);
 								});
@@ -682,7 +682,7 @@ public:
 
 								dispatch_time_t notificationTime = hostTime;
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_after(notificationTime, mNotificationQueue, ^{
+								dispatch_after(notificationTime, mNotifierQueue, ^{
 #if DEBUG
 									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
@@ -726,7 +726,7 @@ public:
 
 								dispatch_time_t notificationTime = hostTime;
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_after(notificationTime, mNotificationQueue, ^{
+								dispatch_after(notificationTime, mNotifierQueue, ^{
 #if DEBUG
 									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
@@ -755,7 +755,7 @@ public:
 
 								dispatch_time_t notificationTime = hostTime;
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_after(notificationTime, mNotificationQueue, ^{
+								dispatch_after(notificationTime, mNotifierQueue, ^{
 #if DEBUG
 									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
@@ -1179,7 +1179,7 @@ private:
 						auto node = mNode;
 
 						dispatch_group_enter(mNotificationGroup);
-						dispatch_async_and_wait(mNotificationQueue, ^{
+						dispatch_async_and_wait(mNotifierQueue, ^{
 							[node.delegate audioPlayerNode:node encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
 							dispatch_group_leave(mNotificationGroup);
 						});
@@ -1292,7 +1292,7 @@ private:
 								auto node = mNode;
 
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_async_and_wait(mNotifierQueue, ^{
 									[node.delegate audioPlayerNode:node decodingStarted:decoderState->mDecoder];
 									dispatch_group_leave(mNotificationGroup);
 								});
@@ -1317,7 +1317,7 @@ private:
 								auto node = mNode;
 
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_async_and_wait(mNotifierQueue, ^{
 									[node.delegate audioPlayerNode:mNode encounteredError:error];
 									dispatch_group_leave(mNotificationGroup);
 								});
@@ -1339,7 +1339,7 @@ private:
 								auto node = mNode;
 
 								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_async_and_wait(mNotifierQueue, ^{
 									[node.delegate audioPlayerNode:node decodingComplete:decoderState->mDecoder];
 									dispatch_group_leave(mNotificationGroup);
 								});
