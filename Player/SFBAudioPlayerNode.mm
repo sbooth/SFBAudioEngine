@@ -1070,7 +1070,7 @@ public:
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioPlayerNodeErrorDomain
-												 code:SFBAudioPlayerNodeErrorFormatNotSupported
+												 code:SFBAudioPlayerNodeErrorCodeFormatNotSupported
 						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
 												  url:decoder.inputSource.url
 										failureReason:NSLocalizedString(@"Unsupported file format", @"")
@@ -1183,11 +1183,17 @@ private:
 				catch(const std::exception& e) {
 					os_log_error(_audioPlayerNodeLog, "Error creating decoder state: %{public}s", e.what());
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
+						NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+															 code:SFBAudioPlayerNodeErrorCodeInternalError
+														 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+																	 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating DecoderState", @""),
+																  }];
+
 						auto node = mNode;
 
 						dispatch_group_enter(mNotificationGroup);
 						dispatch_async_and_wait(mNotifierQueue, ^{
-							[node.delegate audioPlayerNode:node encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
+							[node.delegate audioPlayerNode:node encounteredError:error];
 							dispatch_group_leave(mNotificationGroup);
 						});
 					}
@@ -1255,11 +1261,17 @@ private:
 				if(!buffer) {
 					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", mRenderingFormat, kRingBufferChunkSize);
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
+						NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+															 code:SFBAudioPlayerNodeErrorCodeInternalError
+														 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+																	 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
+																  }];
+
 						auto node = mNode;
 
 						dispatch_group_enter(mNotificationGroup);
 						dispatch_async_and_wait(mNotifierQueue, ^{
-							[node.delegate audioPlayerNode:node encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
+							[node.delegate audioPlayerNode:node encounteredError:error];
 							dispatch_group_leave(mNotificationGroup);
 						});
 					}

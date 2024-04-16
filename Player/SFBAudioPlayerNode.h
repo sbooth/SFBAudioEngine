@@ -259,8 +259,10 @@ extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlay
 
 /// Possible \c NSError error codes used by \c SFBAudioPlayerNode
 typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
+	/// Internal or unspecified error
+	SFBAudioPlayerNodeErrorCodeInternalError 		= 0,
 	/// Format not supported
-	SFBAudioPlayerNodeErrorFormatNotSupported	= 0
+	SFBAudioPlayerNodeErrorCodeFormatNotSupported 	= 1
 } NS_SWIFT_NAME(AudioPlayerNode.ErrorCode);
 
 NS_ASSUME_NONNULL_END

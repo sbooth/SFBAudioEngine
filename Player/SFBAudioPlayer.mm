@@ -591,7 +591,7 @@ enum eAudioPlayerFlags : unsigned int {
 	if(!success) {
 		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
-			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
+			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[_delegate audioPlayer:self encounteredError:error];
 		}
 		return;
@@ -657,7 +657,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 	if(!success) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 		if(self.nowPlaying) {
 			self.nowPlaying = nil;
