@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -89,7 +89,11 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 		}];
 
 		if(status == AVAudioConverterOutputStatus_Error) {
+#if TARGET_OS_TV
+			[[NSFileManager defaultManager] removeItemAtURL:targetURL error:nil];
+#else
 			[[NSFileManager defaultManager] trashItemAtURL:targetURL resultingItemURL:nil error:nil];
+#endif
 			if(error)
 				*error = err;
 			return NO;
@@ -99,7 +103,11 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 
 		if(![outputFile writeFromBuffer:outputBuffer error:&err]) {
 			os_log_error(OS_LOG_DEFAULT, "Error writing audio: %{public}@", err);
+#if TARGET_OS_TV
+			[[NSFileManager defaultManager] removeItemAtURL:targetURL error:nil];
+#else
 			[[NSFileManager defaultManager] trashItemAtURL:targetURL resultingItemURL:nil error:nil];
+#endif
 			if(error)
 				*error = err;
 			return NO;

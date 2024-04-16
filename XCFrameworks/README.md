@@ -2,7 +2,7 @@
 
 Compiled and compressed XCFrameworks for the various open-source audio libraries used by SFBAudioEngine.
 
-The included XCFrameworks target macOS 10.15+ and iOS 14.0+ for all supported 64-bit architectures.
+The included XCFrameworks support macOS 10.15+, iOS 14.0+, and tvOS 14.0+ for all supported 64-bit architectures.
 
 See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more information.
 

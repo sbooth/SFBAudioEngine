@@ -28,6 +28,12 @@ jobs:
           scheme="iOS Framework"
           destination="generic/platform=iOS"
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for tvOS
+        run: |
+          project="SFBAudioEngine.xcodeproj"
+          scheme="tvOS Framework"
+          destination="generic/platform=tvOS"
+          xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for Mac Catalyst
         run: |
           project="SFBAudioEngine.xcodeproj"
@@ -39,4 +45,10 @@ jobs:
           project="SFBAudioEngine.xcodeproj"
           scheme="iOS Framework"
           destination="generic/platform=iOS Simulator"
+          xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for tvOS Simulator
+        run: |
+          project="SFBAudioEngine.xcodeproj"
+          scheme="tvOS Framework"
+          destination="generic/platform=tvOS Simulator"
           xcodebuild clean build analyze -project "$project" -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
