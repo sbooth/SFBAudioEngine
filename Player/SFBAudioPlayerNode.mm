@@ -352,7 +352,7 @@ private:
 	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
 
 	/// Queue used for sending delegate messages
-	dispatch_queue_t				mNotifierQueue 		= nullptr;
+	dispatch_queue_t				mNotifierQueue 			= nullptr;
 
 	/// Dispatch group  used to track in-progress notifications
 	dispatch_group_t 				mNotificationGroup 		= nullptr;
