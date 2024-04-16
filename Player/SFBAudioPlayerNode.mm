@@ -790,10 +790,10 @@ public:
 		for(auto& atomic_ptr : *mActiveDecoders)
 			atomic_ptr.store(nullptr);
 
-		// mActiveDecoders is used in the render block so must be lock free
+		// `mActiveDecoders` is used in the render block so must be lock free
 		assert(mActiveDecoders->at(0).is_lock_free());
 
-		// The collector takes ownership of mActiveDecoders and the finalizer is responsible
+		// The collector takes ownership of `mActiveDecoders` and the finalizer is responsible
 		// for deleting any allocated decoder state it contains as well as the array itself
 		dispatch_set_context(mCollector, mActiveDecoders);
 		dispatch_set_finalizer_f(mCollector, &collector_finalizer_f);
@@ -1195,15 +1195,15 @@ private:
 						if(current)
 							continue;
 
-						// In essence mActiveDecoders is an SPSC queue with this thread as producer
+						// In essence `mActiveDecoders` is an SPSC queue with this thread as producer
 						// and the collector as consumer, with the stored values used in between production
 						// and consumption by any number of other threads/queues including the IOProc.
 						//
-						// Slots in mActiveDecoders are assigned values in two places: here and the
+						// Slots in `mActiveDecoders` are assigned values in two places: here and the
 						// collector. The collector assigns nullptr to slots holding existing non-null
 						// values marked for removal while this code assigns non-null values to slots
 						// holding nullptr.
-						// Since mActiveDecoders[i] was atomically loaded and has been verified not null,
+						// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
 						// it is safe to use store() instead of compare_exchange_strong() because this is the
 						// only code that could have changed the slot to a non-null value and it is called solely
 						// from the decoding thread.
@@ -1211,13 +1211,13 @@ private:
 						// was assigned nullptr in between load() and the check for null. If this happens the
 						// assignment could have taken place but didn't.
 						//
-						// When mActiveDecoders is full this code either needs to wait for a slot to open up or fail.
+						// When `mActiveDecoders` is full this code either needs to wait for a slot to open up or fail.
 						//
-						// mActiveDecoders may be full when the capacity of mAudioRingBuffer exceeds the
-						// total number of audio frames for all the decoders in mActiveDecoders and audio is not
+						// `mActiveDecoders` may be full when the capacity of mAudioRingBuffer exceeds the
+						// total number of audio frames for all the decoders in `mActiveDecoders` and audio is not
 						// being consumed by the IOProc.
 						// The default frame capacity for mAudioRingBuffer is 16384. With 8 slots available in
-						// mActiveDecoders, the average number of frames a decoder needs to contain for
+						// `mActiveDecoders`, the average number of frames a decoder needs to contain for
 						// all slots to be full is 2048. For audio at 8000 Hz that equates to 0.26 sec and at
 						// 44,100 Hz 2048 frames equates to 0.05 sec.
 						// This code elects to wait for a slot to open up instead of failing.
