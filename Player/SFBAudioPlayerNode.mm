@@ -133,11 +133,6 @@ struct DecoderState {
 	DecoderState(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
 	: mFrameLength(decoder.frameLength), mDecoder(decoder)
 	{
-		NSCParameterAssert(decoder != nil);
-		NSCParameterAssert(format != nil);
-		NSCParameterAssert(format.streamDescription->mFormatID == kAudioFormatLinearPCM);
-		NSCParameterAssert(frameCapacity > 0);
-
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 		if(!mConverter) {
 			os_log_error(_audioPlayerNodeLog, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", mDecoder.processingFormat, format);
