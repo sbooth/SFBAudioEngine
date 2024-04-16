@@ -1172,7 +1172,7 @@ private:
 
 		while(!(mFlags.load() & eStopDecoderThread)) {
 			// Dequeue and process the next decoder
-			if(id <SFBPCMDecoding> decoder = DequeueDecoder(); decoder) {
+			if(auto decoder = DequeueDecoder(); decoder) {
 				// Create the decoder state
 				DecoderState *decoderState = nullptr;
 
@@ -1252,6 +1252,19 @@ private:
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, decoderState->mDecoder.processingFormat);
 
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
+				if(!buffer) {
+					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", mRenderingFormat, kRingBufferChunkSize);
+					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
+						auto node = mNode;
+
+						dispatch_group_enter(mNotificationGroup);
+						dispatch_async_and_wait(mNotifierQueue, ^{
+							[node.delegate audioPlayerNode:node encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
+							dispatch_group_leave(mNotificationGroup);
+						});
+					}
+					continue;
+				}
 
 				while(!(mFlags.load() & eStopDecoderThread)) {
 					// If a seek is pending reset the ring buffer
