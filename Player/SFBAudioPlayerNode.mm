@@ -185,7 +185,7 @@ struct DecoderState {
 	{
 		AVAudioFramePosition seekOffset = mFrameToSeek.load();
 
-		os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld", seekOffset);
+		os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld in %{public}@ ", seekOffset, mDecoder);
 
 		if([mDecoder seekToFrame:seekOffset error:nil])
 			// Reset the converter to flush any buffers
@@ -1081,7 +1081,7 @@ public:
 				decoderState->mFlags.fetch_or(DecoderState::eCancelDecoding);
 		}
 
-		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
+		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@ on <AudioPlayerNode: %p>", decoder, this);
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
@@ -1242,8 +1242,7 @@ private:
 				// In the event the render block output format and decoder processing
 				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
 
-				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@", decoderState->mDecoder);
-				os_log_debug(_audioPlayerNodeLog, "Processing format: %{public}@", decoderState->mDecoder.processingFormat);
+				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, decoderState->mDecoder.processingFormat);
 
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 
