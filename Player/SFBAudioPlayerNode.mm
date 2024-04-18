@@ -613,7 +613,11 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - AudioGetCurrentHostTime())) / NSEC_PER_MSEC, decoderState->mDecoder);
+							const auto now = AudioGetCurrentHostTime();
+							if(now > hostTime)
+								os_log_error(_audioPlayerNodeLog, "Rendering will start event processed %.2f msec late for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(now - hostTime)) / NSEC_PER_MSEC, decoderState->mDecoder);
+							else
+								os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - now)) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
 								auto node = mNode;
@@ -640,7 +644,11 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - AudioGetCurrentHostTime())) / NSEC_PER_MSEC, decoderState->mDecoder);
+							const auto now = AudioGetCurrentHostTime();
+							if(now > hostTime)
+								os_log_error(_audioPlayerNodeLog, "Rendering will complete event processed %.2f msec late for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(now - hostTime)) / NSEC_PER_MSEC, decoderState->mDecoder);
+							else
+								os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - now)) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
 								auto node = mNode;
@@ -663,7 +671,11 @@ public:
 							uint64_t hostTime;
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - AudioGetCurrentHostTime())) / NSEC_PER_MSEC);
+							const auto now = AudioGetCurrentHostTime();
+							if(now > hostTime)
+								os_log_error(_audioPlayerNodeLog, "End of audio event processed %.2f msec late", static_cast<double>(AudioConvertHostTimeToNanos(now - hostTime)) / NSEC_PER_MSEC);
+							else
+								os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - now)) / NSEC_PER_MSEC);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
 								auto node = mNode;
