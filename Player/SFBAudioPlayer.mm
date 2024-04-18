@@ -9,9 +9,8 @@
 #import <mutex>
 #import <queue>
 
+#import <mach/mach_time.h>
 #import <os/log.h>
-
-#import <CoreAudio/HostTime.h>
 
 #import "SFBAudioPlayer.h"
 
@@ -20,6 +19,7 @@
 #import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
+#import "SFBTimeUtilities.hpp"
 
 namespace {
 
@@ -882,10 +882,11 @@ enum eAudioPlayerFlags : unsigned int {
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
 #if DEBUG
-		auto delta = static_cast<double>(AudioConvertHostTimeToNanos(AudioGetCurrentHostTime() - hostTime)) / NSEC_PER_MSEC;
-		double tolerance = 1000 / audioPlayerNode.renderingFormat.sampleRate;
-		if(abs(delta) > tolerance)
-			os_log_debug(_audioPlayerLog, "Rendering started notification for %{public}@ arrived %.2f msec %s", decoder, delta, delta > 0 ? "late" : "early");
+		const auto now = mach_absolute_time();
+		const auto delta = SFB::ConvertHostTicksToNanos(now > hostTime ? now - hostTime : hostTime - now);
+		const auto tolerance = static_cast<uint64_t>(NSEC_PER_SEC / audioPlayerNode.renderingFormat.sampleRate);
+		if(delta > tolerance)
+			os_log_debug(_audioPlayerLog, "Rendering started notification for %{public}@ arrived %.2f msec %s", decoder, static_cast<double>(delta) / NSEC_PER_MSEC, now > hostTime ? "late" : "early");
 #endif
 
 		if(audioPlayerNode != self->_playerNode) {
@@ -918,10 +919,11 @@ enum eAudioPlayerFlags : unsigned int {
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
 #if DEBUG
-		auto delta = static_cast<double>(AudioConvertHostTimeToNanos(AudioGetCurrentHostTime() - hostTime)) / NSEC_PER_MSEC;
-		double tolerance = 1000 / audioPlayerNode.renderingFormat.sampleRate;
-		if(abs(delta) > tolerance)
-			os_log_debug(_audioPlayerLog, "Rendering complete notification for %{public}@ arrived %.2f msec %s", decoder, delta, delta > 0 ? "late" : "early");
+		const auto now = mach_absolute_time();
+		const auto delta = SFB::ConvertHostTicksToNanos(now > hostTime ? now - hostTime : hostTime - now);
+		const auto tolerance = static_cast<uint64_t>(NSEC_PER_SEC / audioPlayerNode.renderingFormat.sampleRate);
+		if(delta > tolerance)
+			os_log_debug(_audioPlayerLog, "Rendering complete notification for %{public}@ arrived %.2f msec %s", decoder, static_cast<double>(delta) / NSEC_PER_MSEC, now > hostTime ? "late" : "early");
 #endif
 
 		if(audioPlayerNode != self->_playerNode) {
@@ -956,10 +958,11 @@ enum eAudioPlayerFlags : unsigned int {
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
 #if DEBUG
-		auto delta = static_cast<double>(AudioConvertHostTimeToNanos(AudioGetCurrentHostTime() - hostTime)) / NSEC_PER_MSEC;
-		double tolerance = 1000 / audioPlayerNode.renderingFormat.sampleRate;
-		if(abs(delta) > tolerance)
-			os_log_debug(_audioPlayerLog, "End of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
+		const auto now = mach_absolute_time();
+		const auto delta = SFB::ConvertHostTicksToNanos(now > hostTime ? now - hostTime : hostTime - now);
+		const auto tolerance = static_cast<uint64_t>(NSEC_PER_SEC / audioPlayerNode.renderingFormat.sampleRate);
+		if(delta > tolerance)
+			os_log_debug(_audioPlayerLog, "End of audio notification arrived %.2f msec %s", static_cast<double>(delta) / NSEC_PER_MSEC, now > hostTime ? "late" : "early");
 #endif
 
 		if(audioPlayerNode != self->_playerNode) {
