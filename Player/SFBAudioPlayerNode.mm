@@ -7,12 +7,12 @@
 #import <algorithm>
 #import <array>
 #import <atomic>
+#import <cassert>
 #import <cmath>
 #import <exception>
 #import <memory>
 #import <mutex>
 #import <queue>
-#import <thread>
 
 #import <mach/mach_time.h>
 #import <os/log.h>
@@ -25,61 +25,12 @@
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
+#import "SFBTimeUtilities.hpp"
 
 const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 namespace {
-
-#pragma mark - Time Utilities
-
-// These functions are probably unnecessarily complicated because
-// on Intel processors mach_timebase_info is always 1/1. However,
-// on PPC it is either 1000000000/33333335 or 1000000000/25000000 so
-// naively multiplying by .numer then dividing by .denom may result in
-// integer overflow. To avoid the possibility double is used here, but
-// __int128 would be an alternative.
-
-/// Returns the number of host ticks per nanosecond
-double HostTicksPerNano()
-{
-	mach_timebase_info_data_t timebase_info;
-	auto result = mach_timebase_info(&timebase_info);
-	assert(result == KERN_SUCCESS);
-	return static_cast<double>(timebase_info.numer) / static_cast<double>(timebase_info.denom);
-}
-
-/// Returns the number of nanoseconds per host tick
-double NanosPerHostTick()
-{
-	mach_timebase_info_data_t timebase_info;
-	auto result = mach_timebase_info(&timebase_info);
-	assert(result == KERN_SUCCESS);
-	return static_cast<double>(timebase_info.denom) / static_cast<double>(timebase_info.numer);
-}
-
-/// The number of host ticks per nanosecond
-const double kHostTicksPerNano = HostTicksPerNano();
-/// The number of nanoseconds per host tick
-const double kNanosPerHostTick = NanosPerHostTick();
-
-/// Converts \c ns nanoseconds to host ticks and returns the result
-inline uint64_t ConvertNanosToHostTicks(double ns) noexcept
-{
-	return static_cast<uint64_t>(ns * kNanosPerHostTick);
-}
-
-/// Converts \c s seconds to host ticks and returns the result
-inline uint64_t ConvertSecondsToHostTicks(double s) noexcept
-{
-	return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
-}
-
-/// Converts \c t host ticks to nanoseconds and returns the result
-inline double ConvertHostTicksToNanos(uint64_t t) noexcept
-{
-	return static_cast<double>(t) * kHostTicksPerNano;
-}
 
 #pragma mark - Shared State
 
@@ -295,14 +246,16 @@ DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decode
 
 void collector_finalizer_f(void *context)
 {
-	NSCParameterAssert(context != nullptr);
+	if(auto decoders = static_cast<DecoderStateArray *>(context); decoders) {
+		for(auto& atomic_ptr : *decoders)
+			delete atomic_ptr.exchange(nullptr);
+		delete decoders;
+	}
+}
 
-	auto decoders = static_cast<DecoderStateArray *>(context);
-
-	for(auto& atomic_ptr : *decoders)
-		delete atomic_ptr.exchange(nullptr);
-
-	delete decoders;
+void release_nserror_f(void *context)
+{
+	(void)(__bridge_transfer NSError *)context;
 }
 
 /// SFBAudioPlayerNode implementation
@@ -317,18 +270,16 @@ struct AudioPlayerNode
 		eOutputIsMuted 			= 1u << 1,
 		eMuteRequested 			= 1u << 2,
 		eRingBufferNeedsReset 	= 1u << 3,
-		eStopDecoderThread 		= 1u << 4,
 	};
 
 	enum eEventCommands : uint32_t {
-#if 0
 		eEventDecodingStarted 		= 1,
 		eEventDecodingComplete 		= 2,
-#endif
-		eEventDecodingCanceled 		= 1,
-		eEventRenderingStarted 		= 2,
-		eEventRenderingComplete 	= 3,
-		eEventEndOfAudio 			= 4,
+		eEventDecodingCanceled 		= 3,
+		eEventRenderingStarted 		= 4,
+		eEventRenderingComplete 	= 5,
+		eEventEndOfAudio 			= 6,
+		eEventError 				= 7,
 	};
 
 	/// Weak reference to owning \c SFBAudioPlayerNode instance
@@ -338,11 +289,12 @@ struct AudioPlayerNode
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
-	/// Ring buffer used to transfer audio from the decoding thread to the IOProc
+	/// Ring buffer used to transfer audio from the decoding queue to the IOProc
 	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// The format of the audio supplied by \c mRenderBlock
 	AVAudioFormat 					*mRenderingFormat		= nil;
+
 
 	/// Active decoders and associated state
 	DecoderStateArray 				*mActiveDecoders 		= nullptr;
@@ -353,16 +305,17 @@ private:
 	/// Lock used to protect access to \c mQueuedDecoders
 	mutable SFB::UnfairLock			mQueueLock;
 
-	/// Thread that decodes audio from active decoders and writes it to \c mAudioRingBuffer
-	std::thread 					mDecodingThread;
-	/// Semaphore used for communication with the decoding thread
+
+	/// Dispatch queue used for decoding
+	dispatch_queue_t				mDecodingQueue 			= nullptr;
+
+	/// Dispatch semaphore used for communication with the decoding queue
 	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
 
-	/// Queue used for sending delegate messages
-	dispatch_queue_t				mNotifierQueue 			= nullptr;
 
-	/// Dispatch group  used to track in-progress notifications
-	dispatch_group_t 				mNotificationGroup 		= nullptr;
+	/// Dispatch group  used to track in-progress decoding and delegate messages
+	dispatch_group_t 				mDispatchGroup 			= nullptr;
+
 
 	/// Ring buffer used to communicate decoding and render related events
 	SFB::RingBuffer					mEventRingBuffer;
@@ -370,20 +323,23 @@ private:
 	/// Dispatch source processing events from \c mEventRingBuffer
 	dispatch_source_t				mEventProcessor 		= nullptr;
 
+
 	/// Dispatch source deleting decoder state data with \c eMarkedForRemoval
 	dispatch_source_t				mCollector 				= nullptr;
+
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
+
+	/// Counter used for unique keys to \c dispatch_queue_set_specific
+	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
+
 public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 	: mRenderingFormat(format)
 	{
-		NSCParameterAssert(format != nil);
-		NSCParameterAssert(format.isStandard);
-
 		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> created with render block format %{public}@", this, mRenderingFormat);
 
 		// MARK: Rendering
@@ -441,7 +397,7 @@ public:
 			}
 
 			// ========================================
-			// 5. If there is adequate space in the ring buffer for another chunk signal the decoding thread
+			// 5. If there is adequate space in the ring buffer for another chunk signal the decoding queue
 			AVAudioFrameCount framesAvailableToWrite = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToWrite());
 			if(framesAvailableToWrite >= kRingBufferChunkSize)
 				dispatch_semaphore_signal(mDecodingSemaphore);
@@ -471,10 +427,10 @@ public:
 				if(!(decoderState->mFlags.load() & DecoderState::eRenderingStarted)) {
 					decoderState->mFlags.fetch_or(DecoderState::eRenderingStarted);
 
-					// Submit the rendering started notification
+					// Submit the rendering started event
 					const uint32_t cmd = eEventRenderingStarted;
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-					const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / mAudioRingBuffer.Format().mSampleRate);
+					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTicks(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
 					uint8_t bytesToWrite [4 + 8 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
@@ -490,10 +446,10 @@ public:
 				if((decoderState->mFlags.load() & DecoderState::eDecodingComplete) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
 					decoderState->mFlags.fetch_or(DecoderState::eRenderingComplete);
 
-					// Submit the rendering complete notification
+					// Submit the rendering complete event
 					const uint32_t cmd = eEventRenderingComplete;
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-					const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / mAudioRingBuffer.Format().mSampleRate);
+					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTicks(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
 					uint8_t bytesToWrite [4 + 8 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
@@ -515,7 +471,7 @@ public:
 			decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 			if(!decoderState) {
 				const uint32_t cmd = eEventEndOfAudio;
-				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(framesRead / mAudioRingBuffer.Format().mSampleRate);
+				const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTicks(framesRead / mAudioRingBuffer.Format().mSampleRate);
 
 				uint8_t bytesToWrite [4 + 8];
 				std::memcpy(bytesToWrite, &cmd, 4);
@@ -527,7 +483,7 @@ public:
 			return noErr;
 		};
 
-		// Allocate the audio ring buffer moving audio from the decoder thread to the render block
+		// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 		if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
 			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate() failed");
@@ -541,27 +497,19 @@ public:
 
 		mDecodingSemaphore = dispatch_semaphore_create(0);
 		if(!mDecodingSemaphore) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create failed");
-			throw std::runtime_error("dispatch_semaphore_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create() failed");
+			throw std::runtime_error("dispatch_semaphore_create() failed");
 		}
 
-		mNotificationGroup = dispatch_group_create();
-		if(!mNotificationGroup) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_group_create failed");
-			throw std::runtime_error("dispatch_group_create failed");
-		}
-
-		// Create the dispatch queue used for sending delegate messages
-		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-		mNotifierQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Notifier", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
-		if(!mNotifierQueue) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create_with_target failed");
-			throw std::runtime_error("dispatch_queue_create_with_target failed");
+		mDispatchGroup = dispatch_group_create();
+		if(!mDispatchGroup) {
+			os_log_error(_audioPlayerNodeLog, "dispatch_group_create() failed");
+			throw std::runtime_error("dispatch_group_create() failed");
 		}
 
 		// MARK: Event Processing
 
-		// Set up event processing for delegate notifications
+		// Create the dispatch source used for event processing and delegate messaging
 		mEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
 		if(!mEventProcessor) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
@@ -574,7 +522,6 @@ public:
 				/*auto bytesRead =*/ mEventRingBuffer.Read(&cmd, 4);
 
 				switch(cmd) {
-#if 0
 					case eEventDecodingStarted:
 						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
 							uint64_t sequenceNumber;
@@ -588,11 +535,10 @@ public:
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)]) {
 								auto node = mNode;
-
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node decodingStarted:decoderState->mDecoder];
-									dispatch_group_leave(mNotificationGroup);
+									dispatch_group_leave(mDispatchGroup);
 								});
 							}
 						}
@@ -613,18 +559,17 @@ public:
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)]) {
 								auto node = mNode;
-
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotificationQueue, ^{
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node decodingComplete:decoderState->mDecoder];
-									dispatch_group_leave(mNotificationGroup);
+									dispatch_group_leave(mDispatchGroup);
 								});
 							}
 						}
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventDecodingComplete");
 						break;
-#endif
+
 					case eEventDecodingCanceled:
 						if(mEventRingBuffer.BytesAvailableToRead() >= (8 + 1)) {
 							uint64_t sequenceNumber;
@@ -645,11 +590,10 @@ public:
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
 								auto node = mNode;
-
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotifierQueue, ^{
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:(partiallyRendered ? YES : NO)];
-									dispatch_group_leave(mNotificationGroup);
+									dispatch_group_leave(mDispatchGroup);
 								});
 							}
 						}
@@ -669,34 +613,14 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
+							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", (SFB::ConvertHostTicksToNanos(hostTime) - SFB::ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
 								auto node = mNode;
-
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotifierQueue, ^{
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
-									dispatch_group_leave(mNotificationGroup);
-								});
-							}
-
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingStarted:)]) {
-								auto node = mNode;
-								auto decoder = decoderState->mDecoder;
-
-								dispatch_time_t notificationTime = hostTime;
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_after(notificationTime, mNotifierQueue, ^{
-#if DEBUG
-									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
-									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
-									if(abs(delta) > tolerance)
-										os_log_debug(_audioPlayerNodeLog, "Rendering started notification for %{public}@ arrived %.2f msec %s", decoder, delta, delta > 0 ? "late" : "early");
-#endif
-
-									[node.delegate audioPlayerNode:node renderingStarted:decoder];
-									dispatch_group_leave(mNotificationGroup);
+									dispatch_group_leave(mDispatchGroup);
 								});
 							}
 						}
@@ -716,33 +640,19 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
+							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", (SFB::ConvertHostTicksToNanos(hostTime) - SFB::ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
 
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingComplete:)]) {
+							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
 								auto node = mNode;
-								// Store a strong reference to `decoderState->mDecoder` for use in the notification block
-								// Otherwise the collector could collect `decoderState` before the block is invoked
-								// resulting in a `nil` decoder being passed in -audioPlayerNode:renderingComplete:
-								// with a possible subsequent EXC_BAD_ACCESS from messaging a non-optional `nil` object
-								auto decoder = decoderState->mDecoder;
-
-								decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemoval);
-								dispatch_source_merge_data(mCollector, 1);
-
-								dispatch_time_t notificationTime = hostTime;
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_after(notificationTime, mNotifierQueue, ^{
-#if DEBUG
-									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
-									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
-									if(abs(delta) > tolerance)
-										os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for %{public}@ arrived %.2f msec %s", decoder, delta, delta > 0 ? "late" : "early");
-#endif
-
-									[node.delegate audioPlayerNode:node renderingComplete:decoder];
-									dispatch_group_leave(mNotificationGroup);
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
+									[node.delegate audioPlayerNode:node renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
+									dispatch_group_leave(mDispatchGroup);
 								});
 							}
+
+							decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemoval);
+							dispatch_source_merge_data(mCollector, 1);
 						}
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventRenderingComplete");
@@ -753,28 +663,45 @@ public:
 							uint64_t hostTime;
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
+							os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", (SFB::ConvertHostTicksToNanos(hostTime) - SFB::ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
 
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNodeEndOfAudio:)]) {
+							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
 								auto node = mNode;
-
-								dispatch_time_t notificationTime = hostTime;
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_after(notificationTime, mNotifierQueue, ^{
-#if DEBUG
-									double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
-									double tolerance = 1000 / mAudioRingBuffer.Format().mSampleRate;
-									if(abs(delta) > tolerance)
-										os_log_debug(_audioPlayerNodeLog, "End of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
-#endif
-
-									[node.delegate audioPlayerNodeEndOfAudio:node];
-									dispatch_group_leave(mNotificationGroup);
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
+									[node.delegate audioPlayerNode:node audioWillEndAtHostTime:hostTime];
+									dispatch_group_leave(mDispatchGroup);
 								});
 							}
 						}
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventEndOfAudio");
+						break;
+
+					case eEventError:
+						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
+							uint64_t key;
+							/*bytesRead =*/ mEventRingBuffer.Read(&key, 8);
+
+							NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mNode.delegateQueue, reinterpret_cast<void *>(key));
+							if(!error) {
+								os_log_fault(_audioPlayerNodeLog, "Dispatch value for key %llu missing for eEventError", key);
+								break;
+							}
+
+							dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), nullptr, nullptr);
+
+							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
+								auto node = mNode;
+								dispatch_group_enter(mDispatchGroup);
+								dispatch_async_and_wait(mNode.delegateQueue, ^{
+									[node.delegate audioPlayerNode:node encounteredError:error];
+									dispatch_group_leave(mDispatchGroup);
+								});
+							}
+						}
+						else
+							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventDecodingComplete");
 						break;
 				}
 			}
@@ -817,29 +744,32 @@ public:
 		// Start collecting
 		dispatch_activate(mCollector);
 
-		// Launch the decoding thread
-		try {
-			mDecodingThread = std::thread(&AudioPlayerNode::DecoderThreadEntry, this);
+		// Create the dispatch queue used for decoding
+		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
+		if(!attr) {
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class() failed");
+			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class() failed");
 		}
 
-		catch(const std::exception& e) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create decoding thread: %{public}s", e.what());
-			throw std::runtime_error("Unable to create decoding thread");
+		mDecodingQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Decoder", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		if(!mDecodingQueue) {
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create_with_target() failed");
+			throw std::runtime_error("dispatch_queue_create_with_target() failed");
 		}
 	}
 
 	~AudioPlayerNode()
 	{
-		ClearQueue();
+		// Cancel any further event processing
+		dispatch_source_cancel(mEventProcessor);
+
+		// Cancel decoding
 		CancelCurrentDecoder();
-
-		mFlags.fetch_or(eStopDecoderThread);
 		dispatch_semaphore_signal(mDecodingSemaphore);
-		mDecodingThread.join();
 
-		auto timeout = dispatch_group_wait(mNotificationGroup, DISPATCH_TIME_FOREVER);
+		auto timeout = dispatch_group_wait(mDispatchGroup, /*DISPATCH_TIME_FOREVER*/dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 		if(timeout)
-			os_log_error(_audioPlayerNodeLog, "Timeout occurred waiting for notifications to complete");
+			os_log_fault(_audioPlayerNodeLog, "<AudioPlayerNode: %p> timeout waiting for dispatch group blocks to complete", this);
 
 		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> destroyed", this);
 	}
@@ -1055,8 +985,6 @@ public:
 
 	bool EnqueueDecoder(id <SFBPCMDecoding>decoder, bool reset, NSError **error) noexcept
 	{
-		NSCParameterAssert(decoder != nil);
-
 		if(!decoder.isOpen && ![decoder openReturningError:error])
 			return false;
 
@@ -1087,7 +1015,7 @@ public:
 			mQueuedDecoders.push(decoder);
 		}
 
-		dispatch_semaphore_signal(mDecodingSemaphore);
+		DequeueAndProcessDecoder();
 
 		return true;
 	}
@@ -1156,16 +1084,11 @@ private:
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-#pragma mark - Decoder Thread
+#pragma mark - Decoding
 
-	void DecoderThreadEntry() noexcept
+	void DequeueAndProcessDecoder() noexcept
 	{
-		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.Decoder");
-		pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
-
-		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> decoder thread started", this);
-
-		while(!(mFlags.load() & eStopDecoderThread)) {
+		dispatch_group_async(mDispatchGroup, mDecodingQueue, ^{
 			// Dequeue and process the next decoder
 			if(auto decoder = DequeueDecoder(); decoder) {
 				// Create the decoder state
@@ -1177,22 +1100,26 @@ private:
 
 				catch(const std::exception& e) {
 					os_log_error(_audioPlayerNodeLog, "Error creating decoder state: %{public}s", e.what());
-					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
-						NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
-															 code:SFBAudioPlayerNodeErrorCodeInternalError
-														 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
-																	 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating DecoderState", @""),
-																  }];
 
-						auto node = mNode;
+					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+														 code:SFBAudioPlayerNodeErrorCodeInternalError
+													 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+																 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating DecoderState", @""),
+															  }];
 
-						dispatch_group_enter(mNotificationGroup);
-						dispatch_async_and_wait(mNotifierQueue, ^{
-							[node.delegate audioPlayerNode:node encounteredError:error];
-							dispatch_group_leave(mNotificationGroup);
-						});
-					}
-					continue;
+					// Submit the error event
+					const uint32_t cmd = eEventError;
+					const uint64_t key = mDispatchKeyCounter.fetch_add(1);
+
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+					uint8_t bytesToWrite [4 + 8];
+					std::memcpy(bytesToWrite, &cmd, 4);
+					std::memcpy(bytesToWrite + 4, &key, 8);
+					mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+					dispatch_source_merge_data(mEventProcessor, 1);
+
+					return;
 				}
 
 				// Add the decoder state to the list of active decoders
@@ -1203,7 +1130,7 @@ private:
 						if(current)
 							continue;
 
-						// In essence `mActiveDecoders` is an SPSC queue with this thread as producer
+						// In essence `mActiveDecoders` is an SPSC queue with `mDecodingQueue` as producer
 						// and the collector as consumer, with the stored values used in between production
 						// and consumption by any number of other threads/queues including the IOProc.
 						//
@@ -1214,7 +1141,7 @@ private:
 						// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
 						// it is safe to use store() instead of compare_exchange_strong() because this is the
 						// only code that could have changed the slot to a non-null value and it is called solely
-						// from the decoding thread.
+						// from the decoding queue.
 						// There is the possibility that a non-null value was collected from the slot and the slot
 						// was assigned nullptr in between load() and the check for null. If this happens the
 						// assignment could have taken place but didn't.
@@ -1224,7 +1151,7 @@ private:
 						// `mActiveDecoders` may be full when the capacity of mAudioRingBuffer exceeds the
 						// total number of audio frames for all the decoders in `mActiveDecoders` and audio is not
 						// being consumed by the IOProc.
-						// The default frame capacity for mAudioRingBuffer is 16384. With 8 slots available in
+						// The default frame capacity for `mAudioRingBuffer` is 16384. With 8 slots available in
 						// `mActiveDecoders`, the average number of frames a decoder needs to contain for
 						// all slots to be full is 2048. For audio at 8000 Hz that equates to 0.26 sec and at
 						// 44,100 Hz 2048 frames equates to 0.05 sec.
@@ -1255,25 +1182,30 @@ private:
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 				if(!buffer) {
 					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", mRenderingFormat, kRingBufferChunkSize);
-					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
-						NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
-															 code:SFBAudioPlayerNodeErrorCodeInternalError
-														 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
-																	 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
-																  }];
 
-						auto node = mNode;
+					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+														 code:SFBAudioPlayerNodeErrorCodeInternalError
+													 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+																 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
+															  }];
 
-						dispatch_group_enter(mNotificationGroup);
-						dispatch_async_and_wait(mNotifierQueue, ^{
-							[node.delegate audioPlayerNode:node encounteredError:error];
-							dispatch_group_leave(mNotificationGroup);
-						});
-					}
-					continue;
+					// Submit the error event
+					const uint32_t cmd = eEventError;
+					const uint64_t key = mDispatchKeyCounter.fetch_add(1);
+
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+					uint8_t bytesToWrite [4 + 8];
+					std::memcpy(bytesToWrite, &cmd, 4);
+					std::memcpy(bytesToWrite + 4, &key, 8);
+					mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+					dispatch_source_merge_data(mEventProcessor, 1);
+
+					return;
 				}
 
-				while(!(mFlags.load() & eStopDecoderThread)) {
+				// Process the decoder until canceled or complete
+				for(;;) {
 					// If a seek is pending reset the ring buffer
 					if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
 						mFlags.fetch_or(eRingBufferNeedsReset);
@@ -1282,11 +1214,11 @@ private:
 					if(mFlags.load() & eRingBufferNeedsReset) {
 						mFlags.fetch_and(~eRingBufferNeedsReset);
 
-						// Ensure output is muted before performing operations that aren't thread safe
+						// Ensure output is muted before performing operations that aren't thread-safe
 						if(mNode.engine.isRunning) {
 							mFlags.fetch_or(eMuteRequested);
 
-							// The rendering thread will clear eMuteRequested when the current render cycle completes
+							// The IOProc will clear eMuteRequested when the current render cycle completes
 							while(mFlags.load() & eMuteRequested)
 								dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
 						}
@@ -1297,7 +1229,7 @@ private:
 						if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
 							decoderState->PerformSeek();
 
-						// Reset() is not thread safe but the rendering thread is outputting silence
+						// Reset() is not thread-safe but the IOProc is outputting silence
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
@@ -1308,24 +1240,13 @@ private:
 					auto framesAvailableToWrite = mAudioRingBuffer.FramesAvailableToWrite();
 
 					// Force writes to the ring buffer to be at least kRingBufferChunkSize
-					if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderState::eCancelDecoding)) {
+					if(framesAvailableToWrite >= kRingBufferChunkSize) {
 						if(!(decoderState->mFlags.load() & DecoderState::eDecodingStarted)) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
 							decoderState->mFlags.fetch_or(DecoderState::eDecodingStarted);
 
-							// Perform the decoding started notification
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)]) {
-								auto node = mNode;
-
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotifierQueue, ^{
-									[node.delegate audioPlayerNode:node decodingStarted:decoderState->mDecoder];
-									dispatch_group_leave(mNotificationGroup);
-								});
-							}
-
-#if 0
+							// Submit the decoding started event
 							const uint32_t cmd = eEventDecodingStarted;
 
 							uint8_t bytesToWrite [4 + 8];
@@ -1333,21 +1254,24 @@ private:
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 							mEventRingBuffer.Write(bytesToWrite, 4 + 8);
 							dispatch_source_merge_data(mEventProcessor, 1);
-#endif
 						}
 
 						// Decode audio into the buffer, converting to the bus format in the process
-						NSError *error = nil;
-						if(!decoderState->DecodeAudio(buffer, &error)) {
+						if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
 							os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", error);
-							if(error && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
-								auto node = mNode;
 
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotifierQueue, ^{
-									[node.delegate audioPlayerNode:mNode encounteredError:error];
-									dispatch_group_leave(mNotificationGroup);
-								});
+							if(error) {
+								// Submit the error event
+								const uint32_t cmd = eEventError;
+								const uint64_t key = mDispatchKeyCounter.fetch_add(1);
+
+								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+								uint8_t bytesToWrite [4 + 8];
+								std::memcpy(bytesToWrite, &cmd, 4);
+								std::memcpy(bytesToWrite + 4, &key, 8);
+								mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+								dispatch_source_merge_data(mEventProcessor, 1);
 							}
 						}
 
@@ -1361,18 +1285,7 @@ private:
 							// without processing the entire file, which is a potentially slow operation
 							decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
-							// Perform the decoding complete notification
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)]) {
-								auto node = mNode;
-
-								dispatch_group_enter(mNotificationGroup);
-								dispatch_async_and_wait(mNotifierQueue, ^{
-									[node.delegate audioPlayerNode:node decodingComplete:decoderState->mDecoder];
-									dispatch_group_leave(mNotificationGroup);
-								});
-							}
-
-#if 0
+							// Submit the decoding complete event
 							const uint32_t cmd = eEventDecodingComplete;
 
 							uint8_t bytesToWrite [4 + 8];
@@ -1380,33 +1293,18 @@ private:
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 							mEventRingBuffer.Write(bytesToWrite, 4 + 8);
 							dispatch_source_merge_data(mEventProcessor, 1);
-#endif
 
 							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
 
-							break;
+							return;
 						}
 					}
 					else if(decoderState->mFlags.load() & DecoderState::eCancelDecoding) {
 						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
-//						BOOL partiallyRendered = (decoderState->mFlags.load() & DecoderState::eRenderingStarted) ? YES : NO;
-//						id<SFBPCMDecoding> canceledDecoder = decoderState->mDecoder;
-
 						mFlags.fetch_or(eRingBufferNeedsReset);
 
-//						decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemoval);
-//						dispatch_source_merge_data(mCollector, 1);
-//
-//						if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
-//							dispatch_group_enter(mNotificationGroup);
-//							dispatch_async_and_wait(mNotificationQueue, ^{
-//								[mNode.delegate audioPlayerNode:mNode decodingCanceled:canceledDecoder partiallyRendered:partiallyRendered];
-//								dispatch_group_leave(mNotificationGroup);
-//							});
-//						}
-
-						// Submit the decoding canceled notification
+						// Submit the decoding canceled event
 						const uint32_t cmd = eEventDecodingCanceled;
 						const uint8_t partiallyRendered = decoderState->mFlags.load() & DecoderState::eRenderingStarted;
 
@@ -1417,20 +1315,16 @@ private:
 						mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1);
 						dispatch_source_merge_data(mEventProcessor, 1);
 
-						break;
+						return;
 					}
+
 					// Wait for additional space in the ring buffer
-					else
-						dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
+					dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
 				}
 			}
-			// Wait for another decoder to be enqueued
-			else
-				dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
-		}
-
-		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> decoder thread exiting", this);
+		});
 	}
+
 };
 
 }
@@ -1482,6 +1376,18 @@ const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	if((self = [super initWithFormat:format renderBlock:impl->mRenderBlock])) {
 		_impl = std::move(impl);
 		_impl->mNode = self;
+
+		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
+		if(!attr) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch_queue_attr_t: dispatch_queue_attr_make_with_qos_class() failed");
+			return nil;
+		}
+
+		_delegateQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.DelegateQueue", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		if(!_delegateQueue) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch_queue_t: dispatch_queue_create_with_target() failed");
+			return nil;
+		}
 
 #if 0
 		// See the comments in SFBAudioPlayer -configureEngineForGaplessPlaybackOfFormat:
