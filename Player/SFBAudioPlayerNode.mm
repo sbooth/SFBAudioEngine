@@ -14,8 +14,9 @@
 #import <mutex>
 #import <queue>
 
-#import <mach/mach_time.h>
 #import <os/log.h>
+
+#import <CoreAudio/HostTime.h>
 
 #import "SFBAudioPlayerNode.h"
 
@@ -25,7 +26,6 @@
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
-#import "SFBTimeUtilities.hpp"
 
 const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
@@ -430,7 +430,7 @@ public:
 					// Submit the rendering started event
 					const uint32_t cmd = eEventRenderingStarted;
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTicks(frameOffset / mAudioRingBuffer.Format().mSampleRate);
+					const uint64_t hostTime = timestamp->mHostTime + AudioConvertNanosToHostTime(static_cast<UInt64>(frameOffset / mAudioRingBuffer.Format().mSampleRate) * NSEC_PER_SEC);
 
 					uint8_t bytesToWrite [4 + 8 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
@@ -449,7 +449,7 @@ public:
 					// Submit the rendering complete event
 					const uint32_t cmd = eEventRenderingComplete;
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTicks(frameOffset / mAudioRingBuffer.Format().mSampleRate);
+					const uint64_t hostTime = timestamp->mHostTime + AudioConvertNanosToHostTime(static_cast<UInt64>(frameOffset / mAudioRingBuffer.Format().mSampleRate) * NSEC_PER_SEC);
 
 					uint8_t bytesToWrite [4 + 8 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
@@ -471,7 +471,7 @@ public:
 			decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 			if(!decoderState) {
 				const uint32_t cmd = eEventEndOfAudio;
-				const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTicks(framesRead / mAudioRingBuffer.Format().mSampleRate);
+				const uint64_t hostTime = timestamp->mHostTime + AudioConvertNanosToHostTime(static_cast<UInt64>(framesRead / mAudioRingBuffer.Format().mSampleRate) * NSEC_PER_SEC);
 
 				uint8_t bytesToWrite [4 + 8];
 				std::memcpy(bytesToWrite, &cmd, 4);
@@ -613,7 +613,7 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", (SFB::ConvertHostTicksToNanos(hostTime) - SFB::ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
+							os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - AudioGetCurrentHostTime())) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
 								auto node = mNode;
@@ -640,7 +640,7 @@ public:
 								break;
 							}
 
-							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", (SFB::ConvertHostTicksToNanos(hostTime) - SFB::ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, decoderState->mDecoder);
+							os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - AudioGetCurrentHostTime())) / NSEC_PER_MSEC, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
 								auto node = mNode;
@@ -663,7 +663,7 @@ public:
 							uint64_t hostTime;
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", (SFB::ConvertHostTicksToNanos(hostTime) - SFB::ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
+							os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(AudioConvertHostTimeToNanos(hostTime - AudioGetCurrentHostTime())) / NSEC_PER_MSEC);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
 								auto node = mNode;
