@@ -4,29 +4,35 @@
 // MIT license
 //
 
+//#import <ctime>
+#import <mach/mach_time.h>
+
 namespace SFB {
 
-/// The number of host ticks per nanosecond
-extern const double kHostTicksPerNano;
-/// The number of nanoseconds per host tick
-extern const double kNanosPerHostTick;
+/// Converts host time \c t to nanoseconds and returns the result
+uint64_t ConvertHostTimeToNanoseconds(uint64_t t) noexcept;
 
-/// Converts \c ns nanoseconds to host ticks and returns the result
-inline uint64_t ConvertNanosToHostTicks(double ns) noexcept
+/// Converts \c ns nanoseconds to host time and returns the result
+uint64_t ConvertNanosecondsToHostTime(uint64_t ns) noexcept;
+
+/// Returns the current host time
+inline uint64_t GetCurrentHostTime() noexcept
 {
-	return static_cast<uint64_t>(ns * kNanosPerHostTick);
+	return mach_absolute_time();
+//	return clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
 }
 
-/// Converts \c s seconds to host ticks and returns the result
-inline uint64_t ConvertSecondsToHostTicks(double s) noexcept
+
+/// Converts \c s seconds to host time and returns the result
+inline uint64_t ConvertSecondsToHostTime(double s) noexcept
 {
-	return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
+	return ConvertNanosecondsToHostTime(static_cast<uint64_t>(s * 1e9));
 }
 
-/// Converts \c t host ticks to nanoseconds and returns the result
-inline double ConvertHostTicksToNanos(uint64_t t) noexcept
+/// Returns the absolute delta between \c t1 and \c t2 host time values in nanoseconds
+inline uint64_t ConvertAbsoluteHostTimeDeltaToNanoseconds(uint64_t t1, uint64_t t2) noexcept
 {
-	return static_cast<double>(t) * kHostTicksPerNano;
+	return ConvertHostTimeToNanoseconds(t2 > t1 ? t2 - t1 : t1 - t2);
 }
 
 }
