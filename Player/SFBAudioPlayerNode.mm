@@ -535,7 +535,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node decodingStarted:decoderState->mDecoder];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -559,7 +559,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node decodingComplete:decoderState->mDecoder];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -590,7 +590,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:(partiallyRendered ? YES : NO)];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -621,7 +621,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -652,7 +652,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -679,7 +679,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node audioWillEndAtHostTime:hostTime];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -705,7 +705,7 @@ public:
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
-								dispatch_async_and_wait(mNode.delegateQueue, ^{
+								dispatch_async_and_wait(node.delegateQueue, ^{
 									[node.delegate audioPlayerNode:node encounteredError:error];
 									dispatch_group_leave(mDispatchGroup);
 								});
@@ -777,7 +777,7 @@ public:
 		CancelCurrentDecoder();
 		dispatch_semaphore_signal(mDecodingSemaphore);
 
-		auto timeout = dispatch_group_wait(mDispatchGroup, /*DISPATCH_TIME_FOREVER*/dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
+		auto timeout = dispatch_group_wait(mDispatchGroup, /*DISPATCH_TIME_FOREVER*/dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
 		if(timeout)
 			os_log_fault(_audioPlayerNodeLog, "<AudioPlayerNode: %p> timeout waiting for dispatch group blocks to complete", this);
 
