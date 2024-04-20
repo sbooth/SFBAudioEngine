@@ -739,16 +739,15 @@ public:
 		dispatch_set_finalizer_f(mCollector, &collector_finalizer_f);
 
 		dispatch_source_set_event_handler(mCollector, ^{
-			auto context = dispatch_get_context(mCollector);
-			auto decoders = static_cast<DecoderStateArray *>(context);
+			if(auto decoders = static_cast<DecoderStateArray *>(dispatch_get_context(mCollector)); decoders) {
+				for(auto& atomic_ptr : *decoders) {
+					auto decoderState = atomic_ptr.load();
+					if(!decoderState || !(decoderState->mFlags.load() & DecoderState::eMarkedForRemoval))
+						continue;
 
-			for(auto& atomic_ptr : *decoders) {
-				auto decoderState = atomic_ptr.load();
-				if(!decoderState || !(decoderState->mFlags.load() & DecoderState::eMarkedForRemoval))
-					continue;
-
-				os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
-				delete atomic_ptr.exchange(nullptr);
+					os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
+					delete atomic_ptr.exchange(nullptr);
+				}
 			}
 		});
 
