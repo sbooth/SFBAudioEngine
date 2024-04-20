@@ -105,7 +105,7 @@ struct DecoderState {
 
 	inline AVAudioFramePosition FramePosition() const noexcept
 	{
-		int64_t seek = mFrameToSeek.load();
+		auto seek = mFrameToSeek.load();
 		return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
 	}
 
@@ -363,7 +363,7 @@ public:
 
 			// ========================================
 			// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
-			if(!(mFlags.load() & eIsPlaying) || mFlags.load() & eOutputIsMuted || framesAvailableToRead == 0) {
+			if(const auto flags = mFlags.load(); !(flags & eIsPlaying) || flags & eOutputIsMuted || framesAvailableToRead == 0) {
 				auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 				for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 					std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
