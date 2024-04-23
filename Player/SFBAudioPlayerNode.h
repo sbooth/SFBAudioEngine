@@ -53,19 +53,15 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
-/// Since decoding and rendering are distinct operations performed in separate threads, a GCD source on a background
-/// queue is used for garbage collection. This is necessary because state data created in the decoding thread needs to
-/// live until rendering is complete, which cannot occur until after decoding is complete.
-///
 /// \c SFBAudioPlayerNode supports delegate-based callbacks for the following events:
 ///
 ///  1. Decoding started
 ///  2. Decoding complete
 ///  3. Decoding canceled
 ///  4. Rendering will start
-///  5. Rendering started
-///  6. Rendering complete
-///  7. End of audio
+///  5. Rendering will complete
+///  6. Audio will end
+///  7. Asynchronous error encountered
 ///
 /// All callbacks are performed on a dedicated notification queue.
 NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
@@ -128,16 +124,21 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// @return \c YES if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
+/// Removes and returns the next decoder from the decoder queue
+/// @return The next decoder from the decoder queue or \c nil if none
+- (nullable id <SFBPCMDecoding>)dequeueDecoder;
+
+/// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
+/// @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
 /// Cancels the current decoder
 - (void)cancelCurrentDecoder;
+
 /// Empties the decoder queue
 - (void)clearQueue;
 
 /// Returns \c YES if the decoder queue is empty
 @property (nonatomic, readonly) BOOL queueIsEmpty;
-/// Removes and returns the next decoder from the decoder queue
-/// @return The next decoder from the decoder queue or \c nil if none
-- (nullable id <SFBPCMDecoding>)dequeueDecoder;
 
 #pragma mark - Playback Control
 
@@ -157,9 +158,6 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
  /// Returns \c YES if a decoder is available to supply audio for the next render cycle
 @property (nonatomic, readonly) BOOL isReady;
-/// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
-/// @warning Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
 
 #pragma mark - Playback Properties
 
@@ -205,6 +203,8 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerNodeDelegate> delegate;
+/// The dispatch queue on which the \c SFBAudioPlayerNode messages the delegate
+@property (nonatomic, readonly) dispatch_queue_t delegateQueue;
 
 @end
 
@@ -229,25 +229,22 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 /// @param decoder The decoder for which decoding is canceled
 /// @param partiallyRendered \c YES if any audio frames from \c decoder were rendered
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered;
-/// Called to notify the delegate that audio will soon begin rendering
+/// Called to notify the delegate that the first audio frame from \c decoder will render at \c hostTime
 /// @warning Do not change any properties of \c decoder
 /// @param audioPlayerNode The \c SFBAudioPlayerNode object processing \c decoder
-/// @param decoder The decoder for which rendering is about to start
+/// @param decoder The decoder for which rendering will start
 /// @param hostTime The host time at which the first audio frame from \c decoder will reach the device
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillStart:at:));
-/// Called to notify the delegate when rendering the first frame of audio
-/// @warning Do not change any properties of \c decoder
-/// @param audioPlayerNode The \c SFBAudioPlayerNode object processing decoder
-/// @param decoder The decoder for which rendering started
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate when rendering the final frame of audio
+/// Called to notify the delegate that the final audio frame from \c decoder will render at \c hostTime
 /// @warning Do not change any properties of \c decoder
 /// @param audioPlayerNode The \c SFBAudioPlayerNode object processing \c decoder
-/// @param decoder The decoder for which rendering is complete
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingComplete:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate when rendering is complete for all available decoders
+/// @param decoder The decoder for which rendering will complete
+/// @param hostTime The host time at which the final audio frame from \c decoder will reach the device
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillComplete:at:));
+/// Called to notify the delegate that rendering will complete for all available decoders at \c hostTime
 /// @param audioPlayerNode The \c SFBAudioPlayerNode object
-- (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode NS_SWIFT_NAME(audioPlayerNodeEndOfAudio(_:));
+/// @param hostTime The host time at which the final audio frame will reach the device
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode audioWillEndAtHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:audioWillEndAt:));
 /// Called to notify the delegate when an asynchronous error occurs
 /// @param audioPlayerNode The \c SFBAudioPlayerNode object
 /// @param error The error
@@ -261,8 +258,10 @@ extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlay
 
 /// Possible \c NSError error codes used by \c SFBAudioPlayerNode
 typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
+	/// Internal or unspecified error
+	SFBAudioPlayerNodeErrorCodeInternalError 		= 0,
 	/// Format not supported
-	SFBAudioPlayerNodeErrorFormatNotSupported	= 0
+	SFBAudioPlayerNodeErrorCodeFormatNotSupported 	= 1
 } NS_SWIFT_NAME(AudioPlayerNode.ErrorCode);
 
 NS_ASSUME_NONNULL_END

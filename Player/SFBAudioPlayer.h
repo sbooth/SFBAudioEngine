@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -50,12 +50,14 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  3. Decoding canceled
 ///  4. Rendering will start
 ///  5. Rendering started
-///  6. Rendering complete
-///  7. Now playing changed
-///  8. Playback state changed
-///  9. AVAudioEngineConfigurationChange notification received
-///  10. End of audio
-///  11. Asynchronous error encountered
+///  6. Rendering will complete
+///  7. Rendering complete
+///  8. Now playing changed
+///  9. Playback state changed
+///  10. \c AVAudioEngineConfigurationChange notification received
+///  11. Audio will end
+///  12. End of audio
+///  13. Asynchronous error encountered
 ///
 /// The dispatch queue on which callbacks are performed is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
@@ -291,10 +293,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// @param decoder The decoder for which decoding is canceled
 /// @param partiallyRendered \c YES if any audio frames from \c decoder were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered;
-/// Called to notify the delegate that audio will soon begin rendering
+/// Called to notify the delegate that the first audio frame from \c decoder will render at \c hostTime
 /// @warning Do not change any properties of \c decoder
 /// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
-/// @param decoder The decoder for which rendering is about to start
+/// @param decoder The decoder for which rendering will start
 /// @param hostTime The host time at which the first audio frame from \c decoder will reach the device
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillStart:at:));
 /// Called to notify the delegate when rendering the first frame of audio
@@ -302,6 +304,12 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// @param audioPlayer The \c SFBAudioPlayer object processing decoder
 /// @param decoder The decoder for which rendering started
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingStarted:(id<SFBPCMDecoding>)decoder;
+/// Called to notify the delegate that the final audio frame from \c decoder will render at \c hostTime
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
+/// @param decoder The decoder for which rendering will complete
+/// @param hostTime The host time at which the final audio frame from \c decoder will reach the device
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillComplete:at:));
 /// Called to notify the delegate when rendering the final frame of audio
 /// @warning Do not change any properties of \c decoder
 /// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
@@ -317,6 +325,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// @note Use this instead of listening for \c AVAudioEngineConfigurationChangeNotification
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
+/// Called to notify the delegate that rendering will complete for all available decoders at \c hostTime
+/// @param audioPlayer The \c SFBAudioPlayer object
+/// @param hostTime The host time at which the final audio frame will reach the device
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioWillEndAtHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:audioWillEndAt:));
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
