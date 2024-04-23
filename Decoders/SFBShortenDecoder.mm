@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -530,7 +530,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
-	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:(AVAudioFrameCount)_blocksize];
+	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
 	// Allocate decoding buffers
 	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(_blocksize + _nwrap));
@@ -701,7 +701,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	_framePosition = entry->mFrameNumber;
 	_frameBuffer.frameLength = 0;
 
-	AVAudioFrameCount framesToSkip = (AVAudioFrameCount)(frame - entry->mFrameNumber);
+	AVAudioFrameCount framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->mFrameNumber);
 	AVAudioFrameCount framesSkipped = 0;
 
 	for(;;) {
@@ -761,7 +761,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	__weak SFBInputSource *inputSource = self->_inputSource;
 	_input.SetInputCallback(^bool(void *buf, size_t len, size_t &read) {
 		NSInteger bytesRead;
-		if(![inputSource readBytes:buf length:(NSInteger)len bytesRead:&bytesRead error:nil])
+		if(![inputSource readBytes:buf length:static_cast<NSInteger>(len) bytesRead:&bytesRead error:nil])
 			return false;
 		read = static_cast<size_t>(bytesRead);
 		return true;
@@ -1186,8 +1186,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 				/* find mean offset : N.B. this code duplicated */
 				if(_nmean == 0)
 					coffset = _offset[chan][0];
-				else
-				{
+				else {
 					int32_t sum = (_version < 2) ? 0 : _nmean / 2;
 					for(auto i = 0; i < _nmean; i++) {
 						sum += _offset[chan][i];
@@ -1198,8 +1197,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 						coffset = ROUNDEDSHIFTDOWN(sum / _nmean, _bitshift);
 				}
 
-				switch(cmd)
-				{
+				switch(cmd) {
 					case FN_ZERO:
 						for(auto i = 0; i < _blocksize; ++i) {
 							cbuffer[i] = 0;
