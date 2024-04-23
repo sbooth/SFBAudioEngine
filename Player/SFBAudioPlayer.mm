@@ -813,7 +813,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 #pragma mark - SFBAudioPlayerNodeDelegate
 
-- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder
 {
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingStarted:");
@@ -832,7 +832,7 @@ enum eAudioPlayerFlags : unsigned int {
 		[_delegate audioPlayer:self decodingStarted:decoder];
 }
 
-- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(nonnull id<SFBPCMDecoding>)decoder
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder
 {
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingComplete:");
@@ -843,7 +843,7 @@ enum eAudioPlayerFlags : unsigned int {
 		[_delegate audioPlayer:self decodingComplete:decoder];
 }
 
-- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
 {
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingCanceled:partiallyRendered:");
