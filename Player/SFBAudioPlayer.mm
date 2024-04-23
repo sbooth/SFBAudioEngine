@@ -817,7 +817,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingStarted:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingStarted:");
 		return;
@@ -837,7 +836,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(nonnull id<SFBPCMDecoding>)decoder
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingComplete:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingComplete:");
 		return;
@@ -849,7 +847,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingCanceled:partiallyRendered:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingCanceled:partiallyRendered:");
 		return;
@@ -871,7 +868,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingWillStart:atHostTime:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingWillStart:atHostTime:");
 		return;
@@ -910,7 +906,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingWillComplete:atHostTime:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingWillComplete:atHostTime:");
 		return;
@@ -949,7 +944,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode audioWillEndAtHostTime:(uint64_t)hostTime
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:audioWillEndAtHostTime:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:audioWillEndAtHostTime:");
 		return;
@@ -1000,7 +994,6 @@ enum eAudioPlayerFlags : unsigned int {
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode encounteredError:(NSError *)error
 {
-//	NSAssert(audioPlayerNode == _playerNode, @"Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:encounteredError:");
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:encounteredError:");
 		return;
