@@ -650,8 +650,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-		AVAudioFormat *format = decoder.processingFormat;
-		if(![_playerNode supportsFormat:format]) {
+		if(auto format = decoder.processingFormat; ![_playerNode supportsFormat:format]) {
 			success = [self configureEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
 			playbackStateChanged = _engineIsRunning;
 		}
@@ -774,8 +773,7 @@ enum eAudioPlayerFlags : unsigned int {
 		double ratio = format.sampleRate / outputFormat.sampleRate;
 		auto maximumFramesToRender = static_cast<AUAudioFrameCount>(ceil(512 * ratio));
 
-		AUAudioUnit *audioUnit = _playerNode.AUAudioUnit;
-		if(audioUnit.maximumFramesToRender < maximumFramesToRender) {
+		if(auto audioUnit = _playerNode.AUAudioUnit; audioUnit.maximumFramesToRender < maximumFramesToRender) {
 			BOOL renderResourcesAllocated = audioUnit.renderResourcesAllocated;
 			if(renderResourcesAllocated)
 				[audioUnit deallocateRenderResources];
@@ -925,8 +923,7 @@ enum eAudioPlayerFlags : unsigned int {
 			return;
 		}
 
-		auto flags = self->_flags.load();
-		if(!(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder) && self.internalDecoderQueueIsEmpty) {
+		if(auto flags = self->_flags.load(); !(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder) && self.internalDecoderQueueIsEmpty) {
 			if(self.nowPlaying) {
 				self.nowPlaying = nil;
 				if([self->_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
@@ -963,8 +960,7 @@ enum eAudioPlayerFlags : unsigned int {
 			return;
 		}
 
-		auto flags = self->_flags.load();
-		if((flags & eAudioPlayerFlagRenderingImminent) || (flags & eAudioPlayerFlagHavePendingDecoder))
+		if(auto flags = self->_flags.load(); (flags & eAudioPlayerFlagRenderingImminent) || (flags & eAudioPlayerFlagHavePendingDecoder))
 			return;
 
 		// Dequeue the next decoder
