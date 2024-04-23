@@ -41,7 +41,7 @@ uint64_t SFB::ConvertHostTimeToNanoseconds(uint64_t t) noexcept
 uint64_t SFB::ConvertNanosecondsToHostTime(uint64_t ns) noexcept
 {
 	__uint128_t t = ns;
-	if(kMachTimebase.second != kMachTimebase.first) {
+	if(kMachTimebase.first != kMachTimebase.second) {
 		t *= kMachTimebase.second;
 		t /= kMachTimebase.first;
 	}
