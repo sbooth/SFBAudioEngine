@@ -74,7 +74,7 @@ enum eAudioPlayerFlags : unsigned int {
 	if((self = [super init])) {
 		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_engineQueue) {
-			os_log_error(_audioPlayerLog, "Unable to create serial dispatch queue: dispatch_queue_create failed");
+			os_log_error(_audioPlayerLog, "Unable to create AVAudioEngine isolation dispatch queue: dispatch_queue_create failed");
 			return nil;
 		}
 
