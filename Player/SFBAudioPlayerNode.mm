@@ -59,6 +59,7 @@ struct DecoderState {
 
 	/// Decoder state flags
 	std::atomic_uint 		mFlags 				= 0;
+	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 	/// The number of frames decoded
 	std::atomic_int64_t 	mFramesDecoded 		= 0;
 	/// The number of frames converted
@@ -69,6 +70,7 @@ struct DecoderState {
 	std::atomic_int64_t 	mFrameLength 		= 0;
 	/// The desired seek offset
 	std::atomic_int64_t 	mFrameToSeek 		= kInvalidFramePosition;
+	static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
 	/// Decodes audio from the source representation to PCM
 	id <SFBPCMDecoding> 	mDecoder 			= nil;
