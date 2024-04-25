@@ -437,7 +437,8 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false);
+					if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false))
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventRenderingStarted");
 					dispatch_source_merge_data(mEventProcessor, 1);
 				}
 
@@ -456,7 +457,8 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false);
+					if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false))
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventRenderingComplete");
 					dispatch_source_merge_data(mEventProcessor, 1);
 				}
 
@@ -477,7 +479,8 @@ public:
 				uint8_t bytesToWrite [4 + 8];
 				std::memcpy(bytesToWrite, &cmd, 4);
 				std::memcpy(bytesToWrite + 4, &hostTime, 8);
-				mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
+				if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventEndOfAudio");
 				dispatch_source_merge_data(mEventProcessor, 1);
 			}
 
@@ -1128,7 +1131,8 @@ private:
 					uint8_t bytesToWrite [4 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &key, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
+					if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
 					dispatch_source_merge_data(mEventProcessor, 1);
 
 					return;
@@ -1210,7 +1214,8 @@ private:
 					uint8_t bytesToWrite [4 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &key, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
+					if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
 					dispatch_source_merge_data(mEventProcessor, 1);
 
 					return;
@@ -1264,7 +1269,8 @@ private:
 							uint8_t bytesToWrite [4 + 8];
 							std::memcpy(bytesToWrite, &cmd, 4);
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
+							if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingStarted");
 							dispatch_source_merge_data(mEventProcessor, 1);
 						}
 
@@ -1282,7 +1288,8 @@ private:
 								uint8_t bytesToWrite [4 + 8];
 								std::memcpy(bytesToWrite, &cmd, 4);
 								std::memcpy(bytesToWrite + 4, &key, 8);
-								mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
+								if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+									os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
 								dispatch_source_merge_data(mEventProcessor, 1);
 							}
 						}
@@ -1303,7 +1310,8 @@ private:
 							uint8_t bytesToWrite [4 + 8];
 							std::memcpy(bytesToWrite, &cmd, 4);
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
+							if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingComplete");
 							dispatch_source_merge_data(mEventProcessor, 1);
 
 							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
@@ -1324,7 +1332,8 @@ private:
 						std::memcpy(bytesToWrite, &cmd, 4);
 						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
-						mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false);
+						if(!mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false))
+							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
 						dispatch_source_merge_data(mEventProcessor, 1);
 
 						return;
