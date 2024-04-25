@@ -381,7 +381,7 @@ public:
 			const auto framesToRead = std::min(framesAvailableToRead, frameCount);
 			const auto framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
 			if(framesRead != framesToRead)
-				os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
+				os_log_fault(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
 			// ========================================
 			// 4. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
