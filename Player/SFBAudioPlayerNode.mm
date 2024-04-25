@@ -361,7 +361,7 @@ public:
 
 			// ========================================
 			// 1. Determine how many audio frames are available to read in the ring buffer
-			AVAudioFrameCount framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
+			const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
 
 			// ========================================
 			// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
@@ -378,8 +378,8 @@ public:
 
 			// ========================================
 			// 3. Read as many frames as available from the ring buffer
-			AVAudioFrameCount framesToRead = std::min(framesAvailableToRead, frameCount);
-			AVAudioFrameCount framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
+			const auto framesToRead = std::min(framesAvailableToRead, frameCount);
+			const auto framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
 			if(framesRead != framesToRead)
 				os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
@@ -401,7 +401,7 @@ public:
 
 			// ========================================
 			// 5. If there is adequate space in the ring buffer for another chunk signal the decoding queue
-			AVAudioFrameCount framesAvailableToWrite = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToWrite());
+			const auto framesAvailableToWrite = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToWrite());
 			if(framesAvailableToWrite >= kRingBufferChunkSize)
 				dispatch_semaphore_signal(mDecodingSemaphore);
 
