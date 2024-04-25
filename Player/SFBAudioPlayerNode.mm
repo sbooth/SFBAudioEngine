@@ -437,7 +437,7 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
+					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false);
 					dispatch_source_merge_data(mEventProcessor, 1);
 				}
 
@@ -456,7 +456,7 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
+					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false);
 					dispatch_source_merge_data(mEventProcessor, 1);
 				}
 
@@ -477,7 +477,7 @@ public:
 				uint8_t bytesToWrite [4 + 8];
 				std::memcpy(bytesToWrite, &cmd, 4);
 				std::memcpy(bytesToWrite + 4, &hostTime, 8);
-				mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+				mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
 				dispatch_source_merge_data(mEventProcessor, 1);
 			}
 
@@ -1128,7 +1128,7 @@ private:
 					uint8_t bytesToWrite [4 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &key, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+					mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
 					dispatch_source_merge_data(mEventProcessor, 1);
 
 					return;
@@ -1210,7 +1210,7 @@ private:
 					uint8_t bytesToWrite [4 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &key, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+					mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
 					dispatch_source_merge_data(mEventProcessor, 1);
 
 					return;
@@ -1264,7 +1264,7 @@ private:
 							uint8_t bytesToWrite [4 + 8];
 							std::memcpy(bytesToWrite, &cmd, 4);
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+							mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
 							dispatch_source_merge_data(mEventProcessor, 1);
 						}
 
@@ -1282,7 +1282,7 @@ private:
 								uint8_t bytesToWrite [4 + 8];
 								std::memcpy(bytesToWrite, &cmd, 4);
 								std::memcpy(bytesToWrite + 4, &key, 8);
-								mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+								mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
 								dispatch_source_merge_data(mEventProcessor, 1);
 							}
 						}
@@ -1303,7 +1303,7 @@ private:
 							uint8_t bytesToWrite [4 + 8];
 							std::memcpy(bytesToWrite, &cmd, 4);
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							mEventRingBuffer.Write(bytesToWrite, 4 + 8);
+							mEventRingBuffer.Write(bytesToWrite, 4 + 8, false);
 							dispatch_source_merge_data(mEventProcessor, 1);
 
 							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
@@ -1324,7 +1324,7 @@ private:
 						std::memcpy(bytesToWrite, &cmd, 4);
 						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
-						mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1);
+						mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false);
 						dispatch_source_merge_data(mEventProcessor, 1);
 
 						return;
