@@ -1,13 +1,13 @@
 //
-// Copyright (c) 2018 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2018 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <os/log.h>
-
 #import <algorithm>
 #import <vector>
+
+#import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
 

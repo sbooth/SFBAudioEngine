@@ -1,14 +1,14 @@
 //
-// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
+#import <memory>
+
 #import <os/log.h>
 
 #import <AudioToolbox/AudioToolbox.h>
-
-#import <memory>
 
 #define PLATFORM_APPLE
 

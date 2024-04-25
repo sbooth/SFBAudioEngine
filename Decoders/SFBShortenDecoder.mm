@@ -4,10 +4,10 @@
 // MIT license
 //
 
-#import <os/log.h>
-
 #import <algorithm>
 #import <vector>
+
+#import <os/log.h>
 
 #import "SFBShortenDecoder.h"
 

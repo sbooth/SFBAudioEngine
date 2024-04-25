@@ -1,15 +1,15 @@
 //
-// Copyright (c) 2014 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
-
-#import <os/log.h>
 
 #import <map>
 #import <memory>
 #import <string>
 #import <vector>
+
+#import <os/log.h>
 
 #import "SFBDSDIFFDecoder.h"
 
