@@ -386,7 +386,9 @@ public:
 			// ========================================
 			// 4. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
 			if(framesRead != frameCount) {
+#if DEBUG
 				os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
+#endif
 
 				auto framesOfSilence = frameCount - framesRead;
 				auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
