@@ -60,6 +60,7 @@ struct DecoderState {
 	/// Decoder state flags
 	std::atomic_uint 		mFlags 				= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
+
 	/// The number of frames decoded
 	std::atomic_int64_t 	mFramesDecoded 		= 0;
 	/// The number of frames converted
@@ -70,6 +71,7 @@ struct DecoderState {
 	std::atomic_int64_t 	mFrameLength 		= 0;
 	/// The desired seek offset
 	std::atomic_int64_t 	mFrameToSeek 		= kInvalidFramePosition;
+
 	static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
 	/// Decodes audio from the source representation to PCM
@@ -290,49 +292,39 @@ struct AudioPlayerNode
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
-	/// Ring buffer used to transfer audio from the decoding queue to the IOProc
-	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
-
 	/// The format of the audio supplied by \c mRenderBlock
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
+	/// Ring buffer used to transfer audio from the decoding dispatch queue to the IOProc
+	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
 	DecoderStateArray 				*mActiveDecoders 		= nullptr;
 
 	/// Decoders enqueued for playback that are not yet active
 	DecoderQueue 					mQueuedDecoders 		= {};
-
 	/// Lock used to protect access to \c mQueuedDecoders
 	mutable SFB::UnfairLock			mQueueLock;
 
-
 	/// Dispatch queue used for decoding
 	dispatch_queue_t				mDecodingQueue 			= nullptr;
-
 	/// Dispatch semaphore used for communication with the decoding queue
 	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
 
+	/// Ring buffer used to communicate decoding and render related events
+	SFB::RingBuffer					mEventRingBuffer;
+	/// Dispatch source processing events from \c mEventRingBuffer
+	dispatch_source_t				mEventProcessor 		= nullptr;
 
 	/// Dispatch group  used to track in-progress decoding and delegate messages
 	dispatch_group_t 				mDispatchGroup 			= nullptr;
 
-
-	/// Ring buffer used to communicate decoding and render related events
-	SFB::RingBuffer					mEventRingBuffer;
-
-	/// Dispatch source processing events from \c mEventRingBuffer
-	dispatch_source_t				mEventProcessor 		= nullptr;
-
-
 	/// Dispatch source deleting decoder state data with \c eMarkedForRemoval
 	dispatch_source_t				mCollector 				= nullptr;
-
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
-
 
 	/// Counter used for unique keys to \c dispatch_queue_set_specific
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
