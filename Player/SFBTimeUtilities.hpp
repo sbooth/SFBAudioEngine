@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#pragma once
+
 //#import <ctime>
 #import <mach/mach_time.h>
 
