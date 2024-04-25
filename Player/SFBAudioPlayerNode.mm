@@ -60,6 +60,7 @@ struct DecoderState {
 	/// Decoder state flags
 	std::atomic_uint 		mFlags 				= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
+
 	/// The number of frames decoded
 	std::atomic_int64_t 	mFramesDecoded 		= 0;
 	/// The number of frames converted
@@ -70,6 +71,7 @@ struct DecoderState {
 	std::atomic_int64_t 	mFrameLength 		= 0;
 	/// The desired seek offset
 	std::atomic_int64_t 	mFrameToSeek 		= kInvalidFramePosition;
+
 	static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
 	/// Decodes audio from the source representation to PCM
@@ -98,7 +100,7 @@ struct DecoderState {
 		if(!mDecodeBuffer)
 			throw std::system_error(std::error_code(ENOMEM, std::generic_category()));
 
-		if(AVAudioFramePosition framePosition = decoder.framePosition; framePosition != 0) {
+		if(auto framePosition = decoder.framePosition; framePosition != 0) {
 			mFramesDecoded.store(framePosition);
 			mFramesConverted.store(framePosition);
 			mFramesRendered.store(framePosition);
@@ -107,7 +109,7 @@ struct DecoderState {
 
 	inline AVAudioFramePosition FramePosition() const noexcept
 	{
-		auto seek = mFrameToSeek.load();
+		const auto seek = mFrameToSeek.load();
 		return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
 	}
 
@@ -144,7 +146,7 @@ struct DecoderState {
 	/// Seeks to the frame specified by \c mFrameToSeek
 	bool PerformSeek() noexcept
 	{
-		AVAudioFramePosition seekOffset = mFrameToSeek.load();
+		auto seekOffset = mFrameToSeek.load();
 
 		os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld in %{public}@ ", seekOffset, mDecoder);
 
@@ -154,7 +156,7 @@ struct DecoderState {
 		else
 			os_log_debug(_audioPlayerNodeLog, "Error seeking to frame %lld", seekOffset);
 
-		AVAudioFramePosition newFrame = mDecoder.framePosition;
+		const auto newFrame = mDecoder.framePosition;
 		if(newFrame != seekOffset) {
 			os_log_debug(_audioPlayerNodeLog, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
 			seekOffset = newFrame;
@@ -187,12 +189,12 @@ using DecoderStateArray = std::array<DecoderState::atomic_ptr, kDecoderStateArra
 DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateArray& decoders) noexcept
 {
 	DecoderState *result = nullptr;
-	for(auto& atomic_ptr : decoders) {
+	for(const auto& atomic_ptr : decoders) {
 		auto decoderState = atomic_ptr.load();
 		if(!decoderState)
 			continue;
 
-		if(auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
+		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
 			continue;
 
 		if(!result)
@@ -208,12 +210,12 @@ DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStat
 DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	DecoderState *result = nullptr;
-	for(auto& atomic_ptr : decoders) {
+	for(const auto& atomic_ptr : decoders) {
 		auto decoderState = atomic_ptr.load();
 		if(!decoderState)
 			continue;
 
-		if(auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
+		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
 			continue;
 
 		if(!result && decoderState->mSequenceNumber > sequenceNumber)
@@ -228,12 +230,12 @@ DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateAr
 /// Returns the element in \c decoders with sequence number equal to \c sequenceNumber that has not been marked for removal
 DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
-	for(auto& atomic_ptr : decoders) {
+	for(const auto& atomic_ptr : decoders) {
 		auto decoderState = atomic_ptr.load();
 		if(!decoderState)
 			continue;
 
-		if(auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval)
+		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval)
 			continue;
 
 		if(decoderState->mSequenceNumber == sequenceNumber)
@@ -290,49 +292,39 @@ struct AudioPlayerNode
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
-	/// Ring buffer used to transfer audio from the decoding queue to the IOProc
-	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
-
 	/// The format of the audio supplied by \c mRenderBlock
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
+	/// Ring buffer used to transfer audio from the decoding dispatch queue to the IOProc
+	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
 	DecoderStateArray 				*mActiveDecoders 		= nullptr;
 
 	/// Decoders enqueued for playback that are not yet active
 	DecoderQueue 					mQueuedDecoders 		= {};
-
 	/// Lock used to protect access to \c mQueuedDecoders
 	mutable SFB::UnfairLock			mQueueLock;
 
-
 	/// Dispatch queue used for decoding
 	dispatch_queue_t				mDecodingQueue 			= nullptr;
-
 	/// Dispatch semaphore used for communication with the decoding queue
 	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
 
+	/// Ring buffer used to communicate decoding and render related events
+	SFB::RingBuffer					mEventRingBuffer;
+	/// Dispatch source processing events from \c mEventRingBuffer
+	dispatch_source_t				mEventProcessor 		= nullptr;
 
 	/// Dispatch group  used to track in-progress decoding and delegate messages
 	dispatch_group_t 				mDispatchGroup 			= nullptr;
 
-
-	/// Ring buffer used to communicate decoding and render related events
-	SFB::RingBuffer					mEventRingBuffer;
-
-	/// Dispatch source processing events from \c mEventRingBuffer
-	dispatch_source_t				mEventProcessor 		= nullptr;
-
-
 	/// Dispatch source deleting decoder state data with \c eMarkedForRemoval
 	dispatch_source_t				mCollector 				= nullptr;
-
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
-
 
 	/// Counter used for unique keys to \c dispatch_queue_set_specific
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
@@ -361,7 +353,7 @@ public:
 
 			// ========================================
 			// 1. Determine how many audio frames are available to read in the ring buffer
-			AVAudioFrameCount framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
+			const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
 
 			// ========================================
 			// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
@@ -378,19 +370,21 @@ public:
 
 			// ========================================
 			// 3. Read as many frames as available from the ring buffer
-			AVAudioFrameCount framesToRead = std::min(framesAvailableToRead, frameCount);
-			AVAudioFrameCount framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
+			const auto framesToRead = std::min(framesAvailableToRead, frameCount);
+			const auto framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
 			if(framesRead != framesToRead)
-				os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
+				os_log_fault(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
 			// ========================================
 			// 4. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
 			if(framesRead != frameCount) {
+#if DEBUG
 				os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
+#endif
 
-				auto framesOfSilence = frameCount - framesRead;
-				auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
-				auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
+				const auto framesOfSilence = frameCount - framesRead;
+				const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
+				const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
 				for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 					std::memset(static_cast<int8_t *>(outputData->mBuffers[i].mData) + byteCountToSkip, 0, byteCountToZero);
 					outputData->mBuffers[i].mDataByteSize += byteCountToZero;
@@ -399,7 +393,7 @@ public:
 
 			// ========================================
 			// 5. If there is adequate space in the ring buffer for another chunk signal the decoding queue
-			AVAudioFrameCount framesAvailableToWrite = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToWrite());
+			const auto framesAvailableToWrite = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToWrite());
 			if(framesAvailableToWrite >= kRingBufferChunkSize)
 				dispatch_semaphore_signal(mDecodingSemaphore);
 
@@ -418,12 +412,12 @@ public:
 			// However, these could have come from any number of decoders depending on buffer sizes
 			// So it is necessary to split them up here
 
-			AVAudioFrameCount framesRemainingToDistribute = framesRead;
+			auto framesRemainingToDistribute = framesRead;
 
 			auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 			while(decoderState) {
-				AVAudioFrameCount decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
-				AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
+				const auto decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
+				const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
 				if(!(decoderState->mFlags.load() & DecoderState::eRenderingStarted)) {
 					decoderState->mFlags.fetch_or(DecoderState::eRenderingStarted);
@@ -437,8 +431,10 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
-					dispatch_source_merge_data(mEventProcessor, 1);
+					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false))
+						dispatch_source_merge_data(mEventProcessor, 1);
+					else
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventRenderingStarted");
 				}
 
 				decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
@@ -456,8 +452,10 @@ public:
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
-					dispatch_source_merge_data(mEventProcessor, 1);
+					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false))
+						dispatch_source_merge_data(mEventProcessor, 1);
+					else
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventRenderingComplete");
 				}
 
 				if(framesRemainingToDistribute == 0)
@@ -477,8 +475,10 @@ public:
 				uint8_t bytesToWrite [4 + 8];
 				std::memcpy(bytesToWrite, &cmd, 4);
 				std::memcpy(bytesToWrite + 4, &hostTime, 8);
-				mEventRingBuffer.Write(bytesToWrite, 4 + 8);
-				dispatch_source_merge_data(mEventProcessor, 1);
+				if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+					dispatch_source_merge_data(mEventProcessor, 1);
+				else
+					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventEndOfAudio");
 			}
 
 			return noErr;
@@ -486,26 +486,26 @@ public:
 
 		// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 		if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
-			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
-			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create audio ring buffer: SFB::Audio::RingBuffer::Allocate failed");
+			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate failed");
 		}
 
 		// Allocate the event ring buffer
 		if(!mEventRingBuffer.Allocate(256)) {
-			os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Allocate() failed");
-			throw std::runtime_error("SFB::RingBuffer::Allocate() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create event ring buffer: SFB::RingBuffer::Allocate failed");
+			throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 		}
 
 		mDecodingSemaphore = dispatch_semaphore_create(0);
 		if(!mDecodingSemaphore) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create() failed");
-			throw std::runtime_error("dispatch_semaphore_create() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
+			throw std::runtime_error("dispatch_semaphore_create failed");
 		}
 
 		mDispatchGroup = dispatch_group_create();
 		if(!mDispatchGroup) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_group_create() failed");
-			throw std::runtime_error("dispatch_group_create() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
 		}
 
 		// MARK: Event Processing
@@ -513,7 +513,7 @@ public:
 		// Create the dispatch source used for event processing and delegate messaging
 		mEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
 		if(!mEventProcessor) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch source: dispatch_source_create failed");
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
@@ -726,7 +726,7 @@ public:
 		// Set up the collector
 		mCollector = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
 		if(!mCollector) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create collector dispatch source: dispatch_source_create failed");
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
@@ -759,14 +759,14 @@ public:
 		// Create the dispatch queue used for decoding
 		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
 		if(!attr) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class() failed");
-			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class() failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class failed");
+			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
 		}
 
 		mDecodingQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Decoder", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
 		if(!mDecodingQueue) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create_with_target() failed");
-			throw std::runtime_error("dispatch_queue_create_with_target() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
+			throw std::runtime_error("dispatch_queue_create_with_target failed");
 		}
 	}
 
@@ -779,7 +779,7 @@ public:
 		CancelCurrentDecoder();
 		dispatch_semaphore_signal(mDecodingSemaphore);
 
-		auto timeout = dispatch_group_wait(mDispatchGroup, /*DISPATCH_TIME_FOREVER*/dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
+		const auto timeout = dispatch_group_wait(mDispatchGroup, /*DISPATCH_TIME_FOREVER*/dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
 		if(timeout)
 			os_log_fault(_audioPlayerNodeLog, "<AudioPlayerNode: %p> timeout waiting for dispatch group blocks to complete", this);
 
@@ -818,7 +818,7 @@ public:
 
 	bool IsReady() const noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		return decoderState ? true : false;
 	}
 
@@ -826,7 +826,7 @@ public:
 
 	SFBAudioPlayerNodePlaybackPosition PlaybackPosition() const noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
 
@@ -835,16 +835,16 @@ public:
 
 	SFBAudioPlayerNodePlaybackTime PlaybackTime() const noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 
 		SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 
-		int64_t framePosition = decoderState->FramePosition();
-		int64_t frameLength = decoderState->FrameLength();
+		const auto framePosition = decoderState->FramePosition();
+		const auto frameLength = decoderState->FrameLength();
 
-		if(double sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
+		if(const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
 			if(framePosition != SFBUnknownFramePosition)
 				playbackTime.currentTime = framePosition / sampleRate;
 			if(frameLength != SFBUnknownFrameLength)
@@ -856,7 +856,7 @@ public:
 
 	bool GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition *playbackPosition, SFBAudioPlayerNodePlaybackTime *playbackTime) const noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState) {
 			if(playbackPosition)
 				*playbackPosition = { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
@@ -871,7 +871,7 @@ public:
 
 		if(playbackTime) {
 			SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
-			if(double sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
+			if(const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
 				if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 					currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
 				if(currentPlaybackPosition.frameLength != SFBUnknownFrameLength)
@@ -890,13 +890,13 @@ public:
 		if(secondsToSkip < 0)
 			secondsToSkip = 0;
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return false;
 
-		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		AVAudioFramePosition framePosition = decoderState->FramePosition();
-		AVAudioFramePosition targetFrame = framePosition + static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
+		const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate;
+		const auto framePosition = decoderState->FramePosition();
+		auto targetFrame = framePosition + static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
 		if(targetFrame >= decoderState->FrameLength())
 			targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
@@ -909,13 +909,13 @@ public:
 		if(secondsToSkip < 0)
 			secondsToSkip = 0;
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return false;
 
-		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		AVAudioFramePosition framePosition = decoderState->FramePosition();
-		AVAudioFramePosition targetFrame = framePosition - static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
+		const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate;
+		const auto framePosition = decoderState->FramePosition();
+		auto targetFrame = framePosition - static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
 		if(targetFrame < 0)
 			targetFrame = 0;
@@ -932,8 +932,8 @@ public:
 		if(!decoderState)
 			return false;
 
-		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		AVAudioFramePosition targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
+		const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate;
+		auto targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
 
 		if(targetFrame >= decoderState->FrameLength())
 			targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
@@ -948,11 +948,11 @@ public:
 		else if(position >= 1)
 			position = std::nextafter(1.0, 0.0);
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return false;
 
-		AVAudioFramePosition frameLength = decoderState->FrameLength();
+		auto frameLength = decoderState->FrameLength();
 		return SeekToFrame(static_cast<AVAudioFramePosition>(frameLength * position));
 	}
 
@@ -961,7 +961,7 @@ public:
 		if(frame < 0)
 			frame = 0;
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 			return false;
 
@@ -976,7 +976,7 @@ public:
 
 	bool SupportsSeeking() const noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		return decoderState ? decoderState->mDecoder.supportsSeeking : false;
 	}
 
@@ -1045,7 +1045,7 @@ public:
 
 	id<SFBPCMDecoding> CurrentDecoder() const noexcept
 	{
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		return decoderState ? decoderState->mDecoder : nil;
 	}
 
@@ -1128,8 +1128,10 @@ private:
 					uint8_t bytesToWrite [4 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &key, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8);
-					dispatch_source_merge_data(mEventProcessor, 1);
+					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+						dispatch_source_merge_data(mEventProcessor, 1);
+					else
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
 
 					return;
 				}
@@ -1210,8 +1212,10 @@ private:
 					uint8_t bytesToWrite [4 + 8];
 					std::memcpy(bytesToWrite, &cmd, 4);
 					std::memcpy(bytesToWrite + 4, &key, 8);
-					mEventRingBuffer.Write(bytesToWrite, 4 + 8);
-					dispatch_source_merge_data(mEventProcessor, 1);
+					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+						dispatch_source_merge_data(mEventProcessor, 1);
+					else
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
 
 					return;
 				}
@@ -1249,7 +1253,7 @@ private:
 					}
 
 					// Determine how many frames are available in the ring buffer
-					auto framesAvailableToWrite = mAudioRingBuffer.FramesAvailableToWrite();
+					const auto framesAvailableToWrite = mAudioRingBuffer.FramesAvailableToWrite();
 
 					// Force writes to the ring buffer to be at least kRingBufferChunkSize
 					if(framesAvailableToWrite >= kRingBufferChunkSize) {
@@ -1264,8 +1268,10 @@ private:
 							uint8_t bytesToWrite [4 + 8];
 							std::memcpy(bytesToWrite, &cmd, 4);
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							mEventRingBuffer.Write(bytesToWrite, 4 + 8);
-							dispatch_source_merge_data(mEventProcessor, 1);
+							if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+								dispatch_source_merge_data(mEventProcessor, 1);
+							else
+								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingStarted");
 						}
 
 						// Decode audio into the buffer, converting to the bus format in the process
@@ -1282,13 +1288,15 @@ private:
 								uint8_t bytesToWrite [4 + 8];
 								std::memcpy(bytesToWrite, &cmd, 4);
 								std::memcpy(bytesToWrite + 4, &key, 8);
-								mEventRingBuffer.Write(bytesToWrite, 4 + 8);
-								dispatch_source_merge_data(mEventProcessor, 1);
+								if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+									dispatch_source_merge_data(mEventProcessor, 1);
+								else
+									os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
 							}
 						}
 
 						// Write the decoded audio to the ring buffer for rendering
-						auto framesWritten = mAudioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
+						const auto framesWritten = mAudioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
 						if(framesWritten != buffer.frameLength)
 							os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Write() failed");
 
@@ -1303,8 +1311,10 @@ private:
 							uint8_t bytesToWrite [4 + 8];
 							std::memcpy(bytesToWrite, &cmd, 4);
 							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							mEventRingBuffer.Write(bytesToWrite, 4 + 8);
-							dispatch_source_merge_data(mEventProcessor, 1);
+							if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+								dispatch_source_merge_data(mEventProcessor, 1);
+							else
+								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingComplete");
 
 							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
 
@@ -1324,8 +1334,10 @@ private:
 						std::memcpy(bytesToWrite, &cmd, 4);
 						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
-						mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1);
-						dispatch_source_merge_data(mEventProcessor, 1);
+						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false))
+							dispatch_source_merge_data(mEventProcessor, 1);
+						else
+							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
 
 						return;
 					}
