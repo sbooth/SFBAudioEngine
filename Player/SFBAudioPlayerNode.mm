@@ -486,26 +486,26 @@ public:
 
 		// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 		if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
-			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
-			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create audio ring buffer: SFB::Audio::RingBuffer::Allocate failed");
+			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate failed");
 		}
 
 		// Allocate the event ring buffer
 		if(!mEventRingBuffer.Allocate(256)) {
-			os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Allocate() failed");
-			throw std::runtime_error("SFB::RingBuffer::Allocate() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create event ring buffer: SFB::RingBuffer::Allocate failed");
+			throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 		}
 
 		mDecodingSemaphore = dispatch_semaphore_create(0);
 		if(!mDecodingSemaphore) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create() failed");
-			throw std::runtime_error("dispatch_semaphore_create() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
+			throw std::runtime_error("dispatch_semaphore_create failed");
 		}
 
 		mDispatchGroup = dispatch_group_create();
 		if(!mDispatchGroup) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_group_create() failed");
-			throw std::runtime_error("dispatch_group_create() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
 		}
 
 		// MARK: Event Processing
@@ -513,7 +513,7 @@ public:
 		// Create the dispatch source used for event processing and delegate messaging
 		mEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
 		if(!mEventProcessor) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch source: dispatch_source_create failed");
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
@@ -726,7 +726,7 @@ public:
 		// Set up the collector
 		mCollector = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
 		if(!mCollector) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create collector dispatch source: dispatch_source_create failed");
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
@@ -759,14 +759,14 @@ public:
 		// Create the dispatch queue used for decoding
 		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
 		if(!attr) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class() failed");
-			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class() failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class failed");
+			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
 		}
 
 		mDecodingQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Decoder", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
 		if(!mDecodingQueue) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create_with_target() failed");
-			throw std::runtime_error("dispatch_queue_create_with_target() failed");
+			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
+			throw std::runtime_error("dispatch_queue_create_with_target failed");
 		}
 	}
 
