@@ -83,7 +83,7 @@ struct DecoderState {
 	static uint64_t			sSequenceNumber;
 
 	DecoderState(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
-	: mFrameLength(decoder.frameLength), mDecoder(decoder)
+	: mFrameLength{decoder.frameLength}, mDecoder{decoder}
 	{
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 		if(!mConverter) {
@@ -339,7 +339,7 @@ private:
 
 public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
-	: mRenderingFormat(format)
+	: mRenderingFormat{format}
 	{
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with render block format %{public}@", this, mRenderingFormat);
 
