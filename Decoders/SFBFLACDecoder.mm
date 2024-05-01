@@ -379,8 +379,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 			break;
 
 		// Grab the next frame
-		if(!FLAC__stream_decoder_process_single(_flac.get()))
+		if(!FLAC__stream_decoder_process_single(_flac.get())) {
 			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
 	}
 
 	_framePosition += framesProcessed;
