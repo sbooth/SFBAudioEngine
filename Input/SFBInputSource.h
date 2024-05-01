@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -20,6 +20,14 @@ typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
 NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 
 /// Returns an initialized \c SFBInputSource object for the given URL or \c nil on failure
+/// @note Only file URLs are supported
+/// @param url The URL
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBInputSource object for the specified URL, or \c nil on failure
++ (nullable instancetype)inputSourceForURL:(NSURL *)url error:(NSError **)error;
+
+/// Returns an initialized \c SFBInputSource object for the given URL or \c nil on failure
+/// @note Only file URLs are supported
 /// @param url The URL
 /// @param flags Optional flags affecting how \c url is handled
 /// @param error An optional pointer to a \c NSError to receive error information

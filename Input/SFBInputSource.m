@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,7 +10,6 @@
 #import "SFBDataInputSource.h"
 #import "SFBFileContentsInputSource.h"
 #import "SFBFileInputSource.h"
-#import "SFBHTTPInputSource.h"
 #import "SFBMemoryMappedFileInputSource.h"
 
 // NSError domain for InputSource and subclasses
@@ -44,20 +43,22 @@ static void SFBCreateInputSourceLog(void)
 	}];
 }
 
++ (instancetype)inputSourceForURL:(NSURL *)url error:(NSError **)error
+{
+	return [SFBInputSource inputSourceForURL:url flags:0 error:error];
+}
+
 + (instancetype)inputSourceForURL:(NSURL *)url flags:(SFBInputSourceFlags)flags error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
+	NSParameterAssert(url.isFileURL);
 
-	if(url.isFileURL) {
-		if(flags & SFBInputSourceFlagsMemoryMapFiles)
-			return [[SFBMemoryMappedFileInputSource alloc] initWithURL:url error:error];
-		else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
-			return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
-		else
-			return [[SFBFileInputSource alloc] initWithURL:url error:error];
-	}
-	else if([url.scheme.lowercaseString hasPrefix:@"http"])
-		return [[SFBHTTPInputSource alloc] initWithURL:url error:error];
+	if(flags & SFBInputSourceFlagsMemoryMapFiles)
+		return [[SFBMemoryMappedFileInputSource alloc] initWithURL:url error:error];
+	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
+		return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
+	else
+		return [[SFBFileInputSource alloc] initWithURL:url error:error];
 
 	return nil;
 }
