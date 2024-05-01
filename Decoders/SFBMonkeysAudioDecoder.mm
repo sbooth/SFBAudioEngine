@@ -291,10 +291,12 @@ private:
 	int64_t blocksRead = 0;
 	if(_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
 		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
-	buffer.frameLength = (AVAudioFrameCount)blocksRead;
+	buffer.frameLength = static_cast<AVAudioFrameCount>(blocksRead);
 
 	return YES;
 }
