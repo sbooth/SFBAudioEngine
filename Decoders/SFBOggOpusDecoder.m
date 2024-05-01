@@ -235,6 +235,8 @@ static opus_int64 tell_callback(void *stream)
 
 		if(framesRead < 0) {
 			os_log_error(gSFBAudioDecoderLog, "Ogg Opus decoding error");
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
