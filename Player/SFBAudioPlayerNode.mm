@@ -1367,6 +1367,21 @@ const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 @implementation SFBAudioPlayerNode
 
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioPlayerNodeErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if(userInfoKey == NSLocalizedDescriptionKey) {
+			switch(err.code) {
+				case SFBAudioPlayerNodeErrorCodeInternalError:
+					return NSLocalizedString(@"An internal player error occurred.", @"");
+				case SFBAudioPlayerNodeErrorCodeFormatNotSupported:
+					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
+
 - (instancetype)init
 {
 	return [self initWithSampleRate:44100 channels:2];
