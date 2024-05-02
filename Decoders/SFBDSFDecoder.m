@@ -408,8 +408,8 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	uint32_t bufsize = _buffer.byteCapacity;
 
 	NSInteger bytesRead;
-	if(![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error] || bytesRead != bufsize) {
-		os_log_debug(gSFBDSDDecoderLog, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
+	if(![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error] || (bytesRead != bufsize && !_inputSource.atEOF)) {
+		os_log_error(gSFBDSDDecoderLog, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
 		return NO;
 	}
 
