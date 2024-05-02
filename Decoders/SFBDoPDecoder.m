@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -209,7 +209,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 		// Grab the DSD audio
 		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
 		if(![_decoder decodeIntoBuffer:_buffer packetCount:MIN(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
-			break;
+			return NO;
 
 		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
 		if(dsdPacketsDecoded == 0)
