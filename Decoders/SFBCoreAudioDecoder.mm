@@ -93,14 +93,19 @@ SInt64 get_size_callback(void *inClientData)
 
 			auto readableTypes = SFB::CAAudioFile::ReadableTypes();
 			for(const auto& type : readableTypes) {
-				auto extensionsForType = SFB::CAAudioFile::ExtensionsForType(type);
-				[supportedPathExtensions addObjectsFromArray:(NSArray *)extensionsForType];
+				try {
+					auto extensionsForType = SFB::CAAudioFile::ExtensionsForType(type);
+					[supportedPathExtensions addObjectsFromArray:(NSArray *)extensionsForType];
+				}
+				catch(const std::exception& e) {
+					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ExtensionsForType failed for '%{public}.4s': %s", SFBCStringForOSType(type), e.what());
+				}
 			}
 
 			pathExtensions = [supportedPathExtensions copy];
 		}
 		catch(const std::exception& e) {
-			os_log_error(gSFBAudioDecoderLog, "Error retrieving supported path extensions: %s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %s", e.what());
 			pathExtensions = [NSSet set];
 		}
 	});
@@ -119,14 +124,19 @@ SInt64 get_size_callback(void *inClientData)
 
 			auto readableTypes = SFB::CAAudioFile::ReadableTypes();
 			for(const auto& type : readableTypes) {
-				auto mimeTypesForType = SFB::CAAudioFile::MIMETypesForType(type);
-				[supportedMIMETypes addObjectsFromArray:(NSArray *)mimeTypesForType];
+				try {
+					auto mimeTypesForType = SFB::CAAudioFile::MIMETypesForType(type);
+					[supportedMIMETypes addObjectsFromArray:(NSArray *)mimeTypesForType];
+				}
+				catch(const std::exception& e) {
+					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::MIMETypesForType failed for '%{public}.4s': %s", SFBCStringForOSType(type), e.what());
+				}
 			}
 
 			mimeTypes = [supportedMIMETypes copy];
 		}
 		catch(const std::exception& e) {
-			os_log_error(gSFBAudioDecoderLog, "Error retrieving supported MIME types: %s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %s", e.what());
 			mimeTypes = [NSSet set];
 		}
 	});
