@@ -40,6 +40,9 @@ let url = URL(fileURLWithPath: "example.flac")
 try? player.play(url)
 ~~~
 
+> [!NOTE]
+> Only file URLs are supported.
+
 ### Metadata
 
 Reading audio properties and metadata is similarly trivial:
