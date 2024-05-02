@@ -232,11 +232,11 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	try {
 		while(_framesToSkip && !eos) {
 			if(_framesToSkip >= frameLength) {
-				framesRead = (AVAudioFrameCount)_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength);
+				framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength));
 				_framesToSkip -= framesRead;
 			}
 			else {
-				framesRead = (AVAudioFrameCount)_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), _framesToSkip);
+				framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), _framesToSkip));
 				_framesToSkip = 0;
 			}
 
@@ -245,13 +245,15 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 		}
 
 		if(!eos) {
-			framesRead = (AVAudioFrameCount)_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength);
+			framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength));
 			if(framesRead == 0)
 				eos = true;
 		}
 	}
 	catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -276,6 +278,8 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	}
 	catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
