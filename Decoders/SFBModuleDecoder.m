@@ -240,7 +240,7 @@ static dumb_off_t get_size_callback(void *f)
 	if(!_df) {
 		os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 

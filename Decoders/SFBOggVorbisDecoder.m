@@ -129,7 +129,7 @@ static long tell_func_callback(void *datasource)
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 
 		return NO;
 	}
@@ -142,7 +142,7 @@ static long tell_func_callback(void *datasource)
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 
 		return NO;
 	}
@@ -243,7 +243,7 @@ static long tell_func_callback(void *datasource)
 		if(framesRead < 0) {
 			os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis decoding error");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 

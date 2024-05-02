@@ -227,7 +227,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		if(mpc_demux_decode(_demux, &frame)) {
 			os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
