@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2009 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2009 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,8 +12,6 @@ import SFBAudioEngine
 @NSApplicationMain
 class AppDelegate: NSObject {
 	@IBOutlet weak var playerWindowController: PlayerWindowController!
-	@IBOutlet weak var openURLPanel: NSWindow!
-	@IBOutlet weak var openURLPanelTextField: NSTextField!
 
 	@IBAction func openFile(_ sender: AnyObject?) {
 		let openPanel = NSOpenPanel()
@@ -29,11 +27,6 @@ class AppDelegate: NSObject {
 		}
 	}
 
-	@IBAction func openURL(_ sender: AnyObject?) {
-		openURLPanel.center()
-		openURLPanel.makeKeyAndOrderFront(sender)
-	}
-
 	@IBAction func addFiles(_ sender: AnyObject?) {
 		let openPanel = NSOpenPanel()
 
@@ -44,17 +37,6 @@ class AppDelegate: NSObject {
 		if(openPanel.runModal() == .OK) {
 			playerWindowController.addToPlaylist(urls: openPanel.urls)
 		}
-	}
-
-	@IBAction func openURLPanelOpenAction(_ sender: AnyObject?) {
-		openURLPanel.orderOut(sender)
-		if let url = URL(string: openURLPanelTextField.stringValue) {
-			playerWindowController.play(url: url)
-		}
-	}
-
-	@IBAction func openURLPanelCancelAction(_ sender: AnyObject?) {
-		openURLPanel.orderOut(sender)
 	}
 
 	@IBAction func analyzeFiles(_ sender: AnyObject?) {
