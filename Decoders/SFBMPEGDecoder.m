@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -24,7 +24,7 @@ static void Setupmpg123(void)
 	// What happens if this fails?
 	int result = mpg123_init();
 	if(result != MPG123_OK)
-		os_log_debug(gSFBAudioDecoderLog, "Unable to initialize mpg123: %s", mpg123_plain_strerror(result));
+		os_log_error(gSFBAudioDecoderLog, "Unable to initialize mpg123: %{public}s", mpg123_plain_strerror(result));
 }
 
 static void Teardownmpg123(void) __attribute__ ((destructor));
@@ -307,8 +307,10 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		if(result == MPG123_DONE)
 			break;
 		else if(result != MPG123_OK) {
-			os_log_error(gSFBAudioDecoderLog, "mpg123_decode_frame failed: %s", mpg123_strerror(_mpg123));
-			break;
+			os_log_error(gSFBAudioDecoderLog, "mpg123_decode_frame failed: %{public}s", mpg123_strerror(_mpg123));
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			return NO;
 		}
 
 		// Deinterleave the samples

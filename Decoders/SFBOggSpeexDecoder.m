@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -361,7 +361,9 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 				int result = ogg_stream_packetout(&_streamState, &oggPacket);
 				if(result == -1) {
 					os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding error: Ogg loss of streaming");
-					break;
+					if(error)
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+					return NO;
 				}
 
 				// If result is 0, there is insufficient data to assemble a packet
@@ -401,12 +403,16 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 								break;
 							else if(result == -2) {
 								os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding error: possible corrupted stream");
-								break;
+								if(error)
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+								return NO;
 							}
 
 							if(speex_bits_remaining(&_bits) < 0) {
 								os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding overflow: possible corrupted stream");
-								break;
+								if(error)
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+								return NO;
 							}
 
 							// Process stereo channel, if present
@@ -441,9 +447,9 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 
 					// Read bitstream from input file
 					NSInteger bytesRead;
-					if(![_inputSource readBytes:data length:READ_SIZE_BYTES bytesRead:&bytesRead error:nil]) {
+					if(![_inputSource readBytes:data length:READ_SIZE_BYTES bytesRead:&bytesRead error:error]) {
 						os_log_error(gSFBAudioDecoderLog, "Unable to read from the input file");
-						break;
+						return NO;
 					}
 
 					ogg_sync_wrote(&_syncState, bytesRead);
@@ -461,7 +467,9 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 				int result = ogg_stream_pagein(&_streamState, &_page);
 				if(result) {
 					os_log_error(gSFBAudioDecoderLog, "Error reading Ogg page");
-					break;
+					if(error)
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+					return NO;
 				}
 			}
 		}

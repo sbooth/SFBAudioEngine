@@ -233,7 +233,7 @@ SInt64 get_size_callback(void *inClientData)
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -405,7 +405,7 @@ SInt64 get_size_callback(void *inClientData)
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		buffer.frameLength = 0;
 		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -421,7 +421,7 @@ SInt64 get_size_callback(void *inClientData)
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

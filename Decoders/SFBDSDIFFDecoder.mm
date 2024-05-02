@@ -856,8 +856,8 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 
 		NSInteger bytesRead;
 		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
-			os_log_debug(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
-			break;
+			os_log_error(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
+			return NO;
 		}
 
 		// Decoding is finished

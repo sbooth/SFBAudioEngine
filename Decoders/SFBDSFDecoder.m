@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -347,7 +347,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 		// Read  the next block
 		if(![self readAndInterleaveDSFBlockReturningError:error])
-			break;
+			return NO;
 	}
 
 	_packetPosition += packetsProcessed;
@@ -409,7 +409,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	NSInteger bytesRead;
 	if(![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error] || bytesRead != bufsize) {
-		os_log_debug(gSFBDSDDecoderLog, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
+		os_log_error(gSFBDSDDecoderLog, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
 		return NO;
 	}
 
