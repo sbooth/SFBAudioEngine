@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,11 +9,11 @@
 #import <CoreServices/CoreServices.h>
 #import <ImageIO/ImageIO.h>
 
+#import <SFBCFWrapper.hpp>
+
 #import <taglib/mp4coverart.h>
 
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
-
-#import "SFBCFWrapper.hpp"
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"

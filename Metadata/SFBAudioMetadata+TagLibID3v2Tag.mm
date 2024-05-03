@@ -1,11 +1,13 @@
 //
-// Copyright (c) 2010 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 #import <CoreServices/CoreServices.h>
 #import <ImageIO/ImageIO.h>
+
+#import <SFBCFWrapper.hpp>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -20,8 +22,6 @@
 #pragma clang diagnostic pop
 
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
-
-#import "SFBCFWrapper.hpp"
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"

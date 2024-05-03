@@ -97,8 +97,6 @@
 		32351A2B2AD7782F00B3ADB9 /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32351A292AD7782500B3ADB9 /* AVFAudio.framework */; };
 		325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 325116CB2423B15200B02926 /* SFBAttachedPicture.m */; };
 		325326902AD74E0600B0DC92 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3253268F2AD74E0600B0DC92 /* CXXAudioUtilities */; };
-		325326992AD750DA00B0DC92 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 325326982AD750DA00B0DC92 /* CXXAudioUtilities */; };
-		325326A12AD750E500B0DC92 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 325326A02AD750E500B0DC92 /* CXXAudioUtilities */; };
 		32569570256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
 		32569571256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
 		325A5E05243F8D8B003138D5 /* SFBInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5DF8243F8D8B003138D5 /* SFBInputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -368,6 +366,10 @@
 		32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32DB245894ED002BC014 /* SFBInputSource.swift */; };
 		32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */; };
 		32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D61409BA26001F9A60 /* AudioUnit.framework */; };
+		32B2A0552BE5487E00C1028D /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 32B2A0542BE5487E00C1028D /* CXXAudioUtilities */; };
+		32B2A0582BE548E600C1028D /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32B2A0572BE548E600C1028D /* AVFAudioExtensions */; };
+		32B2A05A2BE5493100C1028D /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32B2A0592BE5493100C1028D /* AVFAudioExtensions */; };
+		32B2A05C2BE5494200C1028D /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 32B2A05B2BE5494200C1028D /* CXXAudioUtilities */; };
 		32BC09A424263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BC09A224263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.h */; };
 		32BC09A524263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32BC09A324263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.mm */; };
 		32BC09A824265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32BC09A624265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.mm */; };
@@ -378,8 +380,6 @@
 		32BC09F524278B24008BB695 /* SFBAIFFFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BC09F324278B23008BB695 /* SFBAIFFFile.h */; };
 		32C09BDE253B4EFB00A1932C /* SFBShortenDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C09BDC253B4EFB00A1932C /* SFBShortenDecoder.h */; };
 		32C09BDF253B4EFB00A1932C /* SFBShortenDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32C09BDD253B4EFB00A1932C /* SFBShortenDecoder.mm */; };
-		32C648A12AD85510002AF4C0 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A02AD85510002AF4C0 /* AVFAudioExtensions */; };
-		32C648A52AD8551C002AF4C0 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */; };
 		32D740BF255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */; };
 		32D740C0255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D740AF255F6D91004D3C1A /* SFBAudioEncoder.m */; };
 		32D740C1255F6D91004D3C1A /* SFBPCMEncoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D740B0255F6D91004D3C1A /* SFBPCMEncoding.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -705,10 +705,9 @@
 			files = (
 				32714C582551D4DF00029BD7 /* Accelerate.framework in Frameworks */,
 				32714C592551D4DF00029BD7 /* AudioToolbox.framework in Frameworks */,
-				325326A12AD750E500B0DC92 /* CXXAudioUtilities in Frameworks */,
+				32B2A05C2BE5494200C1028D /* CXXAudioUtilities in Frameworks */,
 				32673F0F274C9D6300E46A89 /* tta-cpp.xcframework in Frameworks */,
 				32714C5C2551D4DF00029BD7 /* Foundation.framework in Frameworks */,
-				32C648A52AD8551C002AF4C0 /* AVFAudioExtensions in Frameworks */,
 				32714C5D2551D4DF00029BD7 /* CoreAudio.framework in Frameworks */,
 				32714C5E2551D4DF00029BD7 /* CoreServices.framework in Frameworks */,
 				32714C5F2551D4DF00029BD7 /* dumb.xcframework in Frameworks */,
@@ -726,6 +725,7 @@
 				32714C6A2551D4DF00029BD7 /* vorbis.xcframework in Frameworks */,
 				32ABE2152ADC467B008A4590 /* ImageIO.framework in Frameworks */,
 				32714C6B2551D4DF00029BD7 /* wavpack.xcframework in Frameworks */,
+				32B2A05A2BE5493100C1028D /* AVFAudioExtensions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -751,8 +751,8 @@
 				321388CB2881B58A00EC5F63 /* vorbis.xcframework in Frameworks */,
 				321388BF2881B58900EC5F63 /* ogg.xcframework in Frameworks */,
 				321DB854246369E7004D66AF /* CoreServices.framework in Frameworks */,
-				325326992AD750DA00B0DC92 /* CXXAudioUtilities in Frameworks */,
-				32C648A12AD85510002AF4C0 /* AVFAudioExtensions in Frameworks */,
+				32B2A0552BE5487E00C1028D /* CXXAudioUtilities in Frameworks */,
+				32B2A0582BE548E600C1028D /* AVFAudioExtensions in Frameworks */,
 				3221A3302AD5A54C00DD6CF3 /* CXXAudioUtilities in Frameworks */,
 				321388B72881B58900EC5F63 /* lame.xcframework in Frameworks */,
 				321388C32881B58900EC5F63 /* sndfile.xcframework in Frameworks */,
@@ -1346,8 +1346,8 @@
 			);
 			name = "iOS Framework";
 			packageProductDependencies = (
-				325326A02AD750E500B0DC92 /* CXXAudioUtilities */,
-				32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */,
+				32B2A0592BE5493100C1028D /* AVFAudioExtensions */,
+				32B2A05B2BE5494200C1028D /* CXXAudioUtilities */,
 			);
 			productName = Framework;
 			productReference = 32714C7C2551D4DF00029BD7 /* SFBAudioEngine.framework */;
@@ -1372,8 +1372,8 @@
 			packageProductDependencies = (
 				3221A32F2AD5A54C00DD6CF3 /* CXXAudioUtilities */,
 				3253268F2AD74E0600B0DC92 /* CXXAudioUtilities */,
-				325326982AD750DA00B0DC92 /* CXXAudioUtilities */,
-				32C648A02AD85510002AF4C0 /* AVFAudioExtensions */,
+				32B2A0542BE5487E00C1028D /* CXXAudioUtilities */,
+				32B2A0572BE548E600C1028D /* AVFAudioExtensions */,
 			);
 			productName = Framework;
 			productReference = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */;
@@ -1408,7 +1408,8 @@
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* CFPlayer */;
 			packageReferences = (
-				325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */,
+				32B2A0532BE5487E00C1028D /* XCRemoteSwiftPackageReference "CXXAudioUtilities" */,
+				32B2A0562BE548E600C1028D /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */,
 			);
 			productRefGroup = 3210AB8E17B9BF8000743639 /* Products */;
 			projectDirPath = "";
@@ -1993,12 +1994,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */ = {
+		32B2A0532BE5487E00C1028D /* XCRemoteSwiftPackageReference "CXXAudioUtilities" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sbooth/SFBAudioUtilities";
+			repositoryURL = "https://github.com/sbooth/CXXAudioUtilities";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.2.0;
+				branch = main;
+				kind = branch;
+			};
+		};
+		32B2A0562BE548E600C1028D /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sbooth/AVFAudioExtensions";
+			requirement = {
+				branch = main;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -2012,25 +2021,25 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = CXXAudioUtilities;
 		};
-		325326982AD750DA00B0DC92 /* CXXAudioUtilities */ = {
+		32B2A0542BE5487E00C1028D /* CXXAudioUtilities */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
+			package = 32B2A0532BE5487E00C1028D /* XCRemoteSwiftPackageReference "CXXAudioUtilities" */;
 			productName = CXXAudioUtilities;
 		};
-		325326A02AD750E500B0DC92 /* CXXAudioUtilities */ = {
+		32B2A0572BE548E600C1028D /* AVFAudioExtensions */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
+			package = 32B2A0562BE548E600C1028D /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */;
+			productName = AVFAudioExtensions;
+		};
+		32B2A0592BE5493100C1028D /* AVFAudioExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 32B2A0562BE548E600C1028D /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */;
+			productName = AVFAudioExtensions;
+		};
+		32B2A05B2BE5494200C1028D /* CXXAudioUtilities */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 32B2A0532BE5487E00C1028D /* XCRemoteSwiftPackageReference "CXXAudioUtilities" */;
 			productName = CXXAudioUtilities;
-		};
-		32C648A02AD85510002AF4C0 /* AVFAudioExtensions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = AVFAudioExtensions;
-		};
-		32C648A42AD8551C002AF4C0 /* AVFAudioExtensions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 325326952AD750DA00B0DC92 /* XCRemoteSwiftPackageReference "SFBAudioUtilities" */;
-			productName = AVFAudioExtensions;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
