@@ -1998,8 +1998,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sbooth/CXXAudioUtilities";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
 			};
 		};
 		32B2A0562BE548E600C1028D /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */ = {
