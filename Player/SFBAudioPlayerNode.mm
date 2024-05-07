@@ -16,11 +16,11 @@
 
 #import <os/log.h>
 
-#import "SFBAudioPlayerNode.h"
+#import <SFBAudioRingBuffer.hpp>
+#import <SFBRingBuffer.hpp>
+#import <SFBUnfairLock.hpp>
 
-#import "SFBAudioRingBuffer.hpp"
-#import "SFBRingBuffer.hpp"
-#import "SFBUnfairLock.hpp"
+#import "SFBAudioPlayerNode.h"
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
