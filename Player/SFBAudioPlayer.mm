@@ -11,9 +11,9 @@
 
 #import <os/log.h>
 
-#import "SFBAudioPlayer.h"
+#import <SFBUnfairLock.hpp>
 
-#import "SFBUnfairLock.hpp"
+#import "SFBAudioPlayer.h"
 
 #import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"

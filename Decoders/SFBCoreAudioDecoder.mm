@@ -10,10 +10,10 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "SFBCoreAudioDecoder.h"
+#import <SFBAudioFileWrapper.hpp>
+#import <SFBExtAudioFileWrapper.hpp>
 
-#import "SFBAudioFileWrapper.hpp"
-#import "SFBExtAudioFileWrapper.hpp"
+#import "SFBCoreAudioDecoder.h"
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"

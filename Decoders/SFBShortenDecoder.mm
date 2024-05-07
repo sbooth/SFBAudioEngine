@@ -9,9 +9,9 @@
 
 #import <os/log.h>
 
-#import "SFBShortenDecoder.h"
+#import <SFBByteStream.hpp>
 
-#import "SFBByteStream.hpp"
+#import "SFBShortenDecoder.h"
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
