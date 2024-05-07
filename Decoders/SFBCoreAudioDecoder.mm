@@ -176,8 +176,7 @@ SInt64 get_size_callback(void *inClientData)
 		auto format = _eaf.FileDataFormat();
 
 		// Query channel layout
-//		AVAudioChannelLayout *channelLayout = _eaf.FileChannelLayout();
-		AVAudioChannelLayout *channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:_eaf.FileChannelLayout()];
+		AVAudioChannelLayout *channelLayout = _eaf.FileChannelLayout();
 
 		// ExtAudioFile occasionally returns empty channel layouts; ignore them
 		if(channelLayout.channelCount != format.mChannelsPerFrame) {
