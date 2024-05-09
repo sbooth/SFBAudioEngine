@@ -140,6 +140,11 @@ struct DecoderState {
 			return false;
 		mFramesConverted.fetch_add(buffer.frameLength);
 
+		// If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
+		// decoding is complete
+		if(buffer.frameLength != buffer.frameCapacity)
+			mFlags.fetch_or(eDecodingComplete);
+
 		return true;
 	}
 

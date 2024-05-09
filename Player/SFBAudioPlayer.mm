@@ -11,11 +11,11 @@
 
 #import <os/log.h>
 
+#import <AVAudioFormat+SFBFormatTransformation.h>
 #import <SFBUnfairLock.hpp>
 
 #import "SFBAudioPlayer.h"
 
-#import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
 #import "SFBTimeUtilities.hpp"
@@ -28,7 +28,7 @@ os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer"
 enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagRenderingImminent				= 1u << 0,
 	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
-	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2
+	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
 }
