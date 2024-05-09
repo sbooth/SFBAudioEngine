@@ -98,14 +98,14 @@ SInt64 get_size_callback(void *inClientData)
 					[supportedPathExtensions addObjectsFromArray:(NSArray *)extensionsForType];
 				}
 				catch(const std::exception& e) {
-					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ExtensionsForType failed for '%{public}.4s': %s", SFBCStringForOSType(type), e.what());
+					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ExtensionsForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
 				}
 			}
 
 			pathExtensions = [supportedPathExtensions copy];
 		}
 		catch(const std::exception& e) {
-			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %{public}s", e.what());
 			pathExtensions = [NSSet set];
 		}
 	});
@@ -129,14 +129,14 @@ SInt64 get_size_callback(void *inClientData)
 					[supportedMIMETypes addObjectsFromArray:(NSArray *)mimeTypesForType];
 				}
 				catch(const std::exception& e) {
-					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::MIMETypesForType failed for '%{public}.4s': %s", SFBCStringForOSType(type), e.what());
+					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::MIMETypesForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
 				}
 			}
 
 			mimeTypes = [supportedMIMETypes copy];
 		}
 		catch(const std::exception& e) {
-			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %{public}s", e.what());
 			mimeTypes = [NSSet set];
 		}
 	});
@@ -254,7 +254,7 @@ SInt64 get_size_callback(void *inClientData)
 		{}
 
 		if(error) {
-			os_log_error(gSFBAudioDecoderLog, "Error opening SFBCoreAudioDecoder: %s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "Error opening SFBCoreAudioDecoder: %{public}s", e.what());
 			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
 											 code:e.code().value()
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
@@ -274,7 +274,7 @@ SInt64 get_size_callback(void *inClientData)
 		_af.Close();
 	}
 	catch(const std::system_error& e) {
-		os_log_error(gSFBAudioDecoderLog, "Error closing SFBCoreAudioDecoder: %s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "Error closing SFBCoreAudioDecoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:e.code().value() userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
@@ -294,7 +294,7 @@ SInt64 get_size_callback(void *inClientData)
 		return _eaf.Tell();
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Tell failed: %s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Tell failed: %{public}s", e.what());
 		return SFBUnknownFramePosition;
 	}
 }
@@ -305,7 +305,7 @@ SInt64 get_size_callback(void *inClientData)
 		return _eaf.FrameLength();
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::FrameLength failed: %s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::FrameLength failed: %{public}s", e.what());
 		return SFBUnknownFramePosition;
 	}
 }
@@ -331,7 +331,7 @@ SInt64 get_size_callback(void *inClientData)
 		return YES;
 	}
 	catch(const std::system_error& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Read failed: %s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Read failed: %{public}s", e.what());
 		buffer.frameLength = 0;
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:e.code().value() userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -347,7 +347,7 @@ SInt64 get_size_callback(void *inClientData)
 		return YES;
 	}
 	catch(const std::system_error& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Seek failed: %s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Seek failed: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:e.code().value() userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
