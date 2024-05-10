@@ -121,7 +121,7 @@ public:
 	};
 
 	/// Creates a new `VariableLengthInput` object with an internal buffer of the specified size
-	/// @warning Sizes other than `512` will break seeking
+	/// - warning: Sizes other than `512` will break seeking
 	VariableLengthInput(size_t size = 512)
 	: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
 	{
