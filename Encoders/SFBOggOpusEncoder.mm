@@ -10,9 +10,9 @@
 
 #import <opus/opusenc.h>
 
-#import "SFBOggOpusEncoder.h"
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
+#import "SFBOggOpusEncoder.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggOpus = @"org.sbooth.AudioEngine.Encoder.OggOpus";
 

@@ -11,9 +11,10 @@
 
 #import <os/log.h>
 
+#import <AVAudioChannelLayout+SFBChannelLabels.h>
+
 #import "SFBDSDIFFDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
