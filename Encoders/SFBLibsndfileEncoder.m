@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -82,7 +82,7 @@ SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettings
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianBig = @"Big";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU = @"CPU";
 
-/// Returns the major format corresponding to \c pathExtension or \c 0 if none
+/// Returns the major format corresponding to `pathExtension` or `0` if none
 static int MajorFormatForExtension(NSString *pathExtension)
 {
 	NSCParameterAssert(pathExtension != nil);
@@ -104,7 +104,7 @@ static int MajorFormatForExtension(NSString *pathExtension)
 	return 0;
 }
 
-/// Returns the subtype corresponding to \c format or \c 0 if none
+/// Returns the subtype corresponding to `format` or `0` if none
 static int InferSubtypeFromFormat(AVAudioFormat *format)
 {
 	NSCParameterAssert(format != nil);

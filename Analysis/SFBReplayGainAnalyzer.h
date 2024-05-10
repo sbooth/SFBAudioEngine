@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,14 +12,14 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString * SFBReplayGainAnalyzerKey NS_TYPED_ENUM NS_SWIFT_NAME(ReplayGainAnalyzer.Key);
 
 // Replay gain dictionary keys
-/// The gain in dB (\c NSNumber)
+/// The gain in dB (`NSNumber`)
 extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerGainKey;
-/// The peak value normalized to [-1, 1) (\c NSNumber)
+/// The peak value normalized to [-1, 1) (`NSNumber`)
 extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerPeakKey;
 
 
 /// A class that calculates replay gain
-/// @see http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification
+/// - seealso: http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification
 NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 
 /// The reference loudness in dB SPL, defined as 89.0 dB
@@ -28,31 +28,31 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 
 /// Analyze the given album's replay gain
 ///
-/// The returned dictionary will contain the entries returned by \c -albumGainAndPeakSample and the
-/// results of \c -trackGainAndPeakSample keyed by URL
-/// @param urls The URLs to analyze
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return A dictionary of gain and peak information, or \c nil on error
+/// The returned dictionary will contain the entries returned by `-albumGainAndPeakSample` and the
+/// results of `-trackGainAndPeakSample` keyed by URL
+/// - parameter urls: The URLs to analyze
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: A dictionary of gain and peak information, or `nil` on error
 + (nullable NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Analyze the given URL's replay gain
 ///
 /// If the URL's sample rate is not natively supported, the replay gain adjustment will be calculated using audio
 /// resampled to an even multiple sample rate
-/// @param url The URL to analyze
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return A dictionary containing the track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
+/// - parameter url: The URL to analyze
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: A dictionary containing the track gain in dB (`SFBReplayGainAnalyzerGainKey`) and peak sample value normalized to [-1, 1) (`SFBReplayGainAnalyzerPeakKey`), or `nil` on error
 - (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns the album gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
+/// Returns the album gain in dB (`SFBReplayGainAnalyzerGainKey`) and peak sample value normalized to [-1, 1) (`SFBReplayGainAnalyzerPeakKey`), or `nil` on error
 - (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)albumGainAndPeakSampleReturningError:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
-/// The \c NSErrorDomain used by \c SFBReplayGainAnalyzer
+/// The `NSErrorDomain` used by `SFBReplayGainAnalyzer`
 extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorDomain);
 
-/// Possible \c NSError error codes used by \c SFBReplayGainAnalyzer
+/// Possible `NSError` error codes used by `SFBReplayGainAnalyzer`
 typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCode) {
 	/// File format not supported
 	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,

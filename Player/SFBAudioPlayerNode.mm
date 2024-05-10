@@ -148,7 +148,7 @@ struct DecoderState {
 		return true;
 	}
 
-	/// Seeks to the frame specified by \c mFrameToSeek
+	/// Seeks to the frame specified by `mFrameToSeek`
 	bool PerformSeek() noexcept
 	{
 		auto seekOffset = mFrameToSeek.load();
@@ -190,7 +190,7 @@ using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const size_t kDecoderStateArraySize = 8;
 using DecoderStateArray = std::array<DecoderState::atomic_ptr, kDecoderStateArraySize>;
 
-/// Returns the element in \c decoders with the smallest sequence number that has not completed rendering and has not been marked for removal
+/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
 DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateArray& decoders) noexcept
 {
 	DecoderState *result = nullptr;
@@ -211,7 +211,7 @@ DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStat
 	return result;
 }
 
-/// Returns the element in \c decoders with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
+/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
 DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	DecoderState *result = nullptr;
@@ -232,7 +232,7 @@ DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateAr
 	return result;
 }
 
-/// Returns the element in \c decoders with sequence number equal to \c sequenceNumber that has not been marked for removal
+/// Returns the element in `decoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
 DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(const auto& atomic_ptr : decoders) {
@@ -290,14 +290,14 @@ struct AudioPlayerNode
 		eEventError 				= 7,
 	};
 
-	/// Weak reference to owning \c SFBAudioPlayerNode instance
+	/// Weak reference to owning `SFBAudioPlayerNode` instance
 	__weak SFBAudioPlayerNode 		*mNode 					= nil;
 
 	/// The render block supplying audio
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
-	/// The format of the audio supplied by \c mRenderBlock
+	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
 	/// Ring buffer used to transfer audio from the decoding dispatch queue to the IOProc
@@ -308,7 +308,7 @@ private:
 
 	/// Decoders enqueued for playback that are not yet active
 	DecoderQueue 					mQueuedDecoders 		= {};
-	/// Lock used to protect access to \c mQueuedDecoders
+	/// Lock used to protect access to `mQueuedDecoders`
 	mutable SFB::UnfairLock			mQueueLock;
 
 	/// Dispatch queue used for decoding
@@ -318,20 +318,20 @@ private:
 
 	/// Ring buffer used to communicate decoding and render related events
 	SFB::RingBuffer					mEventRingBuffer;
-	/// Dispatch source processing events from \c mEventRingBuffer
+	/// Dispatch source processing events from `mEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
 
 	/// Dispatch group  used to track in-progress decoding and delegate messages
 	dispatch_group_t 				mDispatchGroup 			= nullptr;
 
-	/// Dispatch source deleting decoder state data with \c eMarkedForRemoval
+	/// Dispatch source deleting decoder state data with `eMarkedForRemoval`
 	dispatch_source_t				mCollector 				= nullptr;
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
-	/// Counter used for unique keys to \c dispatch_queue_set_specific
+	/// Counter used for unique keys to `dispatch_queue_set_specific`
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 public:
@@ -1083,19 +1083,19 @@ public:
 
 private:
 
-	/// Returns the decoder state in \c mActiveDecoders with the smallest sequence number that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
 	inline DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 	{
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
-	/// Returns the decoder state  in \c mActiveDecoders with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state  in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
 	inline DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	/// Returns the decoder state  in \c mActiveDecoders with sequence number equal to \c sequenceNumber that has not been marked for removal
+	/// Returns the decoder state  in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
 	inline DecoderState * GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);

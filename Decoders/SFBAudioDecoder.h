@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -60,79 +60,79 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns an initialized \c SFBAudioDecoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @return An initialized \c SFBAudioDecoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url NS_SWIFT_UNAVAILABLE("Use -initWithURL:error: instead");
-/// Returns an initialized \c SFBAudioDecoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioDecoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
-/// Returns an initialized \c SFBAudioDecoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param mimeType The MIME type of \c url or \c nil
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioDecoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter mimeType: The MIME type of `url` or `nil`
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url mimeType:(nullable NSString *)mimeType error:(NSError **)error;
 
-/// Returns an initialized \c SFBAudioDecoder object for the given input source or \c nil on failure
-/// @param inputSource The input source
-/// @return An initialized \c SFBAudioDecoder object for the specified input source, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
-/// Returns an initialized \c SFBAudioDecoder object for the given input source or \c nil on failure
-/// @param inputSource The input source
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioDecoder object for the specified input source, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource error:(NSError **)error;
-/// Returns an initialized \c SFBAudioDecoder object for the given input source or \c nil on failure
-/// @param inputSource The input source
-/// @param mimeType The MIME type of \c inputSource or \c nil
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioDecoder object for the specified input source, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - parameter mimeType: The MIME type of `inputSource` or `nil`
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
-/// Returns an initialized \c SFBAudioDecoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param decoderName The name of the decoder to use
-/// @return An initialized \c SFBAudioDecoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter decoderName: The name of the decoder to use
+/// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
-/// Returns an initialized \c SFBAudioDecoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param decoderName The name of the decoder to use
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioDecoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter decoderName: The name of the decoder to use
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error;
 
-/// Returns an initialized \c SFBAudioDecoder object for the given input source or \c nil on failure
-/// @param inputSource The input source
-/// @param decoderName The name of the decoder to use
-/// @return An initialized \c SFBAudioDecoder object for the specified input source, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - parameter decoderName: The name of the decoder to use
+/// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
-/// Returns an initialized \c SFBAudioDecoder object for the given input source or \c nil on failure
-/// @param inputSource The input source
-/// @param decoderName The name of the decoder to use
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioDecoder object for the specified input source, or \c nil on failure
+/// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - parameter decoderName: The name of the decoder to use
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Opens the decoder
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return \c YES on success, \c NO otherwise
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: `YES` on success, `NO` otherwise
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 /// Closes the decoder
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return \c YES on success, \c NO otherwise
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
 
 #pragma mark - Error Information
 
-/// The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses
+/// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
 extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
 
-/// Possible \c NSError error codes used by \c SFBAudioDecoder
+/// Possible `NSError` error codes used by `SFBAudioDecoder`
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	/// Internal decoder error
 	SFBAudioDecoderErrorCodeInternalError	= 0,

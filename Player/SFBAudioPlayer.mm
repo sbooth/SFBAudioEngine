@@ -36,19 +36,19 @@ enum eAudioPlayerFlags : unsigned int {
 @interface SFBAudioPlayer ()
 {
 @private
-	/// The underlying \c AVAudioEngine instance
+	/// The underlying `AVAudioEngine` instance
 	AVAudioEngine 			*_engine;
-	/// The dispatch queue used to access \c _engine
+	/// The dispatch queue used to access `_engine`
 	dispatch_queue_t		_engineQueue;
-	/// Cached value of \c _engine.isRunning
+	/// Cached value of `_engine`.isRunning
 	std::atomic_bool		_engineIsRunning;
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*_playerNode;
-	/// The lock used to protect access to \c _queuedDecoders
+	/// The lock used to protect access to `_queuedDecoders`
 	SFB::UnfairLock			_queueLock;
 	/// Decoders enqueued for non-gapless playback
 	DecoderQueue 			_queuedDecoders;
-	/// The lock used to protect access to \c _nowPlaying
+	/// The lock used to protect access to `_nowPlaying`
 	SFB::UnfairLock			_nowPlayingLock;
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 	_nowPlaying;

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -14,27 +14,27 @@ typedef NSString * SFBAudioPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioProper
 // Audio property dictionary keys
 /// The name of the audio format
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;
-/// The total number of audio frames (\c NSNumber)
+/// The total number of audio frames (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength;
-/// The number of channels (\c NSNumber)
+/// The number of channels (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount;
-/// The audio bit depth (\c NSNumber
+/// The audio bit depth (`NSNumber`
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth;
-/// The sample rate in Hz (\c NSNumber)
+/// The sample rate in Hz (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate;
-/// The duration in seconds (\c NSNumber)
+/// The duration in seconds (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration;
-/// The audio bitrate in KiB/sec (\c NSNumber)
+/// The audio bitrate in KiB/sec (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;
 
 /// Class providing information on basic audio properties
 NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopying>
 
-/// Returns an initialized an \c SFBAudioProperties object
+/// Returns an initialized an `SFBAudioProperties` object
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
-/// Returns an initialized an \c SFBAudioProperties object populated with values from \c dictionaryRepresentation
-/// @param dictionaryRepresentation A dictionary containing the desired values
+/// Returns an initialized an `SFBAudioProperties` object populated with values from `dictionaryRepresentation`
+/// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAudioPropertiesKey, id> *)dictionaryRepresentation NS_DESIGNATED_INITIALIZER;
 
 /// The name of the audio format
@@ -66,18 +66,18 @@ NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopyi
 #pragma mark - Dictionary-Like Interface
 
 /// Returns the property value for a key
-/// @param key The key for the desired property value
-/// @return The property value for \c key
+/// - parameter key: The key for the desired property value
+/// - returns: The property value for `key`
 - (nullable id)objectForKey:(SFBAudioPropertiesKey)key;
 
 /// Returns the property value for a key
-/// @param key The key for the desired property value
-/// @return The property value for \c key
+/// - parameter key: The key for the desired property value
+/// - returns: The property value for `key`
 - (nullable id)valueForKey:(SFBAudioPropertiesKey)key;
 
 /// Returns the property value for a key
-/// @param key The key for the desired property value
-/// @return The property value for \c key
+/// - parameter key: The key for the desired property value
+/// - returns: The property value for `key`
 - (nullable id)objectForKeyedSubscript:(SFBAudioPropertiesKey)key;
 
 @end
