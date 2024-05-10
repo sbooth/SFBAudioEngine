@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -58,79 +58,79 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns an initialized \c SFBAudioEncoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @return An initialized \c SFBAudioEncoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url NS_SWIFT_UNAVAILABLE("Use -initWithURL:error: instead");
-/// Returns an initialized \c SFBAudioEncoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioEncoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
-/// Returns an initialized \c SFBAudioEncoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param mimeType The MIME type of \c url or \c nil
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioEncoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter mimeType: The MIME type of `url` or `nil`
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url mimeType:(nullable NSString *)mimeType error:(NSError **)error;
 
-/// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
-/// @param outputSource The output source
-/// @return An initialized \c SFBAudioEncoder object for the specified output source, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
+/// - parameter outputSource: The output source
+/// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:error: instead");
-/// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
-/// @param outputSource The output source
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioEncoder object for the specified output source, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
+/// - parameter outputSource: The output source
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource error:(NSError **)error;
-/// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
-/// @param outputSource The output source
-/// @param mimeType The MIME type of \c outputSource or \c nil
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioEncoder object for the specified output source, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
+/// - parameter outputSource: The output source
+/// - parameter mimeType: The MIME type of `outputSource` or `nil`
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
-/// Returns an initialized \c SFBAudioEncoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param encoderName The name of the encoder to use
-/// @return An initialized \c SFBAudioEncoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter encoderName: The name of the encoder to use
+/// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoderName:error: instead");
-/// Returns an initialized \c SFBAudioEncoder object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param encoderName The name of the encoder to use
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioEncoder object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter encoderName: The name of the encoder to use
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error;
 
-/// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
-/// @param outputSource The output source
-/// @param encoderName The name of the encoder to use
-/// @return An initialized \c SFBAudioEncoder object for the specified output source, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
+/// - parameter outputSource: The output source
+/// - parameter encoderName: The name of the encoder to use
+/// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:encoderName:error: instead");
-/// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
-/// @param outputSource The output source
-/// @param encoderName The name of the encoder to use
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioEncoder object for the specified output source, or \c nil on failure
+/// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
+/// - parameter outputSource: The output source
+/// - parameter encoderName: The name of the encoder to use
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Opens the encoder
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return \c YES on success, \c NO otherwise
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: `YES` on success, `NO` otherwise
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 /// Closes the encoder
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return \c YES on success, \c NO otherwise
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
 
 #pragma mark - Error Information
 
-/// The \c NSErrorDomain used by \c SFBAudioEncoder and subclasses
+/// The `NSErrorDomain` used by `SFBAudioEncoder` and subclasses
 extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder.ErrorDomain);
 
-/// Possible \c NSError error codes used by \c SFBAudioEncoder
+/// Possible `NSError` error codes used by `SFBAudioEncoder`
 typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 	/// Internal or unspecified encoder error
 	SFBAudioEncoderErrorCodeInternalError	= 0,
@@ -142,14 +142,14 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 
 #pragma mark - FLAC Encoder Settings
 
-/// FLAC compression level (\c NSNumber from 1 (lowest) to 8 (highest))
+/// FLAC compression level (`NSNumber` from 1 (lowest) to 8 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
-/// Set to nonzero to verify FLAC encoding (\c NSNumber)
+/// Set to nonzero to verify FLAC encoding (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
 
 #pragma mark - Monkey's Audio Encoder Settings
 
-/// APE compression level (\c SFBAudioEncodingSettingsValueAPECompressionLevel)
+/// APE compression level (`SFBAudioEncodingSettingsValueAPECompressionLevel`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
 
 /// Constant type for APE compression levels
@@ -170,23 +170,23 @@ extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSe
 
 // Valid bitrates for MPEG 1 Layer III are 32 40 48 56 64 80 96 112 128 160 192 224 256 320
 
-/// MP3 encoding engine algorithm quality (\c NSNumber from 0 (best) to 9 (worst))
+/// MP3 encoding engine algorithm quality (`NSNumber` from 0 (best) to 9 (worst))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality;
-/// Bitrate for CBR encoding (\c NSNumber in kbps)
+/// Bitrate for CBR encoding (`NSNumber` in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3ConstantBitrate;
-/// Target bitrate for ABR encoding (\c NSNumber in kbps)
+/// Target bitrate for ABR encoding (`NSNumber` in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3AverageBitrate;
-/// Set to nonzero for VBR encoding (\c NSNumber)
+/// Set to nonzero for VBR encoding (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseVariableBitrate;
-/// Quality setting for VBR encoding (\c NSNumberfrom 0 (best) to < 10 (worst))
+/// Quality setting for VBR encoding (`NSNumberfrom` 0 (best) to < 10 (worst))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality;
-/// Minimum bitrate for VBR encoding (\c NSNumber in kbps)
+/// Minimum bitrate for VBR encoding (`NSNumber` in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate;
-/// Maximum bitrate for VBR encoding (\c NSNumber in kbps)
+/// Maximum bitrate for VBR encoding (`NSNumber` in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate;
-/// MP3 stereo mode (\c SFBAudioEncodingSettingsValueMP3StereoMode)
+/// MP3 stereo mode (`SFBAudioEncodingSettingsValueMP3StereoMode`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode;
-/// Set to nonzero to calculate replay gain (\c NSNumber)
+/// Set to nonzero to calculate replay gain (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain;
 
 /// Constant type for MP3 stereo modes
@@ -201,22 +201,22 @@ extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettings
 
 #pragma mark - Musepack Encoder Settings
 
-/// Musepack quality (\c NSNumber from 0.0 (worst) to 10.0 (best))
+/// Musepack quality (`NSNumber` from 0.0 (worst) to 10.0 (best))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality;
 
 #pragma mark - Opus Encoder Settings
 
-/// Set to nonzero to disable resampling (\c NSNumber)
+/// Set to nonzero to disable resampling (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusPreserveSampleRate;
-/// Opus complexity (\c NSNumber from 0 (fastest) to 10 (slowest))
+/// Opus complexity (`NSNumber` from 0 (fastest) to 10 (slowest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusComplexity;
-/// Opus bitrate (\c NSNumber from 6 to 256 in kbps)
+/// Opus bitrate (`NSNumber` from 6 to 256 in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrate;
-/// Opus bitrate mode (\c SFBAudioEncodingSettingsValueOpusBitrateMode)
+/// Opus bitrate mode (`SFBAudioEncodingSettingsValueOpusBitrateMode`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrateMode;
-/// Opus signal type (\c SFBAudioEncodingSettingsValueOpusSignalType)
+/// Opus signal type (`SFBAudioEncodingSettingsValueOpusSignalType`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusSignalType;
-/// Opus frame duration (\c SFBAudioEncodingSettingsValueOpusFrameDuration)
+/// Opus frame duration (`SFBAudioEncodingSettingsValueOpusFrameDuration`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration;
 
 /// Constant type for Opus bitrate modes
@@ -261,33 +261,33 @@ extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSett
 
 #pragma mark - Speex Encoder Settings
 
-/// Speex encoding mode (\c SFBAudioEncodingSettingsValueSpeexMode)
+/// Speex encoding mode (`SFBAudioEncodingSettingsValueSpeexMode`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode;
-/// Set to nonzero to target bitrate instead of quality (\c NSNumber)
+/// Set to nonzero to target bitrate instead of quality (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexTargetIsBitrate;
-/// Speex quality (\c NSNumber from 0 to 10)
+/// Speex quality (`NSNumber` from 0 to 10)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexQuality;
-/// Speex encoding complexity (\c NSNumber from 0 to 10)
+/// Speex encoding complexity (`NSNumber` from 0 to 10)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexComplexity;
-/// Speex bitrate (\c NSNumber in kbps)
+/// Speex bitrate (`NSNumber` in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexBitrate;
-/// Set to nonzero to encode at a variable bitrate (\c NSNumber)
+/// Set to nonzero to encode at a variable bitrate (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVBR;
-/// Speex VBR maximum bitrate (\c NSNumber in kbps)
+/// Speex VBR maximum bitrate (`NSNumber` in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate;
-/// Set to nonzero to enable voice activity detection (\c NSNumber)
+/// Set to nonzero to enable voice activity detection (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVAD;
-/// Set to nonzero to enable discontinuous transmission (\c NSNumber)
+/// Set to nonzero to enable discontinuous transmission (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableDTX;
-/// Set to nonzero to encode at an average bitrate (\c NSNumber)
+/// Set to nonzero to encode at an average bitrate (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableABR;
-/// Set to nonzero to denoise input (\c NSNumber)
+/// Set to nonzero to denoise input (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDenoiseInput;
-/// Set to nonzero to apply adaptive gain control (\c NSNumber)
+/// Set to nonzero to apply adaptive gain control (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableAGC;
-/// Set to nonzero to disable the built-in highpass filter (\c NSNumber)
+/// Set to nonzero to disable the built-in highpass filter (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter;
-/// The number of Speex frames per Ogg Packet (\c NSNumber from 1 to 10)
+/// The number of Speex frames per Ogg Packet (`NSNumber` from 1 to 10)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket;
 
 /// Constant type for Speex modes
@@ -302,20 +302,20 @@ extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValu
 
 #pragma mark - Vorbis Encoder Settings
 
-/// Set to nonzero to target bitrate instead of quality (\c NSNumber)
+/// Set to nonzero to target bitrate instead of quality (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate;
-/// Vorbis quality (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
+/// Vorbis quality (`NSNumber` from -0.1 (lowest) to 1.0 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisQuality;
-/// Vorbis nominal bitrate (\c NSNumber in kpbs)
+/// Vorbis nominal bitrate (`NSNumber` in kpbs)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisBitrate;
-/// Vorbis minimum bitrate (\c NSNumber)
+/// Vorbis minimum bitrate (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMinBitrate;
-/// Vorbis maximum bitrate (\c NSNumber)
+/// Vorbis maximum bitrate (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate;
 
 #pragma mark - WavPack Encoder Settings
 
-/// WavPack compression level (\c SFBAudioEncodingSettingsValueWavPackCompressionLevel)
+/// WavPack compression level (`SFBAudioEncodingSettingsValueWavPackCompressionLevel`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
 
 /// Constant type for WavPack  compression levels
@@ -330,35 +330,35 @@ extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodi
 
 #pragma mark - Core Audio Encoder Settings
 
-/// Core Audio file type ID (\c NSNumber representing \c AudioFileTypeID)
+/// Core Audio file type ID (`NSNumber` representing `AudioFileTypeID`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID;
-/// Core Audio format ID (\c NSNumber representing \c AudioFormatID)
+/// Core Audio format ID (`NSNumber` representing `AudioFormatID`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatID;
-/// Core Audio format flags (\c NSNumber representing \c AudioStreamBasicDescription.mFormatFlags)
+/// Core Audio format flags (`NSNumber` representing `AudioStreamBasicDescription`.mFormatFlags)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags;
-/// Core Audio bits per channel (\c NSNumber representing \c AudioStreamBasicDescription.mBitsPerChannel)
+/// Core Audio bits per channel (`NSNumber` representing `AudioStreamBasicDescription`.mBitsPerChannel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel;
-/// Core Audio audio converter configuration (\c NSDictionary keyed by \c NSNumber representing \c AudioConverterPropertyID with corresponding appropriately-wrapped value, typically \c NSNumber)
+/// Core Audio audio converter configuration (`NSDictionary` keyed by `NSNumber` representing `AudioConverterPropertyID` with corresponding appropriately-wrapped value, typically `NSNumber`)
 ///
 /// Currently supports:
-/// \c kAudioConverterSampleRateConverterComplexity
-/// \c kAudioConverterSampleRateConverterQuality
-/// \c kAudioConverterCodecQuality
-/// \c kAudioConverterEncodeBitRate
-/// \c kAudioCodecPropertyBitRateControlMode
-/// \c kAudioCodecPropertySoundQualityForVBR
-/// \c kAudioCodecPropertyBitRateForVBR
-/// \c kAudioConverterPropertyDithering (macOS only)
-/// \c kAudioConverterPropertyDitherBitDepth (macOS only)
+/// `kAudioConverterSampleRateConverterComplexity`
+/// `kAudioConverterSampleRateConverterQuality`
+/// `kAudioConverterCodecQuality`
+/// `kAudioConverterEncodeBitRate`
+/// `kAudioCodecPropertyBitRateControlMode`
+/// `kAudioCodecPropertySoundQualityForVBR`
+/// `kAudioCodecPropertyBitRateForVBR`
+/// `kAudioConverterPropertyDithering` (macOS only)
+/// `kAudioConverterPropertyDitherBitDepth` (macOS only)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
 
 #pragma mark - Libsndfile Encoder Settings
 
-/// Libsndfile major format (\c SFBAudioEncodingSettingsValueLibsndfileMajorFormat)
+/// Libsndfile major format (`SFBAudioEncodingSettingsValueLibsndfileMajorFormat`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat;
-/// Libsndfile subtype (\c SFBAudioEncodingSettingsValueLibsndfileSubtype)
+/// Libsndfile subtype (`SFBAudioEncodingSettingsValueLibsndfileSubtype`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSubtype;
-/// Libsndfile output file endian-ness (\c SFBAudioEncodingSettingsValueLibsndfileFileEndian)
+/// Libsndfile output file endian-ness (`SFBAudioEncodingSettingsValueLibsndfileFileEndian`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian;
 
 /// Constant type for Libsndfile major formats

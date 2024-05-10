@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -30,20 +30,20 @@ extern os_log_t gSFBAudioEncoderLog;
 #pragma mark - Subclass Registration and Lookup
 
 @interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
-/// Register a subclass with the default priority (\c 0)
+/// Register a subclass with the default priority (`0`)
 + (void)registerSubclass:(Class)subclass;
 /// Register a subclass with the specified priority
 + (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 @interface SFBAudioEncoder (SFBAudioEncoderSubclassLookup)
-/// Returns the appropriate \c SFBAudioEncoder subclass for encoding \c url
+/// Returns the appropriate `SFBAudioEncoder` subclass for encoding `url`
 + (nullable Class)subclassForURL:(NSURL *)url;
-/// Returns the appropriate \c SFBAudioEncoder subclass for encoding paths with \c extension
+/// Returns the appropriate `SFBAudioEncoder` subclass for encoding paths with `extension`
 + (nullable Class)subclassForPathExtension:(NSString *)extension;
-/// Returns the appropriate \c SFBAudioEncoder subclass for encoding data of \c mimeType
+/// Returns the appropriate `SFBAudioEncoder` subclass for encoding data of `mimeType`
 + (nullable Class)subclassForMIMEType:(NSString *)mimeType;
-/// Returns the appropriate \c SFBAudioEncoder subclass corresponding to \c encoderName
+/// Returns the appropriate `SFBAudioEncoder` subclass corresponding to `encoderName`
 + (nullable Class)subclassForEncoderName:(SFBAudioEncoderName)encoderName;
 @end
 

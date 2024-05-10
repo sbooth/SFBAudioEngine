@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2012 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,13 +8,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// \c SFBAttachedPicture Dictionary Keys
+/// `SFBAttachedPicture` dictionary keys
 typedef NSString * SFBAttachedPictureKey NS_TYPED_ENUM NS_SWIFT_NAME(AttachedPicture.Key);
-/// Raw image data (\c NSData)
+/// Raw image data (`NSData`)
 extern SFBAttachedPictureKey const SFBAttachedPictureKeyImageData;
-/// Picture type (\c NSNumber)
+/// Picture type (`NSNumber`)
 extern SFBAttachedPictureKey const SFBAttachedPictureKeyType;
-/// Picture description (\c NSString)
+/// Picture description (`NSString`)
 extern SFBAttachedPictureKey const SFBAttachedPictureKeyDescription;
 
 /// The function or content of a picture
@@ -71,30 +71,30 @@ NS_SWIFT_NAME(AttachedPicture) @interface SFBAttachedPicture : NSObject <NSCopyi
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns an initialized \c SFBAttachedPicture object
-/// @param imageData The raw image data
+/// Returns an initialized `SFBAttachedPicture` object
+/// - parameter imageData: The raw image data
 - (instancetype)initWithImageData:(NSData *)imageData;
 
-/// Returns an initialized \c SFBAttachedPicture object
-/// @param imageData The raw image data
-/// @param type The artwork type
+/// Returns an initialized `SFBAttachedPicture` object
+/// - parameter imageData: The raw image data
+/// - parameter type: The artwork type
 - (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type;
 
-/// Returns an initialized \c SFBAttachedPicture object
-/// @param imageData The raw image data
-/// @param type The artwork type
-/// @param description The image description
+/// Returns an initialized `SFBAttachedPicture` object
+/// - parameter imageData: The raw image data
+/// - parameter type: The artwork type
+/// - parameter description: The image description
 - (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type description:(nullable NSString *)description NS_DESIGNATED_INITIALIZER;
 
-/// Returns an initialized \c SFBAttachedPicture object or \c nil on error
+/// Returns an initialized `SFBAttachedPicture` object or `nil` on error
 ///
-/// Returns \c nil if \c dictionaryRepresentation does not contain image data
-/// @param dictionaryRepresentation A dictionary containing the desired values
+/// Returns `nil` if `dictionaryRepresentation` does not contain image data
+/// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAttachedPictureKey, id> *)dictionaryRepresentation;
 
 
 /// Copy the values contained in this object to a dictionary
-/// @return A dictionary containing this object's artwork information
+/// - returns: A dictionary containing this object's artwork information
 @property (nonatomic, readonly) NSDictionary<SFBAttachedPictureKey, id> *dictionaryRepresentation;
 
 

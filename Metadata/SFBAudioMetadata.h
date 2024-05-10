@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Metadata kind bitmask values used in copyMetadataOfKind:from: and removeMetadataOfKind:
+/// Metadata kind bitmask values used in `copyMetadataOfKind:from: and removeMetadataOfKind:`
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	/// Basic metadata
 	SFBAudioMetadataKindBasic			= (1u << 0),
@@ -28,93 +28,93 @@ typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 typedef NSString * SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata.Key);
 
 // Basic metadata dictionary keys
-/// Title (\c NSString)
+/// Title (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitle;
-/// Artist (\c NSString)
+/// Artist (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtist;
-/// Album title (\c NSString)
+/// Album title (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;
-/// Album artist (\c NSString)
+/// Album artist (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist;
-/// Composer (\c NSString)
+/// Composer (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposer;
-/// Genre (\c NSString)
+/// Genre (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;
-/// Release date (\c NSString)
+/// Release date (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate;
-/// Compilation flag (\c NSNumber)
+/// Compilation flag (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyCompilation;
-/// Track number (\c NSNumber)
+/// Track number (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTrackNumber;
-/// Track total (\c NSNumber)
+/// Track total (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTrackTotal;
-/// Disc number (\c NSNumber)
+/// Disc number (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyDiscNumber;
-/// Disc total (\c NSNumber)
+/// Disc total (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyDiscTotal;
-/// Lyrics (\c NSString)
+/// Lyrics (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyLyrics;
-/// Beats per minute (BPM) (\c NSNumber)
+/// Beats per minute (BPM) (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyBPM;
-/// Rating (\c NSNumber)
+/// Rating (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyRating;
-/// Comment (\c NSString)
+/// Comment (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyComment;
-/// International Standard Recording Code (ISRC) (\c NSString)
+/// International Standard Recording Code (ISRC) (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyISRC;
-/// Media Catalog Number (MCN) (\c NSString)
+/// Media Catalog Number (MCN) (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyMCN;
-/// MusicBrainz release ID (\c NSString)
+/// MusicBrainz release ID (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzReleaseID;
-/// MusicBrainz recording ID (\c NSString)
+/// MusicBrainz recording ID (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID;
 
 // Sorting dictionary keys
-/// Title sort order (\c NSString)
+/// Title sort order (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder;
-/// Artist sort order (\c NSString)
+/// Artist sort order (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder;
-/// Album title sort order (\c NSString)
+/// Album title sort order (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;
-/// Album artist sort order (\c NSString)
+/// Album artist sort order (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder;
-/// Composer sort order (\c NSString)
+/// Composer sort order (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposerSortOrder;
-/// Genre sort order (\c NSString)
+/// Genre sort order (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenreSortOrder;
 
 // Grouping dictionary keys
-/// Grouping (\c NSString)
+/// Grouping (`NSString`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyGrouping;
 
 // Additional metadata dictionary keys
-/// Additional metadata (\c NSDictionary)
+/// Additional metadata (`NSDictionary`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAdditionalMetadata;
 
 // Replay gain dictionary keys
-/// Replay gain reference loudness (\c NSNumber)
+/// Replay gain reference loudness (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainReferenceLoudness;
-/// Replay gain track gain (\c NSNumber)
+/// Replay gain track gain (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackGain;
-/// Replay gain track peak (\c NSNumber)
+/// Replay gain track peak (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackPeak;
-/// Replay gain album gain (\c NSNumber)
+/// Replay gain album gain (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumGain;
-/// Replay gain album peak (\c NSNumber)
+/// Replay gain album peak (`NSNumber`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumPeak;
 
 // Attached Picture dictionary keys
-/// Attached pictures (\c NSArray of \c NSDictionary)
+/// Attached pictures (`NSArray` of `NSDictionary`)
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures;
 
 /// Class supporting commonly-used audio metadata and attached pictures
 NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 
-/// Returns an initialized empty \c SFBAudioMetadata object
+/// Returns an initialized empty `SFBAudioMetadata` object
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
-/// Returns an initialized \c SFBAudioMetadata object populated with values from \c dictionaryRepresentation
-/// @param dictionaryRepresentation A dictionary containing the desired values
+/// Returns an initialized `SFBAudioMetadata` object populated with values from `dictionaryRepresentation`
+/// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAudioMetadataKey, id> *)dictionaryRepresentation;
 
 #pragma mark - Basic Metadata
@@ -228,31 +228,31 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 
 #pragma mark - Metadata Utilities
 
-/// Copies all metadata from \c metadata
-/// @note Does not copy album artwork
-/// @param metadata A \c Metadata object containing the metadata to copy
-/// @see -copyMetadataOfKind:from:
-/// @see -copyAttachedPictures:
+/// Copies all metadata from `metadata`
+/// - note: Does not copy album artwork
+/// - parameter metadata: A `Metadata` object containing the metadata to copy
+/// - seealso: `-copyMetadataOfKind:from:`
+/// - seealso: `-copyAttachedPictures:`
 - (void)copyMetadataFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(from:));
 
-/// Copies the values contained in the specified metadata kinds from \c metadata
-/// @note Does not copy album artwork
-/// @param metadata A \c Metadata object containing the metadata to copy
-/// @param kind A bitmask specifying the kinds of metadata to copy
-/// @see -copyMetadataFrom:
-/// @see -copyAttachedPictures
+/// Copies the values contained in the specified metadata kinds from `metadata`
+/// - note: Does not copy album artwork
+/// - parameter metadata: A `Metadata` object containing the metadata to copy
+/// - parameter kind: A bitmask specifying the kinds of metadata to copy
+/// - seealso: `-copyMetadataFrom:`
+/// - seealso: `-copyAttachedPictures`
 - (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(ofKind:from:));
 
-/// Sets the values contained in specified metadata kinds to \c nullptr
-/// @param kind A bitmask specifying the kinds of metadata to remove
-/// @see -removeAllMetadata
-/// @see -removeAllAttachedPictures
+/// Sets the values contained in specified metadata kinds to `nullptr`
+/// - parameter kind: A bitmask specifying the kinds of metadata to remove
+/// - seealso: `-removeAllMetadata`
+/// - seealso: `-removeAllAttachedPictures`
 - (void)removeMetadataOfKind:(SFBAudioMetadataKind)kind NS_SWIFT_NAME(removeMetadata(ofKind:));
 
-/// Sets all metadata to \c nullptr
-/// @note Leaves album art intact
-/// @see -removeMetadataOfKind:
-/// @see -removeAllAttachedPictures
+/// Sets all metadata to `nullptr`
+/// - note: Leaves album art intact
+/// - seealso: `-removeMetadataOfKind:`
+/// - seealso: `-removeAllAttachedPictures`
 - (void)removeAllMetadata;
 
 #pragma mark - Attached Pictures
@@ -262,11 +262,11 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 
 #pragma mark - Attached Picture Utilities
 
-/// Copies album artwork from \c metadata
-/// @note This clears existing album artwork
-/// @note Does not copy metadata
-/// @param metadata A \c SFBAudioMetadata object containing the artwork to copy
-/// @see -copyMetadataFrom:
+/// Copies album artwork from `metadata`
+/// - note: This clears existing album artwork
+/// - note: Does not copy metadata
+/// - parameter metadata: A `SFBAudioMetadata` object containing the artwork to copy
+/// - seealso: `-copyMetadataFrom:`
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyAttachedPicturesFrom(_:));
 
 /// Get all attached pictures of the specified type
@@ -287,43 +287,43 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 #pragma mark - External Representation
 
 /// Copy the values contained in this object to a dictionary
-/// @return A dictionary containing this object's metadata and attached pictures
+/// - returns: A dictionary containing this object's metadata and attached pictures
 @property (nonatomic, readonly) NSDictionary<SFBAudioMetadataKey, id> *dictionaryRepresentation;
 
 /// Sets the metadata and attached pictures contained in this object from a dictionary
-/// @param dictionary A dictionary containing the desired values
+/// - parameter dictionary: A dictionary containing the desired values
 - (void)setFromDictionaryRepresentation:(NSDictionary<SFBAudioMetadataKey, id> *)dictionary NS_SWIFT_NAME(setFrom(_:));
 
 #pragma mark - Dictionary-Like Interface
 
 /// Returns the metadata value for a key
-/// @param key The key for the desired metadata value
-/// @return The metadata value for \c key
+/// - parameter key: The key for the desired metadata value
+/// - returns: The metadata value for `key`
 - (nullable id)objectForKey:(SFBAudioMetadataKey)key;
 /// Sets the metadata value for a key
-/// @param obj The metadata value to set
-/// @param key The key for the metadata value
+/// - parameter obj: The metadata value to set
+/// - parameter key: The key for the metadata value
 - (void)setObject:(id)obj forKey:(SFBAudioMetadataKey)key;
 /// Removes the metadata value for a key
-/// @param key The key for the metadata value to remove
+/// - parameter key: The key for the metadata value to remove
 - (void)removeObjectForKey:(SFBAudioMetadataKey)key;
 
 /// Returns the metadata value for a key
-/// @param key The key for the desired metadata value
-/// @return The metadata value for \c key
+/// - parameter key: The key for the desired metadata value
+/// - returns: The metadata value for `key`
 - (nullable id)valueForKey:(SFBAudioMetadataKey)key;
 /// Sets or removes a metadata value
-/// @param obj The metadata value to set or \c nil to remove
-/// @param key The key for the metadata value
+/// - parameter obj: The metadata value to set or `nil` to remove
+/// - parameter key: The key for the metadata value
 - (void)setValue:(nullable id)obj forKey:(SFBAudioMetadataKey)key;
 
 /// Returns the metadata value for a key
-/// @param key The key for the desired metadata value
-/// @return The metadata value for \c key
+/// - parameter key: The key for the desired metadata value
+/// - returns: The metadata value for `key`
 - (nullable id)objectForKeyedSubscript:(SFBAudioMetadataKey)key;
 /// Sets or removes a metadata value
-/// @param obj The metadata value to set or \c nil to remove
-/// @param key The key for the metadata value
+/// - parameter obj: The metadata value to set or `nil` to remove
+/// - parameter key: The key for the metadata value
 - (void)setObject:(nullable id)obj forKeyedSubscript:(SFBAudioMetadataKey)key;
 
 @end

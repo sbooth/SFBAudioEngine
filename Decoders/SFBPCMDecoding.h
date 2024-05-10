@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,27 +13,27 @@ NS_SWIFT_NAME(PCMDecoding) @protocol SFBPCMDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
 
-/// Returns the decoder's current frame position or \c SFBUnknownFramePosition if unknown
+/// Returns the decoder's current frame position or `SFBUnknownFramePosition` if unknown
 @property (nonatomic, readonly) AVAudioFramePosition framePosition NS_SWIFT_NAME(position);
 
-/// Returns the decoder's length in frames or \c SFBUnknownFrameLength if unknown
+/// Returns the decoder's length in frames or `SFBUnknownFrameLength` if unknown
 @property (nonatomic, readonly) AVAudioFramePosition frameLength NS_SWIFT_NAME(length);
 
 #pragma mark - Decoding
 
 /// Decodes audio
-/// @param buffer A buffer to receive the decoded audio
-/// @param frameLength The desired number of audio frames
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES on success, \c NO otherwise
+/// - parameter buffer: A buffer to receive the decoded audio
+/// - parameter frameLength: The desired number of audio frames
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` on success, `NO` otherwise
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
 #pragma mark - Seeking
 
 /// Seeks to the specified frame
-/// @param frame The desired frame
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES on success, \c NO otherwise
+/// - parameter frame: The desired frame
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` on success, `NO` otherwise
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error NS_SWIFT_NAME(seek(to:));
 
 @end

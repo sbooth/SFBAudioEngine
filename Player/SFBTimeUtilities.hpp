@@ -9,10 +9,10 @@
 
 namespace SFB {
 
-/// Converts host time \c t to nanoseconds and returns the result
+/// Converts host time `t` to nanoseconds and returns the result
 uint64_t ConvertHostTimeToNanoseconds(uint64_t t) noexcept;
 
-/// Converts \c ns nanoseconds to host time and returns the result
+/// Converts `ns` nanoseconds to host time and returns the result
 uint64_t ConvertNanosecondsToHostTime(uint64_t ns) noexcept;
 
 /// Returns the current host time
@@ -23,13 +23,13 @@ inline uint64_t GetCurrentHostTime() noexcept
 }
 
 
-/// Converts \c s seconds to host time and returns the result
+/// Converts `s` seconds to host time and returns the result
 inline uint64_t ConvertSecondsToHostTime(double s) noexcept
 {
 	return ConvertNanosecondsToHostTime(static_cast<uint64_t>(s * 1e9));
 }
 
-/// Returns the absolute delta between \c t1 and \c t2 host time values in nanoseconds
+/// Returns the absolute delta between `t1` and `t2` host time values in nanoseconds
 inline uint64_t ConvertAbsoluteHostTimeDeltaToNanoseconds(uint64_t t1, uint64_t t2) noexcept
 {
 	return ConvertHostTimeToNanoseconds(t2 > t1 ? t2 - t1 : t1 - t2);
