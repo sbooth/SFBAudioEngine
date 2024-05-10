@@ -11,9 +11,10 @@
 #import <FLAC/metadata.h>
 #import <FLAC/stream_decoder.h>
 
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+
 #import "SFBFLACDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";

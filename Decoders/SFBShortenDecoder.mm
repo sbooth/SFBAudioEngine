@@ -9,11 +9,11 @@
 
 #import <os/log.h>
 
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
 #import <SFBByteStream.hpp>
 
 #import "SFBShortenDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";

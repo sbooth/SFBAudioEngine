@@ -11,9 +11,10 @@
 
 #import <Accelerate/Accelerate.h>
 
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+
 #import "SFBDSDPCMDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
