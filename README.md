@@ -86,7 +86,7 @@ macOS 10.15+ or iOS 14.0+
 
 ## Building SFBAudioEngine
 
-1. `git clone https://github.com/sbooth/SFBAudioEngine.git --recurse-submodules`
+1. `git clone https://github.com/sbooth/SFBAudioEngine.git`
 2. `cd SFBAudioEngine`
 3. `make -C XCFrameworks`
 
