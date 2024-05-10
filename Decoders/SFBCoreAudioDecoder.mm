@@ -193,7 +193,7 @@ SInt64 get_size_callback(void *inClientData)
 	AudioFileID audioFile;
 	auto result = AudioFileOpenWithCallbacks((__bridge void *)self, read_callback, nullptr, get_size_callback, nullptr, 0, &audioFile);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
@@ -211,7 +211,7 @@ SInt64 get_size_callback(void *inClientData)
 	ExtAudioFileRef extAudioFile;
 	result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
@@ -231,7 +231,7 @@ SInt64 get_size_callback(void *inClientData)
 	UInt32 dataSize = sizeof(format);
 	result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
@@ -244,7 +244,7 @@ SInt64 get_size_callback(void *inClientData)
 		AudioChannelLayout *layout = (AudioChannelLayout *)malloc(dataSize);
 		result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
 		if(result != noErr) {
-			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 			free(layout);
 
@@ -269,7 +269,7 @@ SInt64 get_size_callback(void *inClientData)
 		}
 	}
 	else
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
 
@@ -330,7 +330,7 @@ SInt64 get_size_callback(void *inClientData)
 
 	result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
@@ -367,7 +367,7 @@ SInt64 get_size_callback(void *inClientData)
 	SInt64 currentFrame;
 	auto result = ExtAudioFileTell(_eaf, &currentFrame);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return SFBUnknownFramePosition;
 	}
 	return currentFrame;
@@ -379,7 +379,7 @@ SInt64 get_size_callback(void *inClientData)
 	UInt32 dataSize = sizeof(frameLength);
 	auto result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return SFBUnknownFrameLength;
 	}
 	return frameLength;
@@ -402,7 +402,7 @@ SInt64 get_size_callback(void *inClientData)
 
 	auto result = ExtAudioFileRead(_eaf, &frameLength, buffer.mutableAudioBufferList);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		buffer.frameLength = 0;
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -419,7 +419,7 @@ SInt64 get_size_callback(void *inClientData)
 	NSParameterAssert(frame >= 0);
 	auto result = ExtAudioFileSeek(_eaf, frame);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
