@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#pragma once
-
 #import <Foundation/Foundation.h>
 
 /// Project version number for SFBAudioEngine.

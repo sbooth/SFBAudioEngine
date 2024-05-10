@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2011 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
-
-#pragma once
 
 /*! @file SFBCStringForOSType.h @brief OSType to const char [] conversion */
 
