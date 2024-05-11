@@ -20,14 +20,14 @@ typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
 NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 
 /// Returns an initialized `SFBInputSource` object for the given URL or `nil` on failure
-/// - note: Only file URLs are supported
+/// - important: Only file URLs are supported
 /// - parameter url: The URL
 /// - parameter error: An optional pointer to a `NSError` to receive error information
 /// - returns: An initialized `SFBInputSource` object for the specified URL, or `nil` on failure
 + (nullable instancetype)inputSourceForURL:(NSURL *)url error:(NSError **)error;
 
 /// Returns an initialized `SFBInputSource` object for the given URL or `nil` on failure
-/// - note: Only file URLs are supported
+/// - important: Only file URLs are supported
 /// - parameter url: The URL
 /// - parameter flags: Optional flags affecting how `url` is handled
 /// - parameter error: An optional pointer to a `NSError` to receive error information
@@ -46,7 +46,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 + (nullable instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length;
 
 /// Returns an initialized `SFBInputSource` for the given byte buffer or `nil` on failure
-/// - note: If `freeWhenDone` is `YES`, `bytes` must point to a buffer allocated with `malloc`
+/// - important: If `freeWhenDone` is `YES`, `bytes` must point to a buffer allocated with `malloc`
 /// - parameter bytes: A pointer to the desired byte buffer
 /// - parameter length: The number of bytes in `bytes`
 /// - parameter freeWhenDone: If `YES` the returned object takes ownership of `bytes` and frees it on deallocation
