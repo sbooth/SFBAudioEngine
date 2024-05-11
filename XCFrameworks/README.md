@@ -11,7 +11,7 @@ See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more in
 | XCFramework | Package | Version |
 | --- | --- | --- |
 | FLAC.xcframework | [FLAC](https://xiph.org/flac/) | [1.4.3](https://github.com/xiph/flac/releases/tag/1.4.3) |
-| MAC.xcframework | [Monkey's Audio SDK](https://monkeysaudio.com) | 10.25 |
+| MAC.xcframework | [Monkey's Audio SDK](https://monkeysaudio.com) | 10.71 |
 | dumb.xcframework | [dumb](https://github.com/kode54/dumb) | [396caa4](https://github.com/kode54/dumb/tree/396caa4d31859045ccb5ef943fd430ca4026cce8) |
 | lame.xcframework | [LAME](https://lame.sourceforge.io) | 3.100 |
 | mpc.xcframework | [Musepack](https://www.musepack.net) | r475 |
