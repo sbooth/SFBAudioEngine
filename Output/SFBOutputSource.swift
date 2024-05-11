@@ -67,8 +67,8 @@ extension OutputSource {
 	public func write<T: BinaryInteger>(_ i: T) throws {
 		let size = MemoryLayout<T>.size
 
-		let bytesWritten = try i.words.withContiguousStorageIfAvailable { buffer in
-			return try write(buffer.baseAddress!, length: size)
+		let bytesWritten = try withUnsafePointer(to: i) {
+			return  try write($0, length: size)
 		}
 
 		if bytesWritten != size {
