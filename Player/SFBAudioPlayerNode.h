@@ -74,12 +74,12 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: An initialized `SFBAudioPlayerNode` object or `nil` if memory or resource allocation failed
 - (instancetype)initWithSampleRate:(double)sampleRate channels:(AVAudioChannelCount)channels;
 /// Returns an initialized `SFBAudioPlayerNode` object
-/// - note: `format` must be standard
+/// - important: `format` must be standard
 /// - parameter format: The format supplied by the render block
 /// - returns: An initialized `SFBAudioPlayerNode` object or `nil` if memory or resource allocation failed
 - (instancetype)initWithFormat:(AVAudioFormat *)format;
 /// Returns an initialized `SFBAudioPlayerNode` object
-/// - note: `format` must be standard
+/// - important: `format` must be standard
 /// - parameter format: The format supplied by the render block
 /// - parameter ringBufferSize: The desired minimum ring buffer size, in frames.
 /// - returns: An initialized `SFBAudioPlayerNode` object or `nil` if memory or resource allocation failed

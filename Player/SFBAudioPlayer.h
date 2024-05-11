@@ -264,7 +264,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - AVAudioEngine Access
 
 /// Peforms an operation on the underlying `AVAudioEngine`
-/// - note: Graph modifications may only be made between `playerNode` and `engine`.mainMixerNode
+/// - important: Graph modifications may only be made between `playerNode` and `engine`.mainMixerNode
 /// - parameter block: A block performing operations on the underlying `AVAudioEngine`
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
