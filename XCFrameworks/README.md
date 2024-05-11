@@ -15,7 +15,7 @@ See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more in
 | dumb.xcframework | [dumb](https://github.com/kode54/dumb) | [396caa4](https://github.com/kode54/dumb/tree/396caa4d31859045ccb5ef943fd430ca4026cce8) |
 | lame.xcframework | [LAME](https://lame.sourceforge.io) | 3.100 |
 | mpc.xcframework | [Musepack](https://www.musepack.net) | r475 |
-| mpg123.xcframework | [mpg123](https://www.mpg123.de) | 1.32.3 |
+| mpg123.xcframework | [mpg123](https://www.mpg123.de) | 1.32.6 |
 | ogg.xcframework | [libogg](https://www.xiph.org/ogg/) | [1.3.5](https://gitlab.xiph.org/xiph/ogg/-/releases/v1.3.5) |
 | opus.xcframework | [libopus](https://opus-codec.org) | [1.4](https://www.opus-codec.org/release/stable/2023/04/20/libopus-1_4.html) |
 | | opusfile | [9d718345](https://gitlab.xiph.org/xiph/opusfile/-/tree/9d718345ce03b2fad5d7d28e0bcd1cc69ab2b166) |
