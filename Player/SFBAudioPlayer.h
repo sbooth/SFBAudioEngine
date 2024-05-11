@@ -97,7 +97,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
-/// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for `decoder`.processingFormat if necessary
+/// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for `decoder.processingFormat` if necessary
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -264,7 +264,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - AVAudioEngine Access
 
 /// Peforms an operation on the underlying `AVAudioEngine`
-/// - note: Graph modifications may only be made between `playerNode` and `engine`.mainMixerNode
+/// - important: Graph modifications may only be made between `playerNode` and `engine`.mainMixerNode
 /// - parameter block: A block performing operations on the underlying `AVAudioEngine`
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph

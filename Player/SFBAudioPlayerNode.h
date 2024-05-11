@@ -74,12 +74,12 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: An initialized `SFBAudioPlayerNode` object or `nil` if memory or resource allocation failed
 - (instancetype)initWithSampleRate:(double)sampleRate channels:(AVAudioChannelCount)channels;
 /// Returns an initialized `SFBAudioPlayerNode` object
-/// - note: `format` must be standard
+/// - important: `format` must be standard
 /// - parameter format: The format supplied by the render block
 /// - returns: An initialized `SFBAudioPlayerNode` object or `nil` if memory or resource allocation failed
 - (instancetype)initWithFormat:(AVAudioFormat *)format;
 /// Returns an initialized `SFBAudioPlayerNode` object
-/// - note: `format` must be standard
+/// - important: `format` must be standard
 /// - parameter format: The format supplied by the render block
 /// - parameter ringBufferSize: The desired minimum ring buffer size, in frames.
 /// - returns: An initialized `SFBAudioPlayerNode` object or `nil` if memory or resource allocation failed
@@ -100,20 +100,20 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 #pragma mark - Queue Management
 
 /// Cancels the current decoder, clears any queued decoders, and creates and enqueues a decoder for subsequent playback
-/// - note: This is equivalent to `-reset` followed by `-enqueueURL`:error:
+/// - note: This is equivalent to `-reset` followed by `-enqueueURL:error:`
 /// - parameter url: The URL to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)resetAndEnqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(resetAndEnqueue(_:));
 /// Cancels the current decoder, clears any queued decoders, and enqueues a decoder for subsequent playback
-/// - note: This is equivalent to `-reset` followed by `-enqueueDecoder`:error:
+/// - note: This is equivalent to `-reset` followed by `-enqueueDecoder:error:`
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)resetAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(resetAndEnqueue(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
-/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to `-enqueueDecoder`:error:
+/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to `-enqueueDecoder:error:`
 /// - parameter url: The URL to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
