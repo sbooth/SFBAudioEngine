@@ -26,4 +26,4 @@ See [AudioXCFrameworks](https://github.com/sbooth/AudioXCFrameworks) for more in
 | taglib.xcframework | [TagLib](https://taglib.org) | [2.0](https://github.com/taglib/taglib/releases/tag/v2.0) |
 | tta-cpp.xcframework | [tta++](https://sourceforge.net/projects/tta/) | 2.3 |
 | vorbis.xcframework | [libvorbis](https://www.xiph.org/vorbis/) | [1.3.7](https://gitlab.xiph.org/xiph/vorbis/-/releases/v1.3.7) |
-| wavpack.xcframework | [WavPack](https://www.wavpack.com/index.html) | [5.6.0](https://github.com/dbry/WavPack/releases/tag/5.6.0) |
+| wavpack.xcframework | [WavPack](https://www.wavpack.com/index.html) | [5.7.0](https://github.com/dbry/WavPack/releases/tag/5.7.0) |
