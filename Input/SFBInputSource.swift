@@ -93,5 +93,4 @@ extension InputSource {
 		let ui64: UInt64 = try read()
 		return CFSwapInt64HostToLittle(ui64)
 	}
-
 }

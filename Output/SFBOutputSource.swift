@@ -117,5 +117,4 @@ extension OutputSource {
 	public func writeLittleEndian(_ ui64: UInt64) throws {
 		try write(CFSwapInt64HostToLittle(ui64))
 	}
-
 }
