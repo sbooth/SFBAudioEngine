@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -68,7 +68,7 @@ extension OutputSource {
 		let size = MemoryLayout<T>.size
 
 		let bytesWritten = try withUnsafePointer(to: i) {
-			return  try write($0, length: size)
+			return try write($0, length: size)
 		}
 
 		if bytesWritten != size {
