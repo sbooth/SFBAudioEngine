@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -39,12 +39,10 @@ extension InputSource {
 	/// - throws: An `NSError` object if an error occurs
 	public func read<T: BinaryInteger>() throws -> T {
 		var i: T = 0
-		var bytesRead = 0
-
 		let size = MemoryLayout<T>.size
 
-		try withUnsafePointer(to: &i) {
-			bytesRead = try read(UnsafeMutablePointer(mutating: $0), length: size)
+		let bytesRead = try withUnsafeMutablePointer(to: &i) {
+			return try read($0, length: size)
 		}
 
 		if bytesRead != size {
@@ -95,5 +93,4 @@ extension InputSource {
 		let ui64: UInt64 = try read()
 		return CFSwapInt64HostToLittle(ui64)
 	}
-
 }
