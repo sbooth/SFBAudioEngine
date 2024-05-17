@@ -241,7 +241,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 		}
 
 		auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
-		AVAudioFrameCount framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
+		auto framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
 
 		// EOS
 		if(framesRead == 0)
