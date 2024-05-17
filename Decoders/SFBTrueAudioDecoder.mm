@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <algorithm>
 #import <memory>
 
 #import <os/log.h>
@@ -226,29 +227,30 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	if(frameLength == 0)
 		return YES;
 
-	AVAudioFrameCount framesRead = 0;
-	bool eos = false;
-
 	try {
-		while(_framesToSkip && !eos) {
-			if(_framesToSkip >= frameLength) {
-				framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength));
-				_framesToSkip -= framesRead;
-			}
-			else {
-				framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), _framesToSkip));
-				_framesToSkip = 0;
-			}
+		while(_framesToSkip > 0) {
+			auto framesToSkip = std::min(_framesToSkip, frameLength);
+			auto bytesToSkip = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
+			auto framesSkipped = _decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
 
-			if(framesRead == 0)
-				eos = true;
+			// EOS reached finishing seek
+			if(framesSkipped == 0)
+				return YES;
+
+			_framesToSkip -= static_cast<TTAuint32>(framesSkipped);
 		}
 
-		if(!eos) {
-			framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength));
-			if(framesRead == 0)
-				eos = true;
-		}
+		auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
+		AVAudioFrameCount framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
+
+		// EOS
+		if(framesRead == 0)
+			return YES;
+
+		buffer.frameLength = framesRead;
+		_framePosition += framesRead;
+
+		return YES;
 	}
 	catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
@@ -256,14 +258,6 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
-
-	if(eos)
-		return YES;
-
-	buffer.frameLength = framesRead;
-	_framePosition += framesRead;
-
-	return YES;
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
