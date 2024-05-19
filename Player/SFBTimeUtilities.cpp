@@ -26,7 +26,7 @@ auto MachTimebase() noexcept
 /// Mach timebase information
 const auto kMachTimebase = MachTimebase();
 
-}
+} // namespace
 
 uint64_t SFB::ConvertHostTimeToNanoseconds(uint64_t t) noexcept
 {

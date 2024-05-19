@@ -22,7 +22,6 @@ inline uint64_t GetCurrentHostTime() noexcept
 //	return clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
 }
 
-
 /// Converts `s` seconds to host time and returns the result
 inline uint64_t ConvertSecondsToHostTime(double s) noexcept
 {
