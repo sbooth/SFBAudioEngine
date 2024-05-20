@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import CSFBAudioEngine
 
 extension OutputSource {
 	/// Reads bytes from the input
