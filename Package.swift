@@ -23,6 +23,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/CVorbis", from: "1.3.7"),
 		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "10.71.0"),
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
+		.package(url: "https://github.com/sbooth/CWavPack", from: "5.7.0"),
 	],
 	targets: [
 		.target(
@@ -33,6 +34,7 @@ let package = Package(
 				.product(name: "vorbis", package: "CVorbis"),
 				.product(name: "MAC", package: "CXXMonkeysAudio"),
 				.product(name: "dumb", package: "CDUMB"),
+				.product(name: "wavpack", package: "CWavPack"),
 			],
 			cSettings: [
 				.headerSearchPath("include/SFBAudioEngine"),
