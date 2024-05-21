@@ -21,6 +21,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.1.0"),
 		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.1.0"),
 		.package(url: "https://github.com/sbooth/CVorbis", from: "1.3.7"),
+		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "10.71.0"),
 	],
 	targets: [
 		.target(
@@ -28,7 +29,8 @@ let package = Package(
 			dependencies: [
 				.product(name: "CXXAudioUtilities", package: "CXXAudioUtilities"),
 				.product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
-				.product(name: "vorbis", package: "CVorbis")
+				.product(name: "vorbis", package: "CVorbis"),
+				.product(name: "MAC", package: "CXXMonkeysAudio"),
 			],
 			cSettings: [
 				.headerSearchPath("include/SFBAudioEngine"),
