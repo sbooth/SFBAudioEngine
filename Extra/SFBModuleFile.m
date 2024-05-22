@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 @import os.log;
 
-#include <dumb/dumb.h>
+@import dumb;
 
 #import "SFBModuleFile.h"
 
@@ -61,7 +61,7 @@
 		propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Scream Tracker 3 Module";
 	}
 	else if([pathExtension isEqualToString:@"mod"]) {
-		duh = dumb_read_mod_quick(df);
+		duh = dumb_read_mod_quick(df, 0);
 		propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"ProTracker Module";
 	}
 
@@ -81,7 +81,7 @@
 	propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(duh_get_length(duh));
 	propertiesDictionary[SFBAudioPropertiesKeySampleRate] = @(DUMB_SAMPLE_RATE);
 	propertiesDictionary[SFBAudioPropertiesKeyChannelCount] = @(DUMB_CHANNELS);
-	propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(DUMB_BIT_DEPTH);
+	propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(DUMB_BIT_DEPTH);
 	propertiesDictionary[SFBAudioPropertiesKeyDuration] = @(duh_get_length(duh) / (float)DUMB_SAMPLE_RATE);
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];

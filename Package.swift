@@ -26,6 +26,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/CWavPack", from: "5.7.0"),
 		.package(url: "https://github.com/sbooth/CSpeex", from: "1.2.1"),
 		.package(url: "https://github.com/sbooth/CFLAC", from: "1.4.3"),
+		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.0.1"),
 	],
 	targets: [
 		.target(
@@ -39,6 +40,7 @@ let package = Package(
 				.product(name: "wavpack", package: "CWavPack"),
 				.product(name: "speex", package: "CSpeex"),
 				.product(name: "FLAC", package: "CFLAC"),
+				.product(name: "taglib", package: "CXXTagLib"),
 			],
 			cSettings: [
 				.headerSearchPath("include/SFBAudioEngine"),
