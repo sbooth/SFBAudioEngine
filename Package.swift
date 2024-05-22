@@ -24,6 +24,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "10.71.0"),
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
 		.package(url: "https://github.com/sbooth/CWavPack", from: "5.7.0"),
+		.package(url: "https://github.com/sbooth/CSpeex", from: "1.2.1"),
 	],
 	targets: [
 		.target(
@@ -35,6 +36,7 @@ let package = Package(
 				.product(name: "MAC", package: "CXXMonkeysAudio"),
 				.product(name: "dumb", package: "CDUMB"),
 				.product(name: "wavpack", package: "CWavPack"),
+				.product(name: "speex", package: "CSpeex"),
 			],
 			cSettings: [
 				.headerSearchPath("include/SFBAudioEngine"),
