@@ -84,6 +84,7 @@ let package = Package(
 				.headerSearchPath("Conversion"),
 			],
 			linkerSettings: [
+				.linkedFramework("CoreServices"),
 				.linkedFramework("Foundation"),
 				.linkedFramework("AVFAudio"),
 			]),
