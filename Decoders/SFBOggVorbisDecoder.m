@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -137,7 +137,7 @@ static long tell_func_callback(void *datasource)
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 
 		return NO;
 	}
@@ -150,7 +150,7 @@ static long tell_func_callback(void *datasource)
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 
 		return NO;
 	}
@@ -261,6 +261,8 @@ static long tell_func_callback(void *datasource)
 
 		if(framesRead < 0) {
 			os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis decoding error");
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 

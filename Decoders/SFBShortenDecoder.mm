@@ -1,19 +1,19 @@
 //
-// Copyright (c) 2020 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <os/log.h>
-
 #import <algorithm>
 #import <vector>
 
+#import <os/log.h>
+
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+#import <SFBByteStream.hpp>
+
 #import "SFBShortenDecoder.h"
 
-#import "SFBByteStream.hpp"
-
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
@@ -88,7 +88,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndia
 
 namespace {
 
-/// Returns a two-dimensional \c rows x \c cols array using one allocation from \c malloc
+/// Returns a two-dimensional `rows` x `cols` array using one allocation from `malloc`
 template <typename T>
 T ** AllocateContiguous2DArray(size_t rows, size_t cols)
 {
@@ -105,7 +105,7 @@ constexpr const T& clip(const T& n, const T& lower, const T& upper) {
 	return std::max(lower, std::min(n, upper));
 }
 
-///// Returns @c v clamped to the interval @c [lo,hi]
+///// Returns `v` clamped to the interval `[lo,hi]`
 //template<typename T>
 //constexpr const T& clamp(const T& v, const T& lo, const T& hi)
 //{
@@ -128,8 +128,8 @@ public:
 		0x1fffffff,	0x3fffffff,	0x7fffffff,	0xffffffff
 	};
 
-	/// Creates a new \c VariableLengthInput object with an internal buffer of the specified size
-	/// @warning Sizes other than \c 512 will break seeking
+	/// Creates a new `VariableLengthInput` object with an internal buffer of the specified size
+	/// - warning: Sizes other than `512` will break seeking
 	VariableLengthInput(size_t size = 512)
 	: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
 	{
@@ -272,20 +272,20 @@ public:
 private:
 	/// Input callback
 	InputBlock mInputBlock;
-	/// Size of \c mByteBuffer in bytes
+	/// Size of `mByteBuffer` in bytes
 	size_t mSize;
 	/// Byte buffer
 	uint8_t *mByteBuffer;
-	/// Current position in \c mByteBuffer
+	/// Current position in `mByteBuffer`
 	uint8_t *mByteBufferPosition;
-	/// Bytes available in \c mByteBuffer
+	/// Bytes available in `mByteBuffer`
 	size_t mBytesAvailable;
 	/// Bit buffer
 	uint32_t mBitBuffer;
-	/// Bits available in \c mBuffer
+	/// Bits available in `mBuffer`
 	size_t mBitsAvailable;
 
-	/// Reads a single \c uint32_t from the byte buffer, refilling if necessary
+	/// Reads a single `uint32_t` from the byte buffer, refilling if necessary
 	bool word_get(uint32_t& ui32)
 	{
 		if(mBytesAvailable < 4 && !Refill())
@@ -381,7 +381,7 @@ SeekTableEntry ParseSeekTableEntry(const void *buf)
 	return entry;
 }
 
-/// Locates the most suitable seek table entry for \c frame
+/// Locates the most suitable seek table entry for `frame`
 std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::const_iterator begin, std::vector<SeekTableEntry>::const_iterator end, AVAudioFramePosition frame)
 {
 	auto it = std::upper_bound(begin, end, frame, [](AVAudioFramePosition value, const SeekTableEntry& entry) {
@@ -549,7 +549,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		SFBAudioDecodingPropertiesKeyShortenBigEndian: _bigEndian ? @YES : @NO,
 	};
 
-	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:(AVAudioFrameCount)_blocksize];
+	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
 	// Allocate decoding buffers
 	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(_blocksize + _nwrap));
@@ -720,7 +720,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	_framePosition = entry->mFrameNumber;
 	_frameBuffer.frameLength = 0;
 
-	AVAudioFrameCount framesToSkip = (AVAudioFrameCount)(frame - entry->mFrameNumber);
+	AVAudioFrameCount framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->mFrameNumber);
 	AVAudioFrameCount framesSkipped = 0;
 
 	for(;;) {
@@ -780,7 +780,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	__weak SFBInputSource *inputSource = self->_inputSource;
 	_input.SetInputCallback(^bool(void *buf, size_t len, size_t &read) {
 		NSInteger bytesRead;
-		if(![inputSource readBytes:buf length:(NSInteger)len bytesRead:&bytesRead error:nil])
+		if(![inputSource readBytes:buf length:static_cast<NSInteger>(len) bytesRead:&bytesRead error:nil])
 			return false;
 		read = static_cast<size_t>(bytesRead);
 		return true;
@@ -1205,8 +1205,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 				/* find mean offset : N.B. this code duplicated */
 				if(_nmean == 0)
 					coffset = _offset[chan][0];
-				else
-				{
+				else {
 					int32_t sum = (_version < 2) ? 0 : _nmean / 2;
 					for(auto i = 0; i < _nmean; i++) {
 						sum += _offset[chan][i];
@@ -1217,8 +1216,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 						coffset = ROUNDEDSHIFTDOWN(sum / _nmean, _bitshift);
 				}
 
-				switch(cmd)
-				{
+				switch(cmd) {
 					case FN_ZERO:
 						for(auto i = 0; i < _blocksize; ++i) {
 							cbuffer[i] = 0;

@@ -348,6 +348,10 @@ static int can_seek_callback(void *id)
 		if(samplesRead == 0)
 			break;
 
+		// FIXME: What is the best way to detect a decoding error here?
+		// The documentation states:
+		// The actual number of samples unpacked is returned, which should be equal to the number requested unless the end of file is encountered or an error occurs. If all samples have been unpacked then 0 will be returned.
+
 		// The samples returned are handled differently based on the file's mode
 		int mode = WavpackGetMode(_wpc);
 //		int qmode = WavpackGetQualifyMode(_wpc);

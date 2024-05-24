@@ -8,6 +8,8 @@
 
 #import <CoreServices/CoreServices.h>
 
+#import <SFBCFWrapper.hpp>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 
@@ -17,8 +19,6 @@
 #pragma clang diagnostic pop
 
 #import "SFBFLACFile.h"
-
-#import "SFBCFWrapper.hpp"
 
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"

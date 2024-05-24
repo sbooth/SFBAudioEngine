@@ -1,10 +1,8 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
-
-#pragma once
 
 #import <CoreAudioTypes/CoreAudioTypes.h>
 
@@ -31,7 +29,7 @@ CF_ENUM(AudioFormatID) {
 	/// Ogg Vorbis
 	kSFBAudioFormatVorbis 			CF_SWIFT_NAME(vorbis) 			= 'VORB',
 	/// WavPack
-	kSFBAudioFormatWavPack 			CF_SWIFT_NAME(wavPack) 			= 'WV  '
+	kSFBAudioFormatWavPack 			CF_SWIFT_NAME(wavPack) 			= 'WV  ',
 };
 
 #pragma mark - DSD Constants
@@ -57,7 +55,7 @@ CF_ENUM(uint32_t) {
 	/// Quad-rate DSD (DSD256) based on 48,000 Hz
 	kSFBSampleRateDSD256Variant 	CF_SWIFT_NAME(dsd256SampleRateVariant) 		= 12288000,
 	/// Octuple-rate DSD (DSD512) based on 48,000 Hz
-	kSFBSampleRateDSD512Variant 	CF_SWIFT_NAME(dsd512SampleRateVariant) 		= 24576000
+	kSFBSampleRateDSD512Variant 	CF_SWIFT_NAME(dsd512SampleRateVariant) 		= 24576000,
 };
 
 // A DSD packet in this context is 8 one-bit samples (a single channel byte) grouped into
@@ -90,7 +88,7 @@ NS_ENUM(AVAudioFramePosition) {
 	/// Value representing an invalid or unknown audio packet position
 	SFBUnknownPacketPosition 	NS_SWIFT_NAME(unknownPacketPosition) 	= -1,
 	/// Value representing an invalid or unknown audio packet count
-	SFBUnknownPacketCount 		NS_SWIFT_NAME(unknownPacketCount) 		= -1
+	SFBUnknownPacketCount 		NS_SWIFT_NAME(unknownPacketCount) 		= -1,
 };
 
 #endif /* __OBJC__ */

@@ -1,18 +1,18 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <os/log.h>
-
 #import <memory>
+
+#import <os/log.h>
 
 #import <opus/opusenc.h>
 
-#import "SFBOggOpusEncoder.h"
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
+#import "SFBOggOpusEncoder.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggOpus = @"org.sbooth.AudioEngine.Encoder.OggOpus";
 

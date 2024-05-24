@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,9 +10,9 @@
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import speex;
 
-#import "SFBOggSpeexEncoder.h"
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
+#import "SFBOggSpeexEncoder.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex = @"org.sbooth.AudioEngine.Encoder.OggSpeex";
 

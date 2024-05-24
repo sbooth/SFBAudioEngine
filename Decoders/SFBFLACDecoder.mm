@@ -1,19 +1,20 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <os/log.h>
-
 #import <memory>
+
+#import <os/log.h>
 
 #import <FLAC/metadata.h>
 #import <FLAC/stream_decoder.h>
 
+#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+
 #import "SFBFLACDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
@@ -402,8 +403,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 			break;
 
 		// Grab the next frame
-		if(!FLAC__stream_decoder_process_single(_flac.get()))
+		if(!FLAC__stream_decoder_process_single(_flac.get())) {
 			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			return NO;
+		}
 	}
 
 	_framePosition += framesProcessed;

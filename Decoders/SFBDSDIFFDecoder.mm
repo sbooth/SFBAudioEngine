@@ -1,19 +1,20 @@
 //
-// Copyright (c) 2014 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
-
-#import <os/log.h>
 
 #import <map>
 #import <memory>
 #import <string>
 #import <vector>
 
+#import <os/log.h>
+
+#import <AVAudioChannelLayout+SFBChannelLabels.h>
+
 #import "SFBDSDIFFDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -856,8 +857,8 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 
 		NSInteger bytesRead;
 		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
-			os_log_debug(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
-			break;
+			os_log_error(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
+			return NO;
 		}
 
 		// Decoding is finished

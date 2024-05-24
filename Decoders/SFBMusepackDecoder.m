@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -287,7 +287,9 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 
 		if(mpc_demux_decode(_demux, &frame)) {
 			os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
-			break;
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			return NO;
 		}
 
 		// End of input

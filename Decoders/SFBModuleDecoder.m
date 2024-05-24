@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -193,13 +193,11 @@ static dumb_off_t get_size_callback(void *f)
 
 		long samplesSize = framesToCopy;
 		long framesCopied = duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
-		if(framesCopied != framesToCopy)
-			os_log_error(gSFBAudioDecoderLog, "duh_render_int() returned short frame count: requested %d, got %ld", framesToCopy, framesCopied);
 
 		framesProcessed += framesCopied;
 
 		// All requested frames were read or EOS reached
-		if(framesProcessed == frameLength || framesCopied == 0 || duh_sigrenderer_get_position(_dsr) > _frameLength)
+		if(framesProcessed == frameLength || framesCopied == 0)
 			break;
 	}
 
@@ -242,7 +240,7 @@ static dumb_off_t get_size_callback(void *f)
 	if(!_df) {
 		os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -286,6 +284,11 @@ static dumb_off_t get_size_callback(void *f)
 
 		return NO;
 	}
+
+	// Stop producing samples on module end
+	DUMB_IT_SIGRENDERER *itsr = duh_get_it_sigrenderer(_dsr);
+	dumb_it_set_loop_callback(itsr, &dumb_it_callback_terminate, NULL);
+	dumb_it_set_xm_speed_zero_callback(itsr, &dumb_it_callback_terminate, NULL);
 
 	_samples = allocate_sample_buffer(DUMB_CHANNELS, DUMB_BUF_FRAMES);
 	if(!_samples) {

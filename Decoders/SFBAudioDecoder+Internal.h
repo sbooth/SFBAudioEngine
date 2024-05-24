@@ -28,20 +28,20 @@ extern os_log_t gSFBAudioDecoderLog;
 #pragma mark - Subclass Registration and Lookup
 
 @interface SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
-/// Register a subclass with the default priority (\c 0)
+/// Register a subclass with the default priority (`0`)
 + (void)registerSubclass:(Class)subclass;
 /// Register a subclass with the specified priority
 + (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 @interface SFBAudioDecoder (SFBAudioDecoderSubclassLookup)
-/// Returns the appropriate \c SFBAudioDecoder subclass for decoding \c url
+/// Returns the appropriate `SFBAudioDecoder` subclass for decoding `url`
 + (nullable Class)subclassForURL:(NSURL *)url;
-/// Returns the appropriate \c SFBAudioDecoder subclass for decoding paths with \c extension
+/// Returns the appropriate `SFBAudioDecoder` subclass for decoding paths with `extension`
 + (nullable Class)subclassForPathExtension:(NSString *)extension;
-/// Returns the appropriate \c SFBAudioDecoder subclass for decoding data of \c mimeType
+/// Returns the appropriate `SFBAudioDecoder` subclass for decoding data of `mimeType`
 + (nullable Class)subclassForMIMEType:(NSString *)mimeType;
-/// Returns the appropriate \c SFBAudioDecoder subclass corresponding to \c decoderName
+/// Returns the appropriate `SFBAudioDecoder` subclass corresponding to `decoderName`
 + (nullable Class)subclassForDecoderName:(SFBAudioDecoderName)decoderName;
 @end
 

@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2011 - 2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <os/log.h>
-
 #import <memory>
+
+#import <os/log.h>
 
 #define PLATFORM_APPLE
 
@@ -361,10 +361,12 @@ private:
 	int64_t blocksRead = 0;
 	if(_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
 		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
-	buffer.frameLength = (AVAudioFrameCount)blocksRead;
+	buffer.frameLength = static_cast<AVAudioFrameCount>(blocksRead);
 
 	return YES;
 }

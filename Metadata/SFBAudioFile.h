@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -70,49 +70,49 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
-/// Reads metadata from \c sourceURL and writes it to \c destinationURL
-/// @param sourceURL The source URL
-/// @param destinationURL The destination URL
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES on success, \c NO if metadata couldn't be read or written
+/// Reads metadata from `sourceURL` and writes it to `destinationURL`
+/// - parameter sourceURL: The source URL
+/// - parameter destinationURL: The destination URL
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` on success, `NO` if metadata couldn't be read or written
 + (BOOL)copyMetadataFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error;
 
-/// Returns an initialized \c SFBAudioFile object for the specified URL populated with audio properties and metadata or \c nil on failure
-/// @param url The URL
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return An \c SFBAudioFile object or \c nil on failure
+/// Returns an initialized `SFBAudioFile` object for the specified URL populated with audio properties and metadata or `nil` on failure
+/// - parameter url: The URL
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An `SFBAudioFile` object or `nil` on failure
 + (nullable instancetype)audioFileWithURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(init(readingPropertiesAndMetadataFrom:));
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns an initialized \c SFBAudioFile object for the given URL or \c nil on failure
-/// @note Does not read audio properties or metadata
-/// @param url The URL
+/// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
+/// - note: Does not read audio properties or metadata
+/// - parameter url: The URL
 - (nullable instancetype)initWithURL:(NSURL *)url NS_SWIFT_UNAVAILABLE("Use -initWithURL:error: instead");
-/// Returns an initialized \c SFBAudioFile object for the given URL or \c nil on failure
-/// @note Does not read audio properties or metadata
-/// @param url The URL
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioFile object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
+/// - note: Does not read audio properties or metadata
+/// - parameter url: The URL
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioFile` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
-/// Returns an initialized \c SFBAudioFile object for the given URL or \c nil on failure
-/// @param url The URL
-/// @param mimeType The MIME type of \c url or \c nil
-/// @param error An optional pointer to a \c NSError to receive error information
-/// @return An initialized \c SFBAudioFile object for the specified URL, or \c nil on failure
+/// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter mimeType: The MIME type of `url` or `nil`
+/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - returns: An initialized `SFBAudioFile` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
-/// Returns an initialized \c SFBAudioFile object for the specified URL
-/// @note Does not read audio properties or metadata
-/// @param url The URL
-/// @param formatName The name of the format to use
+/// Returns an initialized `SFBAudioFile` object for the specified URL
+/// - note: Does not read audio properties or metadata
+/// - parameter url: The URL
+/// - parameter formatName: The name of the format to use
 - (nullable instancetype)initWithURL:(NSURL *)url formatName:(SFBAudioFileFormatName)formatName NS_SWIFT_UNAVAILABLE("Use -initWithURL:formatName:error: instead");
-/// Returns an initialized \c SFBAudioFile object for the specified URL
-/// @note Does not read audio properties or metadata
-/// @param url The URL
-/// @param formatName The name of the format to use
-/// @param error An optional pointer to a \c NSError to receive error information
+/// Returns an initialized `SFBAudioFile` object for the specified URL
+/// - note: Does not read audio properties or metadata
+/// - parameter url: The URL
+/// - parameter formatName: The name of the format to use
+/// - parameter error: An optional pointer to a `NSError` to receive error information
 - (nullable instancetype)initWithURL:(NSURL *)url formatName:(SFBAudioFileFormatName)formatName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// The URL of the file
@@ -125,23 +125,23 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 @property (nonatomic) SFBAudioMetadata *metadata;
 
 /// Reads audio properties and metadata
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES if successful, \c NO otherwise
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` if successful, `NO` otherwise
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error NS_SWIFT_NAME(readPropertiesAndMetadata());
 
 /// Writes metadata
-/// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES if successful, \c NO otherwise
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` if successful, `NO` otherwise
 - (BOOL)writeMetadataReturningError:(NSError **)error NS_SWIFT_NAME(writeMetadata());
 
 @end
 
 #pragma mark - Error Information
 
-/// The \c NSErrorDomain used by \c SFBAudioFile and subclasses
+/// The `NSErrorDomain` used by `SFBAudioFile` and subclasses
 extern NSErrorDomain const SFBAudioFileErrorDomain NS_SWIFT_NAME(AudioFile.ErrorDomain);
 
-/// Possible \c NSError error codes used by \c SFBAudioFile
+/// Possible `NSError` error codes used by `SFBAudioFile`
 typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 	/// Internal or unspecified error
 	SFBAudioFileErrorCodeInternalError		= 0,

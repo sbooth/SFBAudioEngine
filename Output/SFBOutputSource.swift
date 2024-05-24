@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -67,8 +67,9 @@ extension OutputSource {
 	public func write<T: BinaryInteger>(_ i: T) throws {
 		let size = MemoryLayout<T>.size
 
-		var tmp = i
-		let bytesWritten = try write(&tmp, length: size)
+		let bytesWritten = try withUnsafePointer(to: i) {
+			return try write($0, length: size)
+		}
 
 		if bytesWritten != size {
 			throw NSError(domain: NSPOSIXErrorDomain, code: Int(EIO), userInfo: nil)
@@ -116,5 +117,4 @@ extension OutputSource {
 	public func writeLittleEndian(_ ui64: UInt64) throws {
 		try write(CFSwapInt64HostToLittle(ui64))
 	}
-
 }
