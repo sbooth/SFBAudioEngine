@@ -40,11 +40,11 @@ let package = Package(
 
 		// LGPL bits
 		.package(url: "https://github.com/sbooth/lame-binary-xcframework", from: "0.1.0"),
+		// Technically only the musepack *encoder* is LGPL'd but for now the decoder and encoder are packaged together
 		.package(url: "https://github.com/sbooth/mpc-binary-xcframework", from: "0.1.0"),
 		.package(url: "https://github.com/sbooth/mpg123-binary-xcframework", from: "0.1.0"),
 		// sndfile-binary-xcframework requires ogg-binary-xcframework, flac-binary-xcframework, opus-binary-xcframework, and vorbis-binary-xcframework
 		.package(url: "https://github.com/sbooth/sndfile-binary-xcframework", from: "0.1.0"),
-		// Technically only the TTA *encoder* is LGPL'd but for now the decoder and encoder are packaged together
 		.package(url: "https://github.com/sbooth/tta-cpp-binary-xcframework", from: "0.1.0"),
 	],
 	targets: [
