@@ -73,8 +73,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## [Monkey's Audio SDK](https://monkeysaudio.com/developers.html)
 
 ```
-Monkey's Audio License Agreement (3 clause BSD)
-
 Copyright © 2000-2024 by Matthew T. Ashland.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
