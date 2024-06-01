@@ -1,6 +1,6 @@
 # SFBAudioEngine
 
-SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and iOS. SFBAudioEngine supports:
+SFBAudioEngine is a powerhouse of audio functionality for both macOS and iOS. SFBAudioEngine supports:
 
 * [Audio decoding](#decoding)
 * [Audio playback](#playback)
@@ -84,31 +84,16 @@ try AudioConverter.convert(inputURL, using: encoder)
 
 macOS 10.15+ or iOS 14.0+
 
-## Building SFBAudioEngine
+## Installation
 
-1. `git clone https://github.com/sbooth/SFBAudioEngine.git`
-2. `cd SFBAudioEngine`
-3. `make -C XCFrameworks`
+### Swift Package Manager
 
-The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
+Add a package dependency to https://github.com/sbooth/SFBAudioEngine in Xcode.
 
-The included `Makefile` may also be used to create the build products:
+### Manual or Custom Build
 
-| Target | `make` Command |
-| --- | --- |
-| macOS Framework | `make build/macOS.xcarchive` |
-| macOS Catalyst Framework | `make build/macOS-Catalyst.xcarchive` |
-| iOS Framework | `make build/iOS.xcarchive` |
-| iOS Simulator Framework | `make build/iOS-Simulator.xcarchive` |
-| XCFramework | `make` |
-
-### macOS Framework Notes
-
-When compiling macOS targets against SFBAudioEngine it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by SFBAudioEngine are contained within `SFBAudioEngine.framework`.
-
-### iOS Framework Notes
-
-When compiling iOS targets against SFBAudioEngine it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by SFBAudioEngine as well since iOS does not support umbrella frameworks.
+1. Clone the [SFBAudioEngine](https://github.com/sbooth/SFBAudioEngine) repository.
+2. `swift build`.
 
 ## Decoding
 
@@ -152,21 +137,17 @@ Two versions of SimplePlayer, one for macOS and one for iOS, are provided to ill
 
 ### macOS
 
-![Image of an audio player window](SimplePlayer-macOS/screenshot.png)
-
-[SimplePlayer](SimplePlayer-macOS/) for macOS is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](SimplePlayer-macOS/PlayerWindowController.swift).
+[SimplePlayer for macOS](https://github.com/sbooth/SimplePlayer-macOS) is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](https://github.com/sbooth/SimplePlayer-macOS/SimplePlayer-macOS/PlayerWindowController.swift).
 
 ### iOS
 
-![Image of audio file playback progress](SimplePlayer-iOS/screenshot.png)
-
-[SimplePlayer](SimplePlayer-iOS/) for iOS is written in Swift using SwiftUI and supports playback of a single item selected from a list.
+[SimplePlayer for iOS](https://github.com/sbooth/SimplePlayer-iOS) is written in Swift using SwiftUI and supports playback of a single item selected from a list.
 
 ## License
 
 SFBAudioEngine is released under the [MIT License](https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt).
 
-The open-source projects providing support for the various audio formats are subject to their own licenses that are compatible with the MIT license when used with SFBAudioEngine's default build configuration. For information on the specific licenses for each project see the README in the project's folder in [XCFrameworks](https://github.com/sbooth/AudioXCFrameworks/).
+The open-source projects providing support for the various audio formats are subject to their own licenses that are compatible with the MIT license when used with SFBAudioEngine's default build configuration.
 
 ### LGPL Notes
 
