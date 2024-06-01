@@ -12,6 +12,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// A key in an audio decoder's properties dictionary
+typedef NSString * SFBAudioDecodingPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecodingPropertiesKey);
+/// A value in an audio decoder's properties dictionary
+typedef id SFBAudioDecodingPropertiesValue NS_SWIFT_NAME(AudioDecodingPropertiesValue);
+
 /// Protocol defining the interface for audio decoders
 NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
@@ -30,6 +35,10 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 /// `YES` if decoding allows the original signal to be perfectly reconstructed
 @property (nonatomic, readonly) BOOL decodingIsLossless;
+
+/// Returns a dictionary containing decoder-specific properties
+/// - note: Properties are read when the decoder is opened
+@property (nonatomic, readonly) NSDictionary<SFBAudioDecodingPropertiesKey, SFBAudioDecodingPropertiesValue> *properties;
 
 #pragma mark - Setup and Teardown
 

@@ -17,6 +17,12 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameTrueAudio = @"org.sbooth.AudioEngine.Decoder.TrueAudio";
 
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat = @"format";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioNumberChannels = @"nch";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioBitsPerSample = @"bps";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSampleRate = @"sps";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples = @"samples";
+
 namespace {
 
 struct TTACallbacks : TTA_io_callback
@@ -186,6 +192,15 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	sourceStreamDescription.mBitsPerChannel		= streamInfo.bps;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyTrueAudioFormat: @(streamInfo.format),
+		SFBAudioDecodingPropertiesKeyTrueAudioNumberChannels: @(streamInfo.nch),
+		SFBAudioDecodingPropertiesKeyTrueAudioBitsPerSample: @(streamInfo.bps),
+		SFBAudioDecodingPropertiesKeyTrueAudioSampleRate: @(streamInfo.sps),
+		SFBAudioDecodingPropertiesKeyTrueAudioSamples: @(streamInfo.samples),
+	};
 
 	return YES;
 }

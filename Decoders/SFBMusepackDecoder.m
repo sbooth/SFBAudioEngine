@@ -18,6 +18,35 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
 
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency = @"sample_freq";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackChannels = @"channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackStreamVersion = @"stream_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBitrate = @"bitrate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAverageBitrate = @"average_bitrate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMaximumBandIndex = @"max_band";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMidSideStereo = @"ms";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeystreamInfoMusepackFastSeek = @"fast_seek";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBlockPower = @"block_pwr";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitleGain = @"gain_title";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumGain = @"gain_album";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumPeak = @"peak_album";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitlePeak = @"peak_title";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackIsTrueGapless = @"is_true_gapless";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSamples = @"samples";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBeginningSilence = @"beg_silence";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoderVersion = @"encoder_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoder = @"encoder";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackPNS = @"pns";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfile = @"profile";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfileName = @"profile_name";
+
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackHeaderPosition = @"header_position";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffset = @"tag_offset";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength = @"total_file_length";
+
 static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
 {
 	NSCParameterAssert(p_reader != NULL);
@@ -160,6 +189,38 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	sourceStreamDescription.mFramesPerPacket	= (1 << streaminfo.block_pwr);
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyMusepackSampleFrequency: @(streaminfo.sample_freq),
+		SFBAudioDecodingPropertiesKeyMusepackChannels: @(streaminfo.channels),
+		SFBAudioDecodingPropertiesKeyMusepackStreamVersion: @(streaminfo.stream_version),
+		SFBAudioDecodingPropertiesKeyMusepackBitrate: @(streaminfo.bitrate),
+		SFBAudioDecodingPropertiesKeyMusepackAverageBitrate: @(streaminfo.average_bitrate),
+		SFBAudioDecodingPropertiesKeyMusepackMaximumBandIndex: @(streaminfo.max_band),
+		SFBAudioDecodingPropertiesKeyMusepackMidSideStereo: streaminfo.ms ? (@YES) : (@NO),
+		SFBAudioDecodingPropertiesKeystreamInfoMusepackFastSeek: streaminfo.fast_seek ? (@YES) : (@NO),
+		SFBAudioDecodingPropertiesKeyMusepackBlockPower: @(streaminfo.block_pwr),
+
+		SFBAudioDecodingPropertiesKeyMusepackTitleGain: @(streaminfo.gain_title),
+		SFBAudioDecodingPropertiesKeyMusepackAlbumGain: @(streaminfo.gain_album),
+		SFBAudioDecodingPropertiesKeyMusepackAlbumPeak: @(streaminfo.peak_album),
+		SFBAudioDecodingPropertiesKeyMusepackTitlePeak: @(streaminfo.peak_title),
+
+		SFBAudioDecodingPropertiesKeyMusepackIsTrueGapless: streaminfo.is_true_gapless ? (@YES) : (@NO),
+		SFBAudioDecodingPropertiesKeyMusepackSamples: @(streaminfo.samples),
+		SFBAudioDecodingPropertiesKeyMusepackBeginningSilence: @(streaminfo.beg_silence),
+
+		SFBAudioDecodingPropertiesKeyMusepackEncoderVersion: @(streaminfo.encoder_version),
+		SFBAudioDecodingPropertiesKeyMusepackEncoder: @(streaminfo.encoder),
+		SFBAudioDecodingPropertiesKeyMusepackPNS: @(streaminfo.pns),
+		SFBAudioDecodingPropertiesKeyMusepackProfile: @(streaminfo.profile),
+		SFBAudioDecodingPropertiesKeyMusepackProfileName: @(streaminfo.profile_name),
+
+		SFBAudioDecodingPropertiesKeyMusepackHeaderPosition: @(streaminfo.header_position),
+		SFBAudioDecodingPropertiesKeyMusepackTagOffset: @(streaminfo.tag_offset),
+		SFBAudioDecodingPropertiesKeyMusepackTotalFileLength: @(streaminfo.total_file_length),
+	};
 
 	_buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:MPC_FRAME_LENGTH];
 	_buffer.frameLength = 0;

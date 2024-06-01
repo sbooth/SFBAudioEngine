@@ -142,4 +142,255 @@ typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	SFBAudioDecoderErrorCodeInvalidFormat	= 2
 } NS_SWIFT_NAME(AudioDecoder.ErrorCode);
 
+#pragma mark - FLAC Decoder Properties
+
+/// FLAC minimum block size (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize;
+/// FLAC maximum block size (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize;
+/// FLAC minimum frame size (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize;
+/// FLAC maximum frame size (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize;
+/// FLAC sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACSampleRate;
+/// FLAC channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACChannels;
+/// FLAC bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACBitsPerSample;
+/// FLAC total samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTotalSamples;
+/// FLAC MD5 sum (\c NSData)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum;
+
+#pragma mark - Monkey's Audio Decoder Properties
+
+/// Monkey's Audio file version * 1000 (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion;
+/// Monkey's Audio compression level (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel;
+/// Monkey's Audio format flags (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFormatFlags;
+/// Monkey's Audio sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate;
+/// Monkey's Audio bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBitsPerSample;
+/// Monkey's Audio bytes per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBytesPerSample;
+/// Monkey's Audio channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioChannels;
+/// Monkey's Audio block alignment (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlockAlignment;
+/// Monkey's Audio number of blocks in a frame (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlocksPerFrame;
+/// Monkey's Audio blocks in the final frame (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFinalFrameBlocks;
+/// Monkey's Audio total number of frames (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalFrames;
+/// Monkey's Audio header byte count of the decompressed WAV (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVHeaderBytes;
+/// Monkey's Audio terminating byte count of the decompressed WAV (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTerminatingBytes;
+/// Monkey's Audio data byte count of the decompressed WAV (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVDataBytes;
+/// Monkey's Audio total byte count of the decompressed WAV (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes ;
+/// Monkey's Audio total byte count of the API file (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes;
+/// Monkey's Audio total blocks of audio data (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks;
+/// Monkey's Audio length in milliseconds (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds;
+/// Monkey's Audio average bitrate of the APE (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate;
+/// Monkey's Audio bitrate of the decompressed WAV (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioDecompressedBitrate;
+/// Monkey's Audio @c YES if this is an APL file (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPL;
+
+#pragma mark - Musepack Decoder Properties
+
+/// Musepack sample frequency in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency;
+/// Musepack number of channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackChannels;
+/// Musepack stream version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackStreamVersion;
+/// Musepack bitrate in bits per second (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBitrate;
+/// Musepack average bitrate in bits per second (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAverageBitrate;
+/// Musepack maximum band index used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMaximumBandIndex;
+/// Musepack mid/side stereo (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMidSideStereo;
+/// Musepack supports fast seeking (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeystreamInfoMusepackFastSeek;
+/// Musepack block power (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBlockPower;
+
+/// Musepack title ReplayGain (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitleGain;
+/// Musepack album ReplayGain (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumGain;
+/// Musepack peak album loudness level (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumPeak;
+/// Musepack peak title loudness level (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitlePeak;
+
+/// Musepack true gapless (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackIsTrueGapless;
+/// Musepack number of samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSamples;
+/// Musepack number of leading samples that must be skipped (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBeginningSilence;
+
+/// Musepack version of encoder used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoderVersion;
+/// Musepack encoder name (\c NSString)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoder;
+/// Musepack PNS used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackPNS;
+/// Musepack quality profile (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfile;
+/// Musepack name of profile (\c NSString)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfileName;
+
+/// Musepack byte offset of header position (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackHeaderPosition;
+/// Musepack byte offset to file tags (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffset;
+/// Musepack total file length in bytes (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength;
+
+#pragma mark - Ogg Opus Decoder Properties
+
+/// Ogg Opus format version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion;
+/// Ogg Opus channel count (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount;
+/// Ogg Opus number of samples to discard from the beginning of the stream (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip;
+/// Ogg Opus sample rate of the original input (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate;
+/// Ogg Opus gain to apply to decoded output in dB (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain;
+/// Ogg Opus channel mapping family (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily;
+/// Ogg Opus number of Opus streams in each Ogg packet (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount;
+/// Ogg Opus number of coupled Opus streams in each Ogg packet (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount;
+/// Ogg Opus mapping from coded stream channels to output channels (\c NSData)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping;
+
+#pragma mark - Ogg Speex Decoder Properties
+
+/// Ogg Speex Speex string, always @c "Speex   "  (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString;
+/// Ogg Speex Speex version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion;
+/// Ogg Speex Speex version ID (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersionID;
+/// Ogg Speex total size of the header (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize;
+/// Ogg Speex sampling rate (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexRate;
+/// Ogg Speex mode used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexMode;
+/// Ogg Speex version ID of the bitstream (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexModeBitstreamVersion;
+/// Ogg Speex number of channels encoded (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels;
+/// Ogg Speex bitrate used (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexBitrate;
+/// Ogg Speex size of frames (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFrameSize;
+/// Ogg Speex whether encoding is VBR (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexVBR;
+/// Ogg Speex number of frames stored per Ogg packet (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFramesPerPacket;
+/// Ogg Speex number of additional headers after the comments (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders;
+
+#pragma mark - Ogg Vorbis Decoder Properties
+
+/// Ogg Vorbis version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion;
+/// Ogg Vorbis channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisChannels;
+/// Ogg Vorbis sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisRate;
+/// Ogg Vorbis bitrate upper limit (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateUpper;
+/// Ogg Vorbis nominal bitrate (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateNominal;
+/// Ogg Vorbis bitrate lower limit (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateLower;
+/// Ogg Vorbis bitrate window (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow;
+
+#pragma mark - Shorten Decoder Properties
+
+/// Shorten version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion;
+/// Shorten internal file type (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType;
+/// Shorten number channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels;
+/// Shorten block size (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize;
+/// Shorten sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate;
+/// Shorten bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBitsPerSample;
+/// Shorten big endian (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian;
+
+#pragma mark - True Audio Decoder Properties
+
+/// True Audio format (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat;
+/// True Audio number of channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioNumberChannels;
+/// True Audio bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioBitsPerSample;
+/// True Audio sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSampleRate;
+/// True Audio number of samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples;
+
+#pragma mark - WavPack Decoder Properties
+
+/// WavPack mode (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode;
+/// WavPack qualify mode (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackQualifyMode;
+/// WavPack version (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion;
+/// WavPack file format (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat;
+/// WavPack number samples (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamples;
+/// WavPack number samples in frame (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame;
+/// WavPack sample rate in Hz (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackSampleRate;
+/// WavPack native sample rate (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate;
+/// WavPack bits per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample;
+/// WavPack bytes per sample (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample;
+/// WavPack number channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels;
+/// WavPack channel mask (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackChannelMask;
+/// WavPack reduced channels (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackReducedChannels;
+/// WavPack float normalization exponent (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFloatNormExponent;
+/// WavPack compression ratio (\c NSNumber)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio;
+
 NS_ASSUME_NONNULL_END
