@@ -18,6 +18,14 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion = @"_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType = @"_internal_ftype";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels = @"_nchan";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize = @"_blocksize";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate = @"_sampleRate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBitsPerSample = @"_bitsPerSample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian = @"_bigEndian";
+
 #define MIN_SUPPORTED_VERSION 1
 #define MAX_SUPPORTED_VERSION 3
 
@@ -529,6 +537,17 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	sourceStreamDescription.mFramesPerPacket	= static_cast<UInt32>(_blocksize);
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyShortenVersion: @(_version),
+		SFBAudioDecodingPropertiesKeyShortenInternalFileType: @(_internal_ftype),
+		SFBAudioDecodingPropertiesKeyShortenNumberChannels: @(_nchan),
+		SFBAudioDecodingPropertiesKeyShortenBlockSize: @(_blocksize),
+		SFBAudioDecodingPropertiesKeyShortenSampleRate: @(_sampleRate),
+		SFBAudioDecodingPropertiesKeyShortenBitsPerSample: @(_bitsPerSample),
+		SFBAudioDecodingPropertiesKeyShortenBigEndian: _bigEndian ? @YES : @NO,
+	};
 
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 

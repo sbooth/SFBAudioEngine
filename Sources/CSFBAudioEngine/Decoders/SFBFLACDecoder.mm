@@ -19,6 +19,16 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
 
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize = @"min_blocksize";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize = @"max_blocksize";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize = @"min_framesize";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize = @"max_framesize";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACSampleRate = @"sample_rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACChannels = @"channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACBitsPerSample = @"bits_per_sample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTotalSamples = @"total_samples";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum = @"md5sum";
+
 template <>
 struct ::std::default_delete<FLAC__StreamDecoder> {
 	default_delete() = default;
@@ -316,6 +326,19 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+
+	// Populate codec properties
+	_properties = @{
+		SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize: @(_streamInfo.min_blocksize),
+		SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize: @(_streamInfo.max_blocksize),
+		SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize: @(_streamInfo.min_framesize),
+		SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize: @(_streamInfo.max_framesize),
+		SFBAudioDecodingPropertiesKeyFLACSampleRate: @(_streamInfo.sample_rate),
+		SFBAudioDecodingPropertiesKeyFLACChannels: @(_streamInfo.channels),
+		SFBAudioDecodingPropertiesKeyFLACBitsPerSample: @(_streamInfo.bits_per_sample),
+		SFBAudioDecodingPropertiesKeyFLACTotalSamples: @(_streamInfo.total_samples),
+		SFBAudioDecodingPropertiesKeyFLACMD5Sum: [[NSData alloc] initWithBytes:_streamInfo.md5sum length:16],
+	};
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];
