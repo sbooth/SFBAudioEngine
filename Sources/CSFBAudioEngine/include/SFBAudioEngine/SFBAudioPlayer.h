@@ -152,7 +152,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
 /// Returns `YES` if `engineIsRunning` and `playerNodeIsPlaying`
 @property (nonatomic, readonly) BOOL isPlaying;
-/// Returns `YES` if `engineIsRunning` and \c !playerNodeIsPlaying
+/// Returns `YES` if `engineIsRunning` and `!playerNodeIsPlaying`
 @property (nonatomic, readonly) BOOL isPaused;
 /// Returns `NO` if `engineIsRunning`
 @property (nonatomic, readonly) BOOL isStopped;
@@ -173,14 +173,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 @property (nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
 /// Returns the frame length of the current decoder or `SFBUnknownFrameLength` if the current decoder is `nil`
 @property (nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, `SFBUnknownFrameLength`} if the current decoder is `nil`
+/// Returns the playback position in the current decoder or `{SFBUnknownFramePosition, SFBUnknownFrameLength}` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
 
 /// Returns the current time in the current decoder or `SFBUnknownTime` if the current decoder is `nil`
 @property (nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
 /// Returns the total time of the current decoder or `SFBUnknownTime` if the current decoder is `nil`
 @property (nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// Returns the playback time in the current decoder or \c {SFBUnknownTime, `SFBUnknownTime`} if the current decoder is `nil`
+/// Returns the playback time in the current decoder or `{SFBUnknownTime, SFBUnknownTime}` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
 
 /// Retrieves the playback position and time
@@ -191,10 +191,10 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - Seeking
 
-/// Seeks forward in the current decoder by `3` seconds
+/// Seeks forward in the current decoder by 3 seconds
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)seekForward;
-/// Seeks backward in the current decoder by `3` seconds
+/// Seeks backward in the current decoder by 3 seconds
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)seekBackward;
 
@@ -212,7 +212,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified positioni n the current decoder
-/// - parameter position: The desired position in the interval \c [0, 1)
+/// - parameter position: The desired position in the interval `[0, 1)`
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder

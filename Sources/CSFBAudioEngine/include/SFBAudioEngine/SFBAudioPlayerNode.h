@@ -161,9 +161,9 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 #pragma mark - Playback Properties
 
-/// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, `SFBUnknownFrameLength`} if the current decoder is `nil`
+/// Returns the playback position in the current decoder or `{SFBUnknownFramePosition, SFBUnknownFrameLength}` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBAudioPlayerNodePlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
-/// Returns the playback time in the current decoder or \c {SFBUnknownTime, `SFBUnknownTime`} if the current decoder is `nil`
+/// Returns the playback time in the current decoder or `{SFBUnknownTime, SFBUnknownTime}` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBAudioPlayerNodePlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
 
 /// Retrieves the playback position and time
@@ -188,7 +188,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified positioni n the current decoder
-/// - parameter position: The desired position in the interval \c [0, 1)
+/// - parameter position: The desired position in the interval `[0, 1)`
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
