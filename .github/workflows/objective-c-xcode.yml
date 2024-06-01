@@ -18,19 +18,19 @@ jobs:
         run: |
           scheme="SFBAudioEngine"
           destination="generic/platform=macOS"
-          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for iOS
         run: |
           scheme="SFBAudioEngine"
           destination="generic/platform=iOS"
-          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for Mac Catalyst
         run: |
           scheme="SFBAudioEngine"
           destination="platform=macOS,variant=Mac Catalyst"
-          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for iOS Simulator
         run: |
           scheme="SFBAudioEngine"
           destination="generic/platform=iOS Simulator"
-          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
