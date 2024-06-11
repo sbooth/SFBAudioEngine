@@ -1356,7 +1356,7 @@ private:
 
 };
 
-}
+} // namespace
 
 #pragma mark -
 
