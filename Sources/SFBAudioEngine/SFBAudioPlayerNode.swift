@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -61,7 +61,7 @@ extension AudioPlayerNode.PlaybackPosition {
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return Double(current) / Double(total)
@@ -69,7 +69,7 @@ extension AudioPlayerNode.PlaybackPosition {
 
 	/// Returns the frames remaining
 	public var remaining: AVAudioFramePosition? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return total - current
@@ -85,7 +85,7 @@ extension AudioPlayerNode.PlaybackTime {
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return Double(current) / Double(total)
@@ -93,7 +93,7 @@ extension AudioPlayerNode.PlaybackTime {
 
 	/// Returns the time remaining
 	public var remaining: TimeInterval? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return total - current
