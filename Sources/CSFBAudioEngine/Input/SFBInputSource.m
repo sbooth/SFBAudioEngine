@@ -240,3 +240,28 @@ static void SFBCreateInputSourceLog(void)
 }
 
 @end
+
+@implementation SFBInputSource (SFBDataReading)
+
+- (NSData *)readDataOfLength:(NSUInteger)length error:(NSError **)error
+{
+	if(length == 0)
+		return [NSData data];
+
+	void *buf = malloc(length);
+	if(!buf) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return nil;
+	}
+
+	NSInteger bytesRead = 0;
+	if(![self readBytes:buf length:length bytesRead:&bytesRead error:error]) {
+		free(buf);
+		return nil;
+	}
+
+	return [NSData dataWithBytesNoCopy:buf length:bytesRead freeWhenDone:YES];
+}
+
+@end
