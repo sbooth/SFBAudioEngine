@@ -187,6 +187,15 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Data reading
+@interface SFBInputSource (SFBDataReading)
+/// Reads data from the input
+/// - parameter length: The maximum number of bytes to read
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `NSData` object if any bytes were read, `nil` otherwise
+- (nullable NSData *)readDataOfLength:(NSUInteger)length error:(NSError **)error NS_SWIFT_NAME(read(length:));
+@end
+
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBInputSource` and subclasses
