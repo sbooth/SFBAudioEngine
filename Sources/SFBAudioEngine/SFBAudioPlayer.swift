@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -27,7 +27,7 @@ extension AudioPlayer {
 
 	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
 	public var position: PlaybackPosition? {
-		var position = SFBAudioPlayerPlaybackPosition()
+		var position = __SFBAudioPlayerPlaybackPosition()
 		guard __getPlaybackPosition(&position, andTime: nil) else {
 			return nil
 		}
@@ -48,7 +48,7 @@ extension AudioPlayer {
 
 	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
 	public var time: PlaybackTime? {
-		var time = SFBAudioPlayerPlaybackTime()
+		var time = __SFBAudioPlayerPlaybackTime()
 		guard __getPlaybackPosition(nil, andTime: &time) else {
 			return nil
 		}
@@ -57,8 +57,8 @@ extension AudioPlayer {
 
 	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
 	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
-		var position = SFBAudioPlayerPlaybackPosition()
-		var time = SFBAudioPlayerPlaybackTime()
+		var position = __SFBAudioPlayerPlaybackPosition()
+		var time = __SFBAudioPlayerPlaybackTime()
 		guard __getPlaybackPosition(&position, andTime: &time) else {
 			return nil
 		}

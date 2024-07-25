@@ -17,9 +17,9 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol SFBAudioPlayerDelegate;
 
 /// Playback position information for `SFBAudioPlayer`
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackPosition instead")*/;
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_REFINED_FOR_SWIFT;
 /// Playback time information for `SFBAudioPlayer`
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackTime instead")*/;
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_REFINED_FOR_SWIFT;
 
 /// A block accepting a single `AVAudioEngine` parameter
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);

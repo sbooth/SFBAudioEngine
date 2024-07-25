@@ -21,7 +21,7 @@ struct SFBAudioPlayerNodePlaybackPosition {
 	AVAudioFramePosition framePosition;
 	/// The total number of frames or `SFBUnknownFrameLength` if unknown
 	AVAudioFramePosition frameLength;
-} /*NS_SWIFT_UNAVAILABLE("Use AudioPlayerNode.PlaybackPosition instead")*/;
+} NS_REFINED_FOR_SWIFT;
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
 /// Playback time information for `SFBAudioPlayerNode`
@@ -30,7 +30,7 @@ struct SFBAudioPlayerNodePlaybackTime {
 	NSTimeInterval currentTime;
 	/// The total time or `SFBUnknownTime` if unknown
 	NSTimeInterval totalTime;
-} /*NS_SWIFT_UNAVAILABLE("Use AudioPlayerNode.PlaybackTime instead")*/;
+} NS_REFINED_FOR_SWIFT;
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
 #pragma mark - SFBAudioPlayerNode
