@@ -117,7 +117,7 @@ typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
 	/// Unknown decoder name
 	SFBDSDDecoderErrorCodeUnknownDecoder	= 1,
 	/// Invalid, unknown, or unsupported format
-	SFBDSDDecoderErrorCodeInvalidFormat		= 2
+	SFBDSDDecoderErrorCodeInvalidFormat		= 2,
 } NS_SWIFT_NAME(DSDDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END

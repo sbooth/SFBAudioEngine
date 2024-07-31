@@ -190,7 +190,7 @@ typedef NS_ERROR_ENUM(SFBOutputSourceErrorDomain, SFBOutputSourceErrorCode) {
 	/// File not found
 	SFBOutputSourceErrorCodeFileNotFound	= 0,
 	/// Input/output error
-	SFBOutputSourceErrorCodeInputOutput		= 1
+	SFBOutputSourceErrorCodeInputOutput		= 1,
 } NS_SWIFT_NAME(OutputSource.ErrorCode);
 
 NS_ASSUME_NONNULL_END

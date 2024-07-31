@@ -150,7 +150,7 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 	/// Input/output error
 	SFBAudioFileErrorCodeInputOutput		= 2,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioFileErrorCodeInvalidFormat		= 3
+	SFBAudioFileErrorCodeInvalidFormat		= 3,
 } NS_SWIFT_NAME(AudioFile.ErrorCode);
 
 NS_ASSUME_NONNULL_END
