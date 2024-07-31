@@ -13,15 +13,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// Metadata kind bitmask values used in `copyMetadataOfKind:from: and removeMetadataOfKind:`
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	/// Basic metadata
-	SFBAudioMetadataKindBasic			= (1u << 0),
+	SFBAudioMetadataKindBasic			= 1u << 0,
 	/// Sorting metadata
-	SFBAudioMetadataKindSorting			= (1u << 1),
+	SFBAudioMetadataKindSorting			= 1u << 1,
 	/// Grouping metadata
-	SFBAudioMetadataKindGrouping		= (1u << 2),
+	SFBAudioMetadataKindGrouping		= 1u << 2,
 	/// Additional metadata
-	SFBAudioMetadataKindAdditional		= (1u << 3),
+	SFBAudioMetadataKindAdditional		= 1u << 3,
 	/// Replay gain metadata
-	SFBAudioMetadataKindReplayGain		= (1u << 4),
+	SFBAudioMetadataKindReplayGain		= 1u << 4,
 } NS_SWIFT_NAME(AudioMetadata.Kind);
 
 /// A key in an audio metadata dictionary
