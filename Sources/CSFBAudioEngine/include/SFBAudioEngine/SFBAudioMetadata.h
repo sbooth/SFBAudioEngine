@@ -21,7 +21,7 @@ typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	/// Additional metadata
 	SFBAudioMetadataKindAdditional		= (1u << 3),
 	/// Replay gain metadata
-	SFBAudioMetadataKindReplayGain		= (1u << 4)
+	SFBAudioMetadataKindReplayGain		= (1u << 4),
 } NS_SWIFT_NAME(AudioMetadata.Kind);
 
 /// A key in an audio metadata dictionary

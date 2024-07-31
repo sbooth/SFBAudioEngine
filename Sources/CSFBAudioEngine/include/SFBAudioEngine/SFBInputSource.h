@@ -13,7 +13,7 @@ typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
 	/// Files should be mapped in memory using `mmap()`
 	SFBInputSourceFlagsMemoryMapFiles			= 1 << 0,
 	/// Files should be fully loaded in memory
-	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1
+	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1,
 } NS_SWIFT_NAME(InputSource.Flags);
 
 /// An input source
