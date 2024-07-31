@@ -31,7 +31,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	/// `SFBAudioPlayer.engineIsRunning` and `!SFBAudioPlayer.playerNodeIsPlaying`
 	SFBAudioPlayerPlaybackStatePaused		= 1,
 	/// `!SFBAudioPlayer.engineIsRunning`
-	SFBAudioPlayerPlaybackStateStopped		= 2
+	SFBAudioPlayerPlaybackStateStopped		= 2,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
 /// An audio player wrapping an `AVAudioEngine` processing graph supplied by `SFBAudioPlayerNode`

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -38,7 +38,7 @@ enum ReadMethod {
 	Short,
 	Int,
 	Float,
-	Double
+	Double,
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data)
