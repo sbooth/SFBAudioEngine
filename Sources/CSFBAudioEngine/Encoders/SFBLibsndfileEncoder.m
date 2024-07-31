@@ -149,7 +149,7 @@ enum WriteMethod {
 	Short,
 	Int,
 	Float,
-	Double
+	Double,
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data)
