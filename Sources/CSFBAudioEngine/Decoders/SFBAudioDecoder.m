@@ -113,6 +113,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 	return NO;
 }
+
 - (instancetype)initWithURL:(NSURL *)url
 {
 	return [self initWithURL:url detectContentType:YES mimeTypeHint:nil error:nil];
