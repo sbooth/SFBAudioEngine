@@ -15,6 +15,7 @@
 
 #import "SFBDSDIFFDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -710,6 +711,23 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dsdiff"];
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:16 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header uint32AtLocation:0] == 'FRM8' && [header uint32AtLocation:12] == 'DSD ')
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 + (SFBDSDDecoderName)decoderName

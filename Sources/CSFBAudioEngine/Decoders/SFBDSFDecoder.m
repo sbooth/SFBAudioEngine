@@ -8,6 +8,7 @@
 
 #import "SFBDSFDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -76,6 +77,23 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dsf"];
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:24 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header uint32AtLocation:0] == 'DSD ' && [header uint32AtLocation:20] == 'fmt ')
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 + (SFBDSDDecoderName)decoderName
