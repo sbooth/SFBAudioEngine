@@ -181,7 +181,7 @@ static int can_seek_callback(void *id)
 	if(!header)
 		return NO;
 
-	if([header uint32AtLocation:0] == 'wvpk')
+	if([header startsWithBytes:"wvpk" length:4])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

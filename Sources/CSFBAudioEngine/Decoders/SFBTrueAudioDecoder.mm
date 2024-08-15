@@ -94,7 +94,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	if(!header)
 		return NO;
 
-	if([header containsBytes:"TTA1" length:4])
+	if([header startsWithBytes:"TTA1" length:4])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;
