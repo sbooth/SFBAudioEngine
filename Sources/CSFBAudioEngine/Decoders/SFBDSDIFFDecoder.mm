@@ -713,6 +713,11 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	return [NSSet setWithObject:@"audio/dsdiff"];
 }
 
++ (SFBDSDDecoderName)decoderName
+{
+	return SFBDSDDecoderNameDSDIFF;
+}
+
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
 {
 	NSParameterAssert(inputSource != nil);
@@ -728,11 +733,6 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 
 	return YES;
-}
-
-+ (SFBDSDDecoderName)decoderName
-{
-	return SFBDSDDecoderNameDSDIFF;
 }
 
 - (BOOL)decodingIsLossless

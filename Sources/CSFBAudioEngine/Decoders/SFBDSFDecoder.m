@@ -79,6 +79,11 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	return [NSSet setWithObject:@"audio/dsf"];
 }
 
++ (SFBDSDDecoderName)decoderName
+{
+	return SFBDSDDecoderNameDSF;
+}
+
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
 {
 	NSParameterAssert(inputSource != nil);
@@ -94,11 +99,6 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 
 	return YES;
-}
-
-+ (SFBDSDDecoderName)decoderName
-{
-	return SFBDSDDecoderNameDSF;
 }
 
 - (BOOL)decodingIsLossless
