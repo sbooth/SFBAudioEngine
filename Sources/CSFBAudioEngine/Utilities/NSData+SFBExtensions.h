@@ -30,17 +30,26 @@ NS_ASSUME_NONNULL_BEGIN
 // MARK: - Matching
 
 @interface NSData (SFBMatchMethods)
+/// Returns `YES` if self starts with `pattern`
+/// - parameter pattern: The search pattern
+/// - returns: `YES` if `self` starts with `pattern`, `NO` otherwise
+- (BOOL)startsWith:(NSData *)pattern;
+/// Returns `YES` if self starts with `patternBytes`
+/// - parameter patternBytes: The search pattern
+/// - parameter patternLength: The number of bytes in `patternBytes`
+/// - returns: `YES` if `self` starts with `pattern`, `NO` otherwise
+- (BOOL)startsWithBytes:(const void *)patternBytes length:(NSUInteger)patternLength;
+
 /// Returns `YES` if self contains `pattern` at `location`
 /// - parameter pattern: The search pattern
 /// - parameter location: The location in `self` to compare
-/// - returns: `YES` if `self` contains pattern`, `NO` otherwise
+/// - returns: `YES` if `self` contains `pattern`, `NO` otherwise
 - (BOOL)contains:(NSData *)pattern atLocation:(NSUInteger)location;
-
 /// Returns `YES` if self contains `patternBytes` at `location`
 /// - parameter patternBytes: The search pattern
 /// - parameter patternLength: The number of bytes in `patternBytes`
 /// - parameter location: The location in `self` to compare
-/// - returns: `YES` if `self` contains pattern`, `NO` otherwise
+/// - returns: `YES` if `self` contains `pattern`, `NO` otherwise
 - (BOOL)containsBytes:(const void *)patternBytes length:(NSUInteger)patternLength atLocation:(NSUInteger)location;
 @end
 
@@ -49,26 +58,26 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSData (SFBSearchMethods)
 /// Returns `YES` if self contains `pattern`
 /// - parameter pattern: The search pattern
-/// - returns: `YES` if `self` contains pattern`, `NO` otherwise
+/// - returns: `YES` if `self` contains `pattern`, `NO` otherwise
 - (BOOL)contains:(NSData *)pattern;
 
 /// Returns `YES` if self contains `pattern` at or after `startingLocation`
 /// - parameter pattern: The search pattern
 /// - parameter startingLocation: The location in `self` to begin the search
-/// - returns: `YES` if `self` contains pattern`, `NO` otherwise
+/// - returns: `YES` if `self` contains `pattern`, `NO` otherwise
 - (BOOL)contains:(NSData *)pattern searchingFromLocation:(NSUInteger)startingLocation;
 
 /// Returns `YES` if self contains `patternBytes` at or after `startingLocation`
 /// - parameter patternBytes: The search pattern
 /// - parameter patternLength: The number of bytes in `patternBytes`
-/// - returns: `YES` if `self` contains pattern`, `NO` otherwise
+/// - returns: `YES` if `self` contains `pattern`, `NO` otherwise
 - (BOOL)containsBytes:(const void *)patternBytes length:(NSUInteger)patternLength;
 
 /// Returns `YES` if self contains `patternBytes` at or after `startingLocation`
 /// - parameter patternBytes: The search pattern
 /// - parameter patternLength: The number of bytes in `patternBytes`
 /// - parameter startingLocation: The location in `self` to begin the search
-/// - returns: `YES` if `self` contains pattern`, `NO` otherwise
+/// - returns: `YES` if `self` contains `pattern`, `NO` otherwise
 - (BOOL)containsBytes:(const void *)patternBytes length:(NSUInteger)patternLength searchingFromLocation:(NSUInteger)startingLocation;
 
 

@@ -32,6 +32,16 @@
 
 @implementation NSData (SFBMatchMethods)
 
+- (BOOL)startsWith:(NSData *)pattern
+{
+	return [self containsBytes:pattern.bytes length:pattern.length atLocation:0];
+}
+
+- (BOOL)startsWithBytes:(const void *)patternBytes length:(NSUInteger)patternLength
+{
+	return [self containsBytes:patternBytes length:patternLength atLocation:0];
+}
+
 - (BOOL)contains:(NSData *)pattern atLocation:(NSUInteger)location
 {
 	return [self containsBytes:pattern.bytes length:pattern.length atLocation:location];
