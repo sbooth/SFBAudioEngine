@@ -112,6 +112,17 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	return SFBAudioDecoderNameMPEG;
 }
 
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	// FIXME: Test for MPEG content
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	return YES;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;

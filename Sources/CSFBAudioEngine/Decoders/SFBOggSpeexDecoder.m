@@ -14,6 +14,7 @@
 
 #import "SFBOggSpeexDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
@@ -77,6 +78,23 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameOggSpeex;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:128 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header containsBytes:"OggS" length:4] && [header containsBytes:"Speex   " length:8])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

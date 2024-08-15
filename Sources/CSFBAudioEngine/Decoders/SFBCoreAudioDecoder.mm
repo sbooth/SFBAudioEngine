@@ -171,6 +171,16 @@ SInt64 get_size_callback(void *inClientData)
 	return SFBAudioDecoderNameCoreAudio;
 }
 
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	return YES;
+}
+
 - (BOOL)decodingIsLossless
 {
 	switch(_sourceFormat.streamDescription->mFormatID) {

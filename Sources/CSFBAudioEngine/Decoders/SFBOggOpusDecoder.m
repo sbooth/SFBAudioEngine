@@ -11,6 +11,7 @@
 
 #import "SFBOggOpusDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
@@ -105,6 +106,23 @@ static opus_int64 tell_callback(void *stream)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameOggOpus;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:128 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header containsBytes:"OggS" length:4] && [header containsBytes:"OpusHead" length:8])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

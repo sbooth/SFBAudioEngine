@@ -10,6 +10,7 @@
 
 #import "SFBWavPackDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
@@ -169,6 +170,23 @@ static int can_seek_callback(void *id)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameWavPack;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header uint32AtLocation:0] == 'wvpk')
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

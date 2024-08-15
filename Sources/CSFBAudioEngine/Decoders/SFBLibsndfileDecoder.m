@@ -167,6 +167,16 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	return SFBAudioDecoderNameLibsndfile;
 }
 
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	return YES;
+}
+
 - (BOOL)decodingIsLossless
 {
 	switch(_sfinfo.format & SF_FORMAT_SUBMASK) {

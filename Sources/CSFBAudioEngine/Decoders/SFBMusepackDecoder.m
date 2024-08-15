@@ -14,6 +14,7 @@
 
 #import "SFBMusepackDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
@@ -128,6 +129,23 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameMusepack;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	if([header containsBytes:"MPCK" length:4] || [header containsBytes:"MP+" length:3])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

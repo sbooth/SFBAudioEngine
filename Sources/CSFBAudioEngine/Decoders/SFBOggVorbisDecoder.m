@@ -11,6 +11,7 @@
 
 #import "SFBOggVorbisDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
@@ -99,6 +100,23 @@ static long tell_func_callback(void *datasource)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameOggVorbis;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:128 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header containsBytes:"OggS" length:4] && [header containsBytes:"\x01vorbis" length:7])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

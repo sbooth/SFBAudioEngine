@@ -18,6 +18,7 @@
 
 #import "SFBMonkeysAudioDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
@@ -206,6 +207,23 @@ private:
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameMonkeysAudio;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:3 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	if([header containsBytes:"MAC" length:3])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

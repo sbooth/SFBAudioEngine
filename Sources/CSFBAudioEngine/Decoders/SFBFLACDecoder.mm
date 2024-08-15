@@ -15,6 +15,7 @@
 
 #import "SFBFLACDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
@@ -177,6 +178,27 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameFLAC;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:128 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	BOOL containsMagic = [header containsBytes:"fLaC" length:4];
+	if(containsMagic)
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+
+	if([header containsBytes:"OggS" length:4]) {
+		if(!containsMagic)
+			*formatIsSupported = SFBTernaryTruthValueUnknown;
+	}
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless
