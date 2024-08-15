@@ -192,6 +192,8 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	BOOL containsMagic = [header containsBytes:"fLaC" length:4];
 	if(containsMagic)
 		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
 
 	if([header containsBytes:"OggS" length:4]) {
 		if(!containsMagic)
