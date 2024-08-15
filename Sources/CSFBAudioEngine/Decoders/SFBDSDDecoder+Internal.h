@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#import <os/log.h>
+
 #import "SFBDSDDecoder.h"
 
 #import "SFBTernaryTruthValue.h"
