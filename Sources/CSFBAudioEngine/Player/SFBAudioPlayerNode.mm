@@ -271,6 +271,7 @@ struct AudioPlayerNode
 {
 	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
 
+	/// The minimum number of frames to write to the ring buffer
 	static const AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
 
 	enum eAudioPlayerNodeFlags : unsigned int {
@@ -398,8 +399,7 @@ public:
 
 			// ========================================
 			// 5. If there is adequate space in the ring buffer for another chunk signal the decoding queue
-			const auto framesAvailableToWrite = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToWrite());
-			if(framesAvailableToWrite >= kRingBufferChunkSize)
+			if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
 				dispatch_semaphore_signal(mDecodingSemaphore);
 
 			// ========================================
@@ -1257,11 +1257,29 @@ private:
 						mFlags.fetch_and(~eOutputIsMuted);
 					}
 
-					// Determine how many frames are available in the ring buffer
-					const auto framesAvailableToWrite = mAudioRingBuffer.FramesAvailableToWrite();
+					if(decoderState->mFlags.load() & DecoderState::eCancelDecoding) {
+						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
-					// Force writes to the ring buffer to be at least kRingBufferChunkSize
-					if(framesAvailableToWrite >= kRingBufferChunkSize) {
+						mFlags.fetch_or(eRingBufferNeedsReset);
+
+						// Submit the decoding canceled event
+						const uint32_t cmd = eEventDecodingCanceled;
+						const uint8_t partiallyRendered = decoderState->mFlags.load() & DecoderState::eRenderingStarted;
+
+						uint8_t bytesToWrite [4 + 8 + 1];
+						std::memcpy(bytesToWrite, &cmd, 4);
+						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
+						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
+						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false))
+							dispatch_source_merge_data(mEventProcessor, 1);
+						else
+							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
+
+						return;
+					}
+
+					// Decode and write a chunk to the ring buffer if adequate space is available
+					if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
 						if(!(decoderState->mFlags.load() & DecoderState::eDecodingStarted)) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
@@ -1325,26 +1343,6 @@ private:
 
 							return;
 						}
-					}
-					else if(decoderState->mFlags.load() & DecoderState::eCancelDecoding) {
-						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
-
-						mFlags.fetch_or(eRingBufferNeedsReset);
-
-						// Submit the decoding canceled event
-						const uint32_t cmd = eEventDecodingCanceled;
-						const uint8_t partiallyRendered = decoderState->mFlags.load() & DecoderState::eRenderingStarted;
-
-						uint8_t bytesToWrite [4 + 8 + 1];
-						std::memcpy(bytesToWrite, &cmd, 4);
-						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
-						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false))
-							dispatch_source_merge_data(mEventProcessor, 1);
-						else
-							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
-
-						return;
 					}
 					// Wait for additional space in the ring buffer
 					else
