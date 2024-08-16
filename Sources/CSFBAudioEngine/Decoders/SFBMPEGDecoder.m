@@ -12,6 +12,7 @@
 
 #import "SFBMPEGDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
@@ -117,8 +118,31 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	// FIXME: Test for MPEG content
-	*formatIsSupported = SFBTernaryTruthValueUnknown;
+	NSData *header = [inputSource readHeaderOfLength:3 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	const uint8_t *bytes = header.bytes;
+
+	// Frame sync
+	if(bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// MPEG audio version ID
+	else if(bytes[1] & 0x18 == 0x08)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Layer description
+	else if(bytes[1] & 0x06 == 0)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Protection bit
+	// Bitrate index
+	else if(bytes[2] & 0xf0 == 0xf0)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Sampling rate frequency index
+	else if(bytes[2] & 0x0c == 0x0c)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Remainder of header bits ignored
+	else
+		*formatIsSupported = SFBTernaryTruthValueTrue;
 
 	return YES;
 }
