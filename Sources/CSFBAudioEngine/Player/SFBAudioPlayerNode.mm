@@ -1346,9 +1346,9 @@ private:
 
 						return;
 					}
-
 					// Wait for additional space in the ring buffer
-					dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
+					else
+						dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
 				}
 			}
 		});
