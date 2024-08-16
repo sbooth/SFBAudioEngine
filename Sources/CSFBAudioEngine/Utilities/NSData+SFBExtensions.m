@@ -6,55 +6,30 @@
 
 #import "NSData+SFBExtensions.h"
 
-@implementation NSData (SFBNumericValueMethods)
-
-- (uint32_t)uint32AtLocation:(NSUInteger)location
-{
-	uint32_t ui32;
-	[self getBytes:&ui32 range:NSMakeRange(location, 4)];
-	return ui32;
-}
-
-- (uint32_t)uint32BigEndianAtLocation:(NSUInteger)location
-{
-	uint32_t ui32 = [self uint32AtLocation:location];
-	return OSSwapHostToBigInt32(ui32);
-}
-
-- (uint32_t)uint32LittleEndianAtLocation:(NSUInteger)location
-{
-	uint32_t ui32 = [self uint32AtLocation:location];
-	return OSSwapHostToLittleInt32(ui32);
-}
-
-@end
-
-
 @implementation NSData (SFBMatchMethods)
 
 - (BOOL)startsWith:(NSData *)pattern
 {
-	return [self containsBytes:pattern.bytes length:pattern.length atLocation:0];
+	return [self matchesBytes:pattern.bytes length:pattern.length atLocation:0];
 }
 
-- (BOOL)startsWithBytes:(const void *)patternBytes length:(NSUInteger)patternLength
+- (BOOL)startsWithBytes:(const void *)bytes length:(NSUInteger)length
 {
-	return [self containsBytes:patternBytes length:patternLength atLocation:0];
+	return [self matchesBytes:bytes length:length atLocation:0];
 }
 
-- (BOOL)contains:(NSData *)pattern atLocation:(NSUInteger)location
+
+- (BOOL)matches:(NSData *)pattern atLocation:(NSUInteger)location
 {
-	return [self containsBytes:pattern.bytes length:pattern.length atLocation:location];
+	return [self matchesBytes:pattern.bytes length:pattern.length atLocation:location];
 }
 
-- (BOOL)containsBytes:(const void *)patternBytes length:(NSUInteger)patternLength atLocation:(NSUInteger)location
+- (BOOL)matchesBytes:(const void *)bytes length:(NSUInteger)length atLocation:(NSUInteger)location
 {
-	NSParameterAssert(patternBytes != NULL);
+	NSParameterAssert(bytes != NULL);
+	NSParameterAssert(location < self.length);
 
-	NSUInteger length = self.length;
-	NSParameterAssert(location < length);
-
-	return !memcmp((const uint8_t *)self.bytes + location, patternBytes, patternLength);
+	return !memcmp((const uint8_t *)self.bytes + location, bytes, length);
 }
 
 @end
@@ -64,51 +39,51 @@
 
 - (BOOL)contains:(NSData *)pattern
 {
-	return [self findBytes:pattern.bytes length:pattern.length startingLocation:0] != NSNotFound;
+	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:0] != NSNotFound;
 }
 
-- (BOOL)contains:(NSData *)pattern searchingFromLocation:(NSUInteger)startingLocation
+- (BOOL)contains:(NSData *)pattern searchingFromLocation:(NSUInteger)location
 {
-	return [self findBytes:pattern.bytes length:pattern.length startingLocation:startingLocation] != NSNotFound;
+	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:location] != NSNotFound;
 }
 
-- (BOOL)containsBytes:(const void *)patternBytes length:(NSUInteger)patternLength
+- (BOOL)containsBytes:(const void *)bytes length:(NSUInteger)length
 {
-	return [self findBytes:patternBytes length:patternLength startingLocation:0] != NSNotFound;
+	return [self findBytes:bytes length:length searchingFromLocation:0] != NSNotFound;
 }
 
-- (BOOL)containsBytes:(const void *)patternBytes length:(NSUInteger)patternLength searchingFromLocation:(NSUInteger)startingLocation
+- (BOOL)containsBytes:(const void *)bytes length:(NSUInteger)length searchingFromLocation:(NSUInteger)location
 {
-	return [self findBytes:patternBytes length:patternLength startingLocation:startingLocation] != NSNotFound;
+	return [self findBytes:bytes length:length searchingFromLocation:location] != NSNotFound;
 }
 
 
 - (NSUInteger)find:(NSData *)pattern
 {
-	return [self findBytes:pattern.bytes length:pattern.length startingLocation:0];
+	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:0];
 }
 
-- (NSUInteger)find:(NSData *)pattern startingLocation:(NSUInteger)startingLocation
+- (NSUInteger)find:(NSData *)pattern searchingFromLocation:(NSUInteger)location
 {
-	return [self findBytes:pattern.bytes length:pattern.length startingLocation:startingLocation];
+	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:location];
 }
 
-- (NSUInteger)findBytes:(const void *)patternBytes length:(NSUInteger)patternLength
+- (NSUInteger)findBytes:(const void *)bytes length:(NSUInteger)length
 {
-	return [self findBytes:patternBytes length:patternLength startingLocation:0];
+	return [self findBytes:bytes length:length searchingFromLocation:0];
 }
 
-- (NSUInteger)findBytes:(const void *)patternBytes length:(NSUInteger)patternLength startingLocation:(NSUInteger)startingLocation
+- (NSUInteger)findBytes:(const void *)bytes length:(NSUInteger)length searchingFromLocation:(NSUInteger)location
 {
-	NSParameterAssert(patternBytes != NULL);
+	NSParameterAssert(bytes != NULL);
 
-	NSUInteger length = self.length;
-	NSParameterAssert(startingLocation < length);
+	NSUInteger len = self.length;
+	NSParameterAssert(location < len);
 
-	const void *bytes = (const uint8_t *)self.bytes + startingLocation;
-	const void *offset = memmem(bytes, length - startingLocation, patternBytes, patternLength);
+	const void *buf = (const uint8_t *)self.bytes + location;
+	const void *offset = memmem(buf, len - location, bytes, length);
 	if(offset)
-		return offset - bytes;
+		return offset - buf;
 	return NSNotFound;
 }
 

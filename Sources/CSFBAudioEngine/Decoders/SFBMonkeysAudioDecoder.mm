@@ -214,11 +214,11 @@ private:
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:3 skipID3v2Tag:YES error:error];
+	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
 
-	if([header containsBytes:"MAC" length:3])
+	if([header startsWithBytes:"MAC " length:4])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

@@ -117,10 +117,15 @@ static opus_int64 tell_callback(void *stream)
 	if(!header)
 		return NO;
 
-	if([header containsBytes:"OggS" length:4] && [header containsBytes:"OpusHead" length:8])
+	if(![header startsWithBytes:"OggS\0" length:5]) {
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+		return YES;
+	}
+
+	if([header containsBytes:"OpusHead" length:8 searchingFromLocation:5])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
+		*formatIsSupported = SFBTernaryTruthValueUnknown;
 
 	return YES;
 }

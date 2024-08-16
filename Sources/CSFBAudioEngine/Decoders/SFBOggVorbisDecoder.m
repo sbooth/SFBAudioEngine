@@ -111,10 +111,15 @@ static long tell_func_callback(void *datasource)
 	if(!header)
 		return NO;
 
-	if([header containsBytes:"OggS" length:4] && [header containsBytes:"\x01vorbis" length:7])
+	if(![header startsWithBytes:"OggS\0" length:5]) {
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+		return YES;
+	}
+
+	if([header containsBytes:"\x01vorbis" length:7 searchingFromLocation:5])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
+		*formatIsSupported = SFBTernaryTruthValueUnknown;
 
 	return YES;
 }

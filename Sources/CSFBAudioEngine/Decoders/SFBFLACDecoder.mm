@@ -185,20 +185,28 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:128 skipID3v2Tag:YES error:error];
+	// Native FLAC
+	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
+	if([header startsWithBytes:"fLaC" length:4]) {
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+		return YES;
+	}
 
-	BOOL containsMagic = [header containsBytes:"fLaC" length:4];
-	if(containsMagic)
+	// FLAC in Ogg container
+	header = [inputSource readHeaderOfLength:128 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+	if(![header startsWithBytes:"OggS\0" length:5]) {
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+		return YES;
+	}
+
+	if([header containsBytes:"fLaC" length:4 searchingFromLocation:5])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
-
-	if([header containsBytes:"OggS" length:4]) {
-		if(!containsMagic)
-			*formatIsSupported = SFBTernaryTruthValueUnknown;
-	}
+		*formatIsSupported = SFBTernaryTruthValueUnknown;
 
 	return YES;
 }

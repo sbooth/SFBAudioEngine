@@ -727,7 +727,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	if(!header)
 		return NO;
 
-	if([header uint32AtLocation:0] == 'FRM8' && [header uint32AtLocation:12] == 'DSD ')
+	if([header startsWithBytes:"FRM8" length:4] && [header matchesBytes:"DSD " length:4 atLocation:12])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;
