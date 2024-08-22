@@ -278,7 +278,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: %{public}@", decoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeUnknownDecoder userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeUnknownDecoder
+									 userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return nil;
 	}
 
