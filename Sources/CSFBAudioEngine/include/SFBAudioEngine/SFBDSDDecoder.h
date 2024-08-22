@@ -62,7 +62,7 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// Returns an initialized `SFBDSDDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter detectContentType: Whether to attempt to determine the content type of `url`
-/// - parameter mimeType: A MIME type hint for `url`
+/// - parameter mimeTypeHint: A MIME type hint for `url`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
