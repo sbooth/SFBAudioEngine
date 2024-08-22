@@ -11,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Constant type for decoder names
 typedef NSString * SFBAudioDecoderName NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecoder.Name);
 
-/// FLAC and Ogg FLAC
+/// FLAC
 extern SFBAudioDecoderName const SFBAudioDecoderNameFLAC;
 /// Monkey's Audio
 extern SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio;
@@ -21,6 +21,8 @@ extern SFBAudioDecoderName const SFBAudioDecoderNameModule;
 extern SFBAudioDecoderName const SFBAudioDecoderNameMPEG;
 /// Musepack
 extern SFBAudioDecoderName const SFBAudioDecoderNameMusepack;
+/// Ogg FLAC
+extern SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC;
 /// Ogg Opus
 extern SFBAudioDecoderName const SFBAudioDecoderNameOggOpus;
 /// Ogg Speex
@@ -170,7 +172,7 @@ typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	SFBAudioDecoderErrorCodeInvalidFormat	= 2,
 } NS_SWIFT_NAME(AudioDecoder.ErrorCode);
 
-#pragma mark - FLAC Decoder Properties
+#pragma mark - FLAC and Ogg FLAC Decoder Properties
 
 /// FLAC minimum block size (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize;
