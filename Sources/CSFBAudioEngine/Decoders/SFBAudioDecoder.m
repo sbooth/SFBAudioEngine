@@ -181,7 +181,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(detectContentType && !inputSource.isOpen && ![inputSource openReturningError:error])
 		return nil;
 
-	int score = 0;
+	int score = 10;
 	Class subclass = nil;
 
 	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
