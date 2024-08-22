@@ -128,17 +128,17 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	if(bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0)
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 	// MPEG audio version ID
-	else if(bytes[1] & 0x18 == 0x08)
+	else if((bytes[1] & 0x18) == 0x08)
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 	// Layer description
-	else if(bytes[1] & 0x06 == 0)
+	else if((bytes[1] & 0x06) == 0)
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 	// Protection bit
 	// Bitrate index
-	else if(bytes[2] & 0xf0 == 0xf0)
+	else if((bytes[2] & 0xf0) == 0xf0)
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 	// Sampling rate frequency index
-	else if(bytes[2] & 0x0c == 0x0c)
+	else if((bytes[2] & 0x0c) == 0x0c)
 		*formatIsSupported = SFBTernaryTruthValueFalse;
 	// Remainder of header bits ignored
 	else
