@@ -169,12 +169,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"flac"]];
+	return [NSSet setWithObject:@"flac"];
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/flac"]];
+	return [NSSet setWithObject:@"audio/flac"];
 }
 
 + (SFBAudioDecoderName)decoderName
@@ -544,12 +544,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"oga"]];
+	return [NSSet setWithObject:@"oga"];
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/ogg; codecs=flac"]];
+	return [NSSet setWithObject:@"audio/ogg; codecs=flac"];
 }
 
 + (SFBAudioDecoderName)decoderName
