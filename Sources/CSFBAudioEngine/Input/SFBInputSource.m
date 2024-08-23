@@ -306,7 +306,7 @@ static void SFBCreateInputSourceLog(void)
 		// Attempt to detect and minimally parse an ID3v2 tag header
 		NSData *data = [self readDataOfLength:ID3V2_TAG_HEADER_LENGTH_BYTES error:error];
 		if([data startsWithID3v2Header]) {
-			const uint8_t *bytes = (const uint8_t *)data.bytes;
+			const uint8_t *bytes = data.bytes;
 
 			uint8_t flags = bytes[5];
 			uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
