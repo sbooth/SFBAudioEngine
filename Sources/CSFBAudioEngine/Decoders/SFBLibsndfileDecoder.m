@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,6 +10,7 @@
 
 #import "SFBLibsndfileDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
@@ -38,7 +39,7 @@ enum ReadMethod {
 	Short,
 	Int,
 	Float,
-	Double
+	Double,
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data)
@@ -165,6 +166,30 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameLibsndfile;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:12 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	// libsndfile supports a multitude of formats. This is not meant to be an exhaustive check but
+	// just something quick to identify common file formats lacking a path extension or MIME type.
+
+	// AIFF and AIFF-C files
+	if([header startsWithBytes:"FORM" length:4] && ([header matchesBytes:"AIFF" length:4 atLocation:8] || [header matchesBytes:"AIFC" length:4 atLocation:8]))
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	// WAVE files
+	else if([header startsWithBytes:"RIFF" length:4] && [header matchesBytes:"WAVE" length:4 atLocation:8])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

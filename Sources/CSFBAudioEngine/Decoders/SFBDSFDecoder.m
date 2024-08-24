@@ -8,6 +8,7 @@
 
 #import "SFBDSFDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -81,6 +82,23 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 + (SFBDSDDecoderName)decoderName
 {
 	return SFBDSDDecoderNameDSF;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:32 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"DSD " length:4] && [header matchesBytes:"fmt " length:4 atLocation:28])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless
