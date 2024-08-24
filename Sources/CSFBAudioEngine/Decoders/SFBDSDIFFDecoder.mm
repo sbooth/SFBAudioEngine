@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -15,6 +15,7 @@
 
 #import "SFBDSDIFFDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -715,6 +716,23 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 + (SFBDSDDecoderName)decoderName
 {
 	return SFBDSDDecoderNameDSDIFF;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:16 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"FRM8" length:4] && [header matchesBytes:"DSD " length:4 atLocation:12])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -37,7 +37,7 @@ extern NSErrorDomain const SFBAudioExporterErrorDomain NS_SWIFT_NAME(AudioExport
 /// Possible `NSError` error codes used by `SFBAudioExporter`
 typedef NS_ERROR_ENUM(SFBAudioExporterErrorDomain, SFBAudioExporterErrorCode) {
 	/// File format not supported
-	SFBAudioExporterErrorCodeFileFormatNotSupported				= 0
+	SFBAudioExporterErrorCodeFileFormatNotSupported				= 0,
 } NS_SWIFT_NAME(AudioExporter.ErrorCode);
 
 NS_ASSUME_NONNULL_END

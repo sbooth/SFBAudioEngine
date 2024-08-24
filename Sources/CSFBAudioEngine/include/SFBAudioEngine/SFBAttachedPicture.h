@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2012-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -60,7 +60,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
 	/// Logo of the band or performer
 	SFBAttachedPictureTypeBandLogo				= 0x13,
 	/// Logo of the publisher (record company)
-	SFBAttachedPictureTypePublisherLogo			= 0x14
+	SFBAttachedPictureTypePublisherLogo			= 0x14,
 } NS_SWIFT_NAME(AttachedPicture.Type);
 
 /// A class encapsulating a single attached picture.

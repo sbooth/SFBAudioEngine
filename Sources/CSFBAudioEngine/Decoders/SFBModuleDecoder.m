@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -121,6 +121,16 @@ static dumb_off_t get_size_callback(void *f)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameModule;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

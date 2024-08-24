@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,7 @@
 #import "SFBShortenFile.h"
 
 #import "SFBFileInputSource.h"
-#import "SFBShortenDecoder.h"
+#import "SFBAudioDecoder.h"
 
 #import "NSError+SFBURLPresentation.h"
 
@@ -43,7 +43,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 	if(!inputSource || ![inputSource openReturningError:error])
 		return NO;
 
-	SFBShortenDecoder *decoder = [[SFBShortenDecoder alloc] initWithInputSource:inputSource error:error];
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource decoderName:SFBAudioDecoderNameShorten error:error];
 	if(!decoder || ![decoder openReturningError:error])
 		return NO;
 

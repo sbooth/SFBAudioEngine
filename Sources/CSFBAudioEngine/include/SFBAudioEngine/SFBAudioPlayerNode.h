@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -21,7 +21,7 @@ struct SFBAudioPlayerNodePlaybackPosition {
 	AVAudioFramePosition framePosition;
 	/// The total number of frames or `SFBUnknownFrameLength` if unknown
 	AVAudioFramePosition frameLength;
-} /*NS_SWIFT_UNAVAILABLE("Use AudioPlayerNode.PlaybackPosition instead")*/;
+} NS_REFINED_FOR_SWIFT;
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
 /// Playback time information for `SFBAudioPlayerNode`
@@ -30,7 +30,7 @@ struct SFBAudioPlayerNodePlaybackTime {
 	NSTimeInterval currentTime;
 	/// The total time or `SFBUnknownTime` if unknown
 	NSTimeInterval totalTime;
-} /*NS_SWIFT_UNAVAILABLE("Use AudioPlayerNode.PlaybackTime instead")*/;
+} NS_REFINED_FOR_SWIFT;
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
 #pragma mark - SFBAudioPlayerNode
@@ -261,7 +261,7 @@ typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode
 	/// Internal or unspecified error
 	SFBAudioPlayerNodeErrorCodeInternalError 		= 0,
 	/// Format not supported
-	SFBAudioPlayerNodeErrorCodeFormatNotSupported 	= 1
+	SFBAudioPlayerNodeErrorCodeFormatNotSupported 	= 1,
 } NS_SWIFT_NAME(AudioPlayerNode.ErrorCode);
 
 NS_ASSUME_NONNULL_END

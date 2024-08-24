@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -137,7 +137,7 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 	/// Unknown encoder name
 	SFBAudioEncoderErrorCodeUnknownEncoder	= 1,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioEncoderErrorCodeInvalidFormat	= 2
+	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
 } NS_SWIFT_NAME(AudioEncoder.ErrorCode);
 
 #pragma mark - FLAC Encoder Settings

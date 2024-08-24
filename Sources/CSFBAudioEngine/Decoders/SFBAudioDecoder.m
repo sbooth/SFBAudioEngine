@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -86,6 +86,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 	__builtin_unreachable();
 }
 
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
+}
+
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
 {
 	NSString *lowercaseExtension = extension.lowercaseString;
@@ -110,85 +116,130 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (instancetype)initWithURL:(NSURL *)url
 {
-	return [self initWithURL:url mimeType:nil error:nil];
+	return [self initWithURL:url detectContentType:YES mimeTypeHint:nil error:nil];
 }
 
 - (instancetype)initWithURL:(NSURL *)url error:(NSError **)error
 {
-	return [self initWithURL:url mimeType:nil error:error];
+	return [self initWithURL:url detectContentType:YES mimeTypeHint:nil error:error];
 }
 
-- (instancetype)initWithURL:(NSURL *)url mimeType:(NSString *)mimeType error:(NSError **)error
+- (instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType error:(NSError **)error
+{
+	return [self initWithURL:url detectContentType:detectContentType mimeTypeHint:nil error:error];
+}
+
+- (instancetype)initWithURL:(NSURL *)url mimeTypeHint:(NSString *)mimeTypeHint error:(NSError **)error
+{
+	return [self initWithURL:url detectContentType:YES mimeTypeHint:mimeTypeHint error:error];
+}
+
+- (instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType mimeTypeHint:(NSString *)mimeTypeHint error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
 	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
 	if(!inputSource)
 		return nil;
-	return [self initWithInputSource:inputSource mimeType:mimeType error:error];
+	return [self initWithInputSource:inputSource detectContentType:detectContentType mimeTypeHint:mimeTypeHint error:error];
 }
 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource
 {
-	return [self initWithInputSource:inputSource mimeType:nil error:nil];
+	return [self initWithInputSource:inputSource detectContentType:YES mimeTypeHint:nil error:nil];
 }
 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource error:(NSError **)error
 {
-	return [self initWithInputSource:inputSource mimeType:nil error:error];
+	return [self initWithInputSource:inputSource detectContentType:YES mimeTypeHint:nil error:error];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource detectContentType:(BOOL)detectContentType error:(NSError **)error
+{
+	return [self initWithInputSource:inputSource detectContentType:detectContentType mimeTypeHint:nil error:error];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeTypeHint:(NSString *)mimeTypeHint error:(NSError **)error
+{
+	return [self initWithInputSource:inputSource detectContentType:YES mimeTypeHint:mimeTypeHint error:error];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource detectContentType:(BOOL)detectContentType mimeTypeHint:(NSString *)mimeTypeHint error:(NSError **)error
 {
 	NSParameterAssert(inputSource != nil);
 
-	// The MIME type takes precedence over the file extension
-	if(mimeType) {
-		Class subclass = [SFBAudioDecoder subclassForMIMEType:mimeType.lowercaseString];
-		if(subclass && (self = [[subclass alloc] init])) {
-			_inputSource = inputSource;
-			return self;
+	NSString *lowercaseExtension = inputSource.url.pathExtension.lowercaseString;
+	NSString *lowercaseMIMEType = mimeTypeHint.lowercaseString;
+
+	// Instead of failing for non-seekable inputs just skip content type detection
+	if(detectContentType && !inputSource.supportsSeeking) {
+		os_log_error(gSFBAudioDecoderLog, "Unable to detect content type for non-seekable input source %{public}@", inputSource);
+		detectContentType = NO;
+	}
+
+	// If the input source can't be opened decoding is destined to fail; give up now
+	if(detectContentType && !inputSource.isOpen && ![inputSource openReturningError:error])
+		return nil;
+
+	int score = 10;
+	Class subclass = nil;
+
+	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		int currentScore = 0;
+		Class klass = subclassInfo.klass;
+
+		if(lowercaseMIMEType) {
+			NSSet *supportedMIMETypes = [klass supportedMIMETypes];
+			if([supportedMIMETypes containsObject:lowercaseMIMEType])
+				currentScore += 40;
 		}
-		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unsupported MIME type: %{public}@", mimeType);
+
+		if(lowercaseExtension) {
+			NSSet *supportedPathExtensions = [klass supportedPathExtensions];
+			if([supportedPathExtensions containsObject:lowercaseExtension])
+				currentScore += 20;
+		}
+
+		if(detectContentType) {
+			SFBTernaryTruthValue formatSupported;
+			if(![klass testInputSource:inputSource formatIsSupported:&formatSupported error:error])
+				return nil;
+
+			switch(formatSupported) {
+				case SFBTernaryTruthValueTrue:
+					currentScore += 75;
+					break;
+				case SFBTernaryTruthValueFalse:
+					break;
+				case SFBTernaryTruthValueUnknown:
+					currentScore += 10;
+					break;
+				default:
+					os_log_fault(gSFBAudioDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
+					break;
+			}
+		}
+
+		if(currentScore > score) {
+			score = currentScore;
+			subclass = klass;
+		}
 	}
 
-	// If no MIME type was specified, use the extension-based resolvers
-
-	// TODO: Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-	// and if openDecoder is false the wrong decoder type may be returned, since the file isn't analyzed
-	// until Open() is called
-
-	NSString *pathExtension = inputSource.url.pathExtension;
-	if(!pathExtension) {
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
-											  url:inputSource.url
-									failureReason:NSLocalizedString(@"Unknown file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
-		return nil;
-	}
-
-	Class subclass = [SFBAudioDecoder subclassForPathExtension:pathExtension.lowercaseString];
-	if(!subclass) {
-		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unsupported path extension: %{public}@", pathExtension);
-
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
-											  url:inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
-		return nil;
-	}
-
-	if((self = [[subclass alloc] init]))
+	if(subclass && (self = [[subclass alloc] init])) {
 		_inputSource = inputSource;
+		os_log_debug(gSFBAudioDecoderLog, "Created %{public}@ based on score of %i", self, score);
+		return self;
+	}
 
-	return self;
+	if(error)
+		*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
+				descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
+										  url:inputSource.url
+								failureReason:NSLocalizedString(@"Unknown file type", @"")
+						   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
+	return nil;
 }
 
 - (instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName
@@ -215,11 +266,21 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	NSParameterAssert(inputSource != nil);
 
-	Class subclass = [SFBAudioDecoder subclassForDecoderName:decoderName];
+	Class subclass = nil;
+	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBAudioDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
+		if(subclassDecoderName == decoderName) {
+			subclass = subclassInfo.klass;
+			break;
+		}
+	}
+
 	if(!subclass) {
-		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unsupported decoder: %{public}@", decoderName);
+		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: %{public}@", decoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeUnknownDecoder userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeUnknownDecoder
+									 userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return nil;
 	}
 
@@ -312,52 +373,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
 		return ((SFBAudioDecoderSubclassInfo *)obj1).priority < ((SFBAudioDecoderSubclassInfo *)obj2).priority;
 	}];
-}
-
-@end
-
-@implementation SFBAudioDecoder (SFBAudioDecoderSubclassLookup)
-
-+ (Class)subclassForURL:(NSURL *)url
-{
-	// TODO: Handle MIME types?
-	if(url.isFileURL)
-		return [self subclassForPathExtension:url.pathExtension.lowercaseString];
-
-	return nil;
-}
-
-+ (Class)subclassForPathExtension:(NSString *)extension
-{
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-		if([supportedPathExtensions containsObject:extension])
-			return subclassInfo.klass;
-	}
-
-	return nil;
-}
-
-+ (Class)subclassForMIMEType:(NSString *)mimeType
-{
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-		if([supportedMIMETypes containsObject:mimeType])
-			return subclassInfo.klass;
-	}
-
-	return nil;
-}
-
-+ (Class)subclassForDecoderName:(SFBAudioDecoderName)decoderName
-{
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		SFBAudioDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
-		if(subclassDecoderName == decoderName)
-			return subclassInfo.klass;
-	}
-
-	return nil;
 }
 
 @end

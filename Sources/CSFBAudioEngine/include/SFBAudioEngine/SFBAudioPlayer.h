@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,9 +17,9 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol SFBAudioPlayerDelegate;
 
 /// Playback position information for `SFBAudioPlayer`
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackPosition instead")*/;
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_REFINED_FOR_SWIFT;
 /// Playback time information for `SFBAudioPlayer`
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackTime instead")*/;
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_REFINED_FOR_SWIFT;
 
 /// A block accepting a single `AVAudioEngine` parameter
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
@@ -31,7 +31,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	/// `SFBAudioPlayer.engineIsRunning` and `!SFBAudioPlayer.playerNodeIsPlaying`
 	SFBAudioPlayerPlaybackStatePaused		= 1,
 	/// `!SFBAudioPlayer.engineIsRunning`
-	SFBAudioPlayerPlaybackStateStopped		= 2
+	SFBAudioPlayerPlaybackStateStopped		= 2,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
 /// An audio player wrapping an `AVAudioEngine` processing graph supplied by `SFBAudioPlayerNode`

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,7 @@ extension AudioPlayerNode {
 
 	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
 	public var playbackPosition: PlaybackPosition? {
-		var position = SFBAudioPlayerNodePlaybackPosition()
+		var position = __SFBAudioPlayerNodePlaybackPosition()
 		guard __getPlaybackPosition(&position, andTime: nil) else {
 			return nil
 		}
@@ -34,7 +34,7 @@ extension AudioPlayerNode {
 
 	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
 	public var playbackTime: PlaybackTime? {
-		var time = SFBAudioPlayerNodePlaybackTime()
+		var time = __SFBAudioPlayerNodePlaybackTime()
 		guard __getPlaybackPosition(nil, andTime: &time) else {
 			return nil
 		}
@@ -43,8 +43,8 @@ extension AudioPlayerNode {
 
 	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
 	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
-		var position = SFBAudioPlayerNodePlaybackPosition()
-		var time = SFBAudioPlayerNodePlaybackTime()
+		var position = __SFBAudioPlayerNodePlaybackPosition()
+		var time = __SFBAudioPlayerNodePlaybackTime()
 		guard __getPlaybackPosition(&position, andTime: &time) else {
 			return nil
 		}
@@ -54,14 +54,14 @@ extension AudioPlayerNode {
 
 extension AudioPlayerNode.PlaybackPosition {
 	/// Returns an initialized `AudioPlayerNode.PlaybackPosition` object from `position`
-	init(_ position: SFBAudioPlayerNodePlaybackPosition) {
+	init(_ position: __SFBAudioPlayerNodePlaybackPosition) {
 		self.current = position.framePosition == unknownFramePosition ? nil : position.framePosition
 		self.total = position.frameLength == unknownFrameLength ? nil : position.frameLength
 	}
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return Double(current) / Double(total)
@@ -69,7 +69,7 @@ extension AudioPlayerNode.PlaybackPosition {
 
 	/// Returns the frames remaining
 	public var remaining: AVAudioFramePosition? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return total - current
@@ -78,14 +78,14 @@ extension AudioPlayerNode.PlaybackPosition {
 
 extension AudioPlayerNode.PlaybackTime {
 	/// Returns an initialized `AudioPlayerNode.PlaybackTime` object from `time`
-	init(_ time: SFBAudioPlayerNodePlaybackTime) {
+	init(_ time: __SFBAudioPlayerNodePlaybackTime) {
 		self.current = time.currentTime == unknownTime ? nil : time.currentTime
 		self.total = time.totalTime == unknownTime ? nil : time.totalTime
 	}
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return Double(current) / Double(total)
@@ -93,7 +93,7 @@ extension AudioPlayerNode.PlaybackTime {
 
 	/// Returns the time remaining
 	public var remaining: TimeInterval? {
-		guard let current = self.current, let total = self.total else {
+		guard let current, let total else {
 			return nil
 		}
 		return total - current

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -15,6 +15,7 @@
 
 #import "SFBCoreAudioDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -169,6 +170,30 @@ SInt64 get_size_callback(void *inClientData)
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameCoreAudio;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:8 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	// Core Audio supports a multitude of formats. This is not meant to be an exhaustive check but
+	// just something quick to identify common file formats lacking a path extension or MIME type.
+
+	// M4A files
+	if([header matchesBytes:"ftyp" length:4 atLocation:4])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	// CAF files
+	else if([header startsWithBytes:"caff" length:4])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -150,7 +150,7 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 	/// Input/output error
 	SFBAudioFileErrorCodeInputOutput		= 2,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioFileErrorCodeInvalidFormat		= 3
+	SFBAudioFileErrorCodeInvalidFormat		= 3,
 } NS_SWIFT_NAME(AudioFile.ErrorCode);
 
 NS_ASSUME_NONNULL_END

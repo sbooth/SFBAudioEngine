@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006 - 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -15,9 +15,11 @@
 
 #import "SFBFLACDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
+SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC = @"org.sbooth.AudioEngine.Decoder.OggFLAC";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize = @"min_blocksize";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize = @"max_blocksize";
@@ -45,6 +47,7 @@ struct ::std::default_delete<FLAC__StreamDecoder> {
 	AVAudioFramePosition _framePosition;
 	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
 }
+- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error;
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer;
 - (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata;
 - (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status;
@@ -63,7 +66,7 @@ FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, 
 	SFBInputSource *inputSource = flacDecoder->_inputSource;
 
 	NSInteger bytesRead;
-	if(![inputSource readBytes:buffer length:(NSInteger)*bytes bytesRead:&bytesRead error:nil])
+	if(![inputSource readBytes:buffer length:static_cast<NSInteger>(*bytes) bytesRead:&bytesRead error:nil])
 		return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
 
 	*bytes = static_cast<size_t>(bytesRead);
@@ -166,17 +169,34 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"flac", @"oga"]];
+	return [NSSet setWithObject:@"flac"];
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/flac", @"audio/ogg; codecs=flac"]];
+	return [NSSet setWithObject:@"audio/flac"];
 }
 
 + (SFBAudioDecoderName)decoderName
 {
 	return SFBAudioDecoderNameFLAC;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"fLaC" length:4])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)decodingIsLossless
@@ -198,28 +218,8 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	}
 
 	// Initialize decoder
-	FLAC__StreamDecoderInitStatus status = FLAC__STREAM_DECODER_INIT_STATUS_ERROR_OPENING_FILE;
-
-	// Attempt to create a stream decoder based on the file's extension
-	NSString *extension = _inputSource.url.pathExtension.lowercaseString;
-	if([extension isEqualToString:@"flac"])
-		status = FLAC__stream_decoder_init_stream(flac.get(), read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
-	else if([extension isEqualToString:@"oga"])
-		status = FLAC__stream_decoder_init_ogg_stream(flac.get(), read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
-
-	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
-		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_xxx failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(flac.get()));
-
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+	if(![self initializeFLACStreamDecoder:flac.get() error:error])
 		return NO;
-	}
 
 	// Process metadata
 	if(!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
@@ -372,7 +372,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 - (AVAudioFramePosition)frameLength
 {
-	return (AVAudioFramePosition)_streamInfo.total_samples;
+	return static_cast<AVAudioFramePosition>(_streamInfo.total_samples);
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
@@ -431,6 +431,26 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		_framePosition = frame;
 
 	return result != 0;
+}
+
+- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error
+{
+	auto status = FLAC__stream_decoder_init_stream(decoder, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
+	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
+		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
+											  url:_inputSource.url
+									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
+		return NO;
+	}
+
+	return YES;
 }
 
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer
@@ -511,6 +531,69 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 - (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status
 {
 	os_log_error(gSFBAudioDecoderLog, "FLAC error: %{public}s", FLAC__StreamDecoderErrorStatusString[status]);
+}
+
+@end
+
+@implementation SFBOggFLACDecoder
+
++ (void)load
+{
+	[SFBAudioDecoder registerSubclass:[self class]];
+}
+
++ (NSSet *)supportedPathExtensions
+{
+	return [NSSet setWithObject:@"oga"];
+}
+
++ (NSSet *)supportedMIMETypes
+{
+	return [NSSet setWithObject:@"audio/ogg; codecs=flac"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggFLAC;
+}
+
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [inputSource readHeaderOfLength:33 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"\x7f""FLAC" length:5 atLocation:28])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
+}
+
+- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error
+{
+
+	auto status = FLAC__stream_decoder_init_ogg_stream(decoder, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
+
+	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
+		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
+											  url:_inputSource.url
+									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
+		return NO;
+	}
+
+	return YES;
 }
 
 @end
