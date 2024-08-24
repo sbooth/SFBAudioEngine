@@ -196,6 +196,17 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 - (nullable NSData *)readDataOfLength:(NSUInteger)length error:(NSError **)error NS_SWIFT_NAME(read(length:));
 @end
 
+/// Header reading
+@interface SFBInputSource (SFBHeaderReading)
+/// Reads data from the beginning of the input, optionally skipping a leading ID3v2 tag if present
+/// - important: If the input source does not support seeking this method returns an error
+/// - parameter length: The number of bytes to read
+/// - parameter skipID3v2Tag: Whether to skip a leading ID3v2 tag if present
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `NSData` object containing `length` bytes following the optional leading ID3v2 tag, `nil` otherwise
+- (nullable NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error;
+@end
+
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBInputSource` and subclasses
@@ -207,6 +218,8 @@ typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
 	SFBInputSourceErrorCodeFileNotFound		= 0,
 	/// Input/output error
 	SFBInputSourceErrorCodeInputOutput		= 1,
+	/// Input not seekable
+	SFBInputSourceErrorCodeNotSeekable		= 2,
 } NS_SWIFT_NAME(InputSource.ErrorCode);
 
 NS_ASSUME_NONNULL_END

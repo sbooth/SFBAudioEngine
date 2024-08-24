@@ -123,6 +123,16 @@ static dumb_off_t get_size_callback(void *f)
 	return SFBAudioDecoderNameModule;
 }
 
++ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	*formatIsSupported = SFBTernaryTruthValueUnknown;
+
+	return YES;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
