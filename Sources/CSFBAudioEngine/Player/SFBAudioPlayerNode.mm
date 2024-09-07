@@ -721,6 +721,10 @@ public:
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventDecodingComplete");
 						break;
+
+					default:
+						os_log_fault(_audioPlayerNodeLog, "Unknown event command: %u", cmd);
+						break;
 				}
 			}
 		});
