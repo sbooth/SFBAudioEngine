@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -476,7 +476,7 @@ static id _sharedKeySet;
 
 #pragma mark Metadata Utilities
 
-- (void) copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata
+- (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata
 {
 	if(kind & SFBAudioMetadataKindBasic) {
 		self.title = metadata.title;
@@ -525,12 +525,12 @@ static id _sharedKeySet;
 	}
 }
 
-- (void) copyMetadataFrom:(SFBAudioMetadata *)metadata
+- (void)copyMetadataFrom:(SFBAudioMetadata *)metadata
 {
 	[self copyMetadataOfKind:(SFBAudioMetadataKindBasic | SFBAudioMetadataKindSorting | SFBAudioMetadataKindGrouping | SFBAudioMetadataKindAdditional | SFBAudioMetadataKindReplayGain) from:metadata];
 }
 
-- (void) removeMetadataOfKind:(SFBAudioMetadataKind)kind
+- (void)removeMetadataOfKind:(SFBAudioMetadataKind)kind
 {
 	if(kind & SFBAudioMetadataKindBasic) {
 		self.title = nil;
@@ -579,9 +579,9 @@ static id _sharedKeySet;
 	}
 }
 
-- (void) removeAllMetadata
+- (void)removeAllMetadata
 {
-	[self removeMetadataOfKind:(SFBAudioMetadataKindBasic | SFBAudioMetadataKindSorting | SFBAudioMetadataKindGrouping | SFBAudioMetadataKindAdditional | SFBAudioMetadataKindReplayGain)];
+	[_metadata removeAllObjects];
 }
 
 #pragma mark Attached Pictures
