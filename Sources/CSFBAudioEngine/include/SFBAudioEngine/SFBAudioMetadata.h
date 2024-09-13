@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Metadata kind bitmask values used in `copyMetadataOfKind:from: and removeMetadataOfKind:`
+/// Metadata kind bitmask values used in `copyMetadataOfKind:from:` and `removeMetadataOfKind:`
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	/// Basic metadata
 	SFBAudioMetadataKindBasic			= 1 << 0,
@@ -116,6 +116,11 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// Returns an initialized `SFBAudioMetadata` object populated with values from `dictionaryRepresentation`
 /// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAudioMetadataKey, id> *)dictionaryRepresentation;
+
+/// Removes all metadata and attached pictures
+/// - seealso: `-removeAllMetadata`
+/// - seealso: `-removeAllAttachedPictures`
+- (void)removeAll;
 
 #pragma mark - Basic Metadata
 
@@ -230,26 +235,26 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 
 /// Copies all metadata from `metadata`
 /// - note: Does not copy album artwork
-/// - parameter metadata: A `Metadata` object containing the metadata to copy
+/// - parameter metadata: An `SFBAudioMetadata` object containing the metadata to copy
 /// - seealso: `-copyMetadataOfKind:from:`
 /// - seealso: `-copyAttachedPictures:`
 - (void)copyMetadataFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(from:));
 
 /// Copies the values contained in the specified metadata kinds from `metadata`
 /// - note: Does not copy album artwork
-/// - parameter metadata: A `Metadata` object containing the metadata to copy
+/// - parameter metadata: An `SFBAudioMetadata` object containing the metadata to copy
 /// - parameter kind: A bitmask specifying the kinds of metadata to copy
 /// - seealso: `-copyMetadataFrom:`
 /// - seealso: `-copyAttachedPictures`
 - (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(ofKind:from:));
 
-/// Sets the values contained in specified metadata kinds to `nullptr`
+/// Sets the values contained in the specified metadata kinds to `nil`
 /// - parameter kind: A bitmask specifying the kinds of metadata to remove
 /// - seealso: `-removeAllMetadata`
 /// - seealso: `-removeAllAttachedPictures`
 - (void)removeMetadataOfKind:(SFBAudioMetadataKind)kind NS_SWIFT_NAME(removeMetadata(ofKind:));
 
-/// Sets all metadata to `nullptr`
+/// Sets all metadata to `nil`
 /// - note: Leaves album art intact
 /// - seealso: `-removeMetadataOfKind:`
 /// - seealso: `-removeAllAttachedPictures`
@@ -265,7 +270,7 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// Copies album artwork from `metadata`
 /// - note: This clears existing album artwork
 /// - note: Does not copy metadata
-/// - parameter metadata: A `SFBAudioMetadata` object containing the artwork to copy
+/// - parameter metadata: An `SFBAudioMetadata` object containing the artwork to copy
 /// - seealso: `-copyMetadataFrom:`
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyAttachedPicturesFrom(_:));
 

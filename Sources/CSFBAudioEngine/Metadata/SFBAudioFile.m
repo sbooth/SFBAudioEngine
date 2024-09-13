@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -152,6 +152,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 		Class subclass = [SFBAudioFile subclassForMIMEType:mimeType.lowercaseString];
 		if(subclass && (self = [[subclass alloc] init])) {
 			_url = url;
+			_properties = [[SFBAudioProperties alloc] init];
+			_metadata = [[SFBAudioMetadata alloc] init];
 			return self;
 		}
 		os_log_debug(gSFBAudioFileLog, "SFBAudioFile unsupported MIME type: %{public}@", mimeType);
@@ -188,8 +190,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 		return nil;
 	}
 
-	if((self = [[subclass alloc] init]))
+	if((self = [[subclass alloc] init])) {
 		_url = url;
+		_properties = [[SFBAudioProperties alloc] init];
+		_metadata = [[SFBAudioMetadata alloc] init];
+	}
 
 	return self;
 }
@@ -211,8 +216,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 		return nil;
 	}
 
-	if((self = [[subclass alloc] init]))
+	if((self = [[subclass alloc] init])) {
 		_url = url;
+		_properties = [[SFBAudioProperties alloc] init];
+		_metadata = [[SFBAudioMetadata alloc] init];
+	}
 
 	return self;
 }
