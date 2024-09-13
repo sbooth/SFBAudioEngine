@@ -134,6 +134,12 @@ static id _sharedKeySet;
 	return result;
 }
 
+- (void)removeAll
+{
+	[_metadata removeAllObjects];
+	[_pictures removeAllObjects];
+}
+
 #pragma mark Basic Metadata
 
 - (NSString *)title

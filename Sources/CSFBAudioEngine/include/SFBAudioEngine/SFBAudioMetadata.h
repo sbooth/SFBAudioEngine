@@ -117,6 +117,11 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAudioMetadataKey, id> *)dictionaryRepresentation;
 
+/// Removes all metadata and attached pictures
+/// - seealso: `-removeAllMetadata`
+/// - seealso: `-removeAllAttachedPictures`
+- (void)removeAll;
+
 #pragma mark - Basic Metadata
 
 /// The title
@@ -243,13 +248,13 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// - seealso: `-copyAttachedPictures`
 - (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(ofKind:from:));
 
-/// Sets the values contained in specified metadata kinds to `nullptr`
+/// Sets the values contained in the specified metadata kinds to `nil`
 /// - parameter kind: A bitmask specifying the kinds of metadata to remove
 /// - seealso: `-removeAllMetadata`
 /// - seealso: `-removeAllAttachedPictures`
 - (void)removeMetadataOfKind:(SFBAudioMetadataKind)kind NS_SWIFT_NAME(removeMetadata(ofKind:));
 
-/// Sets all metadata to `nullptr`
+/// Sets all metadata to `nil`
 /// - note: Leaves album art intact
 /// - seealso: `-removeMetadataOfKind:`
 /// - seealso: `-removeAllAttachedPictures`
