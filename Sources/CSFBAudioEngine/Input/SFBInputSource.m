@@ -319,8 +319,14 @@ static void SFBCreateInputSourceLog(void)
 	}
 
 	NSData *data = [self readDataOfLength:length error:error];
-	if(!data || data.length < length)
+	if(!data)
 		return nil;
+
+	if(data.length < length) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
+		return nil;
+	}
 
 	if(![self seekToOffset:originalOffset error:error])
 		return nil;
