@@ -281,7 +281,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 		if(error)
 			*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
 										 code:SFBDSDDecoderErrorCodeUnknownDecoder
-									 userInfo:@{ NSURLErrorKey: _inputSource.url }];
+									 userInfo:@{ NSURLErrorKey: inputSource.url }];
 		return nil;
 	}
 
