@@ -19,20 +19,24 @@ extension InputSource {
 		return bytesRead
 	}
 
-	/// Returns the current offset in the input, in bytes
+	/// The current offset in the input, in bytes
 	/// - throws: An `NSError` object if an error occurs
-	public func offset() throws -> Int {
-		var offset = 0
-		try __getOffset(&offset)
-		return offset
+	public var offset: Int {
+		get throws {
+			var offset = 0
+			try __getOffset(&offset)
+			return offset
+		}
 	}
 
-	/// Returns the length of the input, in bytes
+	/// The length of the input, in bytes
 	/// - throws: An `NSError` object if an error occurs
-	public func length() throws -> Int {
-		var length = 0
-		try __getLength(&length)
-		return length
+	public var length: Int {
+		get throws {
+			var length = 0
+			try __getLength(&length)
+			return length
+		}
 	}
 
 	/// Reads and returns a binary integer
