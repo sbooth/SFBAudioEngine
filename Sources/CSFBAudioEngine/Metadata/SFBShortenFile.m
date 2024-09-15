@@ -11,7 +11,9 @@
 #import "SFBFileInputSource.h"
 #import "SFBAudioDecoder.h"
 
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioEngine.File.Shorten";
 
@@ -35,6 +37,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameShorten;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:4 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"ajkg" length:4])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

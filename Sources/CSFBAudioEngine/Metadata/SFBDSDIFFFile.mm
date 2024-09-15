@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,9 @@
 #import "SFBDSDIFFFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
@@ -43,6 +45,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameDSDIFF;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:16 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"FRM8" length:4] && [header matchesBytes:"DSD " length:4 atLocation:12])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

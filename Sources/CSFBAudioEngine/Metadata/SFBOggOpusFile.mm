@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,9 @@
 #import "SFBOggOpusFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioEngine.File.OggOpus";
@@ -42,6 +44,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameOggOpus;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:36 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"OpusHead" length:8 atLocation:28])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

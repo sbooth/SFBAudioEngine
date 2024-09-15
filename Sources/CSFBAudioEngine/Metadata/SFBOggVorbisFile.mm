@@ -17,7 +17,9 @@
 #import "SFBOggVorbisFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.AudioEngine.File.OggVorbis";
@@ -42,6 +44,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameOggVorbis;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:35 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"\x01vorbis" length:7 atLocation:28])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,9 @@
 #import "SFBMusepackFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 
@@ -43,6 +45,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameMusepack;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"MPCK" length:4] || [header startsWithBytes:"MP+" length:3])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

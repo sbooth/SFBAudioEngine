@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,9 @@
 #import "SFBWAVEFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
@@ -43,6 +45,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameWAVE;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:12 skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"RIFF" length:4] && [header matchesBytes:"WAVE" length:4 atLocation:8])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

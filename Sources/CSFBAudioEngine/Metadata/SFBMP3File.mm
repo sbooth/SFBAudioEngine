@@ -18,7 +18,9 @@
 #import "SFBMP3File.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
@@ -45,6 +47,40 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameMP3;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:3 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	const auto bytes = static_cast<const uint8_t *>(header.bytes);
+
+	// Frame sync
+	if(bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// MPEG audio version ID
+	else if((bytes[1] & 0x18) == 0x08)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Layer description
+	else if((bytes[1] & 0x06) == 0)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Protection bit
+	// Bitrate index
+	else if((bytes[2] & 0xf0) == 0xf0)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Sampling rate frequency index
+	else if((bytes[2] & 0x0c) == 0x0c)
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+	// Remainder of header bits ignored
+	else
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error

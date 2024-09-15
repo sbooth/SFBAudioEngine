@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,7 +17,9 @@
 #import "SFBTrueAudioFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 
@@ -43,6 +45,23 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
 + (SFBAudioFileFormatName)formatName
 {
 	return SFBAudioFileFormatNameTrueAudio;
+}
+
++ (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
+{
+	NSParameterAssert(fileHandle != nil);
+	NSParameterAssert(formatIsSupported != NULL);
+
+	NSData *header = [fileHandle readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	if(!header)
+		return NO;
+
+	if([header startsWithBytes:"TTA1" length:4])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
+
+	return YES;
 }
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
