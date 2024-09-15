@@ -277,7 +277,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 
 	if(!subclass) {
-		os_log_debug(gSFBDSDDecoderLog, "SFBDSDDecoder unknown decoder: %{public}@", decoderName);
+		os_log_error(gSFBDSDDecoderLog, "SFBDSDDecoder unknown decoder: %{public}@", decoderName);
 		if(error)
 			*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
 										 code:SFBDSDDecoderErrorCodeUnknownDecoder
