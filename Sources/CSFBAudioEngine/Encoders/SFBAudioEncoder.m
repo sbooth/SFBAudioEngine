@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -143,24 +143,36 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	NSParameterAssert(outputSource != nil);
 
-	// The MIME type takes precedence over the file extension
-	if(mimeType) {
-		Class subclass = [SFBAudioEncoder subclassForMIMEType:mimeType.lowercaseString];
-		if(subclass && (self = [[subclass alloc] init])) {
-			_outputSource = outputSource;
-			return self;
+	NSString *lowercaseExtension = outputSource.url.pathExtension.lowercaseString;
+	NSString *lowercaseMIMEType = mimeType.lowercaseString;
+
+	int score = 10;
+	Class subclass = nil;
+
+	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		int currentScore = 0;
+		Class klass = subclassInfo.klass;
+
+		if(lowercaseMIMEType) {
+			NSSet *supportedMIMETypes = [klass supportedMIMETypes];
+			if([supportedMIMETypes containsObject:lowercaseMIMEType])
+				currentScore += 40;
 		}
-		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported MIME type: %{public}@", mimeType);
+
+		if(lowercaseExtension) {
+			NSSet *supportedPathExtensions = [klass supportedPathExtensions];
+			if([supportedPathExtensions containsObject:lowercaseExtension])
+				currentScore += 20;
+		}
+
+		if(currentScore > score) {
+			score = currentScore;
+			subclass = klass;
+		}
 	}
 
-	// If no MIME type was specified, use the extension-based resolvers
-
-	// TODO: Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-	// and if openEncoder is false the wrong encoder type may be returned, since the file isn't analyzed
-	// until Open() is called
-
-	NSString *pathExtension = outputSource.url.pathExtension;
-	if(!pathExtension) {
+	if(!subclass) {
+		os_log_debug(gSFBAudioEncoderLog, "Unable to determine content type for %{public}@", outputSource);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
 											 code:SFBAudioEncoderErrorCodeInvalidFormat
@@ -171,23 +183,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 		return nil;
 	}
 
-	Class subclass = [SFBAudioEncoder subclassForPathExtension:pathExtension.lowercaseString];
-	if(!subclass) {
-		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported path extension: %{public}@", pathExtension);
-
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
-											 code:SFBAudioEncoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
-											  url:outputSource.url
-									failureReason:NSLocalizedString(@"Unsupported file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
-		return nil;
-	}
-
-	if((self = [[subclass alloc] init]))
+	if((self = [[subclass alloc] init])) {
 		_outputSource = outputSource;
+		os_log_debug(gSFBAudioEncoderLog, "Created %{public}@ based on score of %i", self, score);
+	}
 
 	return self;
 }
@@ -216,11 +215,21 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	NSParameterAssert(outputSource != nil);
 
-	Class subclass = [SFBAudioEncoder subclassForEncoderName:encoderName];
+	Class subclass = nil;
+	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBAudioEncoderName subclassEncoderName = [subclassInfo.klass encoderName];
+		if(subclassEncoderName == encoderName) {
+			subclass = subclassInfo.klass;
+			break;
+		}
+	}
+
 	if(!subclass) {
-		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported encoder: %{public}@", encoderName);
+		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unknown encoder: \"%{public}@\"", encoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeUnknownEncoder userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+										 code:SFBAudioEncoderErrorCodeUnknownEncoder
+									 userInfo:@{ NSURLErrorKey: outputSource.url }];
 		return nil;
 	}
 
@@ -319,7 +328,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)registerSubclass:(Class)subclass priority:(int)priority
 {
-	//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBAudioEncoder", NSStringFromClass(subclass));
+//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBAudioEncoder", NSStringFromClass(subclass));
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
@@ -334,52 +343,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
 		return ((SFBAudioEncoderSubclassInfo *)obj1).priority < ((SFBAudioEncoderSubclassInfo *)obj2).priority;
 	}];
-}
-
-@end
-
-@implementation SFBAudioEncoder (SFBAudioEncoderSubclassLookup)
-
-+ (Class)subclassForURL:(NSURL *)url
-{
-	// TODO: Handle MIME types?
-	if(url.isFileURL)
-		return [self subclassForPathExtension:url.pathExtension.lowercaseString];
-
-	return nil;
-}
-
-+ (Class)subclassForPathExtension:(NSString *)extension
-{
-	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-		if([supportedPathExtensions containsObject:extension])
-			return subclassInfo.klass;
-	}
-
-	return nil;
-}
-
-+ (Class)subclassForMIMEType:(NSString *)mimeType
-{
-	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-		if([supportedMIMETypes containsObject:mimeType])
-			return subclassInfo.klass;
-	}
-
-	return nil;
-}
-
-+ (Class)subclassForEncoderName:(SFBAudioEncoderName)encoderName
-{
-	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		SFBAudioEncoderName subclassEncoderName = [subclassInfo.klass encoderName];
-		if(subclassEncoderName == encoderName)
-			return subclassInfo.klass;
-	}
-
-	return nil;
 }
 
 @end
