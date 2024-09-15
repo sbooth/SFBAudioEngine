@@ -68,6 +68,7 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
+/// - important: If there is a conflict between the URL's path extension and the MIME type, the MIME type takes precedence
 /// - parameter url: The URL
 /// - parameter mimeType: The MIME type of `url` or `nil`
 /// - parameter error: An optional pointer to a `NSError` to receive error information
