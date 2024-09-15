@@ -191,22 +191,23 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 		if(detectContentType) {
 			SFBTernaryTruthValue formatSupported;
-			if(![klass testFileHandle:fileHandle formatIsSupported:&formatSupported error:error])
-				return nil;
-
-			switch(formatSupported) {
-				case SFBTernaryTruthValueTrue:
-					currentScore += 75;
-					break;
-				case SFBTernaryTruthValueFalse:
-					break;
-				case SFBTernaryTruthValueUnknown:
-					currentScore += 10;
-					break;
-				default:
-					os_log_fault(gSFBAudioFileLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
-					break;
+			if([klass testFileHandle:fileHandle formatIsSupported:&formatSupported error:error]) {
+				switch(formatSupported) {
+					case SFBTernaryTruthValueTrue:
+						currentScore += 75;
+						break;
+					case SFBTernaryTruthValueFalse:
+						break;
+					case SFBTernaryTruthValueUnknown:
+						currentScore += 10;
+						break;
+					default:
+						os_log_fault(gSFBAudioFileLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
+						break;
+				}
 			}
+			else
+				os_log_error(gSFBAudioFileLog, "Error testing %{public}@ format support for %{public}@", klass, fileHandle);
 		}
 
 		if(currentScore > score) {
