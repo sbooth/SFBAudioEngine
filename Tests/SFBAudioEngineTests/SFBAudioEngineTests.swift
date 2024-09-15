@@ -12,11 +12,11 @@ final class SFBAudioEngineTests: XCTestCase {
 		let input = InputSource(data: Data(repeating: 0xfe, count: 16))
 		XCTAssertEqual(input.isOpen, true)
 		XCTAssertEqual(input.supportsSeeking, true)
-		XCTAssertEqual(try input.offset(), 0)
+		XCTAssertEqual(try input.offset, 0)
 		let i: UInt8 = try input.read()
 		XCTAssertEqual(i, 0xfe)
-		XCTAssertEqual(try input.offset(), 1)
-		XCTAssertEqual(try input.length(), 16)
+		XCTAssertEqual(try input.offset, 1)
+		XCTAssertEqual(try input.length, 16)
 	}
 
 	func testOutputSourceFromData() throws {
