@@ -55,7 +55,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"\x01vorbis" length:7 atLocation:28])
+	if([header isOggVorbisHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

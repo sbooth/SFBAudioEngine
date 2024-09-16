@@ -55,7 +55,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameAIFF = @"org.sbooth.AudioEngi
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"FORM" length:4] && ([header matchesBytes:"AIFF" length:4 atLocation:8] || [header matchesBytes:"AIFC" length:4 atLocation:8]))
+	if([header isAIFFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

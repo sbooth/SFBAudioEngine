@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"TTA1" length:4])
+	if([header isTrueAudioHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

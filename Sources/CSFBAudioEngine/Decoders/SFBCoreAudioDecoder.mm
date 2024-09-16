@@ -187,10 +187,10 @@ SInt64 get_size_callback(void *inClientData)
 	// just something quick to identify common file formats lacking a path extension or MIME type.
 
 	// M4A files
-	if([header matchesBytes:"ftyp" length:4 atLocation:4])
+	if([header isMPEG4Header])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	// CAF files
-	else if([header startsWithBytes:"caff" length:4])
+	else if([header isCAFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 
 	return YES;

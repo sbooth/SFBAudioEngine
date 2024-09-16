@@ -140,7 +140,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"MPCK" length:4] || [header startsWithBytes:"MP+" length:3])
+	if([header isMusepackHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

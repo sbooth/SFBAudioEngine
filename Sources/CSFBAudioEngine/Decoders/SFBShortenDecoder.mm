@@ -463,7 +463,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"ajkg" length:4])
+	if([header isShortenHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

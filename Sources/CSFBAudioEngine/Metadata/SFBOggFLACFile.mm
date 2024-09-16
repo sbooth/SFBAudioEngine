@@ -55,7 +55,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioE
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"\x7f""FLAC" length:5 atLocation:28])
+	if([header isOggFLACHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

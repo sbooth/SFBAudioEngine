@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"wvpk" length:4])
+	if([header isWavPackHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

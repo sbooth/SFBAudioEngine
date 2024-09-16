@@ -62,7 +62,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"fLaC" length:4])
+	if([header isFLACHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

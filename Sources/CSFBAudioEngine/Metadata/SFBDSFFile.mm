@@ -55,7 +55,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"DSD " length:4] && [header matchesBytes:"fmt " length:4 atLocation:28])
+	if([header isDSFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

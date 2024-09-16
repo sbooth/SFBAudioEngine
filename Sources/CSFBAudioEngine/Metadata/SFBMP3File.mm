@@ -58,27 +58,10 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 	if(!header)
 		return NO;
 
-	const auto bytes = static_cast<const uint8_t *>(header.bytes);
-
-	// Frame sync
-	if(bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0)
-		*formatIsSupported = SFBTernaryTruthValueFalse;
-	// MPEG audio version ID
-	else if((bytes[1] & 0x18) == 0x08)
-		*formatIsSupported = SFBTernaryTruthValueFalse;
-	// Layer description
-	else if((bytes[1] & 0x06) == 0)
-		*formatIsSupported = SFBTernaryTruthValueFalse;
-	// Protection bit
-	// Bitrate index
-	else if((bytes[2] & 0xf0) == 0xf0)
-		*formatIsSupported = SFBTernaryTruthValueFalse;
-	// Sampling rate frequency index
-	else if((bytes[2] & 0x0c) == 0x0c)
-		*formatIsSupported = SFBTernaryTruthValueFalse;
-	// Remainder of header bits ignored
-	else
+	if([header isMP3Header])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
 
 	return YES;
 }

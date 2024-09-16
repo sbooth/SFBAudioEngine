@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"MPCK" length:4] || [header startsWithBytes:"MP+" length:3])
+	if([header isMusepackHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

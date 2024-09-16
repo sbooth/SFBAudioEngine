@@ -117,7 +117,7 @@ static opus_int64 tell_callback(void *stream)
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"OpusHead" length:8 atLocation:28])
+	if([header isOggOpusHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

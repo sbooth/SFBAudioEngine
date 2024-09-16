@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 	if(!header)
 		return NO;
 
-	if([header matchesBytes:"ftyp" length:4 atLocation:4])
+	if([header isMPEG4Header])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

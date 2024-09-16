@@ -93,7 +93,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"DSD " length:4] && [header matchesBytes:"fmt " length:4 atLocation:28])
+	if([header isDSFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

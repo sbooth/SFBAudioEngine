@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"RIFF" length:4] && [header matchesBytes:"WAVE" length:4 atLocation:8])
+	if([header isWAVEHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

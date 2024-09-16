@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.A
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"MAC " length:4])
+	if([header isMonkeysAudioHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

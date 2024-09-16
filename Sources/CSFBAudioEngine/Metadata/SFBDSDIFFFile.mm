@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"FRM8" length:4] && [header matchesBytes:"DSD " length:4 atLocation:12])
+	if([header isDSDIFFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

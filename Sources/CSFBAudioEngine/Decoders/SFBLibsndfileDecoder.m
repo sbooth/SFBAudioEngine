@@ -183,10 +183,10 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	// just something quick to identify common file formats lacking a path extension or MIME type.
 
 	// AIFF and AIFF-C files
-	if([header startsWithBytes:"FORM" length:4] && ([header matchesBytes:"AIFF" length:4 atLocation:8] || [header matchesBytes:"AIFC" length:4 atLocation:8]))
+	if([header isAIFFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	// WAVE files
-	else if([header startsWithBytes:"RIFF" length:4] && [header matchesBytes:"WAVE" length:4 atLocation:8])
+	else if([header isWAVEHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 
 	return YES;

@@ -181,7 +181,7 @@ static int can_seek_callback(void *id)
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"wvpk" length:4])
+	if([header isWavPackHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;
