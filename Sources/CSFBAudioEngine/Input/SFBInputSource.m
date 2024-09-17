@@ -302,14 +302,8 @@ static void SFBCreateInputSourceLog(void)
 
 		// Attempt to detect and minimally parse an ID3v2 tag header
 		NSData *data = [self readDataOfLength:SFBID3v2HeaderSize error:error];
-		if([data isID3v2Header]) {
-			const uint8_t *bytes = data.bytes;
-
-			uint8_t flags = bytes[5];
-			uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
-
-			offset = SFBID3v2HeaderSize + size + (flags & 0x10 ? SFBID3v2FooterSize : 0);
-		}
+		if([data isID3v2Header])
+			offset = [data id3v2TagTotalSize];
 
 		if(![self seekToOffset:offset error:error])
 			return nil;

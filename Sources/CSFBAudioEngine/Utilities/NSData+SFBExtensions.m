@@ -35,6 +35,19 @@ const NSUInteger SFBID3v2FooterSize = 10;
 	return YES;
 }
 
+- (NSUInteger)id3v2TagTotalSize
+{
+	if(self.length < SFBID3v2HeaderSize)
+		return 0;
+
+	const uint8_t *bytes = self.bytes;
+
+	uint8_t flags = bytes[5];
+	uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
+
+	return SFBID3v2HeaderSize + size + (flags & 0x10 ? SFBID3v2FooterSize : 0);
+}
+
 @end
 
 const NSUInteger SFBAIFFDetectionSize = 12;
