@@ -218,7 +218,7 @@ private:
 	if(!header)
 		return NO;
 
-	if([header isMonkeysAudioHeader])
+	if([header isAPEHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

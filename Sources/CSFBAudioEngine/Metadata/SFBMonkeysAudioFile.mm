@@ -56,7 +56,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.A
 	if(!header)
 		return NO;
 
-	if([header isMonkeysAudioHeader])
+	if([header isAPEHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

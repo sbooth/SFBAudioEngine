@@ -278,9 +278,6 @@ static void SFBCreateInputSourceLog(void)
 
 @end
 
-#define ID3V2_TAG_HEADER_LENGTH_BYTES 10
-#define ID3V2_TAG_FOOTER_LENGTH_BYTES 10
-
 @implementation SFBInputSource (SFBHeaderReading)
 
 - (NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error
@@ -304,14 +301,14 @@ static void SFBCreateInputSourceLog(void)
 		NSInteger offset = 0;
 
 		// Attempt to detect and minimally parse an ID3v2 tag header
-		NSData *data = [self readDataOfLength:ID3V2_TAG_HEADER_LENGTH_BYTES error:error];
+		NSData *data = [self readDataOfLength:SFBID3v2HeaderSize error:error];
 		if([data isID3v2Header]) {
 			const uint8_t *bytes = data.bytes;
 
 			uint8_t flags = bytes[5];
 			uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
 
-			offset = ID3V2_TAG_HEADER_LENGTH_BYTES + size + (flags & 0x10 ? ID3V2_TAG_FOOTER_LENGTH_BYTES : 0);
+			offset = SFBID3v2HeaderSize + size + (flags & 0x10 ? SFBID3v2FooterSize : 0);
 		}
 
 		if(![self seekToOffset:offset error:error])
