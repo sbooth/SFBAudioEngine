@@ -723,11 +723,11 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:16 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"FRM8" length:4] && [header matchesBytes:"DSD " length:4 atLocation:12])
+	if([header isDSDIFFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

@@ -107,11 +107,11 @@ static long tell_func_callback(void *datasource)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:35 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBOggVorbisDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"\x01vorbis" length:7 atLocation:28])
+	if([header isOggVorbisHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

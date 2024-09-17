@@ -177,11 +177,11 @@ static int can_seek_callback(void *id)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBWavPackDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"wvpk" length:4])
+	if([header isWavPackHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

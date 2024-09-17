@@ -187,11 +187,11 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"fLaC" length:4])
+	if([header isFLACHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;
@@ -562,11 +562,11 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:33 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"OggS\0" length:5] && [header matchesBytes:"\x7f""FLAC" length:5 atLocation:28])
+	if([header isOggFLACHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;
