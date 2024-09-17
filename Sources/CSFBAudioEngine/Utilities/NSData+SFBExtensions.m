@@ -46,7 +46,9 @@
 
 - (BOOL)isCAFHeader
 {
-	return self.length >= 4 && !memcmp(self.bytes, "caff", 4);
+	if(self.length < 4)
+		return NO;
+	return !memcmp(self.bytes, "caff", 4);
 }
 
 - (BOOL)isDSDIFFHeader
@@ -67,12 +69,16 @@
 
 - (BOOL)isFLACHeader
 {
-	return self.length >= 4 && !memcmp(self.bytes, "fLaC", 4);
+	if(self.length < 4)
+		return NO;
+	return !memcmp(self.bytes, "fLaC", 4);
 }
 
 - (BOOL)isMonkeysAudioHeader
 {
-	return self.length >= 4 && !memcmp(self.bytes, "MAC ", 4);
+	if(self.length < 4)
+		return NO;
+	return !memcmp(self.bytes, "MAC ", 4);
 }
 
 - (BOOL)isMP3Header
@@ -150,12 +156,16 @@
 
 - (BOOL)isShortenHeader
 {
-	return self.length >= 4 && !memcmp(self.bytes, "ajkg", 4);
+	if(self.length < 4)
+		return NO;
+	return !memcmp(self.bytes, "ajkg", 4);
 }
 
 - (BOOL)isTrueAudioHeader
 {
-	return self.length >= 4 && !memcmp(self.bytes, "TTA1", 4);
+	if(self.length < 4)
+		return NO;
+	return !memcmp(self.bytes, "TTA1", 4);
 }
 
 - (BOOL)isWAVEHeader
@@ -168,7 +178,9 @@
 
 - (BOOL)isWavPackHeader
 {
-	return self.length >= 4 && !memcmp(self.bytes, "wvpk", 4);
+	if(self.length < 4)
+		return NO;
+	return !memcmp(self.bytes, "wvpk", 4);
 }
 
 @end
