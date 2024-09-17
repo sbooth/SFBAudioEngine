@@ -85,7 +85,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:36 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBOggSpeexDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

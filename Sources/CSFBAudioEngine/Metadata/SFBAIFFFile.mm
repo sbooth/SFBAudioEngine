@@ -51,7 +51,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameAIFF = @"org.sbooth.AudioEngi
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [fileHandle readHeaderOfLength:12 skipID3v2Tag:NO error:error];
+	NSData *header = [fileHandle readHeaderOfLength:SFBAIFFDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

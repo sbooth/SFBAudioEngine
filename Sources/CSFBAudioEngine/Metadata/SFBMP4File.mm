@@ -52,7 +52,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [fileHandle readHeaderOfLength:8 skipID3v2Tag:NO error:error];
+	NSData *header = [fileHandle readHeaderOfLength:SFBMPEG4DetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

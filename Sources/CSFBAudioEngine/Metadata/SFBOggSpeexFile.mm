@@ -51,7 +51,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [fileHandle readHeaderOfLength:36 skipID3v2Tag:NO error:error];
+	NSData *header = [fileHandle readHeaderOfLength:SFBOggSpeexDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

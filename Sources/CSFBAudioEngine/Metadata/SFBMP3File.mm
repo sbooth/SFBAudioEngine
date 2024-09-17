@@ -54,7 +54,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [fileHandle readHeaderOfLength:3 skipID3v2Tag:YES error:error];
+	NSData *header = [fileHandle readHeaderOfLength:SFBMP3DetectionSize skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
 

@@ -723,7 +723,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:16 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

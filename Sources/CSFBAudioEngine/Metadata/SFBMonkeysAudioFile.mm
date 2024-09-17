@@ -52,7 +52,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.A
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [fileHandle readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	NSData *header = [fileHandle readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
 

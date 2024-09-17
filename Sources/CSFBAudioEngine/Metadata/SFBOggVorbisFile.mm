@@ -51,7 +51,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [fileHandle readHeaderOfLength:35 skipID3v2Tag:NO error:error];
+	NSData *header = [fileHandle readHeaderOfLength:SFBOggVorbisDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

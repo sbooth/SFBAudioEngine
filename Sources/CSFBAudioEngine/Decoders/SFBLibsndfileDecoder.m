@@ -173,7 +173,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:12 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:MAX(SFBAIFFDetectionSize, SFBWAVEDetectionSize) skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

@@ -214,7 +214,7 @@ private:
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:YES error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
 

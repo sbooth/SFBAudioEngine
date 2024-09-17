@@ -118,7 +118,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:3 skipID3v2Tag:YES error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBMP3DetectionSize skipID3v2Tag:YES error:error];
 	if(!header)
 		return NO;
 

@@ -459,7 +459,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:4 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 

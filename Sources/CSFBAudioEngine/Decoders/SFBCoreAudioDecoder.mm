@@ -177,7 +177,7 @@ SInt64 get_size_callback(void *inClientData)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:8 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:std::max(SFBMPEG4DetectionSize, SFBCAFDetectionSize) skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
