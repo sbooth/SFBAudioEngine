@@ -8,7 +8,7 @@
 
 @implementation NSData (SFBID3v2Methods)
 
-- (BOOL)startsWithID3v2Header
+- (BOOL)isID3v2Header
 {
 	if(self.length < 10)
 		return NO;

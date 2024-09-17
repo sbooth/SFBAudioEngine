@@ -29,7 +29,7 @@
 
 		// Attempt to detect and minimally parse an ID3v2 tag header
 		NSData *data = [self readDataUpToLength:ID3V2_TAG_HEADER_LENGTH_BYTES error:error];
-		if([data startsWithID3v2Header]) {
+		if([data isID3v2Header]) {
 			const uint8_t *bytes = data.bytes;
 
 			uint8_t flags = bytes[5];

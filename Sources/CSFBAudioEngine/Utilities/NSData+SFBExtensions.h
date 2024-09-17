@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSData (SFBID3v2Methods)
 /// Returns `YES` if `self` starts with an ID3v2 tag header
-- (BOOL)startsWithID3v2Header;
+- (BOOL)isID3v2Header;
 @end
 
 // MARK: - Content Type Detection
