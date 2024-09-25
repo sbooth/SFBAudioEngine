@@ -93,15 +93,31 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 /// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
 /// - note: Does not read audio properties or metadata
 /// - parameter url: The URL
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioFile` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
 /// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
+/// - note: Does not read audio properties or metadata
 /// - parameter url: The URL
-/// - parameter mimeType: The MIME type of `url` or `nil`
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter detectContentType: Whether to attempt to determine the content type of `url`
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioFile` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType error:(NSError **)error;
+/// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
+/// - note: Does not read audio properties or metadata
+/// - parameter url: The URL
+/// - parameter mimeTypeHint: A MIME type hint for `url`
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBAudioFile` object for the specified URL, or `nil` on failure
+- (nullable instancetype)initWithURL:(NSURL *)url mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+/// Returns an initialized `SFBAudioFile` object for the given URL or `nil` on failure
+/// - note: Does not read audio properties or metadata
+/// - parameter url: The URL
+/// - parameter detectContentType: Whether to attempt to determine the content type of `url`
+/// - parameter mimeTypeHint: A MIME type hint for `url`
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBAudioFile` object for the specified URL, or `nil` on failure
+- (nullable instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Returns an initialized `SFBAudioFile` object for the specified URL
 /// - note: Does not read audio properties or metadata
@@ -112,7 +128,7 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 /// - note: Does not read audio properties or metadata
 /// - parameter url: The URL
 /// - parameter formatName: The name of the format to use
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 - (nullable instancetype)initWithURL:(NSURL *)url formatName:(SFBAudioFileFormatName)formatName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// The URL of the file

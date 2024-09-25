@@ -6,95 +6,14 @@
 
 #import "NSData+SFBExtensions.h"
 
-@implementation NSData (SFBMatchMethods)
-
-- (BOOL)startsWith:(NSData *)pattern
-{
-	return [self matchesBytes:pattern.bytes length:pattern.length atLocation:0];
-}
-
-- (BOOL)startsWithBytes:(const void *)bytes length:(NSUInteger)length
-{
-	return [self matchesBytes:bytes length:length atLocation:0];
-}
-
-
-- (BOOL)matches:(NSData *)pattern atLocation:(NSUInteger)location
-{
-	return [self matchesBytes:pattern.bytes length:pattern.length atLocation:location];
-}
-
-- (BOOL)matchesBytes:(const void *)bytes length:(NSUInteger)length atLocation:(NSUInteger)location
-{
-	NSParameterAssert(bytes != NULL);
-	NSParameterAssert(location < self.length);
-
-	return !memcmp((const uint8_t *)self.bytes + location, bytes, length);
-}
-
-@end
-
-
-@implementation NSData (SFBSearchMethods)
-
-- (BOOL)contains:(NSData *)pattern
-{
-	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:0] != NSNotFound;
-}
-
-- (BOOL)contains:(NSData *)pattern searchingFromLocation:(NSUInteger)location
-{
-	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:location] != NSNotFound;
-}
-
-- (BOOL)containsBytes:(const void *)bytes length:(NSUInteger)length
-{
-	return [self findBytes:bytes length:length searchingFromLocation:0] != NSNotFound;
-}
-
-- (BOOL)containsBytes:(const void *)bytes length:(NSUInteger)length searchingFromLocation:(NSUInteger)location
-{
-	return [self findBytes:bytes length:length searchingFromLocation:location] != NSNotFound;
-}
-
-
-- (NSUInteger)find:(NSData *)pattern
-{
-	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:0];
-}
-
-- (NSUInteger)find:(NSData *)pattern searchingFromLocation:(NSUInteger)location
-{
-	return [self findBytes:pattern.bytes length:pattern.length searchingFromLocation:location];
-}
-
-- (NSUInteger)findBytes:(const void *)bytes length:(NSUInteger)length
-{
-	return [self findBytes:bytes length:length searchingFromLocation:0];
-}
-
-- (NSUInteger)findBytes:(const void *)bytes length:(NSUInteger)length searchingFromLocation:(NSUInteger)location
-{
-	NSParameterAssert(bytes != NULL);
-
-	NSUInteger len = self.length;
-	NSParameterAssert(location < len);
-
-	const void *buf = (const uint8_t *)self.bytes + location;
-	const void *offset = memmem(buf, len - location, bytes, length);
-	if(offset)
-		return offset - buf;
-	return NSNotFound;
-}
-
-@end
-
+const NSUInteger SFBID3v2HeaderSize = 10;
+const NSUInteger SFBID3v2FooterSize = 10;
 
 @implementation NSData (SFBID3v2Methods)
 
-- (BOOL)startsWithID3v2Header
+- (BOOL)isID3v2Header
 {
-	if(self.length < 10)
+	if(self.length < SFBID3v2HeaderSize)
 		return NO;
 
 	/*
@@ -114,6 +33,191 @@
 	if(bytes[6] >= 0x80 || bytes[7] >= 0x80 || bytes[8] >= 0x80 || bytes[9] >= 0x80)
 		return NO;
 	return YES;
+}
+
+- (NSUInteger)id3v2TagTotalSize
+{
+	if(self.length < SFBID3v2HeaderSize)
+		return 0;
+
+	const uint8_t *bytes = self.bytes;
+
+	uint8_t flags = bytes[5];
+	uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
+
+	return SFBID3v2HeaderSize + size + (flags & 0x10 ? SFBID3v2FooterSize : 0);
+}
+
+@end
+
+const NSUInteger SFBAIFFDetectionSize = 12;
+const NSUInteger SFBAPEDetectionSize = 4;
+const NSUInteger SFBCAFDetectionSize = 4;
+const NSUInteger SFBDSDIFFDetectionSize = 16;
+const NSUInteger SFBDSFDetectionSize = 32;
+const NSUInteger SFBFLACDetectionSize = 4;
+const NSUInteger SFBMP3DetectionSize = 3;
+const NSUInteger SFBMPEG4DetectionSize = 8;
+const NSUInteger SFBMusepackDetectionSize = 4;
+const NSUInteger SFBOggFLACDetectionSize = 33;
+const NSUInteger SFBOggOpusDetectionSize = 36;
+const NSUInteger SFBOggSpeexDetectionSize = 36;
+const NSUInteger SFBOggVorbisDetectionSize = 35;
+const NSUInteger SFBShortenDetectionSize = 4;
+const NSUInteger SFBTrueAudioDetectionSize = 4;
+const NSUInteger SFBWAVEDetectionSize = 12;
+const NSUInteger SFBWavPackDetectionSize = 4;
+
+
+@implementation NSData (SFBContentTypeMethods)
+
+- (BOOL)isAIFFHeader
+{
+	if(self.length < SFBAIFFDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "FORM", 4) && (!memcmp(bytes + 8, "AIFF", 4) || !memcmp(bytes + 8, "AIFC", 4));
+}
+
+- (BOOL)isAPEHeader
+{
+	if(self.length < SFBAPEDetectionSize)
+		return NO;
+	return !memcmp(self.bytes, "MAC ", 4);
+}
+
+- (BOOL)isCAFHeader
+{
+	if(self.length < SFBCAFDetectionSize)
+		return NO;
+	return !memcmp(self.bytes, "caff", 4);
+}
+
+- (BOOL)isDSDIFFHeader
+{
+	if(self.length < SFBDSDIFFDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "FRM8", 4) && !memcmp(bytes + 12, "DSD ", 4);
+}
+
+- (BOOL)isDSFHeader
+{
+	if(self.length < SFBDSFDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "DSD ", 4) && !memcmp(bytes + 28, "fmt ", 4);
+}
+
+- (BOOL)isFLACHeader
+{
+	if(self.length < SFBFLACDetectionSize)
+		return NO;
+	return !memcmp(self.bytes, "fLaC", 4);
+}
+
+- (BOOL)isMP3Header
+{
+	if(self.length < SFBMP3DetectionSize)
+		return NO;
+
+	const uint8_t *bytes = self.bytes;
+
+	// Frame sync
+	if(bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0)
+		return NO;
+	// MPEG audio version ID
+	else if((bytes[1] & 0x18) == 0x08)
+		return NO;
+	// Layer description
+	else if((bytes[1] & 0x06) == 0)
+		return NO;
+	// Protection bit
+	// Bitrate index
+	else if((bytes[2] & 0xf0) == 0xf0)
+		return NO;
+	// Sampling rate frequency index
+	else if((bytes[2] & 0x0c) == 0x0c)
+		return NO;
+	// Remainder of header bits ignored
+	else
+		return YES;
+}
+
+- (BOOL)isMPEG4Header
+{
+	if(self.length < SFBMPEG4DetectionSize)
+		return NO;
+	return !memcmp((const uint8_t *)self.bytes + 4, "ftyp", 4);
+}
+
+- (BOOL)isMusepackHeader
+{
+	if(self.length < SFBMusepackDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "MPCK", 4) || !memcmp(bytes, "MP+", 3);
+}
+
+- (BOOL)isOggFLACHeader
+{
+	if(self.length < SFBOggFLACDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "\x7f""FLAC", 5);
+}
+
+- (BOOL)isOggOpusHeader
+{
+	if(self.length < SFBOggOpusDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "OpusHead", 8);
+}
+
+- (BOOL)isOggSpeexHeader
+{
+	if(self.length < SFBOggSpeexDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "Speex   ", 8);
+}
+
+- (BOOL)isOggVorbisHeader
+{
+	if(self.length < SFBOggVorbisDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "\x01vorbis", 7);
+}
+
+- (BOOL)isShortenHeader
+{
+	if(self.length < SFBShortenDetectionSize)
+		return NO;
+	return !memcmp(self.bytes, "ajkg", 4);
+}
+
+- (BOOL)isTrueAudioHeader
+{
+	if(self.length < SFBTrueAudioDetectionSize)
+		return NO;
+	return !memcmp(self.bytes, "TTA1", 4);
+}
+
+- (BOOL)isWAVEHeader
+{
+	if(self.length < SFBWAVEDetectionSize)
+		return NO;
+	const uint8_t *bytes = self.bytes;
+	return !memcmp(bytes, "RIFF", 4) && !memcmp(bytes + 8, "WAVE", 4);
+}
+
+- (BOOL)isWavPackHeader
+{
+	if(self.length < SFBWavPackDetectionSize)
+		return NO;
+	return !memcmp(self.bytes, "wvpk", 4);
 }
 
 @end

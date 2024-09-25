@@ -278,9 +278,6 @@ static void SFBCreateInputSourceLog(void)
 
 @end
 
-#define ID3V2_TAG_HEADER_LENGTH_BYTES 10
-#define ID3V2_TAG_FOOTER_LENGTH_BYTES 10
-
 @implementation SFBInputSource (SFBHeaderReading)
 
 - (NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error
@@ -304,23 +301,23 @@ static void SFBCreateInputSourceLog(void)
 		NSInteger offset = 0;
 
 		// Attempt to detect and minimally parse an ID3v2 tag header
-		NSData *data = [self readDataOfLength:ID3V2_TAG_HEADER_LENGTH_BYTES error:error];
-		if([data startsWithID3v2Header]) {
-			const uint8_t *bytes = data.bytes;
-
-			uint8_t flags = bytes[5];
-			uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
-
-			offset = ID3V2_TAG_HEADER_LENGTH_BYTES + size + (flags & 0x10 ? ID3V2_TAG_FOOTER_LENGTH_BYTES : 0);
-		}
+		NSData *data = [self readDataOfLength:SFBID3v2HeaderSize error:error];
+		if([data isID3v2Header])
+			offset = [data id3v2TagTotalSize];
 
 		if(![self seekToOffset:offset error:error])
 			return nil;
 	}
 
 	NSData *data = [self readDataOfLength:length error:error];
-	if(!data || data.length < length)
+	if(!data)
 		return nil;
+
+	if(data.length < length) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
+		return nil;
+	}
 
 	if(![self seekToOffset:originalOffset error:error])
 		return nil;

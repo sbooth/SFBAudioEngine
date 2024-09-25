@@ -27,24 +27,13 @@ extern os_log_t gSFBAudioEncoderLog;
 @property (class, nonatomic, readonly) SFBAudioEncoderName encoderName;
 @end
 
-#pragma mark - Subclass Registration and Lookup
+#pragma mark - Subclass Registration
 
 @interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)
 + (void)registerSubclass:(Class)subclass;
 /// Register a subclass with the specified priority
 + (void)registerSubclass:(Class)subclass priority:(int)priority;
-@end
-
-@interface SFBAudioEncoder (SFBAudioEncoderSubclassLookup)
-/// Returns the appropriate `SFBAudioEncoder` subclass for encoding `url`
-+ (nullable Class)subclassForURL:(NSURL *)url;
-/// Returns the appropriate `SFBAudioEncoder` subclass for encoding paths with `extension`
-+ (nullable Class)subclassForPathExtension:(NSString *)extension;
-/// Returns the appropriate `SFBAudioEncoder` subclass for encoding data of `mimeType`
-+ (nullable Class)subclassForMIMEType:(NSString *)mimeType;
-/// Returns the appropriate `SFBAudioEncoder` subclass corresponding to `encoderName`
-+ (nullable Class)subclassForEncoderName:(SFBAudioEncoderName)encoderName;
 @end
 
 NS_ASSUME_NONNULL_END

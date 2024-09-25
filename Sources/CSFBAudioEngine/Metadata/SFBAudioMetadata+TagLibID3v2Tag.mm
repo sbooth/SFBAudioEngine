@@ -263,7 +263,7 @@
 				description = [NSString stringWithUTF8String:frame->description().toCString(true)];
 
 			SFBAttachedPicture *picture = [[SFBAttachedPicture alloc] initWithImageData:imageData
-																				   type:(SFBAttachedPictureType)frame->type()
+																				   type:static_cast<SFBAttachedPictureType>(frame->type())
 																			description:description];
 			[self attachPicture:picture];
 		}

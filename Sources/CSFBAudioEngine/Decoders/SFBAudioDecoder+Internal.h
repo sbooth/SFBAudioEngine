@@ -34,7 +34,7 @@ extern os_log_t gSFBAudioDecoderLog;
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error;
 @end
 
-#pragma mark - Subclass Registration and Lookup
+#pragma mark - Subclass Registration
 
 @interface SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)
