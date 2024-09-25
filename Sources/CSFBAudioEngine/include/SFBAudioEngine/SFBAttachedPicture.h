@@ -1,0 +1,112 @@
+//
+// Copyright (c) 2012-2024 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/SFBAudioEngine
+// MIT license
+//
+
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+/// `SFBAttachedPicture` dictionary keys
+typedef NSString * SFBAttachedPictureKey NS_TYPED_ENUM NS_SWIFT_NAME(AttachedPicture.Key);
+/// Raw image data (`NSData`)
+extern SFBAttachedPictureKey const SFBAttachedPictureKeyImageData;
+/// Picture type (`NSNumber`)
+extern SFBAttachedPictureKey const SFBAttachedPictureKeyType;
+/// Picture description (`NSString`)
+extern SFBAttachedPictureKey const SFBAttachedPictureKeyDescription;
+
+/// The function or content of a picture
+typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
+	/// A type not otherwise enumerated
+	SFBAttachedPictureTypeOther					= 0x00,
+	/// 32x32 PNG image that should be used as the file icon
+	SFBAttachedPictureTypeFileIcon				= 0x01,
+	/// File icon of a different size or format
+	SFBAttachedPictureTypeOtherFileIcon			= 0x02,
+	/// Front cover image of the album
+	SFBAttachedPictureTypeFrontCover			= 0x03,
+	/// Back cover image of the album
+	SFBAttachedPictureTypeBackCover				= 0x04,
+	/// Inside leaflet page of the album
+	SFBAttachedPictureTypeLeafletPage			= 0x05,
+	/// Image from the album itself
+	SFBAttachedPictureTypeMedia					= 0x06,
+	/// Picture of the lead artist or soloist
+	SFBAttachedPictureTypeLeadArtist			= 0x07,
+	/// Picture of the artist or performer
+	SFBAttachedPictureTypeArtist				= 0x08,
+	/// Picture of the conductor
+	SFBAttachedPictureTypeConductor				= 0x09,
+	/// Picture of the band or orchestra
+	SFBAttachedPictureTypeBand					= 0x0A,
+	/// Picture of the composer
+	SFBAttachedPictureTypeComposer				= 0x0B,
+	/// Picture of the lyricist or text writer
+	SFBAttachedPictureTypeLyricist				= 0x0C,
+	/// Picture of the recording location or studio
+	SFBAttachedPictureTypeRecordingLocation		= 0x0D,
+	/// Picture of the artists during recording
+	SFBAttachedPictureTypeDuringRecording		= 0x0E,
+	/// Picture of the artists during performance
+	SFBAttachedPictureTypeDuringPerformance		= 0x0F,
+	/// Picture from a movie or video related to the track
+	SFBAttachedPictureTypeMovieScreenCapture	= 0x10,
+	/// Picture of a large, coloured fish
+	SFBAttachedPictureTypeColouredFish			= 0x11,
+	/// Illustration related to the track
+	SFBAttachedPictureTypeIllustration			= 0x12,
+	/// Logo of the band or performer
+	SFBAttachedPictureTypeBandLogo				= 0x13,
+	/// Logo of the publisher (record company)
+	SFBAttachedPictureTypePublisherLogo			= 0x14,
+} NS_SWIFT_NAME(AttachedPicture.Type);
+
+/// A class encapsulating a single attached picture.
+///
+/// Most file formats may have more than one attached picture of each type.
+NS_SWIFT_NAME(AttachedPicture) @interface SFBAttachedPicture : NSObject <NSCopying>
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
+
+/// Returns an initialized `SFBAttachedPicture` object
+/// - parameter imageData: The raw image data
+- (instancetype)initWithImageData:(NSData *)imageData;
+
+/// Returns an initialized `SFBAttachedPicture` object
+/// - parameter imageData: The raw image data
+/// - parameter type: The artwork type
+- (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type;
+
+/// Returns an initialized `SFBAttachedPicture` object
+/// - parameter imageData: The raw image data
+/// - parameter type: The artwork type
+/// - parameter description: The image description
+- (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type description:(nullable NSString *)description NS_DESIGNATED_INITIALIZER;
+
+/// Returns an initialized `SFBAttachedPicture` object or `nil` on error
+///
+/// Returns `nil` if `dictionaryRepresentation` does not contain image data
+/// - parameter dictionaryRepresentation: A dictionary containing the desired values
+- (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAttachedPictureKey, id> *)dictionaryRepresentation;
+
+
+/// Copy the values contained in this object to a dictionary
+/// - returns: A dictionary containing this object's artwork information
+@property (nonatomic, readonly) NSDictionary<SFBAttachedPictureKey, id> *dictionaryRepresentation;
+
+
+/// The raw image data
+@property (nonatomic, readonly) NSData *imageData;
+
+/// The artwork type
+@property (nonatomic, readonly) SFBAttachedPictureType pictureType NS_SWIFT_NAME(type);
+
+/// The artwork description
+@property (nonatomic, nullable, readonly) NSString *pictureDescription NS_SWIFT_NAME(description);
+
+@end
+
+NS_ASSUME_NONNULL_END

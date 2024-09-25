@@ -1,6 +1,9 @@
 # SFBAudioEngine
 
-SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and iOS. SFBAudioEngine supports:
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsbooth%2FSFBAudioEngine%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/sbooth/SFBAudioEngine)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsbooth%2FSFBAudioEngine%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/sbooth/SFBAudioEngine)
+
+SFBAudioEngine is a powerhouse of audio functionality for both macOS and iOS. SFBAudioEngine supports:
 
 * [Audio decoding](#decoding)
 * [Audio playback](#playback)
@@ -84,35 +87,20 @@ try AudioConverter.convert(inputURL, using: encoder)
 
 macOS 10.15+ or iOS 14.0+
 
-## Building SFBAudioEngine
+## Installation
 
-1. `git clone https://github.com/sbooth/SFBAudioEngine.git --recurse-submodules`
-2. `cd SFBAudioEngine`
-3. `make -C XCFrameworks`
+### Swift Package Manager
 
-The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
+Add a package dependency to https://github.com/sbooth/SFBAudioEngine in Xcode.
 
-The included `Makefile` may also be used to create the build products:
+### Manual or Custom Build
 
-| Target | `make` Command |
-| --- | --- |
-| macOS Framework | `make build/macOS.xcarchive` |
-| macOS Catalyst Framework | `make build/macOS-Catalyst.xcarchive` |
-| iOS Framework | `make build/iOS.xcarchive` |
-| iOS Simulator Framework | `make build/iOS-Simulator.xcarchive` |
-| XCFramework | `make` |
-
-### macOS Framework Notes
-
-When compiling macOS targets against SFBAudioEngine it is only necessary to link and embed `SFBAudioEngine.framework`. macOS supports umbrella frameworks so the libraries used by SFBAudioEngine are contained within `SFBAudioEngine.framework`.
-
-### iOS Framework Notes
-
-When compiling iOS targets against SFBAudioEngine it is necessary not only to link to and embed `SFBAudioEngine.framework`, but the XCFrameworks used by SFBAudioEngine as well since iOS does not support umbrella frameworks.
+1. Clone the [SFBAudioEngine](https://github.com/sbooth/SFBAudioEngine) repository.
+2. `swift build`.
 
 ## Decoding
 
-[Audio decoders](Decoders/) in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
+[Audio decoders](Decoders/) in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or data.
 
 All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM-producing decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
 
@@ -122,15 +110,15 @@ Three special decoder subclasses that wrap an underlying audio decoder instance 
 
 ### [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h)
 
-[SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) is a subclass of [AVAudioSourceNode](https://developer.apple.com/documentation/avfaudio/avaudiosourcenode) that provides rich playback functionality within an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph. [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) supports gapless playback and comprehensive status notifications through delegate callbacks.
+[SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) is a subclass of [AVAudioSourceNode](https://developer.apple.com/documentation/avfaudio/avaudiosourcenode) that provides rich playback functionality within an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph. [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) supports gapless playback and comprehensive status notifications through a delegate.
 
 ### [SFBAudioPlayer](Player/SFBAudioPlayer.h)
 
-[SFBAudioPlayer](Player/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h). [SFBAudioPlayer](Player/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through delegate callbacks.
+[SFBAudioPlayer](Player/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h). [SFBAudioPlayer](Player/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through a delegate.
 
 ## Encoding
 
-[Audio encoders](Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or memory source.
+[Audio encoders](Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or data.
 
 All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Encoders/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
 
@@ -152,21 +140,17 @@ Two versions of SimplePlayer, one for macOS and one for iOS, are provided to ill
 
 ### macOS
 
-![Image of an audio player window](SimplePlayer-macOS/screenshot.png)
-
-[SimplePlayer](SimplePlayer-macOS/) for macOS is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](SimplePlayer-macOS/PlayerWindowController.swift).
+[SimplePlayer for macOS](https://github.com/sbooth/SimplePlayer-macOS) is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](https://github.com/sbooth/SimplePlayer-macOS/SimplePlayer-macOS/PlayerWindowController.swift).
 
 ### iOS
 
-![Image of audio file playback progress](SimplePlayer-iOS/screenshot.png)
-
-[SimplePlayer](SimplePlayer-iOS/) for iOS is written in Swift using SwiftUI and supports playback of a single item selected from a list.
+[SimplePlayer for iOS](https://github.com/sbooth/SimplePlayer-iOS) is written in Swift using SwiftUI and supports playback of a single item selected from a list.
 
 ## License
 
 SFBAudioEngine is released under the [MIT License](https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt).
 
-The open-source projects providing support for the various audio formats are subject to their own licenses that are compatible with the MIT license when used with SFBAudioEngine's default build configuration. For information on the specific licenses for each project see the README in the project's folder in [XCFrameworks](https://github.com/sbooth/AudioXCFrameworks/).
+The open-source projects providing support for the various audio formats are subject to their own licenses that are compatible with the MIT license when used with SFBAudioEngine's default build configuration.
 
 ### LGPL Notes
 
