@@ -280,7 +280,6 @@ SInt64 get_size_callback(void *inClientData)
 
 		if(error) {
 			os_log_error(gSFBAudioDecoderLog, "Error opening SFBCoreAudioDecoder: %{public}s", e.what());
-
 			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
 											 code:e.code().value()
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
