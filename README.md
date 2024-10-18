@@ -126,13 +126,13 @@ Encoders don't support arbitrary input formats. The processing format used by an
 
 ## Conversion
 
-[SFBAudioConverter](Sources/CSFBAudioEngine/include/SFBAudioConverter.h) supports high level conversion operations. An audio converter reads PCM audio from an audio decoder in the decoder's processing format, converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an audio encoder which performs the final conversion to the desired format.
+[SFBAudioConverter](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioConverter.h) supports high level conversion operations. An audio converter reads PCM audio from an audio decoder in the decoder's processing format, converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an audio encoder which performs the final conversion to the desired format.
 
 The decoder's processing format and the intermediate format must both be PCM but do not have to have the same sample rate, bit depth, channel count, or channel layout.
 
 ## Properties and Metadata
 
-Audio properties and metadata are accessed via instances of [SFBAudioFile](Sources/CSFBAudioEngine/include/SFBAudioFile.h). [Audio properties](Sources/CSFBAudioEngine/include/SFBAudioProperties.h) are read-only while [metadata](Sources/CSFBAudioEngine/include/SFBAudioMetadata.h) is writable for most formats. Audio metadata may be obtained from an instance of [SFBAudioFile](Sources/CSFBAudioEngine/include/SFBAudioFile.h) or instantiated directly. 
+Audio properties and metadata are accessed via instances of [SFBAudioFile](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioFile.h). [Audio properties](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioProperties.h) are read-only while [metadata](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioMetadata.h) is writable for most formats. Audio metadata may be obtained from an instance of [SFBAudioFile](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioFile.h) or instantiated directly. 
 
 ## Sample Audio Players
 
