@@ -100,39 +100,39 @@ Add a package dependency to https://github.com/sbooth/SFBAudioEngine in Xcode.
 
 ## Decoding
 
-[Audio decoders](Decoders/) in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or data.
+[Audio decoders](Sources/CSFBAudioEngine/Decoders/) in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBInputSource.h) which may refer to a file, buffer, or data.
 
-All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM-producing decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
+All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioDecoding.h) protocol. PCM-producing decoders additionally implement [SFBPCMDecoding](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBDSDDecoding.h).
 
-Three special decoder subclasses that wrap an underlying audio decoder instance are also provided: [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h), [SFBDoPDecoder](Decoders/SFBDoPDecoder.h), and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h). For seekable inputs, [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h) allows arbitrary looping and repeating of a specified PCM decoder segment. [SFBDoPDecoder](Decoders/SFBDoPDecoder.h) and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h) wrap a DSD decoder providing DSD over PCM (DoP) and PCM output respectively.
+Three special decoder subclasses that wrap an underlying audio decoder instance are also provided: [SFBLoopableRegionDecoder](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBLoopableRegionDecoder.h), [SFBDoPDecoder](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBDoPDecoder.h), and [SFBDSDPCMDecoder](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBDSDPCMDecoder.h). For seekable inputs, [SFBLoopableRegionDecoder](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBLoopableRegionDecoder.h) allows arbitrary looping and repeating of a specified PCM decoder segment. [SFBDoPDecoder](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBDoPDecoder.h) and [SFBDSDPCMDecoder](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBDSDPCMDecoder.h) wrap a DSD decoder providing DSD over PCM (DoP) and PCM output respectively.
 
 ## Playback
 
 ### [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h)
 
-[SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) is a subclass of [AVAudioSourceNode](https://developer.apple.com/documentation/avfaudio/avaudiosourcenode) that provides rich playback functionality within an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph. [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) supports gapless playback and comprehensive status notifications through a delegate.
+[SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h) is a subclass of [AVAudioSourceNode](https://developer.apple.com/documentation/avfaudio/avaudiosourcenode) that provides rich playback functionality within an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph. [SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h) supports gapless playback and comprehensive status notifications through a delegate.
 
 ### [SFBAudioPlayer](Player/SFBAudioPlayer.h)
 
-[SFBAudioPlayer](Player/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h). [SFBAudioPlayer](Player/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through a delegate.
+[SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h). [SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through a delegate.
 
 ## Encoding
 
-[Audio encoders](Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or data.
+[Audio encoders](Sources/CSFBAudioEngine/Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Sources/CSFBAudioEngine/include/SFBOutputSource.h) which may refer to a file, buffer, or data.
 
-All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Encoders/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
+All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Sources/CSFBAudioEngine/include/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Sources/CSFBAudioEngine/include/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
 
 Encoders don't support arbitrary input formats. The processing format used by an encoder is derived from a desired format combined with the encoder's settings.
 
 ## Conversion
 
-[SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion operations. An audio converter reads PCM audio from an audio decoder in the decoder's processing format, converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an audio encoder which performs the final conversion to the desired format.
+[SFBAudioConverter](Sources/CSFBAudioEngine/include/SFBAudioConverter.h) supports high level conversion operations. An audio converter reads PCM audio from an audio decoder in the decoder's processing format, converts that audio to an intermediate PCM format, and then writes the intermediate PCM audio to an audio encoder which performs the final conversion to the desired format.
 
 The decoder's processing format and the intermediate format must both be PCM but do not have to have the same sample rate, bit depth, channel count, or channel layout.
 
 ## Properties and Metadata
 
-Audio properties and metadata are accessed via instances of [SFBAudioFile](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/SFBAudioMetadata.h) is writable for most formats. Audio metadata may be obtained from an instance of [SFBAudioFile](Metadata/SFBAudioFile.h) or instantiated directly. 
+Audio properties and metadata are accessed via instances of [SFBAudioFile](Sources/CSFBAudioEngine/include/SFBAudioFile.h). [Audio properties](Sources/CSFBAudioEngine/include/SFBAudioProperties.h) are read-only while [metadata](Sources/CSFBAudioEngine/include/SFBAudioMetadata.h) is writable for most formats. Audio metadata may be obtained from an instance of [SFBAudioFile](Sources/CSFBAudioEngine/include/SFBAudioFile.h) or instantiated directly. 
 
 ## Sample Audio Players
 
@@ -140,7 +140,7 @@ Two versions of SimplePlayer, one for macOS and one for iOS, are provided to ill
 
 ### macOS
 
-[SimplePlayer for macOS](https://github.com/sbooth/SimplePlayer-macOS) is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](https://github.com/sbooth/SimplePlayer-macOS/SimplePlayer-macOS/PlayerWindowController.swift).
+[SimplePlayer for macOS](https://github.com/sbooth/SimplePlayer-macOS) is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](https://github.com/sbooth/SimplePlayer-macOS/blob/main/SimplePlayer/PlayerWindowController.swift).
 
 ### iOS
 
