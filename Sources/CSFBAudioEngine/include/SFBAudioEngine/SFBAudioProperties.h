@@ -18,7 +18,7 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength;
 /// The number of channels (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount;
-/// The audio bit depth (`NSNumber`
+/// The audio bit depth (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth;
 /// The sample rate in Hz (`NSNumber`)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate;
