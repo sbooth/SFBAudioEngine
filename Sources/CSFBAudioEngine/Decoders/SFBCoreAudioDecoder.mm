@@ -177,7 +177,7 @@ SInt64 get_size_callback(void *inClientData)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:std::max(SFBMPEG4DetectionSize, SFBCAFDetectionSize) skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:std::max({SFBMPEG4DetectionSize, SFBCAFDetectionSize, SFBAIFFDetectionSize, SFBWAVEDetectionSize}) skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
@@ -191,6 +191,12 @@ SInt64 get_size_callback(void *inClientData)
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	// CAF files
 	else if([header isCAFHeader])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	// AIFF and AIFF-C files
+	else if([header isAIFFHeader])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	// WAVE files
+	else if([header isWAVEHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 
 	return YES;
