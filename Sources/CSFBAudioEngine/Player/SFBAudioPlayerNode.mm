@@ -721,6 +721,10 @@ public:
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventDecodingComplete");
 						break;
+
+					default:
+						os_log_fault(_audioPlayerNodeLog, "Unknown event command: %u", cmd);
+						break;
 				}
 			}
 		});
@@ -1412,6 +1416,7 @@ const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	}
 
 	catch(const std::exception& e) {
+		os_log_error(_audioPlayerNodeLog, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
 		return nil;
 	}
 

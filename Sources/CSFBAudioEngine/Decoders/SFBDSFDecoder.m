@@ -89,11 +89,11 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:32 skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:SFBDSFDetectionSize skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
-	if([header startsWithBytes:"DSD " length:4] && [header matchesBytes:"fmt " length:4 atLocation:28])
+	if([header isDSFHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	else
 		*formatIsSupported = SFBTernaryTruthValueFalse;

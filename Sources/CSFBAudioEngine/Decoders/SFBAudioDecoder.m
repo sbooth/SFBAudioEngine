@@ -202,22 +202,23 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 		if(detectContentType) {
 			SFBTernaryTruthValue formatSupported;
-			if(![klass testInputSource:inputSource formatIsSupported:&formatSupported error:error])
-				return nil;
-
-			switch(formatSupported) {
-				case SFBTernaryTruthValueTrue:
-					currentScore += 75;
-					break;
-				case SFBTernaryTruthValueFalse:
-					break;
-				case SFBTernaryTruthValueUnknown:
-					currentScore += 10;
-					break;
-				default:
-					os_log_fault(gSFBAudioDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
-					break;
+			if([klass testInputSource:inputSource formatIsSupported:&formatSupported error:error]) {
+				switch(formatSupported) {
+					case SFBTernaryTruthValueTrue:
+						currentScore += 75;
+						break;
+					case SFBTernaryTruthValueFalse:
+						break;
+					case SFBTernaryTruthValueUnknown:
+						currentScore += 10;
+						break;
+					default:
+						os_log_fault(gSFBAudioDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
+						break;
+				}
 			}
+			else
+				os_log_error(gSFBAudioDecoderLog, "Error testing %{public}@ format support for %{public}@", klass, inputSource);
 		}
 
 		if(currentScore > score) {
@@ -226,20 +227,24 @@ static NSMutableArray *_registeredSubclasses = nil;
 		}
 	}
 
-	if(subclass && (self = [[subclass alloc] init])) {
-		_inputSource = inputSource;
-		os_log_debug(gSFBAudioDecoderLog, "Created %{public}@ based on score of %i", self, score);
-		return self;
+	if(!subclass) {
+		os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
+											  url:inputSource.url
+									failureReason:NSLocalizedString(@"Unknown file type", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
+		return nil;
 	}
 
-	if(error)
-		*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
-				descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
-										  url:inputSource.url
-								failureReason:NSLocalizedString(@"Unknown file type", @"")
-						   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
-	return nil;
+	if((self = [[subclass alloc] init])) {
+		_inputSource = inputSource;
+		os_log_debug(gSFBAudioDecoderLog, "Created %{public}@ based on score of %i", self, score);
+	}
+
+	return self;
 }
 
 - (instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName
@@ -276,11 +281,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 
 	if(!subclass) {
-		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: %{public}@", decoderName);
+		os_log_error(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: \"%{public}@\"", decoderName);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
 										 code:SFBAudioDecoderErrorCodeUnknownDecoder
-									 userInfo:@{ NSURLErrorKey: _inputSource.url }];
+									 userInfo:@{ NSURLErrorKey: inputSource.url }];
 		return nil;
 	}
 

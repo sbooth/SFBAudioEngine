@@ -112,7 +112,7 @@
 			description = [NSString stringWithUTF8String:iter->description().toCString(true)];
 
 		[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
-																	 type:(SFBAttachedPictureType)iter->type()
+																	 type:static_cast<SFBAttachedPictureType>(iter->type())
 															  description:description]];
 	}
 }
