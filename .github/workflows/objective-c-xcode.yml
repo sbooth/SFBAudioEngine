@@ -24,6 +24,11 @@ jobs:
           scheme="SFBAudioEngine"
           destination="generic/platform=iOS"
           xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for tvOS
+        run: |
+          scheme="SFBAudioEngine"
+          destination="generic/platform=tvOS"
+          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
       - name: Build for Mac Catalyst
         run: |
           scheme="SFBAudioEngine"
@@ -33,4 +38,9 @@ jobs:
         run: |
           scheme="SFBAudioEngine"
           destination="generic/platform=iOS Simulator"
+          xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
+      - name: Build for tvOS Simulator
+        run: |
+          scheme="SFBAudioEngine"
+          destination="generic/platform=tvOS Simulator"
           xcodebuild clean build analyze -scheme "$scheme" -destination "$destination" -disableAutomaticPackageResolution | xcpretty && exit ${PIPESTATUS[0]}
