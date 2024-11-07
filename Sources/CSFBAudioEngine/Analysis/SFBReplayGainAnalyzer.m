@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -102,7 +102,7 @@
 #import "SFBReplayGainAnalyzer.h"
 
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBAudioDecoder.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
