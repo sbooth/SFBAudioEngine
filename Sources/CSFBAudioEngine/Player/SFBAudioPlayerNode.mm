@@ -1416,6 +1416,7 @@ const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	}
 
 	catch(const std::exception& e) {
+		os_log_error(_audioPlayerNodeLog, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
 		return nil;
 	}
 

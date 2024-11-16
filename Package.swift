@@ -6,8 +6,9 @@ import PackageDescription
 let package = Package(
 	name: "SFBAudioEngine",
 	platforms: [
-		.macOS(.v10_15),
-		.iOS(.v14),
+		.macOS(.v11),
+		.iOS(.v15),
+		.tvOS(.v15),
 	],
 	products: [
 		.library(
@@ -23,29 +24,31 @@ let package = Package(
 
 		// Standalone dependencies from source
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
-		.package(url: "https://github.com/sbooth/CWavPack", from: "5.7.0"),
 		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "10.71.0"),
 		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.0.1"),
 
+		// Standalone dependencies not easily packaged using SPM
+		.package(url: "https://github.com/sbooth/wavpack-binary-xcframework", from: "0.1.1"),
+
 		// Xiph ecosystem
-		.package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.2"),
 		// flac-binary-xcframework requires ogg-binary-xcframework
-		.package(url: "https://github.com/sbooth/flac-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/flac-binary-xcframework", from: "0.1.3"),
 		// opus-binary-xcframework requires ogg-binary-xcframework
-		.package(url: "https://github.com/sbooth/opus-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/opus-binary-xcframework", from: "0.2.2"),
 		// vorbis-binary-xcframework requires ogg-binary-xcframework
-		.package(url: "https://github.com/sbooth/vorbis-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/vorbis-binary-xcframework", from: "0.1.2"),
 		// libspeex does not depend on libogg
 		.package(url: "https://github.com/sbooth/CSpeex", from: "1.2.1"),
 
 		// LGPL bits
-		.package(url: "https://github.com/sbooth/lame-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/lame-binary-xcframework", from: "0.1.2"),
 		// Technically only the musepack *encoder* is LGPL'd but for now the decoder and encoder are packaged together
-		.package(url: "https://github.com/sbooth/mpc-binary-xcframework", from: "0.1.0"),
-		.package(url: "https://github.com/sbooth/mpg123-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/mpc-binary-xcframework", from: "0.1.2"),
+		.package(url: "https://github.com/sbooth/mpg123-binary-xcframework", from: "0.2.2"),
 		// sndfile-binary-xcframework requires ogg-binary-xcframework, flac-binary-xcframework, opus-binary-xcframework, and vorbis-binary-xcframework
-		.package(url: "https://github.com/sbooth/sndfile-binary-xcframework", from: "0.1.0"),
-		.package(url: "https://github.com/sbooth/tta-cpp-binary-xcframework", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/sndfile-binary-xcframework", from: "0.1.2"),
+		.package(url: "https://github.com/sbooth/tta-cpp-binary-xcframework", from: "0.1.2"),
 	],
 	targets: [
 		.target(
@@ -55,9 +58,9 @@ let package = Package(
 				.product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
 				// Standalone dependencies
 				.product(name: "dumb", package: "CDUMB"),
-				.product(name: "wavpack", package: "CWavPack"),
 				.product(name: "MAC", package: "CXXMonkeysAudio"),
 				.product(name: "taglib", package: "CXXTagLib"),
+				.product(name: "wavpack", package: "wavpack-binary-xcframework"),
 				// Xiph ecosystem
 				.product(name: "ogg", package: "ogg-binary-xcframework"),
 				.product(name: "FLAC", package: "flac-binary-xcframework"),
