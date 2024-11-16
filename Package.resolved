@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/flac-binary-xcframework",
       "state" : {
-        "revision" : "d954211a5ce995fb380781177b227d43322a9690",
-        "version" : "0.1.2"
+        "revision" : "141f566e468e89be24d2d5df9c5ec1fad548f738",
+        "version" : "0.1.3"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/lame-binary-xcframework",
       "state" : {
-        "revision" : "2354ebefb98b529badf2900e3f6c2ff8051380e0",
-        "version" : "0.1.1"
+        "revision" : "07703e040231d50f2e7f160c670f356f129a00e4",
+        "version" : "0.1.2"
       }
     },
     {
@@ -77,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/mpc-binary-xcframework",
       "state" : {
-        "revision" : "7d725bb160e945f2de5877793317a9d52080da44",
-        "version" : "0.1.1"
+        "revision" : "de4b45fa64ed88467806c50217e9da7032a99d80",
+        "version" : "0.1.2"
       }
     },
     {
@@ -86,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/mpg123-binary-xcframework",
       "state" : {
-        "revision" : "884b7738578a7608897bb6375b2ae3a775b4353a",
-        "version" : "0.2.1"
+        "revision" : "456d42bcf025a76499aa64cd7a801d91894579ab",
+        "version" : "0.2.2"
       }
     },
     {
@@ -95,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/ogg-binary-xcframework",
       "state" : {
-        "revision" : "816e3271545fa11c72fc2ea22d555c6ceaa812a2",
-        "version" : "0.1.1"
+        "revision" : "c0e822e18738ad913864e98d9614927ac1e9337c",
+        "version" : "0.1.2"
       }
     },
     {
@@ -104,8 +104,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/opus-binary-xcframework",
       "state" : {
-        "revision" : "ce9a7bd8b8ad383c347a4fb173f4760141af005a",
-        "version" : "0.2.1"
+        "revision" : "74201a6af424e7e3a007fd5e401e9d2ce6896628",
+        "version" : "0.2.2"
       }
     },
     {
@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/sndfile-binary-xcframework",
       "state" : {
-        "revision" : "54f76640d58007c499fce8c875a5fd193690e6ba",
-        "version" : "0.1.1"
+        "revision" : "52f73460dc04ba789ad3007ad004faa328b732dd",
+        "version" : "0.1.2"
       }
     },
     {
@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/tta-cpp-binary-xcframework",
       "state" : {
-        "revision" : "66b2be3cff3dd73f921dbc7cef130a50502a90e7",
-        "version" : "0.1.1"
+        "revision" : "b68cf8a127936434cae93aa2c613d4b47eb34de4",
+        "version" : "0.1.2"
       }
     },
     {
@@ -131,8 +131,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/vorbis-binary-xcframework",
       "state" : {
-        "revision" : "8a17b88d7c16127e97dcb596f92b210a353ad90f",
-        "version" : "0.1.1"
+        "revision" : "842020eabcebe410e698c68545d6597b2d232e51",
+        "version" : "0.1.2"
       }
     },
     {
@@ -140,8 +140,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/wavpack-binary-xcframework",
       "state" : {
-        "revision" : "7c1c5e8ccc5eff311e8c8d131d21aa1c5815c6d0",
-        "version" : "0.1.0"
+        "revision" : "9e46a5e77941e7910da0028d7f367375d98ce2e0",
+        "version" : "0.1.1"
       }
     }
   ],
