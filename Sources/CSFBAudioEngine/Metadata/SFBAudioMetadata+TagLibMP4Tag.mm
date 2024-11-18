@@ -6,8 +6,8 @@
 
 #import <cstdio>
 
-#import <CoreServices/CoreServices.h>
 #import <ImageIO/ImageIO.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import <SFBCFWrapper.hpp>
 
@@ -239,17 +239,18 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 			if(!imageSource)
 				continue;
 
-			// Convert the image's UTI into a MIME type
-			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
 			auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
-			if(mimeType) {
-				if(UTTypeEqual(kUTTypeBMP, (__bridge CFStringRef)mimeType))
+
+			// Determine the image type
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+				UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+				if([utType conformsToType:UTTypeBMP])
 					type = TagLib::MP4::CoverArt::CoverArt::BMP;
-				else if(UTTypeEqual(kUTTypePNG, (__bridge CFStringRef)mimeType))
+				else if([utType conformsToType:UTTypePNG])
 					type = TagLib::MP4::CoverArt::CoverArt::PNG;
-				else if(UTTypeEqual(kUTTypeGIF, (__bridge CFStringRef)mimeType))
+				else if([utType conformsToType:UTTypeGIF])
 					type = TagLib::MP4::CoverArt::CoverArt::GIF;
-				else if(UTTypeEqual(kUTTypeJPEG, (__bridge CFStringRef)mimeType))
+				else if([utType conformsToType:UTTypeJPEG])
 					type = TagLib::MP4::CoverArt::CoverArt::JPEG;
 			}
 

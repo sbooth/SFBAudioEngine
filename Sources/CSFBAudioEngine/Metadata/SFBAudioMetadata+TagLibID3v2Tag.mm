@@ -4,8 +4,8 @@
 // MIT license
 //
 
-#import <CoreServices/CoreServices.h>
 #import <ImageIO/ImageIO.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import <SFBCFWrapper.hpp>
 
@@ -558,9 +558,11 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 			TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame;
 
 			// Convert the image's UTI into a MIME type
-			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-			if(mimeType)
-				frame->setMimeType(TagLib::StringFromNSString(mimeType));
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+				UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+				if(NSString *mimeType = [type preferredMIMEType]; mimeType)
+					frame->setMimeType(TagLib::StringFromNSString(mimeType));
+			}
 
 			frame->setPicture(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 			frame->setType((TagLib::ID3v2::AttachedPictureFrame::Type)attachedPicture.pictureType);
