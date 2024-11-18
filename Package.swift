@@ -87,9 +87,13 @@ let package = Package(
 				.headerSearchPath("Conversion"),
 			],
 			linkerSettings: [
-				.linkedFramework("CoreServices"),
-				.linkedFramework("Foundation"),
+				.linkedFramework("Accelerate"),
+				.linkedFramework("AudioToolbox"),
 				.linkedFramework("AVFAudio"),
+//				.linkedFramework("CoreAudioTypes"),
+				.linkedFramework("Foundation"),
+				.linkedFramework("ImageIO"),
+				.linkedFramework("UniformTypeIdentifiers"),
 			]),
 		.target(
 			name: "SFBAudioEngine",

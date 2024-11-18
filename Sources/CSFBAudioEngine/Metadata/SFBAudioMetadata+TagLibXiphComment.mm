@@ -6,8 +6,8 @@
 
 #import <os/log.h>
 
-#import <CoreServices/CoreServices.h>
 #import <ImageIO/ImageIO.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import <SFBCFWrapper.hpp>
 
@@ -236,9 +236,11 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 		picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
 
 	// Convert the image's UTI into a MIME type
-	NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-	if(mimeType)
-		picture->setMimeType(TagLib::StringFromNSString(mimeType));
+	if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+		UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+		if(NSString *mimeType = [type preferredMIMEType]; mimeType)
+			picture->setMimeType(TagLib::StringFromNSString(mimeType));
+	}
 
 	// Flesh out the height, width, and depth
 	NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
