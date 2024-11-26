@@ -29,19 +29,19 @@ SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP
 
 namespace {
 
-/// A deleter class for lame_global_flags objects
-struct global_flags_closer {
+/// A `std::unique_ptr` deleter for `lame_global_flags` objects
+struct lame_global_flags_deleter {
 	void operator()(lame_global_flags *gfp) { lame_close(gfp); }
 };
 
-using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_closer>;
+using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_global_flags_deleter>;
 
 } /* namespace */
 
 @interface SFBMP3Encoder ()
 {
 @private
-	global_flags_unique_ptr _gfp;
+	lame_global_flags_unique_ptr _gfp;
 	AVAudioFramePosition _framePosition;
 	NSInteger _id3v2TagSize;
 }
@@ -94,7 +94,7 @@ using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_
 	if(![super openReturningError:error])
 		return NO;
 
-	global_flags_unique_ptr gfp{lame_init()};
+	lame_global_flags_unique_ptr gfp{lame_init()};
 	if(!gfp) {
 		os_log_error(gSFBAudioEncoderLog, "lame_init failed");
 		if(error)

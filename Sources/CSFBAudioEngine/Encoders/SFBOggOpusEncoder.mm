@@ -43,18 +43,18 @@ SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsVal
 
 namespace {
 
-/// A deleter class for OggOpusEnc objects
-struct opus_encoder_destroyer {
+/// A `std::unique_ptr` deleter for `OggOpusEnc` objects
+struct ogg_opus_enc_deleter {
 	void operator()(OggOpusEnc *enc) { ope_encoder_destroy(enc); }
 };
 
-/// A deleter class for OggOpusComments objects
-struct opus_comments_destroyer {
+/// A `std::unique_ptr` deleter for `OggOpusComments` objects
+struct ogg_opus_comments_deleter {
 	void operator()(OggOpusComments *comments) { ope_comments_destroy(comments); }
 };
 
-using opus_encoder_unique_ptr = std::unique_ptr<OggOpusEnc, opus_encoder_destroyer>;
-using opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, opus_comments_destroyer>;
+using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
+using ogg_opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, ogg_opus_comments_deleter>;
 
 int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
 {
@@ -74,8 +74,8 @@ int close_callback(void *user_data)
 @interface SFBOggOpusEncoder ()
 {
 @private
-	opus_encoder_unique_ptr _enc;
-	opus_comments_unique_ptr _comments;
+	ogg_opus_enc_unique_ptr _enc;
+	ogg_opus_comments_unique_ptr _comments;
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
 }
@@ -138,7 +138,7 @@ int close_callback(void *user_data)
 
 	OpusEncCallbacks callbacks = { write_callback, close_callback };
 
-	opus_comments_unique_ptr comments{ope_comments_create()};
+	ogg_opus_comments_unique_ptr comments{ope_comments_create()};
 	if(!comments) {
 		os_log_error(gSFBAudioEncoderLog, "ope_comments_create failed");
 		if(error)
@@ -156,7 +156,7 @@ int close_callback(void *user_data)
 		return NO;
 	}
 
-	opus_encoder_unique_ptr enc{(ope_encoder_create_callbacks(&callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate), static_cast<int>(_processingFormat.channelCount), _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
+	ogg_opus_enc_unique_ptr enc{(ope_encoder_create_callbacks(&callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate), static_cast<int>(_processingFormat.channelCount), _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
 	if(!enc) {
 		os_log_error(gSFBAudioEncoderLog, "ope_encoder_create_callbacks failed: %{public}s", ope_strerror(result));
 		if(error)
