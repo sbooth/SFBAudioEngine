@@ -31,18 +31,21 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACBitsPerSamp
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTotalSamples = @"total_samples";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum = @"md5sum";
 
-template <>
-struct ::std::default_delete<FLAC__StreamDecoder> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(FLAC__StreamDecoder *decoder) const noexcept { FLAC__stream_decoder_delete(decoder); }
+namespace {
+
+/// A `std::unique_ptr` deleter for `FLAC__StreamDecoder` objects
+struct flac__stream_decoder_deleter {
+	void operator()(FLAC__StreamDecoder *decoder) { FLAC__stream_decoder_delete(decoder); }
 };
+
+using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
+
+} /* namespace */
 
 @interface SFBFLACDecoder ()
 {
 @private
-	std::unique_ptr<FLAC__StreamDecoder> _flac;
+	flac__stream_decoder_unique_ptr _flac;
 	FLAC__StreamMetadata_StreamInfo _streamInfo;
 	AVAudioFramePosition _framePosition;
 	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
@@ -210,7 +213,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		return NO;
 
 	// Create FLAC decoder
-	auto flac = std::unique_ptr<FLAC__StreamDecoder>(FLAC__stream_decoder_new());
+	flac__stream_decoder_unique_ptr flac{FLAC__stream_decoder_new()};
 	if(!flac) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
