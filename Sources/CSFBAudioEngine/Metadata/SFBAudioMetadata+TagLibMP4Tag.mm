@@ -20,9 +20,11 @@
 namespace {
 
 /// A deleter class for CoreFoundation objects
-struct CoreFoundationReleaser {
+struct cf_releaser {
 	void operator()(CFTypeRef cf) { CFRelease(cf); }
 };
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_releaser>;
 
 } /* namespace */
 
@@ -243,7 +245,7 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 	if(setAlbumArt) {
 		auto list = TagLib::MP4::CoverArtList();
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			std::unique_ptr<CGImageSource, CoreFoundationReleaser> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+			cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 

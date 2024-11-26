@@ -16,9 +16,11 @@
 namespace {
 
 /// A deleter class for CoreFoundation objects
-struct CoreFoundationReleaser {
+struct cf_releaser {
 	void operator()(CFTypeRef cf) { CFRelease(cf); }
 };
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_releaser>;
 
 } /* namespace */
 
@@ -232,7 +234,7 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 {
 	NSCParameterAssert(attachedPicture != nil);
 
-	std::unique_ptr<CGImageSource, CoreFoundationReleaser> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+	cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 	if(!imageSource)
 		return nullptr;
 
