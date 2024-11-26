@@ -332,7 +332,7 @@ using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_
 	if(frameLength == 0)
 		return YES;
 
-	const size_t bufsize = (size_t)(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
+	const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
 	auto buf = std::make_unique<unsigned char[]>(bufsize);
 	if(!buf) {
 		if(error)
