@@ -9,6 +9,8 @@
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
+#import <taglib/mp4coverart.h>
+
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 
 #import "SFBAudioMetadata+TagLibTag.h"
