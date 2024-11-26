@@ -17,6 +17,8 @@
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC = @"org.sbooth.AudioEngine.Encoder.OggFLAC";
 
+namespace {
+
 /// A deleter class for FLAC__StreamEncoder objects
 struct stream_encoder_deleter {
 	void operator()(FLAC__StreamEncoder *encoder) { FLAC__stream_encoder_delete(encoder); }
@@ -29,6 +31,8 @@ struct stream_metadata_deleter {
 
 using stream_encoder_unique_ptr = std::unique_ptr<FLAC__StreamEncoder, stream_encoder_deleter>;
 using stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, stream_metadata_deleter>;
+
+} /* namespace */
 
 @interface SFBOggFLACEncoder ()
 {

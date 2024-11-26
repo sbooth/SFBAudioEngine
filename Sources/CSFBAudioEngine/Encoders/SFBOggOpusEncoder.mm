@@ -68,7 +68,7 @@ int close_callback(void *user_data)
 	return ![encoder->_outputSource closeReturningError:nil];
 }
 
-}
+} /* namespace */
 
 @interface SFBOggOpusEncoder ()
 {
