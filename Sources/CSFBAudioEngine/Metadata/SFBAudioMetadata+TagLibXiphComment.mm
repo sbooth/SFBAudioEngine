@@ -13,13 +13,14 @@
 
 #import "TagLibStringUtilities.h"
 
-template <>
-struct ::std::default_delete<CGImageSource> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(CGImageSource *is) const noexcept { CFRelease(is); }
+namespace {
+
+/// A deleter class for CoreFoundation objects
+struct CoreFoundationReleaser {
+	void operator()(CFTypeRef cf) { CFRelease(cf); }
 };
+
+} /* namespace */
 
 @implementation SFBAudioMetadata (TagLibXiphComment)
 
@@ -231,7 +232,7 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 {
 	NSCParameterAssert(attachedPicture != nil);
 
-	std::unique_ptr<CGImageSource> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+	std::unique_ptr<CGImageSource, CoreFoundationReleaser> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 	if(!imageSource)
 		return nullptr;
 
