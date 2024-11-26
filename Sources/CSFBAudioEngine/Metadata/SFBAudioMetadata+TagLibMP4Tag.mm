@@ -16,6 +16,14 @@
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 
+template <>
+struct ::std::default_delete<CGImageSource> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(CGImageSource *is) const noexcept { CFRelease(is); }
+};
+
 @implementation SFBAudioMetadata (TagLibMP4Tag)
 
 - (void)addMetadataFromTagLibMP4Tag:(const TagLib::MP4::Tag *)tag
@@ -233,14 +241,14 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 	if(setAlbumArt) {
 		auto list = TagLib::MP4::CoverArtList();
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			auto imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr);
+			std::unique_ptr<CGImageSource> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 
 			auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
 
 			// Determine the image type
-			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
 				UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
 				if([utType conformsToType:UTTypeBMP])
 					type = TagLib::MP4::CoverArt::CoverArt::BMP;
@@ -254,8 +262,6 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 
 			auto picture = TagLib::MP4::CoverArt(type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 			list.append(picture);
-
-			CFRelease(imageSource);
 		}
 
 		tag->setItem("covr", list);

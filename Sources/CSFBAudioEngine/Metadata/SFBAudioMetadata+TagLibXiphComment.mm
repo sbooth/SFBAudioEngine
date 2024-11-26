@@ -13,6 +13,14 @@
 
 #import "TagLibStringUtilities.h"
 
+template <>
+struct ::std::default_delete<CGImageSource> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(CGImageSource *is) const noexcept { CFRelease(is); }
+};
+
 @implementation SFBAudioMetadata (TagLibXiphComment)
 
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag
@@ -223,7 +231,7 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 {
 	NSCParameterAssert(attachedPicture != nil);
 
-	auto imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr);
+	std::unique_ptr<CGImageSource> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 	if(!imageSource)
 		return nullptr;
 
@@ -234,14 +242,14 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 		picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
 
 	// Convert the image's UTI into a MIME type
-	if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+	if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
 		UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
 		if(NSString *mimeType = [type preferredMIMEType]; mimeType)
 			picture->setMimeType(TagLib::StringFromNSString(mimeType));
 	}
 
 	// Flesh out the height, width, and depth
-	NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+	NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
 	if(imagePropertiesDictionary) {
 		NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
 		NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
@@ -251,8 +259,6 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 		picture->setWidth(imageWidth.intValue);
 		picture->setColorDepth(imageDepth.intValue);
 	}
-
-	CFRelease(imageSource);
 
 	return picture;
 }

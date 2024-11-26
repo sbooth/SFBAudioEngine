@@ -24,6 +24,14 @@
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 
+template <>
+struct ::std::default_delete<CGImageSource> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(CGImageSource *is) const noexcept { CFRelease(is); }
+};
+
 @implementation SFBAudioMetadata (TagLibID3v2Tag)
 
 - (void)addMetadataFromTagLibID3v2Tag:(const TagLib::ID3v2::Tag *)tag
@@ -549,14 +557,14 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 
 	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			auto imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr);
+			std::unique_ptr<CGImageSource> imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 
 			TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame;
 
 			// Convert the image's UTI into a MIME type
-			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
 				UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
 				if(NSString *mimeType = [type preferredMIMEType]; mimeType)
 					frame->setMimeType(TagLib::StringFromNSString(mimeType));
@@ -567,8 +575,6 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 			if(attachedPicture.pictureDescription)
 				frame->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
 			tag->addFrame(frame);
-
-			CFRelease(imageSource);
 		}
 	}
 }
