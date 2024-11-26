@@ -27,18 +27,21 @@ SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo = @"Stereo";
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo = @"Joint Stereo";
 
-template <>
-struct ::std::default_delete<lame_global_flags> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(lame_global_flags *gfp) const noexcept { lame_close(gfp); }
+namespace {
+
+/// A deleter class for lame_global_flags objects
+struct global_flags_closer {
+	void operator()(lame_global_flags *gfp) { lame_close(gfp); }
 };
+
+using unique_global_flags_ptr = std::unique_ptr<lame_global_flags, global_flags_closer>;
+
+} /* namespace */
 
 @interface SFBMP3Encoder ()
 {
 @private
-	std::unique_ptr<lame_global_flags> _gfp;
+	unique_global_flags_ptr _gfp;
 	AVAudioFramePosition _framePosition;
 	NSInteger _id3v2TagSize;
 }
@@ -91,7 +94,7 @@ struct ::std::default_delete<lame_global_flags> {
 	if(![super openReturningError:error])
 		return NO;
 
-	auto gfp = std::unique_ptr<lame_global_flags>(lame_init());
+	unique_global_flags_ptr gfp{lame_init()};
 	if(!gfp) {
 		os_log_error(gSFBAudioEncoderLog, "lame_init failed");
 		if(error)

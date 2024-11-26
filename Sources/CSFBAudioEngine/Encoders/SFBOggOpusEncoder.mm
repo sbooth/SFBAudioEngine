@@ -40,23 +40,20 @@ SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsVal
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration100ms = @"100 msec";
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration120ms = @"120 msec";
 
-template <>
-struct ::std::default_delete<OggOpusComments> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(OggOpusComments *comments) const noexcept { ope_comments_destroy(comments); }
-};
-
-template <>
-struct ::std::default_delete<OggOpusEnc> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(OggOpusEnc *enc) const noexcept { ope_encoder_destroy(enc); }
-};
-
 namespace {
+
+/// A deleter class for OggOpusEnc objects
+struct opus_encoder_destroyer {
+	void operator()(OggOpusEnc *enc) { ope_encoder_destroy(enc); }
+};
+
+/// A deleter class for OggOpusComments objects
+struct opus_comments_destroyer {
+	void operator()(OggOpusComments *comments) { ope_comments_destroy(comments); }
+};
+
+using unique_opus_encoder_ptr = std::unique_ptr<OggOpusEnc, opus_encoder_destroyer>;
+using unique_opus_comments_ptr = std::unique_ptr<OggOpusComments, opus_comments_destroyer>;
 
 int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
 {
@@ -76,8 +73,8 @@ int close_callback(void *user_data)
 @interface SFBOggOpusEncoder ()
 {
 @private
-	std::unique_ptr<OggOpusEnc> _enc;
-	std::unique_ptr<OggOpusComments> _comments;
+	unique_opus_encoder_ptr _enc;
+	unique_opus_comments_ptr _comments;
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
 }
@@ -130,17 +127,17 @@ int close_callback(void *user_data)
 
 - (BOOL)openReturningError:(NSError **)error
 {
-	//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-	//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-	//	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
-	//	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
+//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
+//	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
 
 	if(![super openReturningError:error])
 		return NO;
 
 	OpusEncCallbacks callbacks = { write_callback, close_callback };
 
-	auto comments = std::unique_ptr<OggOpusComments>(ope_comments_create());
+	unique_opus_comments_ptr comments{ope_comments_create()};
 	if(!comments) {
 		os_log_error(gSFBAudioEncoderLog, "ope_comments_create failed");
 		if(error)
@@ -158,7 +155,7 @@ int close_callback(void *user_data)
 		return NO;
 	}
 
-	auto enc = std::unique_ptr<OggOpusEnc>((ope_encoder_create_callbacks(&callbacks, (__bridge  void*)self, comments.get(), (opus_int32)_processingFormat.sampleRate, (int)_processingFormat.channelCount, _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result)));
+	unique_opus_encoder_ptr enc{(ope_encoder_create_callbacks(&callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate), static_cast<int>(_processingFormat.channelCount), _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
 	if(!enc) {
 		os_log_error(gSFBAudioEncoderLog, "ope_encoder_create_callbacks failed: %{public}s", ope_strerror(result));
 		if(error)

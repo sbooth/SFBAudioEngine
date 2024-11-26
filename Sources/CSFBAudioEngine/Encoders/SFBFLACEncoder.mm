@@ -20,28 +20,29 @@ SFBAudioEncoderName const SFBAudioEncoderNameFLAC = @"org.sbooth.AudioEngine.Enc
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel = @"Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding = @"Verify Encoding";
 
-template <>
-struct ::std::default_delete<FLAC__StreamEncoder> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(FLAC__StreamEncoder *encoder) const noexcept { FLAC__stream_encoder_delete(encoder); }
+namespace {
+
+/// A deleter class for FLAC__StreamEncoder objects
+struct stream_encoder_deleter {
+	void operator()(FLAC__StreamEncoder *encoder) { FLAC__stream_encoder_delete(encoder); }
 };
 
-template <>
-struct ::std::default_delete<FLAC__StreamMetadata> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(FLAC__StreamMetadata *metadata) const noexcept { FLAC__metadata_object_delete(metadata); }
+/// A deleter class for FLAC__StreamMetadata objects
+struct stream_metadata_deleter {
+	void operator()(FLAC__StreamMetadata *metadata) { FLAC__metadata_object_delete(metadata); }
 };
+
+using unique_stream_encoder_ptr = std::unique_ptr<FLAC__StreamEncoder, stream_encoder_deleter>;
+using unique_stream_metadata_ptr = std::unique_ptr<FLAC__StreamMetadata, stream_metadata_deleter>;
+
+} /* namespace */
 
 @interface SFBFLACEncoder ()
 {
 @private
-	std::unique_ptr<FLAC__StreamEncoder> _flac;
-	std::unique_ptr<FLAC__StreamMetadata> _seektable;
-	std::unique_ptr<FLAC__StreamMetadata> _padding;
+	unique_stream_encoder_ptr _flac;
+	unique_stream_metadata_ptr _seektable;
+	unique_stream_metadata_ptr _padding;
 	FLAC__StreamMetadata *_metadata [2];
 @package
 	AVAudioFramePosition _framePosition;
@@ -185,7 +186,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		return NO;
 
 	// Create FLAC encoder
-	auto flac = std::unique_ptr<FLAC__StreamEncoder>(FLAC__stream_encoder_new());
+	unique_stream_encoder_ptr flac{FLAC__stream_encoder_new()};
 	if(!flac) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -271,7 +272,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	}
 
 	// Create the padding metadata block
-	auto padding = std::unique_ptr<FLAC__StreamMetadata>(FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING));
+	unique_stream_metadata_ptr padding{FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)};
 	if(!padding) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_new failed");
 		if(error)
@@ -282,9 +283,9 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	padding->length = DEFAULT_PADDING;
 
 	// Create a seektable when possible
-	std::unique_ptr<FLAC__StreamMetadata> seektable;
+	unique_stream_metadata_ptr seektable;
 	if(_estimatedFramesToEncode > 0) {
-		seektable = std::unique_ptr<FLAC__StreamMetadata>(FLAC__metadata_object_new(FLAC__METADATA_TYPE_SEEKTABLE));
+		seektable = unique_stream_metadata_ptr{FLAC__metadata_object_new(FLAC__METADATA_TYPE_SEEKTABLE)};
 		if(!seektable) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_new failed");
 			if(error)
