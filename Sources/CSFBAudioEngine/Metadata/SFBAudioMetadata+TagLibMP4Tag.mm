@@ -5,11 +5,10 @@
 //
 
 #import <cstdio>
+#import <memory>
 
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-
-#import <SFBCFWrapper.hpp>
 
 #import <taglib/mp4coverart.h>
 
@@ -17,6 +16,17 @@
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
+
+namespace {
+
+/// A deleter class for CoreFoundation objects
+struct cf_releaser {
+	void operator()(CFTypeRef cf) { CFRelease(cf); }
+};
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_releaser>;
+
+} /* namespace */
 
 @implementation SFBAudioMetadata (TagLibMP4Tag)
 
@@ -235,14 +245,14 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 	if(setAlbumArt) {
 		auto list = TagLib::MP4::CoverArtList();
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+			cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 
 			auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
 
 			// Determine the image type
-			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
 				UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
 				if([utType conformsToType:UTTypeBMP])
 					type = TagLib::MP4::CoverArt::CoverArt::BMP;

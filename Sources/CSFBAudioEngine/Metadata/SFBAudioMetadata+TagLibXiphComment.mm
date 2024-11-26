@@ -4,16 +4,25 @@
 // MIT license
 //
 
-#import <os/log.h>
+#import <memory>
 
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#import <SFBCFWrapper.hpp>
-
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
 #import "TagLibStringUtilities.h"
+
+namespace {
+
+/// A deleter class for CoreFoundation objects
+struct cf_releaser {
+	void operator()(CFTypeRef cf) { CFRelease(cf); }
+};
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_releaser>;
+
+} /* namespace */
 
 @implementation SFBAudioMetadata (TagLibXiphComment)
 
@@ -225,7 +234,7 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 {
 	NSCParameterAssert(attachedPicture != nil);
 
-	SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+	cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 	if(!imageSource)
 		return nullptr;
 
@@ -236,14 +245,14 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 		picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
 
 	// Convert the image's UTI into a MIME type
-	if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+	if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
 		UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
 		if(NSString *mimeType = [type preferredMIMEType]; mimeType)
 			picture->setMimeType(TagLib::StringFromNSString(mimeType));
 	}
 
 	// Flesh out the height, width, and depth
-	NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+	NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
 	if(imagePropertiesDictionary) {
 		NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
 		NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];

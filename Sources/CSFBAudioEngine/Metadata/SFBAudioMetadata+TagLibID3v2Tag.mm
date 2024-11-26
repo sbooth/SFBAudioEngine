@@ -4,10 +4,10 @@
 // MIT license
 //
 
+#import <memory>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-
-#import <SFBCFWrapper.hpp>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -25,6 +25,17 @@
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
+
+namespace {
+
+/// A deleter class for CoreFoundation objects
+struct cf_releaser {
+	void operator()(CFTypeRef cf) { CFRelease(cf); }
+};
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_releaser>;
+
+} /* namespace */
 
 @implementation SFBAudioMetadata (TagLibID3v2Tag)
 
@@ -551,14 +562,14 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 
 	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+			cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 
 			TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame;
 
 			// Convert the image's UTI into a MIME type
-			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource); typeIdentifier) {
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
 				UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
 				if(NSString *mimeType = [type preferredMIMEType]; mimeType)
 					frame->setMimeType(TagLib::StringFromNSString(mimeType));
