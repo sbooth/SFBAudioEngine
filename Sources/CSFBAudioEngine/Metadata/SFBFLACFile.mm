@@ -8,8 +8,6 @@
 
 #import <CoreServices/CoreServices.h>
 
-#import <SFBCFWrapper.hpp>
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 

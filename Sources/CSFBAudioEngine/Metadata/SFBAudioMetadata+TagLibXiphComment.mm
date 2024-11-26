@@ -9,8 +9,6 @@
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#import <SFBCFWrapper.hpp>
-
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
 #import "TagLibStringUtilities.h"
@@ -225,7 +223,7 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 {
 	NSCParameterAssert(attachedPicture != nil);
 
-	SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+	auto imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr);
 	if(!imageSource)
 		return nullptr;
 
@@ -253,6 +251,8 @@ std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACP
 		picture->setWidth(imageWidth.intValue);
 		picture->setColorDepth(imageDepth.intValue);
 	}
+
+	CFRelease(imageSource);
 
 	return picture;
 }

@@ -7,8 +7,6 @@
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#import <SFBCFWrapper.hpp>
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 
@@ -551,7 +549,7 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 
 	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+			auto imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr);
 			if(!imageSource)
 				continue;
 
@@ -569,6 +567,8 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 			if(attachedPicture.pictureDescription)
 				frame->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
 			tag->addFrame(frame);
+
+			CFRelease(imageSource);
 		}
 	}
 }

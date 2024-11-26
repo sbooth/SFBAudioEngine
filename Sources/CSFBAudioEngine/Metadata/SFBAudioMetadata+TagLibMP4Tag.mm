@@ -9,10 +9,6 @@
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#import <SFBCFWrapper.hpp>
-
-#import <taglib/mp4coverart.h>
-
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 
 #import "SFBAudioMetadata+TagLibTag.h"
@@ -235,7 +231,7 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 	if(setAlbumArt) {
 		auto list = TagLib::MP4::CoverArtList();
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+			auto imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr);
 			if(!imageSource)
 				continue;
 
@@ -256,6 +252,8 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 
 			auto picture = TagLib::MP4::CoverArt(type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 			list.append(picture);
+
+			CFRelease(imageSource);
 		}
 
 		tag->setItem("covr", list);
