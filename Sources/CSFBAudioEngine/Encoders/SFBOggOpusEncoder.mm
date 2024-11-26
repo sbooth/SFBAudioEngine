@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <algorithm>
 #import <memory>
 
 #import <os/log.h>
@@ -168,7 +169,7 @@ int close_callback(void *user_data)
 		opus_int32 intValue = bitrate.intValue;
 		switch(intValue) {
 			case 6 ... 256:
-				result = ope_encoder_ctl(enc.get(), OPUS_SET_BITRATE(MIN(256 * (opus_int32)_processingFormat.channelCount, intValue) * 1000));
+				result = ope_encoder_ctl(enc.get(), OPUS_SET_BITRATE(std::min(256 * static_cast<opus_int32>(_processingFormat.channelCount), intValue) * 1000));
 				if(result != OPE_OK) {
 					os_log_error(gSFBAudioEncoderLog, "OPUS_SET_BITRATE failed: %{public}s", ope_strerror(result));
 					if(error)
