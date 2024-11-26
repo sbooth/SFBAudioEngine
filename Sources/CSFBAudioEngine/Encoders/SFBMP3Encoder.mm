@@ -340,7 +340,7 @@ using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_
 		return NO;
 	}
 
-	auto result = lame_encode_buffer_interleaved_ieee_float(_gfp.get(), (const float *)buffer.audioBufferList->mBuffers[0].mData, static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
+	auto result = lame_encode_buffer_interleaved_ieee_float(_gfp.get(), static_cast<const float *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_encode_buffer_interleaved_ieee_float failed");
 		if(error)
@@ -406,7 +406,7 @@ using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_
 		auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
 
 		NSInteger bytesWritten;
-		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+		if(![_outputSource writeBytes:buf.get() length:static_cast<NSInteger>(result) bytesWritten:&bytesWritten error:error] || bytesWritten != static_cast<NSInteger>(result))
 			return NO;
 	}
 
@@ -427,11 +427,11 @@ using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_
 		auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
 
 		NSInteger bytesWritten;
-		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+		if(![_outputSource writeBytes:buf.get() length:static_cast<NSInteger>(result) bytesWritten:&bytesWritten error:error] || bytesWritten != static_cast<NSInteger>(result))
 			return NO;
 	}
 
-	_id3v2TagSize = (NSInteger)bufsize;
+	_id3v2TagSize = static_cast<NSInteger>(bufsize);
 
 	return YES;
 }
@@ -453,7 +453,7 @@ using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_
 			return NO;
 
 		NSInteger bytesWritten;
-		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+		if(![_outputSource writeBytes:buf.get() length:static_cast<NSInteger>(result) bytesWritten:&bytesWritten error:error] || bytesWritten != static_cast<NSInteger>(result))
 			return NO;
 	}
 
