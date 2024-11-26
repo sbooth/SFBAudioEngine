@@ -27,14 +27,14 @@ struct stream_metadata_deleter {
 	void operator()(FLAC__StreamMetadata *metadata) { FLAC__metadata_object_delete(metadata); }
 };
 
-using unique_stream_encoder_ptr = std::unique_ptr<FLAC__StreamEncoder, stream_encoder_deleter>;
-using unique_stream_metadata_ptr = std::unique_ptr<FLAC__StreamMetadata, stream_metadata_deleter>;
+using stream_encoder_unique_ptr = std::unique_ptr<FLAC__StreamEncoder, stream_encoder_deleter>;
+using stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, stream_metadata_deleter>;
 
 @interface SFBOggFLACEncoder ()
 {
 @private
-	unique_stream_encoder_ptr _flac;
-	unique_stream_metadata_ptr _padding;
+	stream_encoder_unique_ptr _flac;
+	stream_metadata_unique_ptr _padding;
 	FLAC__StreamMetadata *_metadata [1];
 @package
 	AVAudioFramePosition _framePosition;
@@ -198,7 +198,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		return NO;
 
 	// Create FLAC encoder
-	unique_stream_encoder_ptr flac{FLAC__stream_encoder_new()};
+	stream_encoder_unique_ptr flac{FLAC__stream_encoder_new()};
 	if(!flac) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -284,7 +284,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	}
 
 	// Create the padding metadata block
-	unique_stream_metadata_ptr padding{FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)};
+	stream_metadata_unique_ptr padding{FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)};
 	if(!padding) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_new failed");
 		if(error)

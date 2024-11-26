@@ -34,14 +34,14 @@ struct global_flags_closer {
 	void operator()(lame_global_flags *gfp) { lame_close(gfp); }
 };
 
-using unique_global_flags_ptr = std::unique_ptr<lame_global_flags, global_flags_closer>;
+using global_flags_unique_ptr = std::unique_ptr<lame_global_flags, global_flags_closer>;
 
 } /* namespace */
 
 @interface SFBMP3Encoder ()
 {
 @private
-	unique_global_flags_ptr _gfp;
+	global_flags_unique_ptr _gfp;
 	AVAudioFramePosition _framePosition;
 	NSInteger _id3v2TagSize;
 }
@@ -94,7 +94,7 @@ using unique_global_flags_ptr = std::unique_ptr<lame_global_flags, global_flags_
 	if(![super openReturningError:error])
 		return NO;
 
-	unique_global_flags_ptr gfp{lame_init()};
+	global_flags_unique_ptr gfp{lame_init()};
 	if(!gfp) {
 		os_log_error(gSFBAudioEncoderLog, "lame_init failed");
 		if(error)

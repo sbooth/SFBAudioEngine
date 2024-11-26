@@ -52,8 +52,8 @@ struct opus_comments_destroyer {
 	void operator()(OggOpusComments *comments) { ope_comments_destroy(comments); }
 };
 
-using unique_opus_encoder_ptr = std::unique_ptr<OggOpusEnc, opus_encoder_destroyer>;
-using unique_opus_comments_ptr = std::unique_ptr<OggOpusComments, opus_comments_destroyer>;
+using opus_encoder_unique_ptr = std::unique_ptr<OggOpusEnc, opus_encoder_destroyer>;
+using opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, opus_comments_destroyer>;
 
 int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
 {
@@ -73,8 +73,8 @@ int close_callback(void *user_data)
 @interface SFBOggOpusEncoder ()
 {
 @private
-	unique_opus_encoder_ptr _enc;
-	unique_opus_comments_ptr _comments;
+	opus_encoder_unique_ptr _enc;
+	opus_comments_unique_ptr _comments;
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
 }
@@ -137,7 +137,7 @@ int close_callback(void *user_data)
 
 	OpusEncCallbacks callbacks = { write_callback, close_callback };
 
-	unique_opus_comments_ptr comments{ope_comments_create()};
+	opus_comments_unique_ptr comments{ope_comments_create()};
 	if(!comments) {
 		os_log_error(gSFBAudioEncoderLog, "ope_comments_create failed");
 		if(error)
@@ -155,7 +155,7 @@ int close_callback(void *user_data)
 		return NO;
 	}
 
-	unique_opus_encoder_ptr enc{(ope_encoder_create_callbacks(&callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate), static_cast<int>(_processingFormat.channelCount), _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
+	opus_encoder_unique_ptr enc{(ope_encoder_create_callbacks(&callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate), static_cast<int>(_processingFormat.channelCount), _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
 	if(!enc) {
 		os_log_error(gSFBAudioEncoderLog, "ope_encoder_create_callbacks failed: %{public}s", ope_strerror(result));
 		if(error)

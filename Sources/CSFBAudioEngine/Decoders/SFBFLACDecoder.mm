@@ -38,14 +38,14 @@ struct stream_decoder_deleter {
 	void operator()(FLAC__StreamDecoder *decoder) { FLAC__stream_decoder_delete(decoder); }
 };
 
-using unique_stream_decoder_ptr = std::unique_ptr<FLAC__StreamDecoder, stream_decoder_deleter>;
+using stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, stream_decoder_deleter>;
 
 } /* namespace */
 
 @interface SFBFLACDecoder ()
 {
 @private
-	unique_stream_decoder_ptr _flac;
+	stream_decoder_unique_ptr _flac;
 	FLAC__StreamMetadata_StreamInfo _streamInfo;
 	AVAudioFramePosition _framePosition;
 	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
@@ -213,7 +213,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		return NO;
 
 	// Create FLAC decoder
-	unique_stream_decoder_ptr flac{FLAC__stream_decoder_new()};
+	stream_decoder_unique_ptr flac{FLAC__stream_decoder_new()};
 	if(!flac) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
