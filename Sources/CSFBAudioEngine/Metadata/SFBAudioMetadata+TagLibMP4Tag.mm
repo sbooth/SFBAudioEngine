@@ -5,6 +5,7 @@
 //
 
 #import <cstdio>
+#import <memory>
 
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>

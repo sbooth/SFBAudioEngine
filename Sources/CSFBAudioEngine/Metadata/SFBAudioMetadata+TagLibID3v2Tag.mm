@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#import <memory>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
