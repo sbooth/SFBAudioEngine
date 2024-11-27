@@ -169,7 +169,10 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	AudioStreamBasicDescription streamDescription{};
 
 	streamDescription.mFormatID				= kAudioFormatLinearPCM;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 	streamDescription.mFormatFlags			= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
+#pragma clang diagnostic pop
 
 	streamDescription.mSampleRate			= sourceFormat.sampleRate;
 	streamDescription.mChannelsPerFrame		= sourceFormat.channelCount;

@@ -6,14 +6,8 @@
 
 #import <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#pragma clang diagnostic ignored "-Wshadow"
-
 #import <taglib/mp4file.h>
 #import <taglib/tfilestream.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBMP4File.h"
 
