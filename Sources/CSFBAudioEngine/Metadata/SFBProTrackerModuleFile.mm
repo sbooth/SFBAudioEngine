@@ -8,12 +8,8 @@
 
 #import <os/log.h>
 
-#pragma clang diagnostic push
-
 #import <taglib/modfile.h>
 #import <taglib/tfilestream.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBProTrackerModuleFile.h"
 

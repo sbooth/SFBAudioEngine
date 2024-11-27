@@ -90,7 +90,10 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	AudioStreamBasicDescription streamDescription{};
 
 	streamDescription.mFormatID				= kAudioFormatLinearPCM;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 	streamDescription.mFormatFlags			= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
+#pragma clang diagnostic pop
 
 	streamDescription.mSampleRate			= sourceFormat.sampleRate;
 	streamDescription.mChannelsPerFrame		= sourceFormat.channelCount;

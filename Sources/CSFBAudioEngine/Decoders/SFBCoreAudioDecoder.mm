@@ -314,7 +314,10 @@ SInt64 get_size_callback(void *inClientData)
 		AudioStreamBasicDescription asbd{};
 
 		asbd.mFormatID			= kAudioFormatLinearPCM;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 		asbd.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
+#pragma clang diagnostic pop
 
 		asbd.mSampleRate		= format.mSampleRate;
 		asbd.mChannelsPerFrame	= format.mChannelsPerFrame;

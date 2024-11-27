@@ -4,13 +4,7 @@
 // MIT license
 //
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-#pragma clang diagnostic ignored "-Wshadow"
-
 #import <taglib/mp4tag.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBAudioMetadata.h"
 

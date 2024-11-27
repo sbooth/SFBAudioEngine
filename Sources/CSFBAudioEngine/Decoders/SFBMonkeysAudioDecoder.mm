@@ -267,7 +267,10 @@ private:
 	AudioStreamBasicDescription processingStreamDescription{};
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
+#pragma clang diagnostic pop
 
 	processingStreamDescription.mBitsPerChannel		= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
 	processingStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
