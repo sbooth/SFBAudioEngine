@@ -13,7 +13,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 
 /// Returns an initialized `SFBOutputSource` object for the given URL or `nil` on failure
 /// - parameter url: The URL
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBOutputSource` object for the specified URL, or `nil` on failure
 + (nullable instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error;
 

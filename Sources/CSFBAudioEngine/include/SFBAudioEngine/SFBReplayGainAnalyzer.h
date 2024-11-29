@@ -45,7 +45,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 - (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the album gain in dB (`SFBReplayGainAnalyzerGainKey`) and peak sample value normalized to [-1, 1) (`SFBReplayGainAnalyzerPeakKey`), or `nil` on error
-- (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)albumGainAndPeakSampleReturningError:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)albumGainAndPeakSampleReturningerror:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
