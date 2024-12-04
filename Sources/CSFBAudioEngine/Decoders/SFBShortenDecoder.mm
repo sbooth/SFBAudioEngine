@@ -100,20 +100,6 @@ T ** AllocateContiguous2DArray(size_t rows, size_t cols)
 	return result;
 }
 
-/// Clips values to the interval [lower, upper]
-template <typename T>
-constexpr const T& clip(const T& n, const T& lower, const T& upper) {
-	return std::max(lower, std::min(n, upper));
-}
-
-///// Returns `v` clamped to the interval `[lo,hi]`
-//template<typename T>
-//constexpr const T& clamp(const T& v, const T& lo, const T& hi)
-//{
-//	assert(!(hi < lo));
-//	return (v < lo) ? lo : (hi < v) ? hi : v;
-//}
-
 /// Variable-length input using Golomb-Rice coding
 class VariableLengthInput {
 public:
@@ -129,31 +115,59 @@ public:
 		0x1fffffff,	0x3fffffff,	0x7fffffff,	0xffffffff
 	};
 
-	/// Creates a new `VariableLengthInput` object with an internal buffer of the specified size
-	/// - warning: Sizes other than `512` will break seeking
-	VariableLengthInput(size_t size = 512)
-	: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
+	static constexpr size_t sizeof_uvar(uint32_t val, size_t nbin) noexcept
 	{
-		mByteBuffer = new uint8_t [mSize];
-		mByteBufferPosition = mByteBuffer;
+		return (val >> nbin) + nbin;
 	}
+
+	static constexpr size_t sizeof_var(int32_t val, size_t nbin) noexcept
+	{
+		return static_cast<size_t>(labs(val) >> nbin) + nbin + 1;
+	}
+
+	/// Creates an empty `VariableLengthInput` object
+	/// - important: `Allocate()` must be called before using
+	VariableLengthInput() noexcept = default;
 
 	~VariableLengthInput()
 	{
 		delete [] mByteBuffer;
 	}
 
+	VariableLengthInput(const VariableLengthInput&) = delete;
+	VariableLengthInput(VariableLengthInput&&) = delete;
+	VariableLengthInput& operator=(const VariableLengthInput&) = delete;
+	VariableLengthInput& operator=(VariableLengthInput&&) = delete;
+
 	/// Input callback type
 	using InputBlock = bool(^)(void *buf, size_t len, size_t& read);
 
 	/// Sets the input callback
-	void SetInputCallback(InputBlock block)
+	void SetInputCallback(InputBlock block) noexcept
 	{
 		mInputBlock = block;
 	}
 
+	/// Allocates an internal buffer of the specified size
+	/// - warning: Sizes other than `512` will break seeking
+	bool Allocate(size_t size = 512) noexcept
+	{
+		if(mByteBuffer)
+			return false;
+
+		auto byteBuffer = new (std::nothrow) uint8_t [size];
+		if(!byteBuffer)
+			return false;
+
+		mByteBuffer = byteBuffer;
+		mByteBufferPosition = mByteBuffer;
+		mSize = size;
+
+		return true;
+	}
+
 	/// Reads a single unsigned value from the specified bin
-	bool uvar_get(int32_t& i32, size_t bin)
+	bool uvar_get(int32_t& i32, size_t bin) noexcept
 	{
 		if(mBitsAvailable == 0) {
 			if(!word_get(mBitBuffer))
@@ -190,7 +204,7 @@ public:
 	}
 
 	/// Reads a single signed value from the specified bin
-	bool var_get(int32_t& i32, size_t bin)
+	bool var_get(int32_t& i32, size_t bin) noexcept
 	{
 		int32_t var;
 		if(!uvar_get(var, bin + 1))
@@ -205,7 +219,7 @@ public:
 	}
 
 	/// Reads the unsigned Golomb-Rice code
-	bool ulong_get(uint32_t& ui32)
+	bool ulong_get(uint32_t& ui32) noexcept
 	{
 		int32_t bitcount;
 		if(!uvar_get(bitcount, ULONGSIZE))
@@ -219,7 +233,7 @@ public:
 		return true;
 	}
 
-	bool uint_get(uint32_t& ui32, int version, size_t bin)
+	bool uint_get(uint32_t& ui32, int version, size_t bin) noexcept
 	{
 		if(version == 0) {
 			int32_t i32;
@@ -232,24 +246,14 @@ public:
 			return ulong_get(ui32);
 	}
 
-	static size_t sizeof_uvar(uint32_t val, size_t nbin)
-	{
-		return (val >> nbin) + nbin;
-	}
-
-	static size_t sizeof_var(int32_t val, size_t nbin)
-	{
-		return static_cast<size_t>(labs(val) >> nbin) + nbin + 1;
-	}
-
-	void Reset()
+	void Reset() noexcept
 	{
 		mByteBufferPosition = mByteBuffer;
 		mBytesAvailable = 0;
 		mBitsAvailable = 0;
 	}
 
-	bool Refill()
+	bool Refill() noexcept
 	{
 		size_t bytesRead = 0;
 		if(!mInputBlock || !mInputBlock(mByteBuffer, mSize, bytesRead) || bytesRead < 4)
@@ -259,7 +263,7 @@ public:
 		return true;
 	}
 
-	bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable)
+	bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable) noexcept
 	{
 		if(byteBufferPosition > mBytesAvailable || bytesAvailable > mBytesAvailable - byteBufferPosition || bitsAvailable > 32)
 			return false;
@@ -272,22 +276,22 @@ public:
 
 private:
 	/// Input callback
-	InputBlock mInputBlock;
+	InputBlock mInputBlock = nil;
 	/// Size of `mByteBuffer` in bytes
-	size_t mSize;
+	size_t mSize = 0;
 	/// Byte buffer
-	uint8_t *mByteBuffer;
+	uint8_t *mByteBuffer = nullptr;
 	/// Current position in `mByteBuffer`
-	uint8_t *mByteBufferPosition;
+	uint8_t *mByteBufferPosition = nullptr;
 	/// Bytes available in `mByteBuffer`
-	size_t mBytesAvailable;
+	size_t mBytesAvailable = 0;
 	/// Bit buffer
-	uint32_t mBitBuffer;
-	/// Bits available in `mBuffer`
-	size_t mBitsAvailable;
+	uint32_t mBitBuffer = 0;
+	/// Bits available in `mBitBuffer`
+	size_t mBitsAvailable = 0;
 
 	/// Reads a single `uint32_t` from the byte buffer, refilling if necessary
-	bool word_get(uint32_t& ui32)
+	bool word_get(uint32_t& ui32) noexcept
 	{
 		if(mBytesAvailable < 4 && !Refill())
 			return false;
@@ -391,7 +395,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	return it == begin ? end : --it;
 }
 
-}
+} /* namespace */
 
 @interface SFBShortenDecoder ()
 {
@@ -794,7 +798,14 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	// Default nmean
 	_nmean = _version < 2 ? DEFAULT_V0NMEAN : DEFAULT_V2NMEAN;
 
-	// Set up variable length reading callback
+	// Set up variable length input
+	if(!_input.Allocate()) {
+		os_log_error(gSFBAudioDecoderLog, "Unable to allocate variable-length input");
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
 	__weak SFBInputSource *inputSource = self->_inputSource;
 	_input.SetInputCallback(^bool(void *buf, size_t len, size_t &read) {
 		NSInteger bytesRead;
@@ -1394,7 +1405,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							for(auto channel = 0; channel < _nchan; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
-									channel_buf[sample] = static_cast<uint8_t>(clip(_buffer[channel][sample], 0, UINT8_MAX));
+									channel_buf[sample] = static_cast<uint8_t>(std::clamp(_buffer[channel][sample], 0, UINT8_MAX));
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
@@ -1405,7 +1416,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							for(auto channel = 0; channel < _nchan; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
-									channel_buf[sample] = static_cast<int8_t>(clip(_buffer[channel][sample], INT8_MIN, INT8_MAX));
+									channel_buf[sample] = static_cast<int8_t>(std::clamp(_buffer[channel][sample], INT8_MIN, INT8_MAX));
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
@@ -1417,7 +1428,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							for(auto channel = 0; channel < _nchan; ++channel) {
 								auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
-									channel_buf[sample] = static_cast<uint16_t>(clip(_buffer[channel][sample], 0, UINT16_MAX));
+									channel_buf[sample] = static_cast<uint16_t>(std::clamp(_buffer[channel][sample], 0, UINT16_MAX));
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
@@ -1429,7 +1440,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							for(auto channel = 0; channel < _nchan; ++channel) {
 								auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = static_cast<int16_t>(clip(_buffer[channel][sample], INT16_MIN, INT16_MAX));
+									channel_buf[sample] = static_cast<int16_t>(std::clamp(_buffer[channel][sample], INT16_MIN, INT16_MAX));
 								}
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
