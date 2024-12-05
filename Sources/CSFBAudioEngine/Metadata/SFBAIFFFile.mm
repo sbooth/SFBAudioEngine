@@ -6,13 +6,8 @@
 
 #import <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 #import <taglib/aifffile.h>
 #import <taglib/tfilestream.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBAIFFFile.h"
 

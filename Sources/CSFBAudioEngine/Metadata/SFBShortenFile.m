@@ -4,7 +4,7 @@
 // MIT license
 //
 
-#import <os/log.h>
+@import os.log;
 
 #import "SFBShortenFile.h"
 

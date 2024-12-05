@@ -22,7 +22,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// Returns an initialized `SFBInputSource` object for the given URL or `nil` on failure
 /// - important: Only file URLs are supported
 /// - parameter url: The URL
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBInputSource` object for the specified URL, or `nil` on failure
 + (nullable instancetype)inputSourceForURL:(NSURL *)url error:(NSError **)error;
 
@@ -30,7 +30,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - important: Only file URLs are supported
 /// - parameter url: The URL
 /// - parameter flags: Optional flags affecting how `url` is handled
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBInputSource` object for the specified URL, or `nil` on failure
 + (nullable instancetype)inputSourceForURL:(NSURL *)url flags:(SFBInputSourceFlags)flags error:(NSError **)error;
 

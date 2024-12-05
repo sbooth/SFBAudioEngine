@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -102,7 +102,7 @@
 #import "SFBReplayGainAnalyzer.h"
 
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBAudioDecoder.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
@@ -135,9 +135,6 @@ struct ReplayGainFilter {
 	float BButter [BUTTER_ORDER + 1];
 	float AButter [BUTTER_ORDER + 1];
 };
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-float-conversion"
 
 static const struct ReplayGainFilter sReplayGainFilters [] = {
 
@@ -247,8 +244,6 @@ static const struct ReplayGainFilter sReplayGainFilters [] = {
 	},
 
 };
-
-#pragma clang diagnostic pop
 
 /* When calling this procedure, make sure that ip[-order] and op[-order] point to real data! */
 

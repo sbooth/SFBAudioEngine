@@ -6,13 +6,8 @@
 
 #import <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 #import <taglib/tfilestream.h>
 #import <taglib/wavpackfile.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBWavPackFile.h"
 

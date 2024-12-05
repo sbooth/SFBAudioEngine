@@ -155,7 +155,7 @@ SInt64 get_size_callback(void *inClientData)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:std::max(SFBMPEG4DetectionSize, SFBCAFDetectionSize) skipID3v2Tag:NO error:error];
+	NSData *header = [inputSource readHeaderOfLength:std::max({SFBMPEG4DetectionSize, SFBCAFDetectionSize, SFBAIFFDetectionSize, SFBWAVEDetectionSize}) skipID3v2Tag:NO error:error];
 	if(!header)
 		return NO;
 
@@ -169,6 +169,12 @@ SInt64 get_size_callback(void *inClientData)
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 	// CAF files
 	else if([header isCAFHeader])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	// AIFF and AIFF-C files
+	else if([header isAIFFHeader])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	// WAVE files
+	else if([header isWAVEHeader])
 		*formatIsSupported = SFBTernaryTruthValueTrue;
 
 	return YES;
@@ -221,7 +227,10 @@ SInt64 get_size_callback(void *inClientData)
 			AudioStreamBasicDescription asbd{};
 
 			asbd.mFormatID			= kAudioFormatLinearPCM;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 			asbd.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
+#pragma clang diagnostic pop
 
 			asbd.mSampleRate		= format.mSampleRate;
 			asbd.mChannelsPerFrame	= format.mChannelsPerFrame;
@@ -271,6 +280,8 @@ SInt64 get_size_callback(void *inClientData)
 		return YES;
 	}
 	catch(const std::system_error& e) {
+		os_log_error(gSFBAudioDecoderLog, "Error opening SFBCoreAudioDecoder: %{public}s", e.what());
+
 		try {
 			_af.Close();
 			_eaf.Close();
@@ -278,15 +289,13 @@ SInt64 get_size_callback(void *inClientData)
 		catch(...)
 		{}
 
-		if(error) {
-			os_log_error(gSFBAudioDecoderLog, "Error opening SFBCoreAudioDecoder: %{public}s", e.what());
+		if(error)
 			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
 											 code:e.code().value()
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		}
 
 		return NO;
 	}

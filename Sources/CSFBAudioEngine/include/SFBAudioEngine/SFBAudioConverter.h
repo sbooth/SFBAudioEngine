@@ -65,7 +65,7 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// Returns an initialized `SFBAudioConverter` object for the given URLs or `nil` on failure
 /// - parameter sourceURL: The source URL
 /// - parameter destinationURL: The destination URL
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioConverter` object for the specified URLs, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error;
 
@@ -77,7 +77,7 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// Returns an initialized `SFBAudioConverter` object for the given URL and encoder or `nil` on failure
 /// - parameter sourceURL: The source URL
 /// - parameter encoder: The encoder
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioConverter` object for the specified URL and encoder, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
 
@@ -89,7 +89,7 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// Returns an initialized `SFBAudioConverter` object for the given decoder and URL or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter destinationURL: The destination URL
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioConverter` object for the specified decoder and URL, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error;
 
@@ -101,7 +101,7 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// Returns an initialized `SFBAudioConverter` object for the given decoder and encoder or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter encoder: The encoder
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioConverter` object for the specified decoder and encoder, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
 
@@ -110,7 +110,7 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// - parameter encoder: The encoder
 /// - parameter intermediateFormatBlock: An optional block to receive the proposed intermediate format and return the requested intermediate format.
 /// A change in intermediate format allows operations such as sample rate conversion or channel mapping.
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioConverter` object for the specified decoder and encoder, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedIntermediateFormat:(AVAudioFormat *(^ _Nullable)(AVAudioFormat *))intermediateFormatBlock error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
