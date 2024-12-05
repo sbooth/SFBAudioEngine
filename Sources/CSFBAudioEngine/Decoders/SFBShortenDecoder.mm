@@ -9,7 +9,6 @@
 #import <vector>
 
 #import <libkern/OSByteOrder.h>
-
 #import <os/log.h>
 
 #import <AVAudioPCMBuffer+SFBBufferUtilities.h>
