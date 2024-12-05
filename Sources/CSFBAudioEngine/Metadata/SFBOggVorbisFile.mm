@@ -1,18 +1,13 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 #import <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 #import <taglib/tfilestream.h>
 #import <taglib/vorbisfile.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBOggVorbisFile.h"
 

@@ -8,12 +8,8 @@
 
 #import <os/log.h>
 
-#pragma clang diagnostic push
-
 #import <taglib/s3mfile.h>
 #import <taglib/tfilestream.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBScreamTracker3ModuleFile.h"
 

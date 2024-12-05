@@ -219,7 +219,10 @@ private:
 	AudioStreamBasicDescription streamDescription{};
 
 	streamDescription.mFormatID				= kAudioFormatLinearPCM;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 	streamDescription.mFormatFlags			= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+#pragma clang diagnostic pop
 
 	streamDescription.mSampleRate			= wve.nSamplesPerSec;
 	streamDescription.mChannelsPerFrame		= wve.nChannels;

@@ -376,7 +376,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	[_registeredSubclasses addObject:subclassInfo];
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
-		return ((SFBAudioDecoderSubclassInfo *)obj1).priority < ((SFBAudioDecoderSubclassInfo *)obj2).priority;
+		int a = ((SFBAudioDecoderSubclassInfo *)obj1).priority;
+		int b = ((SFBAudioDecoderSubclassInfo *)obj2).priority;
+		if(a < b)
+			return NSOrderedAscending;
+		else if(a > b)
+			return NSOrderedDescending;
+		else
+			return NSOrderedSame;
 	}];
 }
 

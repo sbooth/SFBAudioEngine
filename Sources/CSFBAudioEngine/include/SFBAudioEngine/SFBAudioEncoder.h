@@ -64,14 +64,14 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 - (nullable instancetype)initWithURL:(NSURL *)url NS_SWIFT_UNAVAILABLE("Use -initWithURL:error: instead");
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
 /// - important: If there is a conflict between the URL's path extension and the MIME type, the MIME type takes precedence
 /// - parameter url: The URL
 /// - parameter mimeType: The MIME type of `url` or `nil`
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url mimeType:(nullable NSString *)mimeType error:(NSError **)error;
 
@@ -81,13 +81,13 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:error: instead");
 /// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
 /// - parameter outputSource: The output source
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource error:(NSError **)error;
 /// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
 /// - parameter outputSource: The output source
 /// - parameter mimeType: The MIME type of `outputSource` or `nil`
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
@@ -99,7 +99,7 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter encoderName: The name of the encoder to use
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error;
 
@@ -111,16 +111,16 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
 /// - parameter outputSource: The output source
 /// - parameter encoderName: The name of the encoder to use
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Opens the encoder
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 /// Closes the encoder
-/// - parameter error: An optional pointer to a `NSError` to receive error information
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 

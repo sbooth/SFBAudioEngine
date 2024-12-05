@@ -136,9 +136,6 @@ struct ReplayGainFilter {
 	float AButter [BUTTER_ORDER + 1];
 };
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-float-conversion"
-
 static const struct ReplayGainFilter sReplayGainFilters [] = {
 
 	{
@@ -247,8 +244,6 @@ static const struct ReplayGainFilter sReplayGainFilters [] = {
 	},
 
 };
-
-#pragma clang diagnostic pop
 
 /* When calling this procedure, make sure that ip[-order] and op[-order] point to real data! */
 

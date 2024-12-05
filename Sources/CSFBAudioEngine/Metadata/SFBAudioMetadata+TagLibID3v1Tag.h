@@ -4,14 +4,7 @@
 // MIT license
 //
 
-// Ignore warnings about TagLib::ID3v1::StringHandler virtual functions but non-virtual dtor
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
-
 #import <taglib/id3v1tag.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBAudioMetadata.h"
 

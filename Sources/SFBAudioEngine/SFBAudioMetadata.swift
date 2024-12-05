@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,7 +13,7 @@ extension AudioMetadata {
 			__compilation?.boolValue
 		}
 		set {
-			__compilation = newValue != nil ? newValue! as NSNumber : nil
+			__compilation = newValue as NSNumber?
 		}
 	}
 
@@ -23,7 +23,7 @@ extension AudioMetadata {
 			__trackNumber?.intValue
 		}
 		set {
-			__trackNumber = newValue != nil ? newValue! as NSNumber : nil
+			__trackNumber = newValue as NSNumber?
 		}
 	}
 
@@ -33,7 +33,7 @@ extension AudioMetadata {
 			__trackTotal?.intValue
 		}
 		set {
-			__trackTotal = newValue != nil ? newValue! as NSNumber : nil
+			__trackTotal = newValue as NSNumber?
 		}
 	}
 
@@ -43,7 +43,7 @@ extension AudioMetadata {
 			__discNumber?.intValue
 		}
 		set {
-			__discNumber = newValue != nil ? newValue! as NSNumber : nil
+			__discNumber = newValue as NSNumber?
 		}
 	}
 
@@ -53,7 +53,7 @@ extension AudioMetadata {
 			__discTotal?.intValue
 		}
 		set {
-			__discTotal = newValue != nil ? newValue! as NSNumber : nil
+			__discTotal = newValue as NSNumber?
 		}
 	}
 
@@ -63,7 +63,7 @@ extension AudioMetadata {
 			__bpm?.intValue
 		}
 		set {
-			__bpm = newValue != nil ? newValue! as NSNumber : nil
+			__bpm = newValue as NSNumber?
 		}
 	}
 
@@ -73,7 +73,7 @@ extension AudioMetadata {
 			__rating?.intValue
 		}
 		set {
-			__rating = newValue != nil ? newValue! as NSNumber : nil
+			__rating = newValue as NSNumber?
 		}
 	}
 
@@ -83,7 +83,7 @@ extension AudioMetadata {
 			__replayGainReferenceLoudness?.doubleValue
 		}
 		set {
-			__replayGainReferenceLoudness = newValue != nil ? newValue! as NSNumber : nil
+			__replayGainReferenceLoudness = newValue as NSNumber?
 		}
 	}
 
@@ -93,7 +93,7 @@ extension AudioMetadata {
 			__replayGainTrackGain?.doubleValue
 		}
 		set {
-			__replayGainTrackGain = newValue != nil ? newValue! as NSNumber : nil
+			__replayGainTrackGain = newValue as NSNumber?
 		}
 	}
 
@@ -103,7 +103,7 @@ extension AudioMetadata {
 			__replayGainTrackPeak?.doubleValue
 		}
 		set {
-			__replayGainTrackPeak = newValue != nil ? newValue! as NSNumber : nil
+			__replayGainTrackPeak = newValue as NSNumber?
 		}
 	}
 
@@ -113,7 +113,7 @@ extension AudioMetadata {
 			__replayGainAlbumGain?.doubleValue
 		}
 		set {
-			__replayGainAlbumGain = newValue != nil ? newValue! as NSNumber : nil
+			__replayGainAlbumGain = newValue as NSNumber?
 		}
 	}
 
@@ -123,7 +123,7 @@ extension AudioMetadata {
 			__replayGainAlbumPeak?.doubleValue
 		}
 		set {
-			__replayGainAlbumPeak = newValue != nil ? newValue! as NSNumber : nil
+			__replayGainAlbumPeak = newValue as NSNumber?
 		}
 	}
 }

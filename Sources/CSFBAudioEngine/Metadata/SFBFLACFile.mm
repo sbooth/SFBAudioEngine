@@ -8,15 +8,8 @@
 
 #import <CoreServices/CoreServices.h>
 
-#import <SFBCFWrapper.hpp>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 #import <taglib/flacfile.h>
 #import <taglib/tfilestream.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBFLACFile.h"
 

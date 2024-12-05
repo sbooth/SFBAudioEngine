@@ -27,18 +27,21 @@ SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo = @"Stereo";
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo = @"Joint Stereo";
 
-template <>
-struct ::std::default_delete<lame_global_flags> {
-	default_delete() = default;
-	template <class U>
-	constexpr default_delete(default_delete<U>) noexcept {}
-	void operator()(lame_global_flags *gfp) const noexcept { lame_close(gfp); }
+namespace {
+
+/// A `std::unique_ptr` deleter for `lame_global_flags` objects
+struct lame_global_flags_deleter {
+	void operator()(lame_global_flags *gfp) { lame_close(gfp); }
 };
+
+using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_global_flags_deleter>;
+
+} /* namespace */
 
 @interface SFBMP3Encoder ()
 {
 @private
-	std::unique_ptr<lame_global_flags> _gfp;
+	lame_global_flags_unique_ptr _gfp;
 	AVAudioFramePosition _framePosition;
 	NSInteger _id3v2TagSize;
 }
@@ -91,7 +94,7 @@ struct ::std::default_delete<lame_global_flags> {
 	if(![super openReturningError:error])
 		return NO;
 
-	auto gfp = std::unique_ptr<lame_global_flags>(lame_init());
+	lame_global_flags_unique_ptr gfp{lame_init()};
 	if(!gfp) {
 		os_log_error(gSFBAudioEncoderLog, "lame_init failed");
 		if(error)
@@ -329,7 +332,7 @@ struct ::std::default_delete<lame_global_flags> {
 	if(frameLength == 0)
 		return YES;
 
-	const size_t bufsize = (size_t)(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
+	const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
 	auto buf = std::make_unique<unsigned char[]>(bufsize);
 	if(!buf) {
 		if(error)
@@ -337,7 +340,7 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
-	auto result = lame_encode_buffer_interleaved_ieee_float(_gfp.get(), (const float *)buffer.audioBufferList->mBuffers[0].mData, static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
+	auto result = lame_encode_buffer_interleaved_ieee_float(_gfp.get(), static_cast<const float *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
 	if(result == -1) {
 		os_log_error(gSFBAudioEncoderLog, "lame_encode_buffer_interleaved_ieee_float failed");
 		if(error)
@@ -403,7 +406,7 @@ struct ::std::default_delete<lame_global_flags> {
 		auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
 
 		NSInteger bytesWritten;
-		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+		if(![_outputSource writeBytes:buf.get() length:static_cast<NSInteger>(result) bytesWritten:&bytesWritten error:error] || bytesWritten != static_cast<NSInteger>(result))
 			return NO;
 	}
 
@@ -424,11 +427,11 @@ struct ::std::default_delete<lame_global_flags> {
 		auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
 
 		NSInteger bytesWritten;
-		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+		if(![_outputSource writeBytes:buf.get() length:static_cast<NSInteger>(result) bytesWritten:&bytesWritten error:error] || bytesWritten != static_cast<NSInteger>(result))
 			return NO;
 	}
 
-	_id3v2TagSize = (NSInteger)bufsize;
+	_id3v2TagSize = static_cast<NSInteger>(bufsize);
 
 	return YES;
 }
@@ -450,7 +453,7 @@ struct ::std::default_delete<lame_global_flags> {
 			return NO;
 
 		NSInteger bytesWritten;
-		if(![_outputSource writeBytes:buf.get() length:(NSInteger)result bytesWritten:&bytesWritten error:error] || bytesWritten != (NSInteger)result)
+		if(![_outputSource writeBytes:buf.get() length:static_cast<NSInteger>(result) bytesWritten:&bytesWritten error:error] || bytesWritten != static_cast<NSInteger>(result))
 			return NO;
 	}
 

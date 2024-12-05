@@ -5,7 +5,6 @@
 //
 
 import Foundation
-import CSFBAudioEngine
 
 extension AudioPlayer {
 	/// Playback position information for `AudioPlayer`
