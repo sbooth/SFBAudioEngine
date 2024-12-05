@@ -4,13 +4,10 @@
 // MIT license
 //
 
-#import <CoreServices/CoreServices.h>
+#import <memory>
+
 #import <ImageIO/ImageIO.h>
-
-#import <SFBCFWrapper.hpp>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import <taglib/attachedpictureframe.h>
 #import <taglib/id3v2frame.h>
@@ -19,12 +16,21 @@
 #import <taglib/textidentificationframe.h>
 #import <taglib/unsynchronizedlyricsframe.h>
 
-#pragma clang diagnostic pop
-
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
+
+namespace {
+
+/// A `std::unique_ptr` deleter for `CFTypeRef` objects
+struct cf_type_ref_deleter {
+	void operator()(CFTypeRef cf) { CFRelease(cf); }
+};
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
+
+} /* namespace */
 
 @implementation SFBAudioMetadata (TagLibID3v2Tag)
 
@@ -551,16 +557,18 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 
 	if(setAlbumArt) {
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+			cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 
 			TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame;
 
 			// Convert the image's UTI into a MIME type
-			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-			if(mimeType)
-				frame->setMimeType(TagLib::StringFromNSString(mimeType));
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
+				UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+				if(NSString *mimeType = [type preferredMIMEType]; mimeType)
+					frame->setMimeType(TagLib::StringFromNSString(mimeType));
+			}
 
 			frame->setPicture(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes), static_cast<unsigned int>(attachedPicture.imageData.length)));
 			frame->setType((TagLib::ID3v2::AttachedPictureFrame::Type)attachedPicture.pictureType);

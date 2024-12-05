@@ -367,7 +367,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	[_registeredSubclasses addObject:subclassInfo];
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-		return ((SFBDSDDecoderSubclassInfo *)obj1).priority < ((SFBDSDDecoderSubclassInfo *)obj2).priority;
+		int a = ((SFBDSDDecoderSubclassInfo *)obj1).priority;
+		int b = ((SFBDSDDecoderSubclassInfo *)obj2).priority;
+		if(a < b)
+			return NSOrderedAscending;
+		else if(a > b)
+			return NSOrderedDescending;
+		else
+			return NSOrderedSame;
 	}];
 }
 

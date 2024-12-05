@@ -6,13 +6,8 @@
 
 #import <memory>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdocumentation"
-
 #import <taglib/tfilestream.h>
 #import <taglib/trueaudiofile.h>
-
-#pragma clang diagnostic pop
 
 #import "SFBTrueAudioFile.h"
 

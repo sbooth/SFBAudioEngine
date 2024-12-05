@@ -5,11 +5,10 @@
 //
 
 #import <cstdio>
+#import <memory>
 
-#import <CoreServices/CoreServices.h>
 #import <ImageIO/ImageIO.h>
-
-#import <SFBCFWrapper.hpp>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import <taglib/mp4coverart.h>
 
@@ -17,6 +16,17 @@
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
+
+namespace {
+
+/// A `std::unique_ptr` deleter for `CFTypeRef` objects
+struct cf_type_ref_deleter {
+	void operator()(CFTypeRef cf) { CFRelease(cf); }
+};
+
+using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
+
+} /* namespace */
 
 @implementation SFBAudioMetadata (TagLibMP4Tag)
 
@@ -235,21 +245,22 @@ void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::
 	if(setAlbumArt) {
 		auto list = TagLib::MP4::CoverArtList();
 		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
+			cg_image_source_unique_ptr imageSource{CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
 			if(!imageSource)
 				continue;
 
-			// Convert the image's UTI into a MIME type
-			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
 			auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
-			if(mimeType) {
-				if(UTTypeEqual(kUTTypeBMP, (__bridge CFStringRef)mimeType))
+
+			// Determine the image type
+			if(CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
+				UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+				if([utType conformsToType:UTTypeBMP])
 					type = TagLib::MP4::CoverArt::CoverArt::BMP;
-				else if(UTTypeEqual(kUTTypePNG, (__bridge CFStringRef)mimeType))
+				else if([utType conformsToType:UTTypePNG])
 					type = TagLib::MP4::CoverArt::CoverArt::PNG;
-				else if(UTTypeEqual(kUTTypeGIF, (__bridge CFStringRef)mimeType))
+				else if([utType conformsToType:UTTypeGIF])
 					type = TagLib::MP4::CoverArt::CoverArt::GIF;
-				else if(UTTypeEqual(kUTTypeJPEG, (__bridge CFStringRef)mimeType))
+				else if([utType conformsToType:UTTypeJPEG])
 					type = TagLib::MP4::CoverArt::CoverArt::JPEG;
 			}
 
