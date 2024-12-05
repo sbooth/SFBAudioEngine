@@ -1,6 +1,10 @@
 clean: true
 
-module: SFBAudioEngine
+modules:
+  - module: SFBAudioEngine
+  - module: CSFBAudioEngine
+    objc: true
+    framework_root: Sources/CSFBAudioEngine
 author: Stephen F. Booth
 author_url: https://sbooth.org
 github_url: https://github.com/sbooth/SFBAudioEngine
