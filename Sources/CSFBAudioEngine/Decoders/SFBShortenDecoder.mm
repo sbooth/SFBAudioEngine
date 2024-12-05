@@ -5,12 +5,12 @@
 //
 
 #import <algorithm>
+#import <cstring>
 #import <vector>
 
 #import <os/log.h>
 
 #import <AVAudioPCMBuffer+SFBBufferUtilities.h>
-#import <SFBByteStream.hpp>
 
 #import "SFBShortenDecoder.h"
 
@@ -316,12 +316,10 @@ struct SeekTableHeader
 
 SeekTableHeader ParseSeekTableHeader(const void *buf)
 {
-	SFB::ByteStream byteStream(buf, SEEK_HEADER_SIZE);
-
 	SeekTableHeader header;
-	byteStream.Read(header.mSignature, 4);
-	header.mVersion = byteStream.ReadLE<uint32_t>();
-	header.mFileSize = byteStream.ReadLE<uint32_t>();
+	std::memcpy(header.mSignature, buf, 4);
+	header.mVersion = OSReadLittleInt32(buf, 4);
+	header.mFileSize = OSReadLittleInt32(buf, 8);
 
 	return header;
 }
@@ -335,11 +333,9 @@ struct SeekTableTrailer
 
 SeekTableTrailer ParseSeekTableTrailer(const void *buf)
 {
-	SFB::ByteStream byteStream(buf, SEEK_TRAILER_SIZE);
-
 	SeekTableTrailer trailer;
-	trailer.mSeekTableSize = byteStream.ReadLE<uint32_t>();
-	byteStream.Read(trailer.mSignature, 8);
+	trailer.mSeekTableSize = OSReadLittleInt32(buf, 0);
+	std::memcpy(trailer.mSignature, static_cast<const uint8_t *>(buf) + 4, 8);
 
 	return trailer;
 }
@@ -363,25 +359,23 @@ struct SeekTableEntry
 
 SeekTableEntry ParseSeekTableEntry(const void *buf)
 {
-	SFB::ByteStream byteStream(buf, SEEK_ENTRY_SIZE);
-
 	SeekTableEntry entry;
-	entry.mFrameNumber = byteStream.ReadLE<uint32_t>();
-	entry.mByteOffsetInFile = byteStream.ReadLE<uint32_t>();
-	entry.mLastBufferReadPosition = byteStream.ReadLE<uint32_t>();
-	entry.mBytesAvailable = byteStream.ReadLE<uint16_t>();
-	entry.mByteBufferPosition = byteStream.ReadLE<uint16_t>();
-	entry.mBitBufferPosition = byteStream.ReadLE<uint16_t>();
-	entry.mBitBuffer = byteStream.ReadLE<uint32_t>();
-	entry.mBitshift = byteStream.ReadLE<uint16_t>();
+	entry.mFrameNumber = OSReadLittleInt32(buf, 0);
+	entry.mByteOffsetInFile = OSReadLittleInt32(buf, 4);
+	entry.mLastBufferReadPosition = OSReadLittleInt32(buf, 8);
+	entry.mBytesAvailable = OSReadLittleInt16(buf, 12);
+	entry.mByteBufferPosition = OSReadLittleInt16(buf, 14);
+	entry.mBitBufferPosition = OSReadLittleInt16(buf, 16);
+	entry.mBitBuffer = OSReadLittleInt32(buf, 18);
+	entry.mBitshift = OSReadLittleInt16(buf, 22);
 	for(auto i = 0; i < 3; ++i)
-		entry.mCBuf0[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+		entry.mCBuf0[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 24 + 4 * i));
 	for(auto i = 0; i < 3; ++i)
-		entry.mCBuf1[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+		entry.mCBuf1[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 36 + 4 * i));
 	for(auto i = 0; i < 4; ++i)
-		entry.mOffset0[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+		entry.mOffset0[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 48 + 4 * i));
 	for(auto i = 0; i < 4; ++i)
-		entry.mOffset1[i] = static_cast<int32_t>(byteStream.ReadLE<uint32_t>());
+		entry.mOffset1[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 64 + 4 * i));
 
 	return entry;
 }
@@ -428,8 +422,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	uint64_t _blocksDecoded;
 }
 - (BOOL)parseShortenHeaderReturningError:(NSError **)error;
-- (BOOL)parseRIFFChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
-- (BOOL)parseFORMChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
+- (BOOL)parseRIFFChunk:(const uint8_t *)chunkData size:(size_t)size error:(NSError **)error;
+- (BOOL)parseFORMChunk:(const uint8_t *)chunkData size:(size_t)size error:(NSError **)error;
 - (BOOL)decodeBlockReturningError:(NSError **)error;
 - (BOOL)scanForSeekTableReturningError:(NSError **)error;
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url;
@@ -963,7 +957,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 	}
 
-	int8_t header_bytes [header_size];
+	uint8_t header_bytes [header_size];
 	for(int32_t i = 0; i < header_size; ++i) {
 		int32_t byte;
 		if(!_input.uvar_get(byte, VERBATIM_BYTE_SIZE)) {
@@ -977,23 +971,22 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 			return NO;
 		}
 
-		header_bytes[i] = static_cast<int8_t>(byte);
+		header_bytes[i] = static_cast<uint8_t>(byte);
 	}
 
-	SFB::ByteStream chunkData{header_bytes, static_cast<size_t>(header_size)};
-	auto chunkID = chunkData.ReadBE<uint32_t>();
+	// header_bytes is at least CANONICAL_HEADER_SIZE (44) bytes in size
 
-	// Skip chunk size
-	chunkData.Skip(4);
+	auto chunkID = OSReadBigInt32(header_bytes, 0);
+//	auto chunkSize = OSReadBigInt32(header_bytes, 4);
 
 	// WAVE
 	if(chunkID == 'RIFF') {
-		if(![self parseRIFFChunk:chunkData error:error])
+		if(![self parseRIFFChunk:(header_bytes + 8) size:(header_size - 8) error:error])
 			return NO;
 	}
 	// AIFF
 	else if(chunkID == 'FORM') {
-		if(![self parseFORMChunk:chunkData error:error])
+		if(![self parseFORMChunk:(header_bytes + 8) size:(header_size - 8) error:error])
 			return NO;
 	}
 	else {
@@ -1011,9 +1004,15 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	return YES;
 }
 
-- (BOOL)parseRIFFChunk:(SFB::ByteStream&)chunkData error:(NSError **)error
+- (BOOL)parseRIFFChunk:(const uint8_t *)chunkData size:(size_t)size error:(NSError **)error
 {
-	auto chunkID = chunkData.ReadBE<uint32_t>();
+	NSParameterAssert(chunkData != nullptr);
+	NSParameterAssert(size >= 28);
+
+	uintptr_t offset = 0;
+
+	auto chunkID = OSReadBigInt32(chunkData, offset);
+	offset += 4;
 	if(chunkID != 'WAVE') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'WAVE' in 'RIFF' chunk");
 		if(error)
@@ -1026,17 +1025,22 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 	}
 
-	bool sawFormatChunk = false;
+	auto sawFormatChunk = false;
 	uint32_t dataChunkSize = 0;
 	uint16_t blockAlign = 0;
 
-	while((chunkID = chunkData.ReadBE<uint32_t>())) {
-		auto len = chunkData.ReadLE<uint32_t>();
+	while(offset < size) {
+		chunkID = OSReadBigInt32(chunkData, offset);
+		offset += 4;
+
+		auto chunkSize = OSReadLittleInt32(chunkData, offset);
+		offset += 4;
+
 		switch(chunkID) {
 			case 'fmt ':
 			{
-				if(len < 16) {
-					os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", len);
+				if(chunkSize < 16) {
+					os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", chunkSize);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 														 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1047,7 +1051,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					return NO;
 				}
 
-				auto format_tag = chunkData.ReadLE<uint16_t>();
+				auto format_tag = OSReadLittleInt16(chunkData, offset);
+				offset += 2;
 				if(format_tag != WAVE_FORMAT_PCM) {
 					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", format_tag);
 					if(error)
@@ -1060,16 +1065,25 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					return NO;
 				}
 
-				auto channels = chunkData.ReadLE<uint16_t>();
+				auto channels = OSReadLittleInt16(chunkData, offset);
+				offset += 2;
 				if(_nchan != channels)
 					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)", _nchan, channels);
-				_sampleRate = chunkData.ReadLE<uint32_t>();
-				chunkData.Skip(4); // average bytes per second
-				blockAlign = chunkData.ReadLE<uint16_t>();
-				_bitsPerSample = chunkData.ReadLE<uint16_t>();
 
-				if(len > 16)
-					os_log_info(gSFBAudioDecoderLog, "%u bytes in 'fmt ' chunk not parsed", len - 16);
+				_sampleRate = OSReadLittleInt32(chunkData, offset);
+				offset += 4;
+
+				// Skip average bytes per second
+				offset += 4;
+
+				blockAlign = OSReadLittleInt16(chunkData, offset);
+				offset += 2;
+
+				_bitsPerSample = OSReadLittleInt16(chunkData, offset);
+				offset += 2;
+
+				if(chunkSize > 16)
+					os_log_info(gSFBAudioDecoderLog, "%u bytes in 'fmt ' chunk not parsed", chunkSize - 16);
 
 				sawFormatChunk = true;
 
@@ -1077,7 +1091,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 			}
 
 			case 'data':
-				dataChunkSize = len;
+				dataChunkSize = chunkSize;
 				break;
 		}
 	}
@@ -1100,9 +1114,15 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	return YES;
 }
 
-- (BOOL)parseFORMChunk:(SFB::ByteStream&)chunkData error:(NSError **)error
+- (BOOL)parseFORMChunk:(const uint8_t *)chunkData size:(size_t)size error:(NSError **)error
 {
-	auto chunkID = chunkData.ReadBE<uint32_t>();
+	NSParameterAssert(chunkData != nullptr);
+	NSParameterAssert(size >= 30);
+
+	uintptr_t offset = 0;
+
+	auto chunkID = OSReadBigInt32(chunkData, offset);
+	offset += 4;
 	if(chunkID != 'AIFF' && chunkID != 'AIFC') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'AIFF' or 'AIFC' in 'FORM' chunk");
 		if(error)
@@ -1118,27 +1138,82 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	if(chunkID == 'AIFC')
 		_bigEndian = true;
 
-	// Skip unknown chunks, looking for 'COMM'
-	while(chunkData.ReadBE<uint32_t>() != 'COMM') {
-		auto len = chunkData.ReadBE<uint32_t>();
-		// pad byte not included in ckLen
-		if(static_cast<int32_t>(len) < 0 || chunkData.Remaining() < 18 + len + (len & 1)) {
-			os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
-			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-			return NO;
+	auto sawCommonChunk = false;
+	while(offset < size) {
+		chunkID = OSReadBigInt32(chunkData, offset);
+		offset += 4;
+
+		auto chunkSize = OSReadBigInt32(chunkData, offset);
+		offset += 4;
+
+		// All chunks must have an even length but the pad byte is not included in ckSize
+		chunkSize += (chunkSize & 1);
+
+		switch(chunkID) {
+			case 'COMM':
+			{
+				if(chunkSize < 18) {
+					os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", chunkSize);
+					if(error)
+						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
+								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
+														  url:_inputSource.url
+												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
+										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+					return NO;
+				}
+
+				auto channels = OSReadBigInt16(chunkData, offset);
+				offset += 2;
+				if(_nchan != channels)
+					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)", _nchan, channels);
+
+				_frameLength = OSReadBigInt32(chunkData, offset);
+				offset += 4;
+
+				_bitsPerSample = OSReadBigInt16(chunkData, offset);
+				offset += 2;
+
+				// sample rate is IEEE 754 80-bit extended float (16-bit exponent, 1-bit integer part, 63-bit fraction)
+				auto exp = static_cast<int16_t>(OSReadBigInt16(chunkData, offset)) - 16383 - 63;
+				offset += 2;
+				if(exp < -63 || exp > 63) {
+					os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
+					if(error)
+						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
+								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
+														  url:_inputSource.url
+												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
+										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+					return NO;
+				}
+
+				auto frac = OSReadBigInt64(chunkData, offset);
+				offset += 8;
+				if(exp >= 0)
+					_sampleRate = static_cast<uint32_t>(frac << exp);
+				else
+					_sampleRate = static_cast<uint32_t>((frac + (static_cast<uint64_t>(1) << (-exp - 1))) >> -exp);
+
+				if(chunkSize > 18)
+					os_log_info(gSFBAudioDecoderLog, "%u bytes in 'COMM' chunk not parsed", chunkSize - 16);
+
+				sawCommonChunk = true;
+
+				break;
+			}
+
+				// Skip all other chunks
+			default:
+				offset += chunkSize;
+				break;
 		}
-		chunkData.Skip(len + (len & 1));
 	}
 
-	auto len = chunkData.ReadBE<uint32_t>();
-	if(static_cast<int32_t>(len) < 18) {
-		os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", len);
+	if(!sawCommonChunk) {
+		os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1148,37 +1223,6 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
-
-	auto channels = chunkData.ReadBE<uint16_t>();
-	if(_nchan != channels)
-		os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)", _nchan, channels);
-
-	_frameLength = chunkData.ReadBE<uint32_t>();
-
-	_bitsPerSample = chunkData.ReadBE<uint16_t>();
-
-	// sample rate is IEEE 754 80-bit extended float (16-bit exponent, 1-bit integer part, 63-bit fraction)
-	auto exp = static_cast<int16_t>(chunkData.ReadBE<uint16_t>()) - 16383 - 63;
-	if(exp < -63 || exp > 63) {
-		os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
-	}
-
-	auto frac = chunkData.ReadBE<uint64_t>();
-	if(exp >= 0)
-		_sampleRate = static_cast<uint32_t>(frac << exp);
-	else
-		_sampleRate = static_cast<uint32_t>((frac + (static_cast<uint64_t>(1) << (-exp - 1))) >> -exp);
-
-	if(len > 18)
-		os_log_info(gSFBAudioDecoderLog, "%u bytes in 'COMM' chunk not parsed", len - 16);
 
 	return YES;
 }

@@ -19,13 +19,13 @@ let package = Package(
 			]),
 	],
 	dependencies: [
-		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.1.0"),
-		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.1.2"),
+		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.1.3"),
 
 		// Standalone dependencies from source
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
-		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "10.71.0"),
-		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.0.1"),
+		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "10.76.0"),
+		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.0.2"),
 
 		// Standalone dependencies not easily packaged using SPM
 		.package(url: "https://github.com/sbooth/wavpack-binary-xcframework", from: "0.1.1"),
