@@ -65,7 +65,7 @@ extension AudioPlayer {
 	}
 }
 
-extension AudioPlayer.PlaybackState: CustomDebugStringConvertible {
+extension AudioPlayer.PlaybackState: @retroactive CustomDebugStringConvertible {
 	// A textual representation of this instance, suitable for debugging.
 	public var debugDescription: String {
 		switch self {
