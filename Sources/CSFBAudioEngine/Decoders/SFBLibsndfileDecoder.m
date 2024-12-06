@@ -288,6 +288,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 					break;
 			}
 		}
+
 		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:_sfinfo.channels];
 	}
 
