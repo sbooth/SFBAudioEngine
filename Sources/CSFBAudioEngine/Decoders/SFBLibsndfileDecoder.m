@@ -295,43 +295,56 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	// Generate interleaved PCM output
 	int subFormat = _sfinfo.format & SF_FORMAT_SUBMASK;
 
+	AudioStreamBasicDescription asbd = {0};
+
 	// 8-bit PCM will be high-aligned in shorts
 	if(subFormat == SF_FORMAT_PCM_U8 || subFormat == SF_FORMAT_PCM_S8) {
-		AudioStreamBasicDescription asbd = {0};
 		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 8, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
 		_readMethod = Short;
 	}
 	// 16-bit PCM
 	else if(subFormat == SF_FORMAT_PCM_16) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_sfinfo.samplerate interleaved:YES channelLayout:channelLayout];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 16, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Short;
 	}
 	// 24-bit PCM will be high-aligned in ints
 	else if(subFormat == SF_FORMAT_PCM_24) {
-		AudioStreamBasicDescription asbd = {0};
 		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 24, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
 		_readMethod = Int;
 	}
 	// 32-bit PCM
 	else if(subFormat == SF_FORMAT_PCM_32) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_sfinfo.samplerate interleaved:YES channelLayout:channelLayout];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Int;
 	}
 	// Floating point formats
 	else if(subFormat == SF_FORMAT_FLOAT) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_sfinfo.samplerate interleaved:YES channelLayout:channelLayout];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Float;
 	}
 	else if(subFormat == SF_FORMAT_DOUBLE) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_sfinfo.samplerate interleaved:YES channelLayout:channelLayout];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 64, 64, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Double;
 	}
 	// Everything else will be converted to 32-bit float
 	else {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_sfinfo.samplerate interleaved:YES channelLayout:channelLayout];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Float;
+	}
+
+	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
+	if(!_processingFormat) {
+		os_log_error(gSFBAudioDecoderLog, "Unable to specify processing format; more than two channels with no channel map");
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported file.", @"")
+											  url:_inputSource.url
+									failureReason:NSLocalizedString(@"Unknown channel layout", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file is missing channel layout information.", @"")];
+
+		return NO;
 	}
 
 	// Set up the source format
