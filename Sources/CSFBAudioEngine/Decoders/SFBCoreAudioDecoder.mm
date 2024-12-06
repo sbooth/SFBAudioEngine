@@ -272,7 +272,7 @@ SInt64 get_size_callback(void *inClientData)
 	AVAudioChannelLayout *channelLayout = nil;
 	result = ExtAudioFileGetPropertyInfo(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
 	if(result == noErr) {
-		AudioChannelLayout *layout = (AudioChannelLayout *)malloc(dataSize);
+		AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(malloc(dataSize));
 		result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
 		if(result != noErr) {
 			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
