@@ -5,6 +5,7 @@
 //
 
 #import <algorithm>
+#import <cmath>
 #import <cstring>
 #import <vector>
 
@@ -22,74 +23,79 @@
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion = @"_version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType = @"_internal_ftype";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels = @"_nchan";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType = @"_internalFileType";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels = @"_channelCount";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize = @"_blocksize";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate = @"_sampleRate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBitsPerSample = @"_bitsPerSample";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian = @"_bigEndian";
 
-#define MIN_SUPPORTED_VERSION 1
-#define MAX_SUPPORTED_VERSION 3
-
-#define DEFAULT_BLOCK_SIZE  256
-#define DEFAULT_V0NMEAN     0
-#define DEFAULT_V2NMEAN     4
-#define DEFAULT_MAXNLPC     0
-
-#define CHANSIZE      0
-#define ENERGYSIZE    3
-#define BITSHIFTSIZE  2
-#define NWRAP         3
-
-#define FNSIZE       2
-#define FN_DIFF0     0
-#define FN_DIFF1     1
-#define FN_DIFF2     2
-#define FN_DIFF3     3
-#define FN_QUIT      4
-#define FN_BLOCKSIZE 5
-#define FN_BITSHIFT  6
-#define FN_QLPC      7
-#define FN_ZERO      8
-#define FN_VERBATIM  9
-
-#define VERBATIM_CKSIZE_SIZE 5   /* a var_put code size */
-#define VERBATIM_BYTE_SIZE   8   /* code size 8 on single bytes means no compression at all */
-#define VERBATIM_CHUNK_MAX   256 /* max. size of a FN_VERBATIM chunk */
-
-#define ULONGSIZE 2
-#define NSKIPSIZE 1
-#define LPCQSIZE  2
-#define LPCQUANT  5
-#define XBYTESIZE 7
-
-#define TYPESIZE            4
-#define TYPE_S8             1  /* signed 8 bit characters                   */
-#define TYPE_U8             2  /* unsigned 8 bit characters                 */
-#define TYPE_S16HL          3  /* signed 16 bit shorts: high-low            */
-#define TYPE_U16HL          4  /* unsigned 16 bit shorts: high-low          */
-#define TYPE_S16LH          5  /* signed 16 bit shorts: low-high            */
-#define TYPE_U16LH          6  /* unsigned 16 bit shorts: low-high          */
-
-#define SEEK_TABLE_REVISION 1
-
-#define SEEK_HEADER_SIZE  12
-#define SEEK_TRAILER_SIZE 12
-#define SEEK_ENTRY_SIZE   80
-
-#define V2LPCQOFFSET (1 << LPCQUANT)
-
-#define MAX_CHANNELS 8
-#define MAX_BLOCKSIZE 65535
-
-#define CANONICAL_HEADER_SIZE 44
-
-#define WAVE_FORMAT_PCM 0x0001
-
-#define ROUNDEDSHIFTDOWN(x, n) (((n) == 0) ? (x) : ((x) >> ((n) - 1)) >> 1)
-
 namespace {
+
+// MARK: Constants
+
+constexpr auto kMinSupportedVersion 		= 1;
+constexpr auto kMaxSupportedVersion 		= 3;
+
+constexpr auto kDefaultBlockSize 			= 256;
+constexpr auto kDefaultV0NMean 				= 0;
+constexpr auto kDefaultV2NMean 				= 4;
+constexpr auto kDefaultMaxNLPC 				= 0;
+
+
+constexpr auto kChannelCountCodeSize 		= 0;
+constexpr auto kEnergyCodeSize 				= 3;
+constexpr auto kBitshiftCodeSize 			= 2;
+constexpr auto kNWrap 						= 3;
+
+constexpr auto kFunctionCodeSize 			= 2;
+constexpr auto kFunctionDiff0 				= 0;
+constexpr auto kFunctionDiff1 				= 1;
+constexpr auto kFunctionDiff2 				= 2;
+constexpr auto kFunctionDiff3 				= 3;
+constexpr auto kFunctionQuit 				= 4;
+constexpr auto kFunctionBlocksize 			= 5;
+constexpr auto kFunctionBitshfit 			= 6;
+constexpr auto kFunctionQLPC 				= 7;
+constexpr auto kFunctionZero 				= 8;
+constexpr auto kFunctionVerbatim 			= 9;
+
+constexpr auto kVerbatimChunkSizeCodeSize 	= 5;
+constexpr auto kVerbatimByteCodeSize 		= 8;
+constexpr auto kVerbatimChunkMaxSizeBytes	= 256;
+
+constexpr auto kUInt32CodeSize 				= 2;
+constexpr auto kSkipBytesCodeSize 			= 1;
+constexpr auto kLPCQuantCodeSize 			= 2;
+constexpr auto kExtraByteCodeSize 			= 7;
+
+constexpr auto kFileTypeCodeSize			= 4;
+constexpr auto kFileTypeSInt8 				= 1;
+constexpr auto kFileTypeUInt8 				= 2;
+constexpr auto kFileTypeSInt16BE 			= 3;
+constexpr auto kFileTypeUInt16BE 			= 4;
+constexpr auto kFileTypeSInt16LE 			= 5;
+constexpr auto kFileTypeUInt16LE 			= 6;
+
+constexpr auto kSeekTableRevision 			= 1;
+
+constexpr auto kSeekHeaderSizeBytes 		= 12;
+constexpr auto kSeekTrailerSizeBytes 		= 12;
+constexpr auto kSeekEntrySizeBytes 			= 80;
+
+constexpr auto kV2LPCQuantOffset 			= (1 << kLPCQuantCodeSize);
+
+constexpr auto kMaxChannelCount 			= 8;
+constexpr auto kMaxBlocksizeBytes			= 65535;
+
+constexpr auto kCanonicalHeaderSizeBytes	= 44;
+
+constexpr auto kWAVEFormatPCMTag 			= 0x0001;
+
+inline constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
+{
+	return (k == 0) ? x : (x >> (k - 1)) >> 1;
+}
 
 /// Returns a two-dimensional `rows` x `cols` array using one allocation from `malloc`
 template <typename T>
@@ -168,36 +174,28 @@ public:
 		return true;
 	}
 
-	/// Reads a single unsigned value from the specified bin
-	bool uvar_get(int32_t& i32, size_t bin) noexcept
+	bool GetRiceGolombCode(int32_t& i32, int k) noexcept
 	{
-		if(mBitsAvailable == 0) {
-			if(!word_get(mBitBuffer))
-				return false;
-			mBitsAvailable = 32;
-		}
+		if(mBitsAvailable == 0 && !RefillBitBuffer())
+			return false;
 
 		int32_t result;
 		for(result = 0; !(mBitBuffer & (1L << --mBitsAvailable)); ++result) {
-			if(mBitsAvailable == 0) {
-				if(!word_get(mBitBuffer))
-					return false;
-				mBitsAvailable = 32;
-			}
+			if(mBitsAvailable == 0 && !RefillBitBuffer())
+				return false;
 		}
 
-		while(bin != 0) {
-			if(mBitsAvailable >= bin) {
-				result = (result << bin) | static_cast<int32_t>((mBitBuffer >> (mBitsAvailable - bin)) & sMaskTable[bin]);
-				mBitsAvailable -= bin;
-				bin = 0;
+		while(k != 0) {
+			if(mBitsAvailable >= k) {
+				result = (result << k) | static_cast<int32_t>((mBitBuffer >> (mBitsAvailable - k)) & sMaskTable[k]);
+				mBitsAvailable -= k;
+				k = 0;
 			}
 			else {
 				result = (result << mBitsAvailable) | static_cast<int32_t>(mBitBuffer & sMaskTable[mBitsAvailable]);
-				bin -= mBitsAvailable;
-				if(!word_get(mBitBuffer))
+				k -= mBitsAvailable;
+				if(!RefillBitBuffer())
 					return false;
-				mBitsAvailable = 32;
 			}
 		}
 
@@ -205,11 +203,10 @@ public:
 		return true;
 	}
 
-	/// Reads a single signed value from the specified bin
-	bool var_get(int32_t& i32, size_t bin) noexcept
+	bool GetInt32(int32_t& i32, int k) noexcept
 	{
 		int32_t var;
-		if(!uvar_get(var, bin + 1))
+		if(!GetRiceGolombCode(var, k + 1))
 			return false;
 
 		uint32_t uvar = static_cast<uint32_t>(var);
@@ -220,32 +217,16 @@ public:
 		return true;
 	}
 
-	/// Reads the unsigned Golomb-Rice code
-	bool ulong_get(uint32_t& ui32) noexcept
+	bool GetUInt32(uint32_t& ui32, int version, int k) noexcept
 	{
-		int32_t bitcount;
-		if(!uvar_get(bitcount, ULONGSIZE))
+		if(version > 0 && !GetRiceGolombCode(k, kUInt32CodeSize))
 			return false;
 
 		int32_t i32;
-		if(!uvar_get(i32, static_cast<uint32_t>(bitcount)))
+		if(!GetRiceGolombCode(i32, k))
 			return false;
-
 		ui32 = static_cast<uint32_t>(i32);
 		return true;
-	}
-
-	bool uint_get(uint32_t& ui32, int version, size_t bin) noexcept
-	{
-		if(version == 0) {
-			int32_t i32;
-			if(!uvar_get(i32, bin))
-				return false;
-			ui32 = static_cast<uint32_t>(i32);
-			return true;
-		}
-		else
-			return ulong_get(ui32);
 	}
 
 	void Reset() noexcept
@@ -286,22 +267,23 @@ private:
 	/// Current position in `mByteBuffer`
 	uint8_t *mByteBufferPosition = nullptr;
 	/// Bytes available in `mByteBuffer`
-	size_t mBytesAvailable = 0;
+	int mBytesAvailable = 0;
 	/// Bit buffer
 	uint32_t mBitBuffer = 0;
 	/// Bits available in `mBitBuffer`
-	size_t mBitsAvailable = 0;
+	int mBitsAvailable = 0;
 
 	/// Reads a single `uint32_t` from the byte buffer, refilling if necessary
-	bool word_get(uint32_t& ui32) noexcept
+	bool RefillBitBuffer() noexcept
 	{
 		if(mBytesAvailable < 4 && !Refill())
 			return false;
 
-		ui32 = static_cast<uint32_t>((static_cast<int32_t>(mByteBufferPosition[0]) << 24) | (static_cast<int32_t>(mByteBufferPosition[1]) << 16) | (static_cast<int32_t>(mByteBufferPosition[2]) << 8) | static_cast<int32_t>(mByteBufferPosition[3]));
+		mBitBuffer = static_cast<uint32_t>((static_cast<int32_t>(mByteBufferPosition[0]) << 24) | (static_cast<int32_t>(mByteBufferPosition[1]) << 16) | (static_cast<int32_t>(mByteBufferPosition[2]) << 8) | static_cast<int32_t>(mByteBufferPosition[3]));
 
 		mByteBufferPosition += 4;
 		mBytesAvailable -= 4;
+		mBitsAvailable = 32;
 
 		return true;
 	}
@@ -398,9 +380,9 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 @private
 	VariableLengthInput _input;
 	int _version;
-	int32_t _lpcqoffset;
-	int _internal_ftype;
-	int _nchan;
+	int32_t _lpcQuantOffset;
+	int _internalFileType;
+	int _channelCount;
 	int _nmean;
 	int _blocksize;
 	int _maxnlpc;
@@ -494,8 +476,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 	}
 
-	if((_bitsPerSample == 8 && (_internal_ftype != TYPE_U8 && _internal_ftype != TYPE_S8)) || (_bitsPerSample == 16 && (_internal_ftype != TYPE_U16HL && _internal_ftype != TYPE_U16LH && _internal_ftype != TYPE_S16HL && _internal_ftype != TYPE_S16LH))) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _internal_ftype);
+	if((_bitsPerSample == 8 && (_internalFileType != kFileTypeUInt8 && _internalFileType != kFileTypeSInt8)) || (_bitsPerSample == 16 && (_internalFileType != kFileTypeUInt16BE && _internalFileType != kFileTypeUInt16LE && _internalFileType != kFileTypeSInt16BE && _internalFileType != kFileTypeSInt16LE))) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _internalFileType);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -514,15 +496,15 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
-	// Apparently *16HL isn't true for 'AIFF'
-//	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	// Apparently *16BE isn't true for 'AIFF'
+//	if(_internalFileType == kFileTypeUInt16BE || _internalFileType == kFileTypeSInt16BE)
 	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
-	if(_internal_ftype == TYPE_S8 || _internal_ftype == TYPE_S16HL || _internal_ftype == TYPE_S16LH)
+	if(_internalFileType == kFileTypeSInt8 || _internalFileType == kFileTypeSInt16BE || _internalFileType == kFileTypeSInt16LE)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
 
 	processingStreamDescription.mSampleRate			= _sampleRate;
-	processingStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_nchan);
+	processingStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_channelCount);
 	processingStreamDescription.mBitsPerChannel		= _bitsPerSample;
 
 	processingStreamDescription.mBytesPerPacket		= (_bitsPerSample + 7) / 8;
@@ -530,12 +512,12 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	AVAudioChannelLayout *channelLayout = nil;
-	switch(_nchan) {
+	switch(_channelCount) {
 		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
 		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
 			// FIXME: Is there a standard ordering for multichannel files? WAVEFORMATEX?
 		default:
-			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | _nchan)];
+			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | _channelCount)];
 			break;
 	}
 
@@ -547,7 +529,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	sourceStreamDescription.mFormatID			= kSFBAudioFormatShorten;
 
 	sourceStreamDescription.mSampleRate			= _sampleRate;
-	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_nchan);
+	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_channelCount);
 	sourceStreamDescription.mBitsPerChannel		= _bitsPerSample;
 
 	sourceStreamDescription.mFramesPerPacket	= static_cast<UInt32>(_blocksize);
@@ -557,8 +539,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	// Populate codec properties
 	_properties = @{
 		SFBAudioDecodingPropertiesKeyShortenVersion: @(_version),
-		SFBAudioDecodingPropertiesKeyShortenInternalFileType: @(_internal_ftype),
-		SFBAudioDecodingPropertiesKeyShortenNumberChannels: @(_nchan),
+		SFBAudioDecodingPropertiesKeyShortenInternalFileType: @(_internalFileType),
+		SFBAudioDecodingPropertiesKeyShortenNumberChannels: @(_channelCount),
 		SFBAudioDecodingPropertiesKeyShortenBlockSize: @(_blocksize),
 		SFBAudioDecodingPropertiesKeyShortenSampleRate: @(_sampleRate),
 		SFBAudioDecodingPropertiesKeyShortenBitsPerSample: @(_bitsPerSample),
@@ -568,10 +550,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
 	// Allocate decoding buffers
-	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(_blocksize + _nwrap));
-	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_nchan), static_cast<size_t>(std::max(1, _nmean)));
+	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(_blocksize + _nwrap));
+	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(std::max(1, _nmean)));
 
-	for(auto i = 0; i < _nchan; ++i) {
+	for(auto i = 0; i < _channelCount; ++i) {
 		for(auto j = 0; j < _nwrap; ++j) {
 			_buffer[i][j] = 0;
 		}
@@ -583,30 +565,25 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	// Initialize offset
 	int32_t mean = 0;
-	switch(_internal_ftype) {
-//		case TYPE_AU1:
-		case TYPE_S8:
-		case TYPE_S16HL:
-		case TYPE_S16LH:
-//		case TYPE_ULAW:
-//		case TYPE_AU2:
-//		case TYPE_AU3:
-//		case TYPE_ALAW:
+	switch(_internalFileType) {
+		case kFileTypeSInt8:
+		case kFileTypeSInt16BE:
+		case kFileTypeSInt16LE:
 			mean = 0;
 			break;
-		case TYPE_U8:
+		case kFileTypeUInt8:
 			mean = 0x80;
 			break;
-		case TYPE_U16HL:
-		case TYPE_U16LH:
+		case kFileTypeUInt16BE:
+		case kFileTypeUInt16LE:
 			mean = 0x8000;
 			break;
 		default:
-			os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", _internal_ftype);
+			os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", _internalFileType);
 			return NO;
 	}
 
-	for(auto chan = 0; chan < _nchan; ++chan) {
+	for(auto chan = 0; chan < _channelCount; ++chan) {
 		for(auto i = 0; i < std::max(1, _nmean); ++i) {
 			_offset[chan][i] = mean;
 		}
@@ -719,7 +696,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	_buffer[0][-1] = entry->mCBuf0[0];
 	_buffer[0][-2] = entry->mCBuf0[1];
 	_buffer[0][-3] = entry->mCBuf0[2];
-	if(_nchan == 2) {
+	if(_channelCount == 2) {
 		_buffer[1][-1] = entry->mCBuf1[0];
 		_buffer[1][-2] = entry->mCBuf1[1];
 		_buffer[1][-3] = entry->mCBuf1[2];
@@ -727,7 +704,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	for(auto i = 0; i < std::max(1, _nmean); ++i) {
 		_offset[0][i] = entry->mOffset0[i];
-		if(_nchan == 2)
+		if(_channelCount == 2)
 			_offset[1][i] = entry->mOffset1[i];
 	}
 
@@ -776,7 +753,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	// Read file version
 	uint8_t version;
-	if(![_inputSource readUInt8:&version error:nil] || version < MIN_SUPPORTED_VERSION || version > MAX_SUPPORTED_VERSION) {
+	if(![_inputSource readUInt8:&version error:nil] || version < kMinSupportedVersion || version > kMaxSupportedVersion) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported version: %u", version);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -790,7 +767,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	_version = version;
 
 	// Default nmean
-	_nmean = _version < 2 ? DEFAULT_V0NMEAN : DEFAULT_V2NMEAN;
+	_nmean = _version < 2 ? kDefaultV0NMean : kDefaultV2NMean;
 
 	// Set up variable length input
 	if(!_input.Allocate()) {
@@ -810,8 +787,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	});
 
 	// Read internal file type
-	uint32_t ftype;
-	if(!_input.uint_get(ftype, _version, TYPESIZE)) {
+	uint32_t internalFileType;
+	if(!_input.GetUInt32(internalFileType, _version, kFileTypeCodeSize)) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -821,8 +798,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
-	if(ftype != TYPE_U8 && ftype != TYPE_S8 && ftype != TYPE_U16HL && ftype != TYPE_U16LH && ftype != TYPE_S16HL && ftype != TYPE_S16LH) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", ftype);
+	if(internalFileType != kFileTypeUInt8 && internalFileType != kFileTypeSInt8 && internalFileType != kFileTypeUInt16BE && internalFileType != kFileTypeUInt16LE && internalFileType != kFileTypeSInt16BE && internalFileType != kFileTypeSInt16LE) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", internalFileType);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -832,12 +809,12 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported audio type.", @"")];
 		return NO;
 	}
-	_internal_ftype = static_cast<int>(ftype);
+	_internalFileType = static_cast<int>(internalFileType);
 
 	// Read number of channels
-	uint32_t nchan = 0;
-	if(!_input.uint_get(nchan, _version, CHANSIZE) || nchan == 0 || nchan > MAX_CHANNELS) {
-		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", nchan);
+	uint32_t channelCount = 0;
+	if(!_input.GetUInt32(channelCount, _version, kChannelCountCodeSize) || channelCount == 0 || channelCount > kMaxChannelCount) {
+		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", channelCount);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -847,12 +824,12 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported number of channels.", @"")];
 		return NO;
 	}
-	_nchan = static_cast<int>(nchan);
+	_channelCount = static_cast<int>(channelCount);
 
 	// Read blocksize if version > 0
 	if(_version > 0) {
 		uint32_t blocksize = 0;
-		if(!_input.uint_get(blocksize, _version, static_cast<size_t>(log2(DEFAULT_BLOCK_SIZE))) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
+		if(!_input.GetUInt32(blocksize, _version, static_cast<int>(std::log2(kDefaultBlockSize))) || blocksize == 0 || blocksize > kMaxBlocksizeBytes) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -866,7 +843,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		_blocksize = static_cast<int>(blocksize);
 
 		uint32_t maxnlpc = 0;
-		if(!_input.uint_get(maxnlpc, _version, LPCQSIZE) || maxnlpc > 1024) {
+		if(!_input.GetUInt32(maxnlpc, _version, kLPCQuantCodeSize) || maxnlpc > 1024) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid maxnlpc: %u", maxnlpc);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -880,7 +857,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		_maxnlpc = static_cast<int>(maxnlpc);
 
 		uint32_t nmean = 0;
-		if(!_input.uint_get(nmean, _version, 0) || nmean > 32768) {
+		if(!_input.GetUInt32(nmean, _version, 0) || nmean > 32768) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid nmean: %u", nmean);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -893,8 +870,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		}
 		_nmean = static_cast<int>(nmean);
 
-		uint32_t nskip;
-		if(!_input.uint_get(nskip, _version, NSKIPSIZE) /* || nskip > bits_remaining_in_input */) {
+		uint32_t skipCount;
+		if(!_input.GetUInt32(skipCount, _version, kSkipBytesCodeSize) /* || nskip > bits_remaining_in_input */) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 												 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -905,9 +882,9 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 			return NO;
 		}
 
-		for(uint32_t i = 0; i < nskip; ++i) {
+		for(uint32_t i = 0; i < skipCount; ++i) {
 			uint32_t dummy;
-			if(!_input.uint_get(dummy, _version, XBYTESIZE)) {
+			if(!_input.GetUInt32(dummy, _version, kExtraByteCodeSize)) {
 				if(error)
 					*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 													 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -920,19 +897,19 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		}
 	}
 	else {
-		_blocksize = DEFAULT_BLOCK_SIZE;
-		_maxnlpc = DEFAULT_MAXNLPC;
+		_blocksize = kDefaultBlockSize;
+		_maxnlpc = kDefaultMaxNLPC;
 	}
 
-	_nwrap = std::max(NWRAP, static_cast<int>(_maxnlpc));
+	_nwrap = std::max(kNWrap, static_cast<int>(_maxnlpc));
 
 	if(_version > 1)
-		_lpcqoffset = V2LPCQOFFSET;
+		_lpcQuantOffset = kV2LPCQuantOffset;
 
 	// Parse the WAVE or AIFF header in the verbatim section
 
-	int32_t fn;
-	if(!_input.uvar_get(fn, FNSIZE) || fn != FN_VERBATIM) {
+	int32_t function;
+	if(!_input.GetRiceGolombCode(function, kFunctionCodeSize) || function != kFunctionVerbatim) {
 		os_log_error(gSFBAudioDecoderLog, "Missing initial verbatim section");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -944,9 +921,9 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 	}
 
-	int32_t header_size;
-	if(!_input.uvar_get(header_size, VERBATIM_CKSIZE_SIZE) || header_size < CANONICAL_HEADER_SIZE || header_size > VERBATIM_CHUNK_MAX) {
-		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", header_size);
+	int32_t headerSize;
+	if(!_input.GetRiceGolombCode(headerSize, kVerbatimChunkSizeCodeSize) || headerSize < kCanonicalHeaderSizeBytes || headerSize > kVerbatimChunkMaxSizeBytes) {
+		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", headerSize);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -957,10 +934,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 	}
 
-	uint8_t header_bytes [header_size];
-	for(int32_t i = 0; i < header_size; ++i) {
+	uint8_t headerBytes [headerSize];
+	for(int32_t i = 0; i < headerSize; ++i) {
 		int32_t byte;
-		if(!_input.uvar_get(byte, VERBATIM_BYTE_SIZE)) {
+		if(!_input.GetRiceGolombCode(byte, kVerbatimByteCodeSize)) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 												 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -971,22 +948,22 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 			return NO;
 		}
 
-		header_bytes[i] = static_cast<uint8_t>(byte);
+		headerBytes[i] = static_cast<uint8_t>(byte);
 	}
 
-	// header_bytes is at least CANONICAL_HEADER_SIZE (44) bytes in size
+	// header_bytes is at least kCanonicalHeaderSizeBytes (44) in size
 
-	auto chunkID = OSReadBigInt32(header_bytes, 0);
+	auto chunkID = OSReadBigInt32(headerBytes, 0);
 //	auto chunkSize = OSReadBigInt32(header_bytes, 4);
 
 	// WAVE
 	if(chunkID == 'RIFF') {
-		if(![self parseRIFFChunk:(header_bytes + 8) size:(header_size - 8) error:error])
+		if(![self parseRIFFChunk:(headerBytes + 8) size:(headerSize - 8) error:error])
 			return NO;
 	}
 	// AIFF
 	else if(chunkID == 'FORM') {
-		if(![self parseFORMChunk:(header_bytes + 8) size:(header_size - 8) error:error])
+		if(![self parseFORMChunk:(headerBytes + 8) size:(headerSize - 8) error:error])
 			return NO;
 	}
 	else {
@@ -1051,10 +1028,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					return NO;
 				}
 
-				auto format_tag = OSReadLittleInt16(chunkData, offset);
+				auto formatTag = OSReadLittleInt16(chunkData, offset);
 				offset += 2;
-				if(format_tag != WAVE_FORMAT_PCM) {
-					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", format_tag);
+				if(formatTag != kWAVEFormatPCMTag) {
+					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", formatTag);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 														 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1067,8 +1044,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 				auto channels = OSReadLittleInt16(chunkData, offset);
 				offset += 2;
-				if(_nchan != channels)
-					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)", _nchan, channels);
+				if(_channelCount != channels)
+					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)", _channelCount, channels);
 
 				_sampleRate = OSReadLittleInt32(chunkData, offset);
 				offset += 4;
@@ -1166,8 +1143,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 				auto channels = OSReadBigInt16(chunkData, offset);
 				offset += 2;
-				if(_nchan != channels)
-					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)", _nchan, channels);
+				if(_channelCount != channels)
+					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)", _channelCount, channels);
 
 				_frameLength = OSReadBigInt32(chunkData, offset);
 				offset += 4;
@@ -1232,7 +1209,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	int chan = 0;
 	for(;;) {
 		int32_t cmd;
-		if(!_input.uvar_get(cmd, FNSIZE)) {
+		if(!_input.GetRiceGolombCode(cmd, kFunctionCodeSize)) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 												 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1243,24 +1220,24 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 			return NO;
 		}
 
-		if(cmd == FN_QUIT) {
+		if(cmd == kFunctionQuit) {
 			_eos = true;
 			return YES;
 		}
 
 		switch(cmd) {
-			case FN_ZERO:
-			case FN_DIFF0:
-			case FN_DIFF1:
-			case FN_DIFF2:
-			case FN_DIFF3:
-			case FN_QLPC:
+			case kFunctionZero:
+			case kFunctionDiff0:
+			case kFunctionDiff1:
+			case kFunctionDiff2:
+			case kFunctionDiff3:
+			case kFunctionQLPC:
 			{
 				int32_t coffset, *cbuffer = _buffer[chan];
 				int resn = 0, nlpc;
 
-				if(cmd != FN_ZERO) {
-					if(!_input.uvar_get(resn, ENERGYSIZE)) {
+				if(cmd != kFunctionZero) {
+					if(!_input.GetRiceGolombCode(resn, kEnergyCodeSize)) {
 						if(error)
 							*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 															 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1286,19 +1263,19 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					if(_version < 2)
 						coffset = sum / _nmean;
 					else
-						coffset = ROUNDEDSHIFTDOWN(sum / _nmean, _bitshift);
+						coffset = RoundedShiftDown(sum / _nmean, _bitshift);
 				}
 
 				switch(cmd) {
-					case FN_ZERO:
+					case kFunctionZero:
 						for(auto i = 0; i < _blocksize; ++i) {
 							cbuffer[i] = 0;
 						}
 						break;
-					case FN_DIFF0:
+					case kFunctionDiff0:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, static_cast<size_t>(resn))) {
+							if(!_input.GetInt32(var, resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1311,10 +1288,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							cbuffer[i] = var + coffset;
 						}
 						break;
-					case FN_DIFF1:
+					case kFunctionDiff1:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, static_cast<size_t>(resn))) {
+							if(!_input.GetInt32(var, resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1327,10 +1304,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							cbuffer[i] = var + cbuffer[i - 1];
 						}
 						break;
-					case FN_DIFF2:
+					case kFunctionDiff2:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, static_cast<size_t>(resn))) {
+							if(!_input.GetInt32(var, resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1343,10 +1320,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							cbuffer[i] = var + (2 * cbuffer[i - 1] - cbuffer[i - 2]);
 						}
 						break;
-					case FN_DIFF3:
+					case kFunctionDiff3:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.var_get(var, static_cast<size_t>(resn))) {
+							if(!_input.GetInt32(var, resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1359,8 +1336,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							cbuffer[i] = var + 3 * (cbuffer[i - 1] -  cbuffer[i - 2]) + cbuffer[i - 3];
 						}
 						break;
-					case FN_QLPC:
-						if(!_input.uvar_get(nlpc, LPCQSIZE)) {
+					case kFunctionQLPC:
+						if(!_input.GetRiceGolombCode(nlpc, kLPCQuantCodeSize)) {
 							if(error)
 								*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1372,7 +1349,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 						}
 
 						for(auto i = 0; i < nlpc; ++i) {
-							if(!_input.var_get(_qlpc[i], LPCQUANT)) {
+							if(!_input.GetInt32(_qlpc[i], kLPCQuantCodeSize)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1387,13 +1364,13 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							cbuffer[i - nlpc] -= coffset;
 						}
 						for(auto i = 0; i < _blocksize; ++i) {
-							int32_t sum = _lpcqoffset;
+							int32_t sum = _lpcQuantOffset;
 
 							for(auto j = 0; j < nlpc; ++j) {
 								sum += _qlpc[j] * cbuffer[i - j - 1];
 							}
 							int32_t var;
-							if(!_input.var_get(var, static_cast<size_t>(resn))) {
+							if(!_input.GetInt32(var, resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 																	 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1403,7 +1380,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 								return NO;
 							}
-							cbuffer[i] = var + (sum >> LPCQUANT);
+							cbuffer[i] = var + (sum >> kLPCQuantCodeSize);
 						}
 						if(coffset != 0) {
 							for(auto i = 0; i < _blocksize; ++i) {
@@ -1441,12 +1418,12 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					}
 				}
 
-				if(chan == _nchan - 1) {
-					switch(_internal_ftype) {
-						case TYPE_U8:
+				if(chan == _channelCount - 1) {
+					switch(_internalFileType) {
+						case kFileTypeUInt8:
 						{
 							auto abl = _frameBuffer.audioBufferList;
-							for(auto channel = 0; channel < _nchan; ++channel) {
+							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
 									channel_buf[sample] = static_cast<uint8_t>(std::clamp(_buffer[channel][sample], 0, UINT8_MAX));
@@ -1454,10 +1431,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
 						}
-						case TYPE_S8:
+						case kFileTypeSInt8:
 						{
 							auto abl = _frameBuffer.audioBufferList;
-							for(auto channel = 0; channel < _nchan; ++channel) {
+							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
 									channel_buf[sample] = static_cast<int8_t>(std::clamp(_buffer[channel][sample], INT8_MIN, INT8_MAX));
@@ -1465,11 +1442,11 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
 						}
-						case TYPE_U16HL:
-						case TYPE_U16LH:
+						case kFileTypeUInt16BE:
+						case kFileTypeUInt16LE:
 						{
 							auto abl = _frameBuffer.audioBufferList;
-							for(auto channel = 0; channel < _nchan; ++channel) {
+							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
 									channel_buf[sample] = static_cast<uint16_t>(std::clamp(_buffer[channel][sample], 0, UINT16_MAX));
@@ -1477,11 +1454,11 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
 						}
-						case TYPE_S16HL:
-						case TYPE_S16LH:
+						case kFileTypeSInt16BE:
+						case kFileTypeSInt16LE:
 						{
 							auto abl = _frameBuffer.audioBufferList;
-							for(auto channel = 0; channel < _nchan; ++channel) {
+							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									channel_buf[sample] = static_cast<int16_t>(std::clamp(_buffer[channel][sample], INT16_MIN, INT16_MAX));
@@ -1495,14 +1472,14 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					++_blocksDecoded;
 					return YES;
 				}
-				chan = (chan + 1) % _nchan;
+				chan = (chan + 1) % _channelCount;
 				break;
 			}
 
-			case FN_BLOCKSIZE:
+			case kFunctionBlocksize:
 			{
 				uint32_t uint = 0;
-				if(!_input.uint_get(uint, _version, static_cast<size_t>(log2(_blocksize))) || uint == 0 || uint > MAX_BLOCKSIZE || static_cast<int>(uint) > _blocksize) {
+				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > kMaxBlocksizeBytes || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1516,8 +1493,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 				_blocksize = static_cast<int>(uint);
 				break;
 			}
-			case FN_BITSHIFT:
-				if(!_input.uvar_get(_bitshift, BITSHIFTSIZE) || _bitshift > 32) {
+			case kFunctionBitshfit:
+				if(!_input.GetRiceGolombCode(_bitshift, kBitshiftCodeSize) || _bitshift > 32) {
 					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bitshift: %u", _bitshift);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1529,10 +1506,10 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 					return NO;
 				}
 				break;
-			case FN_VERBATIM:
+			case kFunctionVerbatim:
 			{
 				int32_t chunk_len;
-				if(!_input.uvar_get(chunk_len, VERBATIM_CKSIZE_SIZE) || chunk_len < 0 || chunk_len > VERBATIM_CHUNK_MAX) {
+				if(!_input.GetRiceGolombCode(chunk_len, kVerbatimChunkSizeCodeSize) || chunk_len < 0 || chunk_len > kVerbatimChunkMaxSizeBytes) {
 					os_log_error(gSFBAudioDecoderLog, "Invald verbatim length: %u", chunk_len);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1545,7 +1522,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 				}
 				while(chunk_len--) {
 					int32_t dummy;
-					if(!_input.uvar_get(dummy, VERBATIM_BYTE_SIZE)) {
+					if(!_input.GetRiceGolombCode(dummy, kVerbatimByteCodeSize)) {
 						if(error)
 							*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 															 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -1587,14 +1564,14 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 
 	NSInteger fileLength;
-	if(![_inputSource getLength:&fileLength error:error] || ![_inputSource seekToOffset:(fileLength - SEEK_TRAILER_SIZE) error:error])
+	if(![_inputSource getLength:&fileLength error:error] || ![_inputSource seekToOffset:(fileLength - kSeekTrailerSizeBytes) error:error])
 		return NO;
 
 	SeekTableTrailer trailer;
 	{
-		uint8_t buf [SEEK_TRAILER_SIZE];
+		uint8_t buf [kSeekTrailerSizeBytes];
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:SEEK_TRAILER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_TRAILER_SIZE)
+		if(![_inputSource readBytes:buf length:kSeekTrailerSizeBytes bytesRead:&bytesRead error:error] || bytesRead != kSeekTrailerSizeBytes)
 			return NO;
 		trailer = ParseSeekTableTrailer(buf);
 	}
@@ -1618,9 +1595,9 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	SeekTableHeader header;
 	{
-		uint8_t buf [SEEK_HEADER_SIZE];
+		uint8_t buf [kSeekHeaderSizeBytes];
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:SEEK_HEADER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_HEADER_SIZE)
+		if(![_inputSource readBytes:buf length:kSeekHeaderSizeBytes bytesRead:&bytesRead error:error] || bytesRead != kSeekHeaderSizeBytes)
 			return NO;
 		header = ParseSeekTableHeader(buf);
 	}
@@ -1635,11 +1612,11 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 
 	std::vector<SeekTableEntry> entries;
 
-	auto count = (trailer.mSeekTableSize - SEEK_TRAILER_SIZE - SEEK_HEADER_SIZE) / SEEK_ENTRY_SIZE;
+	auto count = (trailer.mSeekTableSize - kSeekTrailerSizeBytes - kSeekHeaderSizeBytes) / kSeekEntrySizeBytes;
 	for(uint32_t i = 0; i < count; ++i) {
-		uint8_t buf [SEEK_ENTRY_SIZE];
+		uint8_t buf [kSeekEntrySizeBytes];
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:SEEK_ENTRY_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_ENTRY_SIZE)
+		if(![_inputSource readBytes:buf length:kSeekEntrySizeBytes bytesRead:&bytesRead error:error] || bytesRead != kSeekEntrySizeBytes)
 			return NO;
 
 		auto entry = ParseSeekTableEntry(buf);
@@ -1668,9 +1645,9 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	}
 
 	{
-		uint8_t buf [SEEK_HEADER_SIZE];
+		uint8_t buf [kSeekHeaderSizeBytes];
 		NSInteger bytesRead;
-		if(![inputSource readBytes:buf length:SEEK_HEADER_SIZE bytesRead:&bytesRead error:&error] || bytesRead != SEEK_HEADER_SIZE) {
+		if(![inputSource readBytes:buf length:kSeekHeaderSizeBytes bytesRead:&bytesRead error:&error] || bytesRead != kSeekHeaderSizeBytes) {
 			os_log_error(gSFBAudioDecoderLog, "Error reading external seek table header: %{public}@", error);
 			return {};
 		}
@@ -1685,9 +1662,9 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	std::vector<SeekTableEntry> entries;
 
 	for(;;) {
-		uint8_t buf [SEEK_ENTRY_SIZE];
+		uint8_t buf [kSeekEntrySizeBytes];
 		NSInteger bytesRead;
-		if(![inputSource readBytes:buf length:SEEK_ENTRY_SIZE bytesRead:&bytesRead error:&error] || bytesRead != SEEK_ENTRY_SIZE) {
+		if(![inputSource readBytes:buf length:kSeekEntrySizeBytes bytesRead:&bytesRead error:&error] || bytesRead != kSeekEntrySizeBytes) {
 			os_log_error(gSFBAudioDecoderLog, "Error reading external seek table entry: %{public}@", error);
 			return {};
 		}
@@ -1714,8 +1691,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry", entries[0].mBitshift);
 		return NO;
 	}
-	else if(_nchan != 1 && _nchan != 2) {
-		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _nchan);
+	else if(_channelCount != 1 && _channelCount != 2) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _channelCount);
 		return NO;
 	}
 	else if(_maxnlpc > 3) {
