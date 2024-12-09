@@ -1467,8 +1467,8 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									auto v = µLawToLinear(_buffer[channel][sample]) >> 3;
-									channel_buf[sample] = static_cast<int8_t>(std::clamp(v, INT8_MIN, INT8_MAX));
+									auto value = µLawToLinear(_buffer[channel][sample]);
+									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
 							break;
@@ -1476,8 +1476,8 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									auto v = ALawToLinear(_buffer[channel][sample]) >> 3;
-									channel_buf[sample] = static_cast<int8_t>(std::clamp(v, INT8_MIN, INT8_MAX));
+									auto value = ALawToLinear(_buffer[channel][sample]);
+									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
 							break;
