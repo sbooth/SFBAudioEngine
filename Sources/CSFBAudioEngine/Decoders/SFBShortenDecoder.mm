@@ -76,6 +76,8 @@ constexpr auto kFileTypeSInt16BE 			= 3;
 constexpr auto kFileTypeUInt16BE 			= 4;
 constexpr auto kFileTypeSInt16LE 			= 5;
 constexpr auto kFileTypeUInt16LE 			= 6;
+constexpr auto kFileTypeµLaw 				= 7;
+constexpr auto kFileTypeALaw 				= 10;
 
 constexpr auto kSeekTableRevision 			= 1;
 
@@ -373,6 +375,30 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	return it == begin ? end : --it;
 }
 
+/// Decodes a µ-law sample to a linear value.
+constexpr int16_t µLawToLinear(uint8_t µLaw) noexcept
+{
+	const auto bias = 0x84;
+
+	µLaw = ~µLaw;
+	int t = (((µLaw & 0x0F) << 3) + bias) << (static_cast<int>(µLaw & 0x70) >> 4);
+	return static_cast<int16_t>((µLaw & 0x80) ? (bias - t) : (t - bias));
+}
+
+/// Decodes a A-law sample to a linear value.
+constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
+{
+	const auto mask = 0x55;
+
+	alaw ^= mask;
+	int i = (alaw & 0x0F) << 4;
+	if(auto seg = static_cast<int>(alaw & 0x70) >> 4; seg)
+		i = (i + 0x108) << (seg - 1);
+	else
+		i += 8;
+	return static_cast<int16_t>((alaw & 0x80) ? i : -i);
+}
+
 } /* namespace */
 
 @interface SFBShortenDecoder ()
@@ -476,7 +502,7 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		return NO;
 	}
 
-	if((_bitsPerSample == 8 && (_internalFileType != kFileTypeUInt8 && _internalFileType != kFileTypeSInt8)) || (_bitsPerSample == 16 && (_internalFileType != kFileTypeUInt16BE && _internalFileType != kFileTypeUInt16LE && _internalFileType != kFileTypeSInt16BE && _internalFileType != kFileTypeSInt16LE))) {
+	if((_bitsPerSample == 8 && (_internalFileType != kFileTypeUInt8 && _internalFileType != kFileTypeSInt8 && _internalFileType != kFileTypeµLaw && _internalFileType != kFileTypeALaw)) || (_bitsPerSample == 16 && (_internalFileType != kFileTypeUInt16BE && _internalFileType != kFileTypeUInt16LE && _internalFileType != kFileTypeSInt16BE && _internalFileType != kFileTypeSInt16LE))) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _internalFileType);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -501,6 +527,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
 	if(_internalFileType == kFileTypeSInt8 || _internalFileType == kFileTypeSInt16BE || _internalFileType == kFileTypeSInt16LE)
+		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
+	if(_internalFileType != kFileTypeµLaw || _internalFileType != kFileTypeALaw)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
 
 	processingStreamDescription.mSampleRate			= _sampleRate;
@@ -569,6 +597,8 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 		case kFileTypeSInt8:
 		case kFileTypeSInt16BE:
 		case kFileTypeSInt16LE:
+		case kFileTypeµLaw:
+		case kFileTypeALaw:
 			mean = 0;
 			break;
 		case kFileTypeUInt8:
@@ -1247,12 +1277,11 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 											   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 						return NO;
 					}
-					/* this is a hack as version 0 differed in definition of var_get */
+					// Versions > 0 changed the behavior
 					if(_version == 0)
 						resn--;
 				}
 
-				/* find mean offset : N.B. this code duplicated */
 				if(_nmean == 0)
 					coffset = _offset[chan][0];
 				else {
@@ -1390,7 +1419,6 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 						break;
 				}
 
-				/* store mean value if appropriate : N.B. Duplicated code */
 				if(_nmean > 0) {
 					int32_t sum = (_version < 2) ? 0 : _blocksize / 2;
 
@@ -1407,7 +1435,6 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 						_offset[chan][_nmean - 1] = (sum / _blocksize) << _bitshift;
 				}
 
-				/* do the wrap */
 				for(auto i = -_nwrap; i < 0; i++) {
 					cbuffer[i] = cbuffer[i + _blocksize];
 				}
@@ -1419,55 +1446,61 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 				}
 
 				if(chan == _channelCount - 1) {
+					auto abl = _frameBuffer.audioBufferList;
+
 					switch(_internalFileType) {
 						case kFileTypeUInt8:
-						{
-							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
 									channel_buf[sample] = static_cast<uint8_t>(std::clamp(_buffer[channel][sample], 0, UINT8_MAX));
 							}
-							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
-						}
 						case kFileTypeSInt8:
-						{
-							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
 									channel_buf[sample] = static_cast<int8_t>(std::clamp(_buffer[channel][sample], INT8_MIN, INT8_MAX));
 							}
-							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
-						}
+						case kFileTypeµLaw:
+							for(auto channel = 0; channel < _channelCount; ++channel) {
+								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									auto value = µLawToLinear(_buffer[channel][sample]);
+									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+								}
+							}
+							break;
+						case kFileTypeALaw:
+							for(auto channel = 0; channel < _channelCount; ++channel) {
+								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									auto value = ALawToLinear(_buffer[channel][sample]);
+									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+								}
+							}
+							break;
 						case kFileTypeUInt16BE:
 						case kFileTypeUInt16LE:
-						{
-							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample)
 									channel_buf[sample] = static_cast<uint16_t>(std::clamp(_buffer[channel][sample], 0, UINT16_MAX));
 							}
-							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
-						}
 						case kFileTypeSInt16BE:
 						case kFileTypeSInt16LE:
-						{
-							auto abl = _frameBuffer.audioBufferList;
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									channel_buf[sample] = static_cast<int16_t>(std::clamp(_buffer[channel][sample], INT16_MIN, INT16_MAX));
 								}
 							}
-							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
-						}
 					}
+
+					_frameBuffer.frameLength = static_cast<AVAudioFrameCount>(_blocksize);
 
 					++_blocksDecoded;
 					return YES;
