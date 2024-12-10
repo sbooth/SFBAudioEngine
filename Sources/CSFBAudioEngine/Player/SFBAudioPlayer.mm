@@ -771,7 +771,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice
 		double ratio = format.sampleRate / outputFormat.sampleRate;
-		auto maximumFramesToRender = static_cast<AUAudioFrameCount>(ceil(512 * ratio));
+		auto maximumFramesToRender = static_cast<AUAudioFrameCount>(std::ceil(512 * ratio));
 
 		if(auto audioUnit = _playerNode.AUAudioUnit; audioUnit.maximumFramesToRender < maximumFramesToRender) {
 			BOOL renderResourcesAllocated = audioUnit.renderResourcesAllocated;
