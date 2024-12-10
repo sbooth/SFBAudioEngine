@@ -789,6 +789,9 @@ enum eAudioPlayerFlags : unsigned int {
 	}
 #endif
 
+	if([_delegate respondsToSelector:@selector(audioPlayer:reconfiguredProcessingGraph:)])
+		[_delegate audioPlayer:self reconfiguredProcessingGraph:_engine];
+
 #if DEBUG
 	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _playerNode.renderingFormat);
 	if(![[_playerNode outputFormatForBus:0] isEqual:_playerNode.renderingFormat])
