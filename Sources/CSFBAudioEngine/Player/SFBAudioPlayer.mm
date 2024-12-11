@@ -15,7 +15,7 @@
 #import <SFBUnfairLock.hpp>
 
 #if DEBUG
-#import <AudioToolbox/AudioToolbox.h>
+#import <AudioToolbox/AudioFormat.h>
 #endif
 
 #import "SFBAudioPlayer.h"
