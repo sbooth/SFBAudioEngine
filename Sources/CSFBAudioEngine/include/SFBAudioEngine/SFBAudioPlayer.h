@@ -54,10 +54,11 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Rendering complete
 ///  8. Now playing changed
 ///  9. Playback state changed
-///  10. `AVAudioEngineConfigurationChange` notification received
-///  11. Audio will end
-///  12. End of audio
-///  13. Asynchronous error encountered
+///  10. Processing graph change with custom nodes present
+///  11. `AVAudioEngineConfigurationChange` notification received
+///  12. Audio will end
+///  13. End of audio
+///  14. Asynchronous error encountered
 ///
 /// The dispatch queue on which callbacks are performed is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
