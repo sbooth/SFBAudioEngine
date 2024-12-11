@@ -750,9 +750,20 @@ enum eAudioPlayerFlags : unsigned int {
 		_playerNode = playerNode;
 		[_engine attachNode:_playerNode];
 
-		// Reconnect the player node to its output
-		if(playerNodeOutputConnectionPoint)
-			[_engine connect:_playerNode to:playerNodeOutputConnectionPoint.node format:format];
+		// Reconnect the player node to the next node in the processing chain
+		// This is the mixer node in the default configuration, but additional nodes may
+		// have been inserted between the player and mixer nodes. In this case allow the delegate
+		// to make any necessary adjustments based on the format change if desired.
+		if(playerNodeOutputConnectionPoint && playerNodeOutputConnectionPoint.node != mixerNode) {
+			if([_delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:)]) {
+				AVAudioNode *node = [_delegate audioPlayer:self reconfigureProcessingGraph:_engine];
+				// Ensure the delegate returned a valid node
+				NSAssert(node != nil, @"nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:");
+				[_engine connect:_playerNode to:node format:format];
+			}
+			else
+				[_engine connect:_playerNode to:playerNodeOutputConnectionPoint.node format:format];
+		}
 		else
 			[_engine connect:_playerNode to:mixerNode format:format];
 	}
@@ -788,9 +799,6 @@ enum eAudioPlayerFlags : unsigned int {
 		}
 	}
 #endif
-
-	if([_delegate respondsToSelector:@selector(audioPlayer:reconfiguredProcessingGraph:)])
-		[_delegate audioPlayer:self reconfiguredProcessingGraph:_engine];
 
 #if DEBUG
 	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _playerNode.renderingFormat);
