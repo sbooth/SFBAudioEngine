@@ -54,10 +54,11 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Rendering complete
 ///  8. Now playing changed
 ///  9. Playback state changed
-///  10. `AVAudioEngineConfigurationChange` notification received
-///  11. Audio will end
-///  12. End of audio
-///  13. Asynchronous error encountered
+///  10. Processing graph format change with custom nodes present
+///  11. `AVAudioEngineConfigurationChange` notification received
+///  12. Audio will end
+///  13. End of audio
+///  14. Asynchronous error encountered
 ///
 /// The dispatch queue on which callbacks are performed is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
@@ -227,17 +228,17 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - Volume Control
 
-/// Returns `kHALOutputParam_Volume` on channel `0` for `AVAudioEngine`.outputNode.audioUnit or `NaN` on error
+/// Returns `kHALOutputParam_Volume` on channel `0` for `AVAudioEngine.outputNode.audioUnit` or `NaN` on error
 @property (nonatomic, readonly) float volume;
-/// Sets `kHALOutputParam_Volume` on channel `0` for `AVAudioEngine`.outputNode.audioUnit
+/// Sets `kHALOutputParam_Volume` on channel `0` for `AVAudioEngine.outputNode.audioUnit`
 /// - parameter volume: The desired volume
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the volume was successfully set
 - (BOOL)setVolume:(float)volume error:(NSError **)error;
 
-/// Returns `kHALOutputParam_Volume` on `channel` for `AVAudioEngine`.outputNode.audioUnit or `NaN` on error
+/// Returns `kHALOutputParam_Volume` on `channel` for `AVAudioEngine.outputNode.audioUnit` or `NaN` on error
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;
-/// Sets `kHALOutputParam_Volume` on `channel` for `AVAudioEngine`.outputNode.audioUnit
+/// Sets `kHALOutputParam_Volume` on `channel` for `AVAudioEngine.outputNode.audioUnit`
 /// - parameter volume: The desired volume
 /// - parameter channel: The channel to adjust
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -246,9 +247,9 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - Output Device
 
-/// Returns the output device object ID for `AVAudioEngine`.outputNode
+/// Returns the output device object ID for `AVAudioEngine.outputNode`
 @property (nonatomic, readonly) AUAudioObjectID outputDeviceID;
-/// Sets the output device for `AVAudioEngine`.outputNode
+/// Sets the output device for `AVAudioEngine.outputNode`
 /// - parameter outputDeviceID: The audio object ID of the desired output device
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the output device was successfully set
@@ -264,7 +265,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - AVAudioEngine Access
 
 /// Peforms an operation on the underlying `AVAudioEngine`
-/// - important: Graph modifications may only be made between `playerNode` and `engine`.mainMixerNode
+/// - important: Graph modifications may only be made between `playerNode` and `engine.mainMixerNode`
 /// - parameter block: A block performing operations on the underlying `AVAudioEngine`
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
@@ -321,6 +322,21 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
+/// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
+///
+/// Before this method is called the main mixer node will be connected to the output node, and the player node will be attached
+/// to the processing graph with no connections.
+///
+/// The delegate should establish or update any connections in the processing graph segment between the node to be returned and the main mixer node.
+///
+/// After this method returns the player node will be connected to the returned node using the specified format.
+/// - important: This method is called from a context where it is safe to modify `engine`
+/// - note: This method is only called when one or more nodes have been inserted between the player node and main mixer node.
+/// - parameter audioPlayer: The `SFBAudioPlayer` object
+/// - parameter engine: The `AVAudioEngine` object
+/// - parameter format: The rendering format of the player node
+/// - returns: The `AVAudioNode` to which the player node should be connected
+- (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer reconfigureProcessingGraph:(AVAudioEngine *)engine withFormat:(AVAudioFormat *)format NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
 /// Called to notify the delegate when the configuration of the underlying `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
