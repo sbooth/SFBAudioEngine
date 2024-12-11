@@ -755,10 +755,10 @@ enum eAudioPlayerFlags : unsigned int {
 		// have been inserted between the player and mixer nodes. In this case allow the delegate
 		// to make any necessary adjustments based on the format change if desired.
 		if(playerNodeOutputConnectionPoint && playerNodeOutputConnectionPoint.node != mixerNode) {
-			if([_delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:)]) {
-				AVAudioNode *node = [_delegate audioPlayer:self reconfigureProcessingGraph:_engine];
+			if([_delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:forFormat:)]) {
+				AVAudioNode *node = [_delegate audioPlayer:self reconfigureProcessingGraph:_engine forFormat:format];
 				// Ensure the delegate returned a valid node
-				NSAssert(node != nil, @"nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:");
+				NSAssert(node != nil, @"nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:forFormat:");
 				[_engine connect:_playerNode to:node format:format];
 			}
 			else

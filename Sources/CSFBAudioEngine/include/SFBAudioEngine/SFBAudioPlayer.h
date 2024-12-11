@@ -322,20 +322,21 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
-/// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made
+/// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
-/// Before this method is called the main mixer node's output will be connected to the output node, and the player node will be attached
+/// Before this method is called the main mixer node will be connected to the output node, and the player node will be attached
 /// to the processing graph with no connections.
 ///
 /// The delegate should establish or update any connections in the processing graph segment between the node to be returned and the main mixer node.
 ///
-/// After this method returns the player node's output will be connected to the returned node.
+/// After this method returns the player node will be connected to the returned node using the specified format.
 /// - important: This method is called from a context where it is safe to modify `engine`
 /// - note: This method is only called when one or more nodes have been inserted between the player node and main mixer node.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter engine: The `AVAudioEngine` object
-/// - returns: The `AVAudioNode` to which the player node's output should be connected
-- (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer reconfigureProcessingGraph:(AVAudioEngine *)engine NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:));
+/// - parameter format: The rendering format of the player node
+/// - returns: The `AVAudioNode` to which the player node should be connected
+- (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer reconfigureProcessingGraph:(AVAudioEngine *)engine forFormat:(AVAudioFormat *)format NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:for:));
 /// Called to notify the delegate when the configuration of the underlying `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
