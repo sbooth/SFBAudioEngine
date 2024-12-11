@@ -323,11 +323,14 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 - (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made
 ///
-/// This method is only called when one or more nodes have been inserted between the player node and main mixer node.
 /// Before this method is called the main mixer node's output will be connected to the output node, and the player node will be attached
-/// to the processing graph with no connections. After this method returns the player node's output will be connected to the returned node.
+/// to the processing graph with no connections.
+///
 /// The delegate should establish or update any connections in the processing graph segment between the node to be returned and the main mixer node.
-/// - note: This method is called from a context where it is safe to modify `engine`
+///
+/// After this method returns the player node's output will be connected to the returned node.
+/// - important: This method is called from a context where it is safe to modify `engine`
+/// - note: This method is only called when one or more nodes have been inserted between the player node and main mixer node.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter engine: The `AVAudioEngine` object
 /// - returns: The `AVAudioNode` to which the player node's output should be connected
