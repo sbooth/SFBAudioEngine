@@ -54,7 +54,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Rendering complete
 ///  8. Now playing changed
 ///  9. Playback state changed
-///  10. Processing graph change with custom nodes present
+///  10. Processing graph format change with custom nodes present
 ///  11. `AVAudioEngineConfigurationChange` notification received
 ///  12. Audio will end
 ///  13. End of audio
