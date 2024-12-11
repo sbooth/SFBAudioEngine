@@ -14,6 +14,10 @@
 #import <AVAudioFormat+SFBFormatTransformation.h>
 #import <SFBUnfairLock.hpp>
 
+#if DEBUG
+#import <AudioToolbox/AudioToolbox.h>
+#endif
+
 #import "SFBAudioPlayer.h"
 
 #import "SFBAudioDecoder.h"
@@ -30,6 +34,27 @@ enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
+
+#if DEBUG
+/// Returns the name of the channel layout for `format` or `nil` if none
+NSString * ChannelLayoutName(AVAudioFormat *format) noexcept
+{
+	NSCParameterAssert(format != nil);
+
+	const AudioChannelLayout *acl = format.channelLayout.layout;
+	if(!acl)
+		return nil;
+	UInt32 aclSize = offsetof(AudioChannelLayout, mChannelDescriptions) + (acl->mNumberChannelDescriptions * sizeof(AudioChannelDescription));
+	CFStringRef channelLayoutName = nullptr;
+	UInt32 dataSize = sizeof(channelLayoutName);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, aclSize, acl, &dataSize, &channelLayoutName);
+	if(result != noErr) {
+		os_log_error(_audioPlayerLog, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %d", result);
+		return nil;
+	}
+	return (__bridge_transfer NSString *)channelLayoutName;
+}
+#endif
 
 }
 
@@ -801,21 +826,44 @@ enum eAudioPlayerFlags : unsigned int {
 #endif
 
 #if DEBUG
-	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _playerNode.renderingFormat);
-	if(![[_playerNode outputFormatForBus:0] isEqual:_playerNode.renderingFormat])
-		os_log_debug(_audioPlayerLog, "← player out: %{public}@", [_playerNode outputFormatForBus:0]);
+	{
+		AVAudioFormat *fmt = _playerNode.renderingFormat;
 
-	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_playerNode outputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "→ main mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
+		os_log_debug(_audioPlayerLog,
+					 "↑ rendering: %{public}@ [%{public}@]",
+					 fmt,
+					 ChannelLayoutName(fmt) ?: @"No channel layout");
 
-	if(![[_engine.mainMixerNode outputFormatForBus:0] isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "← main mixer out: %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
+		if(fmt = [_playerNode outputFormatForBus:0]; ![fmt isEqual:_playerNode.renderingFormat])
+			os_log_debug(_audioPlayerLog,
+						 "← player out: %{public}@ [%{public}@]",
+						 fmt,
+						 ChannelLayoutName(fmt) ?: @"No channel layout");
 
-	if(![[_engine.outputNode inputFormatForBus:0] isEqual:[_engine.mainMixerNode outputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "← output in: %{public}@", [_engine.outputNode inputFormatForBus:0]);
+		if(fmt = [_engine.mainMixerNode inputFormatForBus:0]; ![fmt isEqual:[_playerNode outputFormatForBus:0]])
+			os_log_debug(_audioPlayerLog,
+						 "→ main mixer in: %{public}@ [%{public}@]",
+						 fmt,
+						 ChannelLayoutName(fmt) ?: @"No channel layout");
 
-	if(![[_engine.outputNode outputFormatForBus:0] isEqual:[_engine.outputNode inputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "→ output out: %{public}@", [_engine.outputNode outputFormatForBus:0]);
+		if(fmt = [_engine.mainMixerNode outputFormatForBus:0]; ![fmt isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
+			os_log_debug(_audioPlayerLog,
+						 "← main mixer out: %{public}@ [%{public}@]",
+						 fmt,
+						 ChannelLayoutName(fmt) ?: @"No channel layout");
+
+		if(fmt = [_engine.outputNode inputFormatForBus:0]; ![fmt isEqual:[_engine.mainMixerNode outputFormatForBus:0]])
+			os_log_debug(_audioPlayerLog,
+						 "← output in: %{public}@ [%{public}@]",
+						 fmt,
+						 ChannelLayoutName(fmt) ?: @"No channel layout");
+
+		if(fmt = [_engine.outputNode outputFormatForBus:0]; ![fmt isEqual:[_engine.outputNode inputFormatForBus:0]])
+			os_log_debug(_audioPlayerLog,
+						 "→ output out: %{public}@ [%{public}@]",
+						 fmt,
+						 ChannelLayoutName(fmt) ?: @"No channel layout");
+	}
 #endif
 
 	[_engine prepare];
