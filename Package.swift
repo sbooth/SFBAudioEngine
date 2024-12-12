@@ -20,7 +20,7 @@ let package = Package(
 	],
 	dependencies: [
 		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.1.2"),
-		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.1.3"),
+		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.2.0"),
 
 		// Standalone dependencies from source
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),

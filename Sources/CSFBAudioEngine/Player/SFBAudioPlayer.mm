@@ -14,6 +14,10 @@
 #import <AVAudioFormat+SFBFormatTransformation.h>
 #import <SFBUnfairLock.hpp>
 
+#if DEBUG
+#import <AudioToolbox/AudioFormat.h>
+#endif
+
 #import "SFBAudioPlayer.h"
 
 #import "SFBAudioDecoder.h"
@@ -30,6 +34,47 @@ enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
+
+#if DEBUG
+/// Returns the name of the channel layout for `format` or `nil` if none
+NSString * ChannelLayoutName(AVAudioFormat *format) noexcept
+{
+	NSCParameterAssert(format != nil);
+
+	const AudioChannelLayout *layout = format.channelLayout.layout;
+	if(!layout)
+		return nil;
+	UInt32 layoutSize = offsetof(AudioChannelLayout, mChannelDescriptions) + (layout->mNumberChannelDescriptions * sizeof(AudioChannelDescription));
+	CFStringRef name = nullptr;
+	UInt32 dataSize = sizeof(name);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, layoutSize, layout, &dataSize, &name);
+	if(result != noErr) {
+		os_log_error(_audioPlayerLog, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %d", result);
+		return nil;
+	}
+	return (__bridge_transfer NSString *)name;
+}
+
+NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
+{
+	NSCParameterAssert(audioUnit != nil);
+
+	AudioObjectPropertyAddress address = {
+		.mSelector  = kAudioObjectPropertyName,
+		.mScope = kAudioObjectPropertyScopeOutput,
+		.mElement = kAudioObjectPropertyElementMain
+	};
+	CFStringRef name = nullptr;
+	UInt32 dataSize = sizeof(name);
+	OSStatus result = AudioObjectGetPropertyData(audioUnit.deviceID, &address, 0, nullptr, &dataSize, &name);
+	if(result != noErr) {
+		os_log_error(_audioPlayerLog, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %d", result);
+		return nil;
+	}
+	return (__bridge_transfer NSString *)name;
+}
+
+#endif
 
 }
 
@@ -801,21 +846,66 @@ enum eAudioPlayerFlags : unsigned int {
 #endif
 
 #if DEBUG
-	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _playerNode.renderingFormat);
-	if(![[_playerNode outputFormatForBus:0] isEqual:_playerNode.renderingFormat])
-		os_log_debug(_audioPlayerLog, "← player out: %{public}@", [_playerNode outputFormatForBus:0]);
+	{
+		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
+		os_log_debug(_audioPlayerLog,
+					 "↑ rendering: %{public}@ [%{public}@]",
+					 inputFormat,
+					 ChannelLayoutName(inputFormat) ?: @"No channel layout");
 
-	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_playerNode outputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "→ main mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
+		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			os_log_debug(_audioPlayerLog,
+						 "← player out: %{public}@ [%{public}@]",
+						 outputFormat,
+						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+		else
+			os_log_debug(_audioPlayerLog,
+						 "↔ player");
 
-	if(![[_engine.mainMixerNode outputFormatForBus:0] isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "← main mixer out: %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
+		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
+		while(connectionPoint.node != _engine.mainMixerNode) {
+			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
+			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
+			if(![outputFormat isEqual:inputFormat])
+				os_log_debug(_audioPlayerLog,
+							 "← %{public}@: %{public}@ [%{public}@]",
+							 connectionPoint.node,
+							 outputFormat,
+							 ChannelLayoutName(outputFormat) ?: @"No channel layout");
 
-	if(![[_engine.outputNode inputFormatForBus:0] isEqual:[_engine.mainMixerNode outputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "← output in: %{public}@", [_engine.outputNode inputFormatForBus:0]);
+			else
+				os_log_debug(_audioPlayerLog,
+							 "↔ %{public}@",
+							 connectionPoint.node);
 
-	if(![[_engine.outputNode outputFormatForBus:0] isEqual:[_engine.outputNode inputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "→ output out: %{public}@", [_engine.outputNode outputFormatForBus:0]);
+			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
+		}
+
+		inputFormat = [_engine.mainMixerNode inputFormatForBus:0];
+		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			os_log_debug(_audioPlayerLog,
+						 "← main mixer out: %{public}@ [%{public}@]",
+						 outputFormat,
+						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+		else
+			os_log_debug(_audioPlayerLog,
+						 "↔ main mixer");
+
+		inputFormat = [_engine.outputNode inputFormatForBus:0];
+		outputFormat = [_engine.outputNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			os_log_debug(_audioPlayerLog,
+						 "→ output \"%{public}@\" out: %{public}@ [%{public}@]",
+						 AudioDeviceName(_engine.outputNode.AUAudioUnit),
+						 outputFormat,
+						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+		else
+			os_log_debug(_audioPlayerLog,
+						 "↔ output \"%{public}@\"",
+						 AudioDeviceName(_engine.outputNode.AUAudioUnit));
+	}
 #endif
 
 	[_engine prepare];
