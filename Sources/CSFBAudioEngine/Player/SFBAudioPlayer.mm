@@ -55,6 +55,25 @@ NSString * ChannelLayoutName(AVAudioFormat *format) noexcept
 	return (__bridge_transfer NSString *)name;
 }
 
+NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
+{
+	NSCParameterAssert(audioUnit != nil);
+
+	AudioObjectPropertyAddress address = {
+		.mSelector  = kAudioObjectPropertyName,
+		.mScope = kAudioObjectPropertyScopeOutput,
+		.mElement = kAudioObjectPropertyElementMain
+	};
+	CFStringRef name = nullptr;
+	UInt32 dataSize = sizeof(name);
+	OSStatus result = AudioObjectGetPropertyData(audioUnit.deviceID, &address, 0, nullptr, &dataSize, &name);
+	if(result != noErr) {
+		os_log_error(_audioPlayerLog, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %d", result);
+		return nil;
+	}
+	return (__bridge_transfer NSString *)name;
+}
+
 #endif
 
 }
@@ -878,12 +897,14 @@ NSString * ChannelLayoutName(AVAudioFormat *format) noexcept
 		outputFormat = [_engine.outputNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
 			os_log_debug(_audioPlayerLog,
-						 "→ output out: %{public}@ [%{public}@]",
+						 "→ output \"%{public}@\" out: %{public}@ [%{public}@]",
+						 AudioDeviceName(_engine.outputNode.AUAudioUnit),
 						 outputFormat,
 						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
 		else
 			os_log_debug(_audioPlayerLog,
-						 "↔ output");
+						 "↔ output \"%{public}@\"",
+						 AudioDeviceName(_engine.outputNode.AUAudioUnit));
 	}
 #endif
 
