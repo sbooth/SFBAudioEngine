@@ -12,12 +12,18 @@
 #import <os/log.h>
 
 #import <AVAudioFormat+SFBFormatTransformation.h>
+
 #import <SFBUnfairLock.hpp>
+
+#if DEBUG
+#import <CoreAudio/AudioHardware.h>
+#endif
 
 #import "SFBAudioPlayer.h"
 
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
+#import "SFBStringDescribingAVAudioFormat.h"
 #import "SFBTimeUtilities.hpp"
 
 namespace {
@@ -31,7 +37,28 @@ enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
+#if DEBUG
+NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
+{
+	NSCParameterAssert(audioUnit != nil);
+
+	AudioObjectPropertyAddress address = {
+		.mSelector = kAudioObjectPropertyName,
+		.mScope = kAudioObjectPropertyScopeOutput,
+		.mElement = kAudioObjectPropertyElementMain
+	};
+	CFStringRef name = nullptr;
+	UInt32 dataSize = sizeof(name);
+	OSStatus result = AudioObjectGetPropertyData(audioUnit.deviceID, &address, 0, nullptr, &dataSize, &name);
+	if(result != noErr) {
+		os_log_error(_audioPlayerLog, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %d", result);
+		return nil;
+	}
+	return (__bridge_transfer NSString *)name;
 }
+#endif
+
+} // namespace
 
 @interface SFBAudioPlayer ()
 {
@@ -591,7 +618,7 @@ enum eAudioPlayerFlags : unsigned int {
 
 	// Success in this context means the graph is in a working state
 	if(!success) {
-		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
+		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[_delegate audioPlayer:self encounteredError:error];
@@ -712,7 +739,7 @@ enum eAudioPlayerFlags : unsigned int {
 	if(!formatsEqual) {
 		playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 		if(!playerNode) {
-			os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
+			os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", SFB::StringDescribingAVAudioFormat(format));
 			return NO;
 		}
 
@@ -730,7 +757,10 @@ enum eAudioPlayerFlags : unsigned int {
 
 	BOOL outputFormatChanged = outputFormat.channelCount != previousOutputFormat.channelCount || outputFormat.sampleRate != previousOutputFormat.sampleRate;
 	if(outputFormatChanged)
-		os_log_debug(_audioPlayerLog, "AVAudioEngine output format changed from %{public}@ to %{public}@", previousOutputFormat, outputFormat);
+		os_log_debug(_audioPlayerLog,
+					 "AVAudioEngine output format changed from %{public}@ to %{public}@",
+					 SFB::StringDescribingAVAudioFormat(previousOutputFormat),
+					 SFB::StringDescribingAVAudioFormat(outputFormat));
 
 	if(outputFormatChanged) {
 		[_engine disconnectNodeInput:outputNode bus:0];
@@ -801,21 +831,67 @@ enum eAudioPlayerFlags : unsigned int {
 #endif
 
 #if DEBUG
-	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _playerNode.renderingFormat);
-	if(![[_playerNode outputFormatForBus:0] isEqual:_playerNode.renderingFormat])
-		os_log_debug(_audioPlayerLog, "← player out: %{public}@", [_playerNode outputFormatForBus:0]);
+	{
+		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
+		os_log_debug(_audioPlayerLog,
+					 "↓ rendering %{public}@",
+					 SFB::StringDescribingAVAudioFormat(inputFormat));
 
-	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_playerNode outputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "→ main mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
+		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			os_log_debug(_audioPlayerLog,
+						 "→ %{public}@ → %{public}@",
+						 _playerNode,
+						 SFB::StringDescribingAVAudioFormat(outputFormat));
+		else
+			os_log_debug(_audioPlayerLog,
+						 "→ %{public}@ →",
+						 _playerNode);
 
-	if(![[_engine.mainMixerNode outputFormatForBus:0] isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "← main mixer out: %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
+		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
+		while(connectionPoint.node != _engine.mainMixerNode) {
+			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
+			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
+			if(![outputFormat isEqual:inputFormat])
+				os_log_debug(_audioPlayerLog,
+							 "→ %{public}@ → %{public}@",
+							 connectionPoint.node,
+							 SFB::StringDescribingAVAudioFormat(outputFormat));
 
-	if(![[_engine.outputNode inputFormatForBus:0] isEqual:[_engine.mainMixerNode outputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "← output in: %{public}@", [_engine.outputNode inputFormatForBus:0]);
+			else
+				os_log_debug(_audioPlayerLog,
+							 "→ %{public}@ →",
+							 connectionPoint.node);
 
-	if(![[_engine.outputNode outputFormatForBus:0] isEqual:[_engine.outputNode inputFormatForBus:0]])
-		os_log_debug(_audioPlayerLog, "→ output out: %{public}@", [_engine.outputNode outputFormatForBus:0]);
+			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
+		}
+
+		inputFormat = [_engine.mainMixerNode inputFormatForBus:0];
+		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			os_log_debug(_audioPlayerLog,
+						 "→ %{public}@ → %{public}@",
+						 _engine.mainMixerNode,
+						 SFB::StringDescribingAVAudioFormat(outputFormat));
+		else
+			os_log_debug(_audioPlayerLog,
+						 "→ %{public}@ →",
+						 _engine.mainMixerNode);
+
+		inputFormat = [_engine.outputNode inputFormatForBus:0];
+		outputFormat = [_engine.outputNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			os_log_debug(_audioPlayerLog,
+						 "→ %{public}@ \"%{public}@\" ↑ %{public}@]",
+						 _engine.outputNode,
+						 AudioDeviceName(_engine.outputNode.AUAudioUnit),
+						 SFB::StringDescribingAVAudioFormat(outputFormat));
+		else
+			os_log_debug(_audioPlayerLog,
+						 "→ %{public}@ ↑ \"%{public}@\"",
+						 _engine.outputNode,
+						 AudioDeviceName(_engine.outputNode.AUAudioUnit));
+	}
 #endif
 
 	[_engine prepare];
