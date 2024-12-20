@@ -619,7 +619,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 	// Success in this context means the graph is in a working state
 	if(!success) {
-		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@]", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
+		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[_delegate audioPlayer:self encounteredError:error];
