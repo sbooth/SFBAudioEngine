@@ -12,6 +12,7 @@
 #import <os/log.h>
 
 #import <AVAudioFormat+SFBFormatTransformation.h>
+
 #import <SFBUnfairLock.hpp>
 
 #if DEBUG
@@ -22,6 +23,7 @@
 
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
+#import "SFBStringDescribingAVAudioFormat.h"
 #import "SFBTimeUtilities.hpp"
 
 namespace {
@@ -36,25 +38,6 @@ enum eAudioPlayerFlags : unsigned int {
 };
 
 #if DEBUG
-/// Returns the name of the channel layout for `format` or `nil` if none
-NSString * ChannelLayoutName(AVAudioFormat *format) noexcept
-{
-	NSCParameterAssert(format != nil);
-
-	const AudioChannelLayout *layout = format.channelLayout.layout;
-	if(!layout)
-		return nil;
-	UInt32 layoutSize = offsetof(AudioChannelLayout, mChannelDescriptions) + (layout->mNumberChannelDescriptions * sizeof(AudioChannelDescription));
-	CFStringRef name = nullptr;
-	UInt32 dataSize = sizeof(name);
-	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, layoutSize, layout, &dataSize, &name);
-	if(result != noErr) {
-		os_log_error(_audioPlayerLog, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %d", result);
-		return nil;
-	}
-	return (__bridge_transfer NSString *)name;
-}
-
 NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 {
 	NSCParameterAssert(audioUnit != nil);
@@ -636,7 +619,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 	// Success in this context means the graph is in a working state
 	if(!success) {
-		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
+		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@]", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[_delegate audioPlayer:self encounteredError:error];
@@ -757,7 +740,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	if(!formatsEqual) {
 		playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 		if(!playerNode) {
-			os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
+			os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", SFB::StringDescribingAVAudioFormat(format));
 			return NO;
 		}
 
@@ -775,7 +758,10 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 	BOOL outputFormatChanged = outputFormat.channelCount != previousOutputFormat.channelCount || outputFormat.sampleRate != previousOutputFormat.sampleRate;
 	if(outputFormatChanged)
-		os_log_debug(_audioPlayerLog, "AVAudioEngine output format changed from %{public}@ to %{public}@", previousOutputFormat, outputFormat);
+		os_log_debug(_audioPlayerLog,
+					 "AVAudioEngine output format changed from %{public}@ to %{public}@",
+					 SFB::StringDescribingAVAudioFormat(previousOutputFormat),
+					 SFB::StringDescribingAVAudioFormat(outputFormat));
 
 	if(outputFormatChanged) {
 		[_engine disconnectNodeInput:outputNode bus:0];
@@ -847,21 +833,23 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 #if DEBUG
 	{
+//		os_log_debug(_audioPlayerLog, "AVAudioEngine processing graph:");
+
 		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
 		os_log_debug(_audioPlayerLog,
-					 "↑ rendering: %{public}@ [%{public}@]",
-					 inputFormat,
-					 ChannelLayoutName(inputFormat) ?: @"No channel layout");
+					 "↓ rendering %{public}@",
+					 SFB::StringDescribingAVAudioFormat(inputFormat));
 
 		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
 			os_log_debug(_audioPlayerLog,
-						 "← player out: %{public}@ [%{public}@]",
-						 outputFormat,
-						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+						 "→ %{public}@ → %{public}@",
+						 _playerNode,
+						 SFB::StringDescribingAVAudioFormat(outputFormat));
 		else
 			os_log_debug(_audioPlayerLog,
-						 "↔ player");
+						 "→ %{public}@ →",
+						 _playerNode);
 
 		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
 		while(connectionPoint.node != _engine.mainMixerNode) {
@@ -869,14 +857,13 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
 			if(![outputFormat isEqual:inputFormat])
 				os_log_debug(_audioPlayerLog,
-							 "← %{public}@: %{public}@ [%{public}@]",
+							 "→ %{public}@ → %{public}@",
 							 connectionPoint.node,
-							 outputFormat,
-							 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+							 SFB::StringDescribingAVAudioFormat(outputFormat));
 
 			else
 				os_log_debug(_audioPlayerLog,
-							 "↔ %{public}@",
+							 "→ %{public}@ →",
 							 connectionPoint.node);
 
 			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
@@ -886,24 +873,26 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
 			os_log_debug(_audioPlayerLog,
-						 "← main mixer out: %{public}@ [%{public}@]",
-						 outputFormat,
-						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+						 "→ %{public}@ → %{public}@",
+						 _engine.mainMixerNode,
+						 SFB::StringDescribingAVAudioFormat(outputFormat));
 		else
 			os_log_debug(_audioPlayerLog,
-						 "↔ main mixer");
+						 "→ %{public}@ →",
+						 _engine.mainMixerNode);
 
 		inputFormat = [_engine.outputNode inputFormatForBus:0];
 		outputFormat = [_engine.outputNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
 			os_log_debug(_audioPlayerLog,
-						 "→ output \"%{public}@\" out: %{public}@ [%{public}@]",
+						 "→ %{public}@ \"%{public}@\" ↑ %{public}@]",
+						 _engine.outputNode,
 						 AudioDeviceName(_engine.outputNode.AUAudioUnit),
-						 outputFormat,
-						 ChannelLayoutName(outputFormat) ?: @"No channel layout");
+						 SFB::StringDescribingAVAudioFormat(outputFormat));
 		else
 			os_log_debug(_audioPlayerLog,
-						 "↔ output \"%{public}@\"",
+						 "→ %{public}@ ↑ \"%{public}@\"",
+						 _engine.outputNode,
 						 AudioDeviceName(_engine.outputNode.AUAudioUnit));
 	}
 #endif

@@ -24,6 +24,7 @@
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
+#import "SFBStringDescribingAVAudioFormat.h"
 #import "SFBTimeUtilities.hpp"
 
 const NSTimeInterval SFBUnknownTime = -1;
@@ -339,7 +340,7 @@ public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 	: mRenderingFormat{format}
 	{
-		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with render block format %{public}@", this, mRenderingFormat);
+		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with render block format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
 		// MARK: Rendering
 		mRenderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
@@ -1010,7 +1011,7 @@ public:
 			return false;
 
 		if(!SupportsFormat(decoder.processingFormat)) {
-			os_log_error(_audioPlayerNodeLog, "Unsupported decoder processing format: %{public}@", decoder.processingFormat);
+			os_log_error(_audioPlayerNodeLog, "Unsupported decoder processing format: %{public}@", SFB::StringDescribingAVAudioFormat(decoder.processingFormat));
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioPlayerNodeErrorDomain
@@ -1200,11 +1201,11 @@ private:
 				// In the event the render block output format and decoder processing
 				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
 
-				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, decoderState->mDecoder.processingFormat);
+				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 				if(!buffer) {
-					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", mRenderingFormat, kRingBufferChunkSize);
+					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
 
 					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
 														 code:SFBAudioPlayerNodeErrorCodeInternalError
