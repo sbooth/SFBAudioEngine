@@ -340,7 +340,7 @@ public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 	: mRenderingFormat{format}
 	{
-		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with render block format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
+		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
 		// MARK: Rendering
 		mRenderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
