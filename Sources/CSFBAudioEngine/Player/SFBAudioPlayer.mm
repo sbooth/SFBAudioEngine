@@ -43,7 +43,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	NSCParameterAssert(audioUnit != nil);
 
 	AudioObjectPropertyAddress address = {
-		.mSelector  = kAudioObjectPropertyName,
+		.mSelector = kAudioObjectPropertyName,
 		.mScope = kAudioObjectPropertyScopeOutput,
 		.mElement = kAudioObjectPropertyElementMain
 	};

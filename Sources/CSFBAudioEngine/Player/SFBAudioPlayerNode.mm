@@ -323,7 +323,7 @@ private:
 	/// Dispatch source processing events from `mEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
 
-	/// Dispatch group  used to track in-progress decoding and delegate messages
+	/// Dispatch group used to track in-progress decoding and delegate messages
 	dispatch_group_t 				mDispatchGroup 			= nullptr;
 
 	/// Dispatch source deleting decoder state data with `eMarkedForRemoval`
@@ -1094,13 +1094,13 @@ private:
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
-	/// Returns the decoder state  in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
 	inline DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	/// Returns the decoder state  in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
 	inline DecoderState * GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
