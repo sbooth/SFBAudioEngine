@@ -832,8 +832,6 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 #if DEBUG
 	{
-//		os_log_debug(_audioPlayerLog, "AVAudioEngine processing graph:");
-
 		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
 		os_log_debug(_audioPlayerLog,
 					 "↓ rendering %{public}@",
