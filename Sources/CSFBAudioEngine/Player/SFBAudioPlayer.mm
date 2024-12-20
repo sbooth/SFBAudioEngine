@@ -56,10 +56,9 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	}
 	return (__bridge_transfer NSString *)name;
 }
-
 #endif
 
-}
+} // namespace
 
 @interface SFBAudioPlayer ()
 {
