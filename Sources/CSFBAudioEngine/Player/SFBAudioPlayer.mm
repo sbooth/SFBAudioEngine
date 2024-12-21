@@ -38,7 +38,10 @@ enum eAudioPlayerFlags : unsigned int {
 };
 
 #if DEBUG
-NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
+/// Returns the name of `audioUnit.deviceID`
+///
+/// This is the value of `kAudioObjectPropertyName` in the output scope on the main element
+NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
 	NSCParameterAssert(audioUnit != nil);
 
@@ -82,16 +85,33 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	/// Flags
 	std::atomic_uint		_flags;
 }
+/// Returns true if the internal queue of decoders is empty
 - (BOOL)internalDecoderQueueIsEmpty;
+/// Removes all decoders from the internal decoder queue
 - (void)clearInternalDecoderQueue;
+/// Inserts `decoder` at the end of the internal decoder queue
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
-- (id <SFBPCMDecoding>)popDecoderFromInternalQueue;
+/// Removes and returns the first decoder from the internal decoder queue
+- (nullable id <SFBPCMDecoding>)popDecoderFromInternalQueue;
+/// Called to process `AVAudioEngineConfigurationChangeNotification`
 - (void)handleAudioEngineConfigurationChange:(NSNotification *)notification;
 #if TARGET_OS_IPHONE
+/// Called to process `AVAudioSessionInterruptionNotification`
 - (void)handleAudioSessionInterruption:(NSNotification *)notification;
 #endif
-- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
-- (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
+/// Configures the player to render audio from `decoder` and enqueues `decoder` on the player node
+/// - parameter forImmediatePlayback: If `YES` the internal decoder queue is cleared and the player node is reset
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` if the player was successfully configured
+- (BOOL)configureForAndEnqueueDecoder:(nonnull id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
+/// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
+///
+/// This method does nothing if the current rendering format is equal to `format`
+/// - important: This stops the audio engine if reconfiguration is necessary
+/// - parameter format: The desired audio format
+/// - parameter forceUpdate: Whether the graph should be rebuilt even if the current rendering format is equal to `format`
+/// - returns: `YES` if the processing graph was successfully configured
+- (BOOL)configureProcessingGraphForFormat:(nonnull AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
 
 @implementation SFBAudioPlayer
@@ -107,7 +127,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 		// Create the audio processing graph
 		_engine = [[AVAudioEngine alloc] init];
-		if(![self configureEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2] forceUpdate:NO]) {
+		if(![self configureProcessingGraphForFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2] forceUpdate:NO]) {
 			os_log_error(_audioPlayerLog, "Unable to create audio processing graph for 44.1 kHz stereo");
 			return nil;
 		}
@@ -269,7 +289,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_engine stop];
-		_engineIsRunning = NO;
+		_engineIsRunning = false;
 		[_playerNode stop];
 	});
 
@@ -589,8 +609,8 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
-	BOOL engineWasRunning = _engineIsRunning;
-	_engineIsRunning = NO;
+	bool engineWasRunning = _engineIsRunning;
+	_engineIsRunning = false;
 
 	// Attempt to preserve the playback state
 	BOOL playerNodeWasPlaying = _playerNode.isPlaying;
@@ -600,7 +620,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_playerNode pause];
 
-		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
+		success = [self configureProcessingGraphForFormat:_playerNode.renderingFormat forceUpdate:YES];
 		if(success) {
 			// Restart AVAudioEngine if previously running
 			if(engineWasRunning) {
@@ -667,21 +687,21 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
+	NSParameterAssert(decoder != nil);
+
 	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
 
-	__block auto playbackStateChanged = false;
+	bool engineWasRunning = _engineIsRunning;
 	__block BOOL success = YES;
-	dispatch_async_and_wait(_engineQueue, ^{
-		[_playerNode reset];
-		[_engine reset];
 
-		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
-		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-		if(auto format = decoder.processingFormat; ![_playerNode supportsFormat:format]) {
-			success = [self configureEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
-			playbackStateChanged = _engineIsRunning;
-		}
-	});
+	// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
+	if(auto format = decoder.processingFormat; ![_playerNode supportsFormat:format])
+		dispatch_async_and_wait(_engineQueue, ^{
+//			[_playerNode reset];
+//			[_engine reset];
+			success = [self configureProcessingGraphForFormat:format forceUpdate:NO];
+		});
 
 	if(!success) {
 		if(error)
@@ -713,14 +733,17 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 		return NO;
 	}
 
-	if(playbackStateChanged && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+	// AVAudioEngine may have been stopped in `configureEngineForGaplessPlaybackOfFormat`
+	if(engineWasRunning != _engineIsRunning && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
 		[_delegate audioPlayerPlaybackStateChanged:self];
 
 	return YES;
 }
 
-- (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
+- (BOOL)configureProcessingGraphForFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
 {
+	NSParameterAssert(format != nil);
+
 	// SFBAudioPlayerNode requires the standard format
 	if(!format.isStandard) {
 		format = [format standardEquivalent];
@@ -733,6 +756,17 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	BOOL formatsEqual = [format isEqual:_playerNode.renderingFormat];
 	if(formatsEqual && !forceUpdate)
 		return YES;
+
+	// Even if the engine isn't running, call stop to force release of any render resources
+	// Empirically this is necessary when transitioning between formats with different
+	// channel counts, although it seems that it shouldn't be
+//	if(_engineIsRunning) {
+		[_engine stop];
+		_engineIsRunning = false;
+//	}
+
+	if(_playerNode.isPlaying)
+		[_playerNode stop];
 
 	// Avoid creating a new SFBAudioPlayerNode if not necessary
 	SFBAudioPlayerNode *playerNode = nil;
@@ -752,21 +786,20 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	// SFBAudioPlayer requires that the main mixer node be connected to the output node
 	NSAssert([_engine inputConnectionPointForNode:outputNode inputBus:0].node == mixerNode, @"Illegal AVAudioEngine configuration");
 
-	AVAudioFormat *outputFormat = [outputNode outputFormatForBus:0];
-	AVAudioFormat *previousOutputFormat = [outputNode inputFormatForBus:0];
+	AVAudioFormat *outputNodeOutputFormat = [outputNode outputFormatForBus:0];
+	AVAudioFormat *mixerNodeOutputFormat = [mixerNode outputFormatForBus:0];
 
-	BOOL outputFormatChanged = outputFormat.channelCount != previousOutputFormat.channelCount || outputFormat.sampleRate != previousOutputFormat.sampleRate;
-	if(outputFormatChanged)
+	auto outputFormatsMismatch = outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount || outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate;
+	if(outputFormatsMismatch) {
 		os_log_debug(_audioPlayerLog,
-					 "AVAudioEngine output format changed from %{public}@ to %{public}@",
-					 SFB::StringDescribingAVAudioFormat(previousOutputFormat),
-					 SFB::StringDescribingAVAudioFormat(outputFormat));
+					 "Mismatch between output formats for main mixer and output nodes:\n    mainMixerNode: %{public}@\n       outputNode: %{public}@",
+					 SFB::StringDescribingAVAudioFormat(mixerNodeOutputFormat),
+					 SFB::StringDescribingAVAudioFormat(outputNodeOutputFormat));
 
-	if(outputFormatChanged) {
 		[_engine disconnectNodeInput:outputNode bus:0];
 
-		// Reconnect the mixer and output nodes using the output device's format
-		[_engine connect:mixerNode to:outputNode format:outputFormat];
+		// Reconnect the mixer and output nodes using the output node's output format
+		[_engine connect:mixerNode to:outputNode format:outputNodeOutputFormat];
 	}
 
 	if(playerNode) {
@@ -807,11 +840,11 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 	// So if the input and output sample rates on the mixer don't match, adjust
 	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
 	// See http://lists.apple.com/archives/coreaudio-api/2009/Oct/msg00150.html
-	if(format.sampleRate > outputFormat.sampleRate) {
-		os_log_debug(_audioPlayerLog, "AVAudioMixerNode input sample rate (%.2f Hz) and output sample rate (%.2f Hz) don't match", format.sampleRate, outputFormat.sampleRate);
+	if(format.sampleRate > outputNodeOutputFormat.sampleRate) {
+		os_log_debug(_audioPlayerLog, "AVAudioMixerNode input sample rate (%g Hz) and output sample rate (%g Hz) don't match", format.sampleRate, outputNodeOutputFormat.sampleRate);
 
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice
-		double ratio = format.sampleRate / outputFormat.sampleRate;
+		double ratio = format.sampleRate / outputNodeOutputFormat.sampleRate;
 		auto maximumFramesToRender = static_cast<AUAudioFrameCount>(std::ceil(512 * ratio));
 
 		if(auto audioUnit = _playerNode.AUAudioUnit; audioUnit.maximumFramesToRender < maximumFramesToRender) {
@@ -832,36 +865,26 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 #if DEBUG
 	{
+		NSMutableString *string = [NSMutableString stringWithString:@"Audio processing graph:\n"];
+
 		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
-		os_log_debug(_audioPlayerLog,
-					 "↓ rendering %{public}@",
-					 SFB::StringDescribingAVAudioFormat(inputFormat));
+		[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
 
 		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			os_log_debug(_audioPlayerLog,
-						 "→ %{public}@ → %{public}@",
-						 _playerNode,
-						 SFB::StringDescribingAVAudioFormat(outputFormat));
+			[string appendFormat:@"→ %@\n    %@\n", _playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			os_log_debug(_audioPlayerLog,
-						 "→ %{public}@ →",
-						 _playerNode);
+			[string appendFormat:@"→ %@\n", _playerNode];
 
 		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
 		while(connectionPoint.node != _engine.mainMixerNode) {
 			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
 			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
 			if(![outputFormat isEqual:inputFormat])
-				os_log_debug(_audioPlayerLog,
-							 "→ %{public}@ → %{public}@",
-							 connectionPoint.node,
-							 SFB::StringDescribingAVAudioFormat(outputFormat));
+				[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
 
 			else
-				os_log_debug(_audioPlayerLog,
-							 "→ %{public}@ →",
-							 connectionPoint.node);
+				[string appendFormat:@"→ %@\n", connectionPoint.node];
 
 			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
 		}
@@ -869,28 +892,18 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 		inputFormat = [_engine.mainMixerNode inputFormatForBus:0];
 		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			os_log_debug(_audioPlayerLog,
-						 "→ %{public}@ → %{public}@",
-						 _engine.mainMixerNode,
-						 SFB::StringDescribingAVAudioFormat(outputFormat));
+			[string appendFormat:@"→ %@\n    %@\n", _engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			os_log_debug(_audioPlayerLog,
-						 "→ %{public}@ →",
-						 _engine.mainMixerNode);
+			[string appendFormat:@"→ %@\n", _engine.mainMixerNode];
 
 		inputFormat = [_engine.outputNode inputFormatForBus:0];
 		outputFormat = [_engine.outputNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			os_log_debug(_audioPlayerLog,
-						 "→ %{public}@ \"%{public}@\" ↑ %{public}@]",
-						 _engine.outputNode,
-						 AudioDeviceName(_engine.outputNode.AUAudioUnit),
-						 SFB::StringDescribingAVAudioFormat(outputFormat));
+			[string appendFormat:@"→ %@ \"%@\"\n↓ %@]", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit), SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			os_log_debug(_audioPlayerLog,
-						 "→ %{public}@ ↑ \"%{public}@\"",
-						 _engine.outputNode,
-						 AudioDeviceName(_engine.outputNode.AUAudioUnit));
+			[string appendFormat:@"→ %@\n↓ \"%@\"", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit)];
+
+		os_log_debug(_audioPlayerLog, "%{public}@", string);
 	}
 #endif
 
