@@ -89,7 +89,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (BOOL)internalDecoderQueueIsEmpty;
 /// Removes all decoders from the internal decoder queue
 - (void)clearInternalDecoderQueue;
-/// Inserts `decoder` at the end of internal decoder queue
+/// Inserts `decoder` at the end of the internal decoder queue
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
 /// Removes and returns the first decoder from the internal decoder queue
 - (nullable id <SFBPCMDecoding>)popDecoderFromInternalQueue;
@@ -102,14 +102,14 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 /// Configures the player to render audio from `decoder` and enqueues `decoder` on the player node
 /// - parameter forImmediatePlayback: If `YES` the internal decoder queue is cleared and the player node is reset
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: `YES` if the processing graph was successfully configured
+/// - returns: `YES` if the player was successfully configured
 - (BOOL)configureForAndEnqueueDecoder:(nonnull id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
 /// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
 ///
 /// This method does nothing if the current rendering format is equal to `format`
 /// - important: This stops the audio engine if reconfiguration is necessary
 /// - parameter format: The desired audio format
-/// - parameter forceUpdate:Whether the graph should be rebuilt even if the current rendering format is equal to `format`
+/// - parameter forceUpdate: Whether the graph should be rebuilt even if the current rendering format is equal to `format`
 /// - returns: `YES` if the processing graph was successfully configured
 - (BOOL)configureProcessingGraphForFormat:(nonnull AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
