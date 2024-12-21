@@ -16,6 +16,8 @@
 
 #import <os/log.h>
 
+#import <AudioToolbox/AudioFormat.h>
+
 #import <SFBAudioRingBuffer.hpp>
 #import <SFBRingBuffer.hpp>
 #import <SFBUnfairLock.hpp>
@@ -35,6 +37,40 @@ namespace {
 #pragma mark - Shared State
 
 os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
+
+#pragma mark - AVAudioChannelLayout Equivalence
+
+/// Returns `true` if `lhs` and `rhs` are equivalent
+///
+/// Channel layouts are considered equivalent if:
+/// 1) Both channel layouts are `nil`
+/// 2) One channel layout is `nil` and the other contains one or two channels
+/// 3) `kAudioFormatProperty_AreChannelLayoutsEquivalent` is true
+bool AVAudioChannelLayoutsAreEquivalent(AVAudioChannelLayout * _Nullable lhs, AVAudioChannelLayout * _Nullable rhs) noexcept
+{
+	if(!lhs && !rhs)
+		return true;
+
+	if((!lhs && rhs.channelCount <= 2) || (!rhs && lhs.channelCount <= 2))
+		return true;
+
+	if(!lhs || !rhs)
+		return false;
+
+	const AudioChannelLayout *layouts [] = {
+		lhs.layout,
+		rhs.layout
+	};
+
+	UInt32 layoutsEqual = false;
+	UInt32 propertySize = sizeof(layoutsEqual);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), static_cast<void *>(layouts), &propertySize, &layoutsEqual);
+
+	if(noErr != result)
+		return false;
+
+	return layoutsEqual;
+}
 
 #pragma mark - Decoder State
 
@@ -999,8 +1035,9 @@ public:
 
 	inline bool SupportsFormat(AVAudioFormat *format) const noexcept
 	{
-		// Gapless playback requires the same number of channels at the same sample rate
-		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate;
+		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
+		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
+		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && channelLayoutsAreEquivalent;
 	}
 
 #pragma mark - Queue Management
