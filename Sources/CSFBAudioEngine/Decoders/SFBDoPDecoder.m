@@ -129,7 +129,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	}
 
 	if(!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %f", asbd->mSampleRate);
+		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
 											 code:SFBDSDDecoderErrorCodeInvalidFormat

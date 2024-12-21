@@ -145,8 +145,8 @@ int close_callback(void *user_data)
 
 - (BOOL)openReturningError:(NSError **)error
 {
-//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %g", _processingFormat.sampleRate);
 //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
 //	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
 

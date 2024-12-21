@@ -482,7 +482,7 @@ NSString * AudioDeviceName(AUAudioUnit *audioUnit) noexcept
 
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error
 {
-	os_log_info(_audioPlayerLog, "Setting volume for channel %u to %f", channel, volume);
+	os_log_info(_audioPlayerLog, "Setting volume for channel %u to %g", channel, volume);
 
 	__block BOOL success = NO;
 	__block NSError *err = nil;
