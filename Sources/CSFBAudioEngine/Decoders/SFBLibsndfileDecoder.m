@@ -292,6 +292,14 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:_sfinfo.channels];
 	}
 
+#if DEBUG
+	{
+		char buffer [2048];
+		sf_command(_sndfile, SFC_GET_LOG_INFO, buffer, sizeof(buffer));
+		os_log_debug(gSFBAudioDecoderLog, "%{public}s", buffer);
+	}
+#endif /* DEBUG */
+
 	// Generate interleaved PCM output
 	int subFormat = _sfinfo.format & SF_FORMAT_SUBMASK;
 
@@ -331,6 +339,10 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Float;
 	}
+
+	// Rather than fail with no channel layout, use something that might work
+	if(!channelLayout)
+		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_DiscreteInOrder | _sfinfo.channels)];
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
 	if(!_processingFormat) {
