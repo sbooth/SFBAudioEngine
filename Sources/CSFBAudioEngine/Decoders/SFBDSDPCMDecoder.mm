@@ -394,7 +394,7 @@ private:
 	}
 
 	if(asbd->mSampleRate != kSFBSampleRateDSD64) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %f", asbd->mSampleRate);
+		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
 											 code:SFBDSDDecoderErrorCodeInvalidFormat
