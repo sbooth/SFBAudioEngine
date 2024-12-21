@@ -62,9 +62,9 @@ bool AVAudioChannelLayoutsAreEquivalent(AVAudioChannelLayout * _Nullable lhs, AV
 		rhs.layout
 	};
 
-	UInt32 layoutsEqual = false;
+	UInt32 layoutsEqual = 0;
 	UInt32 propertySize = sizeof(layoutsEqual);
-	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), static_cast<void *>(layouts), &propertySize, &layoutsEqual);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), static_cast<const void *>(layouts), &propertySize, &layoutsEqual);
 
 	if(noErr != result)
 		return false;
