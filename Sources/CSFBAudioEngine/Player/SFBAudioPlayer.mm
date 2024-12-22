@@ -802,7 +802,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = nil;
 		if(_playerNode) {
 			playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
-			[_engine disconnectNodeOutput:_playerNode bus:0];
 			[_engine detachNode:_playerNode];
 		}
 
