@@ -827,7 +827,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			[_engine connect:_playerNode to:mixerNode format:format];
 	}
 
-#if 1
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
 	// (maximum frames per slice) greater than the default for AVAudioSourceNode (1156).
 	//
@@ -857,7 +856,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			}
 		}
 	}
-#endif
 
 #if DEBUG
 	{
