@@ -758,10 +758,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// Even if the engine isn't running, call stop to force release of any render resources
 	// Empirically this is necessary when transitioning between formats with different
 	// channel counts, although it seems that it shouldn't be
-//	if(_engineIsRunning) {
-		[_engine stop];
-		_engineIsRunning = false;
-//	}
+	[_engine stop];
+	_engineIsRunning = false;
 
 	if(_playerNode.isPlaying)
 		[_playerNode stop];
