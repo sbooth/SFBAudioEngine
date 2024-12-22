@@ -698,8 +698,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 	if(auto format = decoder.processingFormat; ![_playerNode supportsFormat:format])
 		dispatch_async_and_wait(_engineQueue, ^{
-//			[_playerNode reset];
-//			[_engine reset];
 			success = [self configureProcessingGraphForFormat:format forceUpdate:NO];
 		});
 
