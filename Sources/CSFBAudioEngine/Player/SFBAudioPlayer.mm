@@ -698,8 +698,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 	if(auto format = decoder.processingFormat; ![_playerNode supportsFormat:format])
 		dispatch_async_and_wait(_engineQueue, ^{
-//			[_playerNode reset];
-//			[_engine reset];
 			success = [self configureProcessingGraphForFormat:format forceUpdate:NO];
 		});
 
@@ -760,10 +758,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// Even if the engine isn't running, call stop to force release of any render resources
 	// Empirically this is necessary when transitioning between formats with different
 	// channel counts, although it seems that it shouldn't be
-//	if(_engineIsRunning) {
-		[_engine stop];
-		_engineIsRunning = false;
-//	}
+	[_engine stop];
+	_engineIsRunning = false;
 
 	if(_playerNode.isPlaying)
 		[_playerNode stop];
@@ -831,7 +827,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			[_engine connect:_playerNode to:mixerNode format:format];
 	}
 
-#if 1
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
 	// (maximum frames per slice) greater than the default for AVAudioSourceNode (1156).
 	//
@@ -861,7 +856,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			}
 		}
 	}
-#endif
 
 #if DEBUG
 	{
