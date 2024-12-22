@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
 #import <taglib/oggflacfile.h>
 #import <taglib/tfilestream.h>
 

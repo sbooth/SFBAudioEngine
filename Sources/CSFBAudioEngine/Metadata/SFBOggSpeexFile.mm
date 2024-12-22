@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
 #import <taglib/speexfile.h>
 #import <taglib/tfilestream.h>
 
