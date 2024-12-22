@@ -44,15 +44,22 @@ os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPla
 ///
 /// Channel layouts are considered equivalent if:
 /// 1) Both channel layouts are `nil`
-/// 2) One channel layout is `nil` and the other contains one or two channels
+/// 2) One channel layout is `nil` and the other has a mono or stereo layout tag
 /// 3) `kAudioFormatProperty_AreChannelLayoutsEquivalent` is true
 bool AVAudioChannelLayoutsAreEquivalent(AVAudioChannelLayout * _Nullable lhs, AVAudioChannelLayout * _Nullable rhs) noexcept
 {
 	if(!lhs && !rhs)
 		return true;
-
-	if((!lhs && rhs.channelCount <= 2) || (!rhs && lhs.channelCount <= 2))
-		return true;
+	else if(lhs && !rhs) {
+		auto layoutTag = lhs.layoutTag;
+		if(layoutTag == kAudioChannelLayoutTag_Mono || layoutTag == kAudioChannelLayoutTag_Stereo)
+			return true;
+	}
+	else if(!lhs && rhs) {
+		auto layoutTag = rhs.layoutTag;
+		if(layoutTag == kAudioChannelLayoutTag_Mono || layoutTag == kAudioChannelLayoutTag_Stereo)
+			return true;
+	}
 
 	if(!lhs || !rhs)
 		return false;
