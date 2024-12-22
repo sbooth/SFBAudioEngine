@@ -292,6 +292,16 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:_sfinfo.channels];
 	}
 
+	if(!channelLayout) {
+		switch(_sfinfo.channels) {
+			case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
+			case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
+			default:
+				channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_sfinfo.channels)];
+				break;
+		}
+	}
+
 #if DEBUG
 	{
 		char buffer [2048];
@@ -340,24 +350,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		_readMethod = Float;
 	}
 
-	// Rather than fail with no channel layout, use something that might work
-	if(!channelLayout)
-		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_DiscreteInOrder | _sfinfo.channels)];
-
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
-	if(!_processingFormat) {
-		os_log_error(gSFBAudioDecoderLog, "Unable to specify processing format; more than two channels with no channel map");
-
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Unknown channel layout", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file is missing channel layout information.", @"")];
-
-		return NO;
-	}
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
