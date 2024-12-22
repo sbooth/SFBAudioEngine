@@ -733,7 +733,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return NO;
 	}
 
-	// AVAudioEngine may have been stopped in `configureEngineForGaplessPlaybackOfFormat`
+	// AVAudioEngine may have been stopped in `configureProcessingGraphForFormat`
 	if(engineWasRunning != _engineIsRunning && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
 		[_delegate audioPlayerPlaybackStateChanged:self];
 
