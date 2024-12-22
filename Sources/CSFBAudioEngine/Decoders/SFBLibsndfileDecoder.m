@@ -302,14 +302,6 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		}
 	}
 
-#if DEBUG
-	{
-		char buffer [2048];
-		sf_command(_sndfile, SFC_GET_LOG_INFO, buffer, sizeof(buffer));
-		os_log_debug(gSFBAudioDecoderLog, "%{public}s", buffer);
-	}
-#endif /* DEBUG */
-
 	// Generate interleaved PCM output
 	int subFormat = _sfinfo.format & SF_FORMAT_SUBMASK;
 
