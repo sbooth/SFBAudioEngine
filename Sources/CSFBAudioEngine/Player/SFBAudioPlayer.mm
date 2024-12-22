@@ -738,15 +738,16 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// If this is the case and it was previously running, restart it and the player node
 	// as appropriate
 	if(engineWasRunning && !_engineIsRunning) {
-		_engineIsRunning = [_engine startAndReturnError:error];
-		if(_engineIsRunning) {
-			if(playerNodeWasPlaying)
-				[_playerNode play];
-		}
-		else {
-			os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
+		NSError *err = nil;
+		_engineIsRunning = [_engine startAndReturnError:&err];
+		if(!_engineIsRunning) {
+			os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
+			if(error)
+				*error = err;
 			return NO;
 		}
+		if(playerNodeWasPlaying)
+			[_playerNode play];
 	}
 
 //	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
