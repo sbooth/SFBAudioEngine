@@ -691,7 +691,10 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
 
+	// Attempt to preserve the playback state
 	bool engineWasRunning = _engineIsRunning;
+	BOOL playerNodeWasPlaying = _playerNode.isPlaying;
+
 	__block BOOL success = YES;
 
 	// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
@@ -731,9 +734,23 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return NO;
 	}
 
-	// AVAudioEngine may have been stopped in `configureProcessingGraphForFormat`
-	if(engineWasRunning != _engineIsRunning && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+	// AVAudioEngine may have been stopped in `-configureProcessingGraphForFormat:forceUpdate:`
+	// If this is the case and it was previously running, restart it and the player node
+	// as appropriate
+	if(engineWasRunning && !_engineIsRunning) {
+		_engineIsRunning = [_engine startAndReturnError:error];
+		if(_engineIsRunning) {
+			if(playerNodeWasPlaying)
+				[_playerNode play];
+		}
+		else {
+			os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
+			return NO;
+		}
+	}
+
+//	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+//		[_delegate audioPlayerPlaybackStateChanged:self];
 
 	return YES;
 }
@@ -1057,16 +1074,9 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 
 		// Dequeue the next decoder
-		id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue];
-		if(decoder) {
+		if(id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue]; decoder) {
 			NSError *error = nil;
 			if(![self configureForAndEnqueueDecoder:decoder forImmediatePlayback:NO error:&error]) {
-				if(error && [self->_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-					[self->_delegate audioPlayer:self encounteredError:error];
-				return;
-			}
-
-			if(![self playReturningError:&error]) {
 				if(error && [self->_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[self->_delegate audioPlayer:self encounteredError:error];
 			}
