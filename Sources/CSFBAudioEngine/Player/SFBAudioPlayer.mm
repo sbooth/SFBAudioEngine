@@ -937,7 +937,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			[string appendFormat:@"→ %@", _engine.outputNode];
 
 #if !TARGET_OS_IPHONE
-		[string appendFormat:@"↓ \"%@\"", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit)];
+		[string appendFormat:@"\n↓ \"%@\"", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit)];
 #endif /* !TARGET_OS_IPHONE */
 
 		os_log_debug(_audioPlayerLog, "%{public}@", string);
