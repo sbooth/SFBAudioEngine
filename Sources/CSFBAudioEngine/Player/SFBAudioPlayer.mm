@@ -9,8 +9,6 @@
 #import <mutex>
 #import <queue>
 
-#import <os/log.h>
-
 #import <AVAudioFormat+SFBFormatTransformation.h>
 
 #import <SFBUnfairLock.hpp>
@@ -33,7 +31,7 @@ enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
-#if DEBUG && !TARGET_OS_IPHONE
+#if !TARGET_OS_IPHONE
 /// Returns the name of `audioUnit.deviceID`
 ///
 /// This is the value of `kAudioObjectPropertyName` in the output scope on the main element
@@ -55,7 +53,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 	return (__bridge_transfer NSString *)name;
 }
-#endif /* DEBUG && !TARGET_OS_IPHONE */
+#endif /* !TARGET_OS_IPHONE */
 
 } // namespace
 
@@ -94,7 +92,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 #if TARGET_OS_IPHONE
 /// Called to process `AVAudioSessionInterruptionNotification`
 - (void)handleAudioSessionInterruption:(NSNotification *)notification;
-#endif
+#endif /* TARGET_OS_IPHONE */
 /// Configures the player to render audio from `decoder` and enqueues `decoder` on the player node
 /// - parameter forImmediatePlayback: If `YES` the internal decoder queue is cleared and the player node is reset
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -134,7 +132,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 #if TARGET_OS_IPHONE
 		// Register for audio session interruption notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleAudioSessionInterruption:) name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
-#endif
+#endif /* TARGET_OS_IPHONE */
 	}
 	return self;
 }
@@ -252,7 +250,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if DEBUG
 	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -playReturningError:");
-#endif
+#endif /* DEBUG */
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -269,7 +267,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if DEBUG
 	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePaused, @"Incorrect playback state in -pause");
-#endif
+#endif /* DEBUG */
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
@@ -284,7 +282,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if DEBUG
 	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -resume");
-#endif
+#endif /* DEBUG */
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -305,7 +303,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if DEBUG
 	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStateStopped, @"Incorrect playback state in -stop");
-#endif
+#endif /* DEBUG */
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
@@ -344,7 +342,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		isRunning = _engine.isRunning;
 #if DEBUG
 		NSAssert(_engineIsRunning == isRunning, @"Cached value for _engine.isRunning invalid");
-#endif
+#endif /* DEBUG */
 	});
 	return isRunning;
 }
@@ -399,7 +397,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
 #if DEBUG
 		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change");
-#endif
+#endif /* DEBUG */
 		_nowPlaying = nowPlaying;
 	}
 
@@ -488,7 +486,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return _playerNode.supportsSeeking;
 }
 
-#if TARGET_OS_OSX
+#if !TARGET_OS_IPHONE
 
 #pragma mark - Volume Control
 
@@ -573,7 +571,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return result;
 }
 
-#endif
+#endif /* !TARGET_OS_IPHONE */
 
 #pragma mark - AVAudioEngine
 
@@ -584,6 +582,57 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		// SFBAudioPlayer requires that the mixer node be connected to the output node
 		NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
 		NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
+	});
+}
+
+#pragma mark - Debugging
+
+-(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type
+{
+	dispatch_async(_engineQueue, ^{
+		NSMutableString *string = [NSMutableString stringWithString:@"Audio processing graph:\n"];
+
+		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
+		[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
+
+		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			[string appendFormat:@"→ %@\n    %@\n", _playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+		else
+			[string appendFormat:@"→ %@\n", _playerNode];
+
+		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
+		while(connectionPoint.node != _engine.mainMixerNode) {
+			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
+			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
+			if(![outputFormat isEqual:inputFormat])
+				[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
+
+			else
+				[string appendFormat:@"→ %@\n", connectionPoint.node];
+
+			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
+		}
+
+		inputFormat = [_engine.mainMixerNode inputFormatForBus:0];
+		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			[string appendFormat:@"→ %@\n    %@\n", _engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+		else
+			[string appendFormat:@"→ %@\n", _engine.mainMixerNode];
+
+		inputFormat = [_engine.outputNode inputFormatForBus:0];
+		outputFormat = [_engine.outputNode outputFormatForBus:0];
+		if(![outputFormat isEqual:inputFormat])
+			[string appendFormat:@"→ %@\n    %@]", _engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+		else
+			[string appendFormat:@"→ %@", _engine.outputNode];
+
+#if !TARGET_OS_IPHONE
+		[string appendFormat:@"\n↓ \"%@\"", AudioDeviceName(_engine.outputNode.AUAudioUnit)];
+#endif /* !TARGET_OS_IPHONE */
+
+		os_log_with_type(log, type, "%{public}@", string);
 	});
 }
 
@@ -706,7 +755,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			break;
 	}
 }
-#endif
+#endif /* TARGET_OS_IPHONE */
 
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
@@ -772,7 +821,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if DEBUG
 	NSAssert(engineWasRunning == _engineIsRunning && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
-#endif
+#endif /* DEBUG */
 
 	return YES;
 }
@@ -897,51 +946,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 #if DEBUG
-	{
-		NSMutableString *string = [NSMutableString stringWithString:@"Audio processing graph:\n"];
-
-		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
-		[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
-
-		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
-		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", _playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
-		else
-			[string appendFormat:@"→ %@\n", _playerNode];
-
-		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
-		while(connectionPoint.node != _engine.mainMixerNode) {
-			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
-			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
-			if(![outputFormat isEqual:inputFormat])
-				[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
-
-			else
-				[string appendFormat:@"→ %@\n", connectionPoint.node];
-
-			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
-		}
-
-		inputFormat = [_engine.mainMixerNode inputFormatForBus:0];
-		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
-		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", _engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
-		else
-			[string appendFormat:@"→ %@\n", _engine.mainMixerNode];
-
-		inputFormat = [_engine.outputNode inputFormatForBus:0];
-		outputFormat = [_engine.outputNode outputFormatForBus:0];
-		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@]", _engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
-		else
-			[string appendFormat:@"→ %@", _engine.outputNode];
-
-#if !TARGET_OS_IPHONE
-		[string appendFormat:@"\n↓ \"%@\"", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit)];
-#endif /* !TARGET_OS_IPHONE */
-
-		os_log_debug(_audioPlayerLog, "%{public}@", string);
-	}
+	[self logProcessingGraphDescription:_audioPlayerLog type:OS_LOG_TYPE_DEBUG];
 #endif /* DEBUG */
 
 	[_engine prepare];
@@ -1012,7 +1017,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
 		if(delta > tolerance)
 			os_log_debug(_audioPlayerLog, "Rendering started notification for %{public}@ arrived %.2f msec %s", decoder, static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif
+#endif /* DEBUG */
 
 		if(audioPlayerNode != self->_playerNode) {
 			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:renderingWillStart:atHostTime:");
@@ -1045,7 +1050,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
 		if(delta > tolerance)
 			os_log_debug(_audioPlayerLog, "Rendering complete notification for %{public}@ arrived %.2f msec %s", decoder, static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif
+#endif /* DEBUG */
 
 		if(audioPlayerNode != self->_playerNode) {
 			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:renderingWillComplete:atHostTime:");
@@ -1079,7 +1084,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
 		if(delta > tolerance)
 			os_log_debug(_audioPlayerLog, "End of audio notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif
+#endif /* DEBUG */
 
 		if(audioPlayerNode != self->_playerNode) {
 			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:audioWillEndAtHostTime:");

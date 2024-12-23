@@ -4,8 +4,11 @@
 // MIT license
 //
 
+#import <os/log.h>
+
 #import <Foundation/Foundation.h>
 #import <AVFAudio/AVFAudio.h>
+
 #if !TARGET_OS_IPHONE
 #import <CoreAudio/CoreAudio.h>
 #endif
@@ -224,8 +227,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns `YES` if the current decoder supports seeking
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-#if TARGET_OS_OSX
-
+#if !TARGET_OS_IPHONE
 #pragma mark - Volume Control
 
 /// Returns `kHALOutputParam_Volume` on channel `0` for `AVAudioEngine.outputNode.audioUnit` or `NaN` on error
@@ -254,8 +256,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the output device was successfully set
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
-
-#endif
+#endif /* !TARGET_OS_IPHONE */
 
 #pragma mark - Delegate
 
@@ -270,6 +271,13 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
 @property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
+
+#pragma mark - Debugging
+
+/// Asynchronously logs a description of the player's audio processing graph
+/// - parameter log: An `os_log_t` object to receive the message
+/// - parameter type: The type of log message
+-(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type;
 
 @end
 
