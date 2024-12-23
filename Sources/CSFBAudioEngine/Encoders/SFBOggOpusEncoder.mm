@@ -123,13 +123,30 @@ int close_callback(void *user_data)
 		sampleRate = sourceFormat.sampleRate;
 	}
 
-	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:sampleRate channels:(AVAudioChannelCount)sourceFormat.channelCount interleaved:YES];
+	AVAudioChannelLayout *channelLayout = nil;
+	switch(sourceFormat.channelCount) {
+			// Default channel layouts from Vorbis I specification section 4.3.9
+			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
+		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
+		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
+		case 3:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Ogg_3_0];			break;
+		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Ogg_4_0];			break;
+		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Ogg_5_0];			break;
+		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Ogg_5_1];			break;
+		case 7: 	channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Ogg_6_1]; 			break;
+		case 8: 	channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Ogg_7_1]; 			break;
+		default:
+			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | sourceFormat.channelCount)];
+			break;
+	}
+
+	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:sampleRate interleaved:YES channelLayout:channelLayout];
 }
 
 - (BOOL)openReturningError:(NSError **)error
 {
-//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %g", _processingFormat.sampleRate);
 //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
 //	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
 

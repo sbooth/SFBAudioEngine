@@ -16,6 +16,8 @@
 
 #import <os/log.h>
 
+#import <AudioToolbox/AudioFormat.h>
+
 #import <SFBAudioRingBuffer.hpp>
 #import <SFBRingBuffer.hpp>
 #import <SFBUnfairLock.hpp>
@@ -24,6 +26,7 @@
 
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
+#import "SFBStringDescribingAVAudioFormat.h"
 #import "SFBTimeUtilities.hpp"
 
 const NSTimeInterval SFBUnknownTime = -1;
@@ -34,6 +37,47 @@ namespace {
 #pragma mark - Shared State
 
 os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
+
+#pragma mark - AVAudioChannelLayout Equivalence
+
+/// Returns `true` if `lhs` and `rhs` are equivalent
+///
+/// Channel layouts are considered equivalent if:
+/// 1) Both channel layouts are `nil`
+/// 2) One channel layout is `nil` and the other has a mono or stereo layout tag
+/// 3) `kAudioFormatProperty_AreChannelLayoutsEquivalent` is true
+bool AVAudioChannelLayoutsAreEquivalent(AVAudioChannelLayout * _Nullable lhs, AVAudioChannelLayout * _Nullable rhs) noexcept
+{
+	if(!lhs && !rhs)
+		return true;
+	else if(lhs && !rhs) {
+		auto layoutTag = lhs.layoutTag;
+		if(layoutTag == kAudioChannelLayoutTag_Mono || layoutTag == kAudioChannelLayoutTag_Stereo)
+			return true;
+	}
+	else if(!lhs && rhs) {
+		auto layoutTag = rhs.layoutTag;
+		if(layoutTag == kAudioChannelLayoutTag_Mono || layoutTag == kAudioChannelLayoutTag_Stereo)
+			return true;
+	}
+
+	if(!lhs || !rhs)
+		return false;
+
+	const AudioChannelLayout *layouts [] = {
+		lhs.layout,
+		rhs.layout
+	};
+
+	UInt32 layoutsEqual = 0;
+	UInt32 propertySize = sizeof(layoutsEqual);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), static_cast<const void *>(layouts), &propertySize, &layoutsEqual);
+
+	if(noErr != result)
+		return false;
+
+	return layoutsEqual;
+}
 
 #pragma mark - Decoder State
 
@@ -322,7 +366,7 @@ private:
 	/// Dispatch source processing events from `mEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
 
-	/// Dispatch group  used to track in-progress decoding and delegate messages
+	/// Dispatch group used to track in-progress decoding and delegate messages
 	dispatch_group_t 				mDispatchGroup 			= nullptr;
 
 	/// Dispatch source deleting decoder state data with `eMarkedForRemoval`
@@ -339,7 +383,7 @@ public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 	: mRenderingFormat{format}
 	{
-		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with render block format %{public}@", this, mRenderingFormat);
+		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
 		// MARK: Rendering
 		mRenderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
@@ -998,8 +1042,9 @@ public:
 
 	inline bool SupportsFormat(AVAudioFormat *format) const noexcept
 	{
-		// Gapless playback requires the same number of channels at the same sample rate
-		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate;
+		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
+		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
+		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && channelLayoutsAreEquivalent;
 	}
 
 #pragma mark - Queue Management
@@ -1010,7 +1055,7 @@ public:
 			return false;
 
 		if(!SupportsFormat(decoder.processingFormat)) {
-			os_log_error(_audioPlayerNodeLog, "Unsupported decoder processing format: %{public}@", decoder.processingFormat);
+			os_log_error(_audioPlayerNodeLog, "Unsupported decoder processing format: %{public}@", SFB::StringDescribingAVAudioFormat(decoder.processingFormat));
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioPlayerNodeErrorDomain
@@ -1093,13 +1138,13 @@ private:
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
-	/// Returns the decoder state  in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
 	inline DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	/// Returns the decoder state  in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
 	inline DecoderState * GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
@@ -1200,11 +1245,11 @@ private:
 				// In the event the render block output format and decoder processing
 				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
 
-				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, decoderState->mDecoder.processingFormat);
+				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 				if(!buffer) {
-					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", mRenderingFormat, kRingBufferChunkSize);
+					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
 
 					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
 														 code:SFBAudioPlayerNodeErrorCodeInternalError

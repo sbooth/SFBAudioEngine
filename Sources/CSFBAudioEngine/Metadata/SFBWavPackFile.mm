@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
 #import <taglib/tfilestream.h>
 #import <taglib/wavpackfile.h>
 

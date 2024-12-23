@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
 #import <taglib/mp4file.h>
 #import <taglib/tfilestream.h>
 

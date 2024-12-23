@@ -10,6 +10,7 @@
 
 #import "SFBLibsndfileDecoder.h"
 
+#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
@@ -242,47 +243,106 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		return NO;
 	}
 
+	AVAudioChannelLayout *channelLayout = nil;
+
+	int channel_map [_sfinfo.channels];
+	int result = sf_command(_sndfile, SFC_GET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+	if(result == SF_TRUE) {
+		// Convert from sndfile channel map to Core Audio channel label
+		AudioChannelLabel labels [_sfinfo.channels];
+
+		for(int i = 0; i < _sfinfo.channels; ++i) {
+			switch(channel_map[i]) {
+				case SF_CHANNEL_MAP_INVALID: 				labels[i] = kAudioChannelLabel_Unused; 					break;
+				case SF_CHANNEL_MAP_MONO: 					labels[i] = kAudioChannelLabel_Mono; 					break;
+				case SF_CHANNEL_MAP_LEFT: 					labels[i] = kAudioChannelLabel_Left; 					break;
+				case SF_CHANNEL_MAP_RIGHT: 					labels[i] = kAudioChannelLabel_Right; 					break;
+				case SF_CHANNEL_MAP_CENTER: 				labels[i] = kAudioChannelLabel_Center; 					break;
+				case SF_CHANNEL_MAP_FRONT_LEFT: 			labels[i] = kAudioChannelLabel_LeftTopFront;			break;
+				case SF_CHANNEL_MAP_FRONT_RIGHT: 			labels[i] = kAudioChannelLabel_RightTopFront; 			break;
+				case SF_CHANNEL_MAP_FRONT_CENTER: 			labels[i] = kAudioChannelLabel_CenterTopFront; 			break;
+				case SF_CHANNEL_MAP_REAR_CENTER: 			labels[i] = kAudioChannelLabel_CenterSurround; 			break;
+				case SF_CHANNEL_MAP_REAR_LEFT: 				labels[i] = kAudioChannelLabel_LeftSurround; 			break;
+				case SF_CHANNEL_MAP_REAR_RIGHT: 			labels[i] = kAudioChannelLabel_RightSurround; 			break;
+				case SF_CHANNEL_MAP_LFE: 					labels[i] = kAudioChannelLabel_LFEScreen; 				break;
+				case SF_CHANNEL_MAP_FRONT_LEFT_OF_CENTER: 	labels[i] = kAudioChannelLabel_LeftCenter; 				break;
+				case SF_CHANNEL_MAP_FRONT_RIGHT_OF_CENTER: 	labels[i] = kAudioChannelLabel_RightCenter; 			break;
+				case SF_CHANNEL_MAP_SIDE_LEFT: 				labels[i] = kAudioChannelLabel_LeftSurroundDirect; 		break;
+				case SF_CHANNEL_MAP_SIDE_RIGHT: 			labels[i] = kAudioChannelLabel_RightSurroundDirect; 	break;
+				case SF_CHANNEL_MAP_TOP_CENTER: 			labels[i] = kAudioChannelLabel_TopCenterSurround; 		break;
+				case SF_CHANNEL_MAP_TOP_FRONT_LEFT: 		labels[i] = kAudioChannelLabel_VerticalHeightLeft; 		break;
+				case SF_CHANNEL_MAP_TOP_FRONT_RIGHT: 		labels[i] = kAudioChannelLabel_VerticalHeightRight; 	break;
+				case SF_CHANNEL_MAP_TOP_FRONT_CENTER: 		labels[i] = kAudioChannelLabel_VerticalHeightCenter; 	break;
+				case SF_CHANNEL_MAP_TOP_REAR_LEFT: 			labels[i] = kAudioChannelLabel_TopBackLeft; 			break;
+				case SF_CHANNEL_MAP_TOP_REAR_RIGHT: 		labels[i] = kAudioChannelLabel_TopBackRight; 			break;
+				case SF_CHANNEL_MAP_TOP_REAR_CENTER: 		labels[i] = kAudioChannelLabel_TopBackCenter; 			break;
+
+				case SF_CHANNEL_MAP_AMBISONIC_B_W: 			labels[i] = kAudioChannelLabel_Ambisonic_W; 			break;
+				case SF_CHANNEL_MAP_AMBISONIC_B_X: 			labels[i] = kAudioChannelLabel_Ambisonic_X; 			break;
+				case SF_CHANNEL_MAP_AMBISONIC_B_Y: 			labels[i] = kAudioChannelLabel_Ambisonic_Y; 			break;
+				case SF_CHANNEL_MAP_AMBISONIC_B_Z: 			labels[i] = kAudioChannelLabel_Ambisonic_Z; 			break;
+
+				default:
+					os_log_error(gSFBAudioDecoderLog, "Invalid sndfile channel: %d", channel_map[i]);
+					labels[i] = kAudioChannelLabel_Unused;
+					break;
+			}
+		}
+
+		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:_sfinfo.channels];
+	}
+
+	if(!channelLayout) {
+		switch(_sfinfo.channels) {
+			case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
+			case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
+			default:
+				channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_sfinfo.channels)];
+				break;
+		}
+	}
+
 	// Generate interleaved PCM output
 	int subFormat = _sfinfo.format & SF_FORMAT_SUBMASK;
 
+	AudioStreamBasicDescription asbd = {0};
+
 	// 8-bit PCM will be high-aligned in shorts
 	if(subFormat == SF_FORMAT_PCM_U8 || subFormat == SF_FORMAT_PCM_S8) {
-		AudioStreamBasicDescription asbd = {0};
 		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 8, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
 		_readMethod = Short;
 	}
 	// 16-bit PCM
 	else if(subFormat == SF_FORMAT_PCM_16) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:_sfinfo.samplerate channels:(AVAudioChannelCount)_sfinfo.channels interleaved:YES];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 16, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Short;
 	}
 	// 24-bit PCM will be high-aligned in ints
 	else if(subFormat == SF_FORMAT_PCM_24) {
-		AudioStreamBasicDescription asbd = {0};
 		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 24, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
 		_readMethod = Int;
 	}
 	// 32-bit PCM
 	else if(subFormat == SF_FORMAT_PCM_32) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt32 sampleRate:_sfinfo.samplerate channels:(AVAudioChannelCount)_sfinfo.channels interleaved:YES];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Int;
 	}
 	// Floating point formats
 	else if(subFormat == SF_FORMAT_FLOAT) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_sfinfo.samplerate channels:(AVAudioChannelCount)_sfinfo.channels interleaved:YES];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Float;
 	}
 	else if(subFormat == SF_FORMAT_DOUBLE) {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat64 sampleRate:_sfinfo.samplerate channels:(AVAudioChannelCount)_sfinfo.channels interleaved:YES];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 64, 64, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Double;
 	}
 	// Everything else will be converted to 32-bit float
 	else {
-		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:_sfinfo.samplerate channels:(AVAudioChannelCount)_sfinfo.channels interleaved:YES];
+		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
 		_readMethod = Float;
 	}
+
+	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};

@@ -235,7 +235,7 @@ private:
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;
 
-	UInt32 channelBitmap = 0;
+	AudioChannelBitmap channelBitmap = 0;
 	UInt32 propertySize = sizeof(channelBitmap);
 	AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
 	result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);

@@ -257,7 +257,7 @@ private:
 	switch(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)) {
 		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
 		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
-		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
+			// FIXME: Is there a standard ordering for multichannel files? WAVEFORMATEX?
 		default:
 			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)))];
 			break;
