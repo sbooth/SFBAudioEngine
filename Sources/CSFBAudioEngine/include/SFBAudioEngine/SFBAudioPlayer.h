@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFAudio/AVFAudio.h>
-#if TARGET_OS_OSX
+#if !TARGET_OS_IPHONE
 #import <CoreAudio/CoreAudio.h>
 #endif
 

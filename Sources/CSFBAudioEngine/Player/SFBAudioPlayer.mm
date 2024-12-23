@@ -13,10 +13,6 @@
 
 #import <SFBUnfairLock.hpp>
 
-#if DEBUG
-#import <CoreAudio/AudioHardware.h>
-#endif
-
 #import "SFBAudioPlayer.h"
 
 #import "SFBAudioDecoder.h"
@@ -35,7 +31,7 @@ enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
-#if DEBUG
+#if !TARGET_OS_IPHONE
 /// Returns the name of `audioUnit.deviceID`
 ///
 /// This is the value of `kAudioObjectPropertyName` in the output scope on the main element
@@ -57,7 +53,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 	return (__bridge_transfer NSString *)name;
 }
-#endif
+#endif /* !TARGET_OS_IPHONE */
 
 } // namespace
 
@@ -628,9 +624,13 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		inputFormat = [_engine.outputNode inputFormatForBus:0];
 		outputFormat = [_engine.outputNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@ \"%@\"\n↓ %@]", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit), SFB::StringDescribingAVAudioFormat(outputFormat)];
+			[string appendFormat:@"→ %@\n    %@]", _engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			[string appendFormat:@"→ %@\n↓ \"%@\"", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit)];
+			[string appendFormat:@"→ %@", _engine.outputNode];
+
+#if !TARGET_OS_IPHONE
+		[string appendFormat:@"\n↓ \"%@\"", _engine.outputNode, AudioDeviceName(_engine.outputNode.AUAudioUnit)];
+#endif /* !TARGET_OS_IPHONE */
 
 		os_log_with_type(log, type, "%{public}@", string);
 	});
@@ -947,7 +947,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if DEBUG
 	[self logProcessingGraphDescription:_audioPlayerLog type:OS_LOG_TYPE_DEBUG];
-#endif
+#endif /* DEBUG */
 
 	[_engine prepare];
 	return YES;
