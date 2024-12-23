@@ -962,7 +962,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying) {
+	if(auto flags = _flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive);
 		self.nowPlaying = decoder;
 	}
@@ -992,7 +992,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
-	if((partiallyRendered && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) || self.isStopped) {
+	if(auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped) {
 		if(self.nowPlaying)
 			self.nowPlaying = nil;
 	}
