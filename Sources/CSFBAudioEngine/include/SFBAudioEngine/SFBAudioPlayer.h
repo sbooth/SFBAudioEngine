@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFAudio/AVFAudio.h>
+
 #if !TARGET_OS_IPHONE
 #import <CoreAudio/CoreAudio.h>
 #endif
@@ -226,7 +227,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns `YES` if the current decoder supports seeking
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-#if TARGET_OS_OSX
+#if !TARGET_OS_IPHONE
 
 #pragma mark - Volume Control
 
@@ -257,7 +258,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - returns: `YES` if the output device was successfully set
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
 
-#endif
+#endif /* !TARGET_OS_IPHONE */
 
 #pragma mark - Delegate
 
