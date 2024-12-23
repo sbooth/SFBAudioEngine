@@ -254,8 +254,12 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return NO;
 	}
 
-	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+#if DEBUG
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -playReturningError:");
+#endif
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
 
 	return YES;
 }
@@ -267,8 +271,12 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	[_playerNode pause];
 
-	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+#if DEBUG
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePaused, @"Incorrect playback state in -pause");
+#endif
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
 }
 
 - (void)resume
@@ -278,8 +286,12 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	[_playerNode play];
 
-	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+#if DEBUG
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -resume");
+#endif
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
 }
 
 - (void)stop
@@ -295,8 +307,12 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	[self clearInternalDecoderQueue];
 
-	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+#if DEBUG
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStateStopped, @"Incorrect playback state in -stop");
+#endif
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[_delegate audioPlayer:self playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 }
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
@@ -383,11 +399,18 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (void)setNowPlaying:(id<SFBPCMDecoding>)nowPlaying
 {
-	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+	{
+		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
 #if DEBUG
-	NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change");
+		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change");
 #endif
-	_nowPlaying = nowPlaying;
+		_nowPlaying = nowPlaying;
+	}
+
+	os_log_debug(_audioPlayerLog, "Now playing changed to %{public}@", nowPlaying);
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)])
+		[_delegate audioPlayer:self nowPlayingChanged:nowPlaying];
 }
 
 #pragma mark - Playback Properties
@@ -646,8 +669,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[_delegate audioPlayer:self playbackStateChanged:self.playbackState];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
 		[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
@@ -708,11 +731,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
-		if(self.nowPlaying) {
+		if(self.nowPlaying)
 			self.nowPlaying = nil;
-			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-				[_delegate audioPlayerNowPlayingChanged:self];
-		}
 		return NO;
 	}
 
@@ -726,11 +746,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(!success) {
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
-		if(self.nowPlaying) {
+		if(self.nowPlaying)
 			self.nowPlaying = nil;
-			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-				[_delegate audioPlayerNowPlayingChanged:self];
-		}
 		return NO;
 	}
 
@@ -746,12 +763,13 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 				*error = err;
 			return NO;
 		}
+
 		if(playerNodeWasPlaying)
 			[_playerNode play];
 	}
 
-//	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-//		[_delegate audioPlayerPlaybackStateChanged:self];
+//	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+//		[_delegate audioPlayer:self playbackStateChanged:self.playbackState];
 
 	return YES;
 }
@@ -934,8 +952,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive);
 		self.nowPlaying = decoder;
-		if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-			[_delegate audioPlayerNowPlayingChanged:self];
 	}
 	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 
@@ -964,11 +980,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
 	if((partiallyRendered && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) || self.isStopped) {
-		if(self.nowPlaying) {
+		if(self.nowPlaying)
 			self.nowPlaying = nil;
-			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-				[_delegate audioPlayerNowPlayingChanged:self];
-		}
 	}
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
@@ -998,11 +1011,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
-		if(!(self->_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive)) {
+		if(!(self->_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive))
 			self.nowPlaying = decoder;
-			if([self->_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-				[self->_delegate audioPlayerNowPlayingChanged:self];
-		}
 		self->_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
@@ -1035,11 +1045,8 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		}
 
 		if(auto flags = self->_flags.load(); !(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder) && self.internalDecoderQueueIsEmpty) {
-			if(self.nowPlaying) {
+			if(self.nowPlaying)
 				self.nowPlaying = nil;
-				if([self->_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-					[self->_delegate audioPlayerNowPlayingChanged:self];
-			}
 		}
 
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
