@@ -768,9 +768,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			[_playerNode play];
 	}
 
-//	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-//		[_delegate audioPlayer:self playbackStateChanged:self.playbackState];
-
 	return YES;
 }
 
