@@ -768,6 +768,10 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			[_playerNode play];
 	}
 
+#if DEBUG
+	NSAssert(engineWasRunning == _engineIsRunning && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
+#endif
+
 	return YES;
 }
 
