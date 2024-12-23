@@ -255,7 +255,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 #if DEBUG
-	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state following -playReturningError:");
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -playReturningError:");
 #endif
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
@@ -272,7 +272,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	[_playerNode pause];
 
 #if DEBUG
-	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePaused, @"Incorrect playback state following -pause");
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePaused, @"Incorrect playback state in -pause");
 #endif
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
@@ -287,7 +287,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	[_playerNode play];
 
 #if DEBUG
-	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state following -resume");
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -resume");
 #endif
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
@@ -308,7 +308,7 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	[self clearInternalDecoderQueue];
 
 #if DEBUG
-	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStateStopped, @"Incorrect playback state following -stop");
+	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStateStopped, @"Incorrect playback state in -stop");
 #endif
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
