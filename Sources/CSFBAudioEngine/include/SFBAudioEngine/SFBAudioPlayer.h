@@ -317,8 +317,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter decoder: The decoder for which rendering is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
 /// Called to notify the delegate when the now playing item changes
+/// - warning: Do not change any properties of `nowPlaying`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
-- (void)audioPlayerNowPlayingChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerNowPlayingChanged(_:));
+/// - parameter nowPlaying: The decoder that is now playing
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id <SFBPCMDecoding>)nowPlaying;
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
