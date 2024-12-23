@@ -323,7 +323,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id <SFBPCMDecoding>)nowPlaying;
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
-- (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
+/// - parameter playbackState: The current playback state
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
 /// Before this method is called the main mixer node will be connected to the output node, and the player node will be attached
