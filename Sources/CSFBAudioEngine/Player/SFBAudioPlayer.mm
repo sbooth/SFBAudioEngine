@@ -768,9 +768,6 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 				*error = err;
 			return NO;
 		}
-
-		if(playerNodeWasPlaying)
-			[_playerNode play];
 	}
 
 #if DEBUG
