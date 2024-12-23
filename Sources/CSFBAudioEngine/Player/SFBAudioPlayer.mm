@@ -640,32 +640,36 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
+	__block NSError *error = nil;
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_playerNode pause];
 
+		// Force an update of the audio processing graph
 		success = [self configureProcessingGraphForFormat:_playerNode.renderingFormat forceUpdate:YES];
-		if(success) {
-			// Restart AVAudioEngine if previously running
-			if(engineWasRunning) {
-				NSError *error = nil;
-				_engineIsRunning = [_engine startAndReturnError:&error];
-				if(_engineIsRunning) {
-					if(playerNodeWasPlaying)
-						[_playerNode play];
-				}
-				else
-					os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
+		if(!success) {
+			os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
+			error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+			return;
+		}
+
+		// Restart AVAudioEngine if previously running
+		if(engineWasRunning) {
+			_engineIsRunning = [_engine startAndReturnError:&error];
+			if(!_engineIsRunning) {
+				os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
+				return;
 			}
+
+			// Restart the player node if needed
+			if(playerNodeWasPlaying)
+				[_playerNode play];
 		}
 	});
 
-	// Success in this context means the graph is in a working state
+	// Success in this context means the graph is in a working state, not that the engine was restarted successfully
 	if(!success) {
-		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
-		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
-			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 			[_delegate audioPlayer:self encounteredError:error];
-		}
 		return;
 	}
 
@@ -783,11 +787,12 @@ NSString * AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// SFBAudioPlayerNode requires the standard format
 	if(!format.isStandard) {
-		format = [format standardEquivalent];
-		if(!format) {
-			os_log_error(_audioPlayerLog, "Unable to convert format to standard");
+		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
+		if(!standardEquivalentFormat) {
+			os_log_error(_audioPlayerLog, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
 			return NO;
 		}
+		format = standardEquivalentFormat;
 	}
 
 	BOOL formatsEqual = [format isEqual:_playerNode.renderingFormat];
