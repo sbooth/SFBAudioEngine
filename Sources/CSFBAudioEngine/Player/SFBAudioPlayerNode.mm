@@ -208,6 +208,12 @@ struct DecoderState {
 		return true;
 	}
 
+	/// Returns `true` if there is a pending seek request
+	bool HasPendingSeek() const noexcept
+	{
+		return mFrameToSeek.load() != kInvalidFramePosition;
+	}
+
 	/// Seeks to the frame specified by `mFrameToSeek`
 	bool PerformSeek() noexcept
 	{
@@ -1283,7 +1289,7 @@ private:
 				// Process the decoder until canceled or complete
 				for(;;) {
 					// If a seek is pending request a ring buffer reset
-					if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
+					if(decoderState->HasPendingSeek())
 						mFlags.fetch_or(eRingBufferNeedsReset);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
@@ -1304,7 +1310,7 @@ private:
 						}
 
 						// Perform seek if one is pending
-						if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
+						if(decoderState->HasPendingSeek())
 							decoderState->PerformSeek();
 
 						// Reset() is not thread-safe but the IOProc is outputting silence
