@@ -49,7 +49,7 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// decoder that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are
 /// automatically dequeued and become current when the final frame of the current decoder is pushed in the render block.
 ///
-/// `SFBAudioPlayerNode` decodes audio in a high-priority non-realtime thread into a ring buffer and renders on
+/// `SFBAudioPlayerNode` decodes audio in a high-priority dispatch queue into a ring buffer and renders on
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
