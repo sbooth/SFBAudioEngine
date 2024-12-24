@@ -583,7 +583,7 @@ public:
 							uint64_t sequenceNumber;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingStarted", sequenceNumber);
 								break;
@@ -607,7 +607,7 @@ public:
 							uint64_t sequenceNumber;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingComplete", sequenceNumber);
 								break;
@@ -631,7 +631,7 @@ public:
 							uint64_t sequenceNumber;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingCanceled", sequenceNumber);
 								break;
@@ -660,7 +660,7 @@ public:
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingStarted", sequenceNumber);
 								break;
@@ -691,7 +691,7 @@ public:
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingComplete", sequenceNumber);
 								break;
@@ -960,7 +960,7 @@ public:
 		if(timeInSeconds < 0)
 			timeInSeconds = 0;
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return false;
 
