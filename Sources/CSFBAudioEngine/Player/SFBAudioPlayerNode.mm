@@ -95,7 +95,6 @@ struct DecoderState {
 		eDecodingComplete 	= 1u << 2,
 		eRenderingStarted 	= 1u << 3,
 		eRenderingComplete 	= 1u << 4,
-		eMarkedForRemoval 	= 1u << 5,
 	};
 
 	/// Monotonically increasing instance counter
@@ -234,7 +233,7 @@ using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const size_t kDecoderStateArraySize = 8;
 using DecoderStateArray = std::array<DecoderState::atomic_ptr, kDecoderStateArraySize>;
 
-/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
+/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering
 DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateArray& decoders) noexcept
 {
 	DecoderState *result = nullptr;
@@ -243,7 +242,7 @@ DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStat
 		if(!decoderState)
 			continue;
 
-		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
+		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eRenderingComplete)
 			continue;
 
 		if(!result)
@@ -255,7 +254,7 @@ DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStat
 	return result;
 }
 
-/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
+/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
 DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	DecoderState *result = nullptr;
@@ -264,7 +263,7 @@ DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateAr
 		if(!decoderState)
 			continue;
 
-		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval || flags & DecoderState::eRenderingComplete)
+		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eRenderingComplete)
 			continue;
 
 		if(!result && decoderState->mSequenceNumber > sequenceNumber)
@@ -276,15 +275,12 @@ DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateAr
 	return result;
 }
 
-/// Returns the element in `decoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
+/// Returns the element in `decoders` with sequence number equal to `sequenceNumber`
 DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(const auto& atomic_ptr : decoders) {
 		auto decoderState = atomic_ptr.load();
 		if(!decoderState)
-			continue;
-
-		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eMarkedForRemoval)
 			continue;
 
 		if(decoderState->mSequenceNumber == sequenceNumber)
@@ -294,9 +290,22 @@ DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decode
 	return nullptr;
 }
 
+/// Deletes the element in `decoders` with sequence number equal to `sequenceNumber`
+void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
+{
+	for(auto& atomic_ptr : decoders) {
+		auto decoderState = atomic_ptr.load();
+		if(!decoderState || decoderState->mSequenceNumber != sequenceNumber)
+			continue;
+
+		os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
+		delete atomic_ptr.exchange(nullptr);
+	}
+}
+
 #pragma mark - AudioPlayerNode
 
-void collector_finalizer_f(void *context)
+void event_processor_finalizer_f(void *context)
 {
 	if(auto decoders = static_cast<DecoderStateArray *>(context); decoders) {
 		for(auto& atomic_ptr : *decoders)
@@ -368,9 +377,6 @@ private:
 
 	/// Dispatch group used to track in-progress decoding and delegate messages
 	dispatch_group_t 				mDispatchGroup 			= nullptr;
-
-	/// Dispatch source deleting decoder state data with `eMarkedForRemoval`
-	dispatch_source_t				mCollector 				= nullptr;
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
@@ -577,7 +583,7 @@ public:
 							uint64_t sequenceNumber;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingStarted", sequenceNumber);
 								break;
@@ -601,7 +607,7 @@ public:
 							uint64_t sequenceNumber;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingComplete", sequenceNumber);
 								break;
@@ -621,28 +627,25 @@ public:
 						break;
 
 					case eEventDecodingCanceled:
-						if(mEventRingBuffer.BytesAvailableToRead() >= (8 + 1)) {
+						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
 							uint64_t sequenceNumber;
-							uint8_t partiallyRendered;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-							/*bytesRead =*/ mEventRingBuffer.Read(&partiallyRendered, 1);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingCanceled", sequenceNumber);
 								break;
 							}
 
-							auto decoder = decoderState->mDecoder;
-
-							decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemoval);
-							dispatch_source_merge_data(mCollector, 1);
+							const auto decoder = decoderState->mDecoder;
+							const auto partiallyRendered = (decoderState->mFlags & DecoderState::eRenderingStarted) == DecoderState::eRenderingStarted;
+							DeleteDecoderStateWithSequenceNumber(sequenceNumber);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
 								dispatch_async_and_wait(node.delegateQueue, ^{
-									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:(partiallyRendered ? YES : NO)];
+									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:partiallyRendered];
 									dispatch_group_leave(mDispatchGroup);
 								});
 							}
@@ -657,7 +660,7 @@ public:
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingStarted", sequenceNumber);
 								break;
@@ -688,7 +691,7 @@ public:
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
 							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
 
-							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
 								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingComplete", sequenceNumber);
 								break;
@@ -709,8 +712,7 @@ public:
 								});
 							}
 
-							decoderState->mFlags.fetch_or(DecoderState::eMarkedForRemoval);
-							dispatch_source_merge_data(mCollector, 1);
+							DeleteDecoderStateWithSequenceNumber(sequenceNumber);
 						}
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventRenderingComplete");
@@ -773,41 +775,18 @@ public:
 			}
 		});
 
-		// Start processing events
-		dispatch_activate(mEventProcessor);
-
-		// Set up the collector
-		mCollector = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
-		if(!mCollector) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create collector dispatch source: dispatch_source_create failed");
-			throw std::runtime_error("dispatch_source_create failed");
-		}
-
 		// Allocate and initialize the decoder state array
 		mActiveDecoders = new DecoderStateArray;
 		for(auto& atomic_ptr : *mActiveDecoders)
 			atomic_ptr.store(nullptr);
 
-		// The collector takes ownership of `mActiveDecoders` and the finalizer is responsible
+		// The event processor takes ownership of `mActiveDecoders` and the finalizer is responsible
 		// for deleting any allocated decoder state it contains as well as the array itself
-		dispatch_set_context(mCollector, mActiveDecoders);
-		dispatch_set_finalizer_f(mCollector, &collector_finalizer_f);
+		dispatch_set_context(mEventProcessor, mActiveDecoders);
+		dispatch_set_finalizer_f(mEventProcessor, &event_processor_finalizer_f);
 
-		dispatch_source_set_event_handler(mCollector, ^{
-			if(auto decoders = static_cast<DecoderStateArray *>(dispatch_get_context(mCollector)); decoders) {
-				for(auto& atomic_ptr : *decoders) {
-					auto decoderState = atomic_ptr.load();
-					if(!decoderState || !(decoderState->mFlags.load() & DecoderState::eMarkedForRemoval))
-						continue;
-
-					os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
-					delete atomic_ptr.exchange(nullptr);
-				}
-			}
-		});
-
-		// Start collecting
-		dispatch_activate(mCollector);
+		// Start processing events
+		dispatch_activate(mEventProcessor);
 
 		// Create the dispatch queue used for decoding
 		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
@@ -981,7 +960,7 @@ public:
 		if(timeInSeconds < 0)
 			timeInSeconds = 0;
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState)
 			return false;
 
@@ -1150,6 +1129,11 @@ private:
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
+	inline void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
+	{
+		::DeleteDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
+	}
+
 #pragma mark - Decoding
 
 	void DequeueAndProcessDecoder() noexcept
@@ -1313,13 +1297,11 @@ private:
 
 						// Submit the decoding canceled event
 						const uint32_t cmd = eEventDecodingCanceled;
-						const uint8_t partiallyRendered = decoderState->mFlags.load() & DecoderState::eRenderingStarted;
 
-						uint8_t bytesToWrite [4 + 8 + 1];
+						uint8_t bytesToWrite [4 + 8];
 						std::memcpy(bytesToWrite, &cmd, 4);
 						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
-						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false))
+						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
 							dispatch_source_merge_data(mEventProcessor, 1);
 						else
 							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
