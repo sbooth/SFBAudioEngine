@@ -627,11 +627,9 @@ public:
 						break;
 
 					case eEventDecodingCanceled:
-						if(mEventRingBuffer.BytesAvailableToRead() >= (8 + 1)) {
+						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
 							uint64_t sequenceNumber;
-							uint8_t partiallyRendered;
 							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-							/*bytesRead =*/ mEventRingBuffer.Read(&partiallyRendered, 1);
 
 							auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
 							if(!decoderState) {
@@ -639,14 +637,15 @@ public:
 								break;
 							}
 
-							auto decoder = decoderState->mDecoder;
+							const auto decoder = decoderState->mDecoder;
+							const auto partiallyRendered = (decoderState->mFlags & DecoderState::eRenderingStarted) == DecoderState::eRenderingStarted;
 							DeleteDecoderStateWithSequenceNumber(sequenceNumber);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
 								dispatch_async_and_wait(node.delegateQueue, ^{
-									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:(partiallyRendered ? YES : NO)];
+									[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:partiallyRendered];
 									dispatch_group_leave(mDispatchGroup);
 								});
 							}
@@ -1298,13 +1297,11 @@ private:
 
 						// Submit the decoding canceled event
 						const uint32_t cmd = eEventDecodingCanceled;
-						const uint8_t partiallyRendered = decoderState->mFlags.load() & DecoderState::eRenderingStarted;
 
-						uint8_t bytesToWrite [4 + 8 + 1];
+						uint8_t bytesToWrite [4 + 8];
 						std::memcpy(bytesToWrite, &cmd, 4);
 						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-						std::memcpy(bytesToWrite + 4 + 8, &partiallyRendered, 1);
-						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 1, false))
+						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
 							dispatch_source_merge_data(mEventProcessor, 1);
 						else
 							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
