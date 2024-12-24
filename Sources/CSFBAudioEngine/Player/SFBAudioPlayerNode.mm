@@ -573,7 +573,7 @@ public:
 			throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 		}
 
-		mDecodingSemaphore = dispatch_semaphore_create(0);
+		mDecodingSemaphore = dispatch_semaphore_create(1);
 		if(!mDecodingSemaphore) {
 			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
 			throw std::runtime_error("dispatch_semaphore_create failed");
@@ -1167,6 +1167,8 @@ private:
 				DecoderState *decoderState = nullptr;
 
 				try {
+					// When the decoder's processing format and rendering format don't match
+					// conversion will be performed in DecoderState::DecodeAudio()
 					decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
 				}
 
@@ -1248,11 +1250,9 @@ private:
 					}
 				} while(!stored);
 
-				// In the event the render block output format and decoder processing
-				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
-
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
+				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 				if(!buffer) {
 					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
@@ -1282,7 +1282,7 @@ private:
 
 				// Process the decoder until canceled or complete
 				for(;;) {
-					// If a seek is pending reset the ring buffer
+					// If a seek is pending request a ring buffer reset
 					if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
 						mFlags.fetch_or(eRingBufferNeedsReset);
 
@@ -1290,16 +1290,18 @@ private:
 					if(mFlags.load() & eRingBufferNeedsReset) {
 						mFlags.fetch_and(~eRingBufferNeedsReset);
 
-						// Ensure output is muted before performing operations that aren't thread-safe
-						if(mNode.engine.isRunning) {
-							mFlags.fetch_or(eMuteRequested);
+						// Ensure output is muted before performing operations on the ring buffer that aren't thread-safe
+						if(!(mFlags.load() & eOutputIsMuted)) {
+							if(mNode.engine.isRunning) {
+								mFlags.fetch_or(eMuteRequested);
 
-							// The IOProc will clear eMuteRequested when the current render cycle completes
-							while(mFlags.load() & eMuteRequested)
-								dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
+								// The IOProc will clear eMuteRequested and set eOutputIsMuted
+								while(!(mFlags.load() & eOutputIsMuted))
+									dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
+							}
+							else
+								mFlags.fetch_or(eOutputIsMuted);
 						}
-						else
-							mFlags.fetch_or(eOutputIsMuted);
 
 						// Perform seek if one is pending
 						if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
@@ -1331,8 +1333,8 @@ private:
 						return;
 					}
 
-					// Decode and write a chunk to the ring buffer if adequate space is available
-					if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
+					// Decode and write chunks to the ring buffer
+					while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
 						if(!(decoderState->mFlags.load() & DecoderState::eDecodingStarted)) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
@@ -1350,7 +1352,7 @@ private:
 								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingStarted");
 						}
 
-						// Decode audio into the buffer, converting to the bus format in the process
+						// Decode audio into the buffer, converting to the rendering format in the process
 						if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
 							os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", error);
 
@@ -1397,9 +1399,9 @@ private:
 							return;
 						}
 					}
-					// Wait for additional space in the ring buffer
-					else
-						dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
+
+					// Wait for additional space in the ring buffer or for another event signal
+					dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
 				}
 			}
 		});
