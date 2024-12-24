@@ -224,16 +224,18 @@ struct DecoderState {
 		return mFrameToSeek.load() != kInvalidFramePosition;
 	}
 
-	/// Sets `mFrameToSeek` to `frame`
+	/// Sets the pending seek request to `frame`
 	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept
 	{
 		mFrameToSeek.store(frame);
 	}
 
-	/// Seeks to the frame specified by `mFrameToSeek`
-	bool PerformSeek() noexcept
+	/// Performs the pending seek request, if present
+	bool PerformPendingSeek() noexcept
 	{
 		auto seekOffset = mFrameToSeek.load();
+		if(seekOffset == kInvalidFramePosition)
+			return true;
 
 		os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld in %{public}@ ", seekOffset, mDecoder);
 
@@ -1339,7 +1341,7 @@ private:
 
 						// Perform seek if one is pending
 						if(decoderState->HasPendingSeek())
-							decoderState->PerformSeek();
+							decoderState->PerformPendingSeek();
 
 						// Reset() is not thread-safe but the IOProc is outputting silence
 						mAudioRingBuffer.Reset();
