@@ -214,6 +214,12 @@ struct DecoderState {
 		return mFrameToSeek.load() != kInvalidFramePosition;
 	}
 
+	/// Sets `mFrameToSeek` to `frame`
+	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept
+	{
+		mFrameToSeek.store(frame);
+	}
+
 	/// Seeks to the frame specified by `mFrameToSeek`
 	bool PerformSeek() noexcept
 	{
@@ -1028,7 +1034,7 @@ public:
 		if(frame >= decoderState->FrameLength())
 			frame = std::max(decoderState->FrameLength() - 1, 0ll);
 
-		decoderState->mFrameToSeek.store(frame);
+		decoderState->RequestSeekToFrame(frame);
 		dispatch_semaphore_signal(mDecodingSemaphore);
 
 		return true;
