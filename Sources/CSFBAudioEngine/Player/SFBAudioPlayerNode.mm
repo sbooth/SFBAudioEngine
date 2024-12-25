@@ -45,7 +45,7 @@ const os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "Au
 /// - parameter bufferList: The destination audio buffer list
 /// - parameter byteOffset: The byte offset in `bufferList` to begin writing
 /// - parameter byteCount: The maximum number of bytes per non-interleaved buffer to write
-constexpr void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount) noexcept
+void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount) noexcept
 {
 #if DEBUG
 	assert(bufferList != nullptr);
