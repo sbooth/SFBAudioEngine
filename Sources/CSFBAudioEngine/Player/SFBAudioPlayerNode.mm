@@ -375,7 +375,7 @@ struct AudioPlayerNode
 		eRingBufferNeedsReset 	= 1u << 3,
 	};
 
-	enum eEventCommands : uint32_t {
+	enum eEventCommand : uint32_t {
 		eEventDecodingStarted 		= 1,
 		eEventDecodingComplete 		= 2,
 		eEventDecodingCanceled 		= 3,
@@ -383,6 +383,100 @@ struct AudioPlayerNode
 		eEventRenderingComplete 	= 5,
 		eEventEndOfAudio 			= 6,
 		eEventError 				= 7,
+	};
+
+	struct EventHeader
+	{
+		eEventCommand 	mCommand;
+		uint64_t		mTimestamp = SFB::GetCurrentHostTime();
+	};
+
+	struct DecodingEvent
+	{
+		struct Payload
+		{
+			uint64_t mDecoderSequenceNumber;
+		};
+
+		EventHeader 	mHeader;
+		Payload 		mPayload;
+	};
+
+	struct DecodingStartedEvent: DecodingEvent
+	{
+		DecodingStartedEvent(uint64_t decoderSequenceNumber) noexcept
+		: DecodingEvent{{eEventDecodingStarted}, {decoderSequenceNumber}}
+		{}
+	};
+
+	struct DecodingCompleteEvent: DecodingEvent
+	{
+		DecodingCompleteEvent(uint64_t decoderSequenceNumber) noexcept
+		: DecodingEvent{{eEventDecodingComplete}, {decoderSequenceNumber}}
+		{}
+	};
+
+	struct DecodingCanceledEvent: DecodingEvent
+	{
+		DecodingCanceledEvent(uint64_t decoderSequenceNumber) noexcept
+		: DecodingEvent{{eEventDecodingCanceled}, {decoderSequenceNumber}}
+		{}
+	};
+
+	struct RenderingEvent
+	{
+		struct Payload
+		{
+			uint64_t mDecoderSequenceNumber;
+			uint64_t mHostTime;
+		};
+
+		EventHeader 	mHeader;
+		Payload 		mPayload;
+	};
+
+	struct RenderingStartedEvent: RenderingEvent
+	{
+		RenderingStartedEvent(uint64_t decoderSequenceNumber, uint64_t hostTime) noexcept
+		: RenderingEvent{{eEventRenderingStarted}, {decoderSequenceNumber, hostTime}}
+		{}
+	};
+
+	struct RenderingCompleteEvent: RenderingEvent
+	{
+		RenderingCompleteEvent(uint64_t decoderSequenceNumber, uint64_t hostTime) noexcept
+		: RenderingEvent{{eEventRenderingComplete}, {decoderSequenceNumber, hostTime}}
+		{}
+	};
+
+	struct EndOfAudioEvent
+	{
+		struct Payload
+		{
+			uint64_t mHostTime;
+		};
+
+		EventHeader 	mHeader;
+		Payload 		mPayload;
+
+		EndOfAudioEvent(uint64_t hostTime) noexcept
+		: mHeader{eEventEndOfAudio}, mPayload{hostTime}
+		{}
+	};
+
+	struct ErrorEvent
+	{
+		struct Payload
+		{
+			uint64_t mKey;
+		};
+
+		EventHeader 	mHeader;
+		Payload 		mPayload;
+
+		ErrorEvent(uint64_t key) noexcept
+		: mHeader{eEventError}, mPayload{key}
+		{}
 	};
 
 	/// Weak reference to owning `SFBAudioPlayerNode` instance
@@ -528,18 +622,14 @@ public:
 					decoderState->mFlags.fetch_or(DecoderState::eRenderingStarted);
 
 					// Submit the rendering started event
-					const uint32_t cmd = eEventRenderingStarted;
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
-					uint8_t bytesToWrite [4 + 8 + 8];
-					std::memcpy(bytesToWrite, &cmd, 4);
-					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false))
+					const RenderingStartedEvent event{decoderState->mSequenceNumber, hostTime};
+					if(mEventRingBuffer.WriteValue(event))
 						dispatch_source_merge_data(mEventProcessor, 1);
 					else
-						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventRenderingStarted");
+						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for eEventRenderingStarted");
 				}
 
 				decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
@@ -549,15 +639,11 @@ public:
 					decoderState->mFlags.fetch_or(DecoderState::eRenderingComplete);
 
 					// Submit the rendering complete event
-					const uint32_t cmd = eEventRenderingComplete;
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
-					uint8_t bytesToWrite [4 + 8 + 8];
-					std::memcpy(bytesToWrite, &cmd, 4);
-					std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-					std::memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
-					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8 + 8, false))
+					const RenderingCompleteEvent event{decoderState->mSequenceNumber, hostTime};
+					if(mEventRingBuffer.WriteValue(event))
 						dispatch_source_merge_data(mEventProcessor, 1);
 					else
 						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventRenderingComplete");
@@ -574,13 +660,10 @@ public:
 
 			decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 			if(!decoderState) {
-				const uint32_t cmd = eEventEndOfAudio;
 				const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(framesRead / mAudioRingBuffer.Format().mSampleRate);
 
-				uint8_t bytesToWrite [4 + 8];
-				std::memcpy(bytesToWrite, &cmd, 4);
-				std::memcpy(bytesToWrite + 4, &hostTime, 8);
-				if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+				const EndOfAudioEvent event{hostTime};
+				if(mEventRingBuffer.WriteValue(event))
 					dispatch_source_merge_data(mEventProcessor, 1);
 				else
 					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventEndOfAudio");
@@ -623,19 +706,14 @@ public:
 		}
 
 		dispatch_source_set_event_handler(mEventProcessor, ^{
-			while(mEventRingBuffer.BytesAvailableToRead() >= 4) {
-				uint32_t cmd;
-				/*auto bytesRead =*/ mEventRingBuffer.Read(&cmd, 4);
-
-				switch(cmd) {
+			EventHeader header;
+			while(mEventRingBuffer.ReadValue(header)) {
+				switch(header.mCommand) {
 					case eEventDecodingStarted:
-						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
-							uint64_t sequenceNumber;
-							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-
-							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+						if(DecodingEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
+							const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 							if(!decoderState) {
-								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingStarted", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingStarted", eventPayload.mDecoderSequenceNumber);
 								break;
 							}
 
@@ -653,13 +731,10 @@ public:
 						break;
 
 					case eEventDecodingComplete:
-						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
-							uint64_t sequenceNumber;
-							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-
-							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+						if(DecodingEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
+							const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 							if(!decoderState) {
-								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingComplete", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingComplete", eventPayload.mDecoderSequenceNumber);
 								break;
 							}
 
@@ -677,19 +752,16 @@ public:
 						break;
 
 					case eEventDecodingCanceled:
-						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
-							uint64_t sequenceNumber;
-							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-
-							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+						if(DecodingEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
+							const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 							if(!decoderState) {
-								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingCanceled", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingCanceled", eventPayload.mDecoderSequenceNumber);
 								break;
 							}
 
 							const auto decoder = decoderState->mDecoder;
 							const auto partiallyRendered = (decoderState->mFlags & DecoderState::eRenderingStarted) == DecoderState::eRenderingStarted;
-							DeleteDecoderStateWithSequenceNumber(sequenceNumber);
+							DeleteDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
 								auto node = mNode;
@@ -705,28 +777,24 @@ public:
 						break;
 
 					case eEventRenderingStarted:
-						if(mEventRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
-							uint64_t sequenceNumber, hostTime;
-							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
-
-							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+						if(RenderingEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
+							const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 							if(!decoderState) {
-								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingStarted", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingStarted", eventPayload.mDecoderSequenceNumber);
 								break;
 							}
 
 							const auto now = SFB::GetCurrentHostTime();
-							if(now > hostTime)
-								os_log_error(_audioPlayerNodeLog, "Rendering will start event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+							if(now > eventPayload.mHostTime)
+								os_log_error(_audioPlayerNodeLog, "Rendering will start event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventPayload.mHostTime)) / 1e6, decoderState->mDecoder);
 							else
-								os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
+								os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventPayload.mHostTime - now)) / 1e6, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
 								dispatch_async_and_wait(node.delegateQueue, ^{
-									[node.delegate audioPlayerNode:node renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
+									[node.delegate audioPlayerNode:node renderingWillStart:decoderState->mDecoder atHostTime:eventPayload.mHostTime];
 									dispatch_group_leave(mDispatchGroup);
 								});
 							}
@@ -736,54 +804,48 @@ public:
 						break;
 
 					case eEventRenderingComplete:
-						if(mEventRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
-							uint64_t sequenceNumber, hostTime;
-							/*bytesRead =*/ mEventRingBuffer.Read(&sequenceNumber, 8);
-							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
-
-							const auto decoderState = GetDecoderStateWithSequenceNumber(sequenceNumber);
+						if(RenderingEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
+							const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 							if(!decoderState) {
-								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingComplete", sequenceNumber);
+								os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingComplete", eventPayload.mDecoderSequenceNumber);
 								break;
 							}
 
 							const auto now = SFB::GetCurrentHostTime();
-							if(now > hostTime)
-								os_log_error(_audioPlayerNodeLog, "Rendering will complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+							if(now > eventPayload.mHostTime)
+								os_log_error(_audioPlayerNodeLog, "Rendering will complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventPayload.mHostTime)) / 1e6, decoderState->mDecoder);
 							else
-								os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
+								os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventPayload.mHostTime - now)) / 1e6, decoderState->mDecoder);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
 								dispatch_async_and_wait(node.delegateQueue, ^{
-									[node.delegate audioPlayerNode:node renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
+									[node.delegate audioPlayerNode:node renderingWillComplete:decoderState->mDecoder atHostTime:eventPayload.mHostTime];
 									dispatch_group_leave(mDispatchGroup);
 								});
 							}
 
-							DeleteDecoderStateWithSequenceNumber(sequenceNumber);
+							DeleteDecoderStateWithSequenceNumber(eventPayload.mDecoderSequenceNumber);
 						}
 						else
 							os_log_fault(_audioPlayerNodeLog, "Missing data for eEventRenderingComplete");
 						break;
 
 					case eEventEndOfAudio:
-						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
-							uint64_t hostTime;
-							/*bytesRead =*/ mEventRingBuffer.Read(&hostTime, 8);
+						if(EndOfAudioEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
 
 							const auto now = SFB::GetCurrentHostTime();
-							if(now > hostTime)
-								os_log_error(_audioPlayerNodeLog, "End of audio event processed %.2f msec late", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6);
+							if(now > eventPayload.mHostTime)
+								os_log_error(_audioPlayerNodeLog, "End of audio event processed %.2f msec late", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventPayload.mHostTime)) / 1e6);
 							else
-								os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6);
+								os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventPayload.mHostTime - now)) / 1e6);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
 								auto node = mNode;
 								dispatch_group_enter(mDispatchGroup);
 								dispatch_async_and_wait(node.delegateQueue, ^{
-									[node.delegate audioPlayerNode:node audioWillEndAtHostTime:hostTime];
+									[node.delegate audioPlayerNode:node audioWillEndAtHostTime:eventPayload.mHostTime];
 									dispatch_group_leave(mDispatchGroup);
 								});
 							}
@@ -793,17 +855,15 @@ public:
 						break;
 
 					case eEventError:
-						if(mEventRingBuffer.BytesAvailableToRead() >= 8) {
-							uint64_t key;
-							/*bytesRead =*/ mEventRingBuffer.Read(&key, 8);
+						if(ErrorEvent::Payload eventPayload; mEventRingBuffer.ReadValue(eventPayload)) {
 
-							NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mNode.delegateQueue, reinterpret_cast<void *>(key));
+							NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mNode.delegateQueue, reinterpret_cast<void *>(eventPayload.mKey));
 							if(!error) {
-								os_log_fault(_audioPlayerNodeLog, "Dispatch value for key %llu missing for eEventError", key);
+								os_log_fault(_audioPlayerNodeLog, "Dispatch value for key %llu missing for eEventError", eventPayload.mKey);
 								break;
 							}
 
-							dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), nullptr, nullptr);
+							dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(eventPayload.mKey), nullptr, nullptr);
 
 							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
 								auto node = mNode;
@@ -819,7 +879,7 @@ public:
 						break;
 
 					default:
-						os_log_fault(_audioPlayerNodeLog, "Unknown event command: %u", cmd);
+						os_log_fault(_audioPlayerNodeLog, "Unknown event command: %u", header.mCommand);
 						break;
 				}
 			}
@@ -1218,15 +1278,11 @@ private:
 															  }];
 
 					// Submit the error event
-					const uint32_t cmd = eEventError;
-					const uint64_t key = mDispatchKeyCounter.fetch_add(1);
+					const ErrorEvent event{mDispatchKeyCounter.fetch_add(1)};
 
-					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
-					uint8_t bytesToWrite [4 + 8];
-					std::memcpy(bytesToWrite, &cmd, 4);
-					std::memcpy(bytesToWrite + 4, &key, 8);
-					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+					if(mEventRingBuffer.WriteValue(event))
 						dispatch_source_merge_data(mEventProcessor, 1);
 					else
 						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
@@ -1300,15 +1356,11 @@ private:
 															  }];
 
 					// Submit the error event
-					const uint32_t cmd = eEventError;
-					const uint64_t key = mDispatchKeyCounter.fetch_add(1);
+					const ErrorEvent event{mDispatchKeyCounter.fetch_add(1)};
 
-					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
-					uint8_t bytesToWrite [4 + 8];
-					std::memcpy(bytesToWrite, &cmd, 4);
-					std::memcpy(bytesToWrite + 4, &key, 8);
-					if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+					if(mEventRingBuffer.WriteValue(event))
 						dispatch_source_merge_data(mEventProcessor, 1);
 					else
 						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
@@ -1356,12 +1408,8 @@ private:
 						mFlags.fetch_or(eRingBufferNeedsReset);
 
 						// Submit the decoding canceled event
-						const uint32_t cmd = eEventDecodingCanceled;
-
-						uint8_t bytesToWrite [4 + 8];
-						std::memcpy(bytesToWrite, &cmd, 4);
-						std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-						if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+						const DecodingCanceledEvent event{decoderState->mSequenceNumber};
+						if(mEventRingBuffer.WriteValue(event))
 							dispatch_source_merge_data(mEventProcessor, 1);
 						else
 							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
@@ -1377,12 +1425,8 @@ private:
 							decoderState->mFlags.fetch_or(DecoderState::eDecodingStarted);
 
 							// Submit the decoding started event
-							const uint32_t cmd = eEventDecodingStarted;
-
-							uint8_t bytesToWrite [4 + 8];
-							std::memcpy(bytesToWrite, &cmd, 4);
-							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+							const DecodingStartedEvent event{decoderState->mSequenceNumber};
+							if(mEventRingBuffer.WriteValue(event))
 								dispatch_source_merge_data(mEventProcessor, 1);
 							else
 								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingStarted");
@@ -1394,15 +1438,11 @@ private:
 
 							if(error) {
 								// Submit the error event
-								const uint32_t cmd = eEventError;
-								const uint64_t key = mDispatchKeyCounter.fetch_add(1);
+								const ErrorEvent event{mDispatchKeyCounter.fetch_add(1)};
 
-								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
-								uint8_t bytesToWrite [4 + 8];
-								std::memcpy(bytesToWrite, &cmd, 4);
-								std::memcpy(bytesToWrite + 4, &key, 8);
-								if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+								if(mEventRingBuffer.WriteValue(event))
 									dispatch_source_merge_data(mEventProcessor, 1);
 								else
 									os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventError");
@@ -1420,12 +1460,8 @@ private:
 							decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
 							// Submit the decoding complete event
-							const uint32_t cmd = eEventDecodingComplete;
-
-							uint8_t bytesToWrite [4 + 8];
-							std::memcpy(bytesToWrite, &cmd, 4);
-							std::memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-							if(mEventRingBuffer.Write(bytesToWrite, 4 + 8, false))
+							const DecodingCompleteEvent event{decoderState->mSequenceNumber};
+							if(mEventRingBuffer.WriteValue(event))
 								dispatch_source_merge_data(mEventProcessor, 1);
 							else
 								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingComplete");
