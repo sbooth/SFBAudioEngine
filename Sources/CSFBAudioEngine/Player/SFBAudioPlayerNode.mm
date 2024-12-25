@@ -395,7 +395,7 @@ private:
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
-	/// Ring buffer used to transfer audio from the decoding dispatch queue to the IOProc
+	/// Ring buffer used to transfer audio between the decoding dispatch queue and the render block
 	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
@@ -1243,11 +1243,11 @@ private:
 							continue;
 
 						// In essence `mActiveDecoders` is an SPSC queue with `mDecodingQueue` as producer
-						// and the collector as consumer, with the stored values used in between production
-						// and consumption by any number of other threads/queues including the IOProc.
+						// and the event processor as consumer, with the stored values used in between production
+						// and consumption by any number of other threads/queues including the render block.
 						//
 						// Slots in `mActiveDecoders` are assigned values in two places: here and the
-						// collector. The collector assigns nullptr to slots holding existing non-null
+						// event processor. The event processor assigns nullptr to slots holding existing non-null
 						// values marked for removal while this code assigns non-null values to slots
 						// holding nullptr.
 						// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
@@ -1262,7 +1262,7 @@ private:
 						//
 						// `mActiveDecoders` may be full when the capacity of mAudioRingBuffer exceeds the
 						// total number of audio frames for all the decoders in `mActiveDecoders` and audio is not
-						// being consumed by the IOProc.
+						// being consumed by the render block.
 						// The default frame capacity for `mAudioRingBuffer` is 16384. With 8 slots available in
 						// `mActiveDecoders`, the average number of frames a decoder needs to contain for
 						// all slots to be full is 2048. For audio at 8000 Hz that equates to 0.26 sec and at
@@ -1331,7 +1331,7 @@ private:
 							if(mNode.engine.isRunning) {
 								mFlags.fetch_or(eMuteRequested);
 
-								// The IOProc will clear eMuteRequested and set eOutputIsMuted
+								// The render block will clear eMuteRequested and set eOutputIsMuted
 								while(!(mFlags.load() & eOutputIsMuted))
 									dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
 							}
@@ -1343,7 +1343,7 @@ private:
 						if(decoderState->HasPendingSeek())
 							decoderState->PerformPendingSeek();
 
-						// Reset() is not thread-safe but the IOProc is outputting silence
+						// Reset() is not thread-safe but the render block is outputting silence
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
