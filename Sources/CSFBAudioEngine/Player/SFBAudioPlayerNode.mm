@@ -601,7 +601,7 @@ public:
 			throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 		}
 
-		mDecodingSemaphore = dispatch_semaphore_create(1);
+		mDecodingSemaphore = dispatch_semaphore_create(0);
 		if(!mDecodingSemaphore) {
 			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
 			throw std::runtime_error("dispatch_semaphore_create failed");
@@ -1450,7 +1450,7 @@ private:
 #pragma mark -
 
 /// The default ring buffer capacity in frames
-const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
+constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 @interface SFBAudioPlayerNode ()
 {
