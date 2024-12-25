@@ -36,7 +36,7 @@ namespace {
 
 #pragma mark - Shared State
 
-os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
+const os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
 
 #pragma mark AudioBufferList Utilities
 
@@ -45,8 +45,12 @@ os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPla
 /// - parameter bufferList: The destination audio buffer list
 /// - parameter byteOffset: The byte offset in `bufferList` to begin writing
 /// - parameter byteCount: The maximum number of bytes per non-interleaved buffer to write
-void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount)
+void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount) noexcept
 {
+#if DEBUG
+	assert(bufferList != nullptr);
+#endif /* DEBUG */
+
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
 		if(byteOffset > bufferList->mBuffers[i].mDataByteSize)
 			continue;
@@ -103,8 +107,8 @@ struct DecoderState {
 	using atomic_ptr = std::atomic<DecoderState *>;
 	static_assert(atomic_ptr::is_always_lock_free, "Lock-free std::atomic<DecoderState *> required");
 
-	static const AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
-	static const int64_t			kInvalidFramePosition 	= -1;
+	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
+	static constexpr int64_t			kInvalidFramePosition 	= -1;
 
 	enum eDecoderStateFlags : unsigned int {
 		eCancelDecoding 	= 1u << 0,
@@ -144,9 +148,14 @@ struct DecoderState {
 	/// Next sequence number to use
 	static uint64_t			sSequenceNumber;
 
-	DecoderState(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
+	DecoderState(id <SFBPCMDecoding> _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
 	: mFrameLength{decoder.frameLength}, mDecoder{decoder}
 	{
+#if DEBUG
+		assert(decoder != nil);
+		assert(format != nil);
+#endif /* DEBUG */
+
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 		if(!mConverter) {
 			os_log_error(_audioPlayerNodeLog, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", mDecoder.processingFormat, format);
@@ -167,22 +176,23 @@ struct DecoderState {
 		}
 	}
 
-	inline AVAudioFramePosition FramePosition() const noexcept
+	AVAudioFramePosition FramePosition() const noexcept
 	{
 		const auto seek = mFrameToSeek.load();
 		return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
 	}
 
-	inline AVAudioFramePosition FrameLength() const noexcept
+	AVAudioFramePosition FrameLength() const noexcept
 	{
 		return mFrameLength.load();
 	}
 
-	bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr) noexcept
+	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept
 	{
 #if DEBUG
+		assert(buffer != nil);
 		assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
-#endif
+#endif /* DEBUG */
 
 		if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
 			return false;
@@ -208,10 +218,24 @@ struct DecoderState {
 		return true;
 	}
 
-	/// Seeks to the frame specified by `mFrameToSeek`
-	bool PerformSeek() noexcept
+	/// Returns `true` if there is a pending seek request
+	bool HasPendingSeek() const noexcept
+	{
+		return mFrameToSeek.load() != kInvalidFramePosition;
+	}
+
+	/// Sets the pending seek request to `frame`
+	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept
+	{
+		mFrameToSeek.store(frame);
+	}
+
+	/// Performs the pending seek request, if present
+	bool PerformPendingSeek() noexcept
 	{
 		auto seekOffset = mFrameToSeek.load();
+		if(seekOffset == kInvalidFramePosition)
+			return true;
 
 		os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld in %{public}@ ", seekOffset, mDecoder);
 
@@ -247,11 +271,11 @@ using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
 #pragma mark - Decoder State Array
 
-const size_t kDecoderStateArraySize = 8;
+constexpr size_t kDecoderStateArraySize = 8;
 using DecoderStateArray = std::array<DecoderState::atomic_ptr, kDecoderStateArraySize>;
 
 /// Returns the element in `decoders` with the smallest sequence number that has not completed rendering
-DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateArray& decoders) noexcept
+DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateArray& decoders) noexcept
 {
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : decoders) {
@@ -272,7 +296,7 @@ DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStat
 }
 
 /// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
-DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
+DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : decoders) {
@@ -293,7 +317,7 @@ DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateAr
 }
 
 /// Returns the element in `decoders` with sequence number equal to `sequenceNumber`
-DecoderState * GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
+DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(const auto& atomic_ptr : decoders) {
 		auto decoderState = atomic_ptr.load();
@@ -342,7 +366,7 @@ struct AudioPlayerNode
 	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
 
 	/// The minimum number of frames to write to the ring buffer
-	static const AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
+	static constexpr AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
 
 	enum eAudioPlayerNodeFlags : unsigned int {
 		eIsPlaying 				= 1u << 0,
@@ -403,9 +427,13 @@ private:
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 public:
-	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
+	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize)
 	: mRenderingFormat{format}
 	{
+#if DEBUG
+		assert(format != nil);
+#endif /* DEBUG */
+
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
 		// MARK: Rendering
@@ -461,7 +489,7 @@ public:
 			if(framesRead != frameCount) {
 #if DEBUG
 				os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
-#endif
+#endif /* DEBUG */
 
 				const auto framesOfSilence = frameCount - framesRead;
 				const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
@@ -842,12 +870,12 @@ public:
 
 #pragma mark - Playback Control
 
-	inline void Play() noexcept
+	void Play() noexcept
 	{
 		mFlags.fetch_or(eIsPlaying);
 	}
 
-	inline void Pause() noexcept
+	void Pause() noexcept
 	{
 		mFlags.fetch_and(~eIsPlaying);
 	}
@@ -858,14 +886,14 @@ public:
 		Reset();
 	}
 
-	inline void TogglePlayPause() noexcept
+	void TogglePlayPause() noexcept
 	{
 		mFlags.fetch_xor(eIsPlaying);
 	}
 
 #pragma mark - Playback State
 
-	inline bool IsPlaying() const noexcept
+	bool IsPlaying() const noexcept
 	{
 		return (mFlags.load() & eIsPlaying) != 0;
 	}
@@ -908,7 +936,7 @@ public:
 		return playbackTime;
 	}
 
-	bool GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition *playbackPosition, SFBAudioPlayerNodePlaybackTime *playbackTime) const noexcept
+	bool GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition * _Nullable playbackPosition, SFBAudioPlayerNodePlaybackTime * _Nullable playbackTime) const noexcept
 	{
 		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState) {
@@ -1022,7 +1050,7 @@ public:
 		if(frame >= decoderState->FrameLength())
 			frame = std::max(decoderState->FrameLength() - 1, 0ll);
 
-		decoderState->mFrameToSeek.store(frame);
+		decoderState->RequestSeekToFrame(frame);
 		dispatch_semaphore_signal(mDecodingSemaphore);
 
 		return true;
@@ -1036,13 +1064,17 @@ public:
 
 #pragma mark - Format Information
 
-	inline AVAudioFormat * RenderingFormat() const noexcept
+	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
 	{
 		return mRenderingFormat;
 	}
 
-	inline bool SupportsFormat(AVAudioFormat *format) const noexcept
+	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept
 	{
+#if DEBUG
+		assert(format != nil);
+#endif /* DEBUG */
+
 		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
 		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
 		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && channelLayoutsAreEquivalent;
@@ -1050,8 +1082,12 @@ public:
 
 #pragma mark - Queue Management
 
-	bool EnqueueDecoder(id <SFBPCMDecoding>decoder, bool reset, NSError **error) noexcept
+	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError **error) noexcept
 	{
+#if DEBUG
+		assert(decoder != nil);
+#endif /* DEBUG */
+
 		if(!decoder.isOpen && ![decoder openReturningError:error])
 			return false;
 
@@ -1087,7 +1123,7 @@ public:
 		return true;
 	}
 
-	id <SFBPCMDecoding> DequeueDecoder() noexcept
+	id <SFBPCMDecoding> _Nullable DequeueDecoder() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
 		id <SFBPCMDecoding> decoder = nil;
@@ -1098,7 +1134,7 @@ public:
 		return decoder;
 	}
 
-	id<SFBPCMDecoding> CurrentDecoder() const noexcept
+	id<SFBPCMDecoding> _Nullable CurrentDecoder() const noexcept
 	{
 		const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		return decoderState ? decoderState->mDecoder : nil;
@@ -1134,24 +1170,24 @@ public:
 private:
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
-	inline DecoderState * GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
+	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 	{
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
-	inline DecoderState * GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
+	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
 	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
-	inline DecoderState * GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
+	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	inline void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
+	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
 	{
 		::DeleteDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
@@ -1167,6 +1203,8 @@ private:
 				DecoderState *decoderState = nullptr;
 
 				try {
+					// When the decoder's processing format and rendering format don't match
+					// conversion will be performed in DecoderState::DecodeAudio()
 					decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
 				}
 
@@ -1248,11 +1286,9 @@ private:
 					}
 				} while(!stored);
 
-				// In the event the render block output format and decoder processing
-				// format don't match, conversion will be performed in DecoderState::DecodeAudio()
-
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
+				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
 				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 				if(!buffer) {
 					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
@@ -1282,28 +1318,30 @@ private:
 
 				// Process the decoder until canceled or complete
 				for(;;) {
-					// If a seek is pending reset the ring buffer
-					if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
+					// If a seek is pending request a ring buffer reset
+					if(decoderState->HasPendingSeek())
 						mFlags.fetch_or(eRingBufferNeedsReset);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
 					if(mFlags.load() & eRingBufferNeedsReset) {
 						mFlags.fetch_and(~eRingBufferNeedsReset);
 
-						// Ensure output is muted before performing operations that aren't thread-safe
-						if(mNode.engine.isRunning) {
-							mFlags.fetch_or(eMuteRequested);
+						// Ensure output is muted before performing operations on the ring buffer that aren't thread-safe
+						if(!(mFlags.load() & eOutputIsMuted)) {
+							if(mNode.engine.isRunning) {
+								mFlags.fetch_or(eMuteRequested);
 
-							// The IOProc will clear eMuteRequested when the current render cycle completes
-							while(mFlags.load() & eMuteRequested)
-								dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
+								// The IOProc will clear eMuteRequested and set eOutputIsMuted
+								while(!(mFlags.load() & eOutputIsMuted))
+									dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
+							}
+							else
+								mFlags.fetch_or(eOutputIsMuted);
 						}
-						else
-							mFlags.fetch_or(eOutputIsMuted);
 
 						// Perform seek if one is pending
-						if(decoderState->mFrameToSeek.load() != DecoderState::kInvalidFramePosition)
-							decoderState->PerformSeek();
+						if(decoderState->HasPendingSeek())
+							decoderState->PerformPendingSeek();
 
 						// Reset() is not thread-safe but the IOProc is outputting silence
 						mAudioRingBuffer.Reset();
@@ -1331,8 +1369,8 @@ private:
 						return;
 					}
 
-					// Decode and write a chunk to the ring buffer if adequate space is available
-					if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
+					// Decode and write chunks to the ring buffer
+					while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
 						if(!(decoderState->mFlags.load() & DecoderState::eDecodingStarted)) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
@@ -1350,7 +1388,7 @@ private:
 								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingStarted");
 						}
 
-						// Decode audio into the buffer, converting to the bus format in the process
+						// Decode audio into the buffer, converting to the rendering format in the process
 						if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
 							os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", error);
 
@@ -1397,9 +1435,9 @@ private:
 							return;
 						}
 					}
-					// Wait for additional space in the ring buffer
-					else
-						dispatch_semaphore_wait(mDecodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
+
+					// Wait for additional space in the ring buffer or for another event signal
+					dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
 				}
 			}
 		});
@@ -1412,7 +1450,7 @@ private:
 #pragma mark -
 
 /// The default ring buffer capacity in frames
-const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
+constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 @interface SFBAudioPlayerNode ()
 {
@@ -1484,16 +1522,6 @@ const AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch_queue_t: dispatch_queue_create_with_target() failed");
 			return nil;
 		}
-
-#if 0
-		// See the comments in SFBAudioPlayer -configureEngineForGaplessPlaybackOfFormat:
-		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice while 1156 is AVAudioSourceNode's default
-		AVAudioFrameCount maximumFramesToRender = static_cast<AVAudioFrameCount>(ceil(512 * (format.sampleRate / 44100)));
-		if(self.AUAudioUnit.maximumFramesToRender < maximumFramesToRender) {
-			os_log_debug(_audioPlayerNodeLog, "Setting maximumFramesToRender to %u", maximumFramesToRender);
-			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
-		}
-#endif
 	}
 
 	return self;
