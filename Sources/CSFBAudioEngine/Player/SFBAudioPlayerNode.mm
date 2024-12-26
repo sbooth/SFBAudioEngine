@@ -347,7 +347,7 @@ void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uin
 #pragma mark - Events
 
 /// Returns the next event identification number
-uint64_t NextEventHeaderIdentificationNumber() noexcept
+uint64_t NextEventIdentificationNumber() noexcept
 {
 	static std::atomic_uint64_t nextIdentificationNumber = 1;
 	return nextIdentificationNumber.fetch_add(1);
@@ -368,7 +368,7 @@ struct EventHeader
 	/// Constructs an event header with the next available identification number
 	/// - parameter command: The command for the event
 	EventHeader(T command) noexcept
-	: mCommand{command}, mIdentificationNumber{NextEventHeaderIdentificationNumber()}
+	: mCommand{command}, mIdentificationNumber{NextEventIdentificationNumber()}
 	{}
 };
 
