@@ -391,10 +391,10 @@ struct AudioPlayerNode
 
 	/// Decoding queue events
 	enum class eDecodingEventCommand : uint32_t {
-		eEventDecodingStarted 		= 1,
-		eEventDecodingComplete 		= 2,
-		eEventDecodingCanceled 		= 3,
-		eEventDecodingError 		= 4,
+		eDecodingStarted 	= 1,
+		eDecodingComplete 	= 2,
+		eDecodingCanceled 	= 3,
+		eDecodingError 		= 4,
 	};
 
 	/// A decoding event
@@ -424,11 +424,11 @@ struct AudioPlayerNode
 	};
 
 	/// A decoding started event
-	using DecodingStartedEvent = DecodingEvent<eDecodingEventCommand::eEventDecodingStarted>;
+	using DecodingStartedEvent = DecodingEvent<eDecodingEventCommand::eDecodingStarted>;
 	/// A decoding complete event
-	using DecodingCompleteEvent = DecodingEvent<eDecodingEventCommand::eEventDecodingComplete>;
+	using DecodingCompleteEvent = DecodingEvent<eDecodingEventCommand::eDecodingComplete>;
 	/// A decoding canceled event
-	using DecodingCanceledEvent = DecodingEvent<eDecodingEventCommand::eEventDecodingCanceled>;
+	using DecodingCanceledEvent = DecodingEvent<eDecodingEventCommand::eDecodingCanceled>;
 
 	/// A decoding error event
 	struct DecodingErrorEvent
@@ -441,7 +441,7 @@ struct AudioPlayerNode
 		};
 
 		/// The event command for this event type
-		constexpr static auto sEventCommand = eDecodingEventCommand::eEventDecodingError;
+		constexpr static auto sEventCommand = eDecodingEventCommand::eDecodingError;
 
 		/// The event command and timestamp
 		EventHeader<eDecodingEventCommand> 		mHeader;
@@ -459,9 +459,9 @@ struct AudioPlayerNode
 
 	/// Render block events
 	enum class eRenderEventCommand : uint32_t {
-		eEventRenderingStarted 		= 1,
-		eEventRenderingComplete 	= 2,
-		eEventEndOfAudio			= 3,
+		eRenderingStarted 		= 1,
+		eRenderingComplete 		= 2,
+		eEndOfAudio				= 3,
 	};
 
 	/// A rendering event
@@ -493,8 +493,8 @@ struct AudioPlayerNode
 		{}
 	};
 
-	using RenderingStartedEvent = RenderingEvent<eRenderEventCommand::eEventRenderingStarted>;
-	using RenderingCompleteEvent = RenderingEvent<eRenderEventCommand::eEventRenderingComplete>;
+	using RenderingStartedEvent = RenderingEvent<eRenderEventCommand::eRenderingStarted>;
+	using RenderingCompleteEvent = RenderingEvent<eRenderEventCommand::eRenderingComplete>;
 
 	/// An end of audio event
 	struct EndOfAudioEvent
@@ -507,7 +507,7 @@ struct AudioPlayerNode
 		};
 
 		/// The event command for this event type
-		constexpr static auto sEventCommand = eRenderEventCommand::eEventEndOfAudio;
+		constexpr static auto sEventCommand = eRenderEventCommand::eEndOfAudio;
 
 		/// The event command and timestamp
 		EventHeader<eRenderEventCommand> 	mHeader;
@@ -1317,7 +1317,7 @@ private:
 						if(mDecodeEventRingBuffer.WriteValue(event))
 							dispatch_source_merge_data(mEventProcessor, 1);
 						else
-							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingCanceled");
+							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for DecodingCanceledEvent");
 
 						return;
 					}
@@ -1334,7 +1334,7 @@ private:
 							if(mDecodeEventRingBuffer.WriteValue(event))
 								dispatch_source_merge_data(mEventProcessor, 1);
 							else
-								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingStarted");
+								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for DecodingStartedEvent");
 						}
 
 						// Decode audio into the buffer, converting to the rendering format in the process
@@ -1369,7 +1369,7 @@ private:
 							if(mDecodeEventRingBuffer.WriteValue(event))
 								dispatch_source_merge_data(mEventProcessor, 1);
 							else
-								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for eEventDecodingComplete");
+								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::Write failed for DecodingCompleteEvent");
 
 							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
 
@@ -1393,7 +1393,7 @@ private:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DecodingStartedEvent::Payload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingStarted", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for DecodingStartedEvent", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1414,7 +1414,7 @@ private:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DecodingCompleteEvent::Payload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingComplete", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for DecodingCompleteEvent", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1435,7 +1435,7 @@ private:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DecodingCanceledEvent::Payload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventDecodingCanceled", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for DecodingCanceledEvent", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1492,7 +1492,7 @@ private:
 				if(const auto eventPayload = mRenderEventRingBuffer.ReadValue<RenderingStartedEvent::Payload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingStarted", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for RenderingStartedEvent", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1519,7 +1519,7 @@ private:
 				if(const auto eventPayload = mRenderEventRingBuffer.ReadValue<RenderingCompleteEvent::Payload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for eEventRenderingComplete", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for RenderingCompleteEvent", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
