@@ -266,7 +266,7 @@ struct DecoderState {
 	}
 };
 
-uint64_t DecoderState::sSequenceNumber = 0;
+uint64_t DecoderState::sSequenceNumber = 1;
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
 #pragma mark - Decoder State Array
