@@ -347,6 +347,7 @@ void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uin
 #pragma mark - Events
 
 /// Returns the next event identification number
+/// - note: Event identification numbers are unique across all event types
 uint64_t NextEventIdentificationNumber() noexcept
 {
 	static std::atomic_uint64_t nextIdentificationNumber = 1;
