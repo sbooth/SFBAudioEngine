@@ -397,6 +397,9 @@ struct AudioPlayerNode
 		eDecodingError 		= 4,
 	};
 
+	/// A decoding event command and timestamp
+	using DecodingEventHeader = EventHeader<eDecodingEventCommand>;
+
 	/// A decoding event
 	template <eDecodingEventCommand C>
 	struct DecodingEvent
@@ -412,9 +415,9 @@ struct AudioPlayerNode
 		constexpr static auto sEventCommand = C;
 
 		/// The event command and timestamp
-		EventHeader<eDecodingEventCommand> 		mHeader;
+		DecodingEventHeader 	mHeader;
 		/// Event-specific data
-		Payload 								mPayload;
+		Payload 				mPayload;
 
 		/// Constructs a decoding event with the timestamp set to the current host time
 		/// - parameter decoderSequenceNumber: The decoder sequence number for the event
@@ -444,9 +447,9 @@ struct AudioPlayerNode
 		constexpr static auto sEventCommand = eDecodingEventCommand::eDecodingError;
 
 		/// The event command and timestamp
-		EventHeader<eDecodingEventCommand> 		mHeader;
+		DecodingEventHeader 	mHeader;
 		/// Event-specific data
-		Payload 								mPayload;
+		Payload 				mPayload;
 
 		/// Constructs a decoding error event with the timestamp set to the current host time
 		/// - parameter key: The key for a dispatch queue-specific `NSError` object
@@ -463,6 +466,9 @@ struct AudioPlayerNode
 		eRenderingComplete 		= 2,
 		eEndOfAudio				= 3,
 	};
+
+	/// A rendering event command and timestamp
+	using RenderingEventHeader = EventHeader<eRenderEventCommand>;
 
 	/// A rendering event
 	template <eRenderEventCommand C>
@@ -481,9 +487,9 @@ struct AudioPlayerNode
 		constexpr static auto sEventCommand = C;
 
 		/// The event command and timestamp
-		EventHeader<eRenderEventCommand> 	mHeader;
+		RenderingEventHeader 	mHeader;
 		/// Event-specific data
-		Payload 							mPayload;
+		Payload 				mPayload;
 
 		/// Constructs a rendering event with the timestamp set to the current host time
 		/// - parameter decoderSequenceNumber: The decoder sequence number for the event
@@ -510,9 +516,9 @@ struct AudioPlayerNode
 		constexpr static auto sEventCommand = eRenderEventCommand::eEndOfAudio;
 
 		/// The event command and timestamp
-		EventHeader<eRenderEventCommand> 	mHeader;
+		RenderingEventHeader 		mHeader;
 		/// Event-specific data
-		Payload 							mPayload;
+		Payload 				mPayload;
 
 		/// Constructs an end of audio event with the timestamp set to the current host time
 		/// - parameter hostTime: The host time when audio ends
@@ -759,8 +765,8 @@ public:
 		}
 
 		dispatch_source_set_event_handler(mEventProcessor, ^{
-			auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<EventHeader<eDecodingEventCommand>>();
-			auto renderEventHeader = mRenderEventRingBuffer.ReadValue<EventHeader<eRenderEventCommand>>();
+			auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+			auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 
 			// Process all pending decode and render events in timestamp order
 			for(;;) {
@@ -770,22 +776,22 @@ public:
 				// Process the decode event
 				else if(decodeEventHeader && !renderEventHeader) {
 					ProcessDecodeEvent(*decodeEventHeader);
-					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<EventHeader<eDecodingEventCommand>>();
+					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 				}
 				// Process the render event
 				else if(!decodeEventHeader && renderEventHeader) {
 					ProcessRenderEvent(*renderEventHeader);
-					renderEventHeader = mRenderEventRingBuffer.ReadValue<EventHeader<eRenderEventCommand>>();
+					renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 				}
 				// The decode event has an earlier timestamp; process it
 				else if(decodeEventHeader->mTimestamp < renderEventHeader->mTimestamp) {
 					ProcessDecodeEvent(*decodeEventHeader);
-					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<EventHeader<eDecodingEventCommand>>();
+					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 				}
 				// The render event has an earlier timestamp
 				else {
 					ProcessRenderEvent(*renderEventHeader);
-					renderEventHeader = mRenderEventRingBuffer.ReadValue<EventHeader<eRenderEventCommand>>();
+					renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 				}
 			}
 		});
@@ -1386,7 +1392,7 @@ private:
 
 	// MARK: - Event Processing
 
-	void ProcessDecodeEvent(const EventHeader<eDecodingEventCommand>& header) noexcept
+	void ProcessDecodeEvent(const DecodingEventHeader& header) noexcept
 	{
 		switch(header.mCommand) {
 			case DecodingStartedEvent::sEventCommand:
@@ -1485,7 +1491,7 @@ private:
 		}
 	}
 
-	void ProcessRenderEvent(const EventHeader<eRenderEventCommand>& header) noexcept
+	void ProcessRenderEvent(const RenderingEventHeader& header) noexcept
 	{
 		switch(header.mCommand) {
 			case RenderingStartedEvent::sEventCommand:
