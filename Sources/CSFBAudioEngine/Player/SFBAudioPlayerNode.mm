@@ -344,6 +344,176 @@ void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uin
 	}
 }
 
+#pragma mark - Events
+
+/// Returns the next event identification number
+uint64_t NextEventHeaderIdentificationNumber() noexcept
+{
+	static std::atomic_uint64_t nextIdentificationNumber = 1;
+	return nextIdentificationNumber.fetch_add(1);
+}
+
+/// An event command and identification number
+template <typename T, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<T>, uint32_t>>>
+struct EventHeader
+{
+	/// The event command
+	T mCommand;
+	/// The event identification number
+	uint64_t mIdentificationNumber;
+
+	/// Constructs an empty event header
+	EventHeader() noexcept = default;
+
+	/// Constructs an event header with the next available identification number
+	/// - parameter command: The command for the event
+	EventHeader(T command) noexcept
+	: mCommand{command}, mIdentificationNumber{NextEventHeaderIdentificationNumber()}
+	{}
+};
+
+#pragma mark Decoding Events
+
+/// Decoding queue events
+enum class eDecodingEventCommand : uint32_t {
+	eDecodingStarted 	= 1,
+	eDecodingComplete 	= 2,
+	eDecodingCanceled 	= 3,
+	eDecodingError 		= 4,
+};
+
+/// A decoding event command and identification number
+using DecodingEventHeader = EventHeader<eDecodingEventCommand>;
+
+/// A decoding event
+template <eDecodingEventCommand C>
+struct DecodingEvent
+{
+	/// Event-specific data
+	struct Payload
+	{
+		/// The decoder sequence number for the event
+		uint64_t mDecoderSequenceNumber;
+	};
+
+	/// The event command for this event type
+	constexpr static auto sEventCommand = C;
+
+	/// The event command and identification number
+	DecodingEventHeader 	mHeader;
+	/// Event-specific data
+	Payload 				mPayload;
+
+	/// Constructs a decoding event with the next available identification number
+	/// - parameter decoderSequenceNumber: The decoder sequence number for the event
+	DecodingEvent(uint64_t decoderSequenceNumber) noexcept
+	: mHeader{C}, mPayload{decoderSequenceNumber}
+	{}
+};
+
+/// A decoding started event
+using DecodingStartedEvent = DecodingEvent<eDecodingEventCommand::eDecodingStarted>;
+/// A decoding complete event
+using DecodingCompleteEvent = DecodingEvent<eDecodingEventCommand::eDecodingComplete>;
+/// A decoding canceled event
+using DecodingCanceledEvent = DecodingEvent<eDecodingEventCommand::eDecodingCanceled>;
+
+/// A decoding error event
+struct DecodingErrorEvent
+{
+	/// Event-specific data
+	struct Payload
+	{
+		/// A key for an `NSError` object in dispatch queue-specific data
+		uint64_t mKey;
+	};
+
+	/// The event command for this event type
+	constexpr static auto sEventCommand = eDecodingEventCommand::eDecodingError;
+
+	/// The event command and identification number
+	DecodingEventHeader 	mHeader;
+	/// Event-specific data
+	Payload 				mPayload;
+
+	/// Constructs a decoding error event with the next available identification number
+	/// - parameter key: The key for a dispatch queue-specific `NSError` object
+	DecodingErrorEvent(uint64_t key) noexcept
+	: mHeader{sEventCommand}, mPayload{key}
+	{}
+};
+
+#pragma mark Render Events
+
+/// Render block events
+enum class eRenderEventCommand : uint32_t {
+	eRenderingStarted 		= 1,
+	eRenderingComplete 		= 2,
+	eEndOfAudio				= 3,
+};
+
+/// A rendering event command and identification number
+using RenderingEventHeader = EventHeader<eRenderEventCommand>;
+
+/// A rendering event
+template <eRenderEventCommand C>
+struct RenderingEvent
+{
+	/// Event-specific data
+	struct Payload
+	{
+		/// The decoder sequence number for the event
+		uint64_t mDecoderSequenceNumber;
+		/// The rendering host time
+		uint64_t mHostTime;
+	};
+
+	/// The event command for this event type
+	constexpr static auto sEventCommand = C;
+
+	/// The event command and identification number
+	RenderingEventHeader 	mHeader;
+	/// Event-specific data
+	Payload 				mPayload;
+
+	/// Constructs a rendering event with the next available identification number
+	/// - parameter decoderSequenceNumber: The decoder sequence number for the event
+	/// - parameter hostTime: The rendering host time
+	RenderingEvent(uint64_t decoderSequenceNumber, uint64_t hostTime) noexcept
+	: mHeader{C}, mPayload{decoderSequenceNumber, hostTime}
+	{}
+};
+
+/// A rendering started event
+using RenderingStartedEvent = RenderingEvent<eRenderEventCommand::eRenderingStarted>;
+/// A rendering complete event
+using RenderingCompleteEvent = RenderingEvent<eRenderEventCommand::eRenderingComplete>;
+
+/// An end of audio event
+struct EndOfAudioEvent
+{
+	/// Event-specific data
+	struct Payload
+	{
+		/// The end of audio host time
+		uint64_t mHostTime;
+	};
+
+	/// The event command for this event type
+	constexpr static auto sEventCommand = eRenderEventCommand::eEndOfAudio;
+
+	/// The event command and identification number
+	RenderingEventHeader 	mHeader;
+	/// Event-specific data
+	Payload 				mPayload;
+
+	/// Constructs an end of audio event with the next available identification number
+	/// - parameter hostTime: The host time when audio ends
+	EndOfAudioEvent(uint64_t hostTime) noexcept
+	: mHeader{sEventCommand}, mPayload{hostTime}
+	{}
+};
+
 #pragma mark - AudioPlayerNode
 
 void event_processor_finalizer_f(void *context)
@@ -373,158 +543,6 @@ struct AudioPlayerNode
 		eOutputIsMuted 			= 1u << 1,
 		eMuteRequested 			= 1u << 2,
 		eRingBufferNeedsReset 	= 1u << 3,
-	};
-
-	// MARK: Events
-
-	/// An event command and timestamp
-	template <typename T, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<T>, uint32_t>>>
-	struct EventHeader
-	{
-		/// The event command
-		T mCommand;
-		/// The event timestamp in host time
-		uint64_t mTimestamp = SFB::GetCurrentHostTime();
-	};
-
-	// MARK: Decoding Events
-
-	/// Decoding queue events
-	enum class eDecodingEventCommand : uint32_t {
-		eDecodingStarted 	= 1,
-		eDecodingComplete 	= 2,
-		eDecodingCanceled 	= 3,
-		eDecodingError 		= 4,
-	};
-
-	/// A decoding event command and timestamp
-	using DecodingEventHeader = EventHeader<eDecodingEventCommand>;
-
-	/// A decoding event
-	template <eDecodingEventCommand C>
-	struct DecodingEvent
-	{
-		/// Event-specific data
-		struct Payload
-		{
-			/// The decoder sequence number for the event
-			uint64_t mDecoderSequenceNumber;
-		};
-
-		/// The event command for this event type
-		constexpr static auto sEventCommand = C;
-
-		/// The event command and timestamp
-		DecodingEventHeader 	mHeader;
-		/// Event-specific data
-		Payload 				mPayload;
-
-		/// Constructs a decoding event with the timestamp set to the current host time
-		/// - parameter decoderSequenceNumber: The decoder sequence number for the event
-		DecodingEvent(uint64_t decoderSequenceNumber) noexcept
-		: mHeader{C}, mPayload{decoderSequenceNumber}
-		{}
-	};
-
-	/// A decoding started event
-	using DecodingStartedEvent = DecodingEvent<eDecodingEventCommand::eDecodingStarted>;
-	/// A decoding complete event
-	using DecodingCompleteEvent = DecodingEvent<eDecodingEventCommand::eDecodingComplete>;
-	/// A decoding canceled event
-	using DecodingCanceledEvent = DecodingEvent<eDecodingEventCommand::eDecodingCanceled>;
-
-	/// A decoding error event
-	struct DecodingErrorEvent
-	{
-		/// Event-specific data
-		struct Payload
-		{
-			/// A key for an `NSError` object in dispatch queue-specific data
-			uint64_t mKey;
-		};
-
-		/// The event command for this event type
-		constexpr static auto sEventCommand = eDecodingEventCommand::eDecodingError;
-
-		/// The event command and timestamp
-		DecodingEventHeader 	mHeader;
-		/// Event-specific data
-		Payload 				mPayload;
-
-		/// Constructs a decoding error event with the timestamp set to the current host time
-		/// - parameter key: The key for a dispatch queue-specific `NSError` object
-		DecodingErrorEvent(uint64_t key) noexcept
-		: mHeader{sEventCommand}, mPayload{key}
-		{}
-	};
-
-	// MARK: Render Events
-
-	/// Render block events
-	enum class eRenderEventCommand : uint32_t {
-		eRenderingStarted 		= 1,
-		eRenderingComplete 		= 2,
-		eEndOfAudio				= 3,
-	};
-
-	/// A rendering event command and timestamp
-	using RenderingEventHeader = EventHeader<eRenderEventCommand>;
-
-	/// A rendering event
-	template <eRenderEventCommand C>
-	struct RenderingEvent
-	{
-		/// Event-specific data
-		struct Payload
-		{
-			/// The decoder sequence number for the event
-			uint64_t mDecoderSequenceNumber;
-			/// The rendering host time
-			uint64_t mHostTime;
-		};
-
-		/// The event command for this event type
-		constexpr static auto sEventCommand = C;
-
-		/// The event command and timestamp
-		RenderingEventHeader 	mHeader;
-		/// Event-specific data
-		Payload 				mPayload;
-
-		/// Constructs a rendering event with the timestamp set to the current host time
-		/// - parameter decoderSequenceNumber: The decoder sequence number for the event
-		/// - parameter hostTime: The rendering host time
-		RenderingEvent(uint64_t decoderSequenceNumber, uint64_t hostTime) noexcept
-		: mHeader{C}, mPayload{decoderSequenceNumber, hostTime}
-		{}
-	};
-
-	using RenderingStartedEvent = RenderingEvent<eRenderEventCommand::eRenderingStarted>;
-	using RenderingCompleteEvent = RenderingEvent<eRenderEventCommand::eRenderingComplete>;
-
-	/// An end of audio event
-	struct EndOfAudioEvent
-	{
-		/// Event-specific data
-		struct Payload
-		{
-			/// The end of audio host time
-			uint64_t mHostTime;
-		};
-
-		/// The event command for this event type
-		constexpr static auto sEventCommand = eRenderEventCommand::eEndOfAudio;
-
-		/// The event command and timestamp
-		RenderingEventHeader 		mHeader;
-		/// Event-specific data
-		Payload 				mPayload;
-
-		/// Constructs an end of audio event with the timestamp set to the current host time
-		/// - parameter hostTime: The host time when audio ends
-		EndOfAudioEvent(uint64_t hostTime) noexcept
-		: mHeader{sEventCommand}, mPayload{hostTime}
-		{}
 	};
 
 	/// Weak reference to owning `SFBAudioPlayerNode` instance
@@ -783,12 +801,11 @@ public:
 					ProcessRenderEvent(*renderEventHeader);
 					renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 				}
-				// The decode event has an earlier timestamp; process it
-				else if(decodeEventHeader->mTimestamp < renderEventHeader->mTimestamp) {
+				// Process the event with an earlier identification number
+				else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
 					ProcessDecodeEvent(*decodeEventHeader);
 					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 				}
-				// The render event has an earlier timestamp
 				else {
 					ProcessRenderEvent(*renderEventHeader);
 					renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
