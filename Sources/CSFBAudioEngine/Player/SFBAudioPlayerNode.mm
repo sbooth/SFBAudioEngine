@@ -444,7 +444,7 @@ struct DecodingErrorEvent
 	{}
 };
 
-#pragma mark Render Events
+#pragma mark Rendering Events
 
 /// Render block events
 enum class eRenderingEventCommand : uint32_t {
