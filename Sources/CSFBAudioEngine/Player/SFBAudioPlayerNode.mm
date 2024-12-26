@@ -447,17 +447,17 @@ struct DecodingErrorEvent
 #pragma mark Render Events
 
 /// Render block events
-enum class eRenderEventCommand : uint32_t {
+enum class eRenderingEventCommand : uint32_t {
 	eRenderingStarted 		= 1,
 	eRenderingComplete 		= 2,
 	eEndOfAudio				= 3,
 };
 
 /// A rendering event command and identification number
-using RenderingEventHeader = EventHeader<eRenderEventCommand>;
+using RenderingEventHeader = EventHeader<eRenderingEventCommand>;
 
 /// A rendering event
-template <eRenderEventCommand C>
+template <eRenderingEventCommand C>
 struct RenderingEvent
 {
 	/// Event-specific data
@@ -486,9 +486,9 @@ struct RenderingEvent
 };
 
 /// A rendering started event
-using RenderingStartedEvent = RenderingEvent<eRenderEventCommand::eRenderingStarted>;
+using RenderingStartedEvent = RenderingEvent<eRenderingEventCommand::eRenderingStarted>;
 /// A rendering complete event
-using RenderingCompleteEvent = RenderingEvent<eRenderEventCommand::eRenderingComplete>;
+using RenderingCompleteEvent = RenderingEvent<eRenderingEventCommand::eRenderingComplete>;
 
 /// An end of audio event
 struct EndOfAudioEvent
@@ -501,7 +501,7 @@ struct EndOfAudioEvent
 	};
 
 	/// The event command for this event type
-	constexpr static auto sEventCommand = eRenderEventCommand::eEndOfAudio;
+	constexpr static auto sEventCommand = eRenderingEventCommand::eEndOfAudio;
 
 	/// The event command and identification number
 	RenderingEventHeader 	mHeader;
