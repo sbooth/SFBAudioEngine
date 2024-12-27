@@ -892,7 +892,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		if(_playerNode) {
 			playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
 			[_engine detachNode:_playerNode];
-//			[_playerNode prepForDealloc];
 		}
 
 		_playerNode = playerNode;
