@@ -397,19 +397,19 @@ struct Event
 #pragma mark Decoding Events
 
 /// Decoding queue events
-enum class eDecodingEventCommand : uint32_t {
-	eDecodingStarted 	= 1,
-	eDecodingComplete 	= 2,
-	eDecodingCanceled 	= 3,
-	eDecodingError 		= 4,
+enum class DecodingEventCommand : uint32_t {
+	eStarted 	= 1,
+	eComplete 	= 2,
+	eCanceled 	= 3,
+	eError 		= 4,
 };
 
 /// A decoding event header
-using DecodingEventHeader = EventHeader<eDecodingEventCommand>;
+using DecodingEventHeader = EventHeader<DecodingEventCommand>;
 
 /// A decoding event
 template <typename P>
-using DecodingEvent = Event<eDecodingEventCommand, P>;
+using DecodingEvent = Event<DecodingEventCommand, P>;
 
 /// An event payload consisting of a decoder sequence number
 struct DecoderSequenceNumberPayload
@@ -428,18 +428,18 @@ struct DispatchKeyPayload
 #pragma mark Rendering Events
 
 /// Render block events
-enum class eRenderingEventCommand : uint32_t {
-	eRenderingStarted 		= 1,
-	eRenderingComplete 		= 2,
-	eEndOfAudio				= 3,
+enum class RenderingEventCommand : uint32_t {
+	eStarted 		= 1,
+	eComplete 		= 2,
+	eEndOfAudio		= 3,
 };
 
 /// A rendering event command and identification number
-using RenderingEventHeader = EventHeader<eRenderingEventCommand>;
+using RenderingEventHeader = EventHeader<RenderingEventCommand>;
 
 /// A rendering event
 template <typename P>
-using RenderingEvent = Event<eRenderingEventCommand, P>;
+using RenderingEvent = Event<RenderingEventCommand, P>;
 
 /// An event payload consisting of a decoder sequence number and host time
 struct DecoderSequenceNumberAndHostTimePayload
@@ -637,7 +637,7 @@ public:
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
-					const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{eRenderingEventCommand::eRenderingStarted, decoderState->mSequenceNumber, hostTime};
+					const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eStarted, decoderState->mSequenceNumber, hostTime};
 					if(mRenderEventRingBuffer.WriteValue(event))
 						dispatch_source_merge_data(mEventProcessor, 1);
 					else
@@ -654,7 +654,7 @@ public:
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
-					const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{eRenderingEventCommand::eRenderingComplete, decoderState->mSequenceNumber, hostTime};
+					const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eComplete, decoderState->mSequenceNumber, hostTime};
 					if(mRenderEventRingBuffer.WriteValue(event))
 						dispatch_source_merge_data(mEventProcessor, 1);
 					else
@@ -674,7 +674,7 @@ public:
 			if(!decoderState) {
 				const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(framesRead / mAudioRingBuffer.Format().mSampleRate);
 
-				const RenderingEvent<HostTimePayload> event{eRenderingEventCommand::eEndOfAudio, hostTime};
+				const RenderingEvent<HostTimePayload> event{RenderingEventCommand::eEndOfAudio, hostTime};
 				if(mRenderEventRingBuffer.WriteValue(event))
 					dispatch_source_merge_data(mEventProcessor, 1);
 				else
@@ -1149,7 +1149,7 @@ private:
 															  }];
 
 					// Submit the error event
-					const DecodingEvent<DispatchKeyPayload> event{eDecodingEventCommand::eDecodingError, mDispatchKeyCounter.fetch_add(1)};
+					const DecodingEvent<DispatchKeyPayload> event{DecodingEventCommand::eError, mDispatchKeyCounter.fetch_add(1)};
 
 					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
@@ -1227,7 +1227,7 @@ private:
 															  }];
 
 					// Submit the error event
-					const DecodingEvent<DispatchKeyPayload> event{eDecodingEventCommand::eDecodingError, mDispatchKeyCounter.fetch_add(1)};
+					const DecodingEvent<DispatchKeyPayload> event{DecodingEventCommand::eError, mDispatchKeyCounter.fetch_add(1)};
 
 					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
@@ -1279,7 +1279,7 @@ private:
 						mFlags.fetch_or(eRingBufferNeedsReset);
 
 						// Submit the decoding canceled event
-						const DecodingEvent<DecoderSequenceNumberPayload> event{eDecodingEventCommand::eDecodingCanceled, decoderState->mSequenceNumber};
+						const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eCanceled, decoderState->mSequenceNumber};
 						if(mDecodeEventRingBuffer.WriteValue(event))
 							dispatch_source_merge_data(mEventProcessor, 1);
 						else
@@ -1296,7 +1296,7 @@ private:
 							decoderState->mFlags.fetch_or(DecoderState::eDecodingStarted);
 
 							// Submit the decoding started event
-							const DecodingEvent<DecoderSequenceNumberPayload> event{eDecodingEventCommand::eDecodingStarted, decoderState->mSequenceNumber};
+							const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eStarted, decoderState->mSequenceNumber};
 							if(mDecodeEventRingBuffer.WriteValue(event))
 								dispatch_source_merge_data(mEventProcessor, 1);
 							else
@@ -1309,7 +1309,7 @@ private:
 
 							if(error) {
 								// Submit the error event
-								const DecodingEvent<DispatchKeyPayload> event{eDecodingEventCommand::eDecodingError, mDispatchKeyCounter.fetch_add(1)};
+								const DecodingEvent<DispatchKeyPayload> event{DecodingEventCommand::eError, mDispatchKeyCounter.fetch_add(1)};
 
 								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
@@ -1331,7 +1331,7 @@ private:
 							decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
 							// Submit the decoding complete event
-							const DecodingEvent<DecoderSequenceNumberPayload> event{eDecodingEventCommand::eDecodingComplete, decoderState->mSequenceNumber};
+							const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eComplete, decoderState->mSequenceNumber};
 							if(mDecodeEventRingBuffer.WriteValue(event))
 								dispatch_source_merge_data(mEventProcessor, 1);
 							else
@@ -1355,11 +1355,11 @@ private:
 	void ProcessDecodeEvent(const DecodingEventHeader& header) noexcept
 	{
 		switch(header.mCommand) {
-			case eDecodingEventCommand::eDecodingStarted:
+			case DecodingEventCommand::eStarted:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DecoderSequenceNumberPayload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for DecodingStartedEvent", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for decoding started event", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1373,14 +1373,14 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for DecodingStartedEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for decoding started event");
 				break;
 
-			case eDecodingEventCommand::eDecodingComplete:
+			case DecodingEventCommand::eComplete:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DecoderSequenceNumberPayload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for DecodingCompleteEvent", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for decoding complete event", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1394,14 +1394,14 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for DecodingCompleteEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for decoding complete event");
 				break;
 
-			case eDecodingEventCommand::eDecodingCanceled:
+			case DecodingEventCommand::eCanceled:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DecoderSequenceNumberPayload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for DecodingCanceledEvent", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for decoding canceled event", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1419,14 +1419,14 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for DecodingCanceledEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for decoding canceled event");
 				break;
 
-			case eDecodingEventCommand::eDecodingError:
+			case DecodingEventCommand::eError:
 				if(const auto eventPayload = mDecodeEventRingBuffer.ReadValue<DispatchKeyPayload>(); eventPayload) {
 					NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mNode.delegateQueue, reinterpret_cast<void *>(eventPayload->mKey));
 					if(!error) {
-						os_log_fault(_audioPlayerNodeLog, "Dispatch value for key %llu missing for DecodingErrorEvent", eventPayload->mKey);
+						os_log_fault(_audioPlayerNodeLog, "Dispatch value for key %llu missing for decoding error event", eventPayload->mKey);
 						break;
 					}
 
@@ -1442,7 +1442,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for DecodingErrorEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for decoding error event");
 				break;
 
 			default:
@@ -1454,11 +1454,11 @@ private:
 	void ProcessRenderEvent(const RenderingEventHeader& header) noexcept
 	{
 		switch(header.mCommand) {
-			case eRenderingEventCommand::eRenderingStarted:
+			case RenderingEventCommand::eStarted:
 				if(const auto eventPayload = mRenderEventRingBuffer.ReadValue<DecoderSequenceNumberAndHostTimePayload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for RenderingStartedEvent", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering started event", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1478,14 +1478,14 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for RenderingStartedEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for rendering started event");
 				break;
 
-			case eRenderingEventCommand::eRenderingComplete:
+			case RenderingEventCommand::eComplete:
 				if(const auto eventPayload = mRenderEventRingBuffer.ReadValue<DecoderSequenceNumberAndHostTimePayload>(); eventPayload) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for RenderingCompleteEvent", eventPayload->mDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering complete event", eventPayload->mDecoderSequenceNumber);
 						break;
 					}
 
@@ -1507,10 +1507,10 @@ private:
 					DeleteDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for RenderingCompleteEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for rendering complete event");
 				break;
 
-			case eRenderingEventCommand::eEndOfAudio:
+			case RenderingEventCommand::eEndOfAudio:
 				if(const auto eventPayload = mRenderEventRingBuffer.ReadValue<HostTimePayload>(); eventPayload) {
 					const auto now = SFB::GetCurrentHostTime();
 					if(now > eventPayload->mHostTime)
@@ -1528,7 +1528,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing data for EndOfAudioEvent");
+					os_log_fault(_audioPlayerNodeLog, "Missing data for end of audio event");
 				break;
 
 			default:
