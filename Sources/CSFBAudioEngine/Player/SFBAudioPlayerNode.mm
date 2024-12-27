@@ -49,7 +49,7 @@ void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint3
 {
 #if DEBUG
 	assert(bufferList != nullptr);
-#endif /* DEBUG */
+#endif // DEBUG
 
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
 		if(byteOffset > bufferList->mBuffers[i].mDataByteSize)
@@ -154,7 +154,7 @@ struct DecoderState {
 #if DEBUG
 		assert(decoder != nil);
 		assert(format != nil);
-#endif /* DEBUG */
+#endif // DEBUG
 
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 		if(!mConverter) {
@@ -192,7 +192,7 @@ struct DecoderState {
 #if DEBUG
 		assert(buffer != nil);
 		assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
-#endif /* DEBUG */
+#endif // DEBUG
 
 		if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
 			return false;
@@ -534,7 +534,7 @@ public:
 	{
 #if DEBUG
 		assert(format != nil);
-#endif /* DEBUG */
+#endif // DEBUG
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
@@ -591,7 +591,7 @@ public:
 			if(framesRead != frameCount) {
 #if DEBUG
 				os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
-#endif /* DEBUG */
+#endif // DEBUG
 
 				const auto framesOfSilence = frameCount - framesRead;
 				const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
@@ -1000,7 +1000,7 @@ public:
 	{
 #if DEBUG
 		assert(format != nil);
-#endif /* DEBUG */
+#endif // DEBUG
 
 		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
 		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
@@ -1013,7 +1013,7 @@ public:
 	{
 #if DEBUG
 		assert(decoder != nil);
-#endif /* DEBUG */
+#endif // DEBUG
 
 		if(!decoder.isOpen && ![decoder openReturningError:error])
 			return false;
