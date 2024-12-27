@@ -478,10 +478,10 @@ struct AudioPlayerNode {
 	static constexpr AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
 
 	enum eAudioPlayerNodeFlags : unsigned int {
-		eIsPlaying 				= 1u << 0,
-		eOutputIsMuted 			= 1u << 1,
-		eMuteRequested 			= 1u << 2,
-		eRingBufferNeedsReset 	= 1u << 3,
+		eFlagIsPlaying 				= 1u << 0,
+		eFlagOutputIsMuted 			= 1u << 1,
+		eFlagMuteRequested 			= 1u << 2,
+		eFlagRingBufferNeedsReset 	= 1u << 3,
 	};
 
 	/// Weak reference to owning `SFBAudioPlayerNode` instance
@@ -545,9 +545,9 @@ public:
 
 			// ========================================
 			// 0. Mute output if requested
-			if(mFlags.load() & eMuteRequested) {
-				mFlags.fetch_or(eOutputIsMuted);
-				mFlags.fetch_and(~eMuteRequested);
+			if(mFlags.load() & eFlagMuteRequested) {
+				mFlags.fetch_or(eFlagOutputIsMuted);
+				mFlags.fetch_and(~eFlagMuteRequested);
 				dispatch_semaphore_signal(mDecodingSemaphore);
 			}
 
@@ -559,7 +559,7 @@ public:
 
 			// ========================================
 			// 1. Output silence if the node isn't playing or is muted
-			if(const auto flags = mFlags.load(); !(flags & eIsPlaying) || flags & eOutputIsMuted) {
+			if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagOutputIsMuted) {
 				auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 				SetAudioBufferListToZero(outputData, 0, byteCountToZero);
 				*isSilence = YES;
@@ -799,30 +799,30 @@ public:
 
 	void Play() noexcept
 	{
-		mFlags.fetch_or(eIsPlaying);
+		mFlags.fetch_or(eFlagIsPlaying);
 	}
 
 	void Pause() noexcept
 	{
-		mFlags.fetch_and(~eIsPlaying);
+		mFlags.fetch_and(~eFlagIsPlaying);
 	}
 
 	void Stop() noexcept
 	{
-		mFlags.fetch_and(~eIsPlaying);
+		mFlags.fetch_and(~eFlagIsPlaying);
 		Reset();
 	}
 
 	void TogglePlayPause() noexcept
 	{
-		mFlags.fetch_xor(eIsPlaying);
+		mFlags.fetch_xor(eFlagIsPlaying);
 	}
 
 #pragma mark - Playback State
 
 	bool IsPlaying() const noexcept
 	{
-		return (mFlags.load() & eIsPlaying) != 0;
+		return (mFlags.load() & eFlagIsPlaying) != 0;
 	}
 
 	bool IsReady() const noexcept
@@ -1239,23 +1239,23 @@ private:
 				for(;;) {
 					// If a seek is pending request a ring buffer reset
 					if(decoderState->HasPendingSeek())
-						mFlags.fetch_or(eRingBufferNeedsReset);
+						mFlags.fetch_or(eFlagRingBufferNeedsReset);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
-					if(mFlags.load() & eRingBufferNeedsReset) {
-						mFlags.fetch_and(~eRingBufferNeedsReset);
+					if(mFlags.load() & eFlagRingBufferNeedsReset) {
+						mFlags.fetch_and(~eFlagRingBufferNeedsReset);
 
 						// Ensure output is muted before performing operations on the ring buffer that aren't thread-safe
-						if(!(mFlags.load() & eOutputIsMuted)) {
+						if(!(mFlags.load() & eFlagOutputIsMuted)) {
 							if(mNode.engine.isRunning) {
-								mFlags.fetch_or(eMuteRequested);
+								mFlags.fetch_or(eFlagMuteRequested);
 
 								// The render block will clear eMuteRequested and set eOutputIsMuted
-								while(!(mFlags.load() & eOutputIsMuted))
+								while(!(mFlags.load() & eFlagOutputIsMuted))
 									dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
 							}
 							else
-								mFlags.fetch_or(eOutputIsMuted);
+								mFlags.fetch_or(eFlagOutputIsMuted);
 						}
 
 						// Perform seek if one is pending
@@ -1266,13 +1266,13 @@ private:
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
-						mFlags.fetch_and(~eOutputIsMuted);
+						mFlags.fetch_and(~eFlagOutputIsMuted);
 					}
 
 					if(decoderState->mFlags.load() & DecoderState::eFlagCancelDecoding) {
 						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
-						mFlags.fetch_or(eRingBufferNeedsReset);
+						mFlags.fetch_or(eFlagRingBufferNeedsReset);
 
 						// Submit the decoding canceled event
 						const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eCanceled, decoderState->mSequenceNumber};
