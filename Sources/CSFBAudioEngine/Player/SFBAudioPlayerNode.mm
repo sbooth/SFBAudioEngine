@@ -356,8 +356,7 @@ uint64_t NextEventIdentificationNumber() noexcept
 
 /// An event header consisting of an event command and event identification number
 template <typename T, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<T>, uint32_t>>>
-struct EventHeader
-{
+struct EventHeader {
 	/// The event command
 	T mCommand;
 	/// The event identification number
@@ -375,8 +374,7 @@ struct EventHeader
 
 /// An event consisting of a header and payload
 template <typename T, typename P, typename = std::enable_if_t<std::is_trivially_copyable_v<P> && std::is_default_constructible_v<P>>>
-struct Event
-{
+struct Event {
 	/// The event header
 	EventHeader<T> mHeader;
 	/// Event-specific data
@@ -412,15 +410,13 @@ template <typename P>
 using DecodingEvent = Event<DecodingEventCommand, P>;
 
 /// An event payload consisting of a decoder sequence number
-struct DecoderSequenceNumberPayload
-{
+struct DecoderSequenceNumberPayload {
 	/// The decoder sequence number for the event
 	uint64_t mDecoderSequenceNumber;
 };
 
 /// An event payload consisting of an event key in dispatch queue-specific data
-struct DispatchKeyPayload
-{
+struct DispatchKeyPayload {
 	/// A key for an object in dispatch queue-specific data
 	uint64_t mKey;
 };
@@ -442,8 +438,7 @@ template <typename P>
 using RenderingEvent = Event<RenderingEventCommand, P>;
 
 /// An event payload consisting of a decoder sequence number and host time
-struct DecoderSequenceNumberAndHostTimePayload
-{
+struct DecoderSequenceNumberAndHostTimePayload {
 	/// The decoder sequence number for the event
 	uint64_t mDecoderSequenceNumber;
 	/// The host time for the event
@@ -451,8 +446,7 @@ struct DecoderSequenceNumberAndHostTimePayload
 };
 
 /// An event payload consisting of a host time
-struct HostTimePayload
-{
+struct HostTimePayload {
 	/// The host time for the event
 	uint64_t mHostTime;
 };
@@ -474,8 +468,7 @@ void release_nserror_f(void *context)
 }
 
 /// SFBAudioPlayerNode implementation
-struct AudioPlayerNode
-{
+struct AudioPlayerNode {
 	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
 
 	/// The minimum number of frames to write to the ring buffer
