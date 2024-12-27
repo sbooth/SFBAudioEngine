@@ -25,7 +25,7 @@ namespace {
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
-enum eAudioPlayerFlags : unsigned int {
+enum AudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagRenderingImminent				= 1u << 0,
 	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,

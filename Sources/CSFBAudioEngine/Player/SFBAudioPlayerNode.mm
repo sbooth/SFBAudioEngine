@@ -110,7 +110,7 @@ struct DecoderState {
 	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
 	static constexpr int64_t			kInvalidFramePosition 	= -1;
 
-	enum eDecoderStateFlags : unsigned int {
+	enum DecoderStateFlags : unsigned int {
 		eFlagCancelDecoding 	= 1u << 0,
 		eFlagDecodingStarted 	= 1u << 1,
 		eFlagDecodingComplete 	= 1u << 2,
@@ -477,7 +477,7 @@ struct AudioPlayerNode {
 	/// The minimum number of frames to write to the ring buffer
 	static constexpr AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
 
-	enum eAudioPlayerNodeFlags : unsigned int {
+	enum AudioPlayerNodeFlags : unsigned int {
 		eFlagIsPlaying 				= 1u << 0,
 		eFlagOutputIsMuted 			= 1u << 1,
 		eFlagMuteRequested 			= 1u << 2,
