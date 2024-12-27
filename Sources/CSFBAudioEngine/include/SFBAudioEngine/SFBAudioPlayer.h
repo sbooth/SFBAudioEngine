@@ -256,7 +256,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the output device was successfully set
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
-#endif /* !TARGET_OS_IPHONE */
+#endif // !TARGET_OS_IPHONE
 
 #pragma mark - Delegate
 
