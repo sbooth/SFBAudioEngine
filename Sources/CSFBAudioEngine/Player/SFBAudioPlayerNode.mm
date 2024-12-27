@@ -538,147 +538,36 @@ public:
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
-		// MARK: Rendering
-		mRenderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
-			// ========================================
-			// Pre-rendering actions
+		mDispatchGroup = dispatch_group_create();
+		if(!mDispatchGroup) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
+		}
 
-			// ========================================
-			// 0. Mute output if requested
-			if(mFlags.load() & eFlagMuteRequested) {
-				mFlags.fetch_or(eFlagOutputIsMuted);
-				mFlags.fetch_and(~eFlagMuteRequested);
-				dispatch_semaphore_signal(mDecodingSemaphore);
-			}
+		// ========================================
+		// Decoding Setup
 
-			// ========================================
-			// Rendering
+		mDecodingSemaphore = dispatch_semaphore_create(0);
+		if(!mDecodingSemaphore) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
+			throw std::runtime_error("dispatch_semaphore_create failed");
+		}
 
-			// N.B. The ring buffer must not be read from or written to when eOutputIsMuted is set
-			// because the decoding queue could be performing non-thread safe operations
+		// Create the dispatch queue used for decoding
+		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
+		if(!attr) {
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class failed");
+			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
+		}
 
-			// ========================================
-			// 1. Output silence if the node isn't playing or is muted
-			if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagOutputIsMuted) {
-				auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-				SetAudioBufferListToZero(outputData, 0, byteCountToZero);
-				*isSilence = YES;
-				return noErr;
-			}
+		mDecodingQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Decoder", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		if(!mDecodingQueue) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
+			throw std::runtime_error("dispatch_queue_create_with_target failed");
+		}
 
-			// ========================================
-			// 2. Determine how many audio frames are available to read in the ring buffer
-			const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
-
-			// ========================================
-			// 3. Output silence if the ring buffer is empty
-			if(framesAvailableToRead == 0) {
-				auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-				SetAudioBufferListToZero(outputData, 0, byteCountToZero);
-				*isSilence = YES;
-				return noErr;
-			}
-
-			// ========================================
-			// 4. Read as many frames as available from the ring buffer
-			const auto framesToRead = std::min(framesAvailableToRead, frameCount);
-			const auto framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
-			if(framesRead != framesToRead)
-				os_log_fault(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
-
-			// ========================================
-			// 5. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
-			if(framesRead != frameCount) {
-#if DEBUG
-				os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
-#endif // DEBUG
-
-				const auto framesOfSilence = frameCount - framesRead;
-				const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
-				const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
-				SetAudioBufferListToZero(outputData, byteCountToSkip, byteCountToZero);
-			}
-
-			// ========================================
-			// 6. If there is adequate space in the ring buffer for another chunk signal the decoding queue
-			if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
-				dispatch_semaphore_signal(mDecodingSemaphore);
-
-			// ========================================
-			// Post-rendering actions
-
-			// ========================================
-			// 7. There is nothing more to do if no frames were rendered
-			if(framesRead == 0)
-				return noErr;
-
-			// ========================================
-			// 8. Perform bookkeeping to apportion the rendered frames appropriately
-			//
-			// framesRead contains the number of valid frames that were rendered
-			// However, these could have come from any number of decoders depending on buffer sizes
-			// So it is necessary to split them up here
-
-			auto framesRemainingToDistribute = framesRead;
-
-			auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-			while(decoderState) {
-				const auto decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
-				const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
-
-				if(!(decoderState->mFlags.load() & DecoderState::eFlagRenderingStarted)) {
-					decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
-
-					// Submit the rendering started event
-					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
-
-					const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eStarted, decoderState->mSequenceNumber, hostTime};
-					if(mRenderEventRingBuffer.WriteValue(event))
-						dispatch_source_merge_data(mEventProcessor, 1);
-					else
-						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for rendering started event");
-				}
-
-				decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
-				framesRemainingToDistribute -= framesFromThisDecoder;
-
-				if((decoderState->mFlags.load() & DecoderState::eFlagDecodingComplete) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
-					decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
-
-					// Submit the rendering complete event
-					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-					const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
-
-					const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eComplete, decoderState->mSequenceNumber, hostTime};
-					if(mRenderEventRingBuffer.WriteValue(event))
-						dispatch_source_merge_data(mEventProcessor, 1);
-					else
-						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for rendering complete event");
-				}
-
-				if(framesRemainingToDistribute == 0)
-					break;
-
-				decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
-			}
-
-			// ========================================
-			// 9. If there are no active decoders schedule the end of audio notification
-
-			decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-			if(!decoderState) {
-				const uint64_t hostTime = timestamp->mHostTime + SFB::ConvertSecondsToHostTime(framesRead / mAudioRingBuffer.Format().mSampleRate);
-
-				const RenderingEvent<HostTimePayload> event{RenderingEventCommand::eEndOfAudio, hostTime};
-				if(mRenderEventRingBuffer.WriteValue(event))
-					dispatch_source_merge_data(mEventProcessor, 1);
-				else
-					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for end of audio event");
-			}
-
-			return noErr;
-		};
+		// ========================================
+		// Rendering Setup
 
 		// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 		if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
@@ -686,7 +575,13 @@ public:
 			throw std::runtime_error("SFB::Audio::RingBuffer::Allocate failed");
 		}
 
-		// Allocate the event ring buffers
+		// Set up the render block
+		mRenderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
+			return Render(*isSilence, *timestamp, frameCount, outputData);
+		};
+
+		// ========================================
+		// Event Processing Setup
 
 		// The decode event ring buffer is written to by the decoding queue and read from by the event processor
 		if(!mDecodeEventRingBuffer.Allocate(256)) {
@@ -700,20 +595,6 @@ public:
 			throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 		}
 
-		mDecodingSemaphore = dispatch_semaphore_create(0);
-		if(!mDecodingSemaphore) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
-			throw std::runtime_error("dispatch_semaphore_create failed");
-		}
-
-		mDispatchGroup = dispatch_group_create();
-		if(!mDispatchGroup) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
-			throw std::runtime_error("dispatch_group_create failed");
-		}
-
-		// MARK: Event Processing
-
 		// Create the dispatch source used for event processing and delegate messaging
 		mEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
 		if(!mEventProcessor) {
@@ -722,34 +603,7 @@ public:
 		}
 
 		dispatch_source_set_event_handler(mEventProcessor, ^{
-			auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
-			auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
-
-			// Process all pending decode and render events in chronological order
-			for(;;) {
-				// Nothing left to do
-				if(!decodeEventHeader && !renderEventHeader)
-					return;
-				// Process the decode event
-				else if(decodeEventHeader && !renderEventHeader) {
-					ProcessDecodeEvent(*decodeEventHeader);
-					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
-				}
-				// Process the render event
-				else if(!decodeEventHeader && renderEventHeader) {
-					ProcessRenderEvent(*renderEventHeader);
-					renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
-				}
-				// Process the event with an earlier identification number
-				else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
-					ProcessDecodeEvent(*decodeEventHeader);
-					decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
-				}
-				else {
-					ProcessRenderEvent(*renderEventHeader);
-					renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
-				}
-			}
+			ProcessPendingEvents();
 		});
 
 		// Allocate and initialize the decoder state array
@@ -764,19 +618,6 @@ public:
 
 		// Start processing events
 		dispatch_activate(mEventProcessor);
-
-		// Create the dispatch queue used for decoding
-		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-		if(!attr) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_attr_make_with_qos_class failed");
-			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
-		}
-
-		mDecodingQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Decoder", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
-		if(!mDecodingQueue) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
-			throw std::runtime_error("dispatch_queue_create_with_target failed");
-		}
 	}
 
 	~AudioPlayerNode()
@@ -1346,7 +1187,183 @@ private:
 		});
 	}
 
+	// MARK: - Rendering
+
+	OSStatus Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList * _Nonnull outputData) noexcept
+	{
+		// ========================================
+		// Pre-rendering actions
+
+		// ========================================
+		// 0. Mute output if requested
+		if(mFlags.load() & eFlagMuteRequested) {
+			mFlags.fetch_or(eFlagOutputIsMuted);
+			mFlags.fetch_and(~eFlagMuteRequested);
+			dispatch_semaphore_signal(mDecodingSemaphore);
+		}
+
+		// ========================================
+		// Rendering
+
+		// N.B. The ring buffer must not be read from or written to when eOutputIsMuted is set
+		// because the decoding queue could be performing non-thread safe operations
+
+		// ========================================
+		// 1. Output silence if the node isn't playing or is muted
+		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagOutputIsMuted) {
+			auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
+			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
+			isSilence = YES;
+			return noErr;
+		}
+
+		// ========================================
+		// 2. Determine how many audio frames are available to read in the ring buffer
+		const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
+
+		// ========================================
+		// 3. Output silence if the ring buffer is empty
+		if(framesAvailableToRead == 0) {
+			auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
+			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
+			isSilence = YES;
+			return noErr;
+		}
+
+		// ========================================
+		// 4. Read as many frames as available from the ring buffer
+		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
+		const auto framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
+		if(framesRead != framesToRead)
+			os_log_fault(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
+
+		// ========================================
+		// 5. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
+		if(framesRead != frameCount) {
+#if DEBUG
+			os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
+#endif // DEBUG
+
+			const auto framesOfSilence = frameCount - framesRead;
+			const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
+			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
+			SetAudioBufferListToZero(outputData, byteCountToSkip, byteCountToZero);
+		}
+
+		// ========================================
+		// 6. If there is adequate space in the ring buffer for another chunk signal the decoding queue
+		if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
+			dispatch_semaphore_signal(mDecodingSemaphore);
+
+		// ========================================
+		// Post-rendering actions
+
+		// ========================================
+		// 7. There is nothing more to do if no frames were rendered
+		if(framesRead == 0)
+			return noErr;
+
+		// ========================================
+		// 8. Perform bookkeeping to apportion the rendered frames appropriately
+		//
+		// framesRead contains the number of valid frames that were rendered
+		// However, these could have come from any number of decoders depending on buffer sizes
+		// So it is necessary to split them up here
+
+		auto framesRemainingToDistribute = framesRead;
+
+		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		while(decoderState) {
+			const auto decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
+			const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
+
+			if(!(decoderState->mFlags.load() & DecoderState::eFlagRenderingStarted)) {
+				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
+
+				// Submit the rendering started event
+				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
+
+				const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eStarted, decoderState->mSequenceNumber, hostTime};
+				if(mRenderEventRingBuffer.WriteValue(event))
+					dispatch_source_merge_data(mEventProcessor, 1);
+				else
+					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for rendering started event");
+			}
+
+			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
+			framesRemainingToDistribute -= framesFromThisDecoder;
+
+			if((decoderState->mFlags.load() & DecoderState::eFlagDecodingComplete) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
+				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
+
+				// Submit the rendering complete event
+				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
+
+				const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eComplete, decoderState->mSequenceNumber, hostTime};
+				if(mRenderEventRingBuffer.WriteValue(event))
+					dispatch_source_merge_data(mEventProcessor, 1);
+				else
+					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for rendering complete event");
+			}
+
+			if(framesRemainingToDistribute == 0)
+				break;
+
+			decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
+		}
+
+		// ========================================
+		// 9. If there are no active decoders schedule the end of audio notification
+
+		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+		if(!decoderState) {
+			const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(framesRead / mAudioRingBuffer.Format().mSampleRate);
+
+			const RenderingEvent<HostTimePayload> event{RenderingEventCommand::eEndOfAudio, hostTime};
+			if(mRenderEventRingBuffer.WriteValue(event))
+				dispatch_source_merge_data(mEventProcessor, 1);
+			else
+				os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for end of audio event");
+		}
+
+		return noErr;
+	}
+
 	// MARK: - Event Processing
+
+	void ProcessPendingEvents() noexcept
+	{
+		auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+		auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+
+		// Process all pending decode and render events in chronological order
+		for(;;) {
+			// Nothing left to do
+			if(!decodeEventHeader && !renderEventHeader)
+				return;
+			// Process the decode event
+			else if(decodeEventHeader && !renderEventHeader) {
+				ProcessDecodeEvent(*decodeEventHeader);
+				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+			}
+			// Process the render event
+			else if(!decodeEventHeader && renderEventHeader) {
+				ProcessRenderEvent(*renderEventHeader);
+				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+			}
+			// Process the event with an earlier identification number
+			else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
+				ProcessDecodeEvent(*decodeEventHeader);
+				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+			}
+			else {
+				ProcessRenderEvent(*renderEventHeader);
+				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+			}
+		}
+	}
 
 	void ProcessDecodeEvent(const DecodingEventHeader& header) noexcept
 	{
