@@ -351,6 +351,7 @@ void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uin
 uint64_t NextEventIdentificationNumber() noexcept
 {
 	static std::atomic_uint64_t nextIdentificationNumber = 1;
+	static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 	return nextIdentificationNumber.fetch_add(1);
 }
 
