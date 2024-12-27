@@ -382,13 +382,13 @@ struct Event {
 	P mPayload;
 
 	/// Constructs an empty event
-	Event() noexcept = default;
+	Event() noexcept(std::is_nothrow_default_constructible_v<P>) = default;
 
 	/// Constructs an event
 	/// - parameter command: The command for the event
 	/// - parameter a: The payload for the event
 	template <typename... A>
-	Event(T command, A&&... a) noexcept
+	Event(T command, A&&... a) noexcept(std::is_nothrow_constructible_v<P, A...>)
 	: mHeader{command}, mPayload{std::forward<A>(a)...}
 	{}
 };
@@ -410,18 +410,6 @@ using DecodingEventHeader = EventHeader<DecodingEventCommand>;
 template <typename P>
 using DecodingEvent = Event<DecodingEventCommand, P>;
 
-/// An event payload consisting of a decoder sequence number
-struct DecoderSequenceNumberPayload {
-	/// The decoder sequence number for the event
-	uint64_t mDecoderSequenceNumber;
-};
-
-/// An event payload consisting of an event key in dispatch queue-specific data
-struct DispatchKeyPayload {
-	/// A key for an object in dispatch queue-specific data
-	uint64_t mKey;
-};
-
 #pragma mark Rendering Events
 
 /// Render block events
@@ -437,6 +425,20 @@ using RenderingEventHeader = EventHeader<RenderingEventCommand>;
 /// A rendering event
 template <typename P>
 using RenderingEvent = Event<RenderingEventCommand, P>;
+
+#pragma mark Event Payloads
+
+/// An event payload consisting of a decoder sequence number
+struct DecoderSequenceNumberPayload {
+	/// The decoder sequence number for the event
+	uint64_t mDecoderSequenceNumber;
+};
+
+/// An event payload consisting of an event key in dispatch queue-specific data
+struct DispatchKeyPayload {
+	/// A key for an object in dispatch queue-specific data
+	uint64_t mKey;
+};
 
 /// An event payload consisting of a decoder sequence number and host time
 struct DecoderSequenceNumberAndHostTimePayload {
