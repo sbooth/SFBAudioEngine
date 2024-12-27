@@ -723,7 +723,7 @@ public:
 			auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 			auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 
-			// Process all pending decode and render events in timestamp order
+			// Process all pending decode and render events in chronological order
 			for(;;) {
 				// Nothing left to do
 				if(!decodeEventHeader && !renderEventHeader)
