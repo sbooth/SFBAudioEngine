@@ -1350,27 +1350,27 @@ private:
 				break;
 			// Process the decode event
 			else if(decodeEventHeader && !renderEventHeader) {
-				ProcessDecodeEvent(*decodeEventHeader);
+				ProcessEvent(*decodeEventHeader);
 				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 			}
 			// Process the render event
 			else if(!decodeEventHeader && renderEventHeader) {
-				ProcessRenderEvent(*renderEventHeader);
+				ProcessEvent(*renderEventHeader);
 				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 			}
 			// Process the event with an earlier identification number
 			else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
-				ProcessDecodeEvent(*decodeEventHeader);
+				ProcessEvent(*decodeEventHeader);
 				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 			}
 			else {
-				ProcessRenderEvent(*renderEventHeader);
+				ProcessEvent(*renderEventHeader);
 				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 			}
 		}
 	}
 
-	void ProcessDecodeEvent(const DecodingEventHeader& header) noexcept
+	void ProcessEvent(const DecodingEventHeader& header) noexcept
 	{
 		switch(header.mCommand) {
 			case DecodingEventCommand::eStarted:
@@ -1457,7 +1457,7 @@ private:
 		}
 	}
 
-	void ProcessRenderEvent(const RenderingEventHeader& header) noexcept
+	void ProcessEvent(const RenderingEventHeader& header) noexcept
 	{
 		switch(header.mCommand) {
 			case RenderingEventCommand::eStarted:
