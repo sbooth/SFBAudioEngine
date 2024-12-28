@@ -900,10 +900,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			// of time, especially if the delegate callouts take longer than ideal.
 			//
 			// In my measurements the baseline with an empty delegate implementation of
-			// -audioPlayer:decoderCanceled:partiallyRendered: seems to be around 150 µsec
+			// -audioPlayer:decoderCanceled:partiallyRendered: seems to be around 100 µsec
 			//
 			// Assuming there are no external references to the audio player node,
-			// setting it to nil sends -dealloc
+			// setting it to nil here sends -dealloc
 			_playerNode = nil;
 		}
 

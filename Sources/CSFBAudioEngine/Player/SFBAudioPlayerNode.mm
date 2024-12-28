@@ -483,7 +483,6 @@ struct AudioPlayerNode {
 		eFlagOutputIsMuted 			= 1u << 1,
 		eFlagMuteRequested 			= 1u << 2,
 		eFlagRingBufferNeedsReset 	= 1u << 3,
-		eFlagIsShuttingDown 		= 1u << 4,
 	};
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
@@ -519,9 +518,8 @@ private:
 
 	/// Dispatch source processing events from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
-
-	/// Dispatch semaphore used to synchronize destruction
-	dispatch_semaphore_t			mTeardownSemaphore 		= nullptr;
+	/// Dispatch group used to track event processing
+	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
@@ -539,12 +537,6 @@ public:
 #endif // DEBUG
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
-
-		mTeardownSemaphore = dispatch_semaphore_create(0);
-		if(!mTeardownSemaphore) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create teardown dispatch semaphore: dispatch_semaphore_create failed");
-			throw std::runtime_error("dispatch_semaphore_create failed");
-		}
 
 		// ========================================
 		// Decoding Setup
@@ -604,10 +596,19 @@ public:
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
+		mEventProcessingGroup = dispatch_group_create();
+		if(!mEventProcessingGroup) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
+		}
+
 		dispatch_source_set_event_handler(mEventProcessor, ^{
 			if(dispatch_source_testcancel(mEventProcessor))
 				return;
+
+			dispatch_group_enter(mEventProcessingGroup);
 			ProcessPendingEvents();
+			dispatch_group_leave(mEventProcessingGroup);
 		});
 
 		// Allocate and initialize the decoder state array
@@ -628,13 +629,12 @@ public:
 	{
 		Stop();
 
-		// Use the decoding queue to ensure `DequeueAndProcessDecoder()` completes
+		// Wait on the decoding queue to ensure `DequeueAndProcessDecoder()` completes
 		dispatch_async_and_wait(mDecodingQueue, ^{
-			mFlags.fetch_or(eFlagIsShuttingDown);
-			dispatch_source_merge_data(mEventProcessor, 1);
 		});
 
-		dispatch_semaphore_wait(mTeardownSemaphore, DISPATCH_TIME_FOREVER);
+		// Wait for event processing to complete
+		/*const auto timeout =*/ dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
 		// Cancel any further event processing
 		dispatch_source_cancel(mEventProcessor);
@@ -1374,9 +1374,6 @@ private:
 				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 			}
 		}
-
-		if(mFlags.load() & eFlagIsShuttingDown)
-			dispatch_semaphore_signal(mTeardownSemaphore);
 	}
 
 	void ProcessDecodeEvent(const DecodingEventHeader& header) noexcept
