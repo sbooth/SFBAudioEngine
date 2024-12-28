@@ -20,6 +20,7 @@
 
 #import <SFBAudioRingBuffer.hpp>
 #import <SFBRingBuffer.hpp>
+#import <SFBScopeGuard.hpp>
 #import <SFBUnfairLock.hpp>
 
 #import "SFBAudioPlayerNode.h"
@@ -482,10 +483,11 @@ struct AudioPlayerNode {
 		eFlagOutputIsMuted 			= 1u << 1,
 		eFlagMuteRequested 			= 1u << 2,
 		eFlagRingBufferNeedsReset 	= 1u << 3,
+		eFlagIsShuttingDown 		= 1u << 4,
 	};
 
-	/// Weak reference to owning `SFBAudioPlayerNode` instance
-	__weak SFBAudioPlayerNode 		*mNode 					= nil;
+	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
+	__unsafe_unretained SFBAudioPlayerNode	*mNode 			= nil;
 
 	/// The render block supplying audio
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
@@ -518,8 +520,8 @@ private:
 	/// Dispatch source processing events from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
 
-	/// Dispatch group used to track in-progress decoding and delegate messages
-	dispatch_group_t 				mDispatchGroup 			= nullptr;
+	/// Dispatch semaphore used to synchronize destruction
+	dispatch_semaphore_t			mTeardownSemaphore 		= nullptr;
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
@@ -538,10 +540,10 @@ public:
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
-		mDispatchGroup = dispatch_group_create();
-		if(!mDispatchGroup) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
-			throw std::runtime_error("dispatch_group_create failed");
+		mTeardownSemaphore = dispatch_semaphore_create(0);
+		if(!mTeardownSemaphore) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create teardown dispatch semaphore: dispatch_semaphore_create failed");
+			throw std::runtime_error("dispatch_semaphore_create failed");
 		}
 
 		// ========================================
@@ -603,6 +605,8 @@ public:
 		}
 
 		dispatch_source_set_event_handler(mEventProcessor, ^{
+			if(dispatch_source_testcancel(mEventProcessor))
+				return;
 			ProcessPendingEvents();
 		});
 
@@ -622,16 +626,18 @@ public:
 
 	~AudioPlayerNode()
 	{
+		Stop();
+
+		// Use the decoding queue to ensure `DequeueAndProcessDecoder()` completes
+		dispatch_async_and_wait(mDecodingQueue, ^{
+			mFlags.fetch_or(eFlagIsShuttingDown);
+			dispatch_source_merge_data(mEventProcessor, 1);
+		});
+
+		dispatch_semaphore_wait(mTeardownSemaphore, DISPATCH_TIME_FOREVER);
+
 		// Cancel any further event processing
 		dispatch_source_cancel(mEventProcessor);
-
-		// Cancel decoding
-		CancelCurrentDecoder();
-		dispatch_semaphore_signal(mDecodingSemaphore);
-
-		const auto timeout = dispatch_group_wait(mDispatchGroup, /*DISPATCH_TIME_FOREVER*/dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
-		if(timeout)
-			os_log_fault(_audioPlayerNodeLog, "<AudioPlayerNode: %p> timeout waiting for dispatch group blocks to complete", this);
 
 		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> destroyed", this);
 	}
@@ -964,9 +970,14 @@ private:
 
 	void DequeueAndProcessDecoder() noexcept
 	{
-		dispatch_group_async(mDispatchGroup, mDecodingQueue, ^{
+		dispatch_async(mDecodingQueue, ^{
 			// Dequeue and process the next decoder
 			if(auto decoder = DequeueDecoder(); decoder) {
+				os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> processing %{public}@", this, decoder);
+				SFB::ScopeGuard defer{[&, this, decoder](){
+					os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> finished processing %{public}@", this, decoder);
+				}};
+
 				// Create the decoder state
 				DecoderState *decoderState = nullptr;
 
@@ -1342,7 +1353,7 @@ private:
 		for(;;) {
 			// Nothing left to do
 			if(!decodeEventHeader && !renderEventHeader)
-				return;
+				break;
 			// Process the decode event
 			else if(decodeEventHeader && !renderEventHeader) {
 				ProcessDecodeEvent(*decodeEventHeader);
@@ -1363,6 +1374,9 @@ private:
 				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 			}
 		}
+
+		if(mFlags.load() & eFlagIsShuttingDown)
+			dispatch_semaphore_signal(mTeardownSemaphore);
 	}
 
 	void ProcessDecodeEvent(const DecodingEventHeader& header) noexcept
@@ -1377,11 +1391,8 @@ private:
 					}
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node decodingStarted:decoderState->mDecoder];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode decodingStarted:decoderState->mDecoder];
 						});
 					}
 				}
@@ -1398,11 +1409,8 @@ private:
 					}
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node decodingComplete:decoderState->mDecoder];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode decodingComplete:decoderState->mDecoder];
 						});
 					}
 				}
@@ -1423,11 +1431,8 @@ private:
 					DeleteDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node decodingCanceled:decoder partiallyRendered:partiallyRendered];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode decodingCanceled:decoder partiallyRendered:partiallyRendered];
 						});
 					}
 				}
@@ -1446,11 +1451,8 @@ private:
 					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(eventPayload->mKey), nullptr, nullptr);
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node encounteredError:error];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode encounteredError:error];
 						});
 					}
 				}
@@ -1482,11 +1484,8 @@ private:
 						os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventPayload->mHostTime - now)) / 1e6, decoderState->mDecoder);
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node renderingWillStart:decoderState->mDecoder atHostTime:eventPayload->mHostTime];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode renderingWillStart:decoderState->mDecoder atHostTime:eventPayload->mHostTime];
 						});
 					}
 				}
@@ -1509,11 +1508,8 @@ private:
 						os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventPayload->mHostTime - now)) / 1e6, decoderState->mDecoder);
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node renderingWillComplete:decoderState->mDecoder atHostTime:eventPayload->mHostTime];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode renderingWillComplete:decoderState->mDecoder atHostTime:eventPayload->mHostTime];
 						});
 					}
 
@@ -1532,11 +1528,8 @@ private:
 						os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventPayload->mHostTime - now)) / 1e6);
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
-						auto node = mNode;
-						dispatch_group_enter(mDispatchGroup);
-						dispatch_async_and_wait(node.delegateQueue, ^{
-							[node.delegate audioPlayerNode:node audioWillEndAtHostTime:eventPayload->mHostTime];
-							dispatch_group_leave(mDispatchGroup);
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode audioWillEndAtHostTime:eventPayload->mHostTime];
 						});
 					}
 				}
