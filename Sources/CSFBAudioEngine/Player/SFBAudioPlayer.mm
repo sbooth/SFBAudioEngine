@@ -892,6 +892,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		if(_playerNode) {
 			playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
 			[_engine detachNode:_playerNode];
+
+			// When an audio player node is deallocated the destructor synchronously waits
+			// for decoder cancelation (if there is an active decoder) and then for any
+			// final events to be processed and delegate messages sent.
+			// The potential therefore exists to block the calling thread for a perceptible amount
+			// of time, especially if the delegate callouts take longer than ideal.
+			//
+			// In my measurements the baseline with an empty delegate implementation of
+			// -audioPlayer:decoderCanceled:partiallyRendered: seems to be around 150 µsec
+			//
+			// Assuming there are no external references to the audio player node,
+			// setting it to nil sends -dealloc
+			_playerNode = nil;
 		}
 
 		_playerNode = playerNode;
