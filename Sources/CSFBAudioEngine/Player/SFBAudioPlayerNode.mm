@@ -20,7 +20,6 @@
 
 #import <SFBAudioRingBuffer.hpp>
 #import <SFBRingBuffer.hpp>
-#import <SFBScopeGuard.hpp>
 #import <SFBUnfairLock.hpp>
 
 #import "SFBAudioPlayerNode.h"
@@ -973,11 +972,6 @@ private:
 		dispatch_async(mDecodingQueue, ^{
 			// Dequeue and process the next decoder
 			if(auto decoder = DequeueDecoder(); decoder) {
-				os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> processing %{public}@", this, decoder);
-				SFB::ScopeGuard defer{[&, this, decoder](){
-					os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> finished processing %{public}@", this, decoder);
-				}};
-
 				// Create the decoder state
 				DecoderState *decoderState = nullptr;
 
