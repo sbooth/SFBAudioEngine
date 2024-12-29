@@ -509,6 +509,8 @@ private:
 	dispatch_queue_t				mDecodingQueue 			= nullptr;
 	/// Dispatch semaphore used for communication with the decoding queue
 	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
+	/// Dispatch group used to track decoding tasks
+	dispatch_group_t 				mDecodingGroup			= nullptr;
 
 	/// Ring buffer used to communicate events from the decoding queue
 	SFB::RingBuffer					mDecodeEventRingBuffer;
@@ -517,9 +519,8 @@ private:
 
 	/// Dispatch source processing events from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
-
-	/// Dispatch group used to track decoding and event processing
-	dispatch_group_t 				mDispatchGroup			= nullptr;
+	/// Dispatch group used to track event processing
+	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
@@ -537,12 +538,6 @@ public:
 #endif // DEBUG
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
-
-		mDispatchGroup = dispatch_group_create();
-		if(!mDispatchGroup) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
-			throw std::runtime_error("dispatch_group_create failed");
-		}
 
 		// ========================================
 		// Decoding Setup
@@ -564,6 +559,12 @@ public:
 		if(!mDecodingQueue) {
 			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
 			throw std::runtime_error("dispatch_queue_create_with_target failed");
+		}
+
+		mDecodingGroup = dispatch_group_create();
+		if(!mDecodingGroup) {
+			os_log_error(_audioPlayerNodeLog, "Unable to decoding dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
 		}
 
 		// ========================================
@@ -602,13 +603,19 @@ public:
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
+		mEventProcessingGroup = dispatch_group_create();
+		if(!mEventProcessingGroup) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
+		}
+
 		dispatch_source_set_event_handler(mEventProcessor, ^{
 			if(dispatch_source_testcancel(mEventProcessor))
 				return;
 
-			dispatch_group_enter(mDispatchGroup);
+			dispatch_group_enter(mEventProcessingGroup);
 			ProcessPendingEvents();
-			dispatch_group_leave(mDispatchGroup);
+			dispatch_group_leave(mEventProcessingGroup);
 		});
 
 		// Allocate and initialize the decoder state array
@@ -629,8 +636,12 @@ public:
 	{
 		Stop();
 
-		// Wait for `DequeueAndProcessDecoder()` to return and for event processing to complete
-		/*const auto timeout =*/ dispatch_group_wait(mDispatchGroup, DISPATCH_TIME_FOREVER);
+		// Wait for decoding to complete
+		/*const auto timeout =*/ dispatch_group_wait(mDecodingGroup, DISPATCH_TIME_FOREVER);
+
+		// Wait for event processing to complete
+		if(const auto data = dispatch_source_get_data(mEventProcessor); data)
+		/*const auto timeout =*/ dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
 		// Cancel any further event processing
 		dispatch_source_cancel(mEventProcessor);
@@ -966,7 +977,7 @@ private:
 
 	void DequeueAndProcessDecoder() noexcept
 	{
-		dispatch_group_async(mDispatchGroup, mDecodingQueue, ^{
+		dispatch_group_async(mDecodingGroup, mDecodingQueue, ^{
 			// Dequeue and process the next decoder
 			if(auto decoder = DequeueDecoder(); decoder) {
 				// Create the decoder state
