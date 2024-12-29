@@ -1003,7 +1003,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// but any pending events will still be delivered before the instance is deallocated
 #if 0
 	if(audioPlayerNode != _playerNode) {
-		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingCanceled:partiallyRendered:");
+		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingCanceled:framesRendered:");
 		return;
 	}
 #endif
