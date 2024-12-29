@@ -396,7 +396,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
 #if DEBUG
-		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change");
+		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change to %@", nowPlaying);
 #endif // DEBUG
 		_nowPlaying = nowPlaying;
 	}
