@@ -629,7 +629,7 @@ public:
 	{
 		Stop();
 
-		// Wait for `DequeueAndProcessDecoder()` to return and for and event processing to complete
+		// Wait for `DequeueAndProcessDecoder()` to return and for event processing to complete
 		/*const auto timeout =*/ dispatch_group_wait(mDispatchGroup, DISPATCH_TIME_FOREVER);
 
 		// Cancel any further event processing
