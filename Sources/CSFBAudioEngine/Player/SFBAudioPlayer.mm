@@ -595,7 +595,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type
 {
 	dispatch_async(_engineQueue, ^{
-		NSMutableString *string = [NSMutableString stringWithString:@"Audio processing graph:\n"];
+		NSMutableString *string = [NSMutableString stringWithFormat:@"%@ audio processing graph:\n", self];
 
 		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
 		[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
