@@ -456,15 +456,6 @@ struct HostTimePayload {
 
 #pragma mark - AudioPlayerNode
 
-void event_processor_finalizer_f(void *context)
-{
-	if(auto decoders = static_cast<DecoderStateArray *>(context); decoders) {
-		for(auto& atomic_ptr : *decoders)
-			delete atomic_ptr.exchange(nullptr);
-		delete decoders;
-	}
-}
-
 void release_nserror_f(void *context)
 {
 	(void)(__bridge_transfer NSError *)context;
@@ -517,6 +508,8 @@ private:
 	/// Ring buffer used to communicate events from the render block
 	SFB::RingBuffer					mRenderEventRingBuffer;
 
+	/// Dispatch queue used for event processing
+	dispatch_queue_t				mEventQueue 			= nullptr;
 	/// Dispatch source processing events from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
 	/// Dispatch group used to track event processing
@@ -539,6 +532,11 @@ public:
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
+		// Allocate and initialize the decoder state array
+		mActiveDecoders = new DecoderStateArray;
+		for(auto& atomic_ptr : *mActiveDecoders)
+			atomic_ptr.store(nullptr);
+
 		// ========================================
 		// Decoding Setup
 
@@ -555,7 +553,7 @@ public:
 			throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
 		}
 
-		mDecodingQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.Decoder", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		mDecodingQueue = dispatch_queue_create_with_target("AudioPlayerNode.Decoding", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
 		if(!mDecodingQueue) {
 			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
 			throw std::runtime_error("dispatch_queue_create_with_target failed");
@@ -596,8 +594,15 @@ public:
 			throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 		}
 
-		// Create the dispatch source used for event processing and delegate messaging
-		mEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0));
+		// Create the dispatch queue used for event processing, reusing the same attr
+		mEventQueue = dispatch_queue_create_with_target("AudioPlayerNode.Events", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		if(!mEventQueue) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch queue: dispatch_queue_create_with_target failed");
+			throw std::runtime_error("dispatch_queue_create_with_target failed");
+		}
+
+		// Create the dispatch source used to trigger event processing from the render block
+		mEventProcessor = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, mEventQueue);
 		if(!mEventProcessor) {
 			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch source: dispatch_source_create failed");
 			throw std::runtime_error("dispatch_source_create failed");
@@ -618,16 +623,6 @@ public:
 			dispatch_group_leave(mEventProcessingGroup);
 		});
 
-		// Allocate and initialize the decoder state array
-		mActiveDecoders = new DecoderStateArray;
-		for(auto& atomic_ptr : *mActiveDecoders)
-			atomic_ptr.store(nullptr);
-
-		// The event processor takes ownership of `mActiveDecoders` and the finalizer is responsible
-		// for deleting any allocated decoder state it contains as well as the array itself
-		dispatch_set_context(mEventProcessor, mActiveDecoders);
-		dispatch_set_finalizer_f(mEventProcessor, &event_processor_finalizer_f);
-
 		// Start processing events
 		dispatch_activate(mEventProcessor);
 	}
@@ -636,14 +631,19 @@ public:
 	{
 		Stop();
 
+		// Cancel any further event processing initiated from the render block
+		dispatch_source_cancel(mEventProcessor);
+
 		// Wait for decoding to complete
 		dispatch_group_wait(mDecodingGroup, DISPATCH_TIME_FOREVER);
 
 		// Wait for event processing to complete
 		dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
-		// Cancel any further event processing
-		dispatch_source_cancel(mEventProcessor);
+		// Delete any remaining decoder state
+		for(auto& atomic_ptr : *mActiveDecoders)
+			delete atomic_ptr.exchange(nullptr);
+		delete mActiveDecoders;
 
 		os_log_debug(_audioPlayerNodeLog, "<AudioPlayerNode: %p> destroyed", this);
 	}
@@ -1003,7 +1003,9 @@ private:
 					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
 					if(mDecodeEventRingBuffer.WriteValue(event))
-						dispatch_source_merge_data(mEventProcessor, 1);
+						dispatch_group_async(mEventProcessingGroup, mEventQueue, ^{
+							ProcessPendingEvents();
+						});
 					else
 						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for decoding error event");
 
@@ -1081,7 +1083,9 @@ private:
 					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
 					if(mDecodeEventRingBuffer.WriteValue(event))
-						dispatch_source_merge_data(mEventProcessor, 1);
+						dispatch_group_async(mEventProcessingGroup, mEventQueue, ^{
+							ProcessPendingEvents();
+						});
 					else
 						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for decoding error event");
 
@@ -1130,7 +1134,9 @@ private:
 						// Submit the decoding canceled event
 						const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eCanceled, decoderState->mSequenceNumber};
 						if(mDecodeEventRingBuffer.WriteValue(event))
-							dispatch_source_merge_data(mEventProcessor, 1);
+							dispatch_group_async(mEventProcessingGroup, mEventQueue, ^{
+								ProcessPendingEvents();
+							});
 						else
 							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for decoding canceled event");
 
@@ -1147,7 +1153,9 @@ private:
 							// Submit the decoding started event
 							const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eStarted, decoderState->mSequenceNumber};
 							if(mDecodeEventRingBuffer.WriteValue(event))
-								dispatch_source_merge_data(mEventProcessor, 1);
+								dispatch_group_async(mEventProcessingGroup, mEventQueue, ^{
+									ProcessPendingEvents();
+								});
 							else
 								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for decoding started event");
 						}
@@ -1163,7 +1171,9 @@ private:
 								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
 								if(mDecodeEventRingBuffer.WriteValue(event))
-									dispatch_source_merge_data(mEventProcessor, 1);
+									dispatch_group_async(mEventProcessingGroup, mEventQueue, ^{
+										ProcessPendingEvents();
+									});
 								else
 									os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for decoding error event");
 							}
@@ -1182,7 +1192,9 @@ private:
 							// Submit the decoding complete event
 							const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eComplete, decoderState->mSequenceNumber};
 							if(mDecodeEventRingBuffer.WriteValue(event))
-								dispatch_source_merge_data(mEventProcessor, 1);
+								dispatch_group_async(mEventProcessingGroup, mEventQueue, ^{
+									ProcessPendingEvents();
+								});
 							else
 								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for decoding complete event");
 
@@ -1347,6 +1359,10 @@ private:
 
 	void ProcessPendingEvents() noexcept
 	{
+#if DEBUG
+		dispatch_assert_queue(mEventQueue);
+#endif // DEBUG
+
 		auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 		auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 
@@ -1615,7 +1631,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 			return nil;
 		}
 
-		_delegateQueue = dispatch_queue_create_with_target("org.sbooth.AudioEngine.AudioPlayerNode.DelegateQueue", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		_delegateQueue = dispatch_queue_create_with_target("AudioPlayerNode.Delegate", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
 		if(!_delegateQueue) {
 			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch_queue_t: dispatch_queue_create_with_target() failed");
 			return nil;
