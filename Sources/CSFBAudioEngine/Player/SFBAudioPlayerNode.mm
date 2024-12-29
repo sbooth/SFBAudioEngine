@@ -530,7 +530,7 @@ public:
 		assert(format != nil);
 #endif // DEBUG
 
-		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
+		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p>, rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
 		// Allocate and initialize the decoder state array
 		mActiveDecoders = new DecoderStateArray;
@@ -887,7 +887,7 @@ public:
 				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
 		}
 
-		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@ on <AudioPlayerNode: %p>", decoder, this);
+		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
