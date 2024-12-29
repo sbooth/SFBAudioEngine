@@ -1415,12 +1415,12 @@ private:
 					}
 
 					const auto decoder = decoderState->mDecoder;
-					const auto partiallyRendered = (decoderState->mFlags & DecoderState::eFlagRenderingStarted) == DecoderState::eFlagRenderingStarted;
+					const auto framesRendered = decoderState->mFramesRendered.load();
 					DeleteDecoderStateWithSequenceNumber(eventPayload->mDecoderSequenceNumber);
 
-					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)]) {
+					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:framesRendered:)]) {
 						dispatch_async_and_wait(mNode.delegateQueue, ^{
-							[mNode.delegate audioPlayerNode:mNode decodingCanceled:decoder partiallyRendered:partiallyRendered];
+							[mNode.delegate audioPlayerNode:mNode decodingCanceled:decoder framesRendered:framesRendered];
 						});
 					}
 				}

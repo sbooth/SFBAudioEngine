@@ -227,8 +227,8 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is canceled
-/// - parameter partiallyRendered: `YES` if any audio frames from `decoder` were rendered
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered;
+/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from `decoder` will render at `hostTime`
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
