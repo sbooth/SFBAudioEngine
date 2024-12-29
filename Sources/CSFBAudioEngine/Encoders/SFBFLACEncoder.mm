@@ -248,7 +248,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	if(compressionLevel != nil) {
 		unsigned int value = compressionLevel.unsignedIntValue;
 		switch(value) {
-			case 1 ... 8:
+			case 0 ... 8:
 				if(!FLAC__stream_encoder_set_compression_level(flac.get(), value)) {
 					os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_compression_level failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
 					if(error)
