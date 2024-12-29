@@ -19,6 +19,7 @@
 #import <AudioToolbox/AudioFormat.h>
 
 #import <SFBAudioRingBuffer.hpp>
+#import <SFBDispatchSemaphore.hpp>
 #import <SFBRingBuffer.hpp>
 #import <SFBUnfairLock.hpp>
 
@@ -499,7 +500,7 @@ private:
 	/// Dispatch queue used for decoding
 	dispatch_queue_t				mDecodingQueue 			= nullptr;
 	/// Dispatch semaphore used for communication with the decoding queue
-	dispatch_semaphore_t			mDecodingSemaphore 		= nullptr;
+	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
 	/// Dispatch group used to track decoding tasks
 	dispatch_group_t 				mDecodingGroup			= nullptr;
 
@@ -539,12 +540,6 @@ public:
 
 		// ========================================
 		// Decoding Setup
-
-		mDecodingSemaphore = dispatch_semaphore_create(0);
-		if(!mDecodingSemaphore) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create decoding dispatch semaphore: dispatch_semaphore_create failed");
-			throw std::runtime_error("dispatch_semaphore_create failed");
-		}
 
 		// Create the dispatch queue used for decoding
 		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
@@ -827,7 +822,7 @@ public:
 			frame = std::max(decoderState->FrameLength() - 1, 0ll);
 
 		decoderState->RequestSeekToFrame(frame);
-		dispatch_semaphore_signal(mDecodingSemaphore);
+		mDecodingSemaphore.Signal();
 
 		return true;
 	}
@@ -920,7 +915,7 @@ public:
 	{
 		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
 			decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
-			dispatch_semaphore_signal(mDecodingSemaphore);
+			mDecodingSemaphore.Signal();
 		}
 	}
 
@@ -1105,7 +1100,7 @@ private:
 
 								// The render block will clear eMuteRequested and set eOutputIsMuted
 								while(!(mFlags.load() & eFlagOutputIsMuted))
-									dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
+									mDecodingSemaphore.Wait();
 							}
 							else
 								mFlags.fetch_or(eFlagOutputIsMuted);
@@ -1201,7 +1196,7 @@ private:
 					}
 
 					// Wait for additional space in the ring buffer or for another event signal
-					dispatch_semaphore_wait(mDecodingSemaphore, DISPATCH_TIME_FOREVER);
+					mDecodingSemaphore.Wait();
 				}
 			}
 		});
@@ -1219,7 +1214,7 @@ private:
 		if(mFlags.load() & eFlagMuteRequested) {
 			mFlags.fetch_or(eFlagOutputIsMuted);
 			mFlags.fetch_and(~eFlagMuteRequested);
-			dispatch_semaphore_signal(mDecodingSemaphore);
+			mDecodingSemaphore.Signal();
 		}
 
 		// ========================================
@@ -1273,7 +1268,7 @@ private:
 		// ========================================
 		// 6. If there is adequate space in the ring buffer for another chunk signal the decoding queue
 		if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
-			dispatch_semaphore_signal(mDecodingSemaphore);
+			mDecodingSemaphore.Signal();
 
 		// ========================================
 		// Post-rendering actions
