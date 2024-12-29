@@ -640,8 +640,7 @@ public:
 		dispatch_group_wait(mDecodingGroup, DISPATCH_TIME_FOREVER);
 
 		// Wait for event processing to complete
-		if(const auto data = dispatch_source_get_data(mEventProcessor); data)
-			dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
+		dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
 		// Cancel any further event processing
 		dispatch_source_cancel(mEventProcessor);
