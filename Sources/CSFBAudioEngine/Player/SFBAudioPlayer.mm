@@ -9,6 +9,8 @@
 #import <mutex>
 #import <queue>
 
+#import <objc/objc-runtime.h>
+
 #import <AVAudioFormat+SFBFormatTransformation.h>
 
 #import <SFBUnfairLock.hpp>
@@ -21,6 +23,9 @@
 #import "SFBTimeUtilities.hpp"
 
 namespace {
+
+/// Objective-C associated object key indicating if a decoder has been canceled
+const char _decoderIsCanceledKey = '\0';
 
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
@@ -900,7 +905,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			// of time, especially if the delegate callouts take longer than ideal.
 			//
 			// In my measurements the baseline with an empty delegate implementation of
-			// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
+			// -audioPlayer:decodingCanceled:framesRendered: seems to be around 100 µsec
 			//
 			// Assuming there are no external references to the audio player node,
 			// setting it to nil here sends -dealloc
@@ -1008,6 +1013,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 #endif
 
+	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:framesRendered:)])
 		[_delegate audioPlayer:self decodingCanceled:decoder framesRendered:framesRendered];
 
@@ -1030,6 +1037,11 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	_flags.fetch_or(eAudioPlayerFlagRenderingImminent);
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillStart:atHostTime:", decoder);
+			return;
+		}
+
 #if DEBUG
 		const auto now = SFB::GetCurrentHostTime();
 		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
@@ -1063,6 +1075,11 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillComplete:atHostTime:", decoder);
+			return;
+		}
+
 #if DEBUG
 		const auto now = SFB::GetCurrentHostTime();
 		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
