@@ -615,15 +615,10 @@ public:
 		}
 
 		dispatch_source_set_event_handler(mEventProcessor, ^{
-			if(dispatch_source_testcancel(mEventProcessor))
-				return;
-
-			dispatch_group_enter(mEventProcessingGroup);
 			ProcessPendingEvents();
-			dispatch_group_leave(mEventProcessingGroup);
 		});
 
-		// Start processing events
+		// Start processing events from the render block
 		dispatch_activate(mEventProcessor);
 	}
 
