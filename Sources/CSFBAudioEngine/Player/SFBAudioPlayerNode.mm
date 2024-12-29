@@ -485,7 +485,7 @@ struct AudioPlayerNode {
 	};
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
-	__unsafe_unretained SFBAudioPlayerNode	*mNode 			= nil;
+	__unsafe_unretained SFBAudioPlayerNode *mNode 			= nil;
 
 	/// The render block supplying audio
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
@@ -517,8 +517,9 @@ private:
 
 	/// Dispatch source processing events from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer`
 	dispatch_source_t				mEventProcessor 		= nullptr;
-	/// Dispatch group used to track event processing
-	dispatch_group_t 				mEventProcessingGroup	= nullptr;
+
+	/// Dispatch group used to track decoding and event processing
+	dispatch_group_t 				mDispatchGroup			= nullptr;
 
 	/// AudioPlayerNode flags
 	std::atomic_uint 				mFlags 					= 0;
@@ -536,6 +537,12 @@ public:
 #endif // DEBUG
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p> with rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
+
+		mDispatchGroup = dispatch_group_create();
+		if(!mDispatchGroup) {
+			os_log_error(_audioPlayerNodeLog, "Unable to create dispatch group: dispatch_group_create failed");
+			throw std::runtime_error("dispatch_group_create failed");
+		}
 
 		// ========================================
 		// Decoding Setup
@@ -595,19 +602,13 @@ public:
 			throw std::runtime_error("dispatch_source_create failed");
 		}
 
-		mEventProcessingGroup = dispatch_group_create();
-		if(!mEventProcessingGroup) {
-			os_log_error(_audioPlayerNodeLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
-			throw std::runtime_error("dispatch_group_create failed");
-		}
-
 		dispatch_source_set_event_handler(mEventProcessor, ^{
 			if(dispatch_source_testcancel(mEventProcessor))
 				return;
 
-			dispatch_group_enter(mEventProcessingGroup);
+			dispatch_group_enter(mDispatchGroup);
 			ProcessPendingEvents();
-			dispatch_group_leave(mEventProcessingGroup);
+			dispatch_group_leave(mDispatchGroup);
 		});
 
 		// Allocate and initialize the decoder state array
@@ -628,12 +629,8 @@ public:
 	{
 		Stop();
 
-		// Wait on the decoding queue to ensure `DequeueAndProcessDecoder()` completes
-		dispatch_async_and_wait(mDecodingQueue, ^{
-		});
-
-		// Wait for event processing to complete
-		/*const auto timeout =*/ dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
+		// Wait for `DequeueAndProcessDecoder()` to return and for event processing to complete
+		/*const auto timeout =*/ dispatch_group_wait(mDispatchGroup, DISPATCH_TIME_FOREVER);
 
 		// Cancel any further event processing
 		dispatch_source_cancel(mEventProcessor);
@@ -969,7 +966,7 @@ private:
 
 	void DequeueAndProcessDecoder() noexcept
 	{
-		dispatch_async(mDecodingQueue, ^{
+		dispatch_group_async(mDispatchGroup, mDecodingQueue, ^{
 			// Dequeue and process the next decoder
 			if(auto decoder = DequeueDecoder(); decoder) {
 				// Create the decoder state
