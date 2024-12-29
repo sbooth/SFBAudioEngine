@@ -1038,7 +1038,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(_audioPlayerLog, "%{public}@ canceled after -audioPlayerNode:renderingWillStart:atHostTime:", decoder);
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillStart:atHostTime:", decoder);
 			return;
 		}
 
@@ -1076,7 +1076,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(_audioPlayerLog, "%{public}@ canceled after -audioPlayerNode:renderingWillComplete:atHostTime:", decoder);
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillComplete:atHostTime:", decoder);
 			return;
 		}
 
