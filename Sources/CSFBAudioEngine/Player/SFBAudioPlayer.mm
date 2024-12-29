@@ -900,7 +900,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			// of time, especially if the delegate callouts take longer than ideal.
 			//
 			// In my measurements the baseline with an empty delegate implementation of
-			// -audioPlayer:decoderCanceled:partiallyRendered: seems to be around 100 µsec
+			// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
 			//
 			// Assuming there are no external references to the audio player node,
 			// setting it to nil here sends -dealloc
@@ -996,7 +996,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		[_delegate audioPlayer:self decodingComplete:decoder];
 }
 
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered
 {
 	// It is not an error in this case if the player nodes don't match because when the
 	// audio processing graph is reconfigured the existing player node may be replaced,
@@ -1008,8 +1008,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 #endif
 
-	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
-		[_delegate audioPlayer:self decodingCanceled:decoder partiallyRendered:partiallyRendered];
+	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:framesRendered:)])
+		[_delegate audioPlayer:self decodingCanceled:decoder framesRendered:framesRendered];
 
 	if(audioPlayerNode == _playerNode) {
 		_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
