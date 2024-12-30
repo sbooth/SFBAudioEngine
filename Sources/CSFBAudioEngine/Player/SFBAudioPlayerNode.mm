@@ -467,7 +467,7 @@ struct AudioPlayerNode {
 	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
 
 	/// The minimum number of frames to write to the ring buffer
-	static constexpr AVAudioFrameCount 	kRingBufferChunkSize 	= 2048;
+	static constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
 
 	enum AudioPlayerNodeFlags : unsigned int {
 		eFlagIsPlaying 				= 1u << 0,
