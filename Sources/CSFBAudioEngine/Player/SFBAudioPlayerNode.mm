@@ -1644,6 +1644,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 - (BOOL)supportsFormat:(AVAudioFormat *)format
 {
+	NSParameterAssert(format != nil);
 	return _impl->SupportsFormat(format);
 }
 
