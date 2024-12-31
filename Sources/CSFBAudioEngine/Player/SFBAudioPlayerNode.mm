@@ -48,15 +48,13 @@ const os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "Au
 /// - parameter byteCount: The maximum number of bytes per non-interleaved buffer to write
 void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount) noexcept
 {
-#if DEBUG
 	assert(bufferList != nullptr);
-#endif // DEBUG
 
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
-		if(byteOffset > bufferList->mBuffers[i].mDataByteSize)
-			continue;
-		auto buffer = reinterpret_cast<uintptr_t>(bufferList->mBuffers[i].mData) + byteOffset;
-		std::memset(reinterpret_cast<void *>(buffer), 0, std::min(byteCount, bufferList->mBuffers[i].mDataByteSize - byteOffset));
+		assert(byteOffset <= bufferList->mBuffers[i].mDataByteSize);
+		const auto s = reinterpret_cast<uintptr_t>(bufferList->mBuffers[i].mData) + byteOffset;
+		const auto n = std::min(byteCount, bufferList->mBuffers[i].mDataByteSize - byteOffset);
+		std::memset(reinterpret_cast<void *>(s), 0, n);
 	}
 }
 
@@ -1226,7 +1224,7 @@ private:
 		// ========================================
 		// 1. Output silence if the node isn't playing or is muted
 		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagOutputIsMuted) {
-			auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
+			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
 			isSilence = YES;
 			return noErr;
@@ -1239,7 +1237,7 @@ private:
 		// ========================================
 		// 3. Output silence if the ring buffer is empty
 		if(framesAvailableToRead == 0) {
-			auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
+			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
 			isSilence = YES;
 			return noErr;
