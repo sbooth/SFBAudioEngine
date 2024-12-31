@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#pragma once
+
 #import <SFBCAChannelLayout.hpp>
 #import <SFBCAStreamBasicDescription.hpp>
 

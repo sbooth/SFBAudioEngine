@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#pragma once
+
 #import <taglib/audioproperties.h>
 
 #import <Foundation/Foundation.h>

@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#pragma once
+
 #import <Foundation/Foundation.h>
 
 #import <taglib/tstring.h>
