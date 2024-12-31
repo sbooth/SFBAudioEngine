@@ -53,7 +53,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	UInt32 dataSize = sizeof(name);
 	OSStatus result = AudioObjectGetPropertyData(audioUnit.deviceID, &address, 0, nullptr, &dataSize, &name);
 	if(result != noErr) {
-		os_log_error(_audioPlayerLog, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %d", result);
+		os_log_error(_audioPlayerLog, "AudioObjectGetPropertyData (kAudioObjectPropertyName, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMain) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 	return (__bridge_transfer NSString *)name;
