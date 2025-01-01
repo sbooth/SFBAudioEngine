@@ -5,6 +5,7 @@
 //
 
 #import <algorithm>
+#import <cstdint>
 #import <vector>
 
 #import <os/log.h>

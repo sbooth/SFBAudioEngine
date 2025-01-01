@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <cstdint>
 #import <map>
 #import <memory>
 #import <string>
