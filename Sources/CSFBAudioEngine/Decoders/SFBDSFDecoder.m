@@ -1,8 +1,10 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
+
+@import stdint_h;
 
 @import os.log;
 
@@ -344,7 +346,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 		// Copy data from the internal buffer to output
 		uint32_t copySize = packetsToCopy * packetSize;
-		memcpy((uint8_t *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
+		memcpy((void *)((uintptr_t)buffer.data + (packetsToSkip * packetSize)), _buffer.data, copySize);
 		buffer.packetCount += packetsToCopy;
 		buffer.byteLength += copySize;
 
@@ -401,9 +403,8 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Move data
 	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
-	uint8_t *dst = (uint8_t *)_buffer.data;
-	const uint8_t *src = (uint8_t *)_buffer.data + (packetsToSkip * packetSize);
-	memmove(dst, src, packetsToMove * packetSize);
+	const void *src = (const void *)((uintptr_t)_buffer.data + (packetsToSkip * packetSize));
+	memmove(_buffer.data, src, packetsToMove * packetSize);
 
 	_buffer.packetCount = packetsToMove;
 	_buffer.byteLength = packetsToMove * packetSize;
