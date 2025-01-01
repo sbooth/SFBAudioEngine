@@ -1,9 +1,10 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
+#import <cstdint>
 #import <map>
 #import <memory>
 #import <string>
@@ -870,7 +871,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
 		// a clustered frame (one channel byte per channel)
 
-		uint8_t *buf = (uint8_t *)buffer.data + buffer.byteLength;
+		auto buf = static_cast<uint8_t *>(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(buffer.data) + buffer.byteLength));
 		NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
 		NSInteger bytesRead;

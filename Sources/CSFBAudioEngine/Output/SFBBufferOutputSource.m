@@ -1,8 +1,10 @@
 //
-// Copyright (c) 2010-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
+
+@import stdint_h;
 
 #import "SFBBufferOutputSource.h"
 
@@ -59,7 +61,7 @@
 	}
 
 	size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
-	memcpy(buffer, (uint8_t *)_buffer + _pos, bytesToCopy);
+	memcpy(buffer, (const void *)((uintptr_t)_buffer + _pos), bytesToCopy);
 	_pos += bytesToCopy;
 	*bytesRead = (NSInteger)bytesToCopy;
 
@@ -80,7 +82,7 @@
 	}
 
 	size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
-	memcpy((uint8_t *)_buffer + _pos, buffer, bytesToCopy);
+	memcpy((void *)((uintptr_t)_buffer + _pos), buffer, bytesToCopy);
 	_pos += bytesToCopy;
 	*bytesWritten = (NSInteger)bytesToCopy;
 
