@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <algorithm>
 #import <memory>
 
 #import <os/log.h>
@@ -163,8 +164,10 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	streamDescription.mBitsPerChannel		= ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * 8;
 	if(streamDescription.mBitsPerChannel == 32)
 		streamDescription.mFormatFlags		|= kAudioFormatFlagIsPacked;
+	else
+		streamDescription.mFormatFlags		|= kAudioFormatFlagIsAlignedHigh;
 
-	streamDescription.mBytesPerPacket		= sizeof(FLAC__int32) * streamDescription.mChannelsPerFrame;
+	streamDescription.mBytesPerPacket		= sizeof(int32_t) * streamDescription.mChannelsPerFrame;
 	streamDescription.mFramesPerPacket		= 1;
 	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
@@ -392,11 +395,56 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	if(frameLength == 0)
 		return YES;
 
-	if(!FLAC__stream_encoder_process_interleaved(_flac.get(), static_cast<const FLAC__int32 *>(buffer.audioBufferList->mBuffers[0].mData), frameLength)) {
-		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
-		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-		return NO;
+	// The libFLAC encoder expects signed 32-bit samples in the range of the audio bit depth
+	// (e.g. for 16 bit samples the interval is [-32768, 32767]).
+	//
+	// Samples in the processing format needs to be massaged slightly before the handoff
+	// to libFLAC.
+
+	// Probably unnecessary sanity check
+	static_assert(std::is_same_v<int32_t, FLAC__int32>, "int32_t and FLAC__int32 are different types");
+
+	// Ensure implementation-defined right shift for negative numbers is arithmetic
+	static_assert(~0 >> 1 == ~0, "signed right shift is not arithmetic");
+
+	const auto format = _processingFormat.streamDescription;
+	if(const auto bits = format->mBitsPerChannel; bits != 32) {
+		int32_t dst [512];
+		const AVAudioFrameCount frameCapacity = sizeof(dst) / format->mBytesPerFrame;
+
+		const auto shift = 32 - bits;
+		const auto stride = buffer.stride;
+
+		auto framesRemaining = frameLength;
+		while(framesRemaining > 0) {
+			const auto frameCount = std::min(frameCapacity, framesRemaining);
+
+			const auto frameOffset = frameLength - framesRemaining;
+			const auto byteOffset = frameOffset * format->mBytesPerFrame;
+			const auto src = static_cast<int32_t *>(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset));
+
+			// Shift from high alignment, sign extending in the process
+			for(AVAudioFrameCount i = 0; i < frameCount * stride; ++i)
+				dst[i] = src[i] >> shift;
+
+			if(!FLAC__stream_encoder_process_interleaved(_flac.get(), dst, frameCount)) {
+				os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				return NO;
+			}
+
+			framesRemaining -= frameCount;
+		}
+	}
+	// Pass 32-bit samples straight through
+	else {
+		if(!FLAC__stream_encoder_process_interleaved(_flac.get(), static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData), frameLength)) {
+			os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
 	}
 
 	return YES;
