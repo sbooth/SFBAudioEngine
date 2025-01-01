@@ -14,14 +14,14 @@
 
 #import "SFBFLACEncoder.h"
 
-#define DEFAULT_PADDING 8192
-
 SFBAudioEncoderName const SFBAudioEncoderNameFLAC = @"org.sbooth.AudioEngine.Encoder.FLAC";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel = @"Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding = @"Verify Encoding";
 
 namespace {
+
+constexpr uint32_t kDefaultPaddingSize = 8192;
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamEncoder` objects
 struct flac__stream_encoder_deleter {
@@ -286,7 +286,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		return NO;
 	}
 
-	padding->length = DEFAULT_PADDING;
+	padding->length = kDefaultPaddingSize;
 
 	// Create a seektable when possible
 	flac__stream_metadata_unique_ptr seektable;

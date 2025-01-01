@@ -14,11 +14,11 @@
 
 #import "SFBOggFLACEncoder.h"
 
-#define DEFAULT_PADDING 8192
-
 SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC = @"org.sbooth.AudioEngine.Encoder.OggFLAC";
 
 namespace {
+
+constexpr uint32_t kDefaultPaddingSize = 8192;
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamEncoder` objects
 struct flac__stream_encoder_deleter {
@@ -302,7 +302,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		return NO;
 	}
 
-	padding->length = DEFAULT_PADDING;
+	padding->length = kDefaultPaddingSize;
 
 	_metadata[0] = padding.get();
 
