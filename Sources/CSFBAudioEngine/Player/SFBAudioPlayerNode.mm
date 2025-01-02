@@ -1045,7 +1045,8 @@ private:
 								// The render block will clear eMuteRequested and set eOutputIsMuted
 								while(!(mFlags.load() & eFlagOutputIsMuted)) {
 									auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
-									// If the timeout occurred the engine may have stopped
+									// If the timeout occurred the engine may have stopped since the initial check
+									// with no subsequent opportunity for the render block to set eFlagOutputIsMuted
 									if(!timeout && !mNode.engine.isRunning) {
 										mFlags.fetch_or(eFlagOutputIsMuted);
 										mFlags.fetch_and(~eFlagMuteRequested);
