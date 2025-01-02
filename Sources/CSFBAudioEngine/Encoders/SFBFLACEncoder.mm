@@ -15,6 +15,7 @@
 #import "SFBFLACEncoder.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameFLAC = @"org.sbooth.AudioEngine.Encoder.FLAC";
+SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC = @"org.sbooth.AudioEngine.Encoder.OggFLAC";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel = @"Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding = @"Verify Encoding";
@@ -48,11 +49,32 @@ using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, f
 @package
 	AVAudioFramePosition _framePosition;
 }
+- (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error;
 @end
 
 #pragma mark FLAC Callbacks
 
 namespace {
+
+FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+{
+#pragma unused(encoder)
+	NSCParameterAssert(client_data != NULL);
+
+	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+	SFBOutputSource *outputSource = flacEncoder->_outputSource;
+
+	NSInteger bytesRead;
+	if(![outputSource readBytes:buffer length:static_cast<NSInteger>(*bytes) bytesRead:&bytesRead error:nil])
+		return FLAC__STREAM_ENCODER_READ_STATUS_ABORT;
+
+	*bytes = static_cast<size_t>(bytesRead);
+
+	if(bytesRead == 0 && outputSource.atEOF)
+		return FLAC__STREAM_ENCODER_READ_STATUS_END_OF_STREAM;
+
+	return FLAC__STREAM_ENCODER_READ_STATUS_CONTINUE;
+}
 
 FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], size_t bytes, uint32_t samples, uint32_t current_frame, void *client_data)
 {
@@ -328,13 +350,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	}
 
 	// Initialize the FLAC encoder
-	FLAC__StreamEncoderInitStatus encoderStatus = FLAC__stream_encoder_init_stream(flac.get(), write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
-	if(encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
-		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_stream failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
-		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+	if(![self initializeFLACStreamEncoder:flac.get() error:error])
 		return NO;
-	}
 
 	AudioStreamBasicDescription outputStreamDescription{};
 	outputStreamDescription.mFormatID			= kAudioFormatFLAC;
@@ -458,6 +475,68 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
+	return YES;
+}
+
+- (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error
+{
+	FLAC__StreamEncoderInitStatus encoderStatus = FLAC__stream_encoder_init_stream(encoder, write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
+	if(encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
+		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_stream failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(encoder));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
+
+	return YES;
+}
+
+@end
+
+@implementation SFBOggFLACEncoder
+
++ (void)load
+{
+	[SFBAudioEncoder registerSubclass:[self class]];
+}
+
++ (NSSet *)supportedPathExtensions
+{
+	return [NSSet setWithObject:@"oga"];
+}
+
++ (NSSet *)supportedMIMETypes
+{
+	return [NSSet setWithObject:@"audio/ogg; codecs=flac"];
+}
+
++ (SFBAudioEncoderName)encoderName
+{
+	return SFBAudioEncoderNameOggFLAC;
+}
+
+- (BOOL)encodingIsLossless
+{
+	return YES;
+}
+
+- (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error
+{
+	if(!FLAC__stream_encoder_set_ogg_serial_number(encoder, static_cast<int>(arc4random()))) {
+		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_ogg_serial_number failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(encoder));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
+
+	FLAC__StreamEncoderInitStatus encoderStatus = FLAC__stream_encoder_init_ogg_stream(encoder, read_callback, write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
+	if(encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
+		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_ogg_stream failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(encoder));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
+
 	return YES;
 }
 
