@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioUtilities",
       "state" : {
-        "revision" : "3772c79f313eb04b12c28267670b4318348b4f72",
-        "version" : "0.2.2"
+        "revision" : "351f9f85e17a552b03583525e5a9caec1b11f009",
+        "version" : "0.3.1"
       }
     },
     {
