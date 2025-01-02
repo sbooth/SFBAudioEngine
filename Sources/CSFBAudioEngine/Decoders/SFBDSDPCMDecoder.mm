@@ -305,7 +305,8 @@ private:
 	dsd2pcm_ctx *handle;
 };
 
-}
+} /* namespace */
+
 
 @interface SFBDSDPCMDecoder ()
 {

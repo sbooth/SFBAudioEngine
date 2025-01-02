@@ -684,7 +684,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 					 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 }
 
-}
+} /* namespace */
 
 @interface SFBDSDIFFDecoder ()
 {
