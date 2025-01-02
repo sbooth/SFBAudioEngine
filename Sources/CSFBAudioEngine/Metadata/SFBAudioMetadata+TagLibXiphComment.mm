@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -130,46 +130,46 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
 namespace {
 
-	void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
+void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
 
-		// Remove the existing comment with this name
-		tag->removeFields(key);
+	// Remove the existing comment with this name
+	tag->removeFields(key);
 
-		if(value)
-			tag->addField(key, TagLib::StringFromNSString(value));
-	}
-
-	void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		SetXiphComment(tag, key, value.stringValue);
-	}
-
-	void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		if(value == nil)
-			SetXiphComment(tag, key, nil);
-		else
-			SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
-	}
-
-	void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value, NSString *format = nil)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		SetXiphComment(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
-	}
-
+	if(value)
+		tag->addField(key, TagLib::StringFromNSString(value));
 }
+
+void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	SetXiphComment(tag, key, value.stringValue);
+}
+
+void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	if(value == nil)
+		SetXiphComment(tag, key, nil);
+	else
+		SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
+}
+
+void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value, NSString *format = nil)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	SetXiphComment(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+}
+
+} /* namespace */
 
 void SFB::Audio::SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
 {

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -11,7 +11,7 @@
 
 #if !TARGET_OS_IPHONE
 #import <CoreAudio/CoreAudio.h>
-#endif
+#endif /* !TARGET_OS_IPHONE */
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
 
@@ -256,7 +256,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the output device was successfully set
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
-#endif // !TARGET_OS_IPHONE
+#endif /* !TARGET_OS_IPHONE */
 
 #pragma mark - Delegate
 
