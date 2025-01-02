@@ -1347,7 +1347,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValue failed for decoding started event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number for decoding started event");
 				break;
 
 			case DecodingEventCommand::eComplete:
@@ -1365,7 +1365,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValue failed for decoding complete event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number for decoding complete event");
 				break;
 
 			case DecodingEventCommand::eCanceled:
@@ -1387,14 +1387,14 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValue failed for decoding canceled event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number for decoding canceled event");
 				break;
 
 			case DecodingEventCommand::eError:
 				if(uint64_t key; mDecodeEventRingBuffer.ReadValue(key)) {
 					NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mNode.delegateQueue, reinterpret_cast<void *>(key));
 					if(!error) {
-						os_log_fault(_audioPlayerNodeLog, "Dispatch value for key %llu missing for decoding error event", key);
+						os_log_fault(_audioPlayerNodeLog, "Dispatch queue context data for key %llu missing for decoding error event", key);
 						break;
 					}
 
@@ -1407,7 +1407,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValue failed for decoding error event");
+					os_log_fault(_audioPlayerNodeLog, "Missing key for decoding error event");
 				break;
 
 			default:
@@ -1440,7 +1440,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValues failed for rendering started event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering started event");
 				break;
 
 			case RenderingEventCommand::eComplete:
@@ -1466,7 +1466,7 @@ private:
 					DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValues failed for rendering complete event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering complete event");
 				break;
 
 			case RenderingEventCommand::eEndOfAudio:
@@ -1484,7 +1484,7 @@ private:
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "SFB::RingBuffer::ReadValue failed for end of audio event");
+					os_log_fault(_audioPlayerNodeLog, "Missing host time for end of audio event");
 				break;
 
 			default:
