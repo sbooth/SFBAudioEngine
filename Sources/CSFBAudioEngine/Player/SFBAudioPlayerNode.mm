@@ -1295,7 +1295,6 @@ private:
 
 				const RenderingEventHeader header{RenderingEventCommand::eComplete};
 				const DecoderSequenceNumberAndHostTimePayload payload{decoderState->mSequenceNumber, hostTime};
-
 				if(mRenderEventRingBuffer.WriteValues(header, payload))
 					dispatch_source_merge_data(mEventProcessingSource, 1);
 				else
