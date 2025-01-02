@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -59,7 +59,7 @@ public:
 	: mInputSource(inputSource)
 	{}
 
-	inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
+	int Open(const wchar_t * pName, bool bOpenReadOnly) override
 	{
 #pragma unused(pName)
 #pragma unused(bOpenReadOnly)
@@ -67,12 +67,12 @@ public:
 		return ERROR_INVALID_INPUT_FILE;
 	}
 
-	inline virtual int Close()
+	int Close() override
 	{
 		return ERROR_SUCCESS;
 	}
 
-	virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
+	int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead) override
 	{
 		NSInteger bytesRead;
 		if(![mInputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
@@ -83,7 +83,7 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	inline virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
+	int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten) override
 	{
 #pragma unused(pBuffer)
 #pragma unused(nBytesToWrite)
@@ -92,7 +92,7 @@ public:
 		return ERROR_IO_WRITE;
 	}
 
-	virtual int Seek(APE::int64 nPosition, APE::SeekMethod nMethod)
+	int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override
 	{
 		if(!mInputSource.supportsSeeking)
 			return ERROR_IO_READ;
@@ -119,38 +119,29 @@ public:
 		return ![mInputSource seekToOffset:offset error:nil];
 	}
 
-	inline virtual int Create(const wchar_t * pName)
+	int Create(const wchar_t * pName) override
 	{
 #pragma unused(pName)
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int Delete()
+	int Delete() override
 	{
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int SetEOF()
+	int SetEOF() override
 	{
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int SetReadWholeFile()
-	{
-		return ERROR_IO_READ;
-	}
-
-	inline virtual void SetReadToBuffer()
-	{
-	}
-
-	inline virtual unsigned char * GetBuffer(int * pnBufferBytes)
+	unsigned char * GetBuffer(int * pnBufferBytes) override
 	{
 #pragma unused(pnBufferBytes)
 		return nullptr;
 	}
 
-	inline virtual APE::int64 GetPosition()
+	APE::int64 GetPosition() override
 	{
 		NSInteger offset;
 		if(![mInputSource getOffset:&offset error:nil])
@@ -158,7 +149,7 @@ public:
 		return offset;
 	}
 
-	inline virtual APE::int64 GetSize()
+	APE::int64 GetSize() override
 	{
 		NSInteger length;
 		if(![mInputSource getLength:&length error:nil])
@@ -166,7 +157,7 @@ public:
 		return length;
 	}
 
-	inline virtual int GetName(wchar_t * pBuffer)
+	int GetName(wchar_t * pBuffer) override
 	{
 #pragma unused(pBuffer)
 		return ERROR_SUCCESS;
@@ -177,7 +168,7 @@ private:
 	SFBInputSource *mInputSource;
 };
 
-}
+} /* namespace */
 
 @interface SFBMonkeysAudioDecoder ()
 {

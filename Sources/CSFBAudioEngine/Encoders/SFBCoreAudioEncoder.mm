@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -184,8 +184,8 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 
 	return kAudioFileOperationNotSupportedError;
 }
-	
-}
+
+} /* namespace */
 
 @interface SFBCoreAudioEncoder ()
 {
@@ -411,6 +411,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 			default:	format.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;		break;
 		}
 	}
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format];
 
 	AudioFileID audioFile;
 	auto result = AudioFileInitializeWithCallbacks((__bridge void *)self, my_AudioFile_ReadProc, my_AudioFile_WriteProc, my_AudioFile_GetSizeProc, my_AudioFile_SetSizeProc, fileType, &format, 0, &audioFile);

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -11,7 +11,7 @@
 
 #if !TARGET_OS_IPHONE
 #import <CoreAudio/CoreAudio.h>
-#endif
+#endif /* !TARGET_OS_IPHONE */
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
 
@@ -300,8 +300,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is canceled
-/// - parameter partiallyRendered: `YES` if any audio frames from `decoder` were rendered
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered;
+/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from `decoder` will render at `hostTime`
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`

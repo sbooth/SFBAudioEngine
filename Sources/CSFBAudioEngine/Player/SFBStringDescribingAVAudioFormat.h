@@ -1,8 +1,10 @@
 //
-// Copyright (c) 2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2024-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
+
+#pragma once
 
 #import <SFBCAChannelLayout.hpp>
 #import <SFBCAStreamBasicDescription.hpp>
@@ -25,4 +27,4 @@ inline NSString * _Nullable StringDescribingAVAudioFormat(AVAudioFormat * _Nulla
 		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@>", format, formatDescription];
 }
 
-} // namespace SFB
+} /* namespace SFB */

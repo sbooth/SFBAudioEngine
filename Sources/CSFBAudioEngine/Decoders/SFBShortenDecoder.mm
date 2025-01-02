@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -94,16 +94,18 @@ constexpr auto kCanonicalHeaderSizeBytes	= 44;
 
 constexpr auto kWAVEFormatPCMTag 			= 0x0001;
 
-inline constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
+constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
 {
 	return (k == 0) ? x : (x >> (k - 1)) >> 1;
 }
 
 /// Returns a two-dimensional `rows` x `cols` array using one allocation from `malloc`
 template <typename T>
-T ** AllocateContiguous2DArray(size_t rows, size_t cols)
+T ** AllocateContiguous2DArray(size_t rows, size_t cols) noexcept
 {
 	T **result = static_cast<T **>(std::malloc((rows * sizeof(T *)) + (rows * cols * sizeof(T))));
+	if(!result)
+		return nullptr;
 	T *tmp = reinterpret_cast<T *>(result + rows);
 	for(size_t i = 0; i < rows; ++i)
 		result[i] = tmp + i * cols;
@@ -579,7 +581,19 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 
 	// Allocate decoding buffers
 	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(_blocksize + _nwrap));
+	if(!_buffer) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
 	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(std::max(1, _nmean)));
+	if(!_offset) {
+		std::free(_buffer);
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
 
 	for(auto i = 0; i < _channelCount; ++i) {
 		for(auto j = 0; j < _nwrap; ++j) {
