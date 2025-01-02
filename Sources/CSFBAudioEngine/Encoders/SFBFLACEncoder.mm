@@ -135,7 +135,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 #pragma unused(client_data)
 }
 
-}
+} /* namespace */
 
 @implementation SFBFLACEncoder
 
