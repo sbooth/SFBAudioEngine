@@ -153,7 +153,7 @@ struct DecoderState {
 #if DEBUG
 		assert(decoder != nil);
 		assert(format != nil);
-#endif // DEBUG
+#endif /* DEBUG */
 
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 		if(!mConverter) {
@@ -191,7 +191,7 @@ struct DecoderState {
 #if DEBUG
 		assert(buffer != nil);
 		assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
-#endif // DEBUG
+#endif /* DEBUG */
 
 		if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
 			return false;
@@ -372,26 +372,6 @@ struct EventHeader {
 	{}
 };
 
-/// An event consisting of a header and payload
-template <typename T, typename P, typename = std::enable_if_t<std::is_trivially_copyable_v<P> && std::is_default_constructible_v<P>>>
-struct Event {
-	/// The event header
-	EventHeader<T> mHeader;
-	/// Event-specific data
-	P mPayload;
-
-	/// Constructs an empty event
-	Event() noexcept(std::is_nothrow_default_constructible_v<P>) = default;
-
-	/// Constructs an event
-	/// - parameter command: The command for the event
-	/// - parameter a: The payload for the event
-	template <typename... A>
-	Event(T command, A&&... a) noexcept(std::is_nothrow_constructible_v<P, A...>)
-	: mHeader{command}, mPayload{std::forward<A>(a)...}
-	{}
-};
-
 #pragma mark Decoding Events
 
 /// Decoding queue events
@@ -405,10 +385,6 @@ enum class DecodingEventCommand : uint32_t {
 /// A decoding event header
 using DecodingEventHeader = EventHeader<DecodingEventCommand>;
 
-/// A decoding event
-template <typename P>
-using DecodingEvent = Event<DecodingEventCommand, P>;
-
 #pragma mark Rendering Events
 
 /// Render block events
@@ -420,10 +396,6 @@ enum class RenderingEventCommand : uint32_t {
 
 /// A rendering event command and identification number
 using RenderingEventHeader = EventHeader<RenderingEventCommand>;
-
-/// A rendering event
-template <typename P>
-using RenderingEvent = Event<RenderingEventCommand, P>;
 
 #pragma mark Event Payloads
 
@@ -527,7 +499,7 @@ public:
 	{
 #if DEBUG
 		assert(format != nil);
-#endif // DEBUG
+#endif /* DEBUG */
 
 		os_log_debug(_audioPlayerNodeLog, "Created <AudioPlayerNode: %p>, rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
@@ -842,7 +814,7 @@ public:
 	{
 #if DEBUG
 		assert(format != nil);
-#endif // DEBUG
+#endif /* DEBUG */
 
 		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
 		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
@@ -855,7 +827,7 @@ public:
 	{
 #if DEBUG
 		assert(decoder != nil);
-#endif // DEBUG
+#endif /* DEBUG */
 
 		if(!decoder.isOpen && ![decoder openReturningError:error])
 			return false;
@@ -987,11 +959,12 @@ private:
 															  }];
 
 					// Submit the error event
-					const DecodingEvent<DispatchKeyPayload> event{DecodingEventCommand::eError, mDispatchKeyCounter.fetch_add(1)};
+					const DecodingEventHeader header{DecodingEventCommand::eError};
+					const DispatchKeyPayload payload{mDispatchKeyCounter.fetch_add(1)};
 
-					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(payload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
-					if(mDecodeEventRingBuffer.WriteValue(event))
+					if(mDecodeEventRingBuffer.WriteValues(header, payload))
 						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 							ProcessPendingEvents();
 						});
@@ -1067,11 +1040,12 @@ private:
 															  }];
 
 					// Submit the error event
-					const DecodingEvent<DispatchKeyPayload> event{DecodingEventCommand::eError, mDispatchKeyCounter.fetch_add(1)};
+					const DecodingEventHeader header{DecodingEventCommand::eError};
+					const DispatchKeyPayload payload{mDispatchKeyCounter.fetch_add(1)};
 
-					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(payload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
-					if(mDecodeEventRingBuffer.WriteValue(event))
+					if(mDecodeEventRingBuffer.WriteValues(header, payload))
 						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 							ProcessPendingEvents();
 						});
@@ -1121,8 +1095,9 @@ private:
 						mFlags.fetch_or(eFlagRingBufferNeedsReset);
 
 						// Submit the decoding canceled event
-						const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eCanceled, decoderState->mSequenceNumber};
-						if(mDecodeEventRingBuffer.WriteValue(event))
+						const DecodingEventHeader header{DecodingEventCommand::eCanceled};
+						const DecoderSequenceNumberPayload payload{decoderState->mSequenceNumber};
+						if(mDecodeEventRingBuffer.WriteValues(header, payload))
 							dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 								ProcessPendingEvents();
 							});
@@ -1140,8 +1115,9 @@ private:
 							decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted);
 
 							// Submit the decoding started event
-							const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eStarted, decoderState->mSequenceNumber};
-							if(mDecodeEventRingBuffer.WriteValue(event))
+							const DecodingEventHeader header{DecodingEventCommand::eStarted};
+							const DecoderSequenceNumberPayload payload{decoderState->mSequenceNumber};
+							if(mDecodeEventRingBuffer.WriteValues(header, payload))
 								dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 									ProcessPendingEvents();
 								});
@@ -1155,11 +1131,12 @@ private:
 
 							if(error) {
 								// Submit the error event
-								const DecodingEvent<DispatchKeyPayload> event{DecodingEventCommand::eError, mDispatchKeyCounter.fetch_add(1)};
+								const DecodingEventHeader header{DecodingEventCommand::eError};
+								const DispatchKeyPayload payload{mDispatchKeyCounter.fetch_add(1)};
 
-								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(event.mPayload.mKey), (__bridge_retained void *)error, &release_nserror_f);
+								dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(payload.mKey), (__bridge_retained void *)error, &release_nserror_f);
 
-								if(mDecodeEventRingBuffer.WriteValue(event))
+								if(mDecodeEventRingBuffer.WriteValues(header, payload))
 									dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 										ProcessPendingEvents();
 									});
@@ -1179,8 +1156,9 @@ private:
 							decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
 							// Submit the decoding complete event
-							const DecodingEvent<DecoderSequenceNumberPayload> event{DecodingEventCommand::eComplete, decoderState->mSequenceNumber};
-							if(mDecodeEventRingBuffer.WriteValue(event))
+							const DecodingEventHeader header{DecodingEventCommand::eComplete};
+							const DecoderSequenceNumberPayload payload{decoderState->mSequenceNumber};
+							if(mDecodeEventRingBuffer.WriteValues(header, payload))
 								dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 									ProcessPendingEvents();
 								});
@@ -1255,7 +1233,7 @@ private:
 		if(framesRead != frameCount) {
 #if DEBUG
 			os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
-#endif // DEBUG
+#endif /* DEBUG */
 
 			const auto framesOfSilence = frameCount - framesRead;
 			const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
@@ -1297,8 +1275,9 @@ private:
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
-				const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eStarted, decoderState->mSequenceNumber, hostTime};
-				if(mRenderEventRingBuffer.WriteValue(event))
+				const RenderingEventHeader header{RenderingEventCommand::eStarted};
+				const DecoderSequenceNumberAndHostTimePayload payload{decoderState->mSequenceNumber, hostTime};
+				if(mRenderEventRingBuffer.WriteValues(header, payload))
 					dispatch_source_merge_data(mEventProcessingSource, 1);
 				else
 					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for rendering started event");
@@ -1314,8 +1293,10 @@ private:
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
-				const RenderingEvent<DecoderSequenceNumberAndHostTimePayload> event{RenderingEventCommand::eComplete, decoderState->mSequenceNumber, hostTime};
-				if(mRenderEventRingBuffer.WriteValue(event))
+				const RenderingEventHeader header{RenderingEventCommand::eComplete};
+				const DecoderSequenceNumberAndHostTimePayload payload{decoderState->mSequenceNumber, hostTime};
+
+				if(mRenderEventRingBuffer.WriteValues(header, payload))
 					dispatch_source_merge_data(mEventProcessingSource, 1);
 				else
 					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for rendering complete event");
@@ -1334,8 +1315,9 @@ private:
 		if(!decoderState) {
 			const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(framesRead / mAudioRingBuffer.Format().mSampleRate);
 
-			const RenderingEvent<HostTimePayload> event{RenderingEventCommand::eEndOfAudio, hostTime};
-			if(mRenderEventRingBuffer.WriteValue(event))
+			const RenderingEventHeader header{RenderingEventCommand::eEndOfAudio};
+			const HostTimePayload payload{hostTime};
+			if(mRenderEventRingBuffer.WriteValues(header, payload))
 				dispatch_source_merge_data(mEventProcessingSource, 1);
 			else
 				os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValue failed for end of audio event");
@@ -1350,7 +1332,7 @@ private:
 	{
 #if DEBUG
 		dispatch_assert_queue(mEventProcessingQueue);
-#endif // DEBUG
+#endif /* DEBUG */
 
 		auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 		auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
