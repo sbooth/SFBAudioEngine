@@ -1567,7 +1567,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioPlayerNodeErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBAudioPlayerNodeErrorCodeInternalError:
 					return NSLocalizedString(@"An internal player error occurred.", @"");
