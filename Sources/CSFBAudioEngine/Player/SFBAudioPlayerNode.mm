@@ -941,7 +941,7 @@ private:
 							ProcessPendingEvents();
 						});
 					else
-						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for decoding error event");
+						os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
 
 					return;
 				}
@@ -1022,7 +1022,7 @@ private:
 							ProcessPendingEvents();
 						});
 					else
-						os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for decoding error event");
+						os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
 
 					return;
 				}
@@ -1073,7 +1073,7 @@ private:
 								ProcessPendingEvents();
 							});
 						else
-							os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for decoding canceled event");
+							os_log_fault(_audioPlayerNodeLog, "Error writing decoding canceled event");
 
 						return;
 					}
@@ -1092,7 +1092,7 @@ private:
 									ProcessPendingEvents();
 								});
 							else
-								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for decoding started event");
+								os_log_fault(_audioPlayerNodeLog, "Error writing decoding started event");
 						}
 
 						// Decode audio into the buffer, converting to the rendering format in the process
@@ -1111,7 +1111,7 @@ private:
 										ProcessPendingEvents();
 									});
 								else
-									os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for decoding error event");
+									os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
 							}
 						}
 
@@ -1132,7 +1132,7 @@ private:
 									ProcessPendingEvents();
 								});
 							else
-								os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for decoding complete event");
+								os_log_fault(_audioPlayerNodeLog, "Error writing decoding complete event");
 
 							os_log_debug(_audioPlayerNodeLog, "Decoding complete for %{public}@", decoderState->mDecoder);
 
@@ -1248,7 +1248,7 @@ private:
 				if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, hostTime))
 					dispatch_source_merge_data(mEventProcessingSource, 1);
 				else
-					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for rendering started event");
+					os_log_fault(_audioPlayerNodeLog, "Error writing rendering started event");
 			}
 
 			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
@@ -1265,7 +1265,7 @@ private:
 				if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, hostTime))
 					dispatch_source_merge_data(mEventProcessingSource, 1);
 				else
-					os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for rendering complete event");
+					os_log_fault(_audioPlayerNodeLog, "Error writing rendering complete event");
 			}
 
 			if(framesRemainingToDistribute == 0)
@@ -1285,7 +1285,7 @@ private:
 			if(mRenderEventRingBuffer.WriteValues(header, hostTime))
 				dispatch_source_merge_data(mEventProcessingSource, 1);
 			else
-				os_log_error(_audioPlayerNodeLog, "SFB::RingBuffer::WriteValues failed for end of audio event");
+				os_log_fault(_audioPlayerNodeLog, "Error writing end of audio event");
 		}
 
 		return noErr;
