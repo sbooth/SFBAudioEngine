@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <exception>
 #import <memory>
 
 #import <os/log.h>
