@@ -300,7 +300,7 @@ private:
 	outputStreamDescription.mBitsPerChannel		= wve.wBitsPerSample;
 	outputStreamDescription.mSampleRate			= wve.nSamplesPerSec;
 	outputStreamDescription.mChannelsPerFrame	= wve.nChannels;
-	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
 	return YES;
 }
