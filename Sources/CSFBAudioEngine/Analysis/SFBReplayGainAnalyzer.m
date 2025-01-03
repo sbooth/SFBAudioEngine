@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -332,7 +332,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBReplayGainAnalyzerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
 					return NSLocalizedString(@"The file's format is not supported.", @"");

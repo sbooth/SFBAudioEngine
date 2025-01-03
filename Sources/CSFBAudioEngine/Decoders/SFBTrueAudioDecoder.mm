@@ -212,7 +212,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	sourceStreamDescription.mChannelsPerFrame	= streamInfo.nch;
 	sourceStreamDescription.mBitsPerChannel		= streamInfo.bps;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{

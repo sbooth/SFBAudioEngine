@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -144,8 +144,8 @@ static dumb_off_t get_size_callback(void *f)
 		return NO;
 
 	// Generate interleaved 2-channel 16-bit output
-	AVAudioChannelLayout *layout = [[AVAudioChannelLayout alloc] initWithLayoutTag:kAudioChannelLayoutTag_Stereo];
-	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:DUMB_SAMPLE_RATE interleaved:YES channelLayout:layout];
+	// For mono and stereo the channel layout is assumed
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:DUMB_SAMPLE_RATE channels:DUMB_CHANNELS interleaved:YES];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};

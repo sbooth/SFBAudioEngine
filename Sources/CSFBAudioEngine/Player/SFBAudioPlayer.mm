@@ -597,17 +597,20 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	dispatch_async(_engineQueue, ^{
 		NSMutableString *string = [NSMutableString stringWithFormat:@"%@ audio processing graph:\n", self];
 
-		AVAudioFormat *inputFormat = _playerNode.renderingFormat;
+		const auto playerNode = self->_playerNode;
+		const auto engine = self->_engine;
+
+		AVAudioFormat *inputFormat = playerNode.renderingFormat;
 		[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
 
-		AVAudioFormat *outputFormat = [_playerNode outputFormatForBus:0];
+		AVAudioFormat *outputFormat = [playerNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", _playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+			[string appendFormat:@"→ %@\n    %@\n", playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			[string appendFormat:@"→ %@\n", _playerNode];
+			[string appendFormat:@"→ %@\n", playerNode];
 
-		AVAudioConnectionPoint *connectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
-		while(connectionPoint.node != _engine.mainMixerNode) {
+		AVAudioConnectionPoint *connectionPoint = [[engine outputConnectionPointsForNode:playerNode outputBus:0] firstObject];
+		while(connectionPoint.node != engine.mainMixerNode) {
 			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
 			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
 			if(![outputFormat isEqual:inputFormat])
@@ -616,25 +619,25 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			else
 				[string appendFormat:@"→ %@\n", connectionPoint.node];
 
-			connectionPoint = [[_engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
+			connectionPoint = [[engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
 		}
 
-		inputFormat = [_engine.mainMixerNode inputFormatForBus:0];
-		outputFormat = [_engine.mainMixerNode outputFormatForBus:0];
+		inputFormat = [engine.mainMixerNode inputFormatForBus:0];
+		outputFormat = [engine.mainMixerNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", _engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+			[string appendFormat:@"→ %@\n    %@\n", engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			[string appendFormat:@"→ %@\n", _engine.mainMixerNode];
+			[string appendFormat:@"→ %@\n", engine.mainMixerNode];
 
-		inputFormat = [_engine.outputNode inputFormatForBus:0];
-		outputFormat = [_engine.outputNode outputFormatForBus:0];
+		inputFormat = [engine.outputNode inputFormatForBus:0];
+		outputFormat = [engine.outputNode outputFormatForBus:0];
 		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@]", _engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+			[string appendFormat:@"→ %@\n    %@]", engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			[string appendFormat:@"→ %@", _engine.outputNode];
+			[string appendFormat:@"→ %@", engine.outputNode];
 
 #if !TARGET_OS_IPHONE
-		[string appendFormat:@"\n↓ \"%@\"", AudioDeviceName(_engine.outputNode.AUAudioUnit)];
+		[string appendFormat:@"\n↓ \"%@\"", AudioDeviceName(engine.outputNode.AUAudioUnit)];
 #endif /* !TARGET_OS_IPHONE */
 
 		os_log_with_type(log, type, "%{public}@", string);

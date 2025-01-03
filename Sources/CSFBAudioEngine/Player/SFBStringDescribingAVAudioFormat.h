@@ -20,7 +20,7 @@ inline NSString * _Nullable StringDescribingAVAudioFormat(AVAudioFormat * _Nulla
 	NSString *formatDescription = asbd.FormatDescription();
 
 	if(includeChannelLayout) {
-		NSString *layoutDescription = (__bridge_transfer NSString *)SFB::CopyAudioChannelLayoutDescription(format.channelLayout.layout);
+		NSString *layoutDescription = SFB::AudioChannelLayoutDescription(format.channelLayout.layout);
 		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [%@]>", format, formatDescription, layoutDescription ?: @"no channel layout"];
 	}
 	else

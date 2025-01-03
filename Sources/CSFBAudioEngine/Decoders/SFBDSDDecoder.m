@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -46,7 +46,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBDSDDecoderErrorCodeInternalError:
 					return NSLocalizedString(@"An internal decoder error occurred.", @"");

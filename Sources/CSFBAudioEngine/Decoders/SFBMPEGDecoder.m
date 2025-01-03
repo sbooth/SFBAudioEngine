@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -239,7 +239,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 	sourceStreamDescription.mFramesPerPacket	= framesPerMPEGFrame;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	if(mpg123_scan(_mpg123) != MPG123_OK) {
 		mpg123_close(_mpg123);

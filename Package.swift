@@ -19,7 +19,7 @@ let package = Package(
 			]),
 	],
 	dependencies: [
-		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.2.2"),
+		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.3.1"),
 		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.1"),
 
 		// Standalone dependencies from source

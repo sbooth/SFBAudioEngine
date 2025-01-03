@@ -411,7 +411,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
 			default:	format.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;		break;
 		}
 	}
-	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format];
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:_processingFormat.channelLayout];
 
 	AudioFileID audioFile;
 	auto result = AudioFileInitializeWithCallbacks((__bridge void *)self, my_AudioFile_ReadProc, my_AudioFile_WriteProc, my_AudioFile_GetSizeProc, my_AudioFile_SetSizeProc, fileType, &format, 0, &audioFile);

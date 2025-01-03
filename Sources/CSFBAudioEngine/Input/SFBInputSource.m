@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -33,7 +33,7 @@ static void SFBCreateInputSourceLog(void)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBInputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBInputSourceErrorCodeFileNotFound:
 					return NSLocalizedString(@"The requested file was not found.", @"");
