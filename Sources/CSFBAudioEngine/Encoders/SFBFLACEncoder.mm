@@ -222,12 +222,12 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	}
 
 	// Output format
+	// As long as the FLAC encoder is non-null and uninitialized these setters will succeed
 	FLAC__stream_encoder_set_sample_rate(flac.get(), static_cast<uint32_t>(_processingFormat.sampleRate));
 	FLAC__stream_encoder_set_channels(flac.get(), _processingFormat.channelCount);
 	FLAC__stream_encoder_set_bits_per_sample(flac.get(), _processingFormat.streamDescription->mBitsPerChannel);
-	if(_estimatedFramesToEncode > 0) {
+	if(_estimatedFramesToEncode > 0)
 		FLAC__stream_encoder_set_total_samples_estimate(flac.get(), static_cast<FLAC__uint64>(_estimatedFramesToEncode));
-	}
 
 	// Encoder compression level
 	NSNumber *compressionLevel = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACCompressionLevel];
@@ -248,11 +248,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 		}
 	}
 
-	NSNumber *verifyEncoding = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACVerifyEncoding];
-	if(verifyEncoding != nil) {
-		FLAC__bool value = verifyEncoding.boolValue;
-		FLAC__stream_encoder_set_verify(flac.get(), value);
-	}
+	if(NSNumber *verifyEncoding = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACVerifyEncoding]; verifyEncoding != nil)
+		FLAC__stream_encoder_set_verify(flac.get(), verifyEncoding.boolValue != 0);
 
 	// Create the padding metadata block
 	flac__stream_metadata_unique_ptr padding{FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING)};
@@ -435,7 +432,9 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
 - (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error
 {
-	FLAC__StreamEncoderInitStatus encoderStatus = FLAC__stream_encoder_init_stream(encoder, write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
+	NSParameterAssert(encoder != nullptr);
+
+	auto encoderStatus = FLAC__stream_encoder_init_stream(encoder, write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
 	if(encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_stream failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(encoder));
 		if(error)
@@ -477,9 +476,12 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
 - (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error
 {
+	NSParameterAssert(encoder != nullptr);
+
+	// As long as the FLAC encoder is non-null and uninitialized this setter will succeed
 	FLAC__stream_encoder_set_ogg_serial_number(encoder, static_cast<int>(arc4random()));
 
-	FLAC__StreamEncoderInitStatus encoderStatus = FLAC__stream_encoder_init_ogg_stream(encoder, read_callback, write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
+	auto encoderStatus = FLAC__stream_encoder_init_ogg_stream(encoder, read_callback, write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
 	if(encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_ogg_stream failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(encoder));
 		if(error)
