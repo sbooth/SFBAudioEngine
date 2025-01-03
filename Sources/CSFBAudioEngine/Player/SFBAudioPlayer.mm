@@ -25,7 +25,7 @@
 namespace {
 
 /// Objective-C associated object key indicating if a decoder has been canceled
-const char _decoderIsCanceledKey = '\0';
+constexpr char _decoderIsCanceledKey = '\0';
 
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");

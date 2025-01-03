@@ -31,13 +31,13 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConve
 namespace {
 
 template <typename T>
-OSStatus SetAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue)
+OSStatus SetAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue) noexcept
 {
 	NSCParameterAssert(audioConverter != nullptr);
 	return AudioConverterSetProperty(audioConverter, propertyID, sizeof(propertyValue), &propertyValue);
 }
 
-std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtension)
+std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtension) noexcept
 {
 	NSCParameterAssert(pathExtension != nil);
 	CFStringRef extension = (__bridge CFStringRef)pathExtension;
@@ -61,7 +61,7 @@ std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtensio
 	return typesForExtension;
 }
 
-std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false)
+std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false) noexcept
 {
 	UInt32 size = 0;
 	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size);
@@ -103,7 +103,7 @@ std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeI
 	return formatIDs;
 }
 
-OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
+OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -130,7 +130,7 @@ OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 req
 	return noErr;
 }
 
-OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer, UInt32 *actualCount)
+OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer, UInt32 *actualCount) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -157,7 +157,7 @@ OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 re
 	return noErr;
 }
 
-SInt64 my_AudioFile_GetSizeProc(void *inClientData)
+SInt64 my_AudioFile_GetSizeProc(void *inClientData) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -171,7 +171,7 @@ SInt64 my_AudioFile_GetSizeProc(void *inClientData)
 	return length;
 }
 
-OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize)
+OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
