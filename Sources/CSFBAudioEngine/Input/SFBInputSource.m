@@ -33,7 +33,7 @@ static void SFBCreateInputSourceLog(void)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBInputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBInputSourceErrorCodeFileNotFound:
 					return NSLocalizedString(@"The requested file was not found.", @"");

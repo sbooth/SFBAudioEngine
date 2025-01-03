@@ -332,7 +332,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBReplayGainAnalyzerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
 					return NSLocalizedString(@"The file's format is not supported.", @"");

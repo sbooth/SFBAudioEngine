@@ -46,7 +46,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBAudioDecoderErrorCodeInternalError:
 					return NSLocalizedString(@"An internal decoder error occurred.", @"");

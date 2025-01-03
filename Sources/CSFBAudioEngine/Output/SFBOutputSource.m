@@ -30,7 +30,7 @@ static void SFBCreateOutputSourceLog(void)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBOutputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBOutputSourceErrorCodeFileNotFound:
 					return NSLocalizedString(@"The requested file was not found.", @"");
