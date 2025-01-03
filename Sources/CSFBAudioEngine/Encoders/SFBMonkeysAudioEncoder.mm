@@ -1,9 +1,10 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
+#import <exception>
 #import <memory>
 
 #import <os/log.h>
@@ -42,7 +43,7 @@ public:
 	: mOutputSource(outputSource)
 	{}
 
-	inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
+	int Open(const wchar_t * pName, bool bOpenReadOnly) override
 	{
 #pragma unused(pName)
 #pragma unused(bOpenReadOnly)
@@ -50,12 +51,12 @@ public:
 		return ERROR_INVALID_INPUT_FILE;
 	}
 
-	inline virtual int Close()
+	int Close() override
 	{
 		return ERROR_SUCCESS;
 	}
 
-	virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
+	int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead) override
 	{
 		NSInteger bytesRead;
 		if(![mOutputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
@@ -66,7 +67,7 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	inline virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
+	int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten) override
 	{
 		NSInteger bytesWritten;
 		if(![mOutputSource writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] || bytesWritten != nBytesToWrite)
@@ -77,7 +78,7 @@ public:
 		return ERROR_SUCCESS;
 	}
 
-	virtual int Seek(APE::int64 nPosition, APE::SeekMethod nMethod)
+	int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override
 	{
 		if(!mOutputSource.supportsSeeking)
 			return ERROR_IO_READ;
@@ -104,38 +105,29 @@ public:
 		return ![mOutputSource seekToOffset:offset error:nil];
 	}
 
-	inline virtual int Create(const wchar_t * pName)
+	int Create(const wchar_t * pName) override
 	{
 #pragma unused(pName)
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int Delete()
+	int Delete() override
 	{
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int SetEOF()
+	int SetEOF() override
 	{
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int SetReadWholeFile()
-	{
-		return ERROR_IO_READ;
-	}
-
-	inline virtual void SetReadToBuffer()
-	{
-	}
-
-	inline virtual unsigned char * GetBuffer(int * pnBufferBytes)
+	unsigned char * GetBuffer(int * pnBufferBytes) override
 	{
 #pragma unused(pnBufferBytes)
 		return nullptr;
 	}
 
-	inline virtual APE::int64 GetPosition()
+	APE::int64 GetPosition() override
 	{
 		NSInteger offset;
 		if(![mOutputSource getOffset:&offset error:nil])
@@ -143,7 +135,7 @@ public:
 		return offset;
 	}
 
-	inline virtual APE::int64 GetSize()
+	APE::int64 GetSize() override
 	{
 		NSInteger length;
 		if(![mOutputSource getLength:&length error:nil])
@@ -151,7 +143,7 @@ public:
 		return length;
 	}
 
-	inline virtual int GetName(wchar_t * pBuffer)
+	int GetName(wchar_t * pBuffer) override
 	{
 #pragma unused(pBuffer)
 		return ERROR_SUCCESS;
@@ -162,7 +154,7 @@ private:
 	SFBOutputSource *mOutputSource;
 };
 
-}
+} /* namespace */
 
 @interface SFBMonkeysAudioEncoder ()
 {
@@ -209,7 +201,7 @@ private:
 		return nil;
 
 	APE::WAVEFORMATEX wve;
-	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, (int)sourceFormat.sampleRate, (int)sourceFormat.streamDescription->mBitsPerChannel, (int)sourceFormat.channelCount);
+	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate), static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel), static_cast<int>(sourceFormat.channelCount));
 	if(result != ERROR_SUCCESS) {
 		os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
 		return nil;
@@ -235,7 +227,7 @@ private:
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;
 
-	UInt32 channelBitmap = 0;
+	AudioChannelBitmap channelBitmap = 0;
 	UInt32 propertySize = sizeof(channelBitmap);
 	AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
 	result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
@@ -258,17 +250,25 @@ private:
 	if(![super openReturningError:error])
 		return NO;
 
-	int result;
-	auto compressor = CreateIAPECompress(&result);
-	if(!compressor) {
-		os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
+	try {
+		int result;
+		auto compressor = CreateIAPECompress(&result);
+		if(!compressor) {
+			os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
+		}
+
+		_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
+		_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
+	}
+	catch(const std::exception& e) {
+		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
 	}
-
-	_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
-	_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 
 	int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
 	SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
@@ -288,7 +288,7 @@ private:
 	}
 
 	APE::WAVEFORMATEX wve;
-	result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, (int)_sourceFormat.sampleRate, (int)_sourceFormat.streamDescription->mBitsPerChannel, (int)_sourceFormat.channelCount);
+	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(_sourceFormat.sampleRate), static_cast<int>(_sourceFormat.streamDescription->mBitsPerChannel), static_cast<int>(_sourceFormat.channelCount));
 	if(result != ERROR_SUCCESS) {
 		os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
 		if(error)
@@ -309,7 +309,7 @@ private:
 	outputStreamDescription.mBitsPerChannel		= wve.wBitsPerSample;
 	outputStreamDescription.mSampleRate			= wve.nSamplesPerSec;
 	outputStreamDescription.mChannelsPerFrame	= wve.nChannels;
-	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
 	return YES;
 }

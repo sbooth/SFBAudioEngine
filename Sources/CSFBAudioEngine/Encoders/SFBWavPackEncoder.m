@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -102,7 +102,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;
 
-	UInt32 channelBitmap = 0;
+	AudioChannelBitmap channelBitmap = 0;
 	UInt32 propertySize = sizeof(channelBitmap);
 	AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
 	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
@@ -114,6 +114,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		};
 		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
 	}
+	// TODO: Use WavPack channel identities as a fallback?
 	else
 		os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 
@@ -194,7 +195,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	outputStreamDescription.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
 	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
-	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
 	return YES;
 }

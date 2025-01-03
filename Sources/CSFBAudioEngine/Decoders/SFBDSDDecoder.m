@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -46,7 +46,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBDSDDecoderErrorCodeInternalError:
 					return NSLocalizedString(@"An internal decoder error occurred.", @"");
@@ -366,12 +366,15 @@ static NSMutableArray *_registeredSubclasses = nil;
 	subclassInfo.priority = priority;
 
 	[_registeredSubclasses addObject:subclassInfo];
-	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+
+	// N.B. `sortUsingComparator:` sorts in ascending order
+	// To sort the array in descending order the comparator is reversed
+	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
 		int a = ((SFBDSDDecoderSubclassInfo *)obj1).priority;
 		int b = ((SFBDSDDecoderSubclassInfo *)obj2).priority;
-		if(a < b)
+		if(a > b)
 			return NSOrderedAscending;
-		else if(a > b)
+		else if(a < b)
 			return NSOrderedDescending;
 		else
 			return NSOrderedSame;

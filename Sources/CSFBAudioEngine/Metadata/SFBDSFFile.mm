@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
 #import <taglib/dsffile.h>
 #import <taglib/tfilestream.h>
 

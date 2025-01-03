@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/AVFAudioExtensions",
       "state" : {
-        "revision" : "2a01d9abf5150e3b3fdbf830c16c93d076e5505c",
-        "version" : "0.1.3"
+        "revision" : "a9616556eb3ed9751fc6e036c2197540036567ee",
+        "version" : "0.4.1"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioUtilities",
       "state" : {
-        "revision" : "4bd459dfb0f87c00f5bc345af07d34fbf2fe1899",
-        "version" : "0.1.2"
+        "revision" : "351f9f85e17a552b03583525e5a9caec1b11f009",
+        "version" : "0.3.1"
       }
     },
     {

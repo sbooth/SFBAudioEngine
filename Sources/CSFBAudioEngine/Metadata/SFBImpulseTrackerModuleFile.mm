@@ -4,10 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
-#import <os/log.h>
-
 #import <taglib/itfile.h>
 #import <taglib/tfilestream.h>
 

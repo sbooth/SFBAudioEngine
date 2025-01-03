@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -129,46 +129,46 @@
 
 namespace {
 
-	void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
+void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
 
-		// Remove the existing comment with this name
-		tag->removeItem(key);
+	// Remove the existing comment with this name
+	tag->removeItem(key);
 
-		if(value)
-			tag->addValue(key, TagLib::StringFromNSString(value));
-	}
-
-	void SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, NSNumber *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		SetAPETag(tag, key, value.stringValue);
-	}
-
-	void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		if(value == nil)
-			SetAPETag(tag, key, nil);
-		else
-			SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
-	}
-
-	void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber *value, NSString *format = nil)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		SetAPETag(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
-	}
-
+	if(value)
+		tag->addValue(key, TagLib::StringFromNSString(value));
 }
+
+void SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, NSNumber *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	SetAPETag(tag, key, value.stringValue);
+}
+
+void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	if(value == nil)
+		SetAPETag(tag, key, nil);
+	else
+		SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
+}
+
+void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber *value, NSString *format = nil)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	SetAPETag(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+}
+
+} /* namespace */
 
 void SFB::Audio::SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt)
 {

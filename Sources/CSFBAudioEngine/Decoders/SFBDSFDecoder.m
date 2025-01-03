@@ -1,8 +1,10 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
+
+@import stdint_h;
 
 @import os.log;
 
@@ -256,10 +258,10 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];			break;
 		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];		break;
 		case 3:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_3_0_A];	break;
-		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];	break;
-		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_ITU_2_2];		break;
-		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];	break;
-		case 7:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];	break;
+		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_4_0_B];	break;
+		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_DVD_10];		break;
+		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_0_B];	break;
+		case 7:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_1_B];	break;
 	}
 
 	AudioStreamBasicDescription processingStreamDescription = {0};
@@ -286,7 +288,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)channelNum;
 	sourceStreamDescription.mBitsPerChannel		= 1;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Metadata chunk is ignored
 
@@ -344,7 +346,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 		// Copy data from the internal buffer to output
 		uint32_t copySize = packetsToCopy * packetSize;
-		memcpy((uint8_t *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
+		memcpy((void *)((uintptr_t)buffer.data + (packetsToSkip * packetSize)), _buffer.data, copySize);
 		buffer.packetCount += packetsToCopy;
 		buffer.byteLength += copySize;
 
@@ -401,9 +403,8 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Move data
 	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
-	uint8_t *dst = (uint8_t *)_buffer.data;
-	const uint8_t *src = (uint8_t *)_buffer.data + (packetsToSkip * packetSize);
-	memmove(dst, src, packetsToMove * packetSize);
+	const void *src = (const void *)((uintptr_t)_buffer.data + (packetsToSkip * packetSize));
+	memmove(_buffer.data, src, packetsToMove * packetSize);
 
 	_buffer.packetCount = packetsToMove;
 	_buffer.byteLength = packetsToMove * packetSize;

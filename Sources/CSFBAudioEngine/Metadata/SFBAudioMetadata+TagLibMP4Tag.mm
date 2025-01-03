@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -142,62 +142,62 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
 namespace {
 
-	void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
+void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
 
-		// Remove the existing item with this name
-		tag->removeItem(key);
+	// Remove the existing item with this name
+	tag->removeItem(key);
 
-		if(value)
-			tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
-	}
-
-	void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		// Remove the existing item with this name
-		tag->removeItem(key);
-
-		if(value != nil)
-			tag->setItem(key, TagLib::MP4::Item(value.intValue));
-	}
-
-	void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOne, NSNumber *valueTwo)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		// Remove the existing item with this name
-		tag->removeItem(key);
-
-		if(valueOne || valueTwo)
-			tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
-	}
-
-	void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		if(value == nil)
-			tag->removeItem(key);
-		else
-			tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
-	}
-
-	void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber *value, NSString *format = nil)
-	{
-		assert(nullptr != tag);
-		assert(nullptr != key);
-
-		SetMP4Item(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
-	}
-
+	if(value)
+		tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
 }
+
+void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	// Remove the existing item with this name
+	tag->removeItem(key);
+
+	if(value != nil)
+		tag->setItem(key, TagLib::MP4::Item(value.intValue));
+}
+
+void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOne, NSNumber *valueTwo)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	// Remove the existing item with this name
+	tag->removeItem(key);
+
+	if(valueOne || valueTwo)
+		tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
+}
+
+void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	if(value == nil)
+		tag->removeItem(key);
+	else
+		tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
+}
+
+void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber *value, NSString *format = nil)
+{
+	assert(nullptr != tag);
+	assert(nullptr != key);
+
+	SetMP4Item(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+}
+
+} /* namespace */
 
 void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt)
 {

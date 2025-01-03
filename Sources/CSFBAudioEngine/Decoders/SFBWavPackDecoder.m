@@ -1,15 +1,18 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
 
+@import AudioToolbox;
+
 @import wavpack;
 
 #import "SFBWavPackDecoder.h"
 
+#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
@@ -212,6 +215,7 @@ static int can_seek_callback(void *id)
 	// Setup converter
 	_wpc = WavpackOpenFileInputEx64(&_streamReader, (__bridge void *)self, NULL, errorBuf, OPEN_WVC | OPEN_NORMALIZE/* | OPEN_DSD_NATIVE*/, 0);
 	if(!_wpc) {
+		os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -224,13 +228,80 @@ static int can_seek_callback(void *id)
 	}
 
 	AVAudioChannelLayout *channelLayout = nil;
-	switch(WavpackGetNumChannels(_wpc)) {
-		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
-		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
-		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
-		default:
-			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)WavpackGetNumChannels(_wpc))];
-			break;
+
+	// Attempt to use the standard WAVE channel mask
+	int channelMask = WavpackGetChannelMask(_wpc);
+	if(channelMask) {
+		AudioChannelLayout layout = {
+			.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
+			.mChannelBitmap = channelMask,
+			.mNumberChannelDescriptions = 0,
+		};
+
+		AudioChannelLayoutTag tag = 0;
+		UInt32 propertySize = sizeof(tag);
+		OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof(layout), &layout, &propertySize, &tag);
+		if(result == noErr)
+			channelLayout = [[AVAudioChannelLayout alloc] initWithLayoutTag:tag];
+		else
+			channelLayout = [AVAudioChannelLayout layoutWithLayout:&layout];
+	}
+
+	// Fall back on the WavPack channel identities
+	if(!channelLayout) {
+		int channelCount = WavpackGetNumChannels(_wpc);
+		unsigned char identities [channelCount + 1];
+		WavpackGetChannelIdentities(_wpc, identities);
+
+		// Convert from WavPack channel identity to Core Audio channel label
+		AudioChannelLabel labels [channelCount];
+
+		// from pack_utils.c:
+		//
+		// The channel IDs so far reserved are listed here:
+		//
+		// 0:           not allowed / terminator
+		// 1 - 18:      Microsoft standard channels
+		// 30, 31:      Stereo mix from RF64 (not really recommended, but RF64 specifies this)
+		// 33 - 44:     Core Audio channels (see Core Audio specification)
+		// 127 - 128:   Amio LeftHeight, Amio RightHeight
+		// 138 - 142:   Amio BottomFrontLeft/Center/Right, Amio ProximityLeft/Right
+		// 200 - 207:   Core Audio channels (see Core Audio specification)
+		// 221 - 224:   Core Audio channels 301 - 305 (offset by 80)
+		// 255:         Present but unknown or unused channel
+
+		for(int i = 0; i < channelCount; ++i) {
+			switch(identities[i]) {
+				case 1 ... 18:		labels[i] = identities[i];						break;
+
+				case 30: 	labels[i] = kAudioChannelLabel_Left; 					break;
+				case 31: 	labels[i] = kAudioChannelLabel_Right;					break;
+
+				case 33 ... 44:		labels[i] = identities[i];						break;
+
+					// FIXME: amio mappings are approximate (or possible incorrect)
+				case 127:	labels[i] = kAudioChannelLabel_VerticalHeightLeft;		break;
+				case 128:	labels[i] = kAudioChannelLabel_VerticalHeightRight;		break;
+				case 138:	labels[i] = kAudioChannelLabel_LeftBottom;				break;
+				case 139:	labels[i] = kAudioChannelLabel_CenterBottom;			break;
+				case 140:	labels[i] = kAudioChannelLabel_RightBottom;				break;
+				case 141:	labels[i] = kAudioChannelLabel_LeftEdgeOfScreen;		break;
+				case 142:	labels[i] = kAudioChannelLabel_RightEdgeOfScreen;		break;
+
+				case 200 ... 207:	labels[i] = identities[i];						break;
+
+				case 221 ... 224:	labels[i] = identities[i] + 80;					break;
+
+				case 255:	labels[i] = kAudioChannelLabel_Unknown;					break;
+
+				default:
+					os_log_error(gSFBAudioDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
+					labels[i] = kAudioChannelLabel_Unused;
+					break;
+			}
+		}
+
+		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:channelCount];
 	}
 
 	// Floating-point and lossy files will be handed off in the canonical Core Audio format
@@ -238,13 +309,9 @@ static int can_seek_callback(void *id)
 	//	int qmode = WavpackGetQualifyMode(_wpc);
 	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
 		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:WavpackGetSampleRate(_wpc) interleaved:NO channelLayout:channelLayout];
-//		if(channelLayout)
-//			_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:WavpackGetSampleRate(_wpc) interleaved:NO channelLayout:channelLayout];
-//		else
-//			_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:WavpackGetSampleRate(_wpc) channels:WavpackGetNumChannels(_wpc) interleaved:NO];
 	}
-	//	else if(qmode & QMODE_DSD_AUDIO) {
-	//	}
+//	else if(qmode & QMODE_DSD_AUDIO) {
+//	}
 	else {
 		AudioStreamBasicDescription processingStreamDescription = {0};
 
@@ -278,7 +345,7 @@ static int can_seek_callback(void *id)
 	sourceStreamDescription.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(_wpc);
 	sourceStreamDescription.mBytesPerPacket		= (UInt32)WavpackGetBytesPerSample(_wpc);
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{

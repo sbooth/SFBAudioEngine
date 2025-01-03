@@ -49,7 +49,7 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// decoder that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are
 /// automatically dequeued and become current when the final frame of the current decoder is pushed in the render block.
 ///
-/// `SFBAudioPlayerNode` decodes audio in a high-priority non-realtime thread into a ring buffer and renders on
+/// `SFBAudioPlayerNode` decodes audio in a high-priority dispatch queue into a ring buffer and renders on
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
@@ -227,8 +227,8 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is canceled
-/// - parameter partiallyRendered: `YES` if any audio frames from `decoder` were rendered
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered;
+/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from `decoder` will render at `hostTime`
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`

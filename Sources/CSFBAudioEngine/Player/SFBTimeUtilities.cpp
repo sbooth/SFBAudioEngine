@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -26,7 +26,7 @@ auto MachTimebase() noexcept
 /// Mach timebase information
 const auto kMachTimebase = MachTimebase();
 
-} // namespace
+} /* namespace */
 
 uint64_t SFB::ConvertHostTimeToNanoseconds(uint64_t t) noexcept
 {

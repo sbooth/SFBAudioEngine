@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -37,7 +37,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioFileErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if(userInfoKey == NSLocalizedDescriptionKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBAudioFileErrorCodeInternalError:
 					return NSLocalizedString(@"An internal error occurred.", @"");
@@ -319,12 +319,15 @@ static NSMutableArray *_registeredSubclasses = nil;
 	subclassInfo.priority = priority;
 
 	[_registeredSubclasses addObject:subclassInfo];
+
+	// N.B. `sortUsingComparator:` sorts in ascending order
+	// To sort the array in descending order the comparator is reversed
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
 		int a = ((SFBAudioFileSubclassInfo *)obj1).priority;
 		int b = ((SFBAudioFileSubclassInfo *)obj2).priority;
-		if(a < b)
+		if(a > b)
 			return NSOrderedAscending;
-		else if(a > b)
+		else if(a < b)
 			return NSOrderedDescending;
 		else
 			return NSOrderedSame;

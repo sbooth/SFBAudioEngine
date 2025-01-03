@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#pragma once
+
 #import <CoreFoundation/CoreFoundation.h>
 
 /// A three-valued logic truth value (AKA tribool)

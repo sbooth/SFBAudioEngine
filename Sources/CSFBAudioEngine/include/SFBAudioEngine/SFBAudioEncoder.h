@@ -143,7 +143,7 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 
 #pragma mark - FLAC Encoder Settings
 
-/// FLAC compression level (`NSNumber` from 1 (lowest) to 8 (highest))
+/// FLAC compression level (`NSNumber` from 0 (lowest) to 8 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
 /// Set to nonzero to verify FLAC encoding (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;

@@ -4,8 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
 #import <taglib/opusfile.h>
 #import <taglib/tfilestream.h>
 

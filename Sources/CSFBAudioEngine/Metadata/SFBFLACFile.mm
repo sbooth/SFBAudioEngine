@@ -4,10 +4,6 @@
 // MIT license
 //
 
-#import <memory>
-
-#import <CoreServices/CoreServices.h>
-
 #import <taglib/flacfile.h>
 #import <taglib/tfilestream.h>
 

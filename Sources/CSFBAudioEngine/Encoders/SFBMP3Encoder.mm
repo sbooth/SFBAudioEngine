@@ -116,7 +116,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
 	result = lame_set_in_samplerate(gfp.get(), static_cast<int>(_processingFormat.sampleRate));
 	if(result == -1) {
-		os_log_error(gSFBAudioEncoderLog, "lame_set_in_samplerate(%f) failed", _processingFormat.sampleRate);
+		os_log_error(gSFBAudioEncoderLog, "lame_set_in_samplerate(%g) failed", _processingFormat.sampleRate);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
@@ -216,7 +216,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 		if(vbrQuality != nil) {
 			result = lame_set_VBR_quality(gfp.get(), vbrQuality.floatValue);
 			if(result == -1) {
-				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%f) failed", vbrQuality.floatValue);
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%g) failed", vbrQuality.floatValue);
 				if(error)
 					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 				return NO;
