@@ -79,8 +79,6 @@ constexpr auto kFileTypeUInt16LE 			= 6;
 constexpr auto kFileTypeµLaw 				= 7;
 constexpr auto kFileTypeALaw 				= 10;
 
-constexpr auto kSeekTableRevision 			= 1;
-
 constexpr auto kSeekHeaderSizeBytes 		= 12;
 constexpr auto kSeekTrailerSizeBytes 		= 12;
 constexpr auto kSeekEntrySizeBytes 			= 80;
@@ -1481,7 +1479,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									auto value = µLawToLinear(_buffer[channel][sample]);
+									auto value = µLawToLinear(static_cast<uint8_t>(_buffer[channel][sample]));
 									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
@@ -1490,7 +1488,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									auto value = ALawToLinear(_buffer[channel][sample]);
+									auto value = ALawToLinear(static_cast<uint8_t>(_buffer[channel][sample]));
 									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
