@@ -87,7 +87,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	NSError *writeError = nil;
 
 	for(;;) {
-		AVAudioConverterOutputStatus status = [converter convertToBuffer:outputBuffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
+		AVAudioConverterOutputStatus status = [converter convertToBuffer:outputBuffer error:&convertError withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
 			decodeResult = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&decodeError];
 			if(!decodeResult) {
 				*outStatus = AVAudioConverterInputStatus_NoDataNow;
