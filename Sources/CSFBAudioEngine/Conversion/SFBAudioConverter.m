@@ -164,37 +164,47 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	AVAudioPCMBuffer *encodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_intermediateConverter.outputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 	AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_intermediateConverter.inputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 
-	__block NSError *decodeErr = nil;
+	__block BOOL decodeResult;
+	__block NSError *decodeError = nil;
+	NSError *convertError = nil;
+	NSError *encodeError = nil;
 
 	for(;;) {
-		AVAudioConverterOutputStatus status = [_intermediateConverter convertToBuffer:encodeBuffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
-			BOOL result = [self->_decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&decodeErr];
-			if(!result) {
+		AVAudioConverterOutputStatus status = [_intermediateConverter convertToBuffer:encodeBuffer error:&convertError withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
+			decodeResult = [self->_decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&decodeError];
+			if(!decodeResult) {
 				*outStatus = AVAudioConverterInputStatus_NoDataNow;
 				return nil;
 			}
+
 			if(decodeBuffer.frameLength == 0) {
 				*outStatus = AVAudioConverterInputStatus_EndOfStream;
 				return nil;
 			}
+
 			*outStatus = AVAudioConverterInputStatus_HaveData;
 			return decodeBuffer;
 		}];
 
-		if(decodeErr) {
-			os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeErr);
-			if (error) *error = decodeErr;
+		if(!decodeResult) {
+			os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
+			if(error)
+				*error = decodeError;
 			return NO;
 		}
 		if(status == AVAudioConverterOutputStatus_Error) {
-			os_log_error(OS_LOG_DEFAULT, "Error converting pcm audio: %{public}@", error ? *error : nil);
+			os_log_error(OS_LOG_DEFAULT, "Error converting PCM audio: %{public}@", convertError);
+			if(error)
+				*error = convertError;
 			return NO;
 		}
-		if(status == AVAudioConverterOutputStatus_EndOfStream)
+		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
-		if(![_encoder encodeFromBuffer:encodeBuffer frameLength:encodeBuffer.frameLength error:error]) {
-			os_log_error(OS_LOG_DEFAULT, "Error encoding audio: %{public}@", error ? *error : nil);
+		if(![_encoder encodeFromBuffer:encodeBuffer frameLength:encodeBuffer.frameLength error:&encodeError]) {
+			os_log_error(OS_LOG_DEFAULT, "Error encoding audio: %{public}@", encodeError);
+			if(error)
+				*error = encodeError;
 			return NO;
 		}
 	}
