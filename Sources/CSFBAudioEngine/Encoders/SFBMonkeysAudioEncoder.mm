@@ -264,7 +264,7 @@ private:
 		_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}@", e.what());
+		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
