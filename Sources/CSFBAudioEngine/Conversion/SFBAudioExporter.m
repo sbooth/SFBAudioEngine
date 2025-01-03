@@ -49,7 +49,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(targetURL != nil);
 
-	void(^deleteOutputFile)() = ^{
+	void(^deleteOutputFile)(void) = ^{
 #if TARGET_OS_TV
 		[[NSFileManager defaultManager] removeItemAtURL:targetURL error:nil];
 #else
