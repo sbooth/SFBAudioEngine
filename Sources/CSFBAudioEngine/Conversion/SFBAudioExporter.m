@@ -49,6 +49,14 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(targetURL != nil);
 
+	void(^deleteOutputFile)(void) = ^{
+#if TARGET_OS_TV
+		[[NSFileManager defaultManager] removeItemAtURL:targetURL error:nil];
+#else
+		[[NSFileManager defaultManager] trashItemAtURL:targetURL resultingItemURL:nil error:nil];
+#endif
+	};
+
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
@@ -73,43 +81,50 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 	AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 
+	__block BOOL decodeResult;
+	__block NSError *decodeError = nil;
+	NSError *convertError = nil;
+	NSError *writeError = nil;
+
 	for(;;) {
-		__block NSError *err = nil;
-		AVAudioConverterOutputStatus status = [converter convertToBuffer:outputBuffer error:error withInputFromBlock:^AVAudioBuffer * _Nullable(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus * _Nonnull outStatus) {
-			BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
-			if(!result)
-				os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
+		AVAudioConverterOutputStatus status = [converter convertToBuffer:outputBuffer error:&convertError withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
+			decodeResult = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&decodeError];
+			if(!decodeResult) {
+				*outStatus = AVAudioConverterInputStatus_NoDataNow;
+				return nil;
+			}
 
-			if(result && decodeBuffer.frameLength == 0)
+			if(decodeBuffer.frameLength == 0) {
 				*outStatus = AVAudioConverterInputStatus_EndOfStream;
-			else
-				*outStatus = AVAudioConverterInputStatus_HaveData;
+				return nil;
+			}
 
+			*outStatus = AVAudioConverterInputStatus_HaveData;
 			return decodeBuffer;
 		}];
 
-		if(status == AVAudioConverterOutputStatus_Error) {
-#if TARGET_OS_TV
-			[[NSFileManager defaultManager] removeItemAtURL:targetURL error:nil];
-#else
-			[[NSFileManager defaultManager] trashItemAtURL:targetURL resultingItemURL:nil error:nil];
-#endif
+		if(!decodeResult) {
+			os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
 			if(error)
-				*error = err;
+				*error = decodeError;
+			deleteOutputFile();
+			return NO;
+		}
+		if(status == AVAudioConverterOutputStatus_Error) {
+			os_log_error(OS_LOG_DEFAULT, "Error converting PCM audio: %{public}@", convertError);
+			if(error)
+				*error = convertError;
+			deleteOutputFile();
 			return NO;
 		}
 		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
-		if(![outputFile writeFromBuffer:outputBuffer error:&err]) {
-			os_log_error(OS_LOG_DEFAULT, "Error writing audio: %{public}@", err);
-#if TARGET_OS_TV
-			[[NSFileManager defaultManager] removeItemAtURL:targetURL error:nil];
-#else
-			[[NSFileManager defaultManager] trashItemAtURL:targetURL resultingItemURL:nil error:nil];
-#endif
+		if(![outputFile writeFromBuffer:outputBuffer error:&writeError]) {
+			os_log_error(OS_LOG_DEFAULT, "Error writing audio: %{public}@", writeError);
 			if(error)
-				*error = err;
+				*error = writeError;
+			deleteOutputFile();
 			return NO;
 		}
 	}
