@@ -164,28 +164,33 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	AVAudioPCMBuffer *encodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_intermediateConverter.outputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 	AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_intermediateConverter.inputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 
+	__block NSError *decodeErr = nil;
+
 	for(;;) {
 		AVAudioConverterOutputStatus status = [_intermediateConverter convertToBuffer:encodeBuffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
-			NSError *err = nil;
-			BOOL result = [self->_decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
-			if(!result)
-				os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
-
-			if(decodeBuffer.frameLength == 0) {
-				if(result)
-					*outStatus = AVAudioConverterInputStatus_EndOfStream;
-				else
-					*outStatus = AVAudioConverterInputStatus_NoDataNow;
+			BOOL result = [self->_decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&decodeErr];
+			if(!result) {
+				*outStatus = AVAudioConverterInputStatus_NoDataNow;
+				return nil;
 			}
-			else
-				*outStatus = AVAudioConverterInputStatus_HaveData;
-
+			if(decodeBuffer.frameLength == 0) {
+				*outStatus = AVAudioConverterInputStatus_EndOfStream;
+				return nil;
+			}
+			*outStatus = AVAudioConverterInputStatus_HaveData;
 			return decodeBuffer;
 		}];
 
-		if(status == AVAudioConverterOutputStatus_Error)
+		if(decodeErr) {
+			os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeErr);
+			if (error) *error = decodeErr;
 			return NO;
-		else if(status == AVAudioConverterOutputStatus_EndOfStream)
+		}
+		if(status == AVAudioConverterOutputStatus_Error) {
+			os_log_error(OS_LOG_DEFAULT, "Error converting pcm audio: %{public}@", error ? *error : nil);
+			return NO;
+		}
+		if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
 		if(![_encoder encodeFromBuffer:encodeBuffer frameLength:encodeBuffer.frameLength error:error]) {
