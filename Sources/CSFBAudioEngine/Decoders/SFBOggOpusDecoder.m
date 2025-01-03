@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -196,7 +196,7 @@ static opus_int64 tell_callback(void *stream)
 	sourceStreamDescription.mSampleRate			= header->input_sample_rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)header->channel_count;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -345,7 +345,7 @@ static int can_seek_callback(void *id)
 	sourceStreamDescription.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(_wpc);
 	sourceStreamDescription.mBytesPerPacket		= (UInt32)WavpackGetBytesPerSample(_wpc);
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{

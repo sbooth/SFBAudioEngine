@@ -284,7 +284,7 @@ private:
 	sourceStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
 	sourceStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{

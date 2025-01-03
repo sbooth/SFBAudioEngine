@@ -331,7 +331,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{
