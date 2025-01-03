@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <exception>
 #import <memory>
 
 #import <os/log.h>
@@ -200,7 +201,7 @@ private:
 		return nil;
 
 	APE::WAVEFORMATEX wve;
-	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, (int)sourceFormat.sampleRate, (int)sourceFormat.streamDescription->mBitsPerChannel, (int)sourceFormat.channelCount);
+	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate), static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel), static_cast<int>(sourceFormat.channelCount));
 	if(result != ERROR_SUCCESS) {
 		os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
 		return nil;
@@ -249,17 +250,25 @@ private:
 	if(![super openReturningError:error])
 		return NO;
 
-	int result;
-	auto compressor = CreateIAPECompress(&result);
-	if(!compressor) {
-		os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
+	try {
+		int result;
+		auto compressor = CreateIAPECompress(&result);
+		if(!compressor) {
+			os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
+		}
+
+		_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
+		_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
+	}
+	catch(const std::exception& e) {
+		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
 	}
-
-	_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
-	_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 
 	int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
 	SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
@@ -279,7 +288,7 @@ private:
 	}
 
 	APE::WAVEFORMATEX wve;
-	result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, (int)_sourceFormat.sampleRate, (int)_sourceFormat.streamDescription->mBitsPerChannel, (int)_sourceFormat.channelCount);
+	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(_sourceFormat.sampleRate), static_cast<int>(_sourceFormat.streamDescription->mBitsPerChannel), static_cast<int>(_sourceFormat.channelCount));
 	if(result != ERROR_SUCCESS) {
 		os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
 		if(error)
