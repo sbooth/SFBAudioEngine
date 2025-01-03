@@ -288,7 +288,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)channelNum;
 	sourceStreamDescription.mBitsPerChannel		= 1;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Metadata chunk is ignored
 

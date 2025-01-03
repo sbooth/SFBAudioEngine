@@ -562,7 +562,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 
 	sourceStreamDescription.mFramesPerPacket	= static_cast<UInt32>(_blocksize);
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{

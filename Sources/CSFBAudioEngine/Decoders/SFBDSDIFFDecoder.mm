@@ -804,7 +804,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	sourceStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
 	sourceStreamDescription.mBitsPerChannel		= 1;
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->mLocalChunks['DSD ']);
 	if(!soundDataChunk) {

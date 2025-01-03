@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -206,7 +206,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 
 	sourceStreamDescription.mFramesPerPacket	= (1 << streaminfo.block_pwr);
 
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
 
 	// Populate codec properties
 	_properties = @{
