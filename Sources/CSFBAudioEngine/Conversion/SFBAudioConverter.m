@@ -142,6 +142,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 			if(![encoder openReturningError:error])
 				return nil;
 		}
+
 		_encoder = encoder;
 
 		_intermediateConverter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:encoder.processingFormat];
@@ -186,12 +187,15 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 			return decodeBuffer;
 		}];
 
+		// Verify decoding was successful
 		if(!decodeResult) {
 			os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
 			if(error)
 				*error = decodeError;
 			return NO;
 		}
+
+		// Check conversion status
 		if(status == AVAudioConverterOutputStatus_Error) {
 			os_log_error(OS_LOG_DEFAULT, "Error converting PCM audio: %{public}@", convertError);
 			if(error)
@@ -201,6 +205,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
+		// Send converted data to the encoder
 		if(![_encoder encodeFromBuffer:encodeBuffer frameLength:encodeBuffer.frameLength error:&encodeError]) {
 			os_log_error(OS_LOG_DEFAULT, "Error encoding audio: %{public}@", encodeError);
 			if(error)
