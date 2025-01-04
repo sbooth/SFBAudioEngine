@@ -22,11 +22,11 @@
 
 namespace {
 
-const int kDSDPacketsPerPCMFrame = 8 / kSFBPCMFramesPerDSDPacket;
-const int kBufferSizePackets = 16384;
+constexpr int kDSDPacketsPerPCMFrame = 8 / kSFBPCMFramesPerDSDPacket;
+constexpr int kBufferSizePackets = 16384;
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
-static const uint8_t sBitReverseTable256 [256] =
+constexpr uint8_t sBitReverseTable256 [256] =
 {
 #   define R2(n)     n,     n + 2*64,     n + 1*64,     n + 3*64
 #   define R4(n) R2(n), R2(n + 2*16), R2(n + 1*16), R2(n + 3*16)
@@ -97,7 +97,7 @@ static const uint8_t sBitReverseTable256 [256] =
 /*
  * The 2nd half (48 coeffs) of a 96-tap symmetric lowpass filter
  */
-static const double htaps[HTAPS] = {
+constexpr double htaps[HTAPS] = {
 	0.09950731974056658,
 	0.09562845727714668,
 	0.08819647126516944,
