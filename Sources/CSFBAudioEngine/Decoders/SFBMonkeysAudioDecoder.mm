@@ -52,7 +52,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAve
 namespace {
 
 // The I/O interface for MAC
-class APEIOInterface : public APE::CIO
+class APEIOInterface final : public APE::CIO
 {
 public:
 	explicit APEIOInterface(SFBInputSource *inputSource)

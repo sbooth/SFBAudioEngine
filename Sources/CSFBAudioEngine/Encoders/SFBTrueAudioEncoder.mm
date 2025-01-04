@@ -16,12 +16,12 @@ SFBAudioEncoderName const SFBAudioEncoderNameTrueAudio = @"org.sbooth.AudioEngin
 
 namespace {
 
-struct TTACallbacks : TTA_io_callback
+struct TTACallbacks final : TTA_io_callback
 {
 	SFBAudioEncoder *mEncoder;
 };
 
-TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
+TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
 {
 	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
@@ -31,7 +31,7 @@ TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAui
 	return (TTAint32)bytesWritten;
 }
 
-TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
+TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 {
 	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 

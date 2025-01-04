@@ -26,22 +26,22 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSample
 
 namespace {
 
-struct TTACallbacks : TTA_io_callback
+struct TTACallbacks final : TTA_io_callback
 {
 	SFBAudioDecoder *mDecoder;
 };
 
-TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
+TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
 {
 	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
 	NSInteger bytesRead;
 	if(![iocb->mDecoder->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil])
 		return -1;
-	return (TTAint32)bytesRead;
+	return static_cast<TTAint32>(bytesRead);
 }
 
-TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
+TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 {
 	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 

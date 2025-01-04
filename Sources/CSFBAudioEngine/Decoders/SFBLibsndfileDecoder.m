@@ -23,6 +23,8 @@ static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 to
 
 static void FillOutASBDForLPCM(AudioStreamBasicDescription *asbd, Float64 sampleRate, UInt32 channelsPerFrame, UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian, BOOL isNonInterleaved)
 {
+	NSCParameterAssert(asbd != NULL);
+
 	asbd->mFormatID = kAudioFormatLinearPCM;
 	asbd->mFormatFlags = CalculateLPCMFlags(validBitsPerChannel, totalBitsPerChannel, isFloat, isBigEndian, isNonInterleaved);
 

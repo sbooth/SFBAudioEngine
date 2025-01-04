@@ -21,7 +21,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-	void operator()(CFTypeRef cf) { CFRelease(cf); }
+	void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
