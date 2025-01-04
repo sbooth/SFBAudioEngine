@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -499,6 +499,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 		return NO;
 	}
+
+	AudioStreamBasicDescription outputStreamDescription = {0};
+	outputStreamDescription.mSampleRate			= (Float64)_sfinfo.samplerate;
+	outputStreamDescription.mChannelsPerFrame	= (UInt32)_sfinfo.channels;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
 	return YES;
 }
