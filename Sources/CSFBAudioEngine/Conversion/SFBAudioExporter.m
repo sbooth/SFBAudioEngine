@@ -103,6 +103,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 			return decodeBuffer;
 		}];
 
+		// Verify decoding was successful
 		if(!decodeResult) {
 			os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
 			if(error)
@@ -110,6 +111,8 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 			deleteOutputFile();
 			return NO;
 		}
+
+		// Check conversion status
 		if(status == AVAudioConverterOutputStatus_Error) {
 			os_log_error(OS_LOG_DEFAULT, "Error converting PCM audio: %{public}@", convertError);
 			if(error)
@@ -120,6 +123,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
+		// Write converted data to the output file
 		if(![outputFile writeFromBuffer:outputBuffer error:&writeError]) {
 			os_log_error(OS_LOG_DEFAULT, "Error writing audio: %{public}@", writeError);
 			if(error)
