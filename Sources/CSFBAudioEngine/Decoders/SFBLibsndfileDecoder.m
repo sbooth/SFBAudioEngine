@@ -197,6 +197,13 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 - (BOOL)decodingIsLossless
 {
+	switch(_sfinfo.format & SF_FORMAT_TYPEMASK) {
+		case SF_FORMAT_FLAC:
+			return YES;
+		default:
+			break;
+	}
+
 	switch(_sfinfo.format & SF_FORMAT_SUBMASK) {
 		case SF_FORMAT_PCM_U8:
 		case SF_FORMAT_PCM_S8:
@@ -304,44 +311,52 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		}
 	}
 
-	// Generate interleaved PCM output
-	int subFormat = _sfinfo.format & SF_FORMAT_SUBMASK;
-
+	// Generate interleaved native PCM output
 	AudioStreamBasicDescription asbd = {0};
 
-	// 8-bit PCM will be high-aligned in shorts
-	if(subFormat == SF_FORMAT_PCM_U8 || subFormat == SF_FORMAT_PCM_S8) {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 8, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Short;
-	}
-	// 16-bit PCM
-	else if(subFormat == SF_FORMAT_PCM_16) {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 16, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Short;
-	}
-	// 24-bit PCM will be high-aligned in ints
-	else if(subFormat == SF_FORMAT_PCM_24) {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 24, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Int;
-	}
-	// 32-bit PCM
-	else if(subFormat == SF_FORMAT_PCM_32) {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Int;
-	}
-	// Floating point formats
-	else if(subFormat == SF_FORMAT_FLOAT) {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Float;
-	}
-	else if(subFormat == SF_FORMAT_DOUBLE) {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 64, 64, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Double;
-	}
-	// Everything else will be converted to 32-bit float
-	else {
-		FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
-		_readMethod = Float;
+	int subtype = _sfinfo.format & SF_FORMAT_SUBMASK;
+	switch(subtype) {
+			// 8-bit PCM will be high-aligned in shorts
+		case SF_FORMAT_PCM_U8:
+		case SF_FORMAT_PCM_S8:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 8, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Short;
+			break;
+
+			// 16-bit PCM
+		case SF_FORMAT_PCM_16:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 16, 16, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Short;
+			break;
+
+			// 24-bit PCM will be high-aligned in ints
+		case SF_FORMAT_PCM_24:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 24, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Int;
+			break;
+
+			// 32-bit PCM
+		case SF_FORMAT_PCM_32:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, NO, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Int;
+			break;
+
+			// Floating point formats
+		case SF_FORMAT_FLOAT:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Float;
+			break;
+
+		case SF_FORMAT_DOUBLE:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 64, 64, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Double;
+			break;
+
+			// Everything else will be converted to 32-bit float
+		default:
+			FillOutASBDForLPCM(&asbd, _sfinfo.samplerate, (UInt32)_sfinfo.channels, 32, 32, YES, kAudioFormatFlagsNativeEndian == kAudioFormatFlagIsBigEndian, NO);
+			_readMethod = Float;
+			break;
 	}
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
@@ -349,44 +364,109 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= 'SNDF';
+	// Generic libsndfile format ID, will be set to something more specific if known
+	sourceStreamDescription.mFormatID = 'SNDF';
 
-	sourceStreamDescription.mSampleRate			= _sfinfo.samplerate;
-	sourceStreamDescription.mChannelsPerFrame	= (UInt32)_sfinfo.channels;
+	sourceStreamDescription.mSampleRate = _sfinfo.samplerate;
+	sourceStreamDescription.mChannelsPerFrame = (UInt32)_sfinfo.channels;
 
-	switch(subFormat) {
+	int majorFormat = _sfinfo.format & SF_FORMAT_TYPEMASK;
+
+	switch(subtype) {
 		case SF_FORMAT_PCM_U8:
+			sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
 			sourceStreamDescription.mBitsPerChannel = 8;
 			break;
 
 		case SF_FORMAT_PCM_S8:
-			sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger;
-			sourceStreamDescription.mBitsPerChannel = 8;
+			if(majorFormat == SF_FORMAT_FLAC) {
+				sourceStreamDescription.mFormatID = kAudioFormatFLAC;
+			}
+			else {
+				sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
+				sourceStreamDescription.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
+				sourceStreamDescription.mBitsPerChannel = 8;
+			}
 			break;
 
 		case SF_FORMAT_PCM_16:
-			sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger;
-			sourceStreamDescription.mBitsPerChannel = 16;
+			if(majorFormat == SF_FORMAT_FLAC) {
+				sourceStreamDescription.mFormatID = kAudioFormatFLAC;
+				sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+			}
+			else {
+				sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
+				sourceStreamDescription.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
+				sourceStreamDescription.mBitsPerChannel = 16;
+			}
 			break;
 
 		case SF_FORMAT_PCM_24:
-			sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger;
-			sourceStreamDescription.mBitsPerChannel = 24;
+			if(majorFormat == SF_FORMAT_FLAC) {
+				sourceStreamDescription.mFormatID = kAudioFormatFLAC;
+				sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+			}
+			else {
+				sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
+				sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger;
+				sourceStreamDescription.mBitsPerChannel = 24;
+			}
 			break;
 
 		case SF_FORMAT_PCM_32:
-			sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger;
+			sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
+			sourceStreamDescription.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
 			sourceStreamDescription.mBitsPerChannel = 32;
 			break;
 
 		case SF_FORMAT_FLOAT:
+//			sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
 			sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsFloat;
 			sourceStreamDescription.mBitsPerChannel = 32;
 			break;
 
 		case SF_FORMAT_DOUBLE:
+//			sourceStreamDescription.mFormatID = kAudioFormatLinearPCM;
 			sourceStreamDescription.mFormatFlags = kAudioFormatFlagIsFloat;
 			sourceStreamDescription.mBitsPerChannel = 64;
+			break;
+
+		case SF_FORMAT_VORBIS:
+			sourceStreamDescription.mFormatID = kSFBAudioFormatVorbis;
+			break;
+
+		case SF_FORMAT_OPUS:
+			sourceStreamDescription.mFormatID = kAudioFormatOpus;
+			break;
+
+		case SF_FORMAT_ALAC_16:
+			sourceStreamDescription.mFormatID = kAudioFormatAppleLossless;
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+			break;
+
+		case SF_FORMAT_ALAC_20:
+			sourceStreamDescription.mFormatID = kAudioFormatAppleLossless;
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;
+			break;
+
+		case SF_FORMAT_ALAC_24:
+			sourceStreamDescription.mFormatID = kAudioFormatAppleLossless;
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+			break;
+
+		case SF_FORMAT_ALAC_32:
+			sourceStreamDescription.mFormatID = kAudioFormatAppleLossless;
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_32BitSourceData;
+			break;
+
+		case SF_FORMAT_ULAW:
+			sourceStreamDescription.mFormatID = kAudioFormatULaw;
+			sourceStreamDescription.mBitsPerChannel = 8;
+			break;
+
+		case SF_FORMAT_ALAW:
+			sourceStreamDescription.mFormatID = kAudioFormatALaw;
+			sourceStreamDescription.mBitsPerChannel = 8;
 			break;
 	}
 
