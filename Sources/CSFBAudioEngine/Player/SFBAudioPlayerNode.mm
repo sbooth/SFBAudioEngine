@@ -818,11 +818,8 @@ public:
 			return false;
 		}
 
-		if(reset) {
-			ClearQueue();
-			if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState)
-				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
-		}
+		if(reset)
+			Reset();
 
 		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
 
