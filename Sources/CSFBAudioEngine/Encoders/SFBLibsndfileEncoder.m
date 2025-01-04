@@ -404,7 +404,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24)			subtype = SF_FORMAT_PCM_24;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32)			subtype = SF_FORMAT_PCM_32;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8)			subtype = SF_FORMAT_PCM_U8;
-		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat)			subtype = SF_FORMAT_FLAC;
+		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat)			subtype = SF_FORMAT_FLOAT;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble)			subtype = SF_FORMAT_DOUBLE;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW)			subtype = SF_FORMAT_ULAW;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW)			subtype = SF_FORMAT_ALAW;
