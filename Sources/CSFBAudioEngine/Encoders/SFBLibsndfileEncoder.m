@@ -147,7 +147,7 @@ static int InferSubtypeFromFormat(AVAudioFormat *format)
 }
 
 /// Converts an array of Core Audio channel descriptions to a sndfile channel map
-static void AssignSndfileChannelMapUsingChannelDescriptions(int * _Nonnull channel_map, int channels, const AudioChannelDescription * _Nonnull channelDescriptions)
+static void ChannelMapFromCAChannelDescriptions(int * _Nonnull channel_map, int channels, const AudioChannelDescription * _Nonnull channelDescriptions)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -194,7 +194,7 @@ static void AssignSndfileChannelMapUsingChannelDescriptions(int * _Nonnull chann
 	}
 }
 
-static BOOL FillSndfileChannelMapUsingChannelBitmap(int * _Nonnull channel_map, int channels, AudioChannelBitmap channelBitmap, NSError **error)
+static BOOL ChannelMapFromCAChannelBitmap(int * _Nonnull channel_map, int channels, AudioChannelBitmap channelBitmap, NSError **error)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -221,14 +221,14 @@ static BOOL FillSndfileChannelMapUsingChannelBitmap(int * _Nonnull channel_map, 
 		return NO;
 	}
 
-	AssignSndfileChannelMapUsingChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+	ChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
 
 	free(channelLayout);
 
 	return YES;
 }
 
-static BOOL FillSndfileChannelMapUsingChannelLayoutTag(int * _Nonnull channel_map, int channels, AudioChannelLayoutTag layoutTag, NSError **error)
+static BOOL ChannelMapFromCAChannelLayoutTag(int * _Nonnull channel_map, int channels, AudioChannelLayoutTag layoutTag, NSError **error)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -255,30 +255,29 @@ static BOOL FillSndfileChannelMapUsingChannelLayoutTag(int * _Nonnull channel_ma
 		return NO;
 	}
 
-	AssignSndfileChannelMapUsingChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+	ChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
 
 	free(channelLayout);
 
 	return YES;
 }
 
-static BOOL FillSndfileChannelMapFromChannelLayout(int * _Nonnull channel_map, int channels, AVAudioChannelLayout * _Nonnull channelLayout, NSError **error)
+static BOOL ChannelMapFromCAChannelLayout(int * _Nonnull channel_map, int channels, const AudioChannelLayout * _Nonnull channelLayout, NSError **error)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
 	NSCParameterAssert(channelLayout != nil);
 
-	const AudioChannelLayout *acl = channelLayout.layout;
-	AudioChannelLayoutTag layoutTag = acl->mChannelLayoutTag;
+	AudioChannelLayoutTag layoutTag = channelLayout->mChannelLayoutTag;
 
 	if(layoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
-		AssignSndfileChannelMapUsingChannelDescriptions(channel_map, channels, acl->mChannelDescriptions);
+		ChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
 		return YES;
 	}
 	else if(layoutTag == kAudioChannelLayoutTag_UseChannelBitmap)
-		return FillSndfileChannelMapUsingChannelBitmap(channel_map, channels, acl->mChannelBitmap, error);
+		return ChannelMapFromCAChannelBitmap(channel_map, channels, channelLayout->mChannelBitmap, error);
 	else
-		return FillSndfileChannelMapUsingChannelLayoutTag(channel_map, channels, layoutTag, error);
+		return ChannelMapFromCAChannelLayoutTag(channel_map, channels, layoutTag, error);
 }
 
 enum WriteMethod {
@@ -647,7 +646,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(processingFormatChannelLayout) {
 		int channel_map [_sfinfo.channels];
 
-		if(!FillSndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, error)) {
+		if(!ChannelMapFromCAChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout.layout, error)) {
 			os_log_error(gSFBAudioEncoderLog, "Unable to determine Libsndfile channel map for %{public}@", processingFormatChannelLayout.layoutName);
 			return NO;
 		}
