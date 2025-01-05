@@ -782,7 +782,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
 	outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
 
-	CAStreamDescriptionFromSFFormat(_sfinfo.format, &outputStreamDescription);
+	CAStreamDescriptionFromSFFormat(&outputStreamDescription, _sfinfo.format);
 
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
