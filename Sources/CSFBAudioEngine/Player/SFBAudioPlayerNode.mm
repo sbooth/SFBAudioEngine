@@ -416,6 +416,7 @@ struct AudioPlayerNode {
 		eFlagOutputIsMuted 			= 1u << 1,
 		eFlagMuteRequested 			= 1u << 2,
 		eFlagRingBufferNeedsReset 	= 1u << 3,
+		eFlagEndOfAudioSeen 		= 1u << 4,
 	};
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
@@ -1280,18 +1281,25 @@ private:
 		}
 
 		// ========================================
-		// 9. If there are no active decoders schedule the end of audio notification
+		// 9. If there are no active decoders submit the end of audio event
 
 		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-		if(!decoderState) {
+		const bool endOfAudioSeen = (mFlags.load() & eFlagEndOfAudioSeen) == eFlagEndOfAudioSeen;
+		if(!decoderState && !endOfAudioSeen) {
+			mFlags.fetch_or(eFlagEndOfAudioSeen);
+
 			const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(framesRead / mAudioRingBuffer.Format().mSampleRate);
 
+			// Submit the end of audio event
 			const RenderingEventHeader header{RenderingEventCommand::eEndOfAudio};
 			if(mRenderEventRingBuffer.WriteValues(header, hostTime))
 				dispatch_source_merge_data(mEventProcessingSource, 1);
 			else
 				os_log_fault(_audioPlayerNodeLog, "Error writing end of audio event");
 		}
+		// Clear the flag if there is an active decoder
+		else if(decoderState && endOfAudioSeen)
+			mFlags.fetch_and(~eFlagEndOfAudioSeen);
 
 		return noErr;
 	}
