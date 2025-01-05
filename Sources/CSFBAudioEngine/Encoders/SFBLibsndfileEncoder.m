@@ -266,7 +266,7 @@ static BOOL ChannelMapFromCAChannelLayout(int * _Nonnull channel_map, int channe
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
-	NSCParameterAssert(channelLayout != nil);
+	NSCParameterAssert(channelLayout != NULL);
 
 	AudioChannelLayoutTag layoutTag = channelLayout->mChannelLayoutTag;
 
