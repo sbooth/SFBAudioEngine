@@ -1130,6 +1130,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
+		// If there is an imminent or pending decoder swallow the event
 		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagRenderingImminent) || (flags & eAudioPlayerFlagHavePendingDecoder))
 			return;
 
