@@ -147,7 +147,7 @@ static int InferSubtypeFromFormat(AVAudioFormat *format)
 }
 
 /// Converts an array of Core Audio channel descriptions to a sndfile channel map
-static void ChannelMapFromCAChannelDescriptions(int * _Nonnull channel_map, int channels, const AudioChannelDescription * _Nonnull channelDescriptions)
+static void SFChannelMapFromCAChannelDescriptions(int * _Nonnull channel_map, int channels, const AudioChannelDescription * _Nonnull channelDescriptions)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -194,7 +194,7 @@ static void ChannelMapFromCAChannelDescriptions(int * _Nonnull channel_map, int 
 	}
 }
 
-static BOOL ChannelMapFromCAChannelBitmap(int * _Nonnull channel_map, int channels, AudioChannelBitmap channelBitmap, NSError **error)
+static BOOL SFChannelMapFromCAChannelBitmap(int * _Nonnull channel_map, int channels, AudioChannelBitmap channelBitmap, NSError **error)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -222,14 +222,14 @@ static BOOL ChannelMapFromCAChannelBitmap(int * _Nonnull channel_map, int channe
 		return NO;
 	}
 
-	ChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+	SFChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
 
 	free(channelLayout);
 
 	return YES;
 }
 
-static BOOL ChannelMapFromCAChannelLayoutTag(int * _Nonnull channel_map, int channels, AudioChannelLayoutTag layoutTag, NSError **error)
+static BOOL SFChannelMapFromCAChannelLayoutTag(int * _Nonnull channel_map, int channels, AudioChannelLayoutTag layoutTag, NSError **error)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -257,14 +257,14 @@ static BOOL ChannelMapFromCAChannelLayoutTag(int * _Nonnull channel_map, int cha
 		return NO;
 	}
 
-	ChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+	SFChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
 
 	free(channelLayout);
 
 	return YES;
 }
 
-static BOOL ChannelMapFromCAChannelLayout(int * _Nonnull channel_map, int channels, const AudioChannelLayout * _Nonnull channelLayout, NSError **error)
+static BOOL SFChannelMapFromCAChannelLayout(int * _Nonnull channel_map, int channels, const AudioChannelLayout * _Nonnull channelLayout, NSError **error)
 {
 	NSCParameterAssert(channel_map != NULL);
 	NSCParameterAssert(channels > 0);
@@ -273,13 +273,119 @@ static BOOL ChannelMapFromCAChannelLayout(int * _Nonnull channel_map, int channe
 	AudioChannelLayoutTag layoutTag = channelLayout->mChannelLayoutTag;
 
 	if(layoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
-		ChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+		SFChannelMapFromCAChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
 		return YES;
 	}
 	else if(layoutTag == kAudioChannelLayoutTag_UseChannelBitmap)
-		return ChannelMapFromCAChannelBitmap(channel_map, channels, channelLayout->mChannelBitmap, error);
+		return SFChannelMapFromCAChannelBitmap(channel_map, channels, channelLayout->mChannelBitmap, error);
 	else
-		return ChannelMapFromCAChannelLayoutTag(channel_map, channels, layoutTag, error);
+		return SFChannelMapFromCAChannelLayoutTag(channel_map, channels, layoutTag, error);
+}
+
+static void CAStreamDescriptionFromSFFormat(AudioStreamBasicDescription * _Nonnull asbd, int format)
+{
+	NSCParameterAssert(asbd != NULL);
+
+	int majorFormat = format & SF_FORMAT_TYPEMASK;
+	int subtype = format & SF_FORMAT_SUBMASK;
+
+	switch(subtype) {
+		case SF_FORMAT_PCM_U8:
+			asbd->mFormatID = kAudioFormatLinearPCM;
+			asbd->mBitsPerChannel = 8;
+			break;
+
+		case SF_FORMAT_PCM_S8:
+			if(majorFormat == SF_FORMAT_FLAC) {
+				asbd->mFormatID = kAudioFormatFLAC;
+			}
+			else {
+				asbd->mFormatID = kAudioFormatLinearPCM;
+				asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
+				asbd->mBitsPerChannel = 8;
+			}
+			break;
+
+		case SF_FORMAT_PCM_16:
+			if(majorFormat == SF_FORMAT_FLAC) {
+				asbd->mFormatID = kAudioFormatFLAC;
+				asbd->mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+			}
+			else {
+				asbd->mFormatID = kAudioFormatLinearPCM;
+				asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
+				asbd->mBitsPerChannel = 16;
+			}
+			break;
+
+		case SF_FORMAT_PCM_24:
+			if(majorFormat == SF_FORMAT_FLAC) {
+				asbd->mFormatID = kAudioFormatFLAC;
+				asbd->mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+			}
+			else {
+				asbd->mFormatID = kAudioFormatLinearPCM;
+				asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
+				asbd->mBitsPerChannel = 24;
+			}
+			break;
+
+		case SF_FORMAT_PCM_32:
+			asbd->mFormatID = kAudioFormatLinearPCM;
+			asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
+			asbd->mBitsPerChannel = 32;
+			break;
+
+		case SF_FORMAT_FLOAT:
+//			asbd->mFormatID = kAudioFormatLinearPCM;
+			asbd->mFormatFlags = kAudioFormatFlagIsFloat;
+			asbd->mBitsPerChannel = 32;
+			break;
+
+		case SF_FORMAT_DOUBLE:
+//			asbd->mFormatID = kAudioFormatLinearPCM;
+			asbd->mFormatFlags = kAudioFormatFlagIsFloat;
+			asbd->mBitsPerChannel = 64;
+			break;
+
+		case SF_FORMAT_VORBIS:
+			asbd->mFormatID = kSFBAudioFormatVorbis;
+			break;
+
+		case SF_FORMAT_OPUS:
+			asbd->mFormatID = kAudioFormatOpus;
+			break;
+
+		case SF_FORMAT_ALAC_16:
+			asbd->mFormatID = kAudioFormatAppleLossless;
+			asbd->mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+			break;
+
+		case SF_FORMAT_ALAC_20:
+			asbd->mFormatID = kAudioFormatAppleLossless;
+			asbd->mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;
+			break;
+
+		case SF_FORMAT_ALAC_24:
+			asbd->mFormatID = kAudioFormatAppleLossless;
+			asbd->mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+			break;
+
+		case SF_FORMAT_ALAC_32:
+			asbd->mFormatID = kAudioFormatAppleLossless;
+			asbd->mFormatFlags = kAppleLosslessFormatFlag_32BitSourceData;
+			break;
+
+		case SF_FORMAT_ULAW:
+			asbd->mFormatID = kAudioFormatULaw;
+			asbd->mBitsPerChannel = 8;
+			break;
+
+		case SF_FORMAT_ALAW:
+			asbd->mFormatID = kAudioFormatALaw;
+			asbd->mBitsPerChannel = 8;
+			break;
+	}
 }
 
 enum WriteMethod {
@@ -648,7 +754,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(processingFormatChannelLayout) {
 		int channel_map [_sfinfo.channels];
 
-		if(!ChannelMapFromCAChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout.layout, error)) {
+		if(!SFChannelMapFromCAChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout.layout, error)) {
 			os_log_error(gSFBAudioEncoderLog, "Unable to determine Libsndfile channel map for %{public}@", processingFormatChannelLayout.layoutName);
 			return NO;
 		}
@@ -669,9 +775,16 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	}
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
-	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
-	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
-	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
+	// Generic libsndfile format ID, will be set to something more specific if known
+	outputStreamDescription.mFormatID = 'SNDF';
+
+	outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
+
+	CAStreamDescriptionFromSFFormat(_sfinfo.format, &outputStreamDescription);
+
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
 	return YES;
 }
