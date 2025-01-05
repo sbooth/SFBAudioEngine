@@ -216,6 +216,7 @@ static BOOL ChannelMapFromCAChannelBitmap(int * _Nonnull channel_map, int channe
 
 	result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap), &channelBitmap, &dataSize, channelLayout);
 	if(result != noErr) {
+		free(channelLayout);
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -250,6 +251,7 @@ static BOOL ChannelMapFromCAChannelLayoutTag(int * _Nonnull channel_map, int cha
 
 	result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag), &layoutTag, &dataSize, channelLayout);
 	if(result != noErr) {
+		free(channelLayout);
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
