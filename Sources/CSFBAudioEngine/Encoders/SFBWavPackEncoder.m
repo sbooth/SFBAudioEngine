@@ -102,11 +102,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;
 
-	AVAudioChannelLayout *sourceFormatChannelLayout = sourceFormat.channelLayout;
-	if(sourceFormatChannelLayout != nil) {
+	if(sourceFormat.channelLayout != nil) {
 		AudioChannelBitmap channelBitmap = 0;
 		UInt32 propertySize = sizeof(channelBitmap);
-		AudioChannelLayoutTag layoutTag = sourceFormatChannelLayout.layoutTag;
+		AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
 		OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
 		if(result == noErr) {
 			AudioChannelLayout acl = {
