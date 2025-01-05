@@ -231,7 +231,7 @@ private:
 		AudioChannelBitmap channelBitmap = 0;
 		UInt32 propertySize = sizeof(channelBitmap);
 		AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-		result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
+		OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
 		if(result == noErr) {
 			AudioChannelLayout acl = {
 				.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
