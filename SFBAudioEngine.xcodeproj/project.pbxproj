@@ -138,6 +138,81 @@
 		328E816A2CF7898C00BFCEB2 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328E81692CF7898C00BFCEB2 /* ImageIO.framework */; };
 		328E816C2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328E816B2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework */; };
 		328E816D2CF789D100BFCEB2 /* SFBTimeUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3237E18E2CF785DD0084AA51 /* SFBTimeUtilities.cpp */; };
+		32F6E5C02D2B02F00029B972 /* SFBLibsndfileUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F6E5BF2D2B02F00029B972 /* SFBLibsndfileUtilities.m */; };
+		32F6E5C12D2B02F00029B972 /* SFBLibsndfileUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F6E5BE2D2B02F00029B972 /* SFBLibsndfileUtilities.h */; };
+		32F6E5C22D2B031D0029B972 /* NSData+SFBExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1902CF785DD0084AA51 /* NSData+SFBExtensions.h */; };
+		32F6E5C32D2B031D0029B972 /* NSFileHandle+SFBHeaderReading.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1942CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.h */; };
+		32F6E5C42D2B031D0029B972 /* SFBCStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1962CF785DD0084AA51 /* SFBCStringForOSType.h */; };
+		32F6E5C52D2B031D0029B972 /* SFBTernaryTruthValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1972CF785DD0084AA51 /* SFBTernaryTruthValue.h */; };
+		32F6E5C62D2B031D0029B972 /* NSError+SFBURLPresentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1922CF785DD0084AA51 /* NSError+SFBURLPresentation.h */; };
+		32F6E5C72D2B032F0029B972 /* SFBTimeUtilities.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 3237E18D2CF785DD0084AA51 /* SFBTimeUtilities.hpp */; };
+		32F6E5C82D2B033E0029B972 /* SFBOutputSource+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1892CF785DD0084AA51 /* SFBOutputSource+Internal.h */; };
+		32F6E5C92D2B033E0029B972 /* SFBMutableDataOutputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1862CF785DD0084AA51 /* SFBMutableDataOutputSource.h */; };
+		32F6E5CA2D2B033E0029B972 /* SFBFileOutputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1842CF785DD0084AA51 /* SFBFileOutputSource.h */; };
+		32F6E5CB2D2B033E0029B972 /* SFBBufferOutputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1822CF785DD0084AA51 /* SFBBufferOutputSource.h */; };
+		32F6E5CC2D2B03630029B972 /* SFBMonkeysAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0F22CF785DD0084AA51 /* SFBMonkeysAudioDecoder.h */; };
+		32F6E5CD2D2B03630029B972 /* SFBDSDDecoder+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0E52CF785DD0084AA51 /* SFBDSDDecoder+Internal.h */; };
+		32F6E5CE2D2B03630029B972 /* SFBFLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0EB2CF785DD0084AA51 /* SFBFLACDecoder.h */; };
+		32F6E5CF2D2B03630029B972 /* SFBModuleDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0F02CF785DD0084AA51 /* SFBModuleDecoder.h */; };
+		32F6E5D02D2B03630029B972 /* SFBOggSpeexDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0FA2CF785DD0084AA51 /* SFBOggSpeexDecoder.h */; };
+		32F6E5D12D2B03630029B972 /* SFBMusepackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0F62CF785DD0084AA51 /* SFBMusepackDecoder.h */; };
+		32F6E5D22D2B03630029B972 /* SFBWavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1022CF785DD0084AA51 /* SFBWavPackDecoder.h */; };
+		32F6E5D32D2B03630029B972 /* SFBOggVorbisDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0FC2CF785DD0084AA51 /* SFBOggVorbisDecoder.h */; };
+		32F6E5D42D2B03630029B972 /* SFBAudioDecoder+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0E02CF785DD0084AA51 /* SFBAudioDecoder+Internal.h */; };
+		32F6E5D52D2B03630029B972 /* SFBDSDIFFDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0E62CF785DD0084AA51 /* SFBDSDIFFDecoder.h */; };
+		32F6E5D62D2B03630029B972 /* SFBOggOpusDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0F82CF785DD0084AA51 /* SFBOggOpusDecoder.h */; };
+		32F6E5D72D2B03630029B972 /* SFBShortenDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0FE2CF785DD0084AA51 /* SFBShortenDecoder.h */; };
+		32F6E5D82D2B03630029B972 /* SFBLibsndfileDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0ED2CF785DD0084AA51 /* SFBLibsndfileDecoder.h */; };
+		32F6E5D92D2B03630029B972 /* SFBCoreAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0E12CF785DD0084AA51 /* SFBCoreAudioDecoder.h */; };
+		32F6E5DA2D2B03630029B972 /* SFBDSFDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0E92CF785DD0084AA51 /* SFBDSFDecoder.h */; };
+		32F6E5DB2D2B03630029B972 /* SFBMPEGDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E0F42CF785DD0084AA51 /* SFBMPEGDecoder.h */; };
+		32F6E5DC2D2B03630029B972 /* SFBTrueAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1002CF785DD0084AA51 /* SFBTrueAudioDecoder.h */; };
+		32F6E5DD2D2B03770029B972 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1152CF785DD0084AA51 /* SFBOggOpusEncoder.h */; };
+		32F6E5DE2D2B03770029B972 /* SFBAudioEncoder+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1062CF785DD0084AA51 /* SFBAudioEncoder+Internal.h */; };
+		32F6E5DF2D2B03770029B972 /* SFBOggSpeexEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1172CF785DD0084AA51 /* SFBOggSpeexEncoder.h */; };
+		32F6E5E02D2B03770029B972 /* SFBWavPackEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E11D2CF785DD0084AA51 /* SFBWavPackEncoder.h */; };
+		32F6E5E12D2B03770029B972 /* SFBCoreAudioEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1072CF785DD0084AA51 /* SFBCoreAudioEncoder.h */; };
+		32F6E5E22D2B03770029B972 /* SFBMusepackEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1112CF785DD0084AA51 /* SFBMusepackEncoder.h */; };
+		32F6E5E32D2B03770029B972 /* SFBMP3Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E10F2CF785DD0084AA51 /* SFBMP3Encoder.h */; };
+		32F6E5E42D2B03770029B972 /* SFBTrueAudioEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E11B2CF785DD0084AA51 /* SFBTrueAudioEncoder.h */; };
+		32F6E5E52D2B03770029B972 /* SFBFLACEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1092CF785DD0084AA51 /* SFBFLACEncoder.h */; };
+		32F6E5E62D2B03770029B972 /* SFBMonkeysAudioEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E10D2CF785DD0084AA51 /* SFBMonkeysAudioEncoder.h */; };
+		32F6E5E72D2B03770029B972 /* SFBLibsndfileEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E10B2CF785DD0084AA51 /* SFBLibsndfileEncoder.h */; };
+		32F6E5E82D2B03770029B972 /* SFBOggVorbisEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1192CF785DD0084AA51 /* SFBOggVorbisEncoder.h */; };
+		32F6E5E92D2B03DA0029B972 /* SFBFileContentsInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E13C2CF785DD0084AA51 /* SFBFileContentsInputSource.h */; };
+		32F6E5EA2D2B03DA0029B972 /* SFBInputSource+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1412CF785DD0084AA51 /* SFBInputSource+Internal.h */; };
+		32F6E5EB2D2B03DA0029B972 /* SFBFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E13E2CF785DD0084AA51 /* SFBFileInputSource.h */; };
+		32F6E5EC2D2B03DA0029B972 /* SFBDataInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E13A2CF785DD0084AA51 /* SFBDataInputSource.h */; };
+		32F6E5ED2D2B03DA0029B972 /* SFBMemoryMappedFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1422CF785DD0084AA51 /* SFBMemoryMappedFileInputSource.h */; };
+		32F6E5EE2D2B04030029B972 /* SFBAudioMetadata+TagLibID3v2Tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1512CF785DD0084AA51 /* SFBAudioMetadata+TagLibID3v2Tag.h */; };
+		32F6E5EF2D2B04030029B972 /* SFBOggVorbisFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1722CF785DD0084AA51 /* SFBOggVorbisFile.h */; };
+		32F6E5F02D2B04030029B972 /* SFBTrueAudioFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E17A2CF785DD0084AA51 /* SFBTrueAudioFile.h */; };
+		32F6E5F12D2B04030029B972 /* SFBOggOpusFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E16E2CF785DD0084AA51 /* SFBOggOpusFile.h */; };
+		32F6E5F22D2B04030029B972 /* SFBImpulseTrackerModuleFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1622CF785DD0084AA51 /* SFBImpulseTrackerModuleFile.h */; };
+		32F6E5F32D2B04030029B972 /* SFBAudioMetadata+TagLibMP4Tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1532CF785DD0084AA51 /* SFBAudioMetadata+TagLibMP4Tag.h */; };
+		32F6E5F42D2B04030029B972 /* SFBProTrackerModuleFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1742CF785DD0084AA51 /* SFBProTrackerModuleFile.h */; };
+		32F6E5F52D2B04030029B972 /* SFBShortenFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1782CF785DD0084AA51 /* SFBShortenFile.h */; };
+		32F6E5F62D2B04030029B972 /* SFBExtendedModuleFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E15E2CF785DD0084AA51 /* SFBExtendedModuleFile.h */; };
+		32F6E5F72D2B04030029B972 /* SFBAudioMetadata+TagLibTag.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1552CF785DD0084AA51 /* SFBAudioMetadata+TagLibTag.h */; };
+		32F6E5F82D2B04030029B972 /* SFBAudioMetadata+TagLibID3v1Tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E14F2CF785DD0084AA51 /* SFBAudioMetadata+TagLibID3v1Tag.h */; };
+		32F6E5F92D2B04030029B972 /* SFBAudioMetadata+TagLibXiphComment.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1572CF785DD0084AA51 /* SFBAudioMetadata+TagLibXiphComment.h */; };
+		32F6E5FA2D2B04030029B972 /* SFBScreamTracker3ModuleFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1762CF785DD0084AA51 /* SFBScreamTracker3ModuleFile.h */; };
+		32F6E5FB2D2B04030029B972 /* SFBAIFFFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1472CF785DD0084AA51 /* SFBAIFFFile.h */; };
+		32F6E5FC2D2B04030029B972 /* SFBWavPackFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E17E2CF785DD0084AA51 /* SFBWavPackFile.h */; };
+		32F6E5FD2D2B04030029B972 /* SFBOggSpeexFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1702CF785DD0084AA51 /* SFBOggSpeexFile.h */; };
+		32F6E5FE2D2B04030029B972 /* SFBDSDIFFFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E15A2CF785DD0084AA51 /* SFBDSDIFFFile.h */; };
+		32F6E5FF2D2B04030029B972 /* SFBAudioFile+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E14B2CF785DD0084AA51 /* SFBAudioFile+Internal.h */; };
+		32F6E6002D2B04030029B972 /* TagLibStringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1802CF785DD0084AA51 /* TagLibStringUtilities.h */; };
+		32F6E6012D2B04030029B972 /* SFBDSFFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E15C2CF785DD0084AA51 /* SFBDSFFile.h */; };
+		32F6E6022D2B04030029B972 /* SFBMonkeysAudioFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1642CF785DD0084AA51 /* SFBMonkeysAudioFile.h */; };
+		32F6E6032D2B04030029B972 /* SFBMusepackFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E16A2CF785DD0084AA51 /* SFBMusepackFile.h */; };
+		32F6E6042D2B04030029B972 /* SFBOggFLACFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E16C2CF785DD0084AA51 /* SFBOggFLACFile.h */; };
+		32F6E6052D2B04030029B972 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1452CF785DD0084AA51 /* AddAudioPropertiesToDictionary.h */; };
+		32F6E6062D2B04030029B972 /* SFBMP3File.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1662CF785DD0084AA51 /* SFBMP3File.h */; };
+		32F6E6072D2B04030029B972 /* SFBFLACFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1602CF785DD0084AA51 /* SFBFLACFile.h */; };
+		32F6E6082D2B04030029B972 /* SFBAudioMetadata+TagLibAPETag.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E14D2CF785DD0084AA51 /* SFBAudioMetadata+TagLibAPETag.h */; };
+		32F6E6092D2B04030029B972 /* SFBMP4File.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1682CF785DD0084AA51 /* SFBMP4File.h */; };
+		32F6E60A2D2B04030029B972 /* SFBWAVEFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E17C2CF785DD0084AA51 /* SFBWAVEFile.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -331,6 +406,8 @@
 		3237E1A52CF785DD0084AA51 /* SFBAudioEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioEngineTests.swift; sourceTree = "<group>"; };
 		328E81692CF7898C00BFCEB2 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.1.sdk/System/Library/Frameworks/ImageIO.framework; sourceTree = DEVELOPER_DIR; };
 		328E816B2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.1.sdk/System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = DEVELOPER_DIR; };
+		32F6E5BE2D2B02F00029B972 /* SFBLibsndfileUtilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBLibsndfileUtilities.h; sourceTree = "<group>"; };
+		32F6E5BF2D2B02F00029B972 /* SFBLibsndfileUtilities.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBLibsndfileUtilities.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -631,6 +708,8 @@
 				3237E1942CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.h */,
 				3237E1952CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.m */,
 				3237E1962CF785DD0084AA51 /* SFBCStringForOSType.h */,
+				32F6E5BE2D2B02F00029B972 /* SFBLibsndfileUtilities.h */,
+				32F6E5BF2D2B02F00029B972 /* SFBLibsndfileUtilities.m */,
 				3237E1972CF785DD0084AA51 /* SFBTernaryTruthValue.h */,
 			);
 			path = Utilities;
@@ -710,8 +789,42 @@
 			buildActionMask = 2147483647;
 			files = (
 				3237E2012CF786BA0084AA51 /* SFBAudioPlayerNode.h in Headers */,
+				32F6E5DD2D2B03770029B972 /* SFBOggOpusEncoder.h in Headers */,
+				32F6E5DE2D2B03770029B972 /* SFBAudioEncoder+Internal.h in Headers */,
+				32F6E5DF2D2B03770029B972 /* SFBOggSpeexEncoder.h in Headers */,
+				32F6E5E02D2B03770029B972 /* SFBWavPackEncoder.h in Headers */,
+				32F6E5E12D2B03770029B972 /* SFBCoreAudioEncoder.h in Headers */,
+				32F6E5E22D2B03770029B972 /* SFBMusepackEncoder.h in Headers */,
+				32F6E5E32D2B03770029B972 /* SFBMP3Encoder.h in Headers */,
+				32F6E5E42D2B03770029B972 /* SFBTrueAudioEncoder.h in Headers */,
+				32F6E5E52D2B03770029B972 /* SFBFLACEncoder.h in Headers */,
+				32F6E5E62D2B03770029B972 /* SFBMonkeysAudioEncoder.h in Headers */,
+				32F6E5E72D2B03770029B972 /* SFBLibsndfileEncoder.h in Headers */,
+				32F6E5E82D2B03770029B972 /* SFBOggVorbisEncoder.h in Headers */,
 				3237E2022CF786BA0084AA51 /* SFBOutputSource.h in Headers */,
 				3237E2032CF786BA0084AA51 /* SFBAudioEncoding.h in Headers */,
+				32F6E5CC2D2B03630029B972 /* SFBMonkeysAudioDecoder.h in Headers */,
+				32F6E5CD2D2B03630029B972 /* SFBDSDDecoder+Internal.h in Headers */,
+				32F6E5CE2D2B03630029B972 /* SFBFLACDecoder.h in Headers */,
+				32F6E5CF2D2B03630029B972 /* SFBModuleDecoder.h in Headers */,
+				32F6E5D02D2B03630029B972 /* SFBOggSpeexDecoder.h in Headers */,
+				32F6E5D12D2B03630029B972 /* SFBMusepackDecoder.h in Headers */,
+				32F6E5D22D2B03630029B972 /* SFBWavPackDecoder.h in Headers */,
+				32F6E5D32D2B03630029B972 /* SFBOggVorbisDecoder.h in Headers */,
+				32F6E5D42D2B03630029B972 /* SFBAudioDecoder+Internal.h in Headers */,
+				32F6E5D52D2B03630029B972 /* SFBDSDIFFDecoder.h in Headers */,
+				32F6E5D62D2B03630029B972 /* SFBOggOpusDecoder.h in Headers */,
+				32F6E5E92D2B03DA0029B972 /* SFBFileContentsInputSource.h in Headers */,
+				32F6E5EA2D2B03DA0029B972 /* SFBInputSource+Internal.h in Headers */,
+				32F6E5EB2D2B03DA0029B972 /* SFBFileInputSource.h in Headers */,
+				32F6E5EC2D2B03DA0029B972 /* SFBDataInputSource.h in Headers */,
+				32F6E5ED2D2B03DA0029B972 /* SFBMemoryMappedFileInputSource.h in Headers */,
+				32F6E5D72D2B03630029B972 /* SFBShortenDecoder.h in Headers */,
+				32F6E5D82D2B03630029B972 /* SFBLibsndfileDecoder.h in Headers */,
+				32F6E5D92D2B03630029B972 /* SFBCoreAudioDecoder.h in Headers */,
+				32F6E5DA2D2B03630029B972 /* SFBDSFDecoder.h in Headers */,
+				32F6E5DB2D2B03630029B972 /* SFBMPEGDecoder.h in Headers */,
+				32F6E5DC2D2B03630029B972 /* SFBTrueAudioDecoder.h in Headers */,
 				3237E2042CF786BA0084AA51 /* SFBDSDPCMDecoder.h in Headers */,
 				3237E2052CF786BA0084AA51 /* SFBPCMDecoding.h in Headers */,
 				3237E2062CF786BA0084AA51 /* SFBAudioFile.h in Headers */,
@@ -719,6 +832,7 @@
 				3237E2082CF786BA0084AA51 /* SFBAttachedPicture.h in Headers */,
 				3237E2092CF786BA0084AA51 /* SFBInputSource.h in Headers */,
 				3237E20A2CF786BA0084AA51 /* SFBAudioEngine.h in Headers */,
+				32F6E5C12D2B02F00029B972 /* SFBLibsndfileUtilities.h in Headers */,
 				3237E20B2CF786BA0084AA51 /* SFBAudioProperties.h in Headers */,
 				3237E20C2CF786BA0084AA51 /* SFBPCMEncoding.h in Headers */,
 				3237E20D2CF786BA0084AA51 /* SFBAudioDecoding.h in Headers */,
@@ -728,9 +842,48 @@
 				3237E2112CF786BA0084AA51 /* SFBDSDDecoding.h in Headers */,
 				3237E2122CF786BA0084AA51 /* SFBAudioMetadata.h in Headers */,
 				3237E2132CF786BA0084AA51 /* SFBAudioEngineTypes.h in Headers */,
+				32F6E5EE2D2B04030029B972 /* SFBAudioMetadata+TagLibID3v2Tag.h in Headers */,
+				32F6E5EF2D2B04030029B972 /* SFBOggVorbisFile.h in Headers */,
+				32F6E5F02D2B04030029B972 /* SFBTrueAudioFile.h in Headers */,
+				32F6E5F12D2B04030029B972 /* SFBOggOpusFile.h in Headers */,
+				32F6E5F22D2B04030029B972 /* SFBImpulseTrackerModuleFile.h in Headers */,
+				32F6E5F32D2B04030029B972 /* SFBAudioMetadata+TagLibMP4Tag.h in Headers */,
+				32F6E5F42D2B04030029B972 /* SFBProTrackerModuleFile.h in Headers */,
+				32F6E5F52D2B04030029B972 /* SFBShortenFile.h in Headers */,
+				32F6E5F62D2B04030029B972 /* SFBExtendedModuleFile.h in Headers */,
+				32F6E5F72D2B04030029B972 /* SFBAudioMetadata+TagLibTag.h in Headers */,
+				32F6E5F82D2B04030029B972 /* SFBAudioMetadata+TagLibID3v1Tag.h in Headers */,
+				32F6E5F92D2B04030029B972 /* SFBAudioMetadata+TagLibXiphComment.h in Headers */,
+				32F6E5FA2D2B04030029B972 /* SFBScreamTracker3ModuleFile.h in Headers */,
+				32F6E5FB2D2B04030029B972 /* SFBAIFFFile.h in Headers */,
+				32F6E5FC2D2B04030029B972 /* SFBWavPackFile.h in Headers */,
+				32F6E5FD2D2B04030029B972 /* SFBOggSpeexFile.h in Headers */,
+				32F6E5FE2D2B04030029B972 /* SFBDSDIFFFile.h in Headers */,
+				32F6E5FF2D2B04030029B972 /* SFBAudioFile+Internal.h in Headers */,
+				32F6E6002D2B04030029B972 /* TagLibStringUtilities.h in Headers */,
+				32F6E6012D2B04030029B972 /* SFBDSFFile.h in Headers */,
+				32F6E6022D2B04030029B972 /* SFBMonkeysAudioFile.h in Headers */,
+				32F6E6032D2B04030029B972 /* SFBMusepackFile.h in Headers */,
+				32F6E6042D2B04030029B972 /* SFBOggFLACFile.h in Headers */,
+				32F6E6052D2B04030029B972 /* AddAudioPropertiesToDictionary.h in Headers */,
+				32F6E6062D2B04030029B972 /* SFBMP3File.h in Headers */,
+				32F6E6072D2B04030029B972 /* SFBFLACFile.h in Headers */,
+				32F6E6082D2B04030029B972 /* SFBAudioMetadata+TagLibAPETag.h in Headers */,
+				32F6E6092D2B04030029B972 /* SFBMP4File.h in Headers */,
+				32F6E60A2D2B04030029B972 /* SFBWAVEFile.h in Headers */,
+				32F6E5C82D2B033E0029B972 /* SFBOutputSource+Internal.h in Headers */,
+				32F6E5C92D2B033E0029B972 /* SFBMutableDataOutputSource.h in Headers */,
+				32F6E5CA2D2B033E0029B972 /* SFBFileOutputSource.h in Headers */,
+				32F6E5CB2D2B033E0029B972 /* SFBBufferOutputSource.h in Headers */,
 				3237E2142CF786BA0084AA51 /* SFBAudioDecoder.h in Headers */,
+				32F6E5C72D2B032F0029B972 /* SFBTimeUtilities.hpp in Headers */,
 				3237E2152CF786BA0084AA51 /* SFBAudioConverter.h in Headers */,
 				3237E2162CF786BA0084AA51 /* SFBReplayGainAnalyzer.h in Headers */,
+				32F6E5C22D2B031D0029B972 /* NSData+SFBExtensions.h in Headers */,
+				32F6E5C32D2B031D0029B972 /* NSFileHandle+SFBHeaderReading.h in Headers */,
+				32F6E5C42D2B031D0029B972 /* SFBCStringForOSType.h in Headers */,
+				32F6E5C52D2B031D0029B972 /* SFBTernaryTruthValue.h in Headers */,
+				32F6E5C62D2B031D0029B972 /* NSError+SFBURLPresentation.h in Headers */,
 				3237E2172CF786BA0084AA51 /* SFBDoPDecoder.h in Headers */,
 				3237E2182CF786BA0084AA51 /* SFBAudioEncoder.h in Headers */,
 			);
@@ -911,6 +1064,7 @@
 				3237E1F02CF7868B0084AA51 /* SFBProTrackerModuleFile.mm in Sources */,
 				3237E1F12CF7868B0084AA51 /* SFBOggVorbisDecoder.m in Sources */,
 				3237E1F22CF7868B0084AA51 /* SFBAudioPlayer.mm in Sources */,
+				32F6E5C02D2B02F00029B972 /* SFBLibsndfileUtilities.m in Sources */,
 				3237E1F32CF7868B0084AA51 /* SFBMusepackEncoder.m in Sources */,
 				3237E1F42CF7868B0084AA51 /* SFBMonkeysAudioEncoder.mm in Sources */,
 				3237E1F52CF7868B0084AA51 /* SFBMemoryMappedFileInputSource.m in Sources */,
