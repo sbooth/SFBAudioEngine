@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -34,16 +34,18 @@
 {
 	_file = fopen(self.url.fileSystemRepresentation, "r");
 	if(!_file) {
-		os_log_error(gSFBInputSourceLog, "fopen failed: %{public}s (%d)", strerror(errno), errno);
+		int err = errno;
+		os_log_error(gSFBInputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 
 	if(fstat(fileno(_file), &_filestats) == -1) {
-		os_log_error(gSFBInputSourceLog, "fstat failed: %{public}s (%d)", strerror(errno), errno);
+		int err = errno;
+		os_log_error(gSFBInputSourceLog, "fstat failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
 
 		if(fclose(_file))
 			os_log_info(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(errno), errno);
@@ -61,9 +63,10 @@
 		int result = fclose(_file);
 		_file = NULL;
 		if(result) {
-			os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(errno), errno);
+			int err = errno;
+			os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
 			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
 			return NO;
 		}
 	}
@@ -83,9 +86,10 @@
 
 	size_t read = fread(buffer, 1, (size_t)length, _file);
 	if(read != (size_t)length && ferror(_file)) {
-		os_log_error(gSFBInputSourceLog, "fread error: %{public}s (%d)", strerror(errno), errno);
+		int err = errno;
+		os_log_error(gSFBInputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 	*bytesRead = (NSInteger)read;
@@ -102,9 +106,10 @@
 	NSParameterAssert(offset != NULL);
 	off_t result = ftello(_file);
 	if(result == -1) {
-		os_log_error(gSFBInputSourceLog, "ftello failed: %{public}s (%d)", strerror(errno), errno);
+		int err = errno;
+		os_log_error(gSFBInputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 	*offset = result;
@@ -127,9 +132,10 @@
 {
 	NSParameterAssert(offset >= 0);
 	if(fseeko(_file, offset, SEEK_SET)) {
-		os_log_error(gSFBInputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
+		int err = errno;
+		os_log_error(gSFBInputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 	return YES;

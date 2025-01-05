@@ -9,10 +9,10 @@
 @import AudioToolbox;
 
 @import wavpack;
+@import AVFAudioExtensions;
 
 #import "SFBWavPackDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
