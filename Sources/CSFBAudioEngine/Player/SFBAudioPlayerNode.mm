@@ -879,24 +879,25 @@ public:
 
 private:
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 	{
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
+	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
 	{
 		::DeleteDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
@@ -956,9 +957,9 @@ private:
 						// and consumption by any number of other threads/queues including the render block.
 						//
 						// Slots in `mActiveDecoders` are assigned values in two places: here and the
-						// event processor. The event processor assigns nullptr to slots holding existing non-null
-						// values marked for removal while this code assigns non-null values to slots
-						// holding nullptr.
+						// event processor. The event processor assigns nullptr to slots before deleting
+						// the stored value while this code assigns non-null values to slots holding nullptr.
+						//
 						// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
 						// it is safe to use store() instead of compare_exchange_strong() because this is the
 						// only code that could have changed the slot to a non-null value and it is called solely
