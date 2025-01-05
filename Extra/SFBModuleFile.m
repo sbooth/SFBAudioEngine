@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -86,7 +86,7 @@
 	propertiesDictionary[SFBAudioPropertiesKeyDuration] = @(duh_get_length(duh) / (float)DUMB_SAMPLE_RATE);
 
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
-	self.metadata = [[SFBAudioMetadata alloc] initWithDictionaryRepresentation:@{ SFBAudioMetadataKeyTitle: @(duh_get_tag(duh, "TITLE")) }];;
+	self.metadata = [[SFBAudioMetadata alloc] initWithDictionaryRepresentation:@{ SFBAudioMetadataKeyTitle: @(duh_get_tag(duh, "TITLE")) }];
 
 	unload_duh(duh);
 	dumbfile_close(df);
