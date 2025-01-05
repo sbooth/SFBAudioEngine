@@ -102,21 +102,24 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;
 
-	AudioChannelBitmap channelBitmap = 0;
-	UInt32 propertySize = sizeof(channelBitmap);
-	AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
-	if(result == noErr) {
-		AudioChannelLayout acl = {
-			.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
-			.mChannelBitmap = channelBitmap,
-			.mNumberChannelDescriptions = 0
-		};
-		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
+	AVAudioChannelLayout *sourceFormatChannelLayout = sourceFormat.channelLayout;
+	if(sourceFormatChannelLayout != nil) {
+		AudioChannelBitmap channelBitmap = 0;
+		UInt32 propertySize = sizeof(channelBitmap);
+		AudioChannelLayoutTag layoutTag = sourceFormatChannelLayout.layoutTag;
+		OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
+		if(result == noErr) {
+			AudioChannelLayout acl = {
+				.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
+				.mChannelBitmap = channelBitmap,
+				.mNumberChannelDescriptions = 0
+			};
+			channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
+		}
+		// TODO: Use WavPack channel identities as a fallback?
+		else
+			os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 	}
-	// TODO: Use WavPack channel identities as a fallback?
-	else
-		os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }
