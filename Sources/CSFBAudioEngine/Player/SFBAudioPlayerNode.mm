@@ -1035,7 +1035,7 @@ private:
 					if(mFlags.load() & eFlagRingBufferNeedsReset) {
 						mFlags.fetch_and(~eFlagRingBufferNeedsReset);
 
-						// Ensure output is muted before performing operations on the ring buffer that aren't thread-safe
+						// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
 						if(!(mFlags.load() & eFlagIsMuted)) {
 							if(mNode.engine.isRunning) {
 								mFlags.fetch_or(eFlagMuteRequested);
