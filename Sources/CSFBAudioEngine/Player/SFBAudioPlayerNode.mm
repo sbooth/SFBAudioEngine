@@ -818,17 +818,22 @@ public:
 			return false;
 		}
 
-		if(reset)
-			Reset();
+		if(reset) {
+			// Mute until the decoder becomes active to prevent spurious events
+			mFlags.fetch_or(eFlagMuteRequested);
+			CancelCurrentDecoder();
+		}
 
 		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+			if(reset)
+				mQueuedDecoders.resize(0);
 			mQueuedDecoders.push_back(decoder);
 		}
 
-		DequeueAndProcessDecoder();
+		DequeueAndProcessDecoder(reset);
 
 		return true;
 	}
@@ -904,7 +909,7 @@ private:
 
 #pragma mark - Decoding
 
-	void DequeueAndProcessDecoder() noexcept
+	void DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 	{
 		dispatch_group_async(mDecodingGroup, mDecodingQueue, ^{
 			// Dequeue and process the next decoder
@@ -994,6 +999,10 @@ private:
 						nanosleep(&rqtp, nullptr);
 					}
 				} while(!stored);
+
+				// Clear the mute flags if needed
+				if(unmuteNeeded)
+					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested);
 
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
