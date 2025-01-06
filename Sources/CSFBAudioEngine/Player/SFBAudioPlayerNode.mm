@@ -1614,12 +1614,10 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (BOOL)resetAndEnqueueURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
-
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-
-	return [self resetAndEnqueueDecoder:decoder error:error];
+	return _impl->EnqueueDecoder(decoder, true, error);
 }
 
 - (BOOL)resetAndEnqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
@@ -1631,12 +1629,10 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
-
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-
-	return [self enqueueDecoder:decoder error:error];
+	return _impl->EnqueueDecoder(decoder, false, error);
 }
 
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
