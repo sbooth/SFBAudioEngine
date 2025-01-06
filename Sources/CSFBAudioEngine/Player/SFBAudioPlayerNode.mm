@@ -168,7 +168,7 @@ struct DecoderState {
 		if(!mDecodeBuffer)
 			throw std::system_error(std::error_code(ENOMEM, std::generic_category()));
 
-		if(auto framePosition = decoder.framePosition; framePosition != 0) {
+		if(const auto framePosition = decoder.framePosition; framePosition != 0) {
 			mFramesDecoded.store(framePosition);
 			mFramesConverted.store(framePosition);
 			mFramesRendered.store(framePosition);
@@ -789,7 +789,7 @@ public:
 #endif /* DEBUG */
 
 		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
-		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
+		const auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
 		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && channelLayoutsAreEquivalent;
 	}
 
