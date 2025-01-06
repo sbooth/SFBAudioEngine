@@ -1040,11 +1040,11 @@ private:
 							if(mNode.engine.isRunning) {
 								mFlags.fetch_or(eFlagMuteRequested);
 
-								// The render block will clear eMuteRequested and set eOutputIsMuted
+								// The render block will clear eFlagMuteRequested and set eFlagIsMuted
 								while(!(mFlags.load() & eFlagIsMuted)) {
 									auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
 									// If the timeout occurred the engine may have stopped since the initial check
-									// with no subsequent opportunity for the render block to set eFlagOutputIsMuted
+									// with no subsequent opportunity for the render block to set eFlagIsMuted
 									if(!timeout && !mNode.engine.isRunning) {
 										mFlags.fetch_or(eFlagIsMuted);
 										mFlags.fetch_and(~eFlagMuteRequested);
@@ -1171,7 +1171,7 @@ private:
 		// ========================================
 		// Rendering
 
-		// N.B. The ring buffer must not be read from or written to when eOutputIsMuted is set
+		// N.B. The ring buffer must not be read from or written to when eFlagIsMuted is set
 		// because the decoding queue could be performing non-thread safe operations
 
 		// ========================================
