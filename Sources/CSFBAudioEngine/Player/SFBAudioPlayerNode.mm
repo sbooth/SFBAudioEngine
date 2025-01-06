@@ -266,7 +266,7 @@ struct DecoderState {
 };
 
 uint64_t DecoderState::sSequenceNumber = 1;
-using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 
 #pragma mark - Decoder State Array
 
@@ -413,7 +413,7 @@ struct AudioPlayerNode {
 
 	enum AudioPlayerNodeFlags : unsigned int {
 		eFlagIsPlaying 				= 1u << 0,
-		eFlagOutputIsMuted 			= 1u << 1,
+		eFlagIsMuted 				= 1u << 1,
 		eFlagMuteRequested 			= 1u << 2,
 		eFlagRingBufferNeedsReset 	= 1u << 3,
 		eFlagEndOfAudioSeen 		= 1u << 4,
@@ -826,7 +826,7 @@ public:
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-			mQueuedDecoders.push(decoder);
+			mQueuedDecoders.push_back(decoder);
 		}
 
 		DequeueAndProcessDecoder();
@@ -840,7 +840,7 @@ public:
 		id <SFBPCMDecoding> decoder = nil;
 		if(!mQueuedDecoders.empty()) {
 			decoder = mQueuedDecoders.front();
-			mQueuedDecoders.pop();
+			mQueuedDecoders.pop_front();
 		}
 		return decoder;
 	}
@@ -862,8 +862,7 @@ public:
 	void ClearQueue() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-		while(!mQueuedDecoders.empty())
-			mQueuedDecoders.pop();
+		mQueuedDecoders.resize(0);
 	}
 
 	bool QueueIsEmpty() const noexcept
@@ -880,24 +879,25 @@ public:
 
 private:
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 	{
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
+	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
 	{
 		::DeleteDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
@@ -957,9 +957,9 @@ private:
 						// and consumption by any number of other threads/queues including the render block.
 						//
 						// Slots in `mActiveDecoders` are assigned values in two places: here and the
-						// event processor. The event processor assigns nullptr to slots holding existing non-null
-						// values marked for removal while this code assigns non-null values to slots
-						// holding nullptr.
+						// event processor. The event processor assigns nullptr to slots before deleting
+						// the stored value while this code assigns non-null values to slots holding nullptr.
+						//
 						// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
 						// it is safe to use store() instead of compare_exchange_strong() because this is the
 						// only code that could have changed the slot to a non-null value and it is called solely
@@ -1035,25 +1035,25 @@ private:
 					if(mFlags.load() & eFlagRingBufferNeedsReset) {
 						mFlags.fetch_and(~eFlagRingBufferNeedsReset);
 
-						// Ensure output is muted before performing operations on the ring buffer that aren't thread-safe
-						if(!(mFlags.load() & eFlagOutputIsMuted)) {
+						// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
+						if(!(mFlags.load() & eFlagIsMuted)) {
 							if(mNode.engine.isRunning) {
 								mFlags.fetch_or(eFlagMuteRequested);
 
-								// The render block will clear eMuteRequested and set eOutputIsMuted
-								while(!(mFlags.load() & eFlagOutputIsMuted)) {
+								// The render block will clear eFlagMuteRequested and set eFlagIsMuted
+								while(!(mFlags.load() & eFlagIsMuted)) {
 									auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
 									// If the timeout occurred the engine may have stopped since the initial check
-									// with no subsequent opportunity for the render block to set eFlagOutputIsMuted
+									// with no subsequent opportunity for the render block to set eFlagIsMuted
 									if(!timeout && !mNode.engine.isRunning) {
-										mFlags.fetch_or(eFlagOutputIsMuted);
+										mFlags.fetch_or(eFlagIsMuted);
 										mFlags.fetch_and(~eFlagMuteRequested);
 										break;
 									}
 								}
 							}
 							else
-								mFlags.fetch_or(eFlagOutputIsMuted);
+								mFlags.fetch_or(eFlagIsMuted);
 						}
 
 						// Perform seek if one is pending
@@ -1064,7 +1064,7 @@ private:
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
-						mFlags.fetch_and(~eFlagOutputIsMuted);
+						mFlags.fetch_and(~eFlagIsMuted);
 					}
 
 					if(decoderState->mFlags.load() & DecoderState::eFlagCancelDecoding) {
@@ -1161,9 +1161,9 @@ private:
 		// Pre-rendering actions
 
 		// ========================================
-		// 0. Mute output if requested
+		// 0. Mute if requested
 		if(mFlags.load() & eFlagMuteRequested) {
-			mFlags.fetch_or(eFlagOutputIsMuted);
+			mFlags.fetch_or(eFlagIsMuted);
 			mFlags.fetch_and(~eFlagMuteRequested);
 			mDecodingSemaphore.Signal();
 		}
@@ -1171,12 +1171,12 @@ private:
 		// ========================================
 		// Rendering
 
-		// N.B. The ring buffer must not be read from or written to when eOutputIsMuted is set
+		// N.B. The ring buffer must not be read from or written to when eFlagIsMuted is set
 		// because the decoding queue could be performing non-thread safe operations
 
 		// ========================================
-		// 1. Output silence if the node isn't playing or is muted
-		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagOutputIsMuted) {
+		// 1. Output silence if not playing or muted
+		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
 			isSilence = YES;
@@ -1184,7 +1184,7 @@ private:
 		}
 
 		// ========================================
-		// 2. Determine how many audio frames are available to read in the ring buffer
+		// 2. Determine how many audio frames are available to read from the ring buffer
 		const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
 
 		// ========================================
