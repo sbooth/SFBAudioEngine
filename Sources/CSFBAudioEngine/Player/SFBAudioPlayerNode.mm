@@ -948,6 +948,35 @@ private:
 					return;
 				}
 
+				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
+				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
+				if(!buffer) {
+					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
+
+					delete decoderState;
+
+					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+														 code:SFBAudioPlayerNodeErrorCodeInternalError
+													 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+																 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
+															  }];
+
+					// Submit the error event
+					const DecodingEventHeader header{DecodingEventCommand::eError};
+
+					const auto key = mDispatchKeyCounter.fetch_add(1);
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+					if(mDecodeEventRingBuffer.WriteValues(header, key))
+						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
+							ProcessPendingEvents();
+						});
+					else
+						os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
+
+					return;
+				}
+
 				// Add the decoder state to the list of active decoders
 				auto stored = false;
 				do {
@@ -1005,33 +1034,6 @@ private:
 					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested);
 
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
-
-				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
-				if(!buffer) {
-					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
-
-					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
-														 code:SFBAudioPlayerNodeErrorCodeInternalError
-													 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
-																 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
-															  }];
-
-					// Submit the error event
-					const DecodingEventHeader header{DecodingEventCommand::eError};
-
-					const auto key = mDispatchKeyCounter.fetch_add(1);
-					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
-
-					if(mDecodeEventRingBuffer.WriteValues(header, key))
-						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-							ProcessPendingEvents();
-						});
-					else
-						os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
-
-					return;
-				}
 
 				// Process the decoder until canceled or complete
 				for(;;) {
