@@ -799,6 +799,18 @@ public:
 	{
 #if DEBUG
 		assert(decoder != nil);
+
+		// Extra checks to prevent decoder reuse
+		{
+			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+			for(const auto& elem : mQueuedDecoders)
+				assert(elem != decoder);
+		}
+
+		for(const auto& atomic_ptr : *mActiveDecoders) {
+			if(const auto decoderState = atomic_ptr.load(); decoderState)
+				assert(decoderState->mDecoder != decoder);
+		}
 #endif /* DEBUG */
 
 		if(!decoder.isOpen && ![decoder openReturningError:error])
