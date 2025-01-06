@@ -266,7 +266,7 @@ struct DecoderState {
 };
 
 uint64_t DecoderState::sSequenceNumber = 1;
-using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 
 #pragma mark - Decoder State Array
 
@@ -825,7 +825,7 @@ public:
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-			mQueuedDecoders.push(decoder);
+			mQueuedDecoders.push_back(decoder);
 		}
 
 		DequeueAndProcessDecoder();
@@ -839,7 +839,7 @@ public:
 		id <SFBPCMDecoding> decoder = nil;
 		if(!mQueuedDecoders.empty()) {
 			decoder = mQueuedDecoders.front();
-			mQueuedDecoders.pop();
+			mQueuedDecoders.pop_front();
 		}
 		return decoder;
 	}
@@ -861,8 +861,7 @@ public:
 	void ClearQueue() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-		while(!mQueuedDecoders.empty())
-			mQueuedDecoders.pop();
+		mQueuedDecoders.resize(0);
 	}
 
 	bool QueueIsEmpty() const noexcept
