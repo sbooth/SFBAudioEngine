@@ -39,25 +39,6 @@ namespace {
 
 const os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
 
-#pragma mark AudioBufferList Utilities
-
-/// Zeroes a range of bytes in `bufferList`
-/// - attention: `bufferList` must contain non-interleaved audio data
-/// - parameter bufferList: The destination audio buffer list
-/// - parameter byteOffset: The byte offset in `bufferList` to begin writing
-/// - parameter byteCount: The maximum number of bytes per non-interleaved buffer to write
-void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount) noexcept
-{
-	assert(bufferList != nullptr);
-
-	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
-		assert(byteOffset <= bufferList->mBuffers[i].mDataByteSize);
-		const auto s = reinterpret_cast<uintptr_t>(bufferList->mBuffers[i].mData) + byteOffset;
-		const auto n = std::min(byteCount, bufferList->mBuffers[i].mDataByteSize - byteOffset);
-		std::memset(reinterpret_cast<void *>(s), 0, n);
-	}
-}
-
 #pragma mark - AVAudioChannelLayout Equivalence
 
 /// Returns `true` if `lhs` and `rhs` are equivalent
@@ -1188,7 +1169,10 @@ private:
 		// 1. Output silence if not playing or muted
 		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+			}
 			isSilence = YES;
 			return noErr;
 		}
@@ -1201,7 +1185,10 @@ private:
 		// 3. Output silence if the ring buffer is empty
 		if(framesAvailableToRead == 0) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+			}
 			isSilence = YES;
 			return noErr;
 		}
@@ -1223,7 +1210,10 @@ private:
 			const auto framesOfSilence = frameCount - framesRead;
 			const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
-			SetAudioBufferListToZero(outputData, byteCountToSkip, byteCountToZero);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(outputData->mBuffers[i].mData) + byteCountToSkip), 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
+			}
 		}
 
 		// ========================================
