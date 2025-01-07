@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -36,4 +36,4 @@ inline uint64_t ConvertAbsoluteHostTimeDeltaToNanoseconds(uint64_t t1, uint64_t 
 	return ConvertHostTimeToNanoseconds(t2 > t1 ? t2 - t1 : t1 - t2);
 }
 
-}
+} /* namespace SFB */
