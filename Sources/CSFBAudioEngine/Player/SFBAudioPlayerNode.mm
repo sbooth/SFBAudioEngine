@@ -1274,7 +1274,7 @@ private:
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
 
 				// Submit the rendering complete event
-				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const uint32_t frameOffset = framesRead - framesRemainingToDistribute - 1;
 				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
 				const RenderingEventHeader header{RenderingEventCommand::eComplete};
