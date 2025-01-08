@@ -533,7 +533,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 	}
 
-	if((_bitsPerSample == 8 && (_fileType != kFileTypeUInt8 && _fileType != kFileTypeSInt8 && _fileType != kFileTypeµLaw && _fileType != kFileTypeALaw)) || (_bitsPerSample == 16 && (_fileType != kFileTypeUInt16BE && _fileType != kFileTypeUInt16LE && _fileType != kFileTypeSInt16BE && _fileType != kFileTypeSInt16LE))) {
+	if((_bitsPerSample == 8 && !(_fileType == kFileTypeAU1 || _fileType == kFileTypeUInt8 || _fileType == kFileTypeSInt8 || _fileType == kFileTypeµLaw || _fileType == kFileTypeAU2 || _fileType == kFileTypeAU3 || _fileType == kFileTypeALaw)) ||
+	   (_bitsPerSample == 16 && !(_fileType == kFileTypeUInt16BE || _fileType == kFileTypeUInt16LE || _fileType == kFileTypeSInt16BE || _fileType == kFileTypeSInt16LE))) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _fileType);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
