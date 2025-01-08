@@ -1404,10 +1404,10 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							break;
 						case kFileTypeµLaw:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
-								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									const auto value = µLawToLinear(_buffer[channel][sample] << _bitshift);
-									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+									channel_buf[sample] = static_cast<uint8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
 							break;
@@ -1439,10 +1439,10 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							break;
 						case kFileTypeALaw:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
-								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									const auto value = ALawToLinear(_buffer[channel][sample] << _bitshift);
-									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+									channel_buf[sample] = static_cast<uint8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
 							break;
