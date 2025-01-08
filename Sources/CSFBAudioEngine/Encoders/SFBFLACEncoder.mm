@@ -56,7 +56,7 @@ using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, f
 
 namespace {
 
-FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes, void *client_data) noexcept
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != NULL);
@@ -76,7 +76,7 @@ FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, 
 	return FLAC__STREAM_ENCODER_READ_STATUS_CONTINUE;
 }
 
-FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], size_t bytes, uint32_t samples, uint32_t current_frame, void *client_data)
+FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], size_t bytes, uint32_t samples, uint32_t current_frame, void *client_data) noexcept
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != nullptr);
@@ -94,7 +94,7 @@ FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder
 	return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
 
-FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset, void *client_data) noexcept
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != nullptr);
@@ -111,7 +111,7 @@ FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, 
 	return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
-FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset, void *client_data) noexcept
 {
 #pragma unused(encoder)
 	NSCParameterAssert(client_data != nullptr);
@@ -128,7 +128,7 @@ FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, 
 	return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
 
-void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, void *client_data)
+void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, void *client_data) noexcept
 {
 #pragma unused(encoder)
 #pragma unused(metadata)

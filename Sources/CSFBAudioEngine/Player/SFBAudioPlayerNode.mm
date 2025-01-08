@@ -39,25 +39,6 @@ namespace {
 
 const os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
 
-#pragma mark AudioBufferList Utilities
-
-/// Zeroes a range of bytes in `bufferList`
-/// - attention: `bufferList` must contain non-interleaved audio data
-/// - parameter bufferList: The destination audio buffer list
-/// - parameter byteOffset: The byte offset in `bufferList` to begin writing
-/// - parameter byteCount: The maximum number of bytes per non-interleaved buffer to write
-void SetAudioBufferListToZero(AudioBufferList * const _Nonnull bufferList, uint32_t byteOffset, uint32_t byteCount) noexcept
-{
-	assert(bufferList != nullptr);
-
-	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
-		assert(byteOffset <= bufferList->mBuffers[i].mDataByteSize);
-		const auto s = reinterpret_cast<uintptr_t>(bufferList->mBuffers[i].mData) + byteOffset;
-		const auto n = std::min(byteCount, bufferList->mBuffers[i].mDataByteSize - byteOffset);
-		std::memset(reinterpret_cast<void *>(s), 0, n);
-	}
-}
-
 #pragma mark - AVAudioChannelLayout Equivalence
 
 /// Returns `true` if `lhs` and `rhs` are equivalent
@@ -168,7 +149,7 @@ struct DecoderState {
 		if(!mDecodeBuffer)
 			throw std::system_error(std::error_code(ENOMEM, std::generic_category()));
 
-		if(auto framePosition = decoder.framePosition; framePosition != 0) {
+		if(const auto framePosition = decoder.framePosition; framePosition != 0) {
 			mFramesDecoded.store(framePosition);
 			mFramesConverted.store(framePosition);
 			mFramesRendered.store(framePosition);
@@ -266,7 +247,7 @@ struct DecoderState {
 };
 
 uint64_t DecoderState::sSequenceNumber = 1;
-using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 
 #pragma mark - Decoder State Array
 
@@ -413,7 +394,7 @@ struct AudioPlayerNode {
 
 	enum AudioPlayerNodeFlags : unsigned int {
 		eFlagIsPlaying 				= 1u << 0,
-		eFlagOutputIsMuted 			= 1u << 1,
+		eFlagIsMuted 				= 1u << 1,
 		eFlagMuteRequested 			= 1u << 2,
 		eFlagRingBufferNeedsReset 	= 1u << 3,
 	};
@@ -789,7 +770,7 @@ public:
 #endif /* DEBUG */
 
 		// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
-		auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
+		const auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
 		return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && channelLayoutsAreEquivalent;
 	}
 
@@ -819,19 +800,21 @@ public:
 		}
 
 		if(reset) {
-			ClearQueue();
-			if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState)
-				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
+			// Mute until the decoder becomes active to prevent spurious events
+			mFlags.fetch_or(eFlagMuteRequested);
+			CancelCurrentDecoder();
 		}
 
 		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-			mQueuedDecoders.push(decoder);
+			if(reset)
+				mQueuedDecoders.resize(0);
+			mQueuedDecoders.push_back(decoder);
 		}
 
-		DequeueAndProcessDecoder();
+		DequeueAndProcessDecoder(reset);
 
 		return true;
 	}
@@ -842,7 +825,7 @@ public:
 		id <SFBPCMDecoding> decoder = nil;
 		if(!mQueuedDecoders.empty()) {
 			decoder = mQueuedDecoders.front();
-			mQueuedDecoders.pop();
+			mQueuedDecoders.pop_front();
 		}
 		return decoder;
 	}
@@ -864,8 +847,7 @@ public:
 	void ClearQueue() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-		while(!mQueuedDecoders.empty())
-			mQueuedDecoders.pop();
+		mQueuedDecoders.resize(0);
 	}
 
 	bool QueueIsEmpty() const noexcept
@@ -882,24 +864,25 @@ public:
 
 private:
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 	{
 		return ::GetActiveDecoderStateWithSmallestSequenceNumber(*mActiveDecoders);
 	}
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering and has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetActiveDecoderStateFollowingSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
-	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber` that has not been marked for removal
+	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 	{
 		return ::GetDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
 	}
 
+	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
 	{
 		::DeleteDecoderStateWithSequenceNumber(*mActiveDecoders, sequenceNumber);
@@ -907,7 +890,7 @@ private:
 
 #pragma mark - Decoding
 
-	void DequeueAndProcessDecoder() noexcept
+	void DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 	{
 		dispatch_group_async(mDecodingGroup, mDecodingQueue, ^{
 			// Dequeue and process the next decoder
@@ -946,6 +929,35 @@ private:
 					return;
 				}
 
+				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
+				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
+				if(!buffer) {
+					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
+
+					delete decoderState;
+
+					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+														 code:SFBAudioPlayerNodeErrorCodeInternalError
+													 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+																 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
+															  }];
+
+					// Submit the error event
+					const DecodingEventHeader header{DecodingEventCommand::eError};
+
+					const auto key = mDispatchKeyCounter.fetch_add(1);
+					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+					if(mDecodeEventRingBuffer.WriteValues(header, key))
+						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
+							ProcessPendingEvents();
+						});
+					else
+						os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
+
+					return;
+				}
+
 				// Add the decoder state to the list of active decoders
 				auto stored = false;
 				do {
@@ -959,9 +971,9 @@ private:
 						// and consumption by any number of other threads/queues including the render block.
 						//
 						// Slots in `mActiveDecoders` are assigned values in two places: here and the
-						// event processor. The event processor assigns nullptr to slots holding existing non-null
-						// values marked for removal while this code assigns non-null values to slots
-						// holding nullptr.
+						// event processor. The event processor assigns nullptr to slots before deleting
+						// the stored value while this code assigns non-null values to slots holding nullptr.
+						//
 						// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
 						// it is safe to use store() instead of compare_exchange_strong() because this is the
 						// only code that could have changed the slot to a non-null value and it is called solely
@@ -998,34 +1010,11 @@ private:
 					}
 				} while(!stored);
 
+				// Clear the mute flags if needed
+				if(unmuteNeeded)
+					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested);
+
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
-
-				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-				AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
-				if(!buffer) {
-					os_log_error(_audioPlayerNodeLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
-
-					NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
-														 code:SFBAudioPlayerNodeErrorCodeInternalError
-													 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
-																 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
-															  }];
-
-					// Submit the error event
-					const DecodingEventHeader header{DecodingEventCommand::eError};
-
-					const auto key = mDispatchKeyCounter.fetch_add(1);
-					dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
-
-					if(mDecodeEventRingBuffer.WriteValues(header, key))
-						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-							ProcessPendingEvents();
-						});
-					else
-						os_log_fault(_audioPlayerNodeLog, "Error writing decoding error event");
-
-					return;
-				}
 
 				// Process the decoder until canceled or complete
 				for(;;) {
@@ -1037,25 +1026,25 @@ private:
 					if(mFlags.load() & eFlagRingBufferNeedsReset) {
 						mFlags.fetch_and(~eFlagRingBufferNeedsReset);
 
-						// Ensure output is muted before performing operations on the ring buffer that aren't thread-safe
-						if(!(mFlags.load() & eFlagOutputIsMuted)) {
+						// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
+						if(!(mFlags.load() & eFlagIsMuted)) {
 							if(mNode.engine.isRunning) {
 								mFlags.fetch_or(eFlagMuteRequested);
 
-								// The render block will clear eMuteRequested and set eOutputIsMuted
-								while(!(mFlags.load() & eFlagOutputIsMuted)) {
+								// The render block will clear eFlagMuteRequested and set eFlagIsMuted
+								while(!(mFlags.load() & eFlagIsMuted)) {
 									auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
 									// If the timeout occurred the engine may have stopped since the initial check
-									// with no subsequent opportunity for the render block to set eFlagOutputIsMuted
+									// with no subsequent opportunity for the render block to set eFlagIsMuted
 									if(!timeout && !mNode.engine.isRunning) {
-										mFlags.fetch_or(eFlagOutputIsMuted);
+										mFlags.fetch_or(eFlagIsMuted);
 										mFlags.fetch_and(~eFlagMuteRequested);
 										break;
 									}
 								}
 							}
 							else
-								mFlags.fetch_or(eFlagOutputIsMuted);
+								mFlags.fetch_or(eFlagIsMuted);
 						}
 
 						// Perform seek if one is pending
@@ -1066,7 +1055,7 @@ private:
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
-						mFlags.fetch_and(~eFlagOutputIsMuted);
+						mFlags.fetch_and(~eFlagIsMuted);
 					}
 
 					if(decoderState->mFlags.load() & DecoderState::eFlagCancelDecoding) {
@@ -1163,9 +1152,9 @@ private:
 		// Pre-rendering actions
 
 		// ========================================
-		// 0. Mute output if requested
+		// 0. Mute if requested
 		if(mFlags.load() & eFlagMuteRequested) {
-			mFlags.fetch_or(eFlagOutputIsMuted);
+			mFlags.fetch_or(eFlagIsMuted);
 			mFlags.fetch_and(~eFlagMuteRequested);
 			mDecodingSemaphore.Signal();
 		}
@@ -1173,27 +1162,33 @@ private:
 		// ========================================
 		// Rendering
 
-		// N.B. The ring buffer must not be read from or written to when eOutputIsMuted is set
+		// N.B. The ring buffer must not be read from or written to when eFlagIsMuted is set
 		// because the decoding queue could be performing non-thread safe operations
 
 		// ========================================
-		// 1. Output silence if the node isn't playing or is muted
-		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagOutputIsMuted) {
+		// 1. Output silence if not playing or muted
+		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+			}
 			isSilence = YES;
 			return noErr;
 		}
 
 		// ========================================
-		// 2. Determine how many audio frames are available to read in the ring buffer
+		// 2. Determine how many audio frames are available to read from the ring buffer
 		const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
 
 		// ========================================
 		// 3. Output silence if the ring buffer is empty
 		if(framesAvailableToRead == 0) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-			SetAudioBufferListToZero(outputData, 0, byteCountToZero);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+			}
 			isSilence = YES;
 			return noErr;
 		}
@@ -1215,7 +1210,10 @@ private:
 			const auto framesOfSilence = frameCount - framesRead;
 			const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
-			SetAudioBufferListToZero(outputData, byteCountToSkip, byteCountToZero);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(outputData->mBuffers[i].mData) + byteCountToSkip), 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
+			}
 		}
 
 		// ========================================
@@ -1266,7 +1264,7 @@ private:
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
 
 				// Submit the rendering complete event
-				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const uint32_t frameOffset = framesRead - framesRemainingToDistribute - 1;
 				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(frameOffset / mAudioRingBuffer.Format().mSampleRate);
 
 				const RenderingEventHeader header{RenderingEventCommand::eComplete};
@@ -1608,12 +1606,10 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (BOOL)resetAndEnqueueURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
-
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-
-	return [self resetAndEnqueueDecoder:decoder error:error];
+	return _impl->EnqueueDecoder(decoder, true, error);
 }
 
 - (BOOL)resetAndEnqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
@@ -1625,12 +1621,10 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
-
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-
-	return [self enqueueDecoder:decoder error:error];
+	return _impl->EnqueueDecoder(decoder, false, error);
 }
 
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error

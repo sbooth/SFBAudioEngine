@@ -25,7 +25,7 @@ namespace {
 
 // ========================================
 // Callbacks
-OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
+OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -54,7 +54,7 @@ OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCoun
 	return noErr;
 }
 
-SInt64 get_size_callback(void *inClientData)
+SInt64 get_size_callback(void *inClientData) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 

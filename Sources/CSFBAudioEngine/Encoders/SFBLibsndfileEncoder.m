@@ -1,10 +1,12 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 @import os.log;
+
+@import AudioToolbox;
 
 @import sndfile;
 @import AVFAudioExtensions;
@@ -12,6 +14,7 @@
 #import "SFBLibsndfileEncoder.h"
 
 #import "NSError+SFBURLPresentation.h"
+#import "SFBLibsndfileUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile = @"org.sbooth.AudioEngine.Encoder.Libsndfile";
 
@@ -144,6 +147,146 @@ static int InferSubtypeFromFormat(AVAudioFormat *format)
 	return 0;
 }
 
+/// Fills a sndfile channel map with the corresponding channels from `channelDescriptions`
+static void SndfileChannelMapWithChannelDescriptions(int * _Nonnull channel_map, int channels, const AudioChannelDescription *channelDescriptions)
+{
+	NSCParameterAssert(channel_map != NULL);
+	NSCParameterAssert(channels > 0);
+	NSCParameterAssert(channelDescriptions != NULL);
+
+	for(int i = 0; i < channels; ++i) {
+		switch(channelDescriptions[i].mChannelLabel) {
+			case kAudioChannelLabel_Unused: 				channel_map[i] = SF_CHANNEL_MAP_INVALID;					break;
+
+			case kAudioChannelLabel_Mono: 					channel_map[i] = SF_CHANNEL_MAP_MONO; 						break;
+			case kAudioChannelLabel_Left: 					channel_map[i] = SF_CHANNEL_MAP_LEFT; 						break;
+			case kAudioChannelLabel_Right: 					channel_map[i] = SF_CHANNEL_MAP_RIGHT; 						break;
+			case kAudioChannelLabel_Center: 				channel_map[i] = SF_CHANNEL_MAP_CENTER; 					break;
+
+				// WAVEFORMATEXTENSIBLE standard channels (in dwChannelMask order)
+//			case kAudioChannelLabel_Left: 					channel_map[i] = SF_CHANNEL_MAP_FRONT_LEFT;					break;
+//			case kAudioChannelLabel_Right: 					channel_map[i] = SF_CHANNEL_MAP_FRONT_RIGHT; 				break;
+//			case kAudioChannelLabel_Center: 				channel_map[i] = SF_CHANNEL_MAP_FRONT_CENTER; 				break;
+			case kAudioChannelLabel_LFEScreen: 				channel_map[i] = SF_CHANNEL_MAP_LFE; 						break;
+			case kAudioChannelLabel_LeftSurround: 			channel_map[i] = SF_CHANNEL_MAP_REAR_LEFT; 					break;
+			case kAudioChannelLabel_RightSurround: 			channel_map[i] = SF_CHANNEL_MAP_REAR_RIGHT; 				break;
+			case kAudioChannelLabel_LeftCenter: 			channel_map[i] = SF_CHANNEL_MAP_FRONT_LEFT_OF_CENTER; 		break;
+			case kAudioChannelLabel_RightCenter: 			channel_map[i] = SF_CHANNEL_MAP_FRONT_RIGHT_OF_CENTER; 		break;
+			case kAudioChannelLabel_CenterSurround: 		channel_map[i] = SF_CHANNEL_MAP_REAR_CENTER; 				break;
+			case kAudioChannelLabel_LeftSurroundDirect: 	channel_map[i] = SF_CHANNEL_MAP_SIDE_LEFT; 					break;
+			case kAudioChannelLabel_RightSurroundDirect: 	channel_map[i] = SF_CHANNEL_MAP_SIDE_RIGHT; 				break;
+			case kAudioChannelLabel_TopCenterSurround: 		channel_map[i] = SF_CHANNEL_MAP_TOP_CENTER; 				break;
+			case kAudioChannelLabel_VerticalHeightLeft: 	channel_map[i] = SF_CHANNEL_MAP_TOP_FRONT_LEFT; 			break;
+			case kAudioChannelLabel_VerticalHeightCenter: 	channel_map[i] = SF_CHANNEL_MAP_TOP_FRONT_CENTER; 			break;
+			case kAudioChannelLabel_VerticalHeightRight: 	channel_map[i] = SF_CHANNEL_MAP_TOP_FRONT_RIGHT; 			break;
+			case kAudioChannelLabel_TopBackLeft: 			channel_map[i] = SF_CHANNEL_MAP_TOP_REAR_LEFT; 				break;
+			case kAudioChannelLabel_TopBackCenter: 			channel_map[i] = SF_CHANNEL_MAP_TOP_REAR_CENTER; 			break;
+			case kAudioChannelLabel_TopBackRight: 			channel_map[i] = SF_CHANNEL_MAP_TOP_REAR_RIGHT; 			break;
+
+			case kAudioChannelLabel_Ambisonic_W: 			channel_map[i] = SF_CHANNEL_MAP_AMBISONIC_B_W; 				break;
+			case kAudioChannelLabel_Ambisonic_X: 			channel_map[i] = SF_CHANNEL_MAP_AMBISONIC_B_X; 				break;
+			case kAudioChannelLabel_Ambisonic_Y: 			channel_map[i] = SF_CHANNEL_MAP_AMBISONIC_B_Y; 				break;
+			case kAudioChannelLabel_Ambisonic_Z: 			channel_map[i] = SF_CHANNEL_MAP_AMBISONIC_B_Z; 				break;
+
+			default:
+				os_log_error(gSFBAudioEncoderLog, "Unable to map channel label: %d", channelDescriptions[i].mChannelLabel);
+				channel_map[i] = SF_CHANNEL_MAP_INVALID;
+				break;
+		}
+	}
+}
+
+/// Fills a sndfile channel map with the corresponding channels from `channelBitmap`
+static BOOL SndfileChannelMapWithChannelBitmap(int * _Nonnull channel_map, int channels, AudioChannelBitmap channelBitmap, NSError **error)
+{
+	NSCParameterAssert(channel_map != NULL);
+	NSCParameterAssert(channels > 0);
+
+	UInt32 dataSize;
+	OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap), &channelBitmap, &dataSize);
+	if(result != noErr) {
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	AudioChannelLayout *channelLayout = malloc(dataSize);
+	if(!channelLayout) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
+	result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap), &channelBitmap, &dataSize, channelLayout);
+	if(result != noErr) {
+		free(channelLayout);
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	SndfileChannelMapWithChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+
+	free(channelLayout);
+
+	return YES;
+}
+
+/// Fills a sndfile channel map with the corresponding channels from `layoutTag`
+static BOOL SndfileChannelMapWithChannelLayoutTag(int * _Nonnull channel_map, int channels, AudioChannelLayoutTag layoutTag, NSError **error)
+{
+	NSCParameterAssert(channel_map != NULL);
+	NSCParameterAssert(channels > 0);
+
+	UInt32 dataSize;
+	OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag), &layoutTag, &dataSize);
+	if(result != noErr) {
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	AudioChannelLayout *channelLayout = malloc(dataSize);
+	if(!channelLayout) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
+	result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag), &layoutTag, &dataSize, channelLayout);
+	if(result != noErr) {
+		free(channelLayout);
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	SndfileChannelMapWithChannelDescriptions(channel_map, channels, channelLayout->mChannelDescriptions);
+
+	free(channelLayout);
+
+	return YES;
+}
+
+/// Fills a sndfile channel map with the corresponding channels from `channelLayout`
+static BOOL SndfileChannelMapFromChannelLayout(int * _Nonnull channel_map, int channels, AVAudioChannelLayout * _Nonnull channelLayout, NSError **error)
+{
+	NSCParameterAssert(channel_map != NULL);
+	NSCParameterAssert(channels > 0);
+	NSCParameterAssert(channelLayout != nil);
+
+	AudioChannelLayoutTag layoutTag = channelLayout.layoutTag;
+
+	if(layoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
+		SndfileChannelMapWithChannelDescriptions(channel_map, channels, channelLayout.layout->mChannelDescriptions);
+		return YES;
+	}
+	else if(layoutTag == kAudioChannelLayoutTag_UseChannelBitmap)
+		return SndfileChannelMapWithChannelBitmap(channel_map, channels, channelLayout.layout->mChannelBitmap, error);
+	else
+		return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
+}
+
 enum WriteMethod {
 	Unknown,
 	Short,
@@ -238,7 +381,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 @interface SFBLibsndfileEncoder ()
 {
 @private
-	SNDFILE *_sndfile;;
+	SNDFILE *_sndfile;
 	SF_INFO	_sfinfo;
 	enum WriteMethod _writeMethod;
 }
@@ -293,6 +436,13 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 - (BOOL)encodingIsLossless
 {
+	switch(_sfinfo.format & SF_FORMAT_TYPEMASK) {
+		case SF_FORMAT_FLAC:
+			return YES;
+		default:
+			break;
+	}
+
 	switch(_sfinfo.format & SF_FORMAT_SUBMASK) {
 		case SF_FORMAT_PCM_U8:
 		case SF_FORMAT_PCM_S8:
@@ -346,9 +496,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		streamDescription.mFramesPerPacket		= 1;
 		streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
-		// TODO: what channel layout is appropriate?
-		AVAudioChannelLayout *channelLayout = nil;
-		return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
+		return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:sourceFormat.channelLayout];
 	}
 
 	return nil;
@@ -389,7 +537,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K)		majorFormat = SF_FORMAT_MPC2K;
 		else if(majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64)		majorFormat = SF_FORMAT_RF64;
 		else
-			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Libsndfile major format: %{public}@", majorFormatSetting);
+			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile major format: %{public}@", majorFormatSetting);
 	}
 	else {
 		majorFormat = MajorFormatForExtension(_outputSource.url.pathExtension);
@@ -404,7 +552,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24)			subtype = SF_FORMAT_PCM_24;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32)			subtype = SF_FORMAT_PCM_32;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8)			subtype = SF_FORMAT_PCM_U8;
-		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat)			subtype = SF_FORMAT_FLAC;
+		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat)			subtype = SF_FORMAT_FLOAT;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble)			subtype = SF_FORMAT_DOUBLE;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW)			subtype = SF_FORMAT_ULAW;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW)			subtype = SF_FORMAT_ALAW;
@@ -431,7 +579,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24)		subtype = SF_FORMAT_ALAC_24;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32)		subtype = SF_FORMAT_ALAC_32;
 		else
-			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Libsndfile subtype: %{public}@", subtypeSetting);
+			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile subtype: %{public}@", subtypeSetting);
 	}
 	else {
 		subtype = InferSubtypeFromFormat(_processingFormat);
@@ -446,7 +594,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianBig)		endian = SF_ENDIAN_BIG;
 		else if(fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU)		endian = SF_ENDIAN_CPU;
 		else
-			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Libsndfile file endian-ness: %{public}@", fileEndianSetting);
+			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile file endian-ness: %{public}@", fileEndianSetting);
 	}
 
 	_sfinfo.samplerate 	= (int)_processingFormat.sampleRate;
@@ -499,6 +647,43 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 		return NO;
 	}
+
+	// Set up the channel map for sndfile
+	AVAudioChannelLayout *processingFormatChannelLayout = _processingFormat.channelLayout;
+	if(processingFormatChannelLayout) {
+		int channel_map [_sfinfo.channels];
+
+		if(!SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, error)) {
+			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@", processingFormatChannelLayout.layoutName);
+			return NO;
+		}
+
+		int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+		if(result != SF_TRUE) {
+			os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
+
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:@{
+					NSLocalizedDescriptionKey: NSLocalizedString(@"The output format is not supported by Libsndfile.", @""),
+					NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unsupported channel layout", @""),
+					NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The format is not supported.", @"")
+				}];
+
+			return NO;
+		}
+	}
+
+	AudioStreamBasicDescription outputStreamDescription = {0};
+
+	// Generic libsndfile format ID, will be set to something more specific if known
+	outputStreamDescription.mFormatID = 'SNDF';
+
+	outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
+
+	FillASBDWithSndfileFormat(&outputStreamDescription, _sfinfo.format);
+
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:processingFormatChannelLayout];
 
 	return YES;
 }

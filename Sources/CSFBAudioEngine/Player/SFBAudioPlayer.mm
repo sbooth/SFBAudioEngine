@@ -25,7 +25,7 @@
 namespace {
 
 /// Objective-C associated object key indicating if a decoder has been canceled
-const char _decoderIsCanceledKey = '\0';
+constexpr char _decoderIsCanceledKey = '\0';
 
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
@@ -848,7 +848,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		format = standardEquivalentFormat;
 	}
 
-	const BOOL formatsEqual = [format isEqual:_playerNode.renderingFormat];
+	const auto formatsEqual = [format isEqual:_playerNode.renderingFormat];
 	if(formatsEqual && !forceUpdate)
 		return YES;
 
@@ -952,7 +952,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		const auto maximumFramesToRender = static_cast<AUAudioFrameCount>(std::ceil(512 * ratio));
 
 		if(auto audioUnit = _playerNode.AUAudioUnit; audioUnit.maximumFramesToRender < maximumFramesToRender) {
-			BOOL renderResourcesAllocated = audioUnit.renderResourcesAllocated;
+			const auto renderResourcesAllocated = audioUnit.renderResourcesAllocated;
 			if(renderResourcesAllocated)
 				[audioUnit deallocateRenderResources];
 
