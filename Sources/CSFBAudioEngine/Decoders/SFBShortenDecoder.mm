@@ -560,8 +560,6 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
 	if(_fileType == kFileTypeSInt8 || _fileType == kFileTypeSInt16BE || _fileType == kFileTypeSInt16LE)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
-	if(_fileType != kFileTypeµLaw || _fileType != kFileTypeALaw)
-		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
 
 	processingStreamDescription.mSampleRate			= _sampleRate;
 	processingStreamDescription.mChannelsPerFrame	= static_cast<UInt32>(_channelCount);
