@@ -1377,10 +1377,10 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					switch(_fileType) {
 						case kFileTypeAU1:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
-								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									const auto value = _buffer[channel][sample];
-									channel_buf[sample] = static_cast<int8_t>(µLawTable[_bitshift][value + 128]);
+									channel_buf[sample] = µLawTable[_bitshift][value + 128];
 								}
 							}
 							break;
@@ -1417,23 +1417,23 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									const auto value = _buffer[channel][sample];
 									if(value >= 0)
-										channel_buf[sample] = static_cast<int8_t>(µLawTable[_bitshift][value + 128]);
+										channel_buf[sample] = µLawTable[_bitshift][value + 128];
 									else if(value == -1)
 										channel_buf[sample] = 0x7f;
 									else
-										channel_buf[sample] = static_cast<int8_t>(µLawTable[_bitshift][value + 129]);
+										channel_buf[sample] = µLawTable[_bitshift][value + 129];
 								}
 							}
 							break;
 						case kFileTypeAU3:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
-								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
 									const auto value = _buffer[channel][sample] << _bitshift;
 									if(value < 0)
-										channel_buf[sample] = static_cast<int8_t>((127 - value) ^ 0xd5);
+										channel_buf[sample] = static_cast<uint8_t>((127 - value) ^ 0xd5);
 									else
-										channel_buf[sample] = static_cast<int8_t>((value + 128) ^ 0x55);
+										channel_buf[sample] = static_cast<uint8_t>((value + 128) ^ 0x55);
 								}
 							}
 							break;
