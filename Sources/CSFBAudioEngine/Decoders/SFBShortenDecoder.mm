@@ -23,7 +23,7 @@
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion = @"_version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType = @"_internalFileType";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenFileType = @"_fileType";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels = @"_channelCount";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize = @"_blocksize";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate = @"_sampleRate";
@@ -38,15 +38,14 @@ constexpr auto kMinSupportedVersion 		= 1;
 constexpr auto kMaxSupportedVersion 		= 3;
 
 constexpr auto kDefaultBlockSize 			= 256;
-constexpr auto kDefaultV0NMean 				= 0;
-constexpr auto kDefaultV2NMean 				= 4;
-constexpr auto kDefaultMaxNLPC 				= 0;
-
+constexpr auto kV0DefaultMean 				= 0;
+constexpr auto kV2DefaultMean 				= 4;
+constexpr auto kDefaultMaxLPC 				= 0;
 
 constexpr auto kChannelCountCodeSize 		= 0;
 constexpr auto kEnergyCodeSize 				= 3;
 constexpr auto kBitshiftCodeSize 			= 2;
-constexpr auto kNWrap 						= 3;
+constexpr auto kWrap 						= 3;
 
 constexpr auto kFunctionCodeSize 			= 2;
 constexpr auto kFunctionDiff0 				= 0;
@@ -70,6 +69,7 @@ constexpr auto kLPCQuantCodeSize 			= 2;
 constexpr auto kExtraByteCodeSize 			= 7;
 
 constexpr auto kFileTypeCodeSize			= 4;
+constexpr auto kFileTypeAU1 				= 0;
 constexpr auto kFileTypeSInt8 				= 1;
 constexpr auto kFileTypeUInt8 				= 2;
 constexpr auto kFileTypeSInt16BE 			= 3;
@@ -77,7 +77,11 @@ constexpr auto kFileTypeUInt16BE 			= 4;
 constexpr auto kFileTypeSInt16LE 			= 5;
 constexpr auto kFileTypeUInt16LE 			= 6;
 constexpr auto kFileTypeµLaw 				= 7;
+constexpr auto kFileTypeAU2 				= 8;
+constexpr auto kFileTypeAU3 				= 9;
 constexpr auto kFileTypeALaw 				= 10;
+
+constexpr auto kSeekTableRevision 			= 1;
 
 constexpr auto kSeekHeaderSizeBytes 		= 12;
 constexpr auto kSeekTrailerSizeBytes 		= 12;
@@ -91,6 +95,22 @@ constexpr auto kMaxBlocksizeBytes			= 65535;
 constexpr auto kCanonicalHeaderSizeBytes	= 44;
 
 constexpr auto kWAVEFormatPCMTag 			= 0x0001;
+
+constexpr uint8_t µLawTable[13][256] = {
+	{127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,255,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128},
+	{112,114,116,118,120,122,124,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,113,115,117,119,121,123,125,255,253,251,249,247,245,243,241,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,252,250,248,246,244,242,240},
+	{96,98,100,102,104,106,108,110,112,113,114,116,117,118,120,121,122,124,125,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,97,99,101,103,105,107,109,111,115,119,123,255,251,247,243,239,237,235,233,231,229,227,225,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,253,252,250,249,248,246,245,244,242,241,240,238,236,234,232,230,228,226,224},
+	{80,82,84,86,88,90,92,94,96,97,98,100,101,102,104,105,106,108,109,110,112,113,114,115,116,117,118,120,121,122,123,124,125,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,81,83,85,87,89,91,93,95,99,103,107,111,119,255,247,239,235,231,227,223,221,219,217,215,213,211,209,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,253,252,251,250,249,248,246,245,244,243,242,241,240,238,237,236,234,233,232,230,229,228,226,225,224,222,220,218,216,214,212,210,208},
+	{64,66,68,70,72,74,76,78,80,81,82,84,85,86,88,89,90,92,93,94,96,97,98,99,100,101,102,104,105,106,107,108,109,110,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,65,67,69,71,73,75,77,79,83,87,91,95,103,111,255,239,231,223,219,215,211,207,205,203,201,199,197,195,193,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,238,237,236,235,234,233,232,230,229,228,227,226,225,224,222,221,220,218,217,216,214,213,212,210,209,208,206,204,202,200,198,196,194,192},
+	{49,51,53,55,57,59,61,63,64,66,67,68,70,71,72,74,75,76,78,79,80,81,82,84,85,86,87,88,89,90,92,93,94,95,96,97,98,99,100,101,102,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,50,52,54,56,58,60,62,65,69,73,77,83,91,103,255,231,219,211,205,201,197,193,190,188,186,184,182,180,178,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,230,229,228,227,226,225,224,223,222,221,220,218,217,216,215,214,213,212,210,209,208,207,206,204,203,202,200,199,198,196,195,194,192,191,189,187,185,183,181,179,177},
+	{32,34,36,38,40,42,44,46,48,49,51,52,53,55,56,57,59,60,61,63,64,65,66,67,68,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,33,35,37,39,41,43,45,47,50,54,58,62,69,77,91,255,219,205,197,190,186,182,178,175,173,171,169,167,165,163,161,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,218,217,216,215,214,213,212,211,210,209,208,207,206,204,203,202,201,200,199,198,196,195,194,193,192,191,189,188,187,185,184,183,181,180,179,177,176,174,172,170,168,166,164,162,160},
+	{16,18,20,22,24,26,28,30,32,33,34,36,37,38,40,41,42,44,45,46,48,49,50,51,52,53,55,56,57,58,59,60,61,63,64,65,66,67,68,69,70,71,72,73,74,75,76,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,19,21,23,25,27,29,31,35,39,43,47,54,62,77,255,205,190,182,175,171,167,163,159,157,155,153,151,149,147,145,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,204,203,202,201,200,199,198,197,196,195,194,193,192,191,189,188,187,186,185,184,183,181,180,179,178,177,176,174,173,172,170,169,168,166,165,164,162,161,160,158,156,154,152,150,148,146,144},
+	{2,4,6,8,10,12,14,16,17,18,20,21,22,24,25,26,28,29,30,32,33,34,35,36,37,38,40,41,42,43,44,45,46,48,49,50,51,52,53,54,55,56,57,58,59,60,61,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,1,3,5,7,9,11,13,15,19,23,27,31,39,47,62,255,190,175,167,159,155,151,147,143,141,139,137,135,133,131,129,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,189,188,187,186,185,184,183,182,181,180,179,178,177,176,174,173,172,171,170,169,168,166,165,164,163,162,161,160,158,157,156,154,153,152,150,149,148,146,145,144,142,140,138,136,134,132,130,128},
+	{1,2,4,5,6,8,9,10,12,13,14,16,17,18,19,20,21,22,24,25,26,27,28,29,30,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,3,7,11,15,23,31,47,255,175,159,151,143,139,135,131,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,158,157,156,155,154,153,152,150,149,148,147,146,145,144,142,141,140,138,137,136,134,133,132,130,129,128},
+	{1,2,3,4,5,6,8,9,10,11,12,13,14,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,7,15,31,255,159,143,135,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,142,141,140,139,138,137,136,134,133,132,131,130,129,128},
+	{1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,15,255,143,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128},
+	{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,0,255,254,253,252,251,250,249,248,247,246,245,244,243,242,241,240,239,238,237,236,235,234,233,232,231,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,129,128}
+};
 
 constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
 {
@@ -399,6 +419,17 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	return static_cast<int16_t>((alaw & 0x80) ? i : -i);
 }
 
+/// Returns a generic error for an invalid Shorten file
+NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
+{
+	return [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+								   code:SFBAudioDecoderErrorCodeInvalidFormat
+		  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
+									url:url
+						  failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
+					 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+}
+
 } /* namespace */
 
 @interface SFBShortenDecoder ()
@@ -407,12 +438,12 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	VariableLengthInput _input;
 	int _version;
 	int32_t _lpcQuantOffset;
-	int _internalFileType;
+	int _fileType;
 	int _channelCount;
-	int _nmean;
+	int _mean;
 	int _blocksize;
-	int _maxnlpc;
-	int _nwrap;
+	int _maxLPC;
+	int _wrap;
 
 	uint32_t _sampleRate;
 	uint32_t _bitsPerSample;
@@ -502,8 +533,8 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		return NO;
 	}
 
-	if((_bitsPerSample == 8 && (_internalFileType != kFileTypeUInt8 && _internalFileType != kFileTypeSInt8 && _internalFileType != kFileTypeµLaw && _internalFileType != kFileTypeALaw)) || (_bitsPerSample == 16 && (_internalFileType != kFileTypeUInt16BE && _internalFileType != kFileTypeUInt16LE && _internalFileType != kFileTypeSInt16BE && _internalFileType != kFileTypeSInt16LE))) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _internalFileType);
+	if((_bitsPerSample == 8 && (_fileType != kFileTypeUInt8 && _fileType != kFileTypeSInt8 && _fileType != kFileTypeµLaw && _fileType != kFileTypeALaw)) || (_bitsPerSample == 16 && (_fileType != kFileTypeUInt16BE && _fileType != kFileTypeUInt16LE && _fileType != kFileTypeSInt16BE && _fileType != kFileTypeSInt16LE))) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _fileType);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -523,12 +554,12 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
 	// Apparently *16BE isn't true for 'AIFF'
-//	if(_internalFileType == kFileTypeUInt16BE || _internalFileType == kFileTypeSInt16BE)
+//	if(_fileType == kFileTypeUInt16BE || _fileType == kFileTypeSInt16BE)
 	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
-	if(_internalFileType == kFileTypeSInt8 || _internalFileType == kFileTypeSInt16BE || _internalFileType == kFileTypeSInt16LE)
+	if(_fileType == kFileTypeSInt8 || _fileType == kFileTypeSInt16BE || _fileType == kFileTypeSInt16LE)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
-	if(_internalFileType != kFileTypeµLaw || _internalFileType != kFileTypeALaw)
+	if(_fileType != kFileTypeµLaw || _fileType != kFileTypeALaw)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
 
 	processingStreamDescription.mSampleRate			= _sampleRate;
@@ -567,7 +598,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	// Populate codec properties
 	_properties = @{
 		SFBAudioDecodingPropertiesKeyShortenVersion: @(_version),
-		SFBAudioDecodingPropertiesKeyShortenInternalFileType: @(_internalFileType),
+		SFBAudioDecodingPropertiesKeyShortenFileType: @(_fileType),
 		SFBAudioDecodingPropertiesKeyShortenNumberChannels: @(_channelCount),
 		SFBAudioDecodingPropertiesKeyShortenBlockSize: @(_blocksize),
 		SFBAudioDecodingPropertiesKeyShortenSampleRate: @(_sampleRate),
@@ -578,14 +609,14 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
 	// Allocate decoding buffers
-	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(_blocksize + _nwrap));
+	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(_blocksize + _wrap));
 	if(!_buffer) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
 	}
 
-	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(std::max(1, _nmean)));
+	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(std::max(1, _mean)));
 	if(!_offset) {
 		std::free(_buffer);
 		if(error)
@@ -594,22 +625,25 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	}
 
 	for(auto i = 0; i < _channelCount; ++i) {
-		for(auto j = 0; j < _nwrap; ++j) {
+		for(auto j = 0; j < _wrap; ++j) {
 			_buffer[i][j] = 0;
 		}
-		_buffer[i] += _nwrap;
+		_buffer[i] += _wrap;
 	}
 
-	if(_maxnlpc > 0)
-		_qlpc = new int [static_cast<size_t>(_maxnlpc)];
+	if(_maxLPC > 0)
+		_qlpc = new int [static_cast<size_t>(_maxLPC)];
 
 	// Initialize offset
 	int32_t mean = 0;
-	switch(_internalFileType) {
+	switch(_fileType) {
+		case kFileTypeAU1:
 		case kFileTypeSInt8:
 		case kFileTypeSInt16BE:
 		case kFileTypeSInt16LE:
 		case kFileTypeµLaw:
+		case kFileTypeAU2:
+		case kFileTypeAU3:
 		case kFileTypeALaw:
 			mean = 0;
 			break;
@@ -621,12 +655,12 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 			mean = 0x8000;
 			break;
 		default:
-			os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", _internalFileType);
+			os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", _fileType);
 			return NO;
 	}
 
 	for(auto chan = 0; chan < _channelCount; ++chan) {
-		for(auto i = 0; i < std::max(1, _nmean); ++i) {
+		for(auto i = 0; i < std::max(1, _mean); ++i) {
 			_offset[chan][i] = mean;
 		}
 	}
@@ -744,7 +778,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		_buffer[1][-3] = entry->mCBuf1[2];
 	}
 
-	for(auto i = 0; i < std::max(1, _nmean); ++i) {
+	for(auto i = 0; i < std::max(1, _mean); ++i) {
 		_offset[0][i] = entry->mOffset0[i];
 		if(_channelCount == 2)
 			_offset[1][i] = entry->mOffset1[i];
@@ -808,8 +842,8 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	}
 	_version = version;
 
-	// Default nmean
-	_nmean = _version < 2 ? kDefaultV0NMean : kDefaultV2NMean;
+	// Default mean
+	_mean = _version < 2 ? kV0DefaultMean : kV2DefaultMean;
 
 	// Set up variable length input
 	if(!_input.Allocate()) {
@@ -828,20 +862,15 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		return true;
 	});
 
-	// Read internal file type
-	uint32_t internalFileType;
-	if(!_input.GetUInt32(internalFileType, _version, kFileTypeCodeSize)) {
+	// Read file type
+	uint32_t fileType;
+	if(!_input.GetUInt32(fileType, _version, kFileTypeCodeSize)) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
-	if(internalFileType != kFileTypeUInt8 && internalFileType != kFileTypeSInt8 && internalFileType != kFileTypeUInt16BE && internalFileType != kFileTypeUInt16LE && internalFileType != kFileTypeSInt16BE && internalFileType != kFileTypeSInt16LE) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", internalFileType);
+	if(fileType != kFileTypeUInt8 && fileType != kFileTypeSInt8 && fileType != kFileTypeUInt16BE && fileType != kFileTypeUInt16LE && fileType != kFileTypeSInt16BE && fileType != kFileTypeSInt16LE) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", fileType);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -851,7 +880,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported audio type.", @"")];
 		return NO;
 	}
-	_internalFileType = static_cast<int>(internalFileType);
+	_fileType = static_cast<int>(fileType);
 
 	// Read number of channels
 	uint32_t channelCount = 0;
@@ -884,43 +913,28 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		}
 		_blocksize = static_cast<int>(blocksize);
 
-		uint32_t maxnlpc = 0;
-		if(!_input.GetUInt32(maxnlpc, _version, kLPCQuantCodeSize) || maxnlpc > 1024) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid maxnlpc: %u", maxnlpc);
+		uint32_t maxLPC = 0;
+		if(!_input.GetUInt32(maxLPC, _version, kLPCQuantCodeSize) || maxLPC > 1024) {
+			os_log_error(gSFBAudioDecoderLog, "Invalid max lpc: %u", maxLPC);
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
-		_maxnlpc = static_cast<int>(maxnlpc);
+		_maxLPC = static_cast<int>(maxLPC);
 
-		uint32_t nmean = 0;
-		if(!_input.GetUInt32(nmean, _version, 0) || nmean > 32768) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid nmean: %u", nmean);
+		uint32_t mean = 0;
+		if(!_input.GetUInt32(mean, _version, 0) || mean > 32768) {
+			os_log_error(gSFBAudioDecoderLog, "Invalid mean: %u", mean);
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
-		_nmean = static_cast<int>(nmean);
+		_mean = static_cast<int>(mean);
 
 		uint32_t skipCount;
 		if(!_input.GetUInt32(skipCount, _version, kSkipBytesCodeSize) /* || nskip > bits_remaining_in_input */) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
 
@@ -928,22 +942,17 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 			uint32_t dummy;
 			if(!_input.GetUInt32(dummy, _version, kExtraByteCodeSize)) {
 				if(error)
-					*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-													 code:SFBAudioDecoderErrorCodeInvalidFormat
-							descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-													  url:_inputSource.url
-											failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-									   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 				return NO;
 			}
 		}
 	}
 	else {
 		_blocksize = kDefaultBlockSize;
-		_maxnlpc = kDefaultMaxNLPC;
+		_maxLPC = kDefaultMaxLPC;
 	}
 
-	_nwrap = std::max(kNWrap, static_cast<int>(_maxnlpc));
+	_wrap = std::max(kWrap, static_cast<int>(_maxLPC));
 
 	if(_version > 1)
 		_lpcQuantOffset = kV2LPCQuantOffset;
@@ -967,12 +976,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	if(!_input.GetRiceGolombCode(headerSize, kVerbatimChunkSizeCodeSize) || headerSize < kCanonicalHeaderSizeBytes || headerSize > kVerbatimChunkMaxSizeBytes) {
 		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", headerSize);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -981,12 +985,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		int32_t byte;
 		if(!_input.GetRiceGolombCode(byte, kVerbatimByteCodeSize)) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
 
@@ -1035,12 +1034,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	if(chunkID != 'WAVE') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'WAVE' in 'RIFF' chunk");
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1061,12 +1055,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 				if(chunkSize < 16) {
 					os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", chunkSize);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+						*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 					return NO;
 				}
 
@@ -1118,12 +1107,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	if(!sawFormatChunk) {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'fmt ' chunk");
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1145,12 +1129,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	if(chunkID != 'AIFF' && chunkID != 'AIFC') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'AIFF' or 'AIFC' in 'FORM' chunk");
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1174,12 +1153,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 				if(chunkSize < 18) {
 					os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", chunkSize);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+						*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 					return NO;
 				}
 
@@ -1200,12 +1174,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 				if(exp < -63 || exp > 63) {
 					os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+						*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 					return NO;
 				}
 
@@ -1234,12 +1203,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	if(!sawCommonChunk) {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1253,12 +1217,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		int32_t cmd;
 		if(!_input.GetRiceGolombCode(cmd, kFunctionCodeSize)) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
 
@@ -1275,18 +1234,13 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 			case kFunctionDiff3:
 			case kFunctionQLPC:
 			{
-				int32_t coffset, *cbuffer = _buffer[chan];
-				int resn = 0, nlpc;
+				int32_t chanOffset, *chanBuffer = _buffer[chan];
+				int resn = 0, lpc;
 
 				if(cmd != kFunctionZero) {
 					if(!_input.GetRiceGolombCode(resn, kEnergyCodeSize)) {
 						if(error)
-							*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-															 code:SFBAudioDecoderErrorCodeInvalidFormat
-									descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-															  url:_inputSource.url
-													failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-											   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 						return NO;
 					}
 					// Versions > 0 changed the behavior
@@ -1294,23 +1248,23 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 						resn--;
 				}
 
-				if(_nmean == 0)
-					coffset = _offset[chan][0];
+				if(_mean == 0)
+					chanOffset = _offset[chan][0];
 				else {
-					int32_t sum = (_version < 2) ? 0 : _nmean / 2;
-					for(auto i = 0; i < _nmean; i++) {
+					int32_t sum = (_version < 2) ? 0 : _mean / 2;
+					for(auto i = 0; i < _mean; i++) {
 						sum += _offset[chan][i];
 					}
 					if(_version < 2)
-						coffset = sum / _nmean;
+						chanOffset = sum / _mean;
 					else
-						coffset = RoundedShiftDown(sum / _nmean, _bitshift);
+						chanOffset = RoundedShiftDown(sum / _mean, _bitshift);
 				}
 
 				switch(cmd) {
 					case kFunctionZero:
 						for(auto i = 0; i < _blocksize; ++i) {
-							cbuffer[i] = 0;
+							chanBuffer[i] = 0;
 						}
 						break;
 					case kFunctionDiff0:
@@ -1318,15 +1272,10 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInvalidFormat
-											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																	  url:_inputSource.url
-															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
-							cbuffer[i] = var + coffset;
+							chanBuffer[i] = var + chanOffset;
 						}
 						break;
 					case kFunctionDiff1:
@@ -1334,15 +1283,10 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInvalidFormat
-											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																	  url:_inputSource.url
-															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
-							cbuffer[i] = var + cbuffer[i - 1];
+							chanBuffer[i] = var + chanBuffer[i - 1];
 						}
 						break;
 					case kFunctionDiff2:
@@ -1350,15 +1294,10 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInvalidFormat
-											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																	  url:_inputSource.url
-															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
-							cbuffer[i] = var + (2 * cbuffer[i - 1] - cbuffer[i - 2]);
+							chanBuffer[i] = var + (2 * chanBuffer[i - 1] - chanBuffer[i - 2]);
 						}
 						break;
 					case kFunctionDiff3:
@@ -1366,121 +1305,134 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInvalidFormat
-											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																	  url:_inputSource.url
-															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
-							cbuffer[i] = var + 3 * (cbuffer[i - 1] -  cbuffer[i - 2]) + cbuffer[i - 3];
+							chanBuffer[i] = var + 3 * (chanBuffer[i - 1] -  chanBuffer[i - 2]) + chanBuffer[i - 3];
 						}
 						break;
 					case kFunctionQLPC:
-						if(!_input.GetRiceGolombCode(nlpc, kLPCQuantCodeSize)) {
+						if(!_input.GetRiceGolombCode(lpc, kLPCQuantCodeSize)) {
 							if(error)
-								*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																 code:SFBAudioDecoderErrorCodeInvalidFormat
-										descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																  url:_inputSource.url
-														failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-												   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+								*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 							return NO;
 						}
 
-						for(auto i = 0; i < nlpc; ++i) {
+						for(auto i = 0; i < lpc; ++i) {
 							if(!_input.GetInt32(_qlpc[i], kLPCQuantCodeSize)) {
 								if(error)
-									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInvalidFormat
-											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																	  url:_inputSource.url
-															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
 						}
-						for(auto i = 0; i < nlpc; ++i) {
-							cbuffer[i - nlpc] -= coffset;
+						for(auto i = 0; i < lpc; ++i) {
+							chanBuffer[i - lpc] -= chanOffset;
 						}
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t sum = _lpcQuantOffset;
 
-							for(auto j = 0; j < nlpc; ++j) {
-								sum += _qlpc[j] * cbuffer[i - j - 1];
+							for(auto j = 0; j < lpc; ++j) {
+								sum += _qlpc[j] * chanBuffer[i - j - 1];
 							}
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInvalidFormat
-											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																	  url:_inputSource.url
-															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-													   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
-							cbuffer[i] = var + (sum >> kLPCQuantCodeSize);
+							chanBuffer[i] = var + (sum >> kLPCQuantCodeSize);
 						}
-						if(coffset != 0) {
+						if(chanOffset != 0) {
 							for(auto i = 0; i < _blocksize; ++i) {
-								cbuffer[i] += coffset;
+								chanBuffer[i] += chanOffset;
 							}
 						}
 						break;
 				}
 
-				if(_nmean > 0) {
+				if(_mean > 0) {
 					int32_t sum = (_version < 2) ? 0 : _blocksize / 2;
 
 					for(auto i = 0; i < _blocksize; ++i) {
-						sum += cbuffer[i];
+						sum += chanBuffer[i];
 					}
 
-					for(auto i = 1; i < _nmean; ++i) {
+					for(auto i = 1; i < _mean; ++i) {
 						_offset[chan][i - 1] = _offset[chan][i];
 					}
 					if(_version < 2)
-						_offset[chan][_nmean - 1] = sum / _blocksize;
+						_offset[chan][_mean - 1] = sum / _blocksize;
 					else
-						_offset[chan][_nmean - 1] = (sum / _blocksize) << _bitshift;
+						_offset[chan][_mean - 1] = (sum / _blocksize) << _bitshift;
 				}
 
-				for(auto i = -_nwrap; i < 0; i++) {
-					cbuffer[i] = cbuffer[i + _blocksize];
-				}
-
-				if(_bitshift != 0) {
-					for(auto i = 0; i < _blocksize; ++i) {
-						cbuffer[i] <<= _bitshift;
-					}
+				for(auto i = -_wrap; i < 0; i++) {
+					chanBuffer[i] = chanBuffer[i + _blocksize];
 				}
 
 				if(chan == _channelCount - 1) {
 					auto abl = _frameBuffer.audioBufferList;
 
-					switch(_internalFileType) {
+					switch(_fileType) {
+						case kFileTypeAU1:
+							for(auto channel = 0; channel < _channelCount; ++channel) {
+								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									const auto value = _buffer[channel][sample];
+									channel_buf[sample] = static_cast<int8_t>(µLawTable[_bitshift][value + 128]);
+								}
+							}
+							break;
 						case kFileTypeUInt8:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
-								for(auto sample = 0; sample < _blocksize; ++sample)
-									channel_buf[sample] = static_cast<uint8_t>(std::clamp(_buffer[channel][sample], 0, UINT8_MAX));
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									const auto value = _buffer[channel][sample] << _bitshift;
+									channel_buf[sample] = static_cast<uint8_t>(std::clamp(value, 0, UINT8_MAX));
+								}
 							}
 							break;
 						case kFileTypeSInt8:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
-								for(auto sample = 0; sample < _blocksize; ++sample)
-									channel_buf[sample] = static_cast<int8_t>(std::clamp(_buffer[channel][sample], INT8_MIN, INT8_MAX));
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									const auto value = _buffer[channel][sample] << _bitshift;
+									channel_buf[sample] = static_cast<int8_t>(std::clamp(value, INT8_MIN, INT8_MAX));
+								}
 							}
 							break;
 						case kFileTypeµLaw:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									auto value = µLawToLinear(static_cast<uint8_t>(_buffer[channel][sample]));
+									const auto value = µLawToLinear(_buffer[channel][sample] << _bitshift);
 									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+								}
+							}
+							break;
+						case kFileTypeAU2:
+							for(auto channel = 0; channel < _channelCount; ++channel) {
+								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									const auto value = _buffer[channel][sample];
+									if(value >= 0)
+										channel_buf[sample] = static_cast<int8_t>(µLawTable[_bitshift][value + 128]);
+									else if(value == -1)
+										channel_buf[sample] = 0x7f;
+									else
+										channel_buf[sample] = static_cast<int8_t>(µLawTable[_bitshift][value + 129]);
+								}
+							}
+							break;
+						case kFileTypeAU3:
+							for(auto channel = 0; channel < _channelCount; ++channel) {
+								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									const auto value = _buffer[channel][sample] << _bitshift;
+									if(value < 0)
+										channel_buf[sample] = static_cast<int8_t>((127 - value) ^ 0xd5);
+									else
+										channel_buf[sample] = static_cast<int8_t>((value + 128) ^ 0x55);
 								}
 							}
 							break;
@@ -1488,7 +1440,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									auto value = ALawToLinear(static_cast<uint8_t>(_buffer[channel][sample]));
+									const auto value = ALawToLinear(_buffer[channel][sample] << _bitshift);
 									channel_buf[sample] = static_cast<int8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
 								}
 							}
@@ -1497,8 +1449,10 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 						case kFileTypeUInt16LE:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
-								for(auto sample = 0; sample < _blocksize; ++sample)
-									channel_buf[sample] = static_cast<uint16_t>(std::clamp(_buffer[channel][sample], 0, UINT16_MAX));
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									const auto value = _buffer[channel][sample] << _bitshift;
+									channel_buf[sample] = static_cast<uint16_t>(std::clamp(value, 0, UINT16_MAX));
+								}
 							}
 							break;
 						case kFileTypeSInt16BE:
@@ -1506,7 +1460,8 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = static_cast<int16_t>(std::clamp(_buffer[channel][sample], INT16_MIN, INT16_MAX));
+									const auto value = _buffer[channel][sample] << _bitshift;
+									channel_buf[sample] = static_cast<int16_t>(std::clamp(value, INT16_MIN, INT16_MAX));
 								}
 							}
 							break;
@@ -1540,14 +1495,14 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 			}
 			case kFunctionBitshfit:
 				if(!_input.GetRiceGolombCode(_bitshift, kBitshiftCodeSize) || _bitshift > 32) {
-					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bitshift: %u", _bitshift);
+					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bit shift: %u", _bitshift);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 														 code:SFBAudioDecoderErrorCodeInvalidFormat
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Invalid or unsupported bitshift", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported bitshift.", @"")];
+												failureReason:NSLocalizedString(@"Invalid or unsupported bit shift", @"")
+										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported bit shift.", @"")];
 					return NO;
 				}
 				break;
@@ -1562,19 +1517,14 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 														  url:_inputSource.url
 												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid verbatim chunk length.", @"")];
 					return NO;
 				}
 				while(chunk_len--) {
 					int32_t dummy;
 					if(!_input.GetRiceGolombCode(dummy, kVerbatimByteCodeSize)) {
 						if(error)
-							*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-															 code:SFBAudioDecoderErrorCodeInvalidFormat
-									descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-															  url:_inputSource.url
-													failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-											   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 						return NO;
 					}
 				}
@@ -1584,12 +1534,7 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 			default:
 				os_log_error(gSFBAudioDecoderLog, "sanity check failed for function: %d", cmd);
 				if(error)
-					*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-													 code:SFBAudioDecoderErrorCodeInvalidFormat
-							descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-													  url:_inputSource.url
-											failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-									   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 				return NO;
 		}
 	}
@@ -1650,6 +1595,14 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 	// A corrupt seek table is an error, however YES is returned to try and permit decoding to continue
 	if(memcmp("SEEK", header.mSignature, 4)) {
 		os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.mSignature);
+		if(![_inputSource seekToOffset:startOffset error:error])
+			return NO;
+		return YES;
+	}
+
+	// Validate seek table version
+	if(header.mVersion != kSeekTableRevision) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %d", header.mVersion);
 		if(![_inputSource seekToOffset:startOffset error:error])
 			return NO;
 		return YES;
@@ -1740,12 +1693,12 @@ constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
 		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _channelCount);
 		return NO;
 	}
-	else if(_maxnlpc > 3) {
-		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxnlpc);
+	else if(_maxLPC > 3) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxLPC);
 		return NO;
 	}
-	else if(_nmean > 4) {
-		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid nmean (%d); [0, 4] required", _nmean);
+	else if(_mean > 4) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid mean (%d); [0, 4] required", _mean);
 		return NO;
 	}
 
