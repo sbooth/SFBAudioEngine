@@ -802,15 +802,13 @@ public:
 		if(reset) {
 			// Mute until the decoder becomes active to prevent spurious events
 			mFlags.fetch_or(eFlagMuteRequested);
-			CancelCurrentDecoder();
+			Reset();
 		}
 
 		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
 
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-			if(reset)
-				mQueuedDecoders.resize(0);
 			mQueuedDecoders.push_back(decoder);
 		}
 
