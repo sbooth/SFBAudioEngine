@@ -395,28 +395,49 @@ std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekT
 	return it == begin ? end : --it;
 }
 
-/// Decodes a µ-law sample to a linear value.
-constexpr int16_t µLawToLinear(uint8_t µLaw) noexcept
+/// Encodes a linear sample to µ-law.
+constexpr uint8_t linearToµlaw(int16_t linear)
 {
-	const auto bias = 0x84;
+	constexpr int16_t bias = 0x84;
 
-	µLaw = ~µLaw;
-	int t = (((µLaw & 0x0F) << 3) + bias) << (static_cast<int>(µLaw & 0x70) >> 4);
-	return static_cast<int16_t>((µLaw & 0x80) ? (bias - t) : (t - bias));
+	int16_t mask;
+	if(linear < 0) {
+		linear = bias - linear;
+		mask = 0x7F;
+	}
+	else {
+		linear = bias + linear;
+		mask = 0xFF;
+	}
+
+	static_assert(sizeof(unsigned int) == 4, "32-bit unsigned int required");
+	const int16_t seg = 31 - __builtin_clz(linear | 0xFF) - 7;
+	if(seg >= 8)
+		return static_cast<uint8_t>(0x7F ^ mask);
+	return static_cast<uint8_t>(((seg << 4) | ((linear >> (seg + 3)) & 0xF)) ^ mask);
 }
 
-/// Decodes a A-law sample to a linear value.
-constexpr int16_t ALawToLinear(uint8_t alaw) noexcept
+/// Encodes a linear sample to A-law.
+constexpr uint8_t linearToALaw(int16_t linear)
 {
-	const auto mask = 0x55;
+	constexpr int16_t amiMask = 0x55;
 
-	alaw ^= mask;
-	int i = (alaw & 0x0F) << 4;
-	if(auto seg = static_cast<int>(alaw & 0x70) >> 4; seg)
-		i = (i + 0x108) << (seg - 1);
-	else
-		i += 8;
-	return static_cast<int16_t>((alaw & 0x80) ? i : -i);
+	int16_t mask;
+	if(linear >= 0)
+		mask = amiMask | 0x80;
+	else {
+		mask = amiMask;
+		linear = -linear - 1;
+	}
+
+	static_assert(sizeof(unsigned int) == 4, "32-bit unsigned int required");
+	const int16_t seg = 31 - __builtin_clz(linear | 0xFF) - 7;
+	if(seg >= 8) {
+		if(linear >= 0)
+			return static_cast<uint8_t>(0x7F ^ mask);
+		return static_cast<uint8_t>(0x00 ^ mask);
+	}
+	return static_cast<uint8_t>(((seg << 4) | ((linear >> ((seg) ? (seg + 3) : 4)) & 0x0F)) ^ mask);
 }
 
 /// Returns a generic error for an invalid Shorten file
@@ -1404,8 +1425,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									const auto value = µLawToLinear(_buffer[channel][sample] << _bitshift);
-									channel_buf[sample] = static_cast<uint8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+									const auto value = std::clamp(_buffer[channel][sample] << (_bitshift + 3), INT16_MIN, INT16_MAX);
+									channel_buf[sample] = linearToµlaw(value);
 								}
 							}
 							break;
@@ -1439,8 +1460,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									const auto value = ALawToLinear(_buffer[channel][sample] << _bitshift);
-									channel_buf[sample] = static_cast<uint8_t>(std::clamp(value >> 3, INT8_MIN, INT8_MAX));
+									const auto value = std::clamp(_buffer[channel][sample] << (_bitshift + 3), INT16_MIN, INT16_MAX);
+									channel_buf[sample] = linearToALaw(value);
 								}
 							}
 							break;
