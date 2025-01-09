@@ -1248,8 +1248,8 @@ private:
 
 				// Submit the rendering started event
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-				const double temporalOffset = (frameOffset / mAudioRingBuffer.Format().mSampleRate) * timestamp.mRateScalar;
-				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(temporalOffset);
+				const double temporalOffset = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(temporalOffset * timestamp.mRateScalar);
 
 				const RenderingEventHeader header{RenderingEventCommand::eStarted};
 				if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, hostTime))
@@ -1266,8 +1266,8 @@ private:
 
 				// Submit the rendering complete event
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute - 1;
-				const double temporalOffset = (frameOffset / mAudioRingBuffer.Format().mSampleRate) * timestamp.mRateScalar;
-				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(temporalOffset);
+				const double temporalOffset = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(temporalOffset * timestamp.mRateScalar);
 
 				const RenderingEventHeader header{RenderingEventCommand::eComplete};
 				if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, hostTime))
@@ -1287,9 +1287,9 @@ private:
 
 		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		if(!decoderState) {
-			const uint32_t frameOffset = framesRead - 1;
-			const double temporalOffset = (frameOffset / mAudioRingBuffer.Format().mSampleRate) * timestamp.mRateScalar;
-			const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(temporalOffset);
+			const uint32_t frameOffset = framesRead;
+			const double temporalOffset = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+			const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(temporalOffset * timestamp.mRateScalar);
 
 			const RenderingEventHeader header{RenderingEventCommand::eEndOfAudio};
 			if(mRenderEventRingBuffer.WriteValues(header, hostTime))
