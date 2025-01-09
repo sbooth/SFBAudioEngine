@@ -542,8 +542,8 @@ public:
 
 	~AudioPlayerNode()
 	{
-		mFlags.fetch_and(~eFlagIsPlaying);
-		CancelCurrentDecoder();
+		// Cancel all actives and pending decoders.
+		Stop();
 
 		// Cancel any further event processing initiated by the render block
 		dispatch_source_cancel(mEventProcessingSource);
