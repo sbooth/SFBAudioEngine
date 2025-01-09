@@ -799,18 +799,15 @@ public:
 			return false;
 		}
 
-		if(reset) {
-			// Mute until the decoder becomes active to prevent spurious events
-			mFlags.fetch_or(eFlagMuteRequested);
-			CancelCurrentDecoder();
-		}
-
 		os_log_info(_audioPlayerNodeLog, "Enqueuing %{public}@", decoder);
-
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-			if(reset)
+			if(reset) {
+				// Mute until the decoder becomes active to prevent spurious events
+				mFlags.fetch_or(eFlagMuteRequested);
 				mQueuedDecoders.resize(0);
+				CancelCurrentDecoder();
+			}
 			mQueuedDecoders.push_back(decoder);
 		}
 
