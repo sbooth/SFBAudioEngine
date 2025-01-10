@@ -1050,7 +1050,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
 		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
 		if(delta > tolerance)
-			os_log_debug(_audioPlayerLog, "Rendering started notification for %{public}@ arrived %.2f msec %s", decoder, static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
+			os_log_debug(_audioPlayerLog, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
 		if(audioPlayerNode != self->_playerNode) {
@@ -1068,6 +1068,47 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
 		[_delegate audioPlayer:self renderingWillStart:decoder atHostTime:hostTime];
+}
+
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)completingDecoder willChangeToDecoder:(id<SFBPCMDecoding>)startingDecoder atHostTime:(uint64_t)hostTime
+{
+	if(audioPlayerNode != _playerNode) {
+		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:");
+		return;
+	}
+
+	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
+		if(NSNumber *isCanceled = objc_getAssociatedObject(completingDecoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", completingDecoder);
+			return;
+		}
+
+		if(NSNumber *isCanceled = objc_getAssociatedObject(startingDecoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", startingDecoder);
+			return;
+		}
+
+#if DEBUG
+		const auto now = SFB::GetCurrentHostTime();
+		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
+		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
+		if(delta > tolerance)
+			os_log_debug(_audioPlayerLog, "Rendering decoder changed notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
+#endif /* DEBUG */
+
+		if(audioPlayerNode != self->_playerNode) {
+			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:");
+			return;
+		}
+
+		self.nowPlaying = startingDecoder;
+
+		if([_delegate respondsToSelector:@selector(audioPlayer:renderingDecoder:changedToDecoder:)])
+			[_delegate audioPlayer:self renderingDecoder:completingDecoder changedToDecoder:startingDecoder];
+	});
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:renderingDecoder:willChangeToDecoder:atHostTime:)])
+		[_delegate audioPlayer:self renderingDecoder:completingDecoder willChangeToDecoder:startingDecoder atHostTime:hostTime];
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
@@ -1088,50 +1129,13 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
 		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
 		if(delta > tolerance)
-			os_log_debug(_audioPlayerLog, "Rendering complete notification for %{public}@ arrived %.2f msec %s", decoder, static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
+			os_log_debug(_audioPlayerLog, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
 		if(audioPlayerNode != self->_playerNode) {
 			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:renderingWillComplete:atHostTime:");
 			return;
 		}
-
-		if(const auto flags = self->_flags.load(); !(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder) && self.internalDecoderQueueIsEmpty) {
-			if(self.nowPlaying)
-				self.nowPlaying = nil;
-		}
-
-		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-			[self->_delegate audioPlayer:self renderingComplete:decoder];
-	});
-
-	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
-		[_delegate audioPlayer:self renderingWillComplete:decoder atHostTime:hostTime];
-}
-
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode audioWillEndAtHostTime:(uint64_t)hostTime
-{
-	if(audioPlayerNode != _playerNode) {
-		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:audioWillEndAtHostTime:");
-		return;
-	}
-
-	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
-#if DEBUG
-		const auto now = SFB::GetCurrentHostTime();
-		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
-		const auto tolerance = static_cast<uint64_t>(1e9 / audioPlayerNode.renderingFormat.sampleRate);
-		if(delta > tolerance)
-			os_log_debug(_audioPlayerLog, "End of audio notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif /* DEBUG */
-
-		if(audioPlayerNode != self->_playerNode) {
-			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:audioWillEndAtHostTime:");
-			return;
-		}
-
-		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagRenderingImminent) || (flags & eAudioPlayerFlagHavePendingDecoder))
-			return;
 
 		// Dequeue the next decoder
 		if(id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue]; decoder) {
@@ -1141,14 +1145,20 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 					[self->_delegate audioPlayer:self encounteredError:error];
 			}
 		}
-		else if([self->_delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
-			[self->_delegate audioPlayerEndOfAudio:self];
-		else
-			[self stop];
+		else {
+			// Would it be better to set nowPlaying to nil after stopping?
+			if(self.nowPlaying)
+				self.nowPlaying = nil;
+
+			if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+				[self->_delegate audioPlayer:self renderingComplete:decoder];
+			else
+				[self stop];
+		}
 	});
 
-	if([_delegate respondsToSelector:@selector(audioPlayer:audioWillEndAtHostTime:)])
-		[_delegate audioPlayer:self audioWillEndAtHostTime:hostTime];
+	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
+		[_delegate audioPlayer:self renderingWillComplete:decoder atHostTime:hostTime];
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode encounteredError:(NSError *)error
