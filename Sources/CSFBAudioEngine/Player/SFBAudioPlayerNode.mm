@@ -937,7 +937,6 @@ private:
 					// When the decoder's processing format and rendering format don't match
 					// conversion will be performed in DecoderState::DecodeAudio()
 					decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
-					sleep(1);
 				}
 
 				catch(const std::exception& e) {
