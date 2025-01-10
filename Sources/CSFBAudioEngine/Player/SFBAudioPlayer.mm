@@ -31,9 +31,8 @@ using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
 enum AudioPlayerFlags : unsigned int {
-	eAudioPlayerFlagRenderingImminent				= 1u << 0,
-	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
-	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
+	eAudioPlayerFlagHavePendingDecoder				= 1u << 0,
+	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 1,
 };
 
 #if !TARGET_OS_IPHONE
@@ -1022,7 +1021,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		[_delegate audioPlayer:self decodingCanceled:decoder framesRendered:framesRendered];
 
 	if(audioPlayerNode == _playerNode) {
-		_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
+		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
 		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped) {
 			if(self.nowPlaying)
 				self.nowPlaying = nil;
@@ -1036,8 +1035,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingWillStart:atHostTime:");
 		return;
 	}
-
-	_flags.fetch_or(eAudioPlayerFlagRenderingImminent);
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
@@ -1060,7 +1057,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 		if(!(self->_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive))
 			self.nowPlaying = decoder;
-		self->_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
+		self->_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
 
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 			[self->_delegate audioPlayer:self renderingStarted:decoder];
