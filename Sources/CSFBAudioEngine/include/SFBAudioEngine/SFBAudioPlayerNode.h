@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -59,8 +59,8 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 ///  2. Decoding complete
 ///  3. Decoding canceled
 ///  4. Rendering will start
-///  5. Rendering will complete
-///  6. Audio will end
+///  5. Rendering decoder will change
+///  6. Rendering will complete
 ///  7. Asynchronous error encountered
 ///
 /// All callbacks are performed on a dedicated notification queue.
@@ -213,38 +213,40 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// Delegate methods supported by `SFBAudioPlayerNode`
 NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NSObject>
 @optional
-/// Called to notify the delegate before decoding the first frame of audio
+/// Called to notify the delegate before decoding the first frame of audio from a decoder
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding started
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate after decoding the final frame of audio
+/// Called to notify the delegate after decoding the final frame of audio from a decoder
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is complete
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate that decoding has been canceled
+/// Called to notify the delegate that the decoding process for a decoder has been canceled
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is canceled
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
-/// Called to notify the delegate that the first audio frame from `decoder` will render at `hostTime`
+/// Called to notify the delegate that the first audio frame from the first available decoder will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which rendering will start
 /// - parameter hostTime: The host time at which the first audio frame from `decoder` will reach the device
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillStart:at:));
-/// Called to notify the delegate that the final audio frame from `decoder` will render at `hostTime`
+/// Called to notify the delegate that a transition between rendering decoders will occur
+/// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `completingDecoder` and `startingDecoder`
+/// - parameter completingDecoder: The decoder for which rendering will complete
+/// - parameter startingDecoder: The decoder for which rendering will start
+/// - parameter hostTime: The host time at which the first audio frame from `startingDecoder` will reach the device
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)completingDecoder willChangeToDecoder:(id<SFBPCMDecoding>)startingDecoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingDecoder:willChangeTo:at:));
+/// Called to notify the delegate that the final audio frame from the last available decoder will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which rendering will complete
 /// - parameter hostTime: The host time at which the final audio frame from `decoder` will reach the device
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillComplete:at:));
-/// Called to notify the delegate that rendering will complete for all available decoders at `hostTime`
-/// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object
-/// - parameter hostTime: The host time at which the final audio frame will reach the device
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode audioWillEndAtHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:audioWillEndAt:));
 /// Called to notify the delegate when an asynchronous error occurs
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object
 /// - parameter error: The error
