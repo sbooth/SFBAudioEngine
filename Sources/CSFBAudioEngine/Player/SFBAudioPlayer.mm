@@ -189,23 +189,30 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
 	NSParameterAssert(decoder != nil);
 
+	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
+
 	// Open the decoder if necessary
-	if(!decoder.isOpen && ![decoder openReturningError:error])
+	if(!decoder.isOpen && ![decoder openReturningError:error]) {
+		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 		return NO;
+	}
 
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
-	if(forImmediatePlayback)
-		return [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
+	if(forImmediatePlayback) {
+		const auto result = [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
+		if(!result)
+			_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
+		return result;
+	}
 	// To preserve the order of enqueued decoders, when the internal queue is not empty
 	// enqueue all decoders there regardless of format compability with _playerNode
 	// This prevents incorrect playback order arising from the scenario where
 	// decoders A and AA have formats supported by _playerNode and decoder B does not;
 	// bypassing the internal queue for supported formats when enqueueing A, B, AA
 	// would result in playback order A, AA, B
-	else if(self.internalDecoderQueueIsEmpty && [_playerNode supportsFormat:decoder.processingFormat]) {
+	else if(self.internalDecoderQueueIsEmpty && [_playerNode supportsFormat:decoder.processingFormat])
 		// Enqueuing is expected to succeed since the formats are compatible
 		return [_playerNode enqueueDecoder:decoder error:error];
-	}
 	// If the internal queue is not empty or _playerNode doesn't support
 	// the decoder's processing format add the decoder to our internal queue
 	else {
@@ -768,8 +775,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
 	NSParameterAssert(decoder != nil);
 
-	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
-
 	// Attempt to preserve the playback state
 	const bool engineWasRunning = _engineIsRunning;
 	const BOOL playerNodeWasPlaying = _playerNode.isPlaying;
@@ -786,7 +791,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(!success) {
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
-		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 		if(self.nowPlaying)
 			self.nowPlaying = nil;
 		return NO;
@@ -801,7 +805,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(!success) {
-		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 		if(self.nowPlaying)
 			self.nowPlaying = nil;
 		return NO;
@@ -1134,7 +1137,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
-		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder))
+		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder) == eAudioPlayerFlagHavePendingDecoder)
 			return;
 
 		// Dequeue the next decoder
