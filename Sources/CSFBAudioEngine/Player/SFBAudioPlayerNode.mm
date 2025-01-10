@@ -1278,7 +1278,7 @@ private:
 			const auto decoderFramesRemaining = decoderState->FramesAvailableToRender();
 			const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
-			// Rendering is starting for `decoderState`
+			// Rendering is starting
 			if(!decoderState->RenderingHasStarted()) {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
 
@@ -1297,13 +1297,12 @@ private:
 			decoderState->AddFramesRendered(framesFromThisDecoder);
 			framesRemainingToDistribute -= framesFromThisDecoder;
 
-			// Rendering is complete for `decoderState`
+			// Rendering is complete
 			if(decoderState->DecodingIsComplete() && decoderState->AllAvailableFramesRendered()) {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
 
 				// Check for a decoder transition
-				const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
-				if(nextDecoderState) {
+				if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
 					const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
 					const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
 
@@ -1329,7 +1328,7 @@ private:
 
 					decoderState = nextDecoderState;
 				}
-				// There is no next decoder, so rendering is truly complete
+				// There is no next decoder so rendering is truly complete
 				else {
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute - 1;
 					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
