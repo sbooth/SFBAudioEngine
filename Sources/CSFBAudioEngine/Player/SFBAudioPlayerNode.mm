@@ -1328,7 +1328,6 @@ private:
 
 					decoderState = nextDecoderState;
 				}
-				// There is no next decoder so rendering is truly complete
 				else {
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute - 1;
 					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
