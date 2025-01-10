@@ -1055,7 +1055,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
-		if(!(self->_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive))
+		if(const auto flags = self->_flags.load(); !(flags & eAudioPlayerFlagPendingDecoderBecameActive))
 			self.nowPlaying = decoder;
 		self->_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
 
@@ -1133,6 +1133,9 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance following -audioPlayerNode:renderingWillComplete:atHostTime:");
 			return;
 		}
+
+		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder))
+			return;
 
 		// Dequeue the next decoder
 		if(id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue]; decoder) {
