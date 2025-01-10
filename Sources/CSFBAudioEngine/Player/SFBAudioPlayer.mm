@@ -1024,10 +1024,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	if(audioPlayerNode == _playerNode) {
 		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
-		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped) {
-			if(self.nowPlaying)
-				self.nowPlaying = nil;
-		}
+		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
+			self.nowPlaying = nil;
 	}
 }
 
@@ -1136,7 +1134,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
-		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder) == eAudioPlayerFlagHavePendingDecoder)
+		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder))
 			return;
 
 		// Dequeue the next decoder
@@ -1149,8 +1147,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		}
 		else {
 			// Would it be better to set nowPlaying to nil after stopping?
-			if(self.nowPlaying)
-				self.nowPlaying = nil;
+			self.nowPlaying = nil;
 
 			if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 				[self->_delegate audioPlayer:self renderingComplete:decoder];
