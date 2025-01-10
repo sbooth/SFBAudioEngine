@@ -53,14 +53,14 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  3. Decoding canceled
 ///  4. Rendering will start
 ///  5. Rendering started
-///  6. Rendering will complete
-///  7. Rendering complete
-///  8. Now playing changed
-///  9. Playback state changed
-///  10. Processing graph format change with custom nodes present
-///  11. `AVAudioEngineConfigurationChange` notification received
-///  12. Audio will end
-///  13. End of audio
+///  6. Rendering decoder will change
+///  7. Rendering decoder changed
+///  8. Rendering will complete
+///  9. Rendering complete
+///  10. Now playing changed
+///  11. Playback state changed
+///  12. Processing graph format change with custom nodes present
+///  13. `AVAudioEngineConfigurationChange` notification received
 ///  14. Asynchronous error encountered
 ///
 /// The dispatch queue on which callbacks are performed is not specified.
