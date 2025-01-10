@@ -1512,13 +1512,13 @@ private:
 				if(uint64_t completingDecoderSequenceNumber, startingDecoderSequenceNumber, hostTime; mRenderEventRingBuffer.ReadValues(completingDecoderSequenceNumber, startingDecoderSequenceNumber, hostTime)) {
 					const auto completingDecoderState = GetDecoderStateWithSequenceNumber(completingDecoderSequenceNumber);
 					if(!completingDecoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering complete event", completingDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering changed event", completingDecoderSequenceNumber);
 						break;
 					}
 
 					const auto startingDecoderState = GetDecoderStateWithSequenceNumber(startingDecoderSequenceNumber);
 					if(!startingDecoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering complete event", startingDecoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering changed event", startingDecoderSequenceNumber);
 						break;
 					}
 
