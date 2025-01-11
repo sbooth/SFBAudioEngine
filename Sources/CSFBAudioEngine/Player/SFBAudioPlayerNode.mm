@@ -874,7 +874,7 @@ public:
 	void CancelCurrentDecoder() noexcept
 	{
 		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
-			if(decoderState->mFlags.load() & DecoderState::eFlagDecodingComplete) {
+			if(decoderState->DecodingIsComplete()) {
 #if DEBUG
 				os_log_debug(_audioPlayerNodeLog, "Canceling a decoder that has already completed decoding");
 #endif /* DEBUG */
