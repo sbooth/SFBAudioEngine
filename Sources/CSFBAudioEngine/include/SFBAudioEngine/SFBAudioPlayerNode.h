@@ -239,7 +239,7 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`
 /// - parameter decoder: The decoder for which rendering will complete
-/// - parameter hostTime: The host time at which the final audio frame from `decoder` will reach the device
+/// - parameter hostTime: The host time at which the final audio frame from `decoder` will finish playing on the device
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillComplete:at:));
 /// Called to notify the delegate when an asynchronous error occurs
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object

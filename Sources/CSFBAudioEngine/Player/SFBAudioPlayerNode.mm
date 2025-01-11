@@ -1355,7 +1355,7 @@ private:
 					decoderState = nextDecoderState;
 				}
 				else {
-					const uint32_t frameOffset = framesRead - framesRemainingToDistribute - 1;
+					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
 					const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
