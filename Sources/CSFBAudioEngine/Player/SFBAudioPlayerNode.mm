@@ -879,14 +879,14 @@ public:
 #if DEBUG
 				os_log_debug(_audioPlayerNodeLog, "Canceling %{public}@ that has already completed decoding", decoderState->mDecoder);
 #endif /* DEBUG */
-				// Submit the decoding canceled event
+				// Submit the decoder canceled event
 				const DecodingEventHeader header{DecodingEventCommand::eCanceled};
 				if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
 					dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 						ProcessPendingEvents();
 					});
 				else
-					os_log_fault(_audioPlayerNodeLog, "Error writing decoding canceled event");
+					os_log_fault(_audioPlayerNodeLog, "Error writing decoder canceled event");
 			}
 			else {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
@@ -1131,7 +1131,7 @@ private:
 								ProcessPendingEvents();
 							});
 						else
-							os_log_fault(_audioPlayerNodeLog, "Error writing decoding canceled event");
+							os_log_fault(_audioPlayerNodeLog, "Error writing decoder canceled event");
 
 						return;
 					}
@@ -1458,7 +1458,7 @@ private:
 				if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
 					if(!decoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for decoding canceled event", decoderSequenceNumber);
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for decoder canceled event", decoderSequenceNumber);
 						break;
 					}
 
@@ -1466,14 +1466,14 @@ private:
 					const auto framesRendered = decoderState->FramesRendered();
 					DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
 
-					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:framesRendered:)]) {
+					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)]) {
 						dispatch_async_and_wait(mNode.delegateQueue, ^{
-							[mNode.delegate audioPlayerNode:mNode decodingCanceled:decoder framesRendered:framesRendered];
+							[mNode.delegate audioPlayerNode:mNode decoderCanceled:decoder framesRendered:framesRendered];
 						});
 					}
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number for decoding canceled event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number for decoder canceled event");
 				break;
 
 			case DecodingEventCommand::eError:
