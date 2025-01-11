@@ -1155,6 +1155,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 					[self->_delegate audioPlayer:self encounteredError:error];
 			}
 		}
+		// End of audio
 		else {
 #if DEBUG
 			os_log_debug(_audioPlayerLog, "End of audio reached");
