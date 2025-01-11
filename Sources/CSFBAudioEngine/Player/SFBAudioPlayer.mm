@@ -1134,6 +1134,9 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
+		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+			[self->_delegate audioPlayer:self renderingComplete:decoder];
+
 		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder))
 			return;
 
@@ -1149,8 +1152,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			// Would it be better to set nowPlaying to nil after stopping?
 			self.nowPlaying = nil;
 
-			if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-				[self->_delegate audioPlayer:self renderingComplete:decoder];
+			if([self->_delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
+				[self->_delegate audioPlayerEndOfAudio:self];
 			else
 				[self stop];
 		}

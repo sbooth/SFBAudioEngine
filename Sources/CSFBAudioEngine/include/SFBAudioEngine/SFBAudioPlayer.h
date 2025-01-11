@@ -61,7 +61,8 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  11. Playback state changed
 ///  12. Processing graph format change with custom nodes present
 ///  13. `AVAudioEngineConfigurationChange` notification received
-///  14. Asynchronous error encountered
+///  14. End of audio
+///  15. Asynchronous error encountered
 ///
 /// The dispatch queue on which callbacks are performed is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
@@ -313,18 +314,18 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing decoder
 /// - parameter decoder: The decoder for which rendering started
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingStarted:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate that a transition between rendering decoders will occur
+/// Called to notify the delegate that a gapless transition between rendering decoders will occur
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `completingDecoder` and `startingDecoder`
 /// - parameter completingDecoder: The decoder for which rendering will complete
 /// - parameter startingDecoder: The decoder for which rendering will start
 /// - parameter hostTime: The host time at which the first audio frame from `startingDecoder` will reach the device
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingDecoder:(id<SFBPCMDecoding>)completingDecoder willChangeToDecoder:(id<SFBPCMDecoding>)startingDecoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingDecoder:willChangeTo:at:));
-/// Called to notify the delegate that a transition between rendering decoders occurred
+/// Called to notify the delegate that a gapless transition between rendering decoders occurred
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `completedDecoder` and `startingDecoder`
 /// - parameter completedDecoder: The decoder for which rendering is complete
 /// - parameter startingDecoder: The decoder for which rendering is starting
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingDecoder:(id<SFBPCMDecoding>)completedDecoder changedToDecoder:(id<SFBPCMDecoding>)startingDecoder NS_SWIFT_NAME(audioPlayer(_:renderingDecoder:changedTo:));
-/// Called to notify the delegate that the final audio frame from the last available decoder will render
+/// Called to notify the delegate that the final audio frame from the last available decoder for which a gapless transition is possible will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which rendering will complete
@@ -363,6 +364,9 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
+/// Called to notify the delegate when rendering is complete for all available decoders
+/// - parameter audioPlayer: The `SFBAudioPlayer` object
+- (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
 /// Called to notify the delegate when an asynchronous error occurs
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter error: The error
