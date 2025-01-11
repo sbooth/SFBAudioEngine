@@ -198,8 +198,46 @@ struct DecoderState {
 		return true;
 	}
 
+	/// Returns `true` if `eFlagDecodingComplete` is set
+	bool DecodingIsComplete() const noexcept
+	{
+		return (mFlags.load() & eFlagDecodingComplete) == eFlagDecodingComplete;
+	}
+
+	/// Returns `true` if `eFlagRenderingStarted` is set
+	bool RenderingHasStarted() const noexcept
+	{
+		return (mFlags.load() & eFlagRenderingStarted) == eFlagRenderingStarted;
+	}
+
+	/// Returns the number of frames available to render.
+	///
+	/// This is the difference between the number of frames converted and the number of frames rendered
+	AVAudioFrameCount FramesAvailableToRender() const noexcept
+	{
+		return mFramesConverted.load() - mFramesRendered.load();
+	}
+
+	/// Returns `true` if there are no frames available to render.
+	bool AllAvailableFramesRendered() const noexcept
+	{
+		return FramesAvailableToRender() == 0;
+	}
+
+	/// Returns the number of frames rendered.
+	AVAudioFramePosition FramesRendered() const noexcept
+	{
+		return mFramesRendered.load();
+	}
+
+	/// Adds `count` number of frames to the total count of frames rendered.
+	void AddFramesRendered(AVAudioFramePosition count) noexcept
+	{
+		mFramesRendered.fetch_add(count);
+	}
+
 	/// Returns `true` if there is a pending seek request
-	bool HasPendingSeek() const noexcept
+	bool SeekIsPending() const noexcept
 	{
 		return mFrameToSeek.load() != kInvalidFramePosition;
 	}
@@ -371,8 +409,8 @@ using DecodingEventHeader = EventHeader<DecodingEventCommand>;
 /// Render block events
 enum class RenderingEventCommand : uint32_t {
 	eStarted 		= 1,
-	eComplete 		= 2,
-	eEndOfAudio		= 3,
+	eDecoderChanged = 2,
+	eComplete 		= 3,
 };
 
 /// A rendering event command and identification number
@@ -833,12 +871,13 @@ public:
 		return decoderState ? decoderState->mDecoder : nil;
 	}
 
-	void CancelCurrentDecoder() noexcept
+	void CancelActiveDecoders() noexcept
 	{
-		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
-			if(decoderState->mFlags.load() & DecoderState::eFlagDecodingComplete) {
+		auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
+			// If the decoder has already finished decoding, perform the cancelation manually
+			if(decoderState->DecodingIsComplete()) {
 #if DEBUG
-				os_log_debug(_audioPlayerNodeLog, "Canceling a decoder that has already completed decoding");
+				os_log_debug(_audioPlayerNodeLog, "Canceling %{public}@ that has already completed decoding", decoderState->mDecoder);
 #endif /* DEBUG */
 				// Submit the decoding canceled event
 				const DecodingEventHeader header{DecodingEventCommand::eCanceled};
@@ -852,6 +891,16 @@ public:
 			else {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
 				mDecodingSemaphore.Signal();
+			}
+		};
+
+		// Cancel all active decoders in sequence
+		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
+			cancelDecoder(decoderState);
+			decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
+			while(decoderState) {
+				cancelDecoder(decoderState);
+				decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
 			}
 		}
 	}
@@ -871,7 +920,7 @@ public:
 	void Reset() noexcept
 	{
 		ClearQueue();
-		CancelCurrentDecoder();
+		CancelActiveDecoders();
 	}
 
 private:
@@ -1031,7 +1080,7 @@ private:
 				// Process the decoder until canceled or complete
 				for(;;) {
 					// If a seek is pending request a ring buffer reset
-					if(decoderState->HasPendingSeek())
+					if(decoderState->SeekIsPending())
 						mFlags.fetch_or(eFlagRingBufferNeedsReset);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
@@ -1060,7 +1109,7 @@ private:
 						}
 
 						// Perform seek if one is pending
-						if(decoderState->HasPendingSeek())
+						if(decoderState->SeekIsPending())
 							decoderState->PerformPendingSeek();
 
 						// Reset() is not thread-safe but the render block is outputting silence
@@ -1129,7 +1178,7 @@ private:
 						if(framesWritten != buffer.frameLength)
 							os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Write() failed");
 
-						if(decoderState->mFlags.load() & DecoderState::eFlagDecodingComplete) {
+						if(decoderState->DecodingIsComplete()) {
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
@@ -1252,10 +1301,11 @@ private:
 
 		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		while(decoderState) {
-			const auto decoderFramesRemaining = static_cast<AVAudioFrameCount>(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
+			const auto decoderFramesRemaining = decoderState->FramesAvailableToRender();
 			const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
-			if(!(decoderState->mFlags.load() & DecoderState::eFlagRenderingStarted)) {
+			// Rendering is starting
+			if(!decoderState->RenderingHasStarted()) {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
 
 				// Submit the rendering started event
@@ -1270,44 +1320,58 @@ private:
 					os_log_fault(_audioPlayerNodeLog, "Error writing rendering started event");
 			}
 
-			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
+			decoderState->AddFramesRendered(framesFromThisDecoder);
 			framesRemainingToDistribute -= framesFromThisDecoder;
 
-			if((decoderState->mFlags.load() & DecoderState::eFlagDecodingComplete) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
+			// Rendering is complete
+			if(decoderState->DecodingIsComplete() && decoderState->AllAvailableFramesRendered()) {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
 
-				// Submit the rendering complete event
-				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-				const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
-				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+				// Check for a decoder transition
+				if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
+					const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
+					const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
 
-				const RenderingEventHeader header{RenderingEventCommand::eComplete};
-				if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, hostTime))
-					dispatch_source_merge_data(mEventProcessingSource, 1);
-				else
-					os_log_fault(_audioPlayerNodeLog, "Error writing rendering complete event");
+#if DEBUG
+					assert(!nextDecoderState->RenderingHasStarted());
+#endif /* DEBUG */
+
+					nextDecoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
+
+					nextDecoderState->AddFramesRendered(framesFromNextDecoder);
+					framesRemainingToDistribute -= framesFromNextDecoder;
+
+					// Submit the rendering decoder changed event
+					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+					const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+
+					const RenderingEventHeader header{RenderingEventCommand::eDecoderChanged};
+					if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, nextDecoderState->mSequenceNumber, hostTime))
+						dispatch_source_merge_data(mEventProcessingSource, 1);
+					else
+						os_log_fault(_audioPlayerNodeLog, "Error writing rendering changed event");
+
+					decoderState = nextDecoderState;
+				}
+				else {
+					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+					const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+
+					// Submit the rendering complete event
+					const RenderingEventHeader header{RenderingEventCommand::eComplete};
+					if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, hostTime))
+						dispatch_source_merge_data(mEventProcessingSource, 1);
+					else
+						os_log_fault(_audioPlayerNodeLog, "Error writing rendering complete event");
+				}
 			}
 
 			if(framesRemainingToDistribute == 0)
 				break;
 
 			decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
-		}
-
-		// ========================================
-		// 9. If there are no active decoders schedule the end of audio notification
-
-		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-		if(!decoderState) {
-			const uint32_t frameOffset = framesRead;
-			const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
-			const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
-
-			const RenderingEventHeader header{RenderingEventCommand::eEndOfAudio};
-			if(mRenderEventRingBuffer.WriteValues(header, hostTime))
-				dispatch_source_merge_data(mEventProcessingSource, 1);
-			else
-				os_log_fault(_audioPlayerNodeLog, "Error writing end of audio event");
 		}
 
 		return noErr;
@@ -1399,7 +1463,7 @@ private:
 					}
 
 					const auto decoder = decoderState->mDecoder;
-					const auto framesRendered = decoderState->mFramesRendered.load();
+					const auto framesRendered = decoderState->FramesRendered();
 					DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:framesRendered:)]) {
@@ -1451,7 +1515,7 @@ private:
 
 					const auto now = SFB::GetCurrentHostTime();
 					if(now > hostTime)
-						os_log_error(_audioPlayerNodeLog, "Rendering will start event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+						os_log_error(_audioPlayerNodeLog, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
 #if DEBUG
 					else
 						os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
@@ -1467,6 +1531,41 @@ private:
 					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering started event");
 				break;
 
+
+			case RenderingEventCommand::eDecoderChanged:
+				if(uint64_t decoderSequenceNumber, nextDecoderSequenceNumber, hostTime; mRenderEventRingBuffer.ReadValues(decoderSequenceNumber, nextDecoderSequenceNumber, hostTime)) {
+					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					if(!decoderState) {
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering decoder changed event", decoderSequenceNumber);
+						break;
+					}
+
+					const auto nextDecoderState = GetDecoderStateWithSequenceNumber(nextDecoderSequenceNumber);
+					if(!nextDecoderState) {
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering decoder changed event", nextDecoderSequenceNumber);
+						break;
+					}
+
+					const auto now = SFB::GetCurrentHostTime();
+					if(now > hostTime)
+						os_log_error(_audioPlayerNodeLog, "Rendering decoder changed event processed %.2f msec late for transition from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
+#if DEBUG
+					else
+						os_log_debug(_audioPlayerNodeLog, "Rendering decoder will change in %.2f msec from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
+#endif /* DEBUG */
+
+					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:)]) {
+						dispatch_async_and_wait(mNode.delegateQueue, ^{
+							[mNode.delegate audioPlayerNode:mNode renderingDecoder:decoderState->mDecoder willChangeToDecoder:nextDecoderState->mDecoder atHostTime:hostTime];
+						});
+					}
+
+					DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
+				}
+				else
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering decoder changed event");
+				break;
+
 			case RenderingEventCommand::eComplete:
 				if(uint64_t decoderSequenceNumber, hostTime; mRenderEventRingBuffer.ReadValues(decoderSequenceNumber, hostTime)) {
 					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
@@ -1477,7 +1576,7 @@ private:
 
 					const auto now = SFB::GetCurrentHostTime();
 					if(now > hostTime)
-						os_log_error(_audioPlayerNodeLog, "Rendering will complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+						os_log_error(_audioPlayerNodeLog, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
 #if DEBUG
 					else
 						os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
@@ -1493,26 +1592,6 @@ private:
 				}
 				else
 					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering complete event");
-				break;
-
-			case RenderingEventCommand::eEndOfAudio:
-				if(uint64_t hostTime; mRenderEventRingBuffer.ReadValue(hostTime)) {
-					const auto now = SFB::GetCurrentHostTime();
-					if(now > hostTime)
-						os_log_error(_audioPlayerNodeLog, "End of audio event processed %.2f msec late", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6);
-#if DEBUG
-					else
-						os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6);
-#endif /* DEBUG */
-
-					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:audioWillEndAtHostTime:)]) {
-						dispatch_async_and_wait(mNode.delegateQueue, ^{
-							[mNode.delegate audioPlayerNode:mNode audioWillEndAtHostTime:hostTime];
-						});
-					}
-				}
-				else
-					os_log_fault(_audioPlayerNodeLog, "Missing host time for end of audio event");
 				break;
 
 			default:
@@ -1655,19 +1734,9 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _impl->EnqueueDecoder(decoder, false, error);
 }
 
-- (id <SFBPCMDecoding>)dequeueDecoder
-{
-	return _impl->DequeueDecoder();
-}
-
 - (id<SFBPCMDecoding>)currentDecoder
 {
 	return _impl->CurrentDecoder();
-}
-
-- (void)cancelCurrentDecoder
-{
-	_impl->CancelCurrentDecoder();
 }
 
 - (void)clearQueue
