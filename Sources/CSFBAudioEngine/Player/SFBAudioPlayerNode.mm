@@ -285,7 +285,6 @@ struct DecoderState {
 };
 
 uint64_t DecoderState::sSequenceNumber = 1;
-using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 
 #pragma mark - Decoder State Array
 
@@ -426,6 +425,7 @@ void release_nserror_f(void *context)
 /// SFBAudioPlayerNode implementation
 struct AudioPlayerNode {
 	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
+	using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 
 	/// The minimum number of frames to write to the ring buffer
 	static constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
