@@ -213,7 +213,7 @@ struct DecoderState {
 	/// Returns the number of frames available to render.
 	///
 	/// This is the difference between the number of frames converted and the number of frames rendered
-	AVAudioFrameCount FramesAvailableToRender() const noexcept
+	AVAudioFramePosition FramesAvailableToRender() const noexcept
 	{
 		return mFramesConverted.load() - mFramesRendered.load();
 	}
@@ -1297,7 +1297,7 @@ private:
 		// However, these could have come from any number of decoders depending on buffer sizes
 		// So it is necessary to split them up here
 
-		auto framesRemainingToDistribute = framesRead;
+		AVAudioFramePosition framesRemainingToDistribute = framesRead;
 
 		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 		while(decoderState) {
@@ -1309,7 +1309,7 @@ private:
 				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
 
 				// Submit the rendering started event
-				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const auto frameOffset = framesRead - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
 				const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
@@ -1342,7 +1342,7 @@ private:
 					framesRemainingToDistribute -= framesFromNextDecoder;
 
 					// Submit the rendering decoder changed event
-					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+					const auto frameOffset = framesRead - framesRemainingToDistribute;
 					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
 					const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
@@ -1355,7 +1355,7 @@ private:
 					decoderState = nextDecoderState;
 				}
 				else {
-					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+					const auto frameOffset = framesRead - framesRemainingToDistribute;
 					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
 					const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
