@@ -124,15 +124,9 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
-/// Removes and returns the next decoder from the decoder queue
-/// - returns: The next decoder from the decoder queue or `nil` if none
-- (nullable id <SFBPCMDecoding>)dequeueDecoder;
-
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
-/// Cancels the current decoder
-- (void)cancelCurrentDecoder;
 
 /// Empties the decoder queue
 - (void)clearQueue;

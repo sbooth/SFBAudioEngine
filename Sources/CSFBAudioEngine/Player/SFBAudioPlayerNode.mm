@@ -871,12 +871,13 @@ public:
 		return decoderState ? decoderState->mDecoder : nil;
 	}
 
-	void CancelCurrentDecoder() noexcept
+	void CancelActiveDecoders() noexcept
 	{
-		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
+		auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
+			// If the decoder has already finished decoding, perform the cancelation manually
 			if(decoderState->DecodingIsComplete()) {
 #if DEBUG
-				os_log_debug(_audioPlayerNodeLog, "Canceling a decoder that has already completed decoding");
+				os_log_debug(_audioPlayerNodeLog, "Canceling %{public}@ that has already completed decoding", decoderState->mDecoder);
 #endif /* DEBUG */
 				// Submit the decoding canceled event
 				const DecodingEventHeader header{DecodingEventCommand::eCanceled};
@@ -890,6 +891,16 @@ public:
 			else {
 				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
 				mDecodingSemaphore.Signal();
+			}
+		};
+
+		// Cancel all active decoders in sequence
+		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
+			cancelDecoder(decoderState);
+			decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
+			while(decoderState) {
+				cancelDecoder(decoderState);
+				decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
 			}
 		}
 	}
@@ -909,7 +920,7 @@ public:
 	void Reset() noexcept
 	{
 		ClearQueue();
-		CancelCurrentDecoder();
+		CancelActiveDecoders();
 	}
 
 private:
@@ -1723,19 +1734,9 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _impl->EnqueueDecoder(decoder, false, error);
 }
 
-- (id <SFBPCMDecoding>)dequeueDecoder
-{
-	return _impl->DequeueDecoder();
-}
-
 - (id<SFBPCMDecoding>)currentDecoder
 {
 	return _impl->CurrentDecoder();
-}
-
-- (void)cancelCurrentDecoder
-{
-	_impl->CancelCurrentDecoder();
 }
 
 - (void)clearQueue
