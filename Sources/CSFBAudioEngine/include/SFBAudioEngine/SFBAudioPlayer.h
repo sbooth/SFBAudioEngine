@@ -331,7 +331,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter decoder: The decoder for which rendering will complete
 /// - parameter hostTime: The host time at which the final audio frame from `decoder` will reach the device
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillComplete:at:));
-/// Called to notify the delegate when rendering the final frame of audio from the last available decoder
+/// Called to notify the delegate when rendering the final frame of audio from the last available decoder for which a gapless transition is possible
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which rendering is complete
