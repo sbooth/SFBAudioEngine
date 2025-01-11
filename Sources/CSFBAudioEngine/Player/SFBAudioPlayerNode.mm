@@ -877,7 +877,7 @@ public:
 			// If the decoder has already finished decoding, perform the cancelation manually
 			if(decoderState->DecodingIsComplete()) {
 #if DEBUG
-				os_log_debug(_audioPlayerNodeLog, "Canceling %{public}@ that has already completed decoding", decoderState->mDecoder);
+				os_log_debug(_audioPlayerNodeLog, "Canceling %{public}@ that has completed decoding", decoderState->mDecoder);
 #endif /* DEBUG */
 				// Submit the decoder canceled event
 				const DecodingEventHeader header{DecodingEventCommand::eCanceled};
