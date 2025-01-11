@@ -987,7 +987,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying) {
+	if(const auto flags = _flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying && _playerNode.currentDecoder == decoder) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive);
 		self.nowPlaying = decoder;
 	}
@@ -1025,7 +1025,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(audioPlayerNode == _playerNode) {
 		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
 		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
-			self.nowPlaying = nil;
+			if(self.nowPlaying)
+				self.nowPlaying = nil;
 	}
 }
 
