@@ -1149,6 +1149,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			}
 		}
 		else {
+#if DEBUG
+			os_log_debug(_audioPlayerLog, "End of audio reached");
+#endif /* DEBUG */
+
 			// Would it be better to set nowPlaying to nil after stopping?
 			self.nowPlaying = nil;
 
