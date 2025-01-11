@@ -836,8 +836,23 @@ public:
 	void CancelCurrentDecoder() noexcept
 	{
 		if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
-			decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
-			mDecodingSemaphore.Signal();
+			if(decoderState->DecodingIsComplete()) {
+#if DEBUG
+				os_log_debug(_audioPlayerNodeLog, "Canceling a decoder that has already completed decoding");
+#endif /* DEBUG */
+				// Submit the decoding canceled event
+				const DecodingEventHeader header{DecodingEventCommand::eCanceled};
+				if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
+					dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
+						ProcessPendingEvents();
+					});
+				else
+					os_log_fault(_audioPlayerNodeLog, "Error writing decoding canceled event");
+			}
+			else {
+				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
+				mDecodingSemaphore.Signal();
+			}
 		}
 	}
 
