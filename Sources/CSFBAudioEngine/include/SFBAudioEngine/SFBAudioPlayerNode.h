@@ -230,11 +230,11 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 /// - parameter hostTime: The host time at which the first audio frame from `decoder` will reach the device
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillStart:at:));
 /// Called to notify the delegate that a transition between rendering decoders will occur
-/// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `completingDecoder` and `startingDecoder`
-/// - parameter completingDecoder: The decoder for which rendering will complete
-/// - parameter startingDecoder: The decoder for which rendering will start
-/// - parameter hostTime: The host time at which the first audio frame from `startingDecoder` will reach the device
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)completingDecoder willChangeToDecoder:(id<SFBPCMDecoding>)startingDecoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingDecoder:willChangeTo:at:));
+/// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder` and `nextDecoder`
+/// - parameter decoder: The decoder for which rendering will complete
+/// - parameter nextDecoder: The decoder for which rendering will start
+/// - parameter hostTime: The host time at which the first audio frame from `nextDecoder` will reach the device
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)decoder willChangeToDecoder:(id<SFBPCMDecoding>)nextDecoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingDecoder:willChangeTo:at:));
 /// Called to notify the delegate that the final audio frame from the last available decoder will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayerNode: The `SFBAudioPlayerNode` object processing `decoder`

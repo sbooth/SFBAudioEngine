@@ -409,7 +409,7 @@ using DecodingEventHeader = EventHeader<DecodingEventCommand>;
 /// Render block events
 enum class RenderingEventCommand : uint32_t {
 	eStarted 		= 1,
-	eChanged 		= 2,
+	eDecoderChanged = 2,
 	eComplete 		= 3,
 };
 
@@ -1341,12 +1341,12 @@ private:
 					nextDecoderState->AddFramesRendered(framesFromNextDecoder);
 					framesRemainingToDistribute -= framesFromNextDecoder;
 
-					// Submit the rendering changed event
+					// Submit the rendering decoder changed event
 					const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 					const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
 					const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
-					const RenderingEventHeader header{RenderingEventCommand::eChanged};
+					const RenderingEventHeader header{RenderingEventCommand::eDecoderChanged};
 					if(mRenderEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber, nextDecoderState->mSequenceNumber, hostTime))
 						dispatch_source_merge_data(mEventProcessingSource, 1);
 					else
@@ -1515,7 +1515,7 @@ private:
 
 					const auto now = SFB::GetCurrentHostTime();
 					if(now > hostTime)
-						os_log_error(_audioPlayerNodeLog, "Rendering will start event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+						os_log_error(_audioPlayerNodeLog, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
 #if DEBUG
 					else
 						os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
@@ -1532,38 +1532,38 @@ private:
 				break;
 
 
-			case RenderingEventCommand::eChanged:
-				if(uint64_t completingDecoderSequenceNumber, startingDecoderSequenceNumber, hostTime; mRenderEventRingBuffer.ReadValues(completingDecoderSequenceNumber, startingDecoderSequenceNumber, hostTime)) {
-					const auto completingDecoderState = GetDecoderStateWithSequenceNumber(completingDecoderSequenceNumber);
-					if(!completingDecoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering changed event", completingDecoderSequenceNumber);
+			case RenderingEventCommand::eDecoderChanged:
+				if(uint64_t decoderSequenceNumber, nextDecoderSequenceNumber, hostTime; mRenderEventRingBuffer.ReadValues(decoderSequenceNumber, nextDecoderSequenceNumber, hostTime)) {
+					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					if(!decoderState) {
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering decoder changed event", decoderSequenceNumber);
 						break;
 					}
 
-					const auto startingDecoderState = GetDecoderStateWithSequenceNumber(startingDecoderSequenceNumber);
-					if(!startingDecoderState) {
-						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering changed event", startingDecoderSequenceNumber);
+					const auto nextDecoderState = GetDecoderStateWithSequenceNumber(nextDecoderSequenceNumber);
+					if(!nextDecoderState) {
+						os_log_fault(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing for rendering decoder changed event", nextDecoderSequenceNumber);
 						break;
 					}
 
 					const auto now = SFB::GetCurrentHostTime();
 					if(now > hostTime)
-						os_log_error(_audioPlayerNodeLog, "Rendering decoder will change event processed %.2f msec late for transition from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, completingDecoderState->mDecoder, startingDecoderState->mDecoder);
+						os_log_error(_audioPlayerNodeLog, "Rendering decoder changed event processed %.2f msec late for transition from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
 #if DEBUG
 					else
-						os_log_debug(_audioPlayerNodeLog, "Rendering decoder will change in %.2f msec from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, completingDecoderState->mDecoder, startingDecoderState->mDecoder);
+						os_log_debug(_audioPlayerNodeLog, "Rendering decoder will change in %.2f msec from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
 #endif /* DEBUG */
 
 					if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:)]) {
 						dispatch_async_and_wait(mNode.delegateQueue, ^{
-							[mNode.delegate audioPlayerNode:mNode renderingDecoder:completingDecoderState->mDecoder willChangeToDecoder:startingDecoderState->mDecoder atHostTime:hostTime];
+							[mNode.delegate audioPlayerNode:mNode renderingDecoder:decoderState->mDecoder willChangeToDecoder:nextDecoderState->mDecoder atHostTime:hostTime];
 						});
 					}
 
-					DeleteDecoderStateWithSequenceNumber(completingDecoderSequenceNumber);
+					DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
 				}
 				else
-					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering changed event");
+					os_log_fault(_audioPlayerNodeLog, "Missing decoder sequence number or host time for rendering decoder changed event");
 				break;
 
 			case RenderingEventCommand::eComplete:
@@ -1576,7 +1576,7 @@ private:
 
 					const auto now = SFB::GetCurrentHostTime();
 					if(now > hostTime)
-						os_log_error(_audioPlayerNodeLog, "Rendering will complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+						os_log_error(_audioPlayerNodeLog, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
 #if DEBUG
 					else
 						os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);

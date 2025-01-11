@@ -1068,7 +1068,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		[_delegate audioPlayer:self renderingWillStart:decoder atHostTime:hostTime];
 }
 
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)completingDecoder willChangeToDecoder:(id<SFBPCMDecoding>)startingDecoder atHostTime:(uint64_t)hostTime
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)decoder willChangeToDecoder:(id<SFBPCMDecoding>)nextDecoder atHostTime:(uint64_t)hostTime
 {
 	if(audioPlayerNode != _playerNode) {
 		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:");
@@ -1076,13 +1076,13 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
-		if(NSNumber *isCanceled = objc_getAssociatedObject(completingDecoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", completingDecoder);
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", decoder);
 			return;
 		}
 
-		if(NSNumber *isCanceled = objc_getAssociatedObject(startingDecoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", startingDecoder);
+		if(NSNumber *isCanceled = objc_getAssociatedObject(nextDecoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", nextDecoder);
 			return;
 		}
 
@@ -1100,19 +1100,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		}
 
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-			[self->_delegate audioPlayer:self renderingComplete:completingDecoder];
+			[self->_delegate audioPlayer:self renderingComplete:decoder];
 
-		self.nowPlaying = startingDecoder;
+		self.nowPlaying = nextDecoder;
 
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
-			[self->_delegate audioPlayer:self renderingStarted:startingDecoder];
+			[self->_delegate audioPlayer:self renderingStarted:nextDecoder];
 	});
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
-		[_delegate audioPlayer:self renderingWillComplete:completingDecoder atHostTime:hostTime];
+		[_delegate audioPlayer:self renderingWillComplete:decoder atHostTime:hostTime];
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
-		[_delegate audioPlayer:self renderingWillStart:startingDecoder atHostTime:hostTime];
+		[_delegate audioPlayer:self renderingWillStart:nextDecoder atHostTime:hostTime];
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
