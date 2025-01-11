@@ -909,7 +909,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			// of time, especially if the delegate callouts take longer than ideal.
 			//
 			// In my measurements the baseline with an empty delegate implementation of
-			// -audioPlayer:decodingCanceled:framesRendered: seems to be around 100 µsec
+			// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
 			//
 			// Assuming there are no external references to the audio player node,
 			// setting it to nil here sends -dealloc
@@ -1003,31 +1003,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
 		[_delegate audioPlayer:self decodingComplete:decoder];
-}
-
-- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered
-{
-	// It is not an error in this case if the player nodes don't match because when the
-	// audio processing graph is reconfigured the existing player node may be replaced,
-	// but any pending events will still be delivered before the instance is deallocated
-#if false
-	if(audioPlayerNode != _playerNode) {
-		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decodingCanceled:framesRendered:");
-		return;
-	}
-#endif /* false */
-
-	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
-	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:framesRendered:)])
-		[_delegate audioPlayer:self decodingCanceled:decoder framesRendered:framesRendered];
-
-	if(audioPlayerNode == _playerNode) {
-		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
-		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
-			if(self.nowPlaying)
-				self.nowPlaying = nil;
-	}
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
@@ -1172,6 +1147,32 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
 		[_delegate audioPlayer:self renderingWillComplete:decoder atHostTime:hostTime];
+}
+
+
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered
+{
+	// It is not an error in this case if the player nodes don't match because when the
+	// audio processing graph is reconfigured the existing player node may be replaced,
+	// but any pending events will still be delivered before the instance is deallocated
+#if false
+	if(audioPlayerNode != _playerNode) {
+		os_log_fault(_audioPlayerLog, "Unexpected SFBAudioPlayerNode instance in -audioPlayerNode:decoderCanceled:framesRendered:");
+		return;
+	}
+#endif /* false */
+
+	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
+		[_delegate audioPlayer:self decoderCanceled:decoder framesRendered:framesRendered];
+
+	if(audioPlayerNode == _playerNode) {
+		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
+		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
+			if(self.nowPlaying)
+				self.nowPlaying = nil;
+	}
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode encounteredError:(NSError *)error
