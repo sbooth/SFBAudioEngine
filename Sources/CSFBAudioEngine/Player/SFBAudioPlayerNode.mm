@@ -198,6 +198,12 @@ struct DecoderState {
 		return true;
 	}
 
+	/// Returns `true` if `eFlagDecodingStarted` is set
+	bool DecodingHasStarted() const noexcept
+	{
+		return (mFlags.load() & eFlagDecodingStarted) == eFlagDecodingStarted;
+	}
+
 	/// Returns `true` if `eFlagDecodingComplete` is set
 	bool DecodingIsComplete() const noexcept
 	{
@@ -208,6 +214,12 @@ struct DecoderState {
 	bool RenderingHasStarted() const noexcept
 	{
 		return (mFlags.load() & eFlagRenderingStarted) == eFlagRenderingStarted;
+	}
+
+	/// Returns `true` if `eFlagRenderingComplete` is set
+	bool RenderingIsComplete() const noexcept
+	{
+		return (mFlags.load() & eFlagRenderingComplete) == eFlagRenderingComplete;
 	}
 
 	/// Returns the number of frames available to render.
@@ -300,7 +312,7 @@ DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber(const D
 		if(!decoderState)
 			continue;
 
-		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eFlagRenderingComplete)
+		if(decoderState->RenderingIsComplete())
 			continue;
 
 		if(!result)
@@ -321,7 +333,7 @@ DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const Deco
 		if(!decoderState)
 			continue;
 
-		if(const auto flags = decoderState->mFlags.load(); flags & DecoderState::eFlagRenderingComplete)
+		if(decoderState->RenderingIsComplete())
 			continue;
 
 		if(!result && decoderState->mSequenceNumber > sequenceNumber)
@@ -626,7 +638,7 @@ public:
 
 	bool IsPlaying() const noexcept
 	{
-		return (mFlags.load() & eFlagIsPlaying) != 0;
+		return (mFlags.load() & eFlagIsPlaying) == eFlagIsPlaying;
 	}
 
 	bool IsReady() const noexcept
@@ -1138,7 +1150,7 @@ private:
 
 					// Decode and write chunks to the ring buffer
 					while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
-						if(!(decoderState->mFlags.load() & DecoderState::eFlagDecodingStarted)) {
+						if(!decoderState->DecodingHasStarted()) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
 							decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted);
