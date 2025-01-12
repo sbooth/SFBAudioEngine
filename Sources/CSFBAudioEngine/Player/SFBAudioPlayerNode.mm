@@ -178,7 +178,7 @@ struct DecoderState {
 			return false;
 
 		if(mDecodeBuffer.frameLength == 0) {
-			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_release);
+			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_acq_rel);
 			buffer.frameLength = 0;
 			return true;
 		}
@@ -193,7 +193,7 @@ struct DecoderState {
 		// If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
 		// decoding is complete
 		if(buffer.frameLength != buffer.frameCapacity)
-			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_release);
+			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_acq_rel);
 
 		return true;
 	}
@@ -369,7 +369,7 @@ void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uin
 			continue;
 
 		os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
-		delete atomic_ptr.exchange(nullptr, std::memory_order_release);
+		delete atomic_ptr.exchange(nullptr, std::memory_order_acq_rel);
 	}
 }
 
@@ -1153,7 +1153,7 @@ private:
 						if(!decoderState->DecodingHasStarted()) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
-							decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted, std::memory_order_release);
+							decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted, std::memory_order_acq_rel);
 
 							// Submit the decoding started event
 							const DecodingEventHeader header{DecodingEventCommand::eStarted};
@@ -1318,7 +1318,7 @@ private:
 
 			// Rendering is starting
 			if(!decoderState->RenderingHasStarted()) {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_release);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_acq_rel);
 
 				// Submit the rendering started event
 				const auto frameOffset = framesRead - framesRemainingToDistribute;
@@ -1337,7 +1337,7 @@ private:
 
 			// Rendering is complete
 			if(decoderState->DecodingIsComplete() && decoderState->AllAvailableFramesRendered()) {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete, std::memory_order_release);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete, std::memory_order_acq_rel);
 
 				// Check for a decoder transition
 				if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
@@ -1348,7 +1348,7 @@ private:
 					assert(!nextDecoderState->RenderingHasStarted());
 #endif /* DEBUG */
 
-					nextDecoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_release);
+					nextDecoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_acq_rel);
 
 					nextDecoderState->AddFramesRendered(framesFromNextDecoder);
 					framesRemainingToDistribute -= framesFromNextDecoder;
