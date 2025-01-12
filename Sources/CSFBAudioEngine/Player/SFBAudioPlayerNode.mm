@@ -515,7 +515,7 @@ public:
 		// Allocate and initialize the decoder state array
 		mActiveDecoders = new DecoderStateArray;
 		for(auto& atomic_ptr : *mActiveDecoders)
-			atomic_ptr.store(nullptr);
+			atomic_ptr.store(nullptr, std::memory_order_release);
 
 		// ========================================
 		// Decoding Setup
