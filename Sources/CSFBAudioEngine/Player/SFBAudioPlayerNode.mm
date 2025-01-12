@@ -615,23 +615,23 @@ public:
 
 	void Play() noexcept
 	{
-		mFlags.fetch_or(eFlagIsPlaying);
+		mFlags.fetch_or(eFlagIsPlaying, std::memory_order_acq_rel);
 	}
 
 	void Pause() noexcept
 	{
-		mFlags.fetch_and(~eFlagIsPlaying);
+		mFlags.fetch_and(~eFlagIsPlaying, std::memory_order_acq_rel);
 	}
 
 	void Stop() noexcept
 	{
-		mFlags.fetch_and(~eFlagIsPlaying);
+		mFlags.fetch_and(~eFlagIsPlaying, std::memory_order_acq_rel);
 		Reset();
 	}
 
 	void TogglePlayPause() noexcept
 	{
-		mFlags.fetch_xor(eFlagIsPlaying);
+		mFlags.fetch_xor(eFlagIsPlaying, std::memory_order_acq_rel);
 	}
 
 #pragma mark - Playback State
@@ -850,7 +850,7 @@ public:
 
 		if(reset) {
 			// Mute until the decoder becomes active to prevent spurious events
-			mFlags.fetch_or(eFlagMuteRequested);
+			mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 			Reset();
 		}
 
@@ -901,7 +901,7 @@ public:
 					os_log_fault(_audioPlayerNodeLog, "Error writing decoder canceled event");
 			}
 			else {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding, std::memory_order_acq_rel);
 				mDecodingSemaphore.Signal();
 			}
 		};
@@ -1085,7 +1085,7 @@ private:
 
 				// Clear the mute flags if needed
 				if(unmuteNeeded)
-					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested);
+					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested, std::memory_order_acq_rel);
 
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
@@ -1093,31 +1093,31 @@ private:
 				for(;;) {
 					// If a seek is pending request a ring buffer reset
 					if(decoderState->SeekIsPending())
-						mFlags.fetch_or(eFlagRingBufferNeedsReset);
+						mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
-					if(mFlags.load() & eFlagRingBufferNeedsReset) {
-						mFlags.fetch_and(~eFlagRingBufferNeedsReset);
+					if(mFlags.load(std::memory_order_acquire) & eFlagRingBufferNeedsReset) {
+						mFlags.fetch_and(~eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 						// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
-						if(!(mFlags.load() & eFlagIsMuted)) {
+						if(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
 							if(mNode.engine.isRunning) {
-								mFlags.fetch_or(eFlagMuteRequested);
+								mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 
 								// The render block will clear eFlagMuteRequested and set eFlagIsMuted
-								while(!(mFlags.load() & eFlagIsMuted)) {
+								while(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
 									auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
 									// If the timeout occurred the engine may have stopped since the initial check
 									// with no subsequent opportunity for the render block to set eFlagIsMuted
 									if(!timeout && !mNode.engine.isRunning) {
-										mFlags.fetch_or(eFlagIsMuted);
-										mFlags.fetch_and(~eFlagMuteRequested);
+										mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
+										mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
 										break;
 									}
 								}
 							}
 							else
-								mFlags.fetch_or(eFlagIsMuted);
+								mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
 						}
 
 						// Perform seek if one is pending
@@ -1128,13 +1128,13 @@ private:
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
-						mFlags.fetch_and(~eFlagIsMuted);
+						mFlags.fetch_and(~eFlagIsMuted, std::memory_order_acq_rel);
 					}
 
-					if(decoderState->mFlags.load() & DecoderState::eFlagCancelDecoding) {
+					if(decoderState->mFlags.load(std::memory_order_acquire) & DecoderState::eFlagCancelDecoding) {
 						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
-						mFlags.fetch_or(eFlagRingBufferNeedsReset);
+						mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 						// Submit the decoding canceled event
 						const DecodingEventHeader header{DecodingEventCommand::eCanceled};
@@ -1226,9 +1226,9 @@ private:
 
 		// ========================================
 		// 0. Mute if requested
-		if(mFlags.load() & eFlagMuteRequested) {
-			mFlags.fetch_or(eFlagIsMuted);
-			mFlags.fetch_and(~eFlagMuteRequested);
+		if(mFlags.load(std::memory_order_acquire) & eFlagMuteRequested) {
+			mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
+			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
 			mDecodingSemaphore.Signal();
 		}
 
@@ -1240,7 +1240,7 @@ private:
 
 		// ========================================
 		// 1. Output silence if not playing or muted
-		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
+		if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
