@@ -201,31 +201,31 @@ struct DecoderState {
 	/// Returns `true` if `eFlagDecodingStarted` is set
 	bool DecodingHasStarted() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & eFlagDecodingStarted) == eFlagDecodingStarted;
+		return mFlags.load(std::memory_order_acquire) & eFlagDecodingStarted;
 	}
 
 	/// Returns `true` if `eFlagDecodingComplete` is set
 	bool DecodingIsComplete() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & eFlagDecodingComplete) == eFlagDecodingComplete;
+		return mFlags.load(std::memory_order_acquire) & eFlagDecodingComplete;
 	}
 
 	/// Returns `true` if `eFlagRenderingStarted` is set
 	bool RenderingHasStarted() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & eFlagRenderingStarted) == eFlagRenderingStarted;
+		return mFlags.load(std::memory_order_acquire) & eFlagRenderingStarted;
 	}
 
 	/// Returns `true` if `eFlagRenderingComplete` is set
 	bool RenderingIsComplete() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & eFlagRenderingComplete) == eFlagRenderingComplete;
+		return mFlags.load(std::memory_order_acquire) & eFlagRenderingComplete;
 	}
 
 	/// Returns `true` if `eFlagCanceled` is set
 	bool IsCanceled() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & eFlagCanceled) == eFlagCanceled;
+		return mFlags.load(std::memory_order_acquire) & eFlagCanceled;
 	}
 
 	/// Returns the number of frames available to render.
@@ -644,7 +644,7 @@ public:
 
 	bool IsPlaying() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & eFlagIsPlaying) == eFlagIsPlaying;
+		return mFlags.load(std::memory_order_acquire) & eFlagIsPlaying;
 	}
 
 	bool IsReady() const noexcept

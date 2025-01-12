@@ -355,7 +355,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	dispatch_async_and_wait(_engineQueue, ^{
 		isRunning = _engine.isRunning;
 #if DEBUG
-		NSAssert(((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning) == isRunning, @"Cached value for _engine.isRunning invalid");
+		NSAssert(static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == isRunning, @"Cached value for _engine.isRunning invalid");
 #endif /* DEBUG */
 	});
 	return isRunning;
@@ -595,7 +595,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		block(_engine);
 		// SFBAudioPlayer requires that the mixer node be connected to the output node
 		NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
-		NSAssert(_engine.isRunning == ((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning), @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
+		NSAssert(_engine.isRunning == static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning), @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 	});
 }
 
