@@ -368,7 +368,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (SFBAudioPlayerPlaybackState)playbackState
 {
-	if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning)
+	if(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning)
 		return _playerNode.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 	else
 		return SFBAudioPlayerPlaybackStateStopped;
@@ -376,14 +376,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)isPlaying
 {
-	const auto engineIsRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
-	return engineIsRunning && _playerNode.isPlaying;
+	return (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode.isPlaying;
 }
 
 - (BOOL)isPaused
 {
-	const auto engineIsRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
-	return engineIsRunning && !_playerNode.isPlaying;
+	return (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !_playerNode.isPlaying;
 }
 
 - (BOOL)isStopped
@@ -761,7 +759,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
 			// However, eAudioPlayerFlagEngineIsRunning indicates if the engine was running before the interruption
-			if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning) {
+			if(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) {
 				_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 				dispatch_async_and_wait(_engineQueue, ^{
 					NSError *error = nil;
@@ -1002,7 +1000,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying && _playerNode.currentDecoder == decoder) {
+	if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying && _playerNode.currentDecoder == decoder) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		self.nowPlaying = decoder;
 	}
@@ -1046,7 +1044,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
-		if(const auto flags = self->_flags.load(std::memory_order_acquire); !(flags & eAudioPlayerFlagPendingDecoderBecameActive))
+		if(!(self->_flags.load(std::memory_order_acquire) & eAudioPlayerFlagPendingDecoderBecameActive))
 			self.nowPlaying = decoder;
 		self->_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 
@@ -1134,7 +1132,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[self->_delegate audioPlayer:self renderingComplete:decoder];
 
-		if(const auto flags = self->_flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder))
+		if(self->_flags.load(std::memory_order_acquire) & eAudioPlayerFlagHavePendingDecoder)
 			return;
 
 		// Dequeue the next decoder
@@ -1184,7 +1182,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	if(audioPlayerNode == _playerNode) {
 		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
-		if(const auto flags = _flags.load(std::memory_order_acquire); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
+		if(!(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
 			if(self.nowPlaying)
 				self.nowPlaying = nil;
 	}
