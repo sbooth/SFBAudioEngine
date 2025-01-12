@@ -91,11 +91,11 @@ struct DecoderState {
 	static constexpr int64_t			kInvalidFramePosition 	= -1;
 
 	enum DecoderStateFlags : unsigned int {
-		eFlagCancelDecoding 	= 1u << 0,
-		eFlagDecodingStarted 	= 1u << 1,
-		eFlagDecodingComplete 	= 1u << 2,
-		eFlagRenderingStarted 	= 1u << 3,
-		eFlagRenderingComplete 	= 1u << 4,
+		eFlagDecodingStarted 	= 1u << 0,
+		eFlagDecodingComplete 	= 1u << 1,
+		eFlagRenderingStarted 	= 1u << 2,
+		eFlagRenderingComplete 	= 1u << 3,
+		eFlagCanceled 			= 1u << 4,
 	};
 
 	/// Monotonically increasing instance counter
@@ -220,6 +220,12 @@ struct DecoderState {
 	bool RenderingIsComplete() const noexcept
 	{
 		return (mFlags.load(std::memory_order_acquire) & eFlagRenderingComplete) == eFlagRenderingComplete;
+	}
+
+	/// Returns `true` if `eFlagCanceled` is set
+	bool IsCanceled() const noexcept
+	{
+		return (mFlags.load(std::memory_order_acquire) & eFlagCanceled) == eFlagCanceled;
 	}
 
 	/// Returns the number of frames available to render.
@@ -901,7 +907,7 @@ public:
 					os_log_fault(_audioPlayerNodeLog, "Error writing decoder canceled event");
 			}
 			else {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding, std::memory_order_acq_rel);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagCanceled, std::memory_order_acq_rel);
 				mDecodingSemaphore.Signal();
 			}
 		};
@@ -1131,7 +1137,7 @@ private:
 						mFlags.fetch_and(~eFlagIsMuted, std::memory_order_acq_rel);
 					}
 
-					if(decoderState->mFlags.load(std::memory_order_acquire) & DecoderState::eFlagCancelDecoding) {
+					if(decoderState->IsCanceled()) {
 						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
 						mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
