@@ -1102,11 +1102,11 @@ private:
 						mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
-					if(const auto flags = mFlags.load(std::memory_order_acquire); flags & eFlagRingBufferNeedsReset) {
+					if(mFlags.load(std::memory_order_acquire) & eFlagRingBufferNeedsReset) {
 						mFlags.fetch_and(~eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 						// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
-						if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & eFlagIsMuted)) {
+						if(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
 							if(mNode.engine.isRunning) {
 								mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 
@@ -1232,7 +1232,7 @@ private:
 
 		// ========================================
 		// 0. Mute if requested
-		if(const auto flags = mFlags.load(std::memory_order_acquire); flags & eFlagMuteRequested) {
+		if(mFlags.load(std::memory_order_acquire) & eFlagMuteRequested) {
 			mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
 			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
 			mDecodingSemaphore.Signal();
