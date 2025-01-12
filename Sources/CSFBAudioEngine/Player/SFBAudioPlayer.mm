@@ -760,14 +760,14 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			os_log_debug(_audioPlayerLog, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
-			// However, eAudioPlayerFlagEngineRunning indicates if the engine was running before the interruption
-			if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineRunning) == eAudioPlayerFlagEngineRunning) {
-				_flags.fetch_and(~eAudioPlayerFlagEngineRunning, std::memory_order_acq_rel);
+			// However, eAudioPlayerFlagEngineIsRunning indicates if the engine was running before the interruption
+			if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning) {
+				_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 				dispatch_async_and_wait(_engineQueue, ^{
 					NSError *error = nil;
 					BOOL engineStarted = [_engine startAndReturnError:&error];
 					if(engineStarted)
-						_flags.fetch_or(eAudioPlayerFlagEngineRunning, std::memory_order_acq_rel);
+						_flags.fetch_or(eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 					else
 						os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
 				});
