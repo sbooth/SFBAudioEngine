@@ -694,7 +694,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
-	const auto engineWasRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
+	const bool engineWasRunning = _flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning;
 	_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 
 	// Attempt to preserve the playback state
@@ -784,7 +784,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	NSParameterAssert(decoder != nil);
 
 	// Attempt to preserve the playback state
-	const bool engineWasRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
+	const bool engineWasRunning = _flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning;
 	const BOOL playerNodeWasPlaying = _playerNode.isPlaying;
 
 	__block BOOL success = YES;
