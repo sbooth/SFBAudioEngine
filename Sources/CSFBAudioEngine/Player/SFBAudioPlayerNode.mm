@@ -308,7 +308,7 @@ DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber(const D
 {
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
 			continue;
 
@@ -329,7 +329,7 @@ DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const Deco
 {
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
 			continue;
 
@@ -349,7 +349,7 @@ DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const Deco
 DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(const auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
 			continue;
 
@@ -364,12 +364,12 @@ DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const DecoderStateArr
 void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState || decoderState->mSequenceNumber != sequenceNumber)
 			continue;
 
 		os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
-		delete atomic_ptr.exchange(nullptr);
+		delete atomic_ptr.exchange(nullptr, std::memory_order_release);
 	}
 }
 
@@ -1035,7 +1035,7 @@ private:
 				auto stored = false;
 				do {
 					for(auto& atomic_ptr : *mActiveDecoders) {
-						auto current = atomic_ptr.load();
+						auto current = atomic_ptr.load(std::memory_order_acquire);
 						if(current)
 							continue;
 
@@ -1068,7 +1068,7 @@ private:
 						// This isn't a concern in practice since the main use case for this class is music, not
 						// sequential buffers of 0.05 sec. In normal use it's expected that slots 0 and 1 will
 						// be the only ones used.
-						atomic_ptr.store(decoderState);
+						atomic_ptr.store(decoderState, std::memory_order_release);
 						stored = true;
 						break;
 					}
