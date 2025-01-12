@@ -31,8 +31,9 @@ using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
 enum AudioPlayerFlags : unsigned int {
-	eAudioPlayerFlagHavePendingDecoder				= 1u << 0,
-	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 1,
+	eAudioPlayerFlagEngineIsRunning					= 1u << 0,
+	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
+	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
 #if !TARGET_OS_IPHONE
@@ -68,8 +69,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	AVAudioEngine 			*_engine;
 	/// The dispatch queue used to access `_engine`
 	dispatch_queue_t		_engineQueue;
-	/// Cached value of `_engine`.isRunning
-	std::atomic_bool		_engineIsRunning;
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*_playerNode;
 	/// The lock used to protect access to `_queuedDecoders`
@@ -244,14 +243,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(self.isPlaying)
 		return YES;
 
+	__block BOOL engineStarted = NO;
 	__block NSError *err = nil;
 	dispatch_async_and_wait(_engineQueue, ^{
-		_engineIsRunning = [_engine startAndReturnError:&err];
-		if(_engineIsRunning)
+		engineStarted = [_engine startAndReturnError:&err];
+		if(engineStarted) {
+			_flags.fetch_or(eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 			[_playerNode play];
+		}
+		else
+			_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 	});
 
-	if(!_engineIsRunning) {
+	if(!engineStarted) {
 		os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
 		if(error)
 			*error = err;
@@ -305,7 +309,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_engine stop];
-		_engineIsRunning = false;
+		_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 		[_playerNode stop];
 	});
 
@@ -351,7 +355,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	dispatch_async_and_wait(_engineQueue, ^{
 		isRunning = _engine.isRunning;
 #if DEBUG
-		NSAssert(_engineIsRunning == isRunning, @"Cached value for _engine.isRunning invalid");
+		NSAssert(((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning) == isRunning, @"Cached value for _engine.isRunning invalid");
 #endif /* DEBUG */
 	});
 	return isRunning;
@@ -364,7 +368,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (SFBAudioPlayerPlaybackState)playbackState
 {
-	if(_engineIsRunning)
+	if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning)
 		return _playerNode.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 	else
 		return SFBAudioPlayerPlaybackStateStopped;
@@ -372,17 +376,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)isPlaying
 {
-	return _engineIsRunning && _playerNode.isPlaying;
+	const auto engineIsRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
+	return engineIsRunning && _playerNode.isPlaying;
 }
 
 - (BOOL)isPaused
 {
-	return _engineIsRunning && !_playerNode.isPlaying;
+	const auto engineIsRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
+	return engineIsRunning && !_playerNode.isPlaying;
 }
 
 - (BOOL)isStopped
 {
-	return !_engineIsRunning;
+	return !(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning);
 }
 
 - (BOOL)isReady
@@ -591,7 +597,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		block(_engine);
 		// SFBAudioPlayer requires that the mixer node be connected to the output node
 		NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
-		NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
+		NSAssert(_engine.isRunning == ((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning), @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 	});
 }
 
@@ -690,8 +696,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
-	const bool engineWasRunning = _engineIsRunning;
-	_engineIsRunning = false;
+	const auto engineWasRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
+	_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 
 	// Attempt to preserve the playback state
 	const BOOL playerNodeWasPlaying = _playerNode.isPlaying;
@@ -712,11 +718,13 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 		// Restart AVAudioEngine if previously running
 		if(engineWasRunning) {
-			_engineIsRunning = [_engine startAndReturnError:&error];
-			if(!_engineIsRunning) {
+			BOOL engineStarted = [_engine startAndReturnError:&error];
+			if(!engineStarted) {
 				os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
 				return;
 			}
+
+			_flags.fetch_or(eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 
 			// Restart the player node if needed
 			if(playerNodeWasPlaying)
@@ -731,7 +739,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+	if((engineWasRunning != ((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning) || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[_delegate audioPlayer:self playbackStateChanged:self.playbackState];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
@@ -752,12 +760,15 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			os_log_debug(_audioPlayerLog, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
-			// However, _engineIsRunning isn't updated and will indicate if the engine was running before the interruption
-			if(_engineIsRunning) {
+			// However, eAudioPlayerFlagEngineRunning indicates if the engine was running before the interruption
+			if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineRunning) == eAudioPlayerFlagEngineRunning) {
+				_flags.fetch_and(~eAudioPlayerFlagEngineRunning, std::memory_order_acq_rel);
 				dispatch_async_and_wait(_engineQueue, ^{
 					NSError *error = nil;
-					_engineIsRunning = [_engine startAndReturnError:&error];
-					if(!_engineIsRunning)
+					BOOL engineStarted = [_engine startAndReturnError:&error];
+					if(engineStarted)
+						_flags.fetch_or(eAudioPlayerFlagEngineRunning, std::memory_order_acq_rel);
+					else
 						os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
 				});
 			}
@@ -775,7 +786,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	NSParameterAssert(decoder != nil);
 
 	// Attempt to preserve the playback state
-	const bool engineWasRunning = _engineIsRunning;
+	const bool engineWasRunning = (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning;
 	const BOOL playerNodeWasPlaying = _playerNode.isPlaying;
 
 	__block BOOL success = YES;
@@ -812,15 +823,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// AVAudioEngine may have been stopped in `-configureProcessingGraphForFormat:forceUpdate:`
 	// If this is the case and it was previously running, restart it and the player node
 	// as appropriate
-	if(engineWasRunning && !_engineIsRunning) {
+	if(engineWasRunning && !(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning)) {
+		__block BOOL engineStarted = NO;
 		__block NSError *err = nil;
 		dispatch_async_and_wait(_engineQueue, ^{
-			_engineIsRunning = [_engine startAndReturnError:&err];
-			if(_engineIsRunning && playerNodeWasPlaying)
-				[_playerNode play];
+			engineStarted = [_engine startAndReturnError:&err];
+			if(engineStarted) {
+				_flags.fetch_or(eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
+				if(playerNodeWasPlaying)
+					[_playerNode play];
+			}
 		});
 
-		if(!_engineIsRunning) {
+		if(!engineStarted) {
 			os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
 			if(error)
 				*error = err;
@@ -829,7 +844,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 #if DEBUG
-	NSAssert(engineWasRunning == _engineIsRunning && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
+	NSAssert(engineWasRunning == ((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) == eAudioPlayerFlagEngineIsRunning) && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
 #endif /* DEBUG */
 
 	return YES;
@@ -857,7 +872,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// Empirically this is necessary when transitioning between formats with different
 	// channel counts, although it seems that it shouldn't be
 	[_engine stop];
-	_engineIsRunning = false;
+	_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 
 	if(_playerNode.isPlaying)
 		[_playerNode stop];
