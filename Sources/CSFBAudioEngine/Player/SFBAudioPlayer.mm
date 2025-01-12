@@ -195,10 +195,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
 	if(forImmediatePlayback) {
-		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
+		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 		const auto result = [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
 		if(!result)
-			_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
+			_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 		return result;
 	}
 	// To preserve the order of enqueued decoders, when the internal queue is not empty
@@ -208,7 +208,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// bypassing the internal queue for supported formats when enqueueing A, B, AA
 	// would result in playback order A, AA, B
 	else if(self.internalDecoderQueueIsEmpty && [_playerNode supportsFormat:decoder.processingFormat]) {
-		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
+		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 		// Enqueuing is expected to succeed since the formats are compatible
 		return [_playerNode enqueueDecoder:decoder error:error];
 	}
@@ -987,11 +987,11 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying && _playerNode.currentDecoder == decoder) {
-		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive);
+	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying && _playerNode.currentDecoder == decoder) {
+		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		self.nowPlaying = decoder;
 	}
-	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
+	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder
@@ -1031,9 +1031,9 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return;
 		}
 
-		if(const auto flags = self->_flags.load(); !(flags & eAudioPlayerFlagPendingDecoderBecameActive))
+		if(const auto flags = self->_flags.load(std::memory_order_acquire); !(flags & eAudioPlayerFlagPendingDecoderBecameActive))
 			self.nowPlaying = decoder;
-		self->_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
+		self->_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 			[self->_delegate audioPlayer:self renderingStarted:decoder];
@@ -1119,7 +1119,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		if([self->_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[self->_delegate audioPlayer:self renderingComplete:decoder];
 
-		if(const auto flags = self->_flags.load(); (flags & eAudioPlayerFlagHavePendingDecoder))
+		if(const auto flags = self->_flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder))
 			return;
 
 		// Dequeue the next decoder
@@ -1168,8 +1168,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		[_delegate audioPlayer:self decoderCanceled:decoder framesRendered:framesRendered];
 
 	if(audioPlayerNode == _playerNode) {
-		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive);
-		if(const auto flags = _flags.load(); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
+		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
+		if(const auto flags = _flags.load(std::memory_order_acquire); !(flags & eAudioPlayerFlagHavePendingDecoder) && self.isStopped)
 			if(self.nowPlaying)
 				self.nowPlaying = nil;
 	}
