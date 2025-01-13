@@ -23,6 +23,8 @@
 
 #import "SFBAudioDecoder.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 namespace SFB {
 
 /// Returns the next event identification number
@@ -30,8 +32,6 @@ namespace SFB {
 uint64_t NextEventIdentificationNumber() noexcept;
 
 #pragma mark - AudioPlayerNode
-
-NS_ASSUME_NONNULL_BEGIN
 
 /// SFBAudioPlayerNode implementation
 struct AudioPlayerNode {
@@ -252,6 +252,6 @@ private:
 
 };
 
-NS_ASSUME_NONNULL_END
-
 } /* namespace SFB */
+
+NS_ASSUME_NONNULL_END
