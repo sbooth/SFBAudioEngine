@@ -426,12 +426,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (AVAudioFramePosition)framePosition
 {
-	return self.playbackPosition.framePosition;
+	return _playerNode->_impl->PlaybackPosition().framePosition;
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return self.playbackPosition.frameLength;
+	return _playerNode->_impl->PlaybackPosition().frameLength;
 }
 
 - (SFBAudioPlayerPlaybackPosition)playbackPosition
@@ -441,12 +441,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (NSTimeInterval)currentTime
 {
-	return self.playbackTime.currentTime;
+	return _playerNode->_impl->PlaybackTime().currentTime;
 }
 
 - (NSTimeInterval)totalTime
 {
-	return self.playbackTime.totalTime;
+	return _playerNode->_impl->PlaybackTime().totalTime;
 }
 
 - (SFBAudioPlayerPlaybackTime)playbackTime
@@ -463,12 +463,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)seekForward
 {
-	return [self seekForward:3];
+	return _playerNode->_impl->SeekForward(3);
 }
 
 - (BOOL)seekBackward
 {
-	return [self seekBackward:3];
+	return _playerNode->_impl->SeekBackward(3);
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
