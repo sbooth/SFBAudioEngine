@@ -39,7 +39,7 @@ struct AudioPlayerNode final {
 	struct DecoderState;
 
 	/// The shared log for all `AudioPlayerNode` instances
-	static const os_log_t _log;
+	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
 	__unsafe_unretained SFBAudioPlayerNode *mNode 			= nil;
