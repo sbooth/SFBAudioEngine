@@ -69,18 +69,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	if((self = [super initWithFormat:format renderBlock:impl->mRenderBlock])) {
 		_impl = std::move(impl);
 		_impl->mNode = self;
-
-		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-		if(!attr) {
-			os_log_error(SFB::AudioPlayerNode::sLog, "Unable to create dispatch_queue_attr_t: dispatch_queue_attr_make_with_qos_class() failed");
-			return nil;
-		}
-
-		_delegateQueue = dispatch_queue_create_with_target("AudioPlayerNode.Delegate", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
-		if(!_delegateQueue) {
-			os_log_error(SFB::AudioPlayerNode::sLog, "Unable to create dispatch_queue_t: dispatch_queue_create_with_target() failed");
-			return nil;
-		}
 	}
 
 	return self;

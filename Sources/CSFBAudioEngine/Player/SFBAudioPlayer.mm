@@ -16,6 +16,7 @@
 #import <SFBUnfairLock.hpp>
 
 #import "SFBAudioPlayer.h"
+#import "SFBAudioPlayerNode+Internal.h"
 
 #import "HostTimeUtilities.hpp"
 #import "SFBAudioDecoder.h"
@@ -1025,7 +1026,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
+	dispatch_after(hostTime, audioPlayerNode->_impl->mEventProcessingQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillStart:atHostTime:", decoder);
 			return;
@@ -1063,7 +1064,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
+	dispatch_after(hostTime, audioPlayerNode->_impl->mEventProcessingQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", decoder);
 			return;
@@ -1110,7 +1111,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	dispatch_after(hostTime, audioPlayerNode.delegateQueue, ^{
+	dispatch_after(hostTime, audioPlayerNode->_impl->mEventProcessingQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillComplete:atHostTime:", decoder);
 			return;
