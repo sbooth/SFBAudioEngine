@@ -17,10 +17,10 @@
 
 #import "SFBAudioPlayer.h"
 
+#import "HostTimeUtilities.hpp"
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
-#import "SFBStringDescribingAVAudioFormat.h"
-#import "SFBTimeUtilities.hpp"
+#import "StringDescribingAVAudioFormat.h"
 
 namespace {
 
