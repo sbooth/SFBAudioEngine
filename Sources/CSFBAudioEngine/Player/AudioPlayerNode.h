@@ -77,8 +77,10 @@ private:
 	/// Ring buffer used to communicate events from the render block
 	SFB::RingBuffer					mRenderEventRingBuffer;
 
-	/// Dispatch queue used for event processing
+public:
+	/// Dispatch queue used for event processing and delegate messaging
 	dispatch_queue_t				mEventProcessingQueue	= nullptr;
+private:
 	/// Dispatch source initiating event processing by the render block
 	dispatch_source_t				mEventProcessingSource 	= nullptr;
 	/// Dispatch group used to track event processing initiated by the decoding queue
@@ -166,7 +168,7 @@ public:
 
 	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
 
-#pragma mark - Queue Management
+#pragma mark - Decoder Queue Management
 
 	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError **error) noexcept;
 

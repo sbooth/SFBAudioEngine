@@ -681,7 +681,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 				const DecodingEventHeader header{DecodingEventCommand::eError};
 
 				const auto key = mDispatchKeyCounter.fetch_add(1);
-				dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
 
 				if(mDecodeEventRingBuffer.WriteValues(header, key))
 					dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
@@ -710,7 +710,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 				const DecodingEventHeader header{DecodingEventCommand::eError};
 
 				const auto key = mDispatchKeyCounter.fetch_add(1);
-				dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
 
 				if(mDecodeEventRingBuffer.WriteValues(header, key))
 					dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
@@ -865,7 +865,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 							const DecodingEventHeader header{DecodingEventCommand::eError};
 
 							const auto key = mDispatchKeyCounter.fetch_add(1);
-							dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+							dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
 
 							if(mDecodeEventRingBuffer.WriteValues(header, key))
 								dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
@@ -1120,6 +1120,10 @@ void SFB::AudioPlayerNode::ProcessPendingEvents() noexcept
 
 void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexcept
 {
+#if DEBUG
+	dispatch_assert_queue(mEventProcessingQueue);
+#endif /* DEBUG */
+
 	switch(header.mCommand) {
 		case DecodingEventCommand::eStarted:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
@@ -1130,9 +1134,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 				}
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode decodingStarted:decoderState->mDecoder];
-					});
+					[mNode.delegate audioPlayerNode:mNode decodingStarted:decoderState->mDecoder];
 				}
 			}
 			else
@@ -1148,9 +1150,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 				}
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode decodingComplete:decoderState->mDecoder];
-					});
+					[mNode.delegate audioPlayerNode:mNode decodingComplete:decoderState->mDecoder];
 				}
 			}
 			else
@@ -1170,9 +1170,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 				DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode decoderCanceled:decoder framesRendered:framesRendered];
-					});
+					[mNode.delegate audioPlayerNode:mNode decoderCanceled:decoder framesRendered:framesRendered];
 				}
 			}
 			else
@@ -1181,18 +1179,16 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 		case DecodingEventCommand::eError:
 			if(uint64_t key; mDecodeEventRingBuffer.ReadValue(key)) {
-				NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mNode.delegateQueue, reinterpret_cast<void *>(key));
+				NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mEventProcessingQueue, reinterpret_cast<void *>(key));
 				if(!error) {
 					os_log_fault(sLog, "Dispatch queue context data for key %llu missing for decoding error event", key);
 					break;
 				}
 
-				dispatch_queue_set_specific(mNode.delegateQueue, reinterpret_cast<void *>(key), nullptr, nullptr);
+				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), nullptr, nullptr);
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode encounteredError:error];
-					});
+					[mNode.delegate audioPlayerNode:mNode encounteredError:error];
 				}
 			}
 			else
@@ -1207,6 +1203,10 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noexcept
 {
+#if DEBUG
+	dispatch_assert_queue(mEventProcessingQueue);
+#endif /* DEBUG */
+
 	switch(header.mCommand) {
 		case RenderingEventCommand::eStarted:
 			if(uint64_t decoderSequenceNumber, hostTime; mRenderEventRingBuffer.ReadValues(decoderSequenceNumber, hostTime)) {
@@ -1225,9 +1225,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 #endif /* DEBUG */
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
-					});
+					[mNode.delegate audioPlayerNode:mNode renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
 				}
 			}
 			else
@@ -1258,9 +1256,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 #endif /* DEBUG */
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode renderingDecoder:decoderState->mDecoder willChangeToDecoder:nextDecoderState->mDecoder atHostTime:hostTime];
-					});
+					[mNode.delegate audioPlayerNode:mNode renderingDecoder:decoderState->mDecoder willChangeToDecoder:nextDecoderState->mDecoder atHostTime:hostTime];
 				}
 
 				DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
@@ -1286,9 +1282,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 #endif /* DEBUG */
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
-					dispatch_async_and_wait(mNode.delegateQueue, ^{
-						[mNode.delegate audioPlayerNode:mNode renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
-					});
+					[mNode.delegate audioPlayerNode:mNode renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
 				}
 
 				DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);

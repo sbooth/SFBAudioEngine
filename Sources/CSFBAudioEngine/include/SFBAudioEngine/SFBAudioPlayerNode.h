@@ -197,8 +197,6 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerNodeDelegate> delegate;
-/// The dispatch queue on which the `SFBAudioPlayerNode` messages the delegate
-@property (nonatomic, readonly) dispatch_queue_t delegateQueue;
 
 @end
 
