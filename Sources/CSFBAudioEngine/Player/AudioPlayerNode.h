@@ -99,7 +99,7 @@ private:
 	};
 
 public:
-	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize);
+	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
 	~AudioPlayerNode();
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
@@ -159,7 +159,7 @@ public:
 
 #pragma mark - Format Information
 
-	AVAudioFormat * RenderingFormat() const noexcept
+	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
 	{
 		return mRenderingFormat;
 	}
