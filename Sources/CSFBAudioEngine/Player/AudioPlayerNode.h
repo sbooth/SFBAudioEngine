@@ -6,10 +6,9 @@
 
 #pragma once
 
+#import <array>
 #import <atomic>
-#import <cassert>
 #import <memory>
-#import <mutex>
 #import <queue>
 
 #import <AVFAudio/AVFAudio.h>
@@ -19,9 +18,8 @@
 #import <SFBRingBuffer.hpp>
 #import <SFBUnfairLock.hpp>
 
-#import "SFBAudioPlayerNode.h"
-
 #import "SFBAudioDecoder.h"
+#import "SFBAudioPlayerNode.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
