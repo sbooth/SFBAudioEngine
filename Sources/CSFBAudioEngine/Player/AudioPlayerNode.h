@@ -253,16 +253,16 @@ private:
 
 #pragma mark - Decoder State Array
 
-	/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept;
 
-	/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
 	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
 
-	/// Returns the element in `decoders` with sequence number equal to `sequenceNumber`
+	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
 
-	/// Deletes the element in `decoders` with sequence number equal to `sequenceNumber`
+	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept;
 
 };
