@@ -91,11 +91,11 @@ struct DecoderState {
 	static constexpr int64_t			kInvalidFramePosition 	= -1;
 
 	enum DecoderStateFlags : unsigned int {
-		eFlagCancelDecoding 	= 1u << 0,
-		eFlagDecodingStarted 	= 1u << 1,
-		eFlagDecodingComplete 	= 1u << 2,
-		eFlagRenderingStarted 	= 1u << 3,
-		eFlagRenderingComplete 	= 1u << 4,
+		eFlagDecodingStarted 	= 1u << 0,
+		eFlagDecodingComplete 	= 1u << 1,
+		eFlagRenderingStarted 	= 1u << 2,
+		eFlagRenderingComplete 	= 1u << 3,
+		eFlagCanceled 			= 1u << 4,
 	};
 
 	/// Monotonically increasing instance counter
@@ -178,7 +178,7 @@ struct DecoderState {
 			return false;
 
 		if(mDecodeBuffer.frameLength == 0) {
-			mFlags.fetch_or(eFlagDecodingComplete);
+			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_acq_rel);
 			buffer.frameLength = 0;
 			return true;
 		}
@@ -193,7 +193,7 @@ struct DecoderState {
 		// If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
 		// decoding is complete
 		if(buffer.frameLength != buffer.frameCapacity)
-			mFlags.fetch_or(eFlagDecodingComplete);
+			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_acq_rel);
 
 		return true;
 	}
@@ -201,25 +201,31 @@ struct DecoderState {
 	/// Returns `true` if `eFlagDecodingStarted` is set
 	bool DecodingHasStarted() const noexcept
 	{
-		return (mFlags.load() & eFlagDecodingStarted) == eFlagDecodingStarted;
+		return mFlags.load(std::memory_order_acquire) & eFlagDecodingStarted;
 	}
 
 	/// Returns `true` if `eFlagDecodingComplete` is set
 	bool DecodingIsComplete() const noexcept
 	{
-		return (mFlags.load() & eFlagDecodingComplete) == eFlagDecodingComplete;
+		return mFlags.load(std::memory_order_acquire) & eFlagDecodingComplete;
 	}
 
 	/// Returns `true` if `eFlagRenderingStarted` is set
 	bool RenderingHasStarted() const noexcept
 	{
-		return (mFlags.load() & eFlagRenderingStarted) == eFlagRenderingStarted;
+		return mFlags.load(std::memory_order_acquire) & eFlagRenderingStarted;
 	}
 
 	/// Returns `true` if `eFlagRenderingComplete` is set
 	bool RenderingIsComplete() const noexcept
 	{
-		return (mFlags.load() & eFlagRenderingComplete) == eFlagRenderingComplete;
+		return mFlags.load(std::memory_order_acquire) & eFlagRenderingComplete;
+	}
+
+	/// Returns `true` if `eFlagCanceled` is set
+	bool IsCanceled() const noexcept
+	{
+		return mFlags.load(std::memory_order_acquire) & eFlagCanceled;
 	}
 
 	/// Returns the number of frames available to render.
@@ -308,7 +314,7 @@ DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber(const D
 {
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
 			continue;
 
@@ -329,7 +335,7 @@ DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const Deco
 {
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
 			continue;
 
@@ -349,7 +355,7 @@ DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const Deco
 DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(const auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
 			continue;
 
@@ -364,12 +370,12 @@ DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const DecoderStateArr
 void DeleteDecoderStateWithSequenceNumber(DecoderStateArray& decoders, const uint64_t& sequenceNumber) noexcept
 {
 	for(auto& atomic_ptr : decoders) {
-		auto decoderState = atomic_ptr.load();
+		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState || decoderState->mSequenceNumber != sequenceNumber)
 			continue;
 
 		os_log_debug(_audioPlayerNodeLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
-		delete atomic_ptr.exchange(nullptr);
+		delete atomic_ptr.exchange(nullptr, std::memory_order_acq_rel);
 	}
 }
 
@@ -509,7 +515,7 @@ public:
 		// Allocate and initialize the decoder state array
 		mActiveDecoders = new DecoderStateArray;
 		for(auto& atomic_ptr : *mActiveDecoders)
-			atomic_ptr.store(nullptr);
+			atomic_ptr.store(nullptr, std::memory_order_release);
 
 		// ========================================
 		// Decoding Setup
@@ -615,30 +621,30 @@ public:
 
 	void Play() noexcept
 	{
-		mFlags.fetch_or(eFlagIsPlaying);
+		mFlags.fetch_or(eFlagIsPlaying, std::memory_order_acq_rel);
 	}
 
 	void Pause() noexcept
 	{
-		mFlags.fetch_and(~eFlagIsPlaying);
+		mFlags.fetch_and(~eFlagIsPlaying, std::memory_order_acq_rel);
 	}
 
 	void Stop() noexcept
 	{
-		mFlags.fetch_and(~eFlagIsPlaying);
+		mFlags.fetch_and(~eFlagIsPlaying, std::memory_order_acq_rel);
 		Reset();
 	}
 
 	void TogglePlayPause() noexcept
 	{
-		mFlags.fetch_xor(eFlagIsPlaying);
+		mFlags.fetch_xor(eFlagIsPlaying, std::memory_order_acq_rel);
 	}
 
 #pragma mark - Playback State
 
 	bool IsPlaying() const noexcept
 	{
-		return (mFlags.load() & eFlagIsPlaying) == eFlagIsPlaying;
+		return mFlags.load(std::memory_order_acquire) & eFlagIsPlaying;
 	}
 
 	bool IsReady() const noexcept
@@ -850,7 +856,7 @@ public:
 
 		if(reset) {
 			// Mute until the decoder becomes active to prevent spurious events
-			mFlags.fetch_or(eFlagMuteRequested);
+			mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 			Reset();
 		}
 
@@ -901,7 +907,7 @@ public:
 					os_log_fault(_audioPlayerNodeLog, "Error writing decoder canceled event");
 			}
 			else {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelDecoding);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagCanceled, std::memory_order_acq_rel);
 				mDecodingSemaphore.Signal();
 			}
 		};
@@ -1035,7 +1041,7 @@ private:
 				auto stored = false;
 				do {
 					for(auto& atomic_ptr : *mActiveDecoders) {
-						auto current = atomic_ptr.load();
+						auto current = atomic_ptr.load(std::memory_order_acquire);
 						if(current)
 							continue;
 
@@ -1068,7 +1074,7 @@ private:
 						// This isn't a concern in practice since the main use case for this class is music, not
 						// sequential buffers of 0.05 sec. In normal use it's expected that slots 0 and 1 will
 						// be the only ones used.
-						atomic_ptr.store(decoderState);
+						atomic_ptr.store(decoderState, std::memory_order_release);
 						stored = true;
 						break;
 					}
@@ -1085,7 +1091,7 @@ private:
 
 				// Clear the mute flags if needed
 				if(unmuteNeeded)
-					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested);
+					mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested, std::memory_order_acq_rel);
 
 				os_log_debug(_audioPlayerNodeLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
@@ -1093,31 +1099,31 @@ private:
 				for(;;) {
 					// If a seek is pending request a ring buffer reset
 					if(decoderState->SeekIsPending())
-						mFlags.fetch_or(eFlagRingBufferNeedsReset);
+						mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 					// Reset the ring buffer if required, to prevent audible artifacts
-					if(mFlags.load() & eFlagRingBufferNeedsReset) {
-						mFlags.fetch_and(~eFlagRingBufferNeedsReset);
+					if(mFlags.load(std::memory_order_acquire) & eFlagRingBufferNeedsReset) {
+						mFlags.fetch_and(~eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 						// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
-						if(!(mFlags.load() & eFlagIsMuted)) {
+						if(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
 							if(mNode.engine.isRunning) {
-								mFlags.fetch_or(eFlagMuteRequested);
+								mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 
 								// The render block will clear eFlagMuteRequested and set eFlagIsMuted
-								while(!(mFlags.load() & eFlagIsMuted)) {
+								while(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
 									auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
 									// If the timeout occurred the engine may have stopped since the initial check
 									// with no subsequent opportunity for the render block to set eFlagIsMuted
 									if(!timeout && !mNode.engine.isRunning) {
-										mFlags.fetch_or(eFlagIsMuted);
-										mFlags.fetch_and(~eFlagMuteRequested);
+										mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
+										mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
 										break;
 									}
 								}
 							}
 							else
-								mFlags.fetch_or(eFlagIsMuted);
+								mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
 						}
 
 						// Perform seek if one is pending
@@ -1128,13 +1134,13 @@ private:
 						mAudioRingBuffer.Reset();
 
 						// Clear the mute flag
-						mFlags.fetch_and(~eFlagIsMuted);
+						mFlags.fetch_and(~eFlagIsMuted, std::memory_order_acq_rel);
 					}
 
-					if(decoderState->mFlags.load() & DecoderState::eFlagCancelDecoding) {
+					if(decoderState->IsCanceled()) {
 						os_log_debug(_audioPlayerNodeLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
-						mFlags.fetch_or(eFlagRingBufferNeedsReset);
+						mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 						// Submit the decoding canceled event
 						const DecodingEventHeader header{DecodingEventCommand::eCanceled};
@@ -1153,7 +1159,7 @@ private:
 						if(!decoderState->DecodingHasStarted()) {
 							os_log_debug(_audioPlayerNodeLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
-							decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted);
+							decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted, std::memory_order_acq_rel);
 
 							// Submit the decoding started event
 							const DecodingEventHeader header{DecodingEventCommand::eStarted};
@@ -1226,9 +1232,9 @@ private:
 
 		// ========================================
 		// 0. Mute if requested
-		if(mFlags.load() & eFlagMuteRequested) {
-			mFlags.fetch_or(eFlagIsMuted);
-			mFlags.fetch_and(~eFlagMuteRequested);
+		if(mFlags.load(std::memory_order_acquire) & eFlagMuteRequested) {
+			mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
+			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
 			mDecodingSemaphore.Signal();
 		}
 
@@ -1240,7 +1246,7 @@ private:
 
 		// ========================================
 		// 1. Output silence if not playing or muted
-		if(const auto flags = mFlags.load(); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
+		if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
 			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 				std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
@@ -1318,7 +1324,7 @@ private:
 
 			// Rendering is starting
 			if(!decoderState->RenderingHasStarted()) {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_acq_rel);
 
 				// Submit the rendering started event
 				const auto frameOffset = framesRead - framesRemainingToDistribute;
@@ -1337,7 +1343,7 @@ private:
 
 			// Rendering is complete
 			if(decoderState->DecodingIsComplete() && decoderState->AllAvailableFramesRendered()) {
-				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete, std::memory_order_acq_rel);
 
 				// Check for a decoder transition
 				if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
@@ -1348,7 +1354,7 @@ private:
 					assert(!nextDecoderState->RenderingHasStarted());
 #endif /* DEBUG */
 
-					nextDecoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted);
+					nextDecoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_acq_rel);
 
 					nextDecoderState->AddFramesRendered(framesFromNextDecoder);
 					framesRemainingToDistribute -= framesFromNextDecoder;
