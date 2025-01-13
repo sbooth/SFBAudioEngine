@@ -4,20 +4,13 @@
 // MIT license
 //
 
-#pragma once
-
 #import <AudioToolbox/AudioFormat.h>
-#import <AVFAudio/AVFAudio.h>
+
+#import "AVAudioChannelLayoutsAreEquivalent.h"
 
 namespace SFB {
 
-/// Returns `true` if `lhs` and `rhs` are equivalent
-///
-/// Channel layouts are considered equivalent if:
-/// 1) Both channel layouts are `nil`
-/// 2) One channel layout is `nil` and the other has a mono or stereo layout tag
-/// 3) `kAudioFormatProperty_AreChannelLayoutsEquivalent` is true
-inline bool AVAudioChannelLayoutsAreEquivalent(AVAudioChannelLayout * _Nullable lhs, AVAudioChannelLayout * _Nullable rhs) noexcept
+bool AVAudioChannelLayoutsAreEquivalent(AVAudioChannelLayout *lhs, AVAudioChannelLayout *rhs) noexcept
 {
 	if(!lhs && !rhs)
 		return true;
