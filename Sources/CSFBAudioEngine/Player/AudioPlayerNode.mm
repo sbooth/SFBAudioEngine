@@ -45,7 +45,7 @@ const os_log_t AudioPlayerNode::_log = os_log_create("org.sbooth.AudioEngine", "
 #pragma mark - Decoder State
 
 /// State for tracking/syncing decoding progress
-struct AudioPlayerNode::DecoderState {
+struct AudioPlayerNode::DecoderState final {
 	using atomic_ptr = std::atomic<DecoderState *>;
 	static_assert(atomic_ptr::is_always_lock_free, "Lock-free std::atomic<DecoderState *> required");
 

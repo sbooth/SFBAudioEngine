@@ -32,7 +32,7 @@ uint64_t NextEventIdentificationNumber() noexcept;
 #pragma mark - AudioPlayerNode
 
 /// SFBAudioPlayerNode implementation
-struct AudioPlayerNode {
+struct AudioPlayerNode final {
 	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
 	using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 
