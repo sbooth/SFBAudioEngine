@@ -6,9 +6,7 @@
 
 #import <exception>
 
-#import "SFBAudioPlayerNode.h"
-
-#import "AudioPlayerNode.h"
+#import "SFBAudioPlayerNode+Internal.h"
 
 const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
@@ -19,13 +17,6 @@ namespace {
 constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 } /* namespace */
-
-@interface SFBAudioPlayerNode ()
-{
-@private
-	SFB::AudioPlayerNode::unique_ptr _impl;
-}
-@end
 
 @implementation SFBAudioPlayerNode
 
