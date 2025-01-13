@@ -23,8 +23,6 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
 namespace SFB {
 
 /// Returns the next event identification number
@@ -40,18 +38,8 @@ struct AudioPlayerNode {
 
 	struct DecoderState;
 
-	static constexpr size_t kDecoderStateArraySize = 8;
-	using DecoderStateArray = std::array<std::atomic<DecoderState *>, kDecoderStateArraySize>;
-
 	/// The shared log for all `AudioPlayerNode` instances
 	static const os_log_t _log;
-
-	enum AudioPlayerNodeFlags : unsigned int {
-		eFlagIsPlaying 				= 1u << 0,
-		eFlagIsMuted 				= 1u << 1,
-		eFlagMuteRequested 			= 1u << 2,
-		eFlagRingBufferNeedsReset 	= 1u << 3,
-	};
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
 	__unsafe_unretained SFBAudioPlayerNode *mNode 			= nil;
@@ -60,6 +48,9 @@ struct AudioPlayerNode {
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
+	static constexpr size_t kDecoderStateArraySize = 8;
+	using DecoderStateArray = std::array<std::atomic<DecoderState *>, kDecoderStateArraySize>;
+
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
@@ -100,6 +91,13 @@ private:
 	/// Counter used for unique keys to `dispatch_queue_set_specific`
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
+	enum AudioPlayerNodeFlags : unsigned int {
+		eFlagIsPlaying 				= 1u << 0,
+		eFlagIsMuted 				= 1u << 1,
+		eFlagMuteRequested 			= 1u << 2,
+		eFlagRingBufferNeedsReset 	= 1u << 3,
+	};
+
 public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize);
 	~AudioPlayerNode();
@@ -134,7 +132,10 @@ public:
 		return mFlags.load(std::memory_order_acquire) & eFlagIsPlaying;
 	}
 
-	bool IsReady() const noexcept;
+	bool IsReady() const noexcept
+	{
+		return GetActiveDecoderStateWithSmallestSequenceNumber() != nullptr;
+	}
 
 #pragma mark - Playback Properties
 
@@ -158,11 +159,11 @@ public:
 		return mRenderingFormat;
 	}
 
-	bool SupportsFormat(AVAudioFormat *format) const noexcept;
+	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
 
 #pragma mark - Queue Management
 
-	bool EnqueueDecoder(id <SFBPCMDecoding> decoder, bool reset, NSError **error) noexcept;
+	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError **error) noexcept;
 
 private:
 	id <SFBPCMDecoding> _Nullable DequeueDecoder() noexcept;
@@ -250,8 +251,20 @@ private:
 	void ProcessEvent(const DecodingEventHeader& header) noexcept;
 	void ProcessEvent(const RenderingEventHeader& header) noexcept;
 
+#pragma mark - Decoder State Array
+
+	/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering
+	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept;
+
+	/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
+	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
+
+	/// Returns the element in `decoders` with sequence number equal to `sequenceNumber`
+	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
+
+	/// Deletes the element in `decoders` with sequence number equal to `sequenceNumber`
+	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept;
+
 };
 
 } /* namespace SFB */
-
-NS_ASSUME_NONNULL_END
