@@ -6,8 +6,6 @@
 
 #import <exception>
 
-#import <os/log.h>
-
 #import "SFBAudioPlayerNode.h"
 
 #import "AudioPlayerNode.h"
@@ -15,10 +13,12 @@
 const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
-//const os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
+namespace {
 
 /// The default ring buffer capacity in frames
 constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
+
+} /* namespace */
 
 @interface SFBAudioPlayerNode ()
 {

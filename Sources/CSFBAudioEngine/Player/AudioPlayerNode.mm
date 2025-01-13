@@ -12,8 +12,6 @@
 #import <mutex>
 #import <system_error>
 
-#import <os/log.h>
-
 #import <AVFAudio/AVFAudio.h>
 
 #import "AudioPlayerNode.h"

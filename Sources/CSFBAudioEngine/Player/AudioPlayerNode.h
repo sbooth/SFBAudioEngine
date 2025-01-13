@@ -11,6 +11,8 @@
 #import <memory>
 #import <queue>
 
+#import <os/log.h>
+
 #import <AVFAudio/AVFAudio.h>
 
 #import <SFBAudioRingBuffer.hpp>
