@@ -56,14 +56,14 @@ struct AudioPlayerNode::DecoderState final {
 	static_assert(atomic_ptr::is_always_lock_free, "Lock-free std::atomic<DecoderState *> required");
 
 	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
-	static constexpr int64_t			kInvalidFramePosition 	= -1;
 
 	enum DecoderStateFlags : unsigned int {
 		eFlagDecodingStarted 	= 1u << 0,
 		eFlagDecodingComplete 	= 1u << 1,
 		eFlagRenderingStarted 	= 1u << 2,
 		eFlagRenderingComplete 	= 1u << 3,
-		eFlagCanceled 			= 1u << 4,
+		eFlagSeekPending 		= 1u << 4,
+		eFlagCanceled 			= 1u << 5,
 	};
 
 	/// Monotonically increasing instance counter
@@ -82,7 +82,7 @@ struct AudioPlayerNode::DecoderState final {
 	/// The total number of audio frames
 	std::atomic_int64_t 	mFrameLength 		= 0;
 	/// The desired seek offset
-	std::atomic_int64_t 	mFrameToSeek 		= kInvalidFramePosition;
+	std::atomic_int64_t 	mFrameToSeek 		= SFBUnknownFramePosition;
 
 	static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
@@ -126,8 +126,7 @@ struct AudioPlayerNode::DecoderState final {
 
 	AVAudioFramePosition FramePosition() const noexcept
 	{
-		const auto seek = mFrameToSeek.load();
-		return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
+		return SeekIsPending() ? mFrameToSeek.load() : mFramesRendered.load();
 	}
 
 	AVAudioFramePosition FrameLength() const noexcept
@@ -222,25 +221,26 @@ struct AudioPlayerNode::DecoderState final {
 		mFramesRendered.fetch_add(count);
 	}
 
-	/// Returns `true` if there is a pending seek request
+	/// Returns `true` if `eFlagSeekPending` is set
 	bool SeekIsPending() const noexcept
 	{
-		return mFrameToSeek.load() != kInvalidFramePosition;
+		return mFlags.load(std::memory_order_acquire) & eFlagSeekPending;
 	}
 
 	/// Sets the pending seek request to `frame`
 	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept
 	{
 		mFrameToSeek.store(frame);
+		mFlags.fetch_or(eFlagSeekPending, std::memory_order_acq_rel);
 	}
 
 	/// Performs the pending seek request, if present
-	bool PerformPendingSeek() noexcept
+	bool PerformSeekIfRequired() noexcept
 	{
-		auto seekOffset = mFrameToSeek.load();
-		if(seekOffset == kInvalidFramePosition)
+		if(!SeekIsPending())
 			return true;
 
+		auto seekOffset = mFrameToSeek.load();
 		os_log_debug(sLog, "Seeking to frame %lld in %{public}@ ", seekOffset, mDecoder);
 
 		if([mDecoder seekToFrame:seekOffset error:nil])
@@ -255,18 +255,18 @@ struct AudioPlayerNode::DecoderState final {
 			seekOffset = newFrame;
 		}
 
-		// Update the seek request
-		mFrameToSeek.store(kInvalidFramePosition);
+		// Clear the seek request
+		mFlags.fetch_and(~eFlagSeekPending, std::memory_order_acq_rel);
 
 		// Update the frame counters accordingly
 		// A seek is handled in essentially the same way as initial playback
-		if(newFrame != kInvalidFramePosition) {
+		if(newFrame != SFBUnknownFramePosition) {
 			mFramesDecoded.store(newFrame);
 			mFramesConverted.store(seekOffset);
 			mFramesRendered.store(seekOffset);
 		}
 
-		return newFrame != kInvalidFramePosition;
+		return newFrame != SFBUnknownFramePosition;
 	}
 };
 
@@ -815,8 +815,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					}
 
 					// Perform seek if one is pending
-					if(decoderState->SeekIsPending())
-						decoderState->PerformPendingSeek();
+					decoderState->PerformSeekIfRequired();
 
 					// Reset() is not thread-safe but the render block is outputting silence
 					mAudioRingBuffer.Reset();
