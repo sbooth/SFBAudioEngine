@@ -27,6 +27,12 @@ namespace {
 /// The minimum number of frames to write to the ring buffer
 constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
 
+/// libdispatch destructor function for `NSError` objects
+void release_nserror_f(void *context)
+{
+	(void)(__bridge_transfer NSError *)context;
+}
+
 } /* namespace */
 
 namespace SFB {
@@ -266,12 +272,9 @@ struct AudioPlayerNode::DecoderState final {
 
 uint64_t AudioPlayerNode::DecoderState::sSequenceNumber = 1;
 
-void release_nserror_f(void *context)
-{
-	(void)(__bridge_transfer NSError *)context;
-}
-
 } /* namespace SFB */
+
+#pragma mark - AudioPlayerNode
 
 SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 : mRenderingFormat{format}
@@ -314,7 +317,7 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	
 	// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 	if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
-		os_log_error(sLog, "Unable to create audio ring buffer: SFB::Audio::RingBuffer::Allocate failed");
+		os_log_error(sLog, "Unable to create audio ring buffer: SFB::AudioRingBuffer::Allocate failed");
 		throw std::runtime_error("SFB::Audio::RingBuffer::Allocate failed");
 	}
 	
