@@ -980,7 +980,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
 
 	// The number of frames read from the ring buffer
-	AVAudioFramePosition framesRead = 0;
+	AVAudioFrameCount framesRead = 0;
 
 	// Output silence if the ring buffer is empty
 	if(framesAvailableToRead == 0) {
