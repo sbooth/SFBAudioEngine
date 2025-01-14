@@ -906,7 +906,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					// Write the decoded audio to the ring buffer for rendering
 					const auto framesWritten = mAudioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
 					if(framesWritten != buffer.frameLength)
-						os_log_error(sLog, "SFB::Audio::RingBuffer::Write() failed");
+						os_log_error(sLog, "SFB::AudioRingBuffer::Write() failed");
 
 					if(decoderState->IsDecodingComplete()) {
 						// Some formats (MP3) may not know the exact number of frames in advance
