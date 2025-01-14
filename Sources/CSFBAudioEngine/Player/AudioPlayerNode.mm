@@ -55,6 +55,16 @@ struct AudioPlayerNode::DecoderState final {
 	using atomic_ptr = std::atomic<DecoderState *>;
 	static_assert(atomic_ptr::is_always_lock_free, "Lock-free std::atomic<DecoderState *> required");
 
+	/// Monotonically increasing instance counter
+	const uint64_t				mSequenceNumber 	= sSequenceNumber++;
+
+	/// The sample rate of the audio converter's output format
+	const double 				mSampleRate 		= 0;
+
+	/// Decodes audio from the source representation to PCM
+	const id <SFBPCMDecoding> 	mDecoder 			= nil;
+
+private:
 	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
 
 	enum DecoderStateFlags : unsigned int {
@@ -65,12 +75,6 @@ struct AudioPlayerNode::DecoderState final {
 		eFlagSeekPending 		= 1u << 4,
 		eFlagCanceled 			= 1u << 5,
 	};
-
-	/// Monotonically increasing instance counter
-	const uint64_t			mSequenceNumber 	= sSequenceNumber++;
-
-	/// The sample rate of the audio converter's output format
-	const double 			mSampleRate 		= 0;
 
 	/// Decoder state flags
 	std::atomic_uint 		mFlags 				= 0;
@@ -89,8 +93,6 @@ struct AudioPlayerNode::DecoderState final {
 
 	static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
-	/// Decodes audio from the source representation to PCM
-	id <SFBPCMDecoding> 	mDecoder 			= nil;
 	/// Converts audio from the decoder's processing format to another PCM variant at the same sample rate
 	AVAudioConverter 		*mConverter 		= nil;
 	/// Buffer used internally for buffering during conversion
@@ -99,6 +101,7 @@ struct AudioPlayerNode::DecoderState final {
 	/// Next sequence number to use
 	static uint64_t			sSequenceNumber;
 
+public:
 	DecoderState(id <SFBPCMDecoding> _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
 	: mFrameLength{decoder.frameLength}, mDecoder{decoder}, mSampleRate{format.sampleRate}
 	{
@@ -149,6 +152,13 @@ struct AudioPlayerNode::DecoderState final {
 
 		if(mDecodeBuffer.frameLength == 0) {
 			mFlags.fetch_or(eFlagDecodingComplete, std::memory_order_acq_rel);
+
+#if false
+			// Some formats may not know the exact number of frames in advance
+			// without processing the entire file, which is a potentially slow operation
+			mFrameLength.store(mDecoder.framePosition);
+#endif /* false */
+
 			buffer.frameLength = 0;
 			return true;
 		}
@@ -559,7 +569,7 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
-	
+
 	if(frame >= decoderState->FrameLength())
 		frame = std::max(decoderState->FrameLength() - 1, 0ll);
 	
@@ -911,10 +921,6 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 						os_log_error(sLog, "SFB::AudioRingBuffer::Write() failed");
 
 					if(decoderState->IsDecodingComplete()) {
-						// Some formats (MP3) may not know the exact number of frames in advance
-						// without processing the entire file, which is a potentially slow operation
-						decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
-
 						// Submit the decoding complete event
 						const DecodingEventHeader header{DecodingEventCommand::eComplete};
 						if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
