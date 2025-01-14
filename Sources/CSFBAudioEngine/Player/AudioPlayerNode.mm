@@ -167,33 +167,57 @@ struct AudioPlayerNode::DecoderState final {
 	}
 
 	/// Returns `true` if `eFlagDecodingStarted` is set
-	bool DecodingHasStarted() const noexcept
+	bool HasDecodingStarted() const noexcept
 	{
 		return mFlags.load(std::memory_order_acquire) & eFlagDecodingStarted;
 	}
 
+	/// Sets `eFlagDecodingStarted`
+	void SetDecodingStarted() noexcept
+	{
+		mFlags.fetch_or(eFlagDecodingStarted, std::memory_order_acq_rel);
+	}
+
 	/// Returns `true` if `eFlagDecodingComplete` is set
-	bool DecodingIsComplete() const noexcept
+	bool IsDecodingComplete() const noexcept
 	{
 		return mFlags.load(std::memory_order_acquire) & eFlagDecodingComplete;
 	}
 
 	/// Returns `true` if `eFlagRenderingStarted` is set
-	bool RenderingHasStarted() const noexcept
+	bool HasRenderingStarted() const noexcept
 	{
 		return mFlags.load(std::memory_order_acquire) & eFlagRenderingStarted;
 	}
 
+	/// Sets `eFlagRenderingStarted`
+	void SetRenderingStarted() noexcept
+	{
+		mFlags.fetch_or(eFlagRenderingStarted, std::memory_order_acq_rel);
+	}
+
 	/// Returns `true` if `eFlagRenderingComplete` is set
-	bool RenderingIsComplete() const noexcept
+	bool IsRenderingComplete() const noexcept
 	{
 		return mFlags.load(std::memory_order_acquire) & eFlagRenderingComplete;
+	}
+
+	/// Sets `eFlagRenderingComplete`
+	void SetRenderingComplete() noexcept
+	{
+		mFlags.fetch_or(eFlagRenderingComplete, std::memory_order_acq_rel);
 	}
 
 	/// Returns `true` if `eFlagCanceled` is set
 	bool IsCanceled() const noexcept
 	{
 		return mFlags.load(std::memory_order_acquire) & eFlagCanceled;
+	}
+
+	/// Sets `eFlagCanceled`
+	void SetCanceled() noexcept
+	{
+		mFlags.fetch_or(eFlagCanceled, std::memory_order_acq_rel);
 	}
 
 	/// Returns the number of frames available to render.
@@ -625,7 +649,7 @@ void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
 {
 	auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
 		// If the decoder has already finished decoding, perform the cancelation manually
-		if(decoderState->DecodingIsComplete()) {
+		if(decoderState->IsDecodingComplete()) {
 #if DEBUG
 			os_log_debug(sLog, "Canceling %{public}@ that has completed decoding", decoderState->mDecoder);
 #endif /* DEBUG */
@@ -639,7 +663,7 @@ void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
 				os_log_fault(sLog, "Error writing decoder canceled event");
 		}
 		else {
-			decoderState->mFlags.fetch_or(DecoderState::eFlagCanceled, std::memory_order_acq_rel);
+			decoderState->SetCanceled();
 			mDecodingSemaphore.Signal();
 		}
 	};
@@ -844,10 +868,10 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 
 				// Decode and write chunks to the ring buffer
 				while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
-					if(!decoderState->DecodingHasStarted()) {
+					if(!decoderState->HasDecodingStarted()) {
 						os_log_debug(sLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
-						decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingStarted, std::memory_order_acq_rel);
+						decoderState->SetDecodingStarted();
 
 						// Submit the decoding started event
 						const DecodingEventHeader header{DecodingEventCommand::eStarted};
@@ -882,9 +906,9 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					// Write the decoded audio to the ring buffer for rendering
 					const auto framesWritten = mAudioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
 					if(framesWritten != buffer.frameLength)
-						os_log_error(sLog, "SFB::Audio::RingBuffer::Write() failed");
+						os_log_error(sLog, "SFB::AudioRingBuffer::Write() failed");
 
-					if(decoderState->DecodingIsComplete()) {
+					if(decoderState->IsDecodingComplete()) {
 						// Some formats (MP3) may not know the exact number of frames in advance
 						// without processing the entire file, which is a potentially slow operation
 						decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
@@ -1011,8 +1035,8 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
 		// Rendering is starting
-		if(!decoderState->RenderingHasStarted()) {
-			decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_acq_rel);
+		if(!decoderState->HasRenderingStarted()) {
+			decoderState->SetRenderingStarted();
 
 			// Submit the rendering started event
 			const auto frameOffset = framesRead - framesRemainingToDistribute;
@@ -1030,8 +1054,8 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		framesRemainingToDistribute -= framesFromThisDecoder;
 
 		// Rendering is complete
-		if(decoderState->DecodingIsComplete() && decoderState->AllAvailableFramesRendered()) {
-			decoderState->mFlags.fetch_or(DecoderState::eFlagRenderingComplete, std::memory_order_acq_rel);
+		if(decoderState->IsDecodingComplete() && decoderState->AllAvailableFramesRendered()) {
+			decoderState->SetRenderingComplete();
 
 			// Check for a decoder transition
 			if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
@@ -1039,10 +1063,10 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 				const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
 
 #if DEBUG
-				assert(!nextDecoderState->RenderingHasStarted());
+				assert(!nextDecoderState->HasRenderingStarted());
 #endif /* DEBUG */
 
-				nextDecoderState->mFlags.fetch_or(DecoderState::eFlagRenderingStarted, std::memory_order_acq_rel);
+				nextDecoderState->SetRenderingStarted();
 
 				nextDecoderState->AddFramesRendered(framesFromNextDecoder);
 				framesRemainingToDistribute -= framesFromNextDecoder;
@@ -1310,7 +1334,7 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 		if(!decoderState)
 			continue;
 
-		if(decoderState->RenderingIsComplete())
+		if(decoderState->IsRenderingComplete())
 			continue;
 
 		if(!result)
@@ -1330,7 +1354,7 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 		if(!decoderState)
 			continue;
 
-		if(decoderState->RenderingIsComplete())
+		if(decoderState->IsRenderingComplete())
 			continue;
 
 		if(!result && decoderState->mSequenceNumber > sequenceNumber)
