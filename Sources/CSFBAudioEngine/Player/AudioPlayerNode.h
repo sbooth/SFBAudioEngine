@@ -9,6 +9,7 @@
 #import <array>
 #import <atomic>
 #import <memory>
+#import <mutex>
 #import <queue>
 
 #import <os/log.h>
