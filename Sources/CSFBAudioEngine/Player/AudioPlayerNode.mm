@@ -126,7 +126,7 @@ struct AudioPlayerNode::DecoderState final {
 
 	AVAudioFramePosition FramePosition() const noexcept
 	{
-		return SeekIsPending() ? mFrameToSeek.load() : mFramesRendered.load();
+		return IsSeekPending() ? mFrameToSeek.load() : mFramesRendered.load();
 	}
 
 	AVAudioFramePosition FrameLength() const noexcept
@@ -222,7 +222,7 @@ struct AudioPlayerNode::DecoderState final {
 	}
 
 	/// Returns `true` if `eFlagSeekPending` is set
-	bool SeekIsPending() const noexcept
+	bool IsSeekPending() const noexcept
 	{
 		return mFlags.load(std::memory_order_acquire) & eFlagSeekPending;
 	}
@@ -237,7 +237,7 @@ struct AudioPlayerNode::DecoderState final {
 	/// Performs the pending seek request, if present
 	bool PerformSeekIfRequired() noexcept
 	{
-		if(!SeekIsPending())
+		if(!IsSeekPending())
 			return true;
 
 		auto seekOffset = mFrameToSeek.load();
@@ -786,7 +786,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 			// Process the decoder until canceled or complete
 			for(;;) {
 				// If a seek is pending request a ring buffer reset
-				if(decoderState->SeekIsPending())
+				if(decoderState->IsSeekPending())
 					mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
 				// Reset the ring buffer if required, to prevent audible artifacts
