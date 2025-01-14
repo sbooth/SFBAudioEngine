@@ -977,7 +977,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	}
 
 	// Determine how many audio frames are available to read from the ring buffer
-	const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
+	const AVAudioFrameCount framesAvailableToRead = mAudioRingBuffer.FramesAvailableToRead();
 
 	// The number of frames read from the ring buffer
 	AVAudioFrameCount framesRead = 0;
@@ -994,7 +994,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	// Otherwise read as many frames as available from the ring buffer
 	else {
 		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
-		framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
+		framesRead = mAudioRingBuffer.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
 			os_log_fault(sLog, "SFB::AudioRingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
