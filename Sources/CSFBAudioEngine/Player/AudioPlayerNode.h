@@ -24,6 +24,8 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 namespace SFB {
 
 /// Returns the next event identification number
@@ -81,6 +83,7 @@ private:
 public:
 	/// Dispatch queue used for event processing and delegate messaging
 	dispatch_queue_t				mEventProcessingQueue	= nullptr;
+
 private:
 	/// Dispatch source initiating event processing by the render block
 	dispatch_source_t				mEventProcessingSource 	= nullptr;
@@ -102,7 +105,7 @@ private:
 	};
 
 public:
-	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
+	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize);
 	~AudioPlayerNode();
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
@@ -162,16 +165,16 @@ public:
 
 #pragma mark - Format Information
 
-	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
+	AVAudioFormat * RenderingFormat() const noexcept
 	{
 		return mRenderingFormat;
 	}
 
-	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
+	bool SupportsFormat(AVAudioFormat *format) const noexcept;
 
 #pragma mark - Decoder Queue Management
 
-	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError **error) noexcept;
+	bool EnqueueDecoder(id <SFBPCMDecoding> decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
 
 private:
 	id <SFBPCMDecoding> _Nullable DequeueDecoder() noexcept;
@@ -276,3 +279,5 @@ private:
 };
 
 } /* namespace SFB */
+
+NS_ASSUME_NONNULL_END
