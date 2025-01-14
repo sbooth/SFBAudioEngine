@@ -976,23 +976,11 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		return noErr;
 	}
 
-	// Determine how many audio frames are available to read from the ring buffer
-	const AVAudioFrameCount framesAvailableToRead = mAudioRingBuffer.FramesAvailableToRead();
-
 	// The number of frames read from the ring buffer
 	AVAudioFrameCount framesRead = 0;
 
-	// Output silence if the ring buffer is empty
-	if(framesAvailableToRead == 0) {
-		const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
-		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
-			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
-		}
-		isSilence = YES;
-	}
-	// Otherwise read as many frames as available from the ring buffer
-	else {
+	// If there are audio frames available to read from the ring buffer read as many as possible
+	if(const auto framesAvailableToRead = mAudioRingBuffer.FramesAvailableToRead(); framesAvailableToRead > 0) {
 		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
 		framesRead = mAudioRingBuffer.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
@@ -1016,6 +1004,15 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		// If there is adequate space in the ring buffer for another chunk signal the decoding queue
 		if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
 			mDecodingSemaphore.Signal();
+	}
+	// Output silence if the ring buffer is empty
+	else {
+		const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
+		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
+			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+		}
+		isSilence = YES;
 	}
 
 	// ========================================
