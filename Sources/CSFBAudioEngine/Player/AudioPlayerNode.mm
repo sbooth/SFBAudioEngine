@@ -69,6 +69,9 @@ struct AudioPlayerNode::DecoderState final {
 	/// Monotonically increasing instance counter
 	const uint64_t			mSequenceNumber 	= sSequenceNumber++;
 
+	/// The sample rate of the audio converter's output format
+	const double 			mSampleRate 		= 0;
+
 	/// Decoder state flags
 	std::atomic_uint 		mFlags 				= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
@@ -97,7 +100,7 @@ struct AudioPlayerNode::DecoderState final {
 	static uint64_t			sSequenceNumber;
 
 	DecoderState(id <SFBPCMDecoding> _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
-	: mFrameLength{decoder.frameLength}, mDecoder{decoder}
+	: mFrameLength{decoder.frameLength}, mDecoder{decoder}, mSampleRate{format.sampleRate}
 	{
 #if DEBUG
 		assert(decoder != nil);
@@ -436,7 +439,7 @@ SFBAudioPlayerNodePlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexce
 	const auto framePosition = decoderState->FramePosition();
 	const auto frameLength = decoderState->FrameLength();
 
-	if(const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
+	if(const auto sampleRate = decoderState->mSampleRate; sampleRate > 0) {
 		if(framePosition != SFBUnknownFramePosition)
 			playbackTime.currentTime = framePosition / sampleRate;
 		if(frameLength != SFBUnknownFrameLength)
@@ -463,7 +466,7 @@ bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBAudioPlayerNodePlayback
 
 	if(playbackTime) {
 		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
-		if(const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate; sampleRate > 0) {
+		if(const auto sampleRate = decoderState->mSampleRate; sampleRate > 0) {
 			if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 				currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
 			if(currentPlaybackPosition.frameLength != SFBUnknownFrameLength)
@@ -486,7 +489,7 @@ bool SFB::AudioPlayerNode::SeekForward(NSTimeInterval secondsToSkip) noexcept
 	if(!decoderState)
 		return false;
 
-	const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate;
+	const auto sampleRate = decoderState->mSampleRate;
 	const auto framePosition = decoderState->FramePosition();
 	auto targetFrame = framePosition + static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
@@ -505,7 +508,7 @@ bool SFB::AudioPlayerNode::SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	if(!decoderState)
 		return false;
 
-	const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate;
+	const auto sampleRate = decoderState->mSampleRate;
 	const auto framePosition = decoderState->FramePosition();
 	auto targetFrame = framePosition - static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
@@ -524,7 +527,7 @@ bool SFB::AudioPlayerNode::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 	if(!decoderState)
 		return false;
 
-	const auto sampleRate = decoderState->mConverter.outputFormat.sampleRate;
+	const auto sampleRate = decoderState->mSampleRate;
 	auto targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
 
 	if(targetFrame >= decoderState->FrameLength())
