@@ -7,7 +7,7 @@
 #import <cassert>
 #import <utility>
 
-#import "SFBTimeUtilities.hpp"
+#import "HostTimeUtilities.hpp"
 
 namespace {
 
