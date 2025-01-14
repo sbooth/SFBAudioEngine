@@ -355,7 +355,7 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 	if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
 		os_log_error(sLog, "Unable to create audio ring buffer: SFB::AudioRingBuffer::Allocate failed");
-		throw std::runtime_error("SFB::Audio::RingBuffer::Allocate failed");
+		throw std::runtime_error("SFB::AudioRingBuffer::Allocate failed");
 	}
 	
 	// Set up the render block
@@ -948,10 +948,10 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept
 {
 	// ========================================
-	// Pre-rendering actions
-
+	// Pre-rendering
 	// ========================================
-	// 0. Mute if requested
+
+	// Mute if requested
 	if(mFlags.load(std::memory_order_acquire) & eFlagMuteRequested) {
 		mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
 		mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
@@ -960,13 +960,13 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 
 	// ========================================
 	// Rendering
+	// ========================================
 
 	// N.B. The ring buffer must not be read from or written to when eFlagIsMuted is set
 	// because the decoding queue could be performing non-thread safe operations
 
-	// ========================================
-	// 1. Output silence if not playing or muted
-	if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & eFlagIsPlaying) || flags & eFlagIsMuted) {
+	// Output silence if not playing or muted
+	if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & eFlagIsPlaying) || (flags & eFlagIsMuted)) {
 		const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
 			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
@@ -976,12 +976,13 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		return noErr;
 	}
 
-	// ========================================
-	// 2. Determine how many audio frames are available to read from the ring buffer
+	// Determine how many audio frames are available to read from the ring buffer
 	const auto framesAvailableToRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.FramesAvailableToRead());
 
-	// ========================================
-	// 3. Output silence if the ring buffer is empty
+	// The number of frames read from the ring buffer
+	AVAudioFramePosition framesRead = 0;
+
+	// Output silence if the ring buffer is empty
 	if(framesAvailableToRead == 0) {
 		const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(frameCount);
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
@@ -989,47 +990,39 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
 		}
 		isSilence = YES;
-		return noErr;
 	}
+	// Otherwise read as many frames as available from the ring buffer
+	else {
+		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
+		framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
+		if(framesRead != framesToRead)
+			os_log_fault(sLog, "SFB::AudioRingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
-	// ========================================
-	// 4. Read as many frames as available from the ring buffer
-	const auto framesToRead = std::min(framesAvailableToRead, frameCount);
-	const auto framesRead = static_cast<AVAudioFrameCount>(mAudioRingBuffer.Read(outputData, framesToRead));
-	if(framesRead != framesToRead)
-		os_log_fault(sLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
-
-	// ========================================
-	// 5. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
-	if(framesRead != frameCount) {
+		// If the ring buffer didn't contain as many frames as requested fill the remainder with silence
+		if(framesRead != frameCount) {
 #if DEBUG
-		os_log_debug(sLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
+			os_log_debug(sLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
 #endif /* DEBUG */
 
-		const auto framesOfSilence = frameCount - framesRead;
-		const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
-		const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
-		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(outputData->mBuffers[i].mData) + byteCountToSkip), 0, byteCountToZero);
-			outputData->mBuffers[i].mDataByteSize += byteCountToZero;
+			const auto framesOfSilence = frameCount - framesRead;
+			const auto byteCountToSkip = mAudioRingBuffer.Format().FrameCountToByteSize(framesRead);
+			const auto byteCountToZero = mAudioRingBuffer.Format().FrameCountToByteSize(framesOfSilence);
+			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
+				std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(outputData->mBuffers[i].mData) + byteCountToSkip), 0, byteCountToZero);
+				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
+			}
 		}
+
+		// If there is adequate space in the ring buffer for another chunk signal the decoding queue
+		if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
+			mDecodingSemaphore.Signal();
 	}
 
 	// ========================================
-	// 6. If there is adequate space in the ring buffer for another chunk signal the decoding queue
-	if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
-		mDecodingSemaphore.Signal();
-
+	// Post-rendering
 	// ========================================
-	// Post-rendering actions
 
-	// ========================================
-	// 7. There is nothing more to do if no frames were rendered
-	if(framesRead == 0)
-		return noErr;
-
-	// ========================================
-	// 8. Perform bookkeeping to apportion the rendered frames appropriately
+	// Perform bookkeeping to apportion the rendered frames appropriately
 	//
 	// framesRead contains the number of valid frames that were rendered
 	// However, these could have come from any number of decoders depending on buffer sizes
@@ -1043,7 +1036,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
 		// Rendering is starting
-		if(!decoderState->HasRenderingStarted()) {
+		if(!decoderState->HasRenderingStarted() && framesFromThisDecoder > 0) {
 			decoderState->SetRenderingStarted();
 
 			// Submit the rendering started event
