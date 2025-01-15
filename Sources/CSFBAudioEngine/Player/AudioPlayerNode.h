@@ -90,13 +90,7 @@ private:
 	/// Dispatch group used to track event processing initiated by the decoding queue
 	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
-	/// AudioPlayerNode flags
-	std::atomic_uint 				mFlags 					= 0;
-	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
-
-	/// Counter used for unique keys to `dispatch_queue_set_specific`
-	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
-
+	/// Possible `AudioPlayerNode` flag values
 	enum AudioPlayerNodeFlags : unsigned int {
 		/// The render block is outputting audio
 		eFlagIsPlaying 				= 1u << 0,
@@ -107,6 +101,13 @@ private:
 		/// The audio ring buffer requires a non-threadsafe reset
 		eFlagRingBufferNeedsReset 	= 1u << 3,
 	};
+
+	/// Flags
+	std::atomic_uint 				mFlags 					= 0;
+	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
+
+	/// Counter used for unique keys to `dispatch_queue_set_specific`
+	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 public:
 	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize);

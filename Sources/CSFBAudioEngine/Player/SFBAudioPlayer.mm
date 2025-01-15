@@ -31,9 +31,13 @@ constexpr char _decoderIsCanceledKey = '\0';
 using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
+/// Possible `SFBAudioPlayer` flag values
 enum AudioPlayerFlags : unsigned int {
+	/// Cached value of `_audioEngine.isRunning`
 	eAudioPlayerFlagEngineIsRunning					= 1u << 0,
+	/// Set if there is a decoder being enqueued on the player node that has not yet started decoding
 	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
+	/// Set if the pending decoder becomes active when the player is not playing
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
