@@ -27,7 +27,7 @@ namespace {
 constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
 
 /// libdispatch destructor function for `NSError` objects
-void release_nserror_f(void *context)
+void release_nserror_f(void * _Nullable context)
 {
 	(void)(__bridge_transfer NSError *)context;
 }
@@ -66,16 +66,23 @@ struct AudioPlayerNode::DecoderState final {
 private:
 	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
 
+	/// Possible `DecoderState` flag values
 	enum DecoderStateFlags : unsigned int {
+		/// Decoding started
 		eFlagDecodingStarted 	= 1u << 0,
+		/// Decoding complete
 		eFlagDecodingComplete 	= 1u << 1,
+		/// Rendering started
 		eFlagRenderingStarted 	= 1u << 2,
+		/// Rendering complete
 		eFlagRenderingComplete 	= 1u << 3,
+		/// A seek has been requested
 		eFlagSeekPending 		= 1u << 4,
+		/// Decoder canceled
 		eFlagCanceled 			= 1u << 5,
 	};
 
-	/// Decoder state flags
+	/// Flags
 	std::atomic_uint 		mFlags 				= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
@@ -645,12 +652,20 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(id <SFBPCMDecoding> decoder, bool rese
 		Reset();
 	}
 
-	os_log_info(sLog, "Enqueuing %{public}@", decoder);
-
-	{
+	try {
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
 		mQueuedDecoders.push_back(decoder);
 	}
+	catch(const std::exception& e) {
+		os_log_error(sLog, "Error pushing %{public}@ to mQueuedDecoders: %{public}s", decoder, e.what());
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		if(reset)
+			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
+		return false;
+	}
+
+	os_log_info(sLog, "Enqueued %{public}@", decoder);
 
 	DequeueAndProcessDecoder(reset);
 

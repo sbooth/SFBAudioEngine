@@ -6,8 +6,8 @@
 
 #import <atomic>
 #import <cmath>
+#import <deque>
 #import <mutex>
-#import <queue>
 
 #import <objc/runtime.h>
 
@@ -28,12 +28,16 @@ namespace {
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char _decoderIsCanceledKey = '\0';
 
-using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
+/// Possible `SFBAudioPlayer` flag values
 enum AudioPlayerFlags : unsigned int {
+	/// Cached value of `_audioEngine.isRunning`
 	eAudioPlayerFlagEngineIsRunning					= 1u << 0,
+	/// Set if there is a decoder being enqueued on the player node that has not yet started decoding
 	eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
+	/// Set if the pending decoder becomes active when the player is not playing
 	eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2,
 };
 
@@ -88,7 +92,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 /// Removes all decoders from the internal decoder queue
 - (void)clearInternalDecoderQueue;
 /// Inserts `decoder` at the end of the internal decoder queue
-- (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
+- (BOOL)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
 /// Removes and returns the first decoder from the internal decoder queue
 - (nullable id <SFBPCMDecoding>)popDecoderFromInternalQueue;
 /// Called to process `AVAudioEngineConfigurationChangeNotification`
@@ -215,7 +219,11 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// If the internal queue is not empty or _playerNode doesn't support
 	// the decoder's processing format add the decoder to our internal queue
 	else {
-		[self pushDecoderToInternalQueue:decoder];
+		if(![self pushDecoderToInternalQueue:decoder]) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
+		}
 		return YES;
 	}
 }
@@ -665,23 +673,30 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)clearInternalDecoderQueue
 {
 	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-	while(!_queuedDecoders.empty())
-		_queuedDecoders.pop();
+	_queuedDecoders.resize(0);
 }
 
-- (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
+- (BOOL)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
 {
-	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-	_queuedDecoders.push(decoder);
+	try {
+		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+		_queuedDecoders.push_back(decoder);
+	}
+	catch(const std::exception& e) {
+		os_log_error(_audioPlayerLog, "Error pushing %{public}@ to _queuedDecoders: %{public}s", decoder, e.what());
+		return NO;
+	}
+
+	return YES;
 }
 
 - (id <SFBPCMDecoding>)popDecoderFromInternalQueue
 {
-	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 	id <SFBPCMDecoding> decoder = nil;
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 	if(!_queuedDecoders.empty()) {
 		decoder = _queuedDecoders.front();
-		_queuedDecoders.pop();
+		_queuedDecoders.pop_front();
 	}
 	return decoder;
 }
