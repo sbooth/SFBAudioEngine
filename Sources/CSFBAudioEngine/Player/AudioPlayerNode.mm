@@ -660,7 +660,8 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(id <SFBPCMDecoding> decoder, bool rese
 		os_log_error(sLog, "Error pushing %{public}@ to mQueuedDecoders: %{public}s", decoder, e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-		mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
+		if(reset)
+			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
 		return false;
 	}
 
