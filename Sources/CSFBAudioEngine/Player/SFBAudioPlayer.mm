@@ -6,8 +6,8 @@
 
 #import <atomic>
 #import <cmath>
+#import <deque>
 #import <mutex>
-#import <queue>
 
 #import <objc/runtime.h>
 
@@ -28,7 +28,7 @@ namespace {
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char _decoderIsCanceledKey = '\0';
 
-using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
 const os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
 /// Possible `SFBAudioPlayer` flag values
@@ -669,23 +669,22 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)clearInternalDecoderQueue
 {
 	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-	while(!_queuedDecoders.empty())
-		_queuedDecoders.pop();
+	_queuedDecoders.resize(0);
 }
 
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
 {
 	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-	_queuedDecoders.push(decoder);
+	_queuedDecoders.push_back(decoder);
 }
 
 - (id <SFBPCMDecoding>)popDecoderFromInternalQueue
 {
-	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 	id <SFBPCMDecoding> decoder = nil;
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 	if(!_queuedDecoders.empty()) {
 		decoder = _queuedDecoders.front();
-		_queuedDecoders.pop();
+		_queuedDecoders.pop_front();
 	}
 	return decoder;
 }
