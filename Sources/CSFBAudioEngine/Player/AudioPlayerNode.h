@@ -98,9 +98,13 @@ private:
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 	enum AudioPlayerNodeFlags : unsigned int {
+		/// The render block is outputting audio
 		eFlagIsPlaying 				= 1u << 0,
+		/// The render block is outputting silence
 		eFlagIsMuted 				= 1u << 1,
+		/// The decoding dispatch queue has requested the render block to set `eFlagIsMuted` during the next render cycle
 		eFlagMuteRequested 			= 1u << 2,
+		/// The audio ring buffer requires a non-threadsafe reset
 		eFlagRingBufferNeedsReset 	= 1u << 3,
 	};
 
