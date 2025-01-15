@@ -500,10 +500,11 @@ bool SFB::AudioPlayerNode::SeekForward(NSTimeInterval secondsToSkip) noexcept
 
 	const auto sampleRate = decoderState->mSampleRate;
 	const auto framePosition = decoderState->FramePosition();
+	const auto frameLength = decoderState->FrameLength();
 
 	auto targetFrame = framePosition + static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
-	if(targetFrame >= decoderState->FrameLength())
-		targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
+	if(targetFrame >= frameLength)
+		targetFrame = std::max(frameLength - 1, 0ll);
 
 	decoderState->RequestSeekToFrame(targetFrame);
 	mDecodingSemaphore.Signal();
@@ -543,10 +544,11 @@ bool SFB::AudioPlayerNode::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 		return false;
 
 	const auto sampleRate = decoderState->mSampleRate;
+	const auto frameLength = decoderState->FrameLength();
 
 	auto targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
-	if(targetFrame >= decoderState->FrameLength())
-		targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
+	if(targetFrame >= frameLength)
+		targetFrame = std::max(frameLength - 1, 0ll);
 
 	decoderState->RequestSeekToFrame(targetFrame);
 	mDecodingSemaphore.Signal();
@@ -583,9 +585,10 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
 
-	if(frame >= decoderState->FrameLength())
-		frame = std::max(decoderState->FrameLength() - 1, 0ll);
-	
+	const auto frameLength = decoderState->FrameLength();
+	if(frame >= frameLength)
+		frame = std::max(frameLength - 1, 0ll);
+
 	decoderState->RequestSeekToFrame(frame);
 	mDecodingSemaphore.Signal();
 	
