@@ -60,7 +60,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	try {
 		impl = std::make_unique<SFB::AudioPlayerNode>(format, ringBufferSize);
 	}
-
 	catch(const std::exception& e) {
 		os_log_error(SFB::AudioPlayerNode::sLog, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
 		return nil;
