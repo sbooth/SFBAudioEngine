@@ -211,10 +211,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	// decoders A and AA have formats supported by _playerNode and decoder B does not;
 	// bypassing the internal queue for supported formats when enqueueing A, B, AA
 	// would result in playback order A, AA, B
-	else if(self.internalDecoderQueueIsEmpty && [_playerNode supportsFormat:decoder.processingFormat]) {
+	else if(self.internalDecoderQueueIsEmpty && _playerNode->_impl->SupportsFormat(decoder.processingFormat)) {
 		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 		// Enqueuing is expected to succeed since the formats are compatible
-		return [_playerNode enqueueDecoder:decoder error:error];
+		return _playerNode->_impl->EnqueueDecoder(decoder, false, error);
 	}
 	// If the internal queue is not empty or _playerNode doesn't support
 	// the decoder's processing format add the decoder to our internal queue
@@ -231,25 +231,25 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
 {
 	NSParameterAssert(format != nil);
-	return [_playerNode supportsFormat:format];
+	return _playerNode->_impl->SupportsFormat(format);
 }
 
 - (void)clearQueue
 {
-	[_playerNode clearQueue];
+	_playerNode->_impl->ClearQueue();
 	[self clearInternalDecoderQueue];
 }
 
 - (BOOL)queueIsEmpty
 {
-	return _playerNode.queueIsEmpty && self.internalDecoderQueueIsEmpty;
+	return _playerNode->_impl->QueueIsEmpty() && self.internalDecoderQueueIsEmpty;
 }
 
 #pragma mark - Playback Control
 
 - (BOOL)playReturningError:(NSError **)error
 {
-	if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode.isPlaying)
+	if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode->_impl->IsPlaying())
 		return YES;
 
 	__block BOOL engineStarted = NO;
@@ -258,7 +258,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		engineStarted = [_engine startAndReturnError:&err];
 		if(engineStarted) {
 			_flags.fetch_or(eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
-			[_playerNode play];
+			_playerNode->_impl->Play();
 		}
 		else
 			_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
@@ -283,10 +283,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (void)pause
 {
-	if(!((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode.isPlaying))
+	if(!((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode->_impl->IsPlaying()))
 		return;
 
-	[_playerNode pause];
+	_playerNode->_impl->Pause();
 
 #if DEBUG
 	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePaused, @"Incorrect playback state in -pause");
@@ -298,10 +298,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (void)resume
 {
-	if(!((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !_playerNode.isPlaying))
+	if(!((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !_playerNode->_impl->IsPlaying()))
 		return;
 
-	[_playerNode play];
+	_playerNode->_impl->Play();
 
 #if DEBUG
 	NSAssert(self.playbackState == SFBAudioPlayerPlaybackStatePlaying, @"Incorrect playback state in -resume");
@@ -319,7 +319,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_engine stop];
 		_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
-		[_playerNode stop];
+		_playerNode->_impl->Stop();
 	});
 
 	[self clearInternalDecoderQueue];
@@ -349,7 +349,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)reset
 {
 	dispatch_async_and_wait(_engineQueue, ^{
-		[_playerNode reset];
+		_playerNode->_impl->Reset();
 		[_engine reset];
 	});
 
@@ -372,25 +372,25 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)playerNodeIsPlaying
 {
-	return _playerNode.isPlaying;
+	return _playerNode->_impl->IsPlaying();
 }
 
 - (SFBAudioPlayerPlaybackState)playbackState
 {
 	if(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning)
-		return _playerNode.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		return _playerNode->_impl->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 	else
 		return SFBAudioPlayerPlaybackStateStopped;
 }
 
 - (BOOL)isPlaying
 {
-	return (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode.isPlaying;
+	return (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && _playerNode->_impl->IsPlaying();
 }
 
 - (BOOL)isPaused
 {
-	return (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !_playerNode.isPlaying;
+	return (_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !_playerNode->_impl->IsPlaying();
 }
 
 - (BOOL)isStopped
@@ -400,12 +400,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)isReady
 {
-	return _playerNode.isReady;
+	return _playerNode->_impl->IsReady();
 }
 
 - (id<SFBPCMDecoding>)currentDecoder
 {
-	return _playerNode.currentDecoder;
+	return _playerNode->_impl->CurrentDecoder();
 }
 
 - (id<SFBPCMDecoding>)nowPlaying
@@ -434,79 +434,79 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (AVAudioFramePosition)framePosition
 {
-	return self.playbackPosition.framePosition;
+	return _playerNode->_impl->PlaybackPosition().framePosition;
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return self.playbackPosition.frameLength;
+	return _playerNode->_impl->PlaybackPosition().frameLength;
 }
 
 - (SFBAudioPlayerPlaybackPosition)playbackPosition
 {
-	return _playerNode.playbackPosition;
+	return _playerNode->_impl->PlaybackPosition();
 }
 
 - (NSTimeInterval)currentTime
 {
-	return self.playbackTime.currentTime;
+	return _playerNode->_impl->PlaybackTime().currentTime;
 }
 
 - (NSTimeInterval)totalTime
 {
-	return self.playbackTime.totalTime;
+	return _playerNode->_impl->PlaybackTime().totalTime;
 }
 
 - (SFBAudioPlayerPlaybackTime)playbackTime
 {
-	return _playerNode.playbackTime;
+	return _playerNode->_impl->PlaybackTime();
 }
 
 - (BOOL)getPlaybackPosition:(SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerPlaybackTime *)playbackTime
 {
-	return [_playerNode getPlaybackPosition:playbackPosition andTime:playbackTime];
+	return _playerNode->_impl->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 }
 
 #pragma mark - Seeking
 
 - (BOOL)seekForward
 {
-	return [self seekForward:3];
+	return _playerNode->_impl->SeekForward(3);
 }
 
 - (BOOL)seekBackward
 {
-	return [self seekBackward:3];
+	return _playerNode->_impl->SeekBackward(3);
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	return [_playerNode seekForward:secondsToSkip];
+	return _playerNode->_impl->SeekForward(secondsToSkip);
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	return [_playerNode seekBackward:secondsToSkip];
+	return _playerNode->_impl->SeekBackward(secondsToSkip);
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds
 {
-	return [_playerNode seekToTime:timeInSeconds];
+	return _playerNode->_impl->SeekToTime(timeInSeconds);
 }
 
 - (BOOL)seekToPosition:(double)position
 {
-	return [_playerNode seekToPosition:position];
+	return _playerNode->_impl->SeekToPosition(position);
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame
 {
-	return [_playerNode seekToFrame:frame];
+	return _playerNode->_impl->SeekToFrame(frame);
 }
 
 - (BOOL)supportsSeeking
 {
-	return _playerNode.supportsSeeking;
+	return _playerNode->_impl->SupportsSeeking();
 }
 
 #if !TARGET_OS_IPHONE
@@ -714,18 +714,18 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	_flags.fetch_and(~eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 
 	// Attempt to preserve the playback state
-	const BOOL playerNodeWasPlaying = _playerNode.isPlaying;
+	const BOOL playerNodeWasPlaying = _playerNode->_impl->IsPlaying();
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
 	__block NSError *error = nil;
 	dispatch_async_and_wait(_engineQueue, ^{
-		[_playerNode pause];
+		_playerNode->_impl->Pause();
 
 		// Force an update of the audio processing graph
-		success = [self configureProcessingGraphForFormat:_playerNode.renderingFormat forceUpdate:YES];
+		success = [self configureProcessingGraphForFormat:_playerNode->_impl->RenderingFormat() forceUpdate:YES];
 		if(!success) {
-			os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(_playerNode.renderingFormat));
+			os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(_playerNode->_impl->RenderingFormat()));
 			error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			return;
 		}
@@ -742,7 +742,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 			// Restart the player node if needed
 			if(playerNodeWasPlaying)
-				[_playerNode play];
+				_playerNode->_impl->Play();
 		}
 	});
 
@@ -753,7 +753,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	if((engineWasRunning != static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+	if((engineWasRunning != static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) || playerNodeWasPlaying != _playerNode->_impl->IsPlaying()) && [_delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[_delegate audioPlayer:self playbackStateChanged:self.playbackState];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
@@ -801,13 +801,13 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// Attempt to preserve the playback state
 	const bool engineWasRunning = _flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning;
-	const BOOL playerNodeWasPlaying = _playerNode.isPlaying;
+	const BOOL playerNodeWasPlaying = _playerNode->_impl->IsPlaying();
 
 	__block BOOL success = YES;
 
 	// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-	if(auto format = decoder.processingFormat; ![_playerNode supportsFormat:format])
+	if(auto format = decoder.processingFormat; !_playerNode->_impl->SupportsFormat(format))
 		dispatch_async_and_wait(_engineQueue, ^{
 			success = [self configureProcessingGraphForFormat:format forceUpdate:NO];
 		});
@@ -822,10 +822,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	if(forImmediatePlayback) {
 		[self clearInternalDecoderQueue];
-		success = [_playerNode resetAndEnqueueDecoder:decoder error:error];
+		success = _playerNode->_impl->EnqueueDecoder(decoder, true, error);
 	}
 	else
-		success = [_playerNode enqueueDecoder:decoder error:error];
+		success = _playerNode->_impl->EnqueueDecoder(decoder, false, error);
 
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(!success) {
@@ -845,7 +845,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			if(engineStarted) {
 				_flags.fetch_or(eAudioPlayerFlagEngineIsRunning, std::memory_order_acq_rel);
 				if(playerNodeWasPlaying)
-					[_playerNode play];
+					_playerNode->_impl->Play();
 			}
 		});
 
@@ -858,7 +858,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 #if DEBUG
-	NSAssert(engineWasRunning == static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
+	NSAssert(engineWasRunning == static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && playerNodeWasPlaying == _playerNode->_impl->IsPlaying(), @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
 #endif /* DEBUG */
 
 	return YES;
@@ -878,6 +878,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		format = standardEquivalentFormat;
 	}
 
+	// _playerNode may be nil since this method is called from -init, so avoid use of _impl
 	const auto formatsEqual = [format isEqual:_playerNode.renderingFormat];
 	if(formatsEqual && !forceUpdate)
 		return YES;
@@ -1016,7 +1017,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && _playerNode.isPlaying) && _playerNode.currentDecoder == decoder) {
+	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && audioPlayerNode->_impl->IsPlaying()) && audioPlayerNode->_impl->CurrentDecoder() == decoder) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		self.nowPlaying = decoder;
 	}
