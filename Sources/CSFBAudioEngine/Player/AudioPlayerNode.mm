@@ -738,7 +738,6 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 				// conversion will be performed in DecoderState::DecodeAudio()
 				decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
 			}
-
 			catch(const std::exception& e) {
 				os_log_error(sLog, "Error creating decoder state: %{public}s", e.what());
 
