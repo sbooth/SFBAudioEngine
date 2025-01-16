@@ -21,7 +21,7 @@ struct SFBAudioPlayerNodePlaybackPosition {
 	AVAudioFramePosition framePosition;
 	/// The total number of frames or `SFBUnknownFrameLength` if unknown
 	AVAudioFramePosition frameLength;
-} NS_REFINED_FOR_SWIFT;
+} NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition);
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
 /// Playback time information for `SFBAudioPlayerNode`
@@ -30,7 +30,7 @@ struct SFBAudioPlayerNodePlaybackTime {
 	NSTimeInterval currentTime;
 	/// The total time or `SFBUnknownTime` if unknown
 	NSTimeInterval totalTime;
-} NS_REFINED_FOR_SWIFT;
+} NS_SWIFT_NAME(AudioPlayerNode.PlaybackTime);
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
 #pragma mark - SFBAudioPlayerNode
@@ -156,15 +156,15 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 #pragma mark - Playback Properties
 
 /// Returns the playback position in the current decoder or `{SFBUnknownFramePosition, SFBUnknownFrameLength}` if the current decoder is `nil`
-@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
+@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackPosition playbackPosition;
 /// Returns the playback time in the current decoder or `{SFBUnknownTime, SFBUnknownTime}` if the current decoder is `nil`
-@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
+@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackTime playbackTime;
 
 /// Retrieves the playback position and time
 /// - parameter playbackPosition: An optional pointer to an `SFBAudioPlayerNodePlaybackPosition` struct to receive playback position information
 /// - parameter playbackTime: An optional pointer to an `SFBAudioPlayerNodePlaybackTime` struct to receive playback time information
 /// - returns: `NO` if the current decoder is `nil`
-- (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerNodePlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerNodePlaybackTime *)playbackTime NS_REFINED_FOR_SWIFT;
+- (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerNodePlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerNodePlaybackTime *)playbackTime;
 
 #pragma mark - Seeking
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -7,11 +7,6 @@
 import Foundation
 
 extension AudioPlayer {
-	/// Playback position information for `AudioPlayer`
-	public typealias PlaybackPosition = AudioPlayerNode.PlaybackPosition
-	/// Playback time information for `AudioPlayer`
-	public typealias PlaybackTime = AudioPlayerNode.PlaybackTime
-
 	/// Returns the frame position in the current decoder or `nil` if the current decoder is `nil`
 	public var framePosition: AVAudioFramePosition? {
 		let framePosition = __framePosition
@@ -26,11 +21,11 @@ extension AudioPlayer {
 
 	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
 	public var position: PlaybackPosition? {
-		var position = __SFBAudioPlayerPlaybackPosition()
-		guard __getPlaybackPosition(&position, andTime: nil) else {
+		var position = PlaybackPosition()
+		guard getPlaybackPosition(&position, andTime: nil) else {
 			return nil
 		}
-		return PlaybackPosition(position)
+		return position
 	}
 
 	/// Returns the current time in the current decoder or `nil` if the current decoder is `nil`
@@ -47,21 +42,21 @@ extension AudioPlayer {
 
 	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
 	public var time: PlaybackTime? {
-		var time = __SFBAudioPlayerPlaybackTime()
-		guard __getPlaybackPosition(nil, andTime: &time) else {
+		var time = PlaybackTime()
+		guard getPlaybackPosition(nil, andTime: &time) else {
 			return nil
 		}
-		return PlaybackTime(time)
+		return time
 	}
 
 	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
 	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
-		var position = __SFBAudioPlayerPlaybackPosition()
-		var time = __SFBAudioPlayerPlaybackTime()
-		guard __getPlaybackPosition(&position, andTime: &time) else {
+		var position = PlaybackPosition()
+		var time = PlaybackTime()
+		guard getPlaybackPosition(&position, andTime: &time) else {
 			return nil
 		}
-		return (position: PlaybackPosition(position), time: PlaybackTime(time))
+		return (position: position, time: time)
 	}
 }
 
