@@ -6,73 +6,72 @@
 
 import Foundation
 
-extension AudioPlayerNode {
-	public var playbackPosition: PlaybackPosition? {
-		var position = PlaybackPosition()
-		guard getPlaybackPosition(&position, andTime: nil) else {
-			return nil
-		}
-		return position
-	}
-
-	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackTime: PlaybackTime? {
-		var time = PlaybackTime()
-		guard getPlaybackPosition(nil, andTime: &time) else {
-			return nil
-		}
-		return time
-	}
-
-	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
-		var positionAndTime = (position: PlaybackPosition(), time: PlaybackTime())
-		guard getPlaybackPosition(&positionAndTime.position, andTime: &positionAndTime.time) else {
-			return nil
-		}
-		return positionAndTime
-	}
-}
 extension AudioPlayerNode.PlaybackPosition {
+	/// Returns `true` if the current frame position and total number of frames are valid
+	public var isValid: Bool {
+		framePosition != unknownFramePosition && frameLength != unknownFrameLength
+	}
+	/// Returns `true` if the current frame position is valid
+	public var isFramePositionValid: Bool {
+		framePosition != unknownFramePosition
+	}
+	/// Returns `true` if the total number of frames is valid
+	public var isFrameLengthValid: Bool {
+		frameLength != unknownFrameLength
+	}
+
 	/// The current frame position or `nil` if unknown
 	public var current: AVAudioFramePosition? {
-		framePosition == unknownFramePosition ? nil : framePosition
+		isFramePositionValid ? framePosition : nil
 	}
 	/// The total number of frames or `nil` if unknown
 	public var total: AVAudioFramePosition? {
-		frameLength == unknownFrameLength ? nil : frameLength
+		isFrameLengthValid ? frameLength : nil
 	}
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current, let total else {
+		guard isValid else {
 			return nil
 		}
-		return Double(current) / Double(total)
+		return Double(framePosition) / Double(frameLength)
 	}
 
 	/// Returns the frames remaining
 	public var remaining: AVAudioFramePosition? {
-		guard let current, let total else {
+		guard isValid else {
 			return nil
 		}
-		return total - current
+		return frameLength - framePosition
 	}
 }
 
 extension AudioPlayerNode.PlaybackTime {
+	/// Returns `true` if the current time and total time are valid
+	public var isValid: Bool {
+		currentTime != unknownTime && totalTime != unknownTime
+	}
+	/// Returns `true` if the current time is valid
+	public var isCurrentTimeValid: Bool {
+		currentTime != unknownTime
+	}
+	/// Returns `true` if the total time is valid
+	public var isTotalTimeValid: Bool {
+		totalTime != unknownTime
+	}
+
 	/// The current time or `nil` if unknown
 	public var current: TimeInterval? {
-		currentTime == unknownTime ? nil : currentTime
+		isCurrentTimeValid ? currentTime : nil
 	}
 	/// The total time or `nil` if unknown
 	public var total: TimeInterval? {
-		totalTime == unknownTime ? nil : totalTime
+		isTotalTimeValid ? totalTime : nil
 	}
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard currentTime != unknownTime, totalTime != unknownTime else {
+		guard isValid else {
 			return nil
 		}
 		return currentTime / totalTime
@@ -80,7 +79,7 @@ extension AudioPlayerNode.PlaybackTime {
 
 	/// Returns the time remaining
 	public var remaining: TimeInterval? {
-		guard currentTime != unknownTime, totalTime != unknownTime else {
+		guard isValid else {
 			return nil
 		}
 		return totalTime - currentTime

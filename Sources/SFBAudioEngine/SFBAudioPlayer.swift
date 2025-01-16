@@ -22,7 +22,7 @@ extension AudioPlayer {
 	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
 	public var position: PlaybackPosition? {
 		let position = playbackPosition
-		guard position.framePosition != unknownFramePosition, position.frameLength != unknownFrameLength else {
+		guard position.isValid else {
 			return nil
 		}
 		return position
@@ -43,7 +43,7 @@ extension AudioPlayer {
 	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
 	public var time: PlaybackTime? {
 		let time = playbackTime
-		guard time.currentTime != unknownTime, time.totalTime != unknownTime else {
+		guard time.isValid else {
 			return nil
 		}
 		return time

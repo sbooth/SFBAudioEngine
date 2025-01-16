@@ -11,6 +11,7 @@
 
 #if !TARGET_OS_IPHONE
 #import <CoreAudio/CoreAudio.h>
+#import <AudioToolbox/AudioToolbox.h>
 #endif /* !TARGET_OS_IPHONE */
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
