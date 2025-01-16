@@ -26,12 +26,11 @@ extension AudioPlayerNode {
 
 	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
 	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
-		var position = PlaybackPosition()
-		var time = PlaybackTime()
-		guard getPlaybackPosition(&position, andTime: &time) else {
+		var positionAndTime = (position: PlaybackPosition(), time: PlaybackTime())
+		guard getPlaybackPosition(&positionAndTime.position, andTime: &positionAndTime.time) else {
 			return nil
 		}
-		return (position: position, time: time)
+		return positionAndTime
 	}
 }
 extension AudioPlayerNode.PlaybackPosition {
