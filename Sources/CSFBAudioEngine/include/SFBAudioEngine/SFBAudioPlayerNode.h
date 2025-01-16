@@ -16,22 +16,32 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Playback position and time information
 
 /// Playback position information for `SFBAudioPlayerNode`
-struct SFBAudioPlayerNodePlaybackPosition {
+struct NS_SWIFT_SENDABLE SFBAudioPlayerNodePlaybackPosition {
 	/// The current frame position or `SFBUnknownFramePosition` if unknown
 	AVAudioFramePosition framePosition;
 	/// The total number of frames or `SFBUnknownFrameLength` if unknown
 	AVAudioFramePosition frameLength;
-} NS_REFINED_FOR_SWIFT;
+} NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition);
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
+/// Returns `YES` if the current frame position and total number of frames in `playbackPosition` are valid
+NS_INLINE BOOL SFBAudioPlayerNodePlaybackPositionIsValid(SFBAudioPlayerNodePlaybackPosition playbackPosition) {
+	return playbackPosition.framePosition != SFBUnknownFramePosition && playbackPosition.frameLength != SFBUnknownFrameLength;
+}
+
 /// Playback time information for `SFBAudioPlayerNode`
-struct SFBAudioPlayerNodePlaybackTime {
+struct NS_SWIFT_SENDABLE SFBAudioPlayerNodePlaybackTime {
 	/// The current time or `SFBUnknownTime` if unknown
 	NSTimeInterval currentTime;
 	/// The total time or `SFBUnknownTime` if unknown
 	NSTimeInterval totalTime;
-} NS_REFINED_FOR_SWIFT;
+} NS_SWIFT_NAME(AudioPlayerNode.PlaybackTime);
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
+
+/// Returns `YES` if the current time and total time in `playbackTime` are valid
+NS_INLINE BOOL SFBAudioPlayerNodePlaybackTimeIsValid(SFBAudioPlayerNodePlaybackTime playbackTime) {
+	return playbackTime.currentTime != SFBUnknownTime && playbackTime.totalTime != SFBUnknownTime;
+}
 
 #pragma mark - SFBAudioPlayerNode
 
@@ -156,15 +166,15 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 #pragma mark - Playback Properties
 
 /// Returns the playback position in the current decoder or `{SFBUnknownFramePosition, SFBUnknownFrameLength}` if the current decoder is `nil`
-@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
+@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackPosition playbackPosition;
 /// Returns the playback time in the current decoder or `{SFBUnknownTime, SFBUnknownTime}` if the current decoder is `nil`
-@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
+@property (nonatomic, readonly) SFBAudioPlayerNodePlaybackTime playbackTime;
 
 /// Retrieves the playback position and time
 /// - parameter playbackPosition: An optional pointer to an `SFBAudioPlayerNodePlaybackPosition` struct to receive playback position information
 /// - parameter playbackTime: An optional pointer to an `SFBAudioPlayerNodePlaybackTime` struct to receive playback time information
 /// - returns: `NO` if the current decoder is `nil`
-- (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerNodePlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerNodePlaybackTime *)playbackTime NS_REFINED_FOR_SWIFT;
+- (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerNodePlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerNodePlaybackTime *)playbackTime;
 
 #pragma mark - Seeking
 
