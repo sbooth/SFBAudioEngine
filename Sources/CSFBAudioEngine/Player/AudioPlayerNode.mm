@@ -27,7 +27,7 @@ namespace {
 constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
 
 /// libdispatch destructor function for `NSError` objects
-void release_nserror_f(void *context)
+void release_nserror_f(void * _Nullable context)
 {
 	(void)(__bridge_transfer NSError *)context;
 }
@@ -66,16 +66,23 @@ struct AudioPlayerNode::DecoderState final {
 private:
 	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
 
+	/// Possible `DecoderState` flag values
 	enum DecoderStateFlags : unsigned int {
+		/// Decoding started
 		eFlagDecodingStarted 	= 1u << 0,
+		/// Decoding complete
 		eFlagDecodingComplete 	= 1u << 1,
+		/// Rendering started
 		eFlagRenderingStarted 	= 1u << 2,
+		/// Rendering complete
 		eFlagRenderingComplete 	= 1u << 3,
+		/// A seek has been requested
 		eFlagSeekPending 		= 1u << 4,
+		/// Decoder canceled
 		eFlagCanceled 			= 1u << 5,
 	};
 
-	/// Decoder state flags
+	/// Flags
 	std::atomic_uint 		mFlags 				= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
@@ -428,22 +435,22 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 
 #pragma mark - Playback Properties
 
-SFBAudioPlayerNodePlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
+SFBPlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
-		return { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
+		return SFBInvalidPlaybackPosition;
 
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 }
 
-SFBAudioPlayerNodePlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
+SFBPlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
-		return { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+		return SFBInvalidPlaybackTime;
 
-	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+	SFBPlaybackTime playbackTime = SFBInvalidPlaybackTime;
 
 	const auto framePosition = decoderState->FramePosition();
 	const auto frameLength = decoderState->FrameLength();
@@ -458,23 +465,23 @@ SFBAudioPlayerNodePlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexce
 	return playbackTime;
 }
 
-bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition *playbackPosition, SFBAudioPlayerNodePlaybackTime *playbackTime) const noexcept
+bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition, SFBPlaybackTime *playbackTime) const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState) {
 		if(playbackPosition)
-			*playbackPosition = { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
+			*playbackPosition = SFBInvalidPlaybackPosition;
 		if(playbackTime)
-			*playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+			*playbackTime = SFBInvalidPlaybackTime;
 		return false;
 	}
 
-	SFBAudioPlayerNodePlaybackPosition currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
+	SFBPlaybackPosition currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 	if(playbackPosition)
 		*playbackPosition = currentPlaybackPosition;
 
 	if(playbackTime) {
-		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+		SFBPlaybackTime currentPlaybackTime = SFBInvalidPlaybackTime;
 		if(const auto sampleRate = decoderState->mSampleRate; sampleRate > 0) {
 			if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 				currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
@@ -495,17 +502,21 @@ bool SFB::AudioPlayerNode::SeekForward(NSTimeInterval secondsToSkip) noexcept
 		secondsToSkip = 0;
 
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-	if(!decoderState)
+	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
 
 	const auto sampleRate = decoderState->mSampleRate;
 	const auto framePosition = decoderState->FramePosition();
+	const auto frameLength = decoderState->FrameLength();
+
 	auto targetFrame = framePosition + static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
+	if(targetFrame >= frameLength)
+		targetFrame = std::max(frameLength - 1, 0ll);
 
-	if(targetFrame >= decoderState->FrameLength())
-		targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
+	decoderState->RequestSeekToFrame(targetFrame);
+	mDecodingSemaphore.Signal();
 
-	return SeekToFrame(targetFrame);
+	return true;
 }
 
 bool SFB::AudioPlayerNode::SeekBackward(NSTimeInterval secondsToSkip) noexcept
@@ -514,17 +525,20 @@ bool SFB::AudioPlayerNode::SeekBackward(NSTimeInterval secondsToSkip) noexcept
 		secondsToSkip = 0;
 
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-	if(!decoderState)
+	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
 
 	const auto sampleRate = decoderState->mSampleRate;
 	const auto framePosition = decoderState->FramePosition();
-	auto targetFrame = framePosition - static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 
+	auto targetFrame = framePosition - static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
 	if(targetFrame < 0)
 		targetFrame = 0;
 
-	return SeekToFrame(targetFrame);
+	decoderState->RequestSeekToFrame(targetFrame);
+	mDecodingSemaphore.Signal();
+
+	return true;
 }
 
 bool SFB::AudioPlayerNode::SeekToTime(NSTimeInterval timeInSeconds) noexcept
@@ -533,16 +547,20 @@ bool SFB::AudioPlayerNode::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 		timeInSeconds = 0;
 
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-	if(!decoderState)
+	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
 
 	const auto sampleRate = decoderState->mSampleRate;
+	const auto frameLength = decoderState->FrameLength();
+
 	auto targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
+	if(targetFrame >= frameLength)
+		targetFrame = std::max(frameLength - 1, 0ll);
 
-	if(targetFrame >= decoderState->FrameLength())
-		targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
+	decoderState->RequestSeekToFrame(targetFrame);
+	mDecodingSemaphore.Signal();
 
-	return SeekToFrame(targetFrame);
+	return true;
 }
 
 bool SFB::AudioPlayerNode::SeekToPosition(double position) noexcept
@@ -553,11 +571,16 @@ bool SFB::AudioPlayerNode::SeekToPosition(double position) noexcept
 		position = std::nextafter(1.0, 0.0);
 
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-	if(!decoderState)
+	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
 
-	auto frameLength = decoderState->FrameLength();
-	return SeekToFrame(static_cast<AVAudioFramePosition>(frameLength * position));
+	const auto frameLength = decoderState->FrameLength();
+	const auto targetFrame = static_cast<AVAudioFramePosition>(frameLength * position);
+
+	decoderState->RequestSeekToFrame(targetFrame);
+	mDecodingSemaphore.Signal();
+
+	return true;
 }
 
 bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
@@ -569,9 +592,10 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
 
-	if(frame >= decoderState->FrameLength())
-		frame = std::max(decoderState->FrameLength() - 1, 0ll);
-	
+	const auto frameLength = decoderState->FrameLength();
+	if(frame >= frameLength)
+		frame = std::max(frameLength - 1, 0ll);
+
 	decoderState->RequestSeekToFrame(frame);
 	mDecodingSemaphore.Signal();
 	
@@ -628,12 +652,20 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(id <SFBPCMDecoding> decoder, bool rese
 		Reset();
 	}
 
-	os_log_info(sLog, "Enqueuing %{public}@", decoder);
-
-	{
+	try {
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
 		mQueuedDecoders.push_back(decoder);
 	}
+	catch(const std::exception& e) {
+		os_log_error(sLog, "Error pushing %{public}@ to mQueuedDecoders: %{public}s", decoder, e.what());
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		if(reset)
+			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
+		return false;
+	}
+
+	os_log_info(sLog, "Enqueued %{public}@", decoder);
 
 	DequeueAndProcessDecoder(reset);
 
@@ -706,7 +738,6 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 				// conversion will be performed in DecoderState::DecodeAudio()
 				decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
 			}
-
 			catch(const std::exception& e) {
 				os_log_error(sLog, "Error creating decoder state: %{public}s", e.what());
 

@@ -8,9 +8,9 @@
 
 #import <array>
 #import <atomic>
+#import <deque>
 #import <memory>
 #import <mutex>
-#import <queue>
 
 #import <os/log.h>
 
@@ -23,6 +23,8 @@
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 namespace SFB {
 
@@ -81,28 +83,34 @@ private:
 public:
 	/// Dispatch queue used for event processing and delegate messaging
 	dispatch_queue_t				mEventProcessingQueue	= nullptr;
+
 private:
 	/// Dispatch source initiating event processing by the render block
 	dispatch_source_t				mEventProcessingSource 	= nullptr;
 	/// Dispatch group used to track event processing initiated by the decoding queue
 	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
-	/// AudioPlayerNode flags
+	/// Possible `AudioPlayerNode` flag values
+	enum AudioPlayerNodeFlags : unsigned int {
+		/// The render block is outputting audio
+		eFlagIsPlaying 				= 1u << 0,
+		/// The render block is outputting silence
+		eFlagIsMuted 				= 1u << 1,
+		/// The decoding dispatch queue requested the render block to set `eFlagIsMuted` during the next render cycle
+		eFlagMuteRequested 			= 1u << 2,
+		/// The audio ring buffer requires a non-threadsafe reset
+		eFlagRingBufferNeedsReset 	= 1u << 3,
+	};
+
+	/// Flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 	/// Counter used for unique keys to `dispatch_queue_set_specific`
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
-	enum AudioPlayerNodeFlags : unsigned int {
-		eFlagIsPlaying 				= 1u << 0,
-		eFlagIsMuted 				= 1u << 1,
-		eFlagMuteRequested 			= 1u << 2,
-		eFlagRingBufferNeedsReset 	= 1u << 3,
-	};
-
 public:
-	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
+	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize);
 	~AudioPlayerNode();
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
@@ -147,9 +155,9 @@ public:
 
 #pragma mark - Playback Properties
 
-	SFBAudioPlayerNodePlaybackPosition PlaybackPosition() const noexcept;
-	SFBAudioPlayerNodePlaybackTime PlaybackTime() const noexcept;
-	bool GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition * _Nullable playbackPosition, SFBAudioPlayerNodePlaybackTime * _Nullable playbackTime) const noexcept;
+	SFBPlaybackPosition PlaybackPosition() const noexcept;
+	SFBPlaybackTime PlaybackTime() const noexcept;
+	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept;
 
 #pragma mark - Seeking
 
@@ -162,18 +170,19 @@ public:
 
 #pragma mark - Format Information
 
-	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
+	AVAudioFormat * RenderingFormat() const noexcept
 	{
 		return mRenderingFormat;
 	}
 
-	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
+	bool SupportsFormat(AVAudioFormat *format) const noexcept;
 
 #pragma mark - Decoder Queue Management
 
-	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError **error) noexcept;
+	bool EnqueueDecoder(id <SFBPCMDecoding> decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
 
 private:
+	/// Pops the next decoder from the decoder queue
 	id <SFBPCMDecoding> _Nullable DequeueDecoder() noexcept;
 
 public:
@@ -202,10 +211,12 @@ private:
 
 #pragma mark - Decoding
 
+	/// Pops the next decoder from the decoder queue and submits it for processing on the decoding dispatch queue
 	void DequeueAndProcessDecoder(bool unmuteNeeded) noexcept;
 
 #pragma mark - Rendering
 
+	/// Render block implementation
 	OSStatus Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept;
 
 #pragma mark - Events
@@ -232,9 +243,13 @@ private:
 
 	/// Decoding queue events
 	enum class DecodingEventCommand : uint32_t {
+		/// Decoding started
 		eStarted 	= 1,
+		/// Decoding complete
 		eComplete 	= 2,
+		/// Decoder canceled
 		eCanceled 	= 3,
+		/// Decoding error
 		eError 		= 4,
 	};
 
@@ -245,8 +260,11 @@ private:
 
 	/// Render block events
 	enum class RenderingEventCommand : uint32_t {
+		/// Rendering started
 		eStarted 		= 1,
+		/// Rendering decoder changed
 		eDecoderChanged = 2,
+		/// Rendering complete
 		eComplete 		= 3,
 	};
 
@@ -255,8 +273,11 @@ private:
 
 #pragma mark - Event Processing
 
+	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
 	void ProcessPendingEvents() noexcept;
+	/// Processes an event from `mDecodeEventRingBuffer`
 	void ProcessEvent(const DecodingEventHeader& header) noexcept;
+	/// Processes an event from `mRenderEventRingBuffer`
 	void ProcessEvent(const RenderingEventHeader& header) noexcept;
 
 #pragma mark - Decoder State Array
@@ -276,3 +297,5 @@ private:
 };
 
 } /* namespace SFB */
+
+NS_ASSUME_NONNULL_END

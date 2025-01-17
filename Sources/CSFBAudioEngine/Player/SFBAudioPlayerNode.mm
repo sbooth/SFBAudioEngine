@@ -8,8 +8,10 @@
 
 #import "SFBAudioPlayerNode+Internal.h"
 
-const NSTimeInterval SFBUnknownTime = -1;
-NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
+const NSTimeInterval 		SFBUnknownTime 					= -1;
+const SFBPlaybackPosition 	SFBInvalidPlaybackPosition 		= { .framePosition =  SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength};
+const SFBPlaybackTime 		SFBInvalidPlaybackTime 			= { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime};
+NSErrorDomain const 		SFBAudioPlayerNodeErrorDomain 	= @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 namespace {
 
@@ -60,7 +62,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	try {
 		impl = std::make_unique<SFB::AudioPlayerNode>(format, ringBufferSize);
 	}
-
 	catch(const std::exception& e) {
 		os_log_error(SFB::AudioPlayerNode::sLog, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
 		return nil;
@@ -184,17 +185,17 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 #pragma mark - Playback Properties
 
-- (SFBAudioPlayerNodePlaybackPosition)playbackPosition
+- (SFBPlaybackPosition)playbackPosition
 {
 	return _impl->PlaybackPosition();
 }
 
-- (SFBAudioPlayerNodePlaybackTime)playbackTime
+- (SFBPlaybackTime)playbackTime
 {
 	return _impl->PlaybackTime();
 }
 
-- (BOOL)getPlaybackPosition:(SFBAudioPlayerNodePlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerNodePlaybackTime *)playbackTime
+- (BOOL)getPlaybackPosition:(SFBPlaybackPosition *)playbackPosition andTime:(SFBPlaybackTime *)playbackTime
 {
 	return _impl->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 }

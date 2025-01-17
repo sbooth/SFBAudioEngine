@@ -198,7 +198,6 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
 		_encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
 	}
-
 	catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", e.code());
 		if(error)
@@ -216,7 +215,6 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 	try {
 		_encoder->finalize();
 	}
-
 	catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", e.code());
 		if(error)
