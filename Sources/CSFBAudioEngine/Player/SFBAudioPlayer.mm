@@ -878,7 +878,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		format = standardEquivalentFormat;
 	}
 
-	// _playerNode may be nil since this method is called from -init, so avoid use of _impl
+	// _playerNode may be nil since this method is called from -init
 	const auto formatsEqual = [format isEqual:_playerNode.renderingFormat];
 	if(formatsEqual && !forceUpdate)
 		return YES;
