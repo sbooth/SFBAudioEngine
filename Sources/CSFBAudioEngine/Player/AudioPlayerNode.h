@@ -293,7 +293,7 @@ private:
 	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
 
 	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	void DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept;
+	bool DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept;
 
 };
 
