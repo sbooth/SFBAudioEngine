@@ -171,14 +171,14 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 #pragma mark - Playback Properties
 
-/// Returns the playback position in the current decoder or `{SFBUnknownFramePosition, SFBUnknownFrameLength}` if the current decoder is `nil`
+/// Returns the playback position in the current decoder or `SFBInvalidPlaybackPosition` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBPlaybackPosition playbackPosition;
-/// Returns the playback time in the current decoder or `{SFBUnknownTime, SFBUnknownTime}` if the current decoder is `nil`
+/// Returns the playback time in the current decoder or `SFBInvalidPlaybackTime` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBPlaybackTime playbackTime;
 
 /// Retrieves the playback position and time
-/// - parameter playbackPosition: An optional pointer to an `SFBAudioPlayerNodePlaybackPosition` struct to receive playback position information
-/// - parameter playbackTime: An optional pointer to an `SFBAudioPlayerNodePlaybackTime` struct to receive playback time information
+/// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position information
+/// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition andTime:(nullable SFBPlaybackTime *)playbackTime;
 
