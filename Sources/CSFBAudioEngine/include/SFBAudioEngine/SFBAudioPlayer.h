@@ -20,11 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
-/// Playback position information for `SFBAudioPlayer`
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
-/// Playback time information for `SFBAudioPlayer`
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
-
 /// A block accepting a single `AVAudioEngine` parameter
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
 
@@ -177,21 +172,21 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 @property (nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
 /// Returns the frame length of the current decoder or `SFBUnknownFrameLength` if the current decoder is `nil`
 @property (nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// Returns the playback position in the current decoder or `{SFBUnknownFramePosition, SFBUnknownFrameLength}` if the current decoder is `nil`
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition;
+/// Returns the playback position in the current decoder or `SFBInvalidPlaybackPosition` if the current decoder is `nil`
+@property (nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
 /// Returns the current time in the current decoder or `SFBUnknownTime` if the current decoder is `nil`
 @property (nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
 /// Returns the total time of the current decoder or `SFBUnknownTime` if the current decoder is `nil`
 @property (nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// Returns the playback time in the current decoder or `{SFBUnknownTime, SFBUnknownTime}` if the current decoder is `nil`
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime;
+/// Returns the playback time in the current decoder or `SFBInvalidPlaybackTime` if the current decoder is `nil`
+@property (nonatomic, readonly) SFBPlaybackTime playbackTime;
 
 /// Retrieves the playback position and time
-/// - parameter playbackPosition: An optional pointer to an `SFBAudioPlayerPlaybackPosition` struct to receive playback position information
-/// - parameter playbackTime: An optional pointer to an `SFBAudioPlayerPlaybackTime` struct to receive playback time information
+/// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position information
+/// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
 /// - returns: `NO` if the current decoder is `nil`
-- (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerPlaybackTime *)playbackTime;
+- (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition andTime:(nullable SFBPlaybackTime *)playbackTime;
 
 #pragma mark - Seeking
 

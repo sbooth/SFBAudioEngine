@@ -442,7 +442,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return _playerNode->_impl->PlaybackPosition().frameLength;
 }
 
-- (SFBAudioPlayerPlaybackPosition)playbackPosition
+- (SFBPlaybackPosition)playbackPosition
 {
 	return _playerNode->_impl->PlaybackPosition();
 }
@@ -457,12 +457,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return _playerNode->_impl->PlaybackTime().totalTime;
 }
 
-- (SFBAudioPlayerPlaybackTime)playbackTime
+- (SFBPlaybackTime)playbackTime
 {
 	return _playerNode->_impl->PlaybackTime();
 }
 
-- (BOOL)getPlaybackPosition:(SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerPlaybackTime *)playbackTime
+- (BOOL)getPlaybackPosition:(SFBPlaybackPosition *)playbackPosition andTime:(SFBPlaybackTime *)playbackTime
 {
 	return _playerNode->_impl->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 }

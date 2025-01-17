@@ -435,22 +435,22 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 
 #pragma mark - Playback Properties
 
-SFBAudioPlayerNodePlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
+SFBPlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
-		return { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
+		return SFBInvalidPlaybackPosition;
 
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 }
 
-SFBAudioPlayerNodePlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
+SFBPlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
-		return { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+		return SFBInvalidPlaybackTime;
 
-	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+	SFBPlaybackTime playbackTime = SFBInvalidPlaybackTime;
 
 	const auto framePosition = decoderState->FramePosition();
 	const auto frameLength = decoderState->FrameLength();
@@ -465,23 +465,23 @@ SFBAudioPlayerNodePlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexce
 	return playbackTime;
 }
 
-bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition *playbackPosition, SFBAudioPlayerNodePlaybackTime *playbackTime) const noexcept
+bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition, SFBPlaybackTime *playbackTime) const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState) {
 		if(playbackPosition)
-			*playbackPosition = { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
+			*playbackPosition = SFBInvalidPlaybackPosition;
 		if(playbackTime)
-			*playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+			*playbackTime = SFBInvalidPlaybackTime;
 		return false;
 	}
 
-	SFBAudioPlayerNodePlaybackPosition currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
+	SFBPlaybackPosition currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 	if(playbackPosition)
 		*playbackPosition = currentPlaybackPosition;
 
 	if(playbackTime) {
-		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
+		SFBPlaybackTime currentPlaybackTime = SFBInvalidPlaybackTime;
 		if(const auto sampleRate = decoderState->mSampleRate; sampleRate > 0) {
 			if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 				currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
