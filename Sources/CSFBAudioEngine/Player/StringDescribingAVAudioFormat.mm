@@ -4,14 +4,14 @@
 // MIT license
 //
 
-#pragma once
-
 #import <SFBCAChannelLayout.hpp>
 #import <SFBCAStreamBasicDescription.hpp>
 
+#import "StringDescribingAVAudioFormat.h"
+
 namespace SFB {
 
-inline NSString * _Nullable StringDescribingAVAudioFormat(AVAudioFormat * _Nullable format, bool includeChannelLayout = true) noexcept
+NSString * StringDescribingAVAudioFormat(AVAudioFormat *format, bool includeChannelLayout) noexcept
 {
 	if(!format)
 		return nullptr;

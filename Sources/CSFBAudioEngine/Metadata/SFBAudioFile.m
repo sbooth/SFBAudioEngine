@@ -234,7 +234,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 		_url = url;
 		_properties = [[SFBAudioProperties alloc] init];
 		_metadata = [[SFBAudioMetadata alloc] init];
+#if DEBUG
 		os_log_debug(gSFBAudioFileLog, "Created %{public}@ based on score of %i", self, score);
+#endif /* DEBUG */
 	}
 
 	return self;
