@@ -6,19 +6,7 @@
 
 import Foundation
 
-extension AudioPlayerNode {
-	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
-		var positionAndTime = (position: PlaybackPosition(), time: PlaybackTime())
-		getPlaybackPosition(&positionAndTime.position, andTime: &positionAndTime.time)
-		return positionAndTime
-	}
-}
-
-extension AudioPlayerNode.PlaybackPosition {
-	/// The invalid playback position
-	public static let invalid = AudioPlayerNode.PlaybackPosition(framePosition: unknownFramePosition, frameLength: unknownFrameLength)
-
+extension PlaybackPosition {
 	/// Returns `true` if the current frame position and total number of frames are valid
 	public var isValid: Bool {
 		framePosition != unknownFramePosition && frameLength != unknownFrameLength
@@ -58,10 +46,7 @@ extension AudioPlayerNode.PlaybackPosition {
 	}
 }
 
-extension AudioPlayerNode.PlaybackTime {
-	/// The invalid playback time
-	public static let invalid = AudioPlayerNode.PlaybackTime(currentTime: unknownTime, totalTime: unknownTime)
-
+extension PlaybackTime {
 	/// Returns `true` if the current time and total time are valid
 	public var isValid: Bool {
 		currentTime != unknownTime && totalTime != unknownTime
@@ -98,5 +83,14 @@ extension AudioPlayerNode.PlaybackTime {
 			return nil
 		}
 		return totalTime - currentTime
+	}
+}
+
+extension AudioPlayerNode {
+	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
+	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
+		var positionAndTime = (position: PlaybackPosition(), time: PlaybackTime())
+		getPlaybackPosition(&positionAndTime.position, andTime: &positionAndTime.time)
+		return positionAndTime
 	}
 }
