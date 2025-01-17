@@ -24,7 +24,8 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
 
-NS_ASSUME_NONNULL_BEGIN
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnullability-completeness"
 
 namespace SFB {
 
@@ -110,7 +111,7 @@ private:
 	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 public:
-	AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize);
+	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
 	~AudioPlayerNode();
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
@@ -170,16 +171,16 @@ public:
 
 #pragma mark - Format Information
 
-	AVAudioFormat * RenderingFormat() const noexcept
+	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
 	{
 		return mRenderingFormat;
 	}
 
-	bool SupportsFormat(AVAudioFormat *format) const noexcept;
+	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
 
 #pragma mark - Decoder Queue Management
 
-	bool EnqueueDecoder(id <SFBPCMDecoding> decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
+	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
 
 private:
 	/// Pops the next decoder from the decoder queue
@@ -217,7 +218,7 @@ private:
 #pragma mark - Rendering
 
 	/// Render block implementation
-	OSStatus Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept;
+	OSStatus Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList * _Nonnull outputData) noexcept;
 
 #pragma mark - Events
 
@@ -298,4 +299,4 @@ private:
 
 } /* namespace SFB */
 
-NS_ASSUME_NONNULL_END
+#pragma clang diagnostic pop
