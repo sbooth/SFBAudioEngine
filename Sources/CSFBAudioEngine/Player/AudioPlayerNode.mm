@@ -1408,14 +1408,18 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSe
 	return nullptr;
 }
 
-void SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
+bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
 {
 	for(auto& atomic_ptr : *mActiveDecoders) {
 		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState || decoderState->mSequenceNumber != sequenceNumber)
 			continue;
 
-		os_log_debug(AudioPlayerNode::sLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
+		os_log_debug(sLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
 		delete atomic_ptr.exchange(nullptr, std::memory_order_acq_rel);
+		return true;
 	}
+
+	os_log_fault(sLog, "Unable to delete missing decoder state with sequence number %llu", sequenceNumber);
+	return false;
 }
