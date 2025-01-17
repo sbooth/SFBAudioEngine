@@ -1222,7 +1222,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 				const auto decoder = decoderState->mDecoder;
 				const auto framesRendered = decoderState->FramesRendered();
-				DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
+				if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
+					os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)]) {
 					[mNode.delegate audioPlayerNode:mNode decoderCanceled:decoder framesRendered:framesRendered];
@@ -1314,7 +1315,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 					[mNode.delegate audioPlayerNode:mNode renderingDecoder:decoderState->mDecoder willChangeToDecoder:nextDecoderState->mDecoder atHostTime:hostTime];
 				}
 
-				DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
+				if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
+					os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering decoder changed event", decoderSequenceNumber);
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number or host time for rendering decoder changed event");
@@ -1340,7 +1342,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 					[mNode.delegate audioPlayerNode:mNode renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
 				}
 
-				DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber);
+				if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
+					os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderSequenceNumber);
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number or host time for rendering complete event");
@@ -1420,6 +1423,5 @@ bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& 
 		return true;
 	}
 
-	os_log_fault(sLog, "Unable to delete missing decoder state with sequence number %llu", sequenceNumber);
 	return false;
 }
