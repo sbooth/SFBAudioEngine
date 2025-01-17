@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -364,9 +364,9 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbi
 
 /// Shorten version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion;
-/// Shorten internal file type (`NSNumber`)
-extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenInternalFileType;
-/// Shorten number channels (`NSNumber`)
+/// Shorten file type (`NSNumber`)
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenFileType;
+/// Shorten number of channels (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels;
 /// Shorten block size (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize;

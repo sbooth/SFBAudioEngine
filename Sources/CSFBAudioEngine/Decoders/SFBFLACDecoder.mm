@@ -60,7 +60,7 @@ using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, fla
 
 namespace {
 
-FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data) noexcept
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -80,7 +80,7 @@ FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, 
 	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 }
 
-FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data) noexcept
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -97,7 +97,7 @@ FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, 
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data) noexcept
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -112,7 +112,7 @@ FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, 
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
-FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
+FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data) noexcept
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -127,7 +127,7 @@ FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decod
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data)
+FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data) noexcept
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -136,7 +136,7 @@ FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data)
 	return flacDecoder->_inputSource.atEOF;
 }
 
-FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
+FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data) noexcept
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -145,7 +145,7 @@ FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder
 	return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
 }
 
-void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
+void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data) noexcept
 {
 	NSCParameterAssert(client_data != NULL);
 
@@ -153,7 +153,7 @@ void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMet
 	[flacDecoder handleFLACMetadata:decoder metadata:metadata];
 }
 
-void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
+void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data) noexcept
 {
 	NSCParameterAssert(client_data != NULL);
 

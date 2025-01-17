@@ -25,7 +25,7 @@ SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDe
 namespace {
 
 // Convert a four byte chunk ID to a uint32_t
-inline uint32_t BytesToID(char bytes [4])
+uint32_t BytesToID(char bytes [4]) noexcept
 {
 	auto one	= bytes[0];
 	auto two	= bytes[1];
@@ -52,7 +52,7 @@ inline uint32_t BytesToID(char bytes [4])
 }
 
 // Read an ID as a uint32_t, performing validation
-bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID)
+bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID) noexcept
 {
 	NSCParameterAssert(inputSource != nil);
 
@@ -72,7 +72,7 @@ bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID)
 	return true;
 }
 
-inline AudioChannelLabel DSDIFFChannelIDToCoreAudioChannelLabel(uint32_t channelID)
+AudioChannelLabel DSDIFFChannelIDToCoreAudioChannelLabel(uint32_t channelID) noexcept
 {
 	switch(channelID) {
 		case 'SLFT':	return kAudioChannelLabel_Left;
