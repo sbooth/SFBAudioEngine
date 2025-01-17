@@ -155,9 +155,9 @@ public:
 
 #pragma mark - Playback Properties
 
-	SFBAudioPlayerNodePlaybackPosition PlaybackPosition() const noexcept;
-	SFBAudioPlayerNodePlaybackTime PlaybackTime() const noexcept;
-	bool GetPlaybackPositionAndTime(SFBAudioPlayerNodePlaybackPosition * _Nullable playbackPosition, SFBAudioPlayerNodePlaybackTime * _Nullable playbackTime) const noexcept;
+	SFBPlaybackPosition PlaybackPosition() const noexcept;
+	SFBPlaybackTime PlaybackTime() const noexcept;
+	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept;
 
 #pragma mark - Seeking
 

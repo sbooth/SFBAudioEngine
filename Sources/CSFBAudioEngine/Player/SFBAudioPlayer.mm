@@ -442,7 +442,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return self.playbackPosition.frameLength;
 }
 
-- (SFBAudioPlayerPlaybackPosition)playbackPosition
+- (SFBPlaybackPosition)playbackPosition
 {
 	return _playerNode.playbackPosition;
 }
@@ -457,12 +457,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return self.playbackTime.totalTime;
 }
 
-- (SFBAudioPlayerPlaybackTime)playbackTime
+- (SFBPlaybackTime)playbackTime
 {
 	return _playerNode.playbackTime;
 }
 
-- (BOOL)getPlaybackPosition:(SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerPlaybackTime *)playbackTime
+- (BOOL)getPlaybackPosition:(SFBPlaybackPosition *)playbackPosition andTime:(SFBPlaybackTime *)playbackTime
 {
 	return [_playerNode getPlaybackPosition:playbackPosition andTime:playbackTime];
 }
@@ -471,12 +471,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)seekForward
 {
-	return [self seekForward:3];
+	return [_playerNode seekForward:3];
 }
 
 - (BOOL)seekBackward
 {
-	return [self seekBackward:3];
+	return [_playerNode seekBackward:3];
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
@@ -878,6 +878,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		format = standardEquivalentFormat;
 	}
 
+	// _playerNode may be nil since this method is called from -init
 	const auto formatsEqual = [format isEqual:_playerNode.renderingFormat];
 	if(formatsEqual && !forceUpdate)
 		return YES;
@@ -1016,7 +1017,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && _playerNode.isPlaying) && _playerNode.currentDecoder == decoder) {
+	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && audioPlayerNode->_impl->IsPlaying()) && audioPlayerNode->_impl->CurrentDecoder() == decoder) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		self.nowPlaying = decoder;
 	}

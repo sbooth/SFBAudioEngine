@@ -1,101 +1,96 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 import Foundation
 
-extension AudioPlayerNode {
-	/// Playback position information for `AudioPlayerNode`
-	public struct PlaybackPosition {
-		/// The current frame position or `nil` if unknown
-		public let current: AVAudioFramePosition?
-		/// The total number of frames or `nil` if unknown
-		public let total: AVAudioFramePosition?
+extension PlaybackPosition {
+	/// Returns `true` if the current frame position and total number of frames are valid
+	public var isValid: Bool {
+		framePosition != unknownFramePosition && frameLength != unknownFrameLength
+	}
+	/// Returns `true` if the current frame position is valid
+	public var isFramePositionValid: Bool {
+		framePosition != unknownFramePosition
+	}
+	/// Returns `true` if the total number of frames is valid
+	public var isFrameLengthValid: Bool {
+		frameLength != unknownFrameLength
 	}
 
-	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackPosition: PlaybackPosition? {
-		var position = __SFBAudioPlayerNodePlaybackPosition()
-		guard __getPlaybackPosition(&position, andTime: nil) else {
-			return nil
-		}
-		return PlaybackPosition(position)
+	/// The current frame position or `nil` if unknown
+	public var current: AVAudioFramePosition? {
+		isFramePositionValid ? framePosition : nil
 	}
-
-	/// Playback time information for `AudioPlayerNode`
-	public struct PlaybackTime {
-		/// The current time or `nil` if unknown
-		public let current: TimeInterval?
-		/// The total time or `nil` if unknown
-		public let total: TimeInterval?
-	}
-
-	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackTime: PlaybackTime? {
-		var time = __SFBAudioPlayerNodePlaybackTime()
-		guard __getPlaybackPosition(nil, andTime: &time) else {
-			return nil
-		}
-		return PlaybackTime(time)
-	}
-
-	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
-		var position = __SFBAudioPlayerNodePlaybackPosition()
-		var time = __SFBAudioPlayerNodePlaybackTime()
-		guard __getPlaybackPosition(&position, andTime: &time) else {
-			return nil
-		}
-		return (position: PlaybackPosition(position), time: PlaybackTime(time))
-	}
-}
-
-extension AudioPlayerNode.PlaybackPosition {
-	/// Returns an initialized `AudioPlayerNode.PlaybackPosition` object from `position`
-	init(_ position: __SFBAudioPlayerNodePlaybackPosition) {
-		self.current = position.framePosition == unknownFramePosition ? nil : position.framePosition
-		self.total = position.frameLength == unknownFrameLength ? nil : position.frameLength
+	/// The total number of frames or `nil` if unknown
+	public var total: AVAudioFramePosition? {
+		isFrameLengthValid ? frameLength : nil
 	}
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current, let total else {
+		guard isValid else {
 			return nil
 		}
-		return Double(current) / Double(total)
+		return Double(framePosition) / Double(frameLength)
 	}
 
 	/// Returns the frames remaining
 	public var remaining: AVAudioFramePosition? {
-		guard let current, let total else {
+		guard isValid else {
 			return nil
 		}
-		return total - current
+		return frameLength - framePosition
 	}
 }
 
-extension AudioPlayerNode.PlaybackTime {
-	/// Returns an initialized `AudioPlayerNode.PlaybackTime` object from `time`
-	init(_ time: __SFBAudioPlayerNodePlaybackTime) {
-		self.current = time.currentTime == unknownTime ? nil : time.currentTime
-		self.total = time.totalTime == unknownTime ? nil : time.totalTime
+extension PlaybackTime {
+	/// Returns `true` if the current time and total time are valid
+	public var isValid: Bool {
+		currentTime != unknownTime && totalTime != unknownTime
+	}
+	/// Returns `true` if the current time is valid
+	public var isCurrentTimeValid: Bool {
+		currentTime != unknownTime
+	}
+	/// Returns `true` if the total time is valid
+	public var isTotalTimeValid: Bool {
+		totalTime != unknownTime
+	}
+
+	/// The current time or `nil` if unknown
+	public var current: TimeInterval? {
+		isCurrentTimeValid ? currentTime : nil
+	}
+	/// The total time or `nil` if unknown
+	public var total: TimeInterval? {
+		isTotalTimeValid ? totalTime : nil
 	}
 
 	/// Returns `current` as a fraction of `total`
 	public var progress: Double? {
-		guard let current, let total else {
+		guard isValid else {
 			return nil
 		}
-		return Double(current) / Double(total)
+		return currentTime / totalTime
 	}
 
 	/// Returns the time remaining
 	public var remaining: TimeInterval? {
-		guard let current, let total else {
+		guard isValid else {
 			return nil
 		}
-		return total - current
+		return totalTime - currentTime
+	}
+}
+
+extension AudioPlayerNode {
+	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
+	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
+		var positionAndTime = (position: PlaybackPosition(), time: PlaybackTime())
+		getPlaybackPosition(&positionAndTime.position, andTime: &positionAndTime.time)
+		return positionAndTime
 	}
 }
