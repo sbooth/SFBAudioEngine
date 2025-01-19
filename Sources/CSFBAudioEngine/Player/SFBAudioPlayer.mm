@@ -258,7 +258,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (BOOL)playReturningError:(NSError **)error
 {
 	SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)reinterpret_cast<void *>(_playerNodePtr.load(std::memory_order_acquire));
-
 	if((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && playerNode.isPlaying)
 		return YES;
 
@@ -310,7 +309,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)resume
 {
 	SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)reinterpret_cast<void *>(_playerNodePtr.load(std::memory_order_acquire));
-
 	if(!((_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !playerNode.isPlaying))
 		return;
 
