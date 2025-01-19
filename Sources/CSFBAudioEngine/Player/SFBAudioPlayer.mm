@@ -655,7 +655,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	dispatch_async(_engineQueue, ^{
 		NSMutableString *string = [NSMutableString stringWithFormat:@"%@ audio processing graph:\n", self];
 
-		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)reinterpret_cast<void *>(_playerNodePtr.load(std::memory_order_acquire));
+		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)reinterpret_cast<void *>(self->_playerNodePtr.load(std::memory_order_acquire));
 		AVAudioEngine *engine = self->_engine;
 
 		AVAudioFormat *inputFormat = playerNode.renderingFormat;
