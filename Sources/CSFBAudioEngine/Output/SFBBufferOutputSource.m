@@ -4,7 +4,7 @@
 // MIT license
 //
 
-@import stdint_h;
+#import <stdint.h>
 
 #import "SFBBufferOutputSource.h"
 
