@@ -265,7 +265,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// - parameter block: A block performing operations on the underlying `AVAudioEngine`
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
-@property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
+@property (nonnull, readonly) SFBAudioPlayerNode *playerNode;
 
 #pragma mark - Debugging
 
