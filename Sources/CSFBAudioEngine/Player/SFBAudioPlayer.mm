@@ -80,10 +80,9 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	SFB::UnfairLock			_queueLock;
 	/// Decoders enqueued for non-gapless playback
 	DecoderQueue 			_queuedDecoders;
-	/// The lock used to protect access to `_nowPlaying`
-	SFB::UnfairLock			_nowPlayingLock;
-	/// The currently rendering decoder
-	id <SFBPCMDecoding> 	_nowPlaying;
+	/// The address of the currently rendering decoder
+	std::atomic<uintptr_t> 	_nowPlayingPtr;
+	static_assert(std::atomic<uintptr_t>::is_always_lock_free, "Lock-free std::atomic<uintptr_t> required");
 	/// Flags
 	std::atomic_uint		_flags;
 }
@@ -143,6 +142,12 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 #endif /* TARGET_OS_IPHONE */
 	}
 	return self;
+}
+
+- (void)dealloc
+{
+	uintptr_t nowPlayingPtr = _nowPlayingPtr.load(std::memory_order_acquire);
+	(void)(__bridge_transfer id<SFBPCMDecoding>)reinterpret_cast<void *>(nowPlayingPtr);
 }
 
 #pragma mark - Playlist Management
@@ -410,19 +415,18 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (id<SFBPCMDecoding>)nowPlaying
 {
-	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-	return _nowPlaying;
+	id<SFBPCMDecoding> nowPlaying = (__bridge id<SFBPCMDecoding>)reinterpret_cast<void *>(_nowPlayingPtr.load(std::memory_order_acquire));
+	return nowPlaying;
 }
 
 - (void)setNowPlaying:(id<SFBPCMDecoding>)nowPlaying
 {
-	{
-		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+	uintptr_t previousNowPlayingPtr = _nowPlayingPtr.exchange(reinterpret_cast<uintptr_t>((__bridge_retained void *)nowPlaying), std::memory_order_acq_rel);
+	id<SFBPCMDecoding> previousNowPlaying = (__bridge_transfer id<SFBPCMDecoding>)reinterpret_cast<void *>(previousNowPlayingPtr);
+
 #if DEBUG
-		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change to %@", nowPlaying);
+	NSAssert(previousNowPlaying != nowPlaying, @"Unnecessary now playing change to %@", nowPlaying);
 #endif /* DEBUG */
-		_nowPlaying = nowPlaying;
-	}
 
 	os_log_debug(_audioPlayerLog, "Now playing changed to %{public}@", nowPlaying);
 
