@@ -401,17 +401,18 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 		throw std::runtime_error("dispatch_queue_create_with_target failed");
 	}
 
+	// Create the dispatch group used to track event processing initiated from the decoding queue
+	mEventProcessingGroup = dispatch_group_create();
+	if(!mEventProcessingGroup) {
+		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
+		throw std::runtime_error("dispatch_group_create failed");
+	}
+
 	// Create the dispatch source used to trigger event processing from the render block
 	mEventProcessingSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, mEventProcessingQueue);
 	if(!mEventProcessingSource) {
 		os_log_error(sLog, "Unable to create event processing dispatch source: dispatch_source_create failed");
 		throw std::runtime_error("dispatch_source_create failed");
-	}
-
-	mEventProcessingGroup = dispatch_group_create();
-	if(!mEventProcessingGroup) {
-		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
-		throw std::runtime_error("dispatch_group_create failed");
 	}
 
 	dispatch_set_context(mEventProcessingSource, this);
@@ -698,7 +699,7 @@ id<SFBPCMDecoding> SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 	return decoderState ? decoderState->mDecoder : nil;
 }
 
-void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
+void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 {
 	auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
 		// If the decoder has already finished decoding, perform the cancelation manually
@@ -722,6 +723,8 @@ void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
 	// Cancel all active decoders in sequence
 	if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
 		cancelDecoder(decoderState);
+		if(!cancelAllActive)
+			return;
 		decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
 		while(decoderState) {
 			cancelDecoder(decoderState);

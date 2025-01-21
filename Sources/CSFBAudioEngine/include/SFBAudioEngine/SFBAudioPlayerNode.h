@@ -143,6 +143,15 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+/// Cancels the current decoder
+/// - note: It is normally recommended to use `-cancelActiveDecoders` instead
+- (void)cancelCurrentDecoder;
+/// Cancels all active decoders
+///
+/// Although there is normally only one active decoder at a time, two are active during transition periods.
+/// A transition period occurs when decoder *A* has completed decoding but not yet completed rendering
+/// and decoder *B* has started decoding but not yet started rendering.
+- (void)cancelActiveDecoders;
 
 /// Empties the decoder queue
 - (void)clearQueue;
@@ -156,7 +165,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 - (void)play;
 /// Pauses audio from the current decoder and pushes silence
 - (void)pause;
-/// Cancels the current decoder, clears any queued decoders, and pushes silence
+/// Cancels all active decoders, clears any queued decoders, and pushes silence
 - (void)stop;
 /// Toggles the playback state
 - (void)togglePlayPause;
