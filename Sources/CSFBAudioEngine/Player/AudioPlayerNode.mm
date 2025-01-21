@@ -699,29 +699,7 @@ id<SFBPCMDecoding> SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 	return decoderState ? decoderState->mDecoder : nil;
 }
 
-void SFB::AudioPlayerNode::CancelCurrentDecoder() noexcept
-{
-	if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
-		// If the decoder has already finished decoding, perform the cancelation manually
-		if(decoderState->IsDecodingComplete()) {
-#if DEBUG
-			os_log_debug(sLog, "Canceling %{public}@ that has completed decoding", decoderState->mDecoder);
-#endif /* DEBUG */
-			// Submit the decoder canceled event
-			const DecodingEventHeader header{DecodingEventCommand::eCanceled};
-			if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-				dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
-			else
-				os_log_fault(sLog, "Error writing decoder canceled event");
-		}
-		else {
-			decoderState->SetCanceled();
-			mDecodingSemaphore.Signal();
-		}
-	}
-}
-
-void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
+void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 {
 	auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
 		// If the decoder has already finished decoding, perform the cancelation manually
@@ -745,6 +723,8 @@ void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
 	// Cancel all active decoders in sequence
 	if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
 		cancelDecoder(decoderState);
+		if(!cancelAllActive)
+			return;
 		decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
 		while(decoderState) {
 			cancelDecoder(decoderState);

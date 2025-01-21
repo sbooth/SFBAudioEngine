@@ -132,12 +132,12 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 - (void)cancelCurrentDecoder
 {
-	_impl->CancelCurrentDecoder();
+	_impl->CancelActiveDecoders(false);
 }
 
 - (void)cancelActiveDecoders
 {
-	_impl->CancelActiveDecoders();
+	_impl->CancelActiveDecoders(true);
 }
 
 - (void)clearQueue
