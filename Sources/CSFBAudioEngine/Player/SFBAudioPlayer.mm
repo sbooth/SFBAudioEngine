@@ -931,23 +931,22 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		if(_playerNode) {
 			playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
 			[_engine detachNode:_playerNode];
-
-			// When an audio player node is deallocated the destructor synchronously waits
-			// for decoder cancelation (if there is an active decoder) and then for any
-			// final events to be processed and delegate messages sent.
-			// The potential therefore exists to block the calling thread for a perceptible amount
-			// of time, especially if the delegate callouts take longer than ideal.
-			//
-			// In my measurements the baseline with an empty delegate implementation of
-			// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
-			//
-			// Assuming there are no external references to the audio player node,
-			// setting it to nil here sends -dealloc
-			_playerNode = nil;
 		}
 
+		[_engine attachNode:playerNode];
+
+		// When an audio player node is deallocated the destructor synchronously waits
+		// for decoder cancelation (if there is an active decoder) and then for any
+		// final events to be processed and delegate messages sent.
+		// The potential therefore exists to block the calling thread for a perceptible amount
+		// of time, especially if the delegate callouts take longer than ideal.
+		//
+		// In my measurements the baseline with an empty delegate implementation of
+		// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
+		//
+		// Assuming there are no external references to the audio player node,
+		// setting it here sends -dealloc
 		_playerNode = playerNode;
-		[_engine attachNode:_playerNode];
 
 		// Reconnect the player node to the next node in the processing chain
 		// This is the mixer node in the default configuration, but additional nodes may
@@ -991,9 +990,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			audioUnit.maximumFramesToRender = maximumFramesToRender;
 
 			NSError *error;
-			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error]) {
+			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error])
 				os_log_error(_audioPlayerLog, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@", error);
-			}
 		}
 	}
 
