@@ -990,9 +990,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			audioUnit.maximumFramesToRender = maximumFramesToRender;
 
 			NSError *error;
-			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error]) {
+			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error])
 				os_log_error(_audioPlayerLog, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@", error);
-			}
 		}
 	}
 
