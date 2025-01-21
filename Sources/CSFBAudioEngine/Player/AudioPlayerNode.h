@@ -275,6 +275,7 @@ private:
 
 public:
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
+	/// - warning: This function is not part of the public API
 	void ProcessPendingEvents() noexcept;
 
 private:
