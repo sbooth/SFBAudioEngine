@@ -401,17 +401,18 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 		throw std::runtime_error("dispatch_queue_create_with_target failed");
 	}
 
+	// Create the dispatch group used to track event processing initiated from the decoding queue
+	mEventProcessingGroup = dispatch_group_create();
+	if(!mEventProcessingGroup) {
+		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
+		throw std::runtime_error("dispatch_group_create failed");
+	}
+
 	// Create the dispatch source used to trigger event processing from the render block
 	mEventProcessingSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, mEventProcessingQueue);
 	if(!mEventProcessingSource) {
 		os_log_error(sLog, "Unable to create event processing dispatch source: dispatch_source_create failed");
 		throw std::runtime_error("dispatch_source_create failed");
-	}
-
-	mEventProcessingGroup = dispatch_group_create();
-	if(!mEventProcessingGroup) {
-		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
-		throw std::runtime_error("dispatch_group_create failed");
 	}
 
 	dispatch_set_context(mEventProcessingSource, this);
@@ -696,6 +697,28 @@ id<SFBPCMDecoding> SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	return decoderState ? decoderState->mDecoder : nil;
+}
+
+void SFB::AudioPlayerNode::CancelCurrentDecoder() noexcept
+{
+	if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
+		// If the decoder has already finished decoding, perform the cancelation manually
+		if(decoderState->IsDecodingComplete()) {
+#if DEBUG
+			os_log_debug(sLog, "Canceling %{public}@ that has completed decoding", decoderState->mDecoder);
+#endif /* DEBUG */
+			// Submit the decoder canceled event
+			const DecodingEventHeader header{DecodingEventCommand::eCanceled};
+			if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
+				dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+			else
+				os_log_fault(sLog, "Error writing decoder canceled event");
+		}
+		else {
+			decoderState->SetCanceled();
+			mDecodingSemaphore.Signal();
+		}
+	}
 }
 
 void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept

@@ -188,6 +188,7 @@ private:
 
 public:
 	id<SFBPCMDecoding> _Nullable CurrentDecoder() const noexcept;
+	void CancelCurrentDecoder() noexcept;
 	void CancelActiveDecoders() noexcept;
 
 	void ClearQueue() noexcept
