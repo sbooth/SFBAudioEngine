@@ -902,10 +902,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					// Submit the decoding canceled event
 					const DecodingEventHeader header{DecodingEventCommand::eCanceled};
 					if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-							ProcessPendingEvents();
-						});
-//						dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+						dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 					else
 						os_log_fault(sLog, "Error writing decoder canceled event");
 
