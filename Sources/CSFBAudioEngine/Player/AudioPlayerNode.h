@@ -209,7 +209,6 @@ public:
 	}
 
 private:
-
 #pragma mark - Decoding
 
 	/// Pops the next decoder from the decoder queue and submits it for processing on the decoding dispatch queue
@@ -274,8 +273,11 @@ private:
 
 #pragma mark - Event Processing
 
+public:
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
 	void ProcessPendingEvents() noexcept;
+
+private:
 	/// Processes an event from `mDecodeEventRingBuffer`
 	void ProcessEvent(const DecodingEventHeader& header) noexcept;
 	/// Processes an event from `mRenderEventRingBuffer`

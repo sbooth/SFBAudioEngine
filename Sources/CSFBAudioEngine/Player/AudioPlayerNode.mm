@@ -32,6 +32,16 @@ void release_nserror_f(void * _Nullable context)
 	(void)(__bridge_transfer NSError *)context;
 }
 
+/// libdispatch function that calls `ProcessPendingEvents` on `context`
+void process_pending_events_f(void *context) noexcept
+{
+#if DEBUG
+	assert(context != nullptr);
+#endif /* DEBUG */
+	auto that = static_cast<SFB::AudioPlayerNode *>(context);
+	that->ProcessPendingEvents();
+}
+
 } /* namespace */
 
 namespace SFB {
@@ -403,11 +413,10 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
 		throw std::runtime_error("dispatch_group_create failed");
 	}
-	
-	dispatch_source_set_event_handler(mEventProcessingSource, ^{
-		ProcessPendingEvents();
-	});
-	
+
+	dispatch_set_context(mEventProcessingSource, this);
+	dispatch_source_set_event_handler_f(mEventProcessingSource, process_pending_events_f);
+
 	// Start processing events from the render block
 	dispatch_activate(mEventProcessingSource);
 }
@@ -700,9 +709,7 @@ void SFB::AudioPlayerNode::CancelActiveDecoders() noexcept
 			// Submit the decoder canceled event
 			const DecodingEventHeader header{DecodingEventCommand::eCanceled};
 			if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-				dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-					ProcessPendingEvents();
-				});
+				dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 			else
 				os_log_fault(sLog, "Error writing decoder canceled event");
 		}
@@ -754,9 +761,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
 
 				if(mDecodeEventRingBuffer.WriteValues(header, key))
-					dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-						ProcessPendingEvents();
-					});
+					dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 				else
 					os_log_fault(sLog, "Error writing decoding error event");
 
@@ -783,9 +788,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
 
 				if(mDecodeEventRingBuffer.WriteValues(header, key))
-					dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-						ProcessPendingEvents();
-					});
+					dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 				else
 					os_log_fault(sLog, "Error writing decoding error event");
 
@@ -902,6 +905,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 						dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
 							ProcessPendingEvents();
 						});
+//						dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 					else
 						os_log_fault(sLog, "Error writing decoder canceled event");
 
@@ -918,9 +922,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 						// Submit the decoding started event
 						const DecodingEventHeader header{DecodingEventCommand::eStarted};
 						if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-							dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-								ProcessPendingEvents();
-							});
+							dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 						else
 							os_log_fault(sLog, "Error writing decoding started event");
 					}
@@ -937,9 +939,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 							dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
 
 							if(mDecodeEventRingBuffer.WriteValues(header, key))
-								dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-									ProcessPendingEvents();
-								});
+								dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 							else
 								os_log_fault(sLog, "Error writing decoding error event");
 						}
@@ -954,9 +954,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 						// Submit the decoding complete event
 						const DecodingEventHeader header{DecodingEventCommand::eComplete};
 						if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-							dispatch_group_async(mEventProcessingGroup, mEventProcessingQueue, ^{
-								ProcessPendingEvents();
-							});
+							dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
 						else
 							os_log_fault(sLog, "Error writing decoding complete event");
 
