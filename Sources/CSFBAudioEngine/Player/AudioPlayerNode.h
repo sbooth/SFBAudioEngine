@@ -63,6 +63,8 @@ private:
 
 	/// Active decoders and associated state
 	DecoderStateArray 				*mActiveDecoders 		= nullptr;
+	/// Lock used to protect access to `mActiveDecoders`
+	mutable SFB::UnfairLock			mDecoderLock;
 
 	/// Decoders enqueued for playback that are not yet active
 	DecoderQueue 					mQueuedDecoders 		= {};

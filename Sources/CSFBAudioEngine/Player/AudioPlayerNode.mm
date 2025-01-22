@@ -447,6 +447,8 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 
 SFBPlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
 {
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
 		return SFBInvalidPlaybackPosition;
@@ -456,6 +458,8 @@ SFBPlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
 
 SFBPlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
 {
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
 		return SFBInvalidPlaybackTime;
@@ -477,6 +481,8 @@ SFBPlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
 
 bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition, SFBPlaybackTime *playbackTime) const noexcept
 {
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState) {
 		if(playbackPosition)
@@ -511,6 +517,8 @@ bool SFB::AudioPlayerNode::SeekForward(NSTimeInterval secondsToSkip) noexcept
 	if(secondsToSkip < 0)
 		secondsToSkip = 0;
 
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
@@ -534,6 +542,8 @@ bool SFB::AudioPlayerNode::SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	if(secondsToSkip < 0)
 		secondsToSkip = 0;
 
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
@@ -555,6 +565,8 @@ bool SFB::AudioPlayerNode::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 {
 	if(timeInSeconds < 0)
 		timeInSeconds = 0;
+
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
@@ -580,6 +592,8 @@ bool SFB::AudioPlayerNode::SeekToPosition(double position) noexcept
 	else if(position >= 1)
 		position = std::nextafter(1.0, 0.0);
 
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
@@ -597,7 +611,9 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 {
 	if(frame < 0)
 		frame = 0;
-	
+
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return false;
@@ -614,6 +630,7 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 
 bool SFB::AudioPlayerNode::SupportsSeeking() const noexcept
 {
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	return decoderState ? decoderState->mDecoder.supportsSeeking : false;
 }
@@ -695,6 +712,7 @@ id <SFBPCMDecoding> SFB::AudioPlayerNode::DequeueDecoder() noexcept
 
 id<SFBPCMDecoding> SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	return decoderState ? decoderState->mDecoder : nil;
 }
@@ -719,7 +737,9 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 			mDecodingSemaphore.Signal();
 		}
 	};
-	
+
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+
 	// Cancel all active decoders in sequence
 	if(auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(); decoderState) {
 		cancelDecoder(decoderState);
@@ -1088,15 +1108,20 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 	switch(header.mCommand) {
 		case DecodingEventCommand::eStarted:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
-				const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
-				if(!decoderState) {
-					os_log_fault(sLog, "Decoder state with sequence number %llu missing for decoding started event", decoderSequenceNumber);
-					break;
+				id<SFBPCMDecoding> decoder;
+
+				{
+					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					if(!decoderState) {
+						os_log_fault(sLog, "Decoder state with sequence number %llu missing for decoding started event", decoderSequenceNumber);
+						break;
+					}
+					decoder = decoderState->mDecoder;
 				}
 
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)]) {
-					[mNode.delegate audioPlayerNode:mNode decodingStarted:decoderState->mDecoder];
-				}
+				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)])
+					[mNode.delegate audioPlayerNode:mNode decodingStarted:decoder];
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number for decoding started event");
@@ -1104,15 +1129,20 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 		case DecodingEventCommand::eComplete:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
-				const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
-				if(!decoderState) {
-					os_log_fault(sLog, "Decoder state with sequence number %llu missing for decoding complete event", decoderSequenceNumber);
-					break;
+				id<SFBPCMDecoding> decoder;
+
+				{
+					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					if(!decoderState) {
+						os_log_fault(sLog, "Decoder state with sequence number %llu missing for decoding complete event", decoderSequenceNumber);
+						break;
+					}
+					decoder = decoderState->mDecoder;
 				}
 
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)]) {
-					[mNode.delegate audioPlayerNode:mNode decodingComplete:decoderState->mDecoder];
-				}
+				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)])
+					[mNode.delegate audioPlayerNode:mNode decodingComplete:decoder];
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number for decoding complete event");
@@ -1120,20 +1150,26 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 		case DecodingEventCommand::eCanceled:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
-				const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
-				if(!decoderState) {
-					os_log_fault(sLog, "Decoder state with sequence number %llu missing for decoder canceled event", decoderSequenceNumber);
-					break;
+				id<SFBPCMDecoding> decoder;
+				AVAudioFramePosition framesRendered;
+
+				{
+					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					if(!decoderState) {
+						os_log_fault(sLog, "Decoder state with sequence number %llu missing for decoder canceled event", decoderSequenceNumber);
+						break;
+					}
+
+					decoder = decoderState->mDecoder;
+					framesRendered = decoderState->FramesRendered();
+
+					if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
+						os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
 				}
 
-				const auto decoder = decoderState->mDecoder;
-				const auto framesRendered = decoderState->FramesRendered();
-				if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
-					os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
-
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)]) {
+				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)])
 					[mNode.delegate audioPlayerNode:mNode decoderCanceled:decoder framesRendered:framesRendered];
-				}
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number for decoder canceled event");
@@ -1149,9 +1185,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), nullptr, nullptr);
 
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)]) {
+				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
 					[mNode.delegate audioPlayerNode:mNode encounteredError:error];
-				}
 			}
 			else
 				os_log_fault(sLog, "Missing key for decoding error event");
@@ -1177,110 +1212,124 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 			uint32_t framesRendered;
 
 			if(mRenderEventRingBuffer.ReadValues(timestamp, framesRendered)) {
+#if DEBUG
+				assert(framesRendered > 0);
+#endif /* DEBUG */
+
 				// Perform bookkeeping to apportion the rendered frames appropriately
 				//
-				// framesRead contains the number of valid frames that were rendered
+				// framesRendered contains the number of valid frames that were rendered
 				// However, these could have come from any number of decoders depending on buffer sizes
 				// So it is necessary to split them up here
 
+				DecoderState *decoderState = nullptr;
 				AVAudioFramePosition framesRemainingToDistribute = framesRendered;
+				while(framesRemainingToDistribute > 0) {
+					uint64_t hostTime;
+					id<SFBPCMDecoding> startedDecoder = nil;
+					id<SFBPCMDecoding> nextDecoder = nil;
+					id<SFBPCMDecoding> completeDecoder = nil;
 
-				auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-				while(decoderState) {
-					const auto decoderFramesRemaining = decoderState->FramesAvailableToRender();
-					const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
-
-					// Rendering is starting
-					if(!decoderState->HasRenderingStarted() && framesFromThisDecoder > 0) {
-						decoderState->SetRenderingStarted();
-
-						// Submit the rendering started event
-						const auto frameOffset = framesRendered - framesRemainingToDistribute;
-						const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
-						const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
-
-						const auto now = SFB::GetCurrentHostTime();
-						if(now > hostTime)
-							os_log_error(sLog, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
-#if DEBUG
+					{
+						std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+						if(decoderState)
+							decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
 						else
-							os_log_debug(sLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
-#endif /* DEBUG */
+							decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
+						if(!decoderState)
+							break;
 
-						if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)]) {
-							[mNode.delegate audioPlayerNode:mNode renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
-						}
-					}
+						const auto decoderFramesRemaining = decoderState->FramesAvailableToRender();
+						const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
-					decoderState->AddFramesRendered(framesFromThisDecoder);
-					framesRemainingToDistribute -= framesFromThisDecoder;
+						// Rendering is starting
+						if(!decoderState->HasRenderingStarted() && framesFromThisDecoder > 0) {
+							decoderState->SetRenderingStarted();
 
-					// Rendering is complete
-					if(decoderState->IsDecodingComplete() && decoderState->AllAvailableFramesRendered()) {
-						decoderState->SetRenderingComplete();
-
-						// Check for a decoder transition
-						if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
-							const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
-							const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
-
-#if DEBUG
-							assert(!nextDecoderState->HasRenderingStarted());
-#endif /* DEBUG */
-
-							nextDecoderState->SetRenderingStarted();
-
-							nextDecoderState->AddFramesRendered(framesFromNextDecoder);
-							framesRemainingToDistribute -= framesFromNextDecoder;
-
-							// Submit the rendering decoder changed event
 							const auto frameOffset = framesRendered - framesRemainingToDistribute;
 							const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
-							const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+							hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
 							const auto now = SFB::GetCurrentHostTime();
 							if(now > hostTime)
-								os_log_error(sLog, "Rendering decoder changed event processed %.2f msec late for transition from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
+								os_log_error(sLog, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
 #if DEBUG
 							else
-								os_log_debug(sLog, "Rendering decoder will change in %.2f msec from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
+								os_log_debug(sLog, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
 #endif /* DEBUG */
 
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:)]) {
-								[mNode.delegate audioPlayerNode:mNode renderingDecoder:decoderState->mDecoder willChangeToDecoder:nextDecoderState->mDecoder atHostTime:hostTime];
-							}
-
-							if(!DeleteDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
-								os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering decoder changed event", decoderState->mSequenceNumber);
-
-							decoderState = nextDecoderState;
+							startedDecoder = decoderState->mDecoder;
 						}
-						else {
-							const auto frameOffset = framesRendered - framesRemainingToDistribute;
-							const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
-							const uint64_t hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
-							const auto now = SFB::GetCurrentHostTime();
-							if(now > hostTime)
-								os_log_error(sLog, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+						decoderState->AddFramesRendered(framesFromThisDecoder);
+						framesRemainingToDistribute -= framesFromThisDecoder;
+
+						// Rendering is complete
+						if(decoderState->IsDecodingComplete() && decoderState->AllAvailableFramesRendered()) {
+							decoderState->SetRenderingComplete();
+
+							completeDecoder = decoderState->mDecoder;
+
+							// Check for a decoder transition
+							if(const auto nextDecoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber); nextDecoderState) {
+								const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
+								const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
+
 #if DEBUG
-							else
-								os_log_debug(sLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
+								assert(!nextDecoderState->HasRenderingStarted());
 #endif /* DEBUG */
 
-							if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)]) {
-								[mNode.delegate audioPlayerNode:mNode renderingWillComplete:decoderState->mDecoder atHostTime:hostTime];
-							}
+								nextDecoderState->SetRenderingStarted();
 
-							if(!DeleteDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
-								os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderState->mSequenceNumber);
+								nextDecoderState->AddFramesRendered(framesFromNextDecoder);
+								framesRemainingToDistribute -= framesFromNextDecoder;
+
+								const auto frameOffset = framesRendered - framesRemainingToDistribute;
+								const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+								hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+
+								const auto now = SFB::GetCurrentHostTime();
+								if(now > hostTime)
+									os_log_error(sLog, "Rendering decoder changed event processed %.2f msec late for transition from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
+#if DEBUG
+								else
+									os_log_debug(sLog, "Rendering decoder will change in %.2f msec from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder, nextDecoderState->mDecoder);
+#endif /* DEBUG */
+
+								nextDecoder = nextDecoderState->mDecoder;
+
+								if(!DeleteDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
+									os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering decoder changed event", decoderState->mSequenceNumber);
+
+								decoderState = nextDecoderState;
+							}
+							else {
+								const auto frameOffset = framesRendered - framesRemainingToDistribute;
+								const double deltaSeconds = frameOffset / mAudioRingBuffer.Format().mSampleRate;
+								hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+
+								const auto now = SFB::GetCurrentHostTime();
+								if(now > hostTime)
+									os_log_error(sLog, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->mDecoder);
+#if DEBUG
+								else
+									os_log_debug(sLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
+#endif /* DEBUG */
+
+								if(!DeleteDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
+									os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderState->mSequenceNumber);
+							}
 						}
 					}
 
-					if(framesRemainingToDistribute == 0)
-						break;
+					// Send delegate messages after unlock
+					if(startedDecoder && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)])
+						[mNode.delegate audioPlayerNode:mNode renderingWillStart:startedDecoder atHostTime:hostTime];
 
-					decoderState = GetActiveDecoderStateFollowingSequenceNumber(decoderState->mSequenceNumber);
+					if(nextDecoder && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:)])
+						[mNode.delegate audioPlayerNode:mNode renderingDecoder:completeDecoder willChangeToDecoder:nextDecoder atHostTime:hostTime];
+					else if(completeDecoder && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)])
+						[mNode.delegate audioPlayerNode:mNode renderingWillComplete:completeDecoder atHostTime:hostTime];
 				}
 			}
 			else
@@ -1297,6 +1346,10 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept
 {
+#if DEBUG
+	mDecoderLock.assert_owner();
+#endif /* DEBUG */
+
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : *mActiveDecoders) {
 		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
@@ -1317,6 +1370,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 {
+#if DEBUG
+	mDecoderLock.assert_owner();
+#endif /* DEBUG */
+
 	DecoderState *result = nullptr;
 	for(const auto& atomic_ptr : *mActiveDecoders) {
 		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
@@ -1337,6 +1394,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
 {
+#if DEBUG
+	mDecoderLock.assert_owner();
+#endif /* DEBUG */
+
 	for(const auto& atomic_ptr : *mActiveDecoders) {
 		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState)
@@ -1351,6 +1412,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSe
 
 bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
 {
+#if DEBUG
+	mDecoderLock.assert_owner();
+#endif /* DEBUG */
+
 	for(auto& atomic_ptr : *mActiveDecoders) {
 		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
 		if(!decoderState || decoderState->mSequenceNumber != sequenceNumber)
