@@ -60,7 +60,8 @@ const os_log_t AudioPlayerNode::sLog = os_log_create("org.sbooth.AudioEngine", "
 #pragma mark - Decoder State
 
 /// State for tracking/syncing decoding progress
-struct AudioPlayerNode::DecoderState final {
+class AudioPlayerNode::DecoderState final {
+public:
 	/// Monotonically increasing instance counter
 	const uint64_t				mSequenceNumber 	= sSequenceNumber++;
 
