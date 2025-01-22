@@ -432,8 +432,7 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 
 	// Delete any remaining decoder state
 	while(!mActiveDecoders.empty()) {
-		auto decoderState = mActiveDecoders.front();
-		delete decoderState;
+		delete mActiveDecoders.front();
 		mActiveDecoders.pop_front();
 	}
 
