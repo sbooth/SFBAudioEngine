@@ -1298,9 +1298,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	if(mActiveDecoders.empty())
+	auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [](const DecoderState *decoderState){ return !decoderState->IsRenderingComplete(); });
+	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return mActiveDecoders.front();
+	return *iter;
 }
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
