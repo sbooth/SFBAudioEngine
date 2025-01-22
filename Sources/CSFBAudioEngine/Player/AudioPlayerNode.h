@@ -260,12 +260,8 @@ private:
 
 	/// Render block events
 	enum class RenderingEventCommand : uint32_t {
-		/// Rendering started
-		eStarted 		= 1,
-		/// Rendering decoder changed
-		eDecoderChanged = 2,
-		/// Rendering complete
-		eComplete 		= 3,
+		/// Timestamp and frames rendered
+		eFramesRendered 	= 1,
 	};
 
 	/// A rendering event command and identification number
