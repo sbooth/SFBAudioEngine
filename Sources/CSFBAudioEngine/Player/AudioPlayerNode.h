@@ -6,9 +6,9 @@
 
 #pragma once
 
-#import <array>
 #import <atomic>
 #import <deque>
+#import <list>
 #import <memory>
 #import <mutex>
 
@@ -36,11 +36,10 @@ uint64_t NextEventIdentificationNumber() noexcept;
 #pragma mark - AudioPlayerNode
 
 /// SFBAudioPlayerNode implementation
-struct AudioPlayerNode final {
-	using unique_ptr = std::unique_ptr<AudioPlayerNode>;
-	using DecoderQueue = std::deque<id <SFBPCMDecoding>>;
-
-	struct DecoderState;
+class AudioPlayerNode final {
+public:
+	using unique_ptr 	= std::unique_ptr<AudioPlayerNode>;
+	using Decoder 		= id<SFBPCMDecoding>;
 
 	/// The shared log for all `AudioPlayerNode` instances
 	static const os_log_t sLog;
@@ -52,8 +51,10 @@ struct AudioPlayerNode final {
 	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
 
 private:
-	static constexpr size_t kDecoderStateArraySize = 8;
-	using DecoderStateArray = std::array<std::atomic<DecoderState *>, kDecoderStateArraySize>;
+	struct DecoderState;
+
+	using DecoderQueue 				= std::deque<Decoder>;
+	using DecoderStateList 			= std::list<DecoderState *>;
 
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
@@ -62,7 +63,7 @@ private:
 	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
-	DecoderStateArray 				*mActiveDecoders 		= nullptr;
+	DecoderStateList 				mActiveDecoders;
 	/// Lock used to protect access to `mActiveDecoders`
 	mutable SFB::UnfairLock			mDecoderLock;
 
@@ -182,14 +183,14 @@ public:
 
 #pragma mark - Decoder Queue Management
 
-	bool EnqueueDecoder(id <SFBPCMDecoding> _Nonnull decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
+	bool EnqueueDecoder(Decoder _Nonnull decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
 
 private:
 	/// Pops the next decoder from the decoder queue
-	id <SFBPCMDecoding> _Nullable DequeueDecoder() noexcept;
+	Decoder _Nullable DequeueDecoder() noexcept;
 
 public:
-	id<SFBPCMDecoding> _Nullable CurrentDecoder() const noexcept;
+	Decoder _Nullable CurrentDecoder() const noexcept;
 	void CancelActiveDecoders(bool cancelAllActive) noexcept;
 
 	void ClearQueue() noexcept

@@ -71,7 +71,7 @@ struct AudioPlayerNode::DecoderState final {
 	const double 				mSampleRate 		= 0;
 
 	/// Decodes audio from the source representation to PCM
-	const id <SFBPCMDecoding> 	mDecoder 			= nil;
+	const Decoder 				mDecoder 			= nil;
 
 private:
 	static constexpr AVAudioFrameCount 	kDefaultFrameCapacity 	= 1024;
@@ -118,7 +118,7 @@ private:
 	static uint64_t			sSequenceNumber;
 
 public:
-	DecoderState(id <SFBPCMDecoding> _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
+	DecoderState(Decoder _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = kDefaultFrameCapacity)
 	: mFrameLength{decoder.frameLength}, mDecoder{decoder}, mSampleRate{format.sampleRate}
 	{
 #if DEBUG
@@ -338,11 +338,6 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 
 	os_log_debug(sLog, "Created <AudioPlayerNode: %p>, rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
-	// Allocate and initialize the decoder state array
-	mActiveDecoders = new DecoderStateArray;
-	for(auto& atomic_ptr : *mActiveDecoders)
-		atomic_ptr.store(nullptr, std::memory_order_release);
-
 	// ========================================
 	// Decoding Setup
 
@@ -436,9 +431,11 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 	dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
 	// Delete any remaining decoder state
-	for(auto& atomic_ptr : *mActiveDecoders)
-		delete atomic_ptr.exchange(nullptr);
-	delete mActiveDecoders;
+	while(!mActiveDecoders.empty()) {
+		auto decoderState = mActiveDecoders.front();
+		delete decoderState;
+		mActiveDecoders.pop_front();
+	}
 
 	os_log_debug(sLog, "<AudioPlayerNode: %p> destroyed", this);
 }
@@ -650,7 +647,7 @@ bool SFB::AudioPlayerNode::SupportsFormat(AVAudioFormat *format) const noexcept
 
 #pragma mark - Queue Management
 
-bool SFB::AudioPlayerNode::EnqueueDecoder(id <SFBPCMDecoding> decoder, bool reset, NSError **error) noexcept
+bool SFB::AudioPlayerNode::EnqueueDecoder(Decoder decoder, bool reset, NSError **error) noexcept
 {
 #if DEBUG
 	assert(decoder != nil);
@@ -699,10 +696,10 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(id <SFBPCMDecoding> decoder, bool rese
 	return true;
 }
 
-id <SFBPCMDecoding> SFB::AudioPlayerNode::DequeueDecoder() noexcept
+SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::DequeueDecoder() noexcept
 {
 	std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-	id <SFBPCMDecoding> decoder = nil;
+	Decoder decoder = nil;
 	if(!mQueuedDecoders.empty()) {
 		decoder = mQueuedDecoders.front();
 		mQueuedDecoders.pop_front();
@@ -710,7 +707,7 @@ id <SFBPCMDecoding> SFB::AudioPlayerNode::DequeueDecoder() noexcept
 	return decoder;
 }
 
-id<SFBPCMDecoding> SFB::AudioPlayerNode::CurrentDecoder() const noexcept
+SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
@@ -819,56 +816,10 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 			}
 
 			// Add the decoder state to the list of active decoders
-			auto stored = false;
-			do {
-				for(auto& atomic_ptr : *mActiveDecoders) {
-					auto current = atomic_ptr.load(std::memory_order_acquire);
-					if(current)
-						continue;
-
-					// In essence `mActiveDecoders` is an SPSC queue with `mDecodingQueue` as producer
-					// and the event processor as consumer, with the stored values used in between production
-					// and consumption by any number of other threads/queues including the render block.
-					//
-					// Slots in `mActiveDecoders` are assigned values in two places: here and the
-					// event processor. The event processor assigns nullptr to slots before deleting
-					// the stored value while this code assigns non-null values to slots holding nullptr.
-					//
-					// Since `mActiveDecoders[i]` was atomically loaded and has been verified not null,
-					// it is safe to use store() instead of compare_exchange_strong() because this is the
-					// only code that could have changed the slot to a non-null value and it is called solely
-					// from the decoding queue.
-					// There is the possibility that a non-null value was collected from the slot and the slot
-					// was assigned nullptr in between load() and the check for null. If this happens the
-					// assignment could have taken place but didn't.
-					//
-					// When `mActiveDecoders` is full this code either needs to wait for a slot to open up or fail.
-					//
-					// `mActiveDecoders` may be full when the capacity of mAudioRingBuffer exceeds the
-					// total number of audio frames for all the decoders in `mActiveDecoders` and audio is not
-					// being consumed by the render block.
-					// The default frame capacity for `mAudioRingBuffer` is 16384. With 8 slots available in
-					// `mActiveDecoders`, the average number of frames a decoder needs to contain for
-					// all slots to be full is 2048. For audio at 8000 Hz that equates to 0.26 sec and at
-					// 44,100 Hz 2048 frames equates to 0.05 sec.
-					// This code elects to wait for a slot to open up instead of failing.
-					// This isn't a concern in practice since the main use case for this class is music, not
-					// sequential buffers of 0.05 sec. In normal use it's expected that slots 0 and 1 will
-					// be the only ones used.
-					atomic_ptr.store(decoderState, std::memory_order_release);
-					stored = true;
-					break;
-				}
-
-				if(!stored) {
-					os_log_debug(sLog, "No open slots in mActiveDecoders");
-					struct timespec rqtp = {
-						.tv_sec = 0,
-						.tv_nsec = NSEC_PER_SEC / 20
-					};
-					nanosleep(&rqtp, nullptr);
-				}
-			} while(!stored);
+			{
+				std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+				mActiveDecoders.push_back(decoderState);
+			}
 
 			// Clear the mute flags if needed
 			if(unmuteNeeded)
@@ -1108,7 +1059,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 	switch(header.mCommand) {
 		case DecodingEventCommand::eStarted:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
-				id<SFBPCMDecoding> decoder;
+				Decoder decoder;
 
 				{
 					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
@@ -1129,7 +1080,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 		case DecodingEventCommand::eComplete:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
-				id<SFBPCMDecoding> decoder;
+				Decoder decoder;
 
 				{
 					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
@@ -1150,7 +1101,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 		case DecodingEventCommand::eCanceled:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
-				id<SFBPCMDecoding> decoder;
+				Decoder decoder;
 				AVAudioFramePosition framesRendered;
 
 				{
@@ -1226,9 +1177,9 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 				AVAudioFramePosition framesRemainingToDistribute = framesRendered;
 				while(framesRemainingToDistribute > 0) {
 					uint64_t hostTime;
-					id<SFBPCMDecoding> startedDecoder = nil;
-					id<SFBPCMDecoding> nextDecoder = nil;
-					id<SFBPCMDecoding> completeDecoder = nil;
+					Decoder startedDecoder = nil;
+					Decoder nextDecoder = nil;
+					Decoder completeDecoder = nil;
 
 					{
 						std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
@@ -1350,22 +1301,9 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	DecoderState *result = nullptr;
-	for(const auto& atomic_ptr : *mActiveDecoders) {
-		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
-		if(!decoderState)
-			continue;
-
-		if(decoderState->IsRenderingComplete())
-			continue;
-
-		if(!result)
-			result = decoderState;
-		else if(decoderState->mSequenceNumber < result->mSequenceNumber)
-			result = decoderState;
-	}
-
-	return result;
+	if(mActiveDecoders.empty())
+		return nullptr;
+	return mActiveDecoders.front();
 }
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
@@ -1374,22 +1312,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	DecoderState *result = nullptr;
-	for(const auto& atomic_ptr : *mActiveDecoders) {
-		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
-		if(!decoderState)
-			continue;
-
-		if(decoderState->IsRenderingComplete())
-			continue;
-
-		if(!result && decoderState->mSequenceNumber > sequenceNumber)
-			result = decoderState;
-		else if(result && decoderState->mSequenceNumber > sequenceNumber && decoderState->mSequenceNumber < result->mSequenceNumber)
-			result = decoderState;
-	}
-
-	return result;
+	auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const DecoderState *decoderState){ return decoderState->mSequenceNumber > sequenceNumber; });
+	if(iter == mActiveDecoders.end())
+		return nullptr;
+	return *iter;
 }
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
@@ -1398,16 +1324,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSe
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	for(const auto& atomic_ptr : *mActiveDecoders) {
-		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
-		if(!decoderState)
-			continue;
-
-		if(decoderState->mSequenceNumber == sequenceNumber)
-			return decoderState;
-	}
-
-	return nullptr;
+	auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const DecoderState *decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
+	if(iter == mActiveDecoders.end())
+		return nullptr;
+	return *iter;
 }
 
 bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
@@ -1416,15 +1336,13 @@ bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& 
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	for(auto& atomic_ptr : *mActiveDecoders) {
-		auto decoderState = atomic_ptr.load(std::memory_order_acquire);
-		if(!decoderState || decoderState->mSequenceNumber != sequenceNumber)
-			continue;
+	auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const DecoderState *decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
+	if(iter == mActiveDecoders.end())
+		return false;
 
-		os_log_debug(sLog, "Deleting decoder state for %{public}@", decoderState->mDecoder);
-		delete atomic_ptr.exchange(nullptr, std::memory_order_acq_rel);
-		return true;
-	}
+	os_log_debug(sLog, "Deleting decoder state for %{public}@", (*iter)->mDecoder);
+	delete *iter;
+	mActiveDecoders.erase(iter);
 
-	return false;
+	return true;
 }
