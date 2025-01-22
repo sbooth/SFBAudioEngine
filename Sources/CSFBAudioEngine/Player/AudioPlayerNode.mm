@@ -61,9 +61,6 @@ const os_log_t AudioPlayerNode::sLog = os_log_create("org.sbooth.AudioEngine", "
 
 /// State for tracking/syncing decoding progress
 struct AudioPlayerNode::DecoderState final {
-	using atomic_ptr = std::atomic<DecoderState *>;
-	static_assert(atomic_ptr::is_always_lock_free, "Lock-free std::atomic<DecoderState *> required");
-
 	/// Monotonically increasing instance counter
 	const uint64_t				mSequenceNumber 	= sSequenceNumber++;
 
