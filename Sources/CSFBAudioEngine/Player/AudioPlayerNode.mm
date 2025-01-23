@@ -442,11 +442,9 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 SFBPlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
 {
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
-
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
 	if(!decoderState)
 		return SFBInvalidPlaybackPosition;
-
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 }
 
@@ -626,7 +624,9 @@ bool SFB::AudioPlayerNode::SupportsSeeking() const noexcept
 {
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-	return decoderState ? decoderState->mDecoder.supportsSeeking : false;
+	if(!decoderState)
+		return false;
+	return decoderState->mDecoder.supportsSeeking;
 }
 
 #pragma mark - Format Information
@@ -708,7 +708,9 @@ SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexc
 {
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 	const auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber();
-	return decoderState ? decoderState->mDecoder : nil;
+	if(!decoderState)
+		return nil;
+	return decoderState->mDecoder;
 }
 
 void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
@@ -813,9 +815,27 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 			}
 
 			// Add the decoder state to the list of active decoders
-			{
+			try {
 				std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 				mActiveDecoders.push_back(decoderState);
+			}
+			catch(const std::exception& e) {
+				os_log_error(sLog, "Error pushing %{public}@ to mActiveDecoders: %{public}s", decoderState->mDecoder, e.what());
+
+				// Submit the error event
+				const DecodingEventHeader header{DecodingEventCommand::eError};
+
+				const auto key = mDispatchKeyCounter.fetch_add(1);
+				NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+				if(mDecodeEventRingBuffer.WriteValues(header, key))
+					dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+				else
+					os_log_fault(sLog, "Error writing decoding error event");
+
+				delete decoderState;
+				return;
 			}
 
 			// Clear the mute flags if needed
