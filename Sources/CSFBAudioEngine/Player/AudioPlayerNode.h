@@ -55,7 +55,7 @@ private:
 	struct DecoderState;
 
 	using DecoderQueue 				= std::deque<Decoder>;
-	using DecoderStateList 			= std::list<DecoderState *>;
+	using DecoderStateList 			= std::list<std::unique_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;

@@ -431,8 +431,7 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 	dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
 	// Delete any remaining decoder state
-	for(auto&& decoderState : mActiveDecoders)
-		delete decoderState;
+	mActiveDecoders.clear();
 
 	os_log_debug(sLog, "<AudioPlayerNode: %p> destroyed", this);
 }
@@ -777,38 +776,25 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 	while(!(mFlags.load(std::memory_order_acquire) & eFlagStopDecodingThread)) {
 		// Dequeue and process the next decoder
 		if(auto decoder = DequeueDecoder(); decoder) {
-			// Create the decoder state
+			// The decoder state being processed
 			DecoderState *decoderState = nullptr;
 
 			try {
+				// Create the decoder state and add it to the list of active decoders
 				// When the decoder's processing format and rendering format don't match
 				// conversion will be performed in DecoderState::DecodeAudio()
-				decoderState = new DecoderState(decoder, mRenderingFormat, kRingBufferChunkSize);
+				std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+				mActiveDecoders.push_back(std::make_unique<DecoderState>(decoder, mRenderingFormat, kRingBufferChunkSize));
+				decoderState = mActiveDecoders.back().get();
 			}
 			catch(const std::exception& e) {
-				os_log_error(sLog, "Error creating decoder state: %{public}s", e.what());
-
+				os_log_error(sLog, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
 				NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
 													 code:SFBAudioPlayerNodeErrorCodeInternalError
 												 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
 															 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating DecoderState", @""),
 														  }];
-				SubmitDecodingErrorEvent(error);
-
-				continue;
-			}
-
-			// Add the decoder state to the list of active decoders
-			try {
-				std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
-				mActiveDecoders.push_back(decoderState);
-			}
-			catch(const std::exception& e) {
-				os_log_error(sLog, "Error pushing %{public}@ to mActiveDecoders: %{public}s", decoderState->mDecoder, e.what());
-
 				SubmitDecodingErrorEvent([NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]);
-
-				delete decoderState;
 				continue;
 			}
 
@@ -1304,10 +1290,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [](const DecoderState *decoderState){ return !decoderState->IsRenderingComplete(); });
+	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [](const auto& decoderState){ return !decoderState->IsRenderingComplete(); });
 	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return *iter;
+	return iter->get();
 }
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept
@@ -1316,10 +1302,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetActiveDecoderState
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const DecoderState *decoderState){ return decoderState->mSequenceNumber > sequenceNumber; });
+	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const auto& decoderState){ return decoderState->mSequenceNumber > sequenceNumber; });
 	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return *iter;
+	return iter->get();
 }
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept
@@ -1328,10 +1314,10 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSe
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const DecoderState *decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
+	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const auto& decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
 	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return *iter;
+	return iter->get();
 }
 
 bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept
@@ -1340,12 +1326,11 @@ bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t& 
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const DecoderState *decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
+	const auto iter = std::find_if(mActiveDecoders.begin(), mActiveDecoders.end(), [&sequenceNumber](const auto& decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
 	if(iter == mActiveDecoders.end())
 		return false;
 
 	os_log_debug(sLog, "Deleting decoder state for %{public}@", (*iter)->mDecoder);
-	delete *iter;
 	mActiveDecoders.erase(iter);
 
 	return true;
