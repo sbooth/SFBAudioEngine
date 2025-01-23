@@ -337,28 +337,6 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	os_log_debug(sLog, "Created <AudioPlayerNode: %p>, rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
 	// ========================================
-	// Decoding Setup
-
-	// Create the dispatch queue used for decoding
-	dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-	if(!attr) {
-		os_log_error(sLog, "dispatch_queue_attr_make_with_qos_class failed");
-		throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
-	}
-
-	mDecodingQueue = dispatch_queue_create_with_target("AudioPlayerNode.Decoding", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
-	if(!mDecodingQueue) {
-		os_log_error(sLog, "Unable to create decoding dispatch queue: dispatch_queue_create_with_target failed");
-		throw std::runtime_error("dispatch_queue_create_with_target failed");
-	}
-
-	mDecodingGroup = dispatch_group_create();
-	if(!mDecodingGroup) {
-		os_log_error(sLog, "Unable to decoding dispatch group: dispatch_group_create failed");
-		throw std::runtime_error("dispatch_group_create failed");
-	}
-
-	// ========================================
 	// Rendering Setup
 
 	// Allocate the audio ring buffer moving audio from the decoder queue to the render block
@@ -375,7 +353,7 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	// ========================================
 	// Event Processing Setup
 
-	// The decode event ring buffer is written to by the decoding queue and read from by the event queue
+	// The decode event ring buffer is written to by the decoding thread and read from by the event queue
 	if(!mDecodeEventRingBuffer.Allocate(256)) {
 		os_log_error(sLog, "Unable to create decode event ring buffer: SFB::RingBuffer::Allocate failed");
 		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
@@ -387,14 +365,20 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 	}
 
-	// Create the dispatch queue used for event processing, reusing the same attributes
+	// Create the dispatch queue used for event processing
+	dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
+	if(!attr) {
+		os_log_error(sLog, "dispatch_queue_attr_make_with_qos_class failed");
+		throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
+	}
+
 	mEventProcessingQueue = dispatch_queue_create_with_target("AudioPlayerNode.Events", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
 	if(!mEventProcessingQueue) {
 		os_log_error(sLog, "Unable to create event processing dispatch queue: dispatch_queue_create_with_target failed");
 		throw std::runtime_error("dispatch_queue_create_with_target failed");
 	}
 
-	// Create the dispatch group used to track event processing initiated from the decoding queue
+	// Create the dispatch group used to track event processing initiated from the decoding thread
 	mEventProcessingGroup = dispatch_group_create();
 	if(!mEventProcessingGroup) {
 		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
@@ -413,6 +397,15 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 
 	// Start processing events from the render block
 	dispatch_activate(mEventProcessingSource);
+
+	// Launch the decoding thread
+	try {
+		mDecodingThread = std::thread(&SFB::AudioPlayerNode::ProcessDecoders, this);
+	}
+	catch(const std::exception& e) {
+		os_log_error(sLog, "Unable to create decoding thread: %{public}s", e.what());
+		throw;
+	}
 }
 
 SFB::AudioPlayerNode::~AudioPlayerNode()
@@ -422,17 +415,24 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 	// Cancel any further event processing initiated by the render block
 	dispatch_source_cancel(mEventProcessingSource);
 
-	// Wait for the current decoder to complete cancelation
-	dispatch_group_wait(mDecodingGroup, DISPATCH_TIME_FOREVER);
+	// Stop the decoding thread
+	mFlags.fetch_or(eFlagStopDecodingThread, std::memory_order_acq_rel);
+	mDecodingSemaphore.Signal();
 
-	// Wait for event processing initiated by the decoding queue to complete
+	// Wait for the decoding thread to exit
+	try {
+		mDecodingThread.join();
+	}
+	catch(const std::exception& e) {
+		os_log_debug(sLog, "Error joining decoding thread: %{public}@", e.what());
+	}
+
+	// Wait for event processing initiated by the decoding thread to complete
 	dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
 
 	// Delete any remaining decoder state
-	while(!mActiveDecoders.empty()) {
-		delete mActiveDecoders.front();
-		mActiveDecoders.pop_front();
-	}
+	for(auto&& decoderState : mActiveDecoders)
+		delete decoderState;
 
 	os_log_debug(sLog, "<AudioPlayerNode: %p> destroyed", this);
 }
@@ -671,6 +671,7 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(Decoder decoder, bool reset, NSError *
 		// Mute until the decoder becomes active to prevent spurious events
 		mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 		Reset();
+		mFlags.fetch_or(eFlagUmuteAfterDequeue, std::memory_order_acq_rel);
 	}
 
 	try {
@@ -682,13 +683,13 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(Decoder decoder, bool reset, NSError *
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		if(reset)
-			mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
+			mFlags.fetch_and(~eFlagMuteRequested & ~eFlagUmuteAfterDequeue, std::memory_order_acq_rel);
 		return false;
 	}
 
 	os_log_info(sLog, "Enqueued %{public}@", decoder);
 
-	DequeueAndProcessDecoder(reset);
+	mDecodingSemaphore.Signal();
 
 	return true;
 }
@@ -751,9 +752,29 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 
 #pragma mark - Decoding
 
-void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
+void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 {
-	dispatch_group_async(mDecodingGroup, mDecodingQueue, ^{
+	pthread_setname_np("AudioPlayerNode.Decoding");
+	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+
+	os_log_debug(sLog, "Decoding thread starting");
+
+	// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
+	AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
+	if(!buffer) {
+		os_log_error(sLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
+
+		NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
+											 code:SFBAudioPlayerNodeErrorCodeInternalError
+										 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
+													 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
+												  }];
+		SubmitDecodingErrorEvent(error);
+
+		return;
+	}
+
+	while(!(mFlags.load(std::memory_order_acquire) & eFlagStopDecodingThread)) {
 		// Dequeue and process the next decoder
 		if(auto decoder = DequeueDecoder(); decoder) {
 			// Create the decoder state
@@ -772,46 +793,9 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 												 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
 															 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating DecoderState", @""),
 														  }];
+				SubmitDecodingErrorEvent(error);
 
-				// Submit the error event
-				const DecodingEventHeader header{DecodingEventCommand::eError};
-
-				const auto key = mDispatchKeyCounter.fetch_add(1);
-				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
-
-				if(mDecodeEventRingBuffer.WriteValues(header, key))
-					dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
-				else
-					os_log_fault(sLog, "Error writing decoding error event");
-
-				return;
-			}
-
-			// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-			AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
-			if(!buffer) {
-				os_log_error(sLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
-
-				delete decoderState;
-
-				NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
-													 code:SFBAudioPlayerNodeErrorCodeInternalError
-												 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
-															 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
-														  }];
-
-				// Submit the error event
-				const DecodingEventHeader header{DecodingEventCommand::eError};
-
-				const auto key = mDispatchKeyCounter.fetch_add(1);
-				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
-
-				if(mDecodeEventRingBuffer.WriteValues(header, key))
-					dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
-				else
-					os_log_fault(sLog, "Error writing decoding error event");
-
-				return;
+				continue;
 			}
 
 			// Add the decoder state to the list of active decoders
@@ -822,30 +806,20 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 			catch(const std::exception& e) {
 				os_log_error(sLog, "Error pushing %{public}@ to mActiveDecoders: %{public}s", decoderState->mDecoder, e.what());
 
-				// Submit the error event
-				const DecodingEventHeader header{DecodingEventCommand::eError};
-
-				const auto key = mDispatchKeyCounter.fetch_add(1);
-				NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
-
-				if(mDecodeEventRingBuffer.WriteValues(header, key))
-					dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
-				else
-					os_log_fault(sLog, "Error writing decoding error event");
+				SubmitDecodingErrorEvent([NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]);
 
 				delete decoderState;
-				return;
+				continue;
 			}
 
 			// Clear the mute flags if needed
-			if(unmuteNeeded)
-				mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested, std::memory_order_acq_rel);
+			if(mFlags.load(std::memory_order_acquire) & eFlagUmuteAfterDequeue)
+				mFlags.fetch_and(~eFlagIsMuted & ~eFlagMuteRequested & ~eFlagUmuteAfterDequeue, std::memory_order_acq_rel);
 
 			os_log_debug(sLog, "Dequeued %{public}@, processing format %{public}@", decoderState->mDecoder, SFB::StringDescribingAVAudioFormat(decoderState->mDecoder.processingFormat));
 
 			// Process the decoder until canceled or complete
-			for(;;) {
+			while(!(mFlags.load(std::memory_order_acquire) & eFlagStopDecodingThread)) {
 				// If a seek is pending request a ring buffer reset
 				if(decoderState->IsSeekPending())
 					mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
@@ -885,6 +859,7 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					mFlags.fetch_and(~eFlagIsMuted, std::memory_order_acq_rel);
 				}
 
+				// Cancel the decoder if requested
 				if(decoderState->IsCanceled()) {
 					os_log_debug(sLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
@@ -897,11 +872,10 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					else
 						os_log_fault(sLog, "Error writing decoder canceled event");
 
-					return;
+					break;
 				}
-
 				// Decode and write chunks to the ring buffer
-				while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
+				else if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
 					if(!decoderState->HasDecodingStarted()) {
 						os_log_debug(sLog, "Decoding started for %{public}@", decoderState->mDecoder);
 
@@ -918,19 +892,8 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 					// Decode audio into the buffer, converting to the rendering format in the process
 					if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
 						os_log_error(sLog, "Error decoding audio: %{public}@", error);
-
-						if(error) {
-							// Submit the error event
-							const DecodingEventHeader header{DecodingEventCommand::eError};
-
-							const auto key = mDispatchKeyCounter.fetch_add(1);
-							dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
-
-							if(mDecodeEventRingBuffer.WriteValues(header, key))
-								dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
-							else
-								os_log_fault(sLog, "Error writing decoding error event");
-						}
+						if(error)
+							SubmitDecodingErrorEvent(error);
 					}
 
 					// Write the decoded audio to the ring buffer for rendering
@@ -948,15 +911,38 @@ void SFB::AudioPlayerNode::DequeueAndProcessDecoder(bool unmuteNeeded) noexcept
 
 						os_log_debug(sLog, "Decoding complete for %{public}@", decoderState->mDecoder);
 
-						return;
+						break;
 					}
 				}
-
 				// Wait for additional space in the ring buffer or for another event signal
-				mDecodingSemaphore.Wait();
+				else
+					mDecodingSemaphore.Wait();
 			}
 		}
-	});
+
+		// Wait for another decoder to be enqueued
+		mDecodingSemaphore.Wait();
+	}
+
+	os_log_debug(sLog, "Decoding thread complete");
+}
+
+void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
+{
+#if DEBUG
+	assert(std::this_thread::get_id() == mDecodingThread.get_id());
+	assert(error != nil);
+#endif /* DEBUG */
+
+	const DecodingEventHeader header{DecodingEventCommand::eError};
+
+	const auto key = mDispatchKeyCounter.fetch_add(1);
+	dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+
+	if(mDecodeEventRingBuffer.WriteValues(header, key))
+		dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+	else
+		os_log_fault(sLog, "Error writing decoding error event");
 }
 
 #pragma mark - Rendering

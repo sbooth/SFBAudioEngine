@@ -11,6 +11,7 @@
 #import <list>
 #import <memory>
 #import <mutex>
+#import <thread>
 
 #import <os/log.h>
 
@@ -72,12 +73,10 @@ private:
 	/// Lock used to protect access to `mQueuedDecoders`
 	mutable SFB::UnfairLock			mQueueLock;
 
-	/// Dispatch queue used for decoding
-	dispatch_queue_t				mDecodingQueue 			= nullptr;
-	/// Dispatch semaphore used for communication with the decoding queue
+	/// Thread used for decoding
+	std::thread 					mDecodingThread;
+	/// Dispatch semaphore used for communication with the decoding thread
 	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
-	/// Dispatch group used to track decoding tasks
-	dispatch_group_t 				mDecodingGroup			= nullptr;
 
 	/// Ring buffer used to communicate events from the decoding queue
 	SFB::RingBuffer					mDecodeEventRingBuffer;
@@ -104,6 +103,10 @@ private:
 		eFlagMuteRequested 			= 1u << 2,
 		/// The audio ring buffer requires a non-threadsafe reset
 		eFlagRingBufferNeedsReset 	= 1u << 3,
+		/// The decoding thread should exit
+		eFlagStopDecodingThread		= 1u << 4,
+		/// Unmute after the next decoder is dequeued and starts decoding
+		eFlagUmuteAfterDequeue 		= 1u << 5,
 	};
 
 	/// Flags
@@ -196,7 +199,7 @@ public:
 	void ClearQueue() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-		mQueuedDecoders.resize(0);
+		mQueuedDecoders.clear();
 	}
 
 	bool QueueIsEmpty() const noexcept
@@ -214,8 +217,11 @@ public:
 private:
 #pragma mark - Decoding
 
-	/// Pops the next decoder from the decoder queue and submits it for processing on the decoding dispatch queue
-	void DequeueAndProcessDecoder(bool unmuteNeeded) noexcept;
+	/// Dequeues and processes decoders from the decoder queue
+	void ProcessDecoders() noexcept;
+
+	/// Submits an error event to `mDecodeEventRingBuffer`
+	void SubmitDecodingErrorEvent(NSError *error) noexcept;
 
 #pragma mark - Rendering
 

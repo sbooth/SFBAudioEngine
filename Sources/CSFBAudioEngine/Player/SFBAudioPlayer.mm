@@ -673,7 +673,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)clearInternalDecoderQueue
 {
 	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-	_queuedDecoders.resize(0);
+	_queuedDecoders.clear();
 }
 
 - (BOOL)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
