@@ -60,7 +60,7 @@ private:
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
-	/// Ring buffer used to transfer audio between the decoding dispatch queue and the render block
+	/// Ring buffer used to transfer audio between the decoding thread and the render block
 	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
@@ -78,7 +78,7 @@ private:
 	/// Dispatch semaphore used for communication with the decoding thread
 	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
 
-	/// Ring buffer used to communicate events from the decoding queue
+	/// Ring buffer used to communicate events from the decoding thread
 	SFB::RingBuffer					mDecodeEventRingBuffer;
 	/// Ring buffer used to communicate events from the render block
 	SFB::RingBuffer					mRenderEventRingBuffer;
@@ -90,7 +90,7 @@ public:
 private:
 	/// Dispatch source initiating event processing by the render block
 	dispatch_source_t				mEventProcessingSource 	= nullptr;
-	/// Dispatch group used to track event processing initiated by the decoding queue
+	/// Dispatch group used to track event processing initiated by the decoding thread
 	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
 	/// Possible `AudioPlayerNode` flag values
@@ -99,7 +99,7 @@ private:
 		eFlagIsPlaying 				= 1u << 0,
 		/// The render block is outputting silence
 		eFlagIsMuted 				= 1u << 1,
-		/// The decoding dispatch queue requested the render block to set `eFlagIsMuted` during the next render cycle
+		/// The decoding thread requested the render block to set `eFlagIsMuted` during the next render cycle
 		eFlagMuteRequested 			= 1u << 2,
 		/// The audio ring buffer requires a non-threadsafe reset
 		eFlagRingBufferNeedsReset 	= 1u << 3,
@@ -250,7 +250,7 @@ private:
 
 #pragma mark Decoding Events
 
-	/// Decoding queue events
+	/// Decoding thread events
 	enum class DecodingEventCommand : uint32_t {
 		/// Decoding started
 		eStarted 	= 1,
