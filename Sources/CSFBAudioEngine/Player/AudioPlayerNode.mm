@@ -753,6 +753,10 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 
 void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 {
+#if DEBUG
+	assert(std::this_thread::get_id() == mDecodingThread.get_id());
+#endif /* DEBUG */
+
 	pthread_setname_np("AudioPlayerNode.Decoding");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
