@@ -424,7 +424,7 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 		mDecodingThread.join();
 	}
 	catch(const std::exception& e) {
-		os_log_debug(sLog, "Error joining decoding thread: %{public}@", e.what());
+		os_log_debug(sLog, "Error joining decoding thread: %{public}s", e.what());
 	}
 
 	// Wait for event processing initiated by the decoding thread to complete
