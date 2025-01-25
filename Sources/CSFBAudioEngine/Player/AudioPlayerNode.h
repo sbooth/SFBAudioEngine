@@ -78,20 +78,15 @@ private:
 	/// Dispatch semaphore used for communication with the decoding thread
 	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
 
+	/// Thread used for event processing
+	std::thread 					mEventThread;
+	/// Dispatch semaphore used for communication with the event processing thread
+	SFB::DispatchSemaphore			mEventSemaphore 		{0};
+
 	/// Ring buffer used to communicate events from the decoding thread
 	SFB::RingBuffer					mDecodeEventRingBuffer;
 	/// Ring buffer used to communicate events from the render block
 	SFB::RingBuffer					mRenderEventRingBuffer;
-
-public:
-	/// Dispatch queue used for event processing and delegate messaging
-	dispatch_queue_t				mEventProcessingQueue	= nullptr;
-
-private:
-	/// Dispatch source initiating event processing by the render block
-	dispatch_source_t				mEventProcessingSource 	= nullptr;
-	/// Dispatch group used to track event processing initiated by the decoding thread
-	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
 	/// Possible `AudioPlayerNode` flag values
 	enum AudioPlayerNodeFlags : unsigned int {
@@ -107,14 +102,13 @@ private:
 		eFlagStopDecodingThread		= 1u << 4,
 		/// Unmute after the next decoder is dequeued and starts decoding
 		eFlagUmuteAfterDequeue 		= 1u << 5,
+		/// The event thread should exit
+		eFlagStopEventThread		= 1u << 6,
 	};
 
 	/// Flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
-
-	/// Counter used for unique keys to `dispatch_queue_set_specific`
-	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 public:
 	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
@@ -220,7 +214,7 @@ private:
 	/// Dequeues and processes decoders from the decoder queue
 	void ProcessDecoders() noexcept;
 
-	/// Submits an error event to `mDecodeEventRingBuffer`
+	/// Writes an error event to `mDecodeEventRingBuffer` and signals `mEventSemaphore`
 	void SubmitDecodingErrorEvent(NSError *error) noexcept;
 
 #pragma mark - Rendering
@@ -278,10 +272,8 @@ private:
 
 #pragma mark - Event Processing
 
-public:
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
-	/// - warning: This function is not part of the public API
-	void ProcessPendingEvents() noexcept;
+	void ProcessEvents() noexcept;
 
 private:
 	/// Processes an event from `mDecodeEventRingBuffer`

@@ -32,16 +32,6 @@ void release_nserror_f(void * _Nullable context)
 	(void)(__bridge_transfer NSError *)context;
 }
 
-/// libdispatch function that calls `ProcessPendingEvents` on `context`
-void process_pending_events_f(void *context) noexcept
-{
-#if DEBUG
-	assert(context != nullptr);
-#endif /* DEBUG */
-	auto that = static_cast<SFB::AudioPlayerNode *>(context);
-	that->ProcessPendingEvents();
-}
-
 } /* namespace */
 
 namespace SFB {
@@ -354,56 +344,24 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	// Event Processing Setup
 
 	// The decode event ring buffer is written to by the decoding thread and read from by the event queue
-	if(!mDecodeEventRingBuffer.Allocate(256)) {
+	if(!mDecodeEventRingBuffer.Allocate(1024)) {
 		os_log_error(sLog, "Unable to create decode event ring buffer: SFB::RingBuffer::Allocate failed");
 		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 	}
 
 	// The render event ring buffer is written to by the render block and read from by the event queue
-	if(!mRenderEventRingBuffer.Allocate(256)) {
+	if(!mRenderEventRingBuffer.Allocate(1024)) {
 		os_log_error(sLog, "Unable to create render event ring buffer: SFB::RingBuffer::Allocate failed");
 		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 	}
 
-	// Create the dispatch queue used for event processing
-	dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
-	if(!attr) {
-		os_log_error(sLog, "dispatch_queue_attr_make_with_qos_class failed");
-		throw std::runtime_error("dispatch_queue_attr_make_with_qos_class failed");
-	}
-
-	mEventProcessingQueue = dispatch_queue_create_with_target("AudioPlayerNode.Events", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
-	if(!mEventProcessingQueue) {
-		os_log_error(sLog, "Unable to create event processing dispatch queue: dispatch_queue_create_with_target failed");
-		throw std::runtime_error("dispatch_queue_create_with_target failed");
-	}
-
-	// Create the dispatch group used to track event processing initiated from the decoding thread
-	mEventProcessingGroup = dispatch_group_create();
-	if(!mEventProcessingGroup) {
-		os_log_error(sLog, "Unable to create event processing dispatch group: dispatch_group_create failed");
-		throw std::runtime_error("dispatch_group_create failed");
-	}
-
-	// Create the dispatch source used to trigger event processing from the render block
-	mEventProcessingSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_DATA_OR, 0, 0, mEventProcessingQueue);
-	if(!mEventProcessingSource) {
-		os_log_error(sLog, "Unable to create event processing dispatch source: dispatch_source_create failed");
-		throw std::runtime_error("dispatch_source_create failed");
-	}
-
-	dispatch_set_context(mEventProcessingSource, this);
-	dispatch_source_set_event_handler_f(mEventProcessingSource, process_pending_events_f);
-
-	// Start processing events from the render block
-	dispatch_activate(mEventProcessingSource);
-
-	// Launch the decoding thread
+	// Launch the decoding and event processing threads
 	try {
 		mDecodingThread = std::thread(&SFB::AudioPlayerNode::ProcessDecoders, this);
+		mEventThread = std::thread(&SFB::AudioPlayerNode::ProcessEvents, this);
 	}
 	catch(const std::exception& e) {
-		os_log_error(sLog, "Unable to create decoding thread: %{public}s", e.what());
+		os_log_error(sLog, "Unable to create thread: %{public}s", e.what());
 		throw;
 	}
 }
@@ -411,9 +369,6 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 SFB::AudioPlayerNode::~AudioPlayerNode()
 {
 	Stop();
-
-	// Cancel any further event processing initiated by the render block
-	dispatch_source_cancel(mEventProcessingSource);
 
 	// Stop the decoding thread
 	mFlags.fetch_or(eFlagStopDecodingThread, std::memory_order_acq_rel);
@@ -427,8 +382,17 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 		os_log_debug(sLog, "Error joining decoding thread: %{public}s", e.what());
 	}
 
-	// Wait for event processing initiated by the decoding thread to complete
-	dispatch_group_wait(mEventProcessingGroup, DISPATCH_TIME_FOREVER);
+	// Stop the event processing thread
+	mFlags.fetch_or(eFlagStopEventThread, std::memory_order_acq_rel);
+	mEventSemaphore.Signal();
+
+	// Wait for the event processing thread to exit
+	try {
+		mEventThread.join();
+	}
+	catch(const std::exception& e) {
+		os_log_debug(sLog, "Error joining event processing thread: %{public}s", e.what());
+	}
 
 	// Delete any remaining decoder state
 	mActiveDecoders.clear();
@@ -724,7 +688,7 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 			// Submit the decoder canceled event
 			const DecodingEventHeader header{DecodingEventCommand::eCanceled};
 			if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-				dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+				mEventSemaphore.Signal();
 			else
 				os_log_fault(sLog, "Error writing decoder canceled event");
 		}
@@ -766,14 +730,12 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 	AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mRenderingFormat frameCapacity:kRingBufferChunkSize];
 	if(!buffer) {
 		os_log_error(sLog, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(mRenderingFormat), kRingBufferChunkSize);
-
 		NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain
 											 code:SFBAudioPlayerNodeErrorCodeInternalError
 										 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
 													 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating AVAudioPCMBuffer", @""),
 												  }];
 		SubmitDecodingErrorEvent(error);
-
 		return;
 	}
 
@@ -798,7 +760,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 												 userInfo:@{ NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"An internal error occurred in AudioPlayerNode.", @""),
 															 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error creating DecoderState", @""),
 														  }];
-				SubmitDecodingErrorEvent([NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]);
+				SubmitDecodingErrorEvent(error);
 				continue;
 			}
 
@@ -858,7 +820,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 					// Submit the decoding canceled event
 					const DecodingEventHeader header{DecodingEventCommand::eCanceled};
 					if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-						dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+						mEventSemaphore.Signal();
 					else
 						os_log_fault(sLog, "Error writing decoder canceled event");
 
@@ -874,7 +836,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 						// Submit the decoding started event
 						const DecodingEventHeader header{DecodingEventCommand::eStarted};
 						if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-							dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+							mEventSemaphore.Signal();
 						else
 							os_log_fault(sLog, "Error writing decoding started event");
 					}
@@ -895,7 +857,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 						// Submit the decoding complete event
 						const DecodingEventHeader header{DecodingEventCommand::eComplete};
 						if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-							dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
+							mEventSemaphore.Signal();
 						else
 							os_log_fault(sLog, "Error writing decoding complete event");
 
@@ -921,18 +883,57 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 {
 #if DEBUG
 	assert(std::this_thread::get_id() == mDecodingThread.get_id());
-	assert(error != nil);
 #endif /* DEBUG */
+	NSCParameterAssert(error != nil);
 
+	NSError *err = nil;
+	NSData *errorData = [NSKeyedArchiver archivedDataWithRootObject:error requiringSecureCoding:YES error:&err];
+	if(!errorData) {
+		os_log_error(sLog, "Error archiving NSError for decoding error event: %{public}@", err);
+		return;
+	}
+
+	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
+	if(spaceNeeded > mDecodeEventRingBuffer.BytesAvailableToWrite()) {
+		os_log_fault(sLog, "Insufficient space to write decoding error event");
+		return;
+	}
+
+	// Event header and payload
 	const DecodingEventHeader header{DecodingEventCommand::eError};
+	const uint32_t dataSize = static_cast<uint32_t>(errorData.length);
+	const void *data = errorData.bytes;
 
-	const auto key = mDispatchKeyCounter.fetch_add(1);
-	dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), (__bridge_retained void *)error, &release_nserror_f);
+	uint32_t bytesWritten = 0;
+	auto wvec = mDecodeEventRingBuffer.WriteVector();
 
-	if(mDecodeEventRingBuffer.WriteValues(header, key))
-		dispatch_group_async_f(mEventProcessingGroup, mEventProcessingQueue, this, process_pending_events_f);
-	else
-		os_log_fault(sLog, "Error writing decoding error event");
+	const auto do_write = [&bytesWritten, wvec](const void *arg, uint32_t sz) noexcept {
+		auto bytesRemaining = sz;
+		// Write to wvec.first if space is available
+		if(wvec.first.mBufferCapacity > bytesWritten) {
+			const auto n = std::min(bytesRemaining, wvec.first.mBufferCapacity - bytesWritten);
+			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.first.mBuffer) + bytesWritten),
+						arg,
+						n);
+			bytesRemaining -= n;
+			bytesWritten += n;
+		}
+		// Write to wvec.second
+		if(bytesRemaining > 0){
+			const auto n = bytesRemaining;
+			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.mBuffer) + (bytesWritten - wvec.first.mBufferCapacity)),
+						arg,
+						n);
+			bytesWritten += n;
+		}
+	};
+
+	do_write(&header, sizeof(header));
+	do_write(&dataSize, sizeof(dataSize));
+	do_write(data, dataSize);
+
+	mDecodeEventRingBuffer.AdvanceWritePosition(bytesWritten);
+	mEventSemaphore.Signal();
 }
 
 #pragma mark - Rendering
@@ -988,7 +989,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 
 		const RenderingEventHeader header{RenderingEventCommand::eFramesRendered};
 		if(mRenderEventRingBuffer.WriteValues(header, timestamp, framesRead))
-			dispatch_source_merge_data(mEventProcessingSource, 1);
+			mEventSemaphore.Signal();
 		else
 			os_log_fault(sLog, "Error writing frames rendered event");
 	}
@@ -1007,46 +1008,58 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 
 #pragma mark - Event Processing
 
-void SFB::AudioPlayerNode::ProcessPendingEvents() noexcept
+void SFB::AudioPlayerNode::ProcessEvents() noexcept
 {
 #if DEBUG
-	dispatch_assert_queue(mEventProcessingQueue);
+	assert(std::this_thread::get_id() == mEventThread.get_id());
 #endif /* DEBUG */
 
-	auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
-	auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+	pthread_setname_np("AudioPlayerNode.Events");
+	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
-	// Process all pending decode and render events in chronological order
-	for(;;) {
-		// Nothing left to do
-		if(!decodeEventHeader && !renderEventHeader)
-			break;
-		// Process the decode event
-		else if(decodeEventHeader && !renderEventHeader) {
-			ProcessEvent(*decodeEventHeader);
-			decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+	os_log_debug(sLog, "Event processing thread starting");
+
+	while(!(mFlags.load(std::memory_order_acquire) & eFlagStopEventThread)) {
+		auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+		auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+
+		// Process all pending decode and render events in chronological order
+		for(;;) {
+			// Nothing left to do
+			if(!decodeEventHeader && !renderEventHeader)
+				break;
+			// Process the decode event
+			else if(decodeEventHeader && !renderEventHeader) {
+				ProcessEvent(*decodeEventHeader);
+				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+			}
+			// Process the render event
+			else if(!decodeEventHeader && renderEventHeader) {
+				ProcessEvent(*renderEventHeader);
+				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+			}
+			// Process the event with an earlier identification number
+			else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
+				ProcessEvent(*decodeEventHeader);
+				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
+			}
+			else {
+				ProcessEvent(*renderEventHeader);
+				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
+			}
 		}
-		// Process the render event
-		else if(!decodeEventHeader && renderEventHeader) {
-			ProcessEvent(*renderEventHeader);
-			renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
-		}
-		// Process the event with an earlier identification number
-		else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
-			ProcessEvent(*decodeEventHeader);
-			decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
-		}
-		else {
-			ProcessEvent(*renderEventHeader);
-			renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
-		}
+
+		// Wait for the next event
+		mEventSemaphore.Wait();
 	}
+
+	os_log_debug(sLog, "Event processing thread complete");
 }
 
 void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexcept
 {
 #if DEBUG
-	dispatch_assert_queue(mEventProcessingQueue);
+	assert(std::this_thread::get_id() == mEventThread.get_id());
 #endif /* DEBUG */
 
 	switch(header.mCommand) {
@@ -1120,21 +1133,30 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 			break;
 
 		case DecodingEventCommand::eError:
-			if(uint64_t key; mDecodeEventRingBuffer.ReadValue(key)) {
-				NSError *error = (__bridge NSError *)dispatch_queue_get_specific(mEventProcessingQueue, reinterpret_cast<void *>(key));
-				if(!error) {
-					os_log_fault(sLog, "Dispatch queue context data for key %llu missing for decoding error event", key);
-					break;
-				}
-
-				dispatch_queue_set_specific(mEventProcessingQueue, reinterpret_cast<void *>(key), nullptr, nullptr);
-
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
-					[mNode.delegate audioPlayerNode:mNode encounteredError:error];
+		{
+			uint32_t dataSize;
+			if(!mDecodeEventRingBuffer.ReadValue(dataSize)) {
+				os_log_fault(sLog, "Missing data size for decoding error event");
+				break;
 			}
-			else
-				os_log_fault(sLog, "Missing key for decoding error event");
+
+			NSMutableData *data = [NSMutableData dataWithLength:dataSize];
+			if(!mDecodeEventRingBuffer.Read(data.mutableBytes, dataSize)) {
+				os_log_fault(sLog, "Missing archived NSError for decoding error event");
+				break;
+			}
+
+			NSError *err = nil;
+			NSError *error = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSError class] fromData:data error:&err];
+			if(!error) {
+				os_log_error(sLog, "Error unarchiving NSError for decoding error event: %{public}@", err);
+				break;
+			}
+
+			if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
+				[mNode.delegate audioPlayerNode:mNode encounteredError:error];
 			break;
+		}
 
 		default:
 			os_log_fault(sLog, "Unknown decode event command: %u", header.mCommand);
@@ -1145,7 +1167,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noexcept
 {
 #if DEBUG
-	dispatch_assert_queue(mEventProcessingQueue);
+	assert(std::this_thread::get_id() == mEventThread.get_id());
 #endif /* DEBUG */
 
 	switch(header.mCommand) {
