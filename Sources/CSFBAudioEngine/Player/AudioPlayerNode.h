@@ -8,10 +8,10 @@
 
 #import <atomic>
 #import <deque>
-#import <list>
 #import <memory>
 #import <mutex>
 #import <thread>
+#import <vector>
 
 #import <os/log.h>
 
@@ -55,7 +55,7 @@ private:
 	struct DecoderState;
 
 	using DecoderQueue 				= std::deque<Decoder>;
-	using DecoderStateList 			= std::list<std::unique_ptr<DecoderState>>;
+	using DecoderStateVector 		= std::vector<std::shared_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
@@ -64,7 +64,7 @@ private:
 	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
-	DecoderStateList 				mActiveDecoders;
+	DecoderStateVector 				mActiveDecoders;
 	/// Lock used to protect access to `mActiveDecoders`
 	mutable SFB::UnfairLock			mDecoderLock;
 
@@ -92,16 +92,16 @@ private:
 	enum AudioPlayerNodeFlags : unsigned int {
 		/// The render block is outputting audio
 		eFlagIsPlaying 				= 1u << 0,
+		/// The decoding thread requested that the render block set `eFlagIsMuted` during the next render cycle
+		eFlagMuteRequested 			= 1u << 1,
 		/// The render block is outputting silence
-		eFlagIsMuted 				= 1u << 1,
-		/// The decoding thread requested the render block to set `eFlagIsMuted` during the next render cycle
-		eFlagMuteRequested 			= 1u << 2,
+		eFlagIsMuted 				= 1u << 2,
+		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
+		eFlagUmuteAfterDequeue 		= 1u << 3,
 		/// The audio ring buffer requires a non-threadsafe reset
-		eFlagRingBufferNeedsReset 	= 1u << 3,
+		eFlagRingBufferNeedsReset 	= 1u << 4,
 		/// The decoding thread should exit
-		eFlagStopDecodingThread		= 1u << 4,
-		/// Unmute after the next decoder is dequeued and starts decoding
-		eFlagUmuteAfterDequeue 		= 1u << 5,
+		eFlagStopDecodingThread		= 1u << 5,
 		/// The event thread should exit
 		eFlagStopEventThread		= 1u << 6,
 	};
@@ -151,7 +151,7 @@ public:
 
 	bool IsReady() const noexcept
 	{
-		return GetActiveDecoderStateWithSmallestSequenceNumber() != nullptr;
+		return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
 #pragma mark - Playback Properties
@@ -182,13 +182,8 @@ public:
 
 	bool EnqueueDecoder(Decoder _Nonnull decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
 
-private:
 	/// Pops the next decoder from the decoder queue
 	Decoder _Nullable DequeueDecoder() noexcept;
-
-public:
-	Decoder _Nullable CurrentDecoder() const noexcept;
-	void CancelActiveDecoders(bool cancelAllActive) noexcept;
 
 	void ClearQueue() noexcept
 	{
@@ -208,10 +203,14 @@ public:
 		CancelActiveDecoders(true);
 	}
 
+	Decoder _Nullable CurrentDecoder() const noexcept;
+	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+
 private:
 #pragma mark - Decoding
 
 	/// Dequeues and processes decoders from the decoder queue
+	/// - note: This is the thread entry point for the decoding thread
 	void ProcessDecoders() noexcept;
 
 	/// Writes an error event to `mDecodeEventRingBuffer` and signals `mEventSemaphore`
@@ -273,6 +272,7 @@ private:
 #pragma mark - Event Processing
 
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
+	/// - note: This is the thread entry point for the event thread
 	void ProcessEvents() noexcept;
 
 private:
@@ -281,19 +281,22 @@ private:
 	/// Processes an event from `mRenderEventRingBuffer`
 	void ProcessEvent(const RenderingEventHeader& header) noexcept;
 
-#pragma mark - Decoder State Array
+#pragma mark - Active Decoder Management
+
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed decoding
+	const std::shared_ptr<DecoderState> GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
-	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept;
+	const std::shared_ptr<DecoderState> GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
-	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
+	const std::shared_ptr<DecoderState> GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
+	const std::shared_ptr<DecoderState> GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
-	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	bool DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept;
+	/// Removes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
+	bool RemoveDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
 
 };
 

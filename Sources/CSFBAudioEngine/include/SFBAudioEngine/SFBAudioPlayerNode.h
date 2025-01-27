@@ -140,6 +140,15 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
+/// Dequeues and returns the next decoder from the decoder queue
+- (nullable id <SFBPCMDecoding>) dequeueDecoder;
+
+/// Empties the decoder queue
+- (void)clearQueue;
+
+/// Returns `YES` if the decoder queue is empty
+@property (nonatomic, readonly) BOOL queueIsEmpty;
+
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
@@ -152,12 +161,6 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// A transition period occurs when decoder *A* has completed decoding but not yet completed rendering
 /// and decoder *B* has started decoding but not yet started rendering.
 - (void)cancelActiveDecoders;
-
-/// Empties the decoder queue
-- (void)clearQueue;
-
-/// Returns `YES` if the decoder queue is empty
-@property (nonatomic, readonly) BOOL queueIsEmpty;
 
 #pragma mark - Playback Control
 
