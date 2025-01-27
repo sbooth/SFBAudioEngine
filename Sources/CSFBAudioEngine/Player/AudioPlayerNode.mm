@@ -1351,17 +1351,17 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateF
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	for(const auto& decoderState : mActiveDecoders) {
-		if(decoderState->mSequenceNumber > sequenceNumber) {
-			const auto flags = decoderState->mFlags.load(std::memory_order_acquire);
-			const auto canceled = flags & DecoderState::eFlagIsCanceled;
-			const auto renderingComplete = flags & DecoderState::eFlagRenderingComplete;
-			if(!canceled && !renderingComplete)
-				return decoderState.get();
-		}
-	}
-
-	return nullptr;
+	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [sequenceNumber](const auto& decoderState){
+		if(decoderState->mSequenceNumber <= sequenceNumber)
+			return false;
+		const auto flags = decoderState->mFlags.load(std::memory_order_acquire);
+		const auto canceled = flags & DecoderState::eFlagIsCanceled;
+		const auto renderingComplete = flags & DecoderState::eFlagRenderingComplete;
+		return !canceled && !renderingComplete;
+	});
+	if(iter == mActiveDecoders.end())
+		return nullptr;
+	return iter->get();
 }
 
 SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept
@@ -1370,7 +1370,9 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSe
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [sequenceNumber](const auto& decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
+	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [sequenceNumber](const auto& decoderState){
+		return decoderState->mSequenceNumber == sequenceNumber;
+	});
 	if(iter == mActiveDecoders.end())
 		return nullptr;
 	return iter->get();
@@ -1382,7 +1384,9 @@ bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t s
 	mDecoderLock.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [sequenceNumber](const auto& decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
+	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [sequenceNumber](const auto& decoderState){
+		return decoderState->mSequenceNumber == sequenceNumber;
+	});
 	if(iter == mActiveDecoders.end())
 		return false;
 
