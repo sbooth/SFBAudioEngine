@@ -283,13 +283,13 @@ private:
 
 #pragma mark - Active Decoder Management
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed decoding
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed decoding
 	const std::shared_ptr<DecoderState> GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed rendering
 	const std::shared_ptr<DecoderState> GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
 	const std::shared_ptr<DecoderState> GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
