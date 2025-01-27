@@ -55,7 +55,7 @@ private:
 	struct DecoderState;
 
 	using DecoderQueue 				= std::deque<Decoder>;
-	using DecoderStateVector 		= std::vector<std::shared_ptr<DecoderState>>;
+	using DecoderStateVector 		= std::vector<std::unique_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
@@ -284,19 +284,19 @@ private:
 #pragma mark - Active Decoder Management
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed decoding
-	const std::shared_ptr<DecoderState> GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
+	DecoderState * _Nullable GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed rendering
-	const std::shared_ptr<DecoderState> GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
+	DecoderState * _Nullable GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
-	const std::shared_ptr<DecoderState> GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
+	DecoderState * _Nullable GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	const std::shared_ptr<DecoderState> GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
+	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
 	/// Removes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	bool RemoveDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
+	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
 
 };
 

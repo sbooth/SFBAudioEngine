@@ -137,13 +137,6 @@ struct AudioPlayerNode::DecoderState final {
 		}
 	}
 
-#if DEBUG
-	~DecoderState()
-	{
-		os_log_debug(sLog, "<DecoderState: %p %{public}@> destroyed", this, mDecoder);
-	}
-#endif /* DEBUG */
-
 	AVAudioFramePosition FramePosition() const noexcept
 	{
 		return IsSeekPending() ? mFrameToSeek.load() : mFramesRendered.load();
@@ -647,7 +640,7 @@ SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexc
 
 void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 {
-	auto cancelDecoder = [&](const std::shared_ptr<DecoderState>& decoderState) {
+	auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
 		// If the decoder has already finished decoding, perform the cancelation manually
 		if(decoderState->IsDecodingComplete()) {
 #if DEBUG
@@ -703,10 +696,9 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 		return;
 	}
 
-	// Process decoders until the thread is stopped
-	while(!(mFlags.load(std::memory_order_acquire) & eFlagStopDecodingThread)) {
+	for(;;) {
 		// The decoder state being processed
-		std::shared_ptr<DecoderState> decoderState;
+		DecoderState *decoderState = nullptr;
 
 		// Get the earliest decoder state that has not completed rendering
 		{
@@ -734,6 +726,10 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 			}
 		}
 
+		// Terminate the thread if requested after processing cancelations
+		if(mFlags.load(std::memory_order_acquire) & eFlagStopDecodingThread)
+		   break;
+
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
 			// If a seek is pending request a ring buffer reset
@@ -747,7 +743,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 				decoderState->mFlags.fetch_and(~DecoderState::eFlagDecodingComplete, std::memory_order_acq_rel);
 				decoderState->mFlags.fetch_or(DecoderState::eFlagDecodingResumed, std::memory_order_acq_rel);
 
-				std::shared_ptr<DecoderState> nextDecoderState;
+				DecoderState *nextDecoderState = nullptr;
 				{
 					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 					nextDecoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->mSequenceNumber);
@@ -790,8 +786,8 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 					// When the decoder's processing format and rendering format don't match
 					// conversion will be performed in DecoderState::DecodeAudio()
 					std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
-					mActiveDecoders.push_back(std::make_shared<DecoderState>(decoder, mRenderingFormat, kRingBufferChunkSize));
-					decoderState = mActiveDecoders.back();
+					mActiveDecoders.push_back(std::make_unique<DecoderState>(decoder, mRenderingFormat, kRingBufferChunkSize));
+					decoderState = mActiveDecoders.back().get();
 				}
 				catch(const std::exception& e) {
 					os_log_error(sLog, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
@@ -896,9 +892,6 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 				}
 			}
 		}
-
-		// Release any references to the shared_ptr
-		decoderState.reset();
 
 		// Wait for additional space in the ring buffer, another event signal, or for another decoder to be enqueued
 		mDecodingSemaphore.Wait();
@@ -1149,8 +1142,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 					decoder = decoderState->mDecoder;
 					framesRendered = decoderState->FramesRendered();
 
-					if(!RemoveDecoderStateWithSequenceNumber(decoderSequenceNumber))
-						os_log_fault(sLog, "Unable to remove decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
+					if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
+						os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
 				}
 
 				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)])
@@ -1216,7 +1209,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 				// However, these could have come from any number of decoders depending on buffer sizes
 				// So it is necessary to split them up here
 
-				std::shared_ptr<DecoderState> decoderState = nullptr;
+				DecoderState *decoderState = nullptr;
 				AVAudioFramePosition framesRemainingToDistribute = framesRendered;
 				while(framesRemainingToDistribute > 0) {
 					uint64_t hostTime;
@@ -1292,8 +1285,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 
 								nextDecoder = nextDecoderState->mDecoder;
 
-								if(!RemoveDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
-									os_log_fault(sLog, "Unable to remove decoder state with sequence number %llu in rendering decoder changed event", decoderState->mSequenceNumber);
+								if(!DeleteDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
+									os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering decoder changed event", decoderState->mSequenceNumber);
 
 								decoderState = nextDecoderState;
 							}
@@ -1310,8 +1303,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 									os_log_debug(sLog, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->mDecoder);
 #endif /* DEBUG */
 
-								if(!RemoveDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
-									os_log_fault(sLog, "Unable to remove decoder state with sequence number %llu in rendering complete event", decoderState->mSequenceNumber);
+								if(!DeleteDecoderStateWithSequenceNumber(decoderState->mSequenceNumber))
+									os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderState->mSequenceNumber);
 							}
 						}
 					}
@@ -1338,7 +1331,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 
 #pragma mark - Active Decoder Management
 
-const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::GetFirstDecoderStateWithDecodingNotComplete() const noexcept
+SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateWithDecodingNotComplete() const noexcept
 {
 #if DEBUG
 	mDecoderLock.assert_owner();
@@ -1352,10 +1345,10 @@ const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::
 	});
 	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return *iter;
+	return iter->get();
 }
 
-const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::GetFirstDecoderStateWithRenderingNotComplete() const noexcept
+SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateWithRenderingNotComplete() const noexcept
 {
 #if DEBUG
 	mDecoderLock.assert_owner();
@@ -1369,10 +1362,10 @@ const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::
 	});
 	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return *iter;
+	return iter->get();
 }
 
-const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept
+SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept
 {
 #if DEBUG
 	mDecoderLock.assert_owner();
@@ -1384,14 +1377,14 @@ const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::
 			const auto canceled = flags & DecoderState::eFlagIsCanceled;
 			const auto renderingComplete = flags & DecoderState::eFlagRenderingComplete;
 			if(!canceled && !renderingComplete)
-				return decoderState;
+				return decoderState.get();
 		}
 	}
 
 	return nullptr;
 }
 
-const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept
+SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept
 {
 #if DEBUG
 	mDecoderLock.assert_owner();
@@ -1400,10 +1393,10 @@ const std::shared_ptr<SFB::AudioPlayerNode::DecoderState> SFB::AudioPlayerNode::
 	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [sequenceNumber](const auto& decoderState){ return decoderState->mSequenceNumber == sequenceNumber; });
 	if(iter == mActiveDecoders.end())
 		return nullptr;
-	return *iter;
+	return iter->get();
 }
 
-bool SFB::AudioPlayerNode::RemoveDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept
+bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept
 {
 #if DEBUG
 	mDecoderLock.assert_owner();
@@ -1413,6 +1406,7 @@ bool SFB::AudioPlayerNode::RemoveDecoderStateWithSequenceNumber(const uint64_t s
 	if(iter == mActiveDecoders.end())
 		return false;
 
+	os_log_debug(sLog, "Deleting decoder state for %{public}@", (*iter)->mDecoder);
 	mActiveDecoders.erase(iter);
 
 	return true;
