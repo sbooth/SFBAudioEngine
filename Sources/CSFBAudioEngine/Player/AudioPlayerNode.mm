@@ -640,37 +640,20 @@ SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexc
 
 void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 {
-	auto cancelDecoder = [&](DecoderState * _Nonnull decoderState) {
-		// If the decoder has already finished decoding, perform the cancelation manually
-		if(decoderState->IsDecodingComplete()) {
-#if DEBUG
-			os_log_debug(sLog, "Canceling %{public}@ that has completed decoding", decoderState->mDecoder);
-#endif /* DEBUG */
-			// Submit the decoder canceled event
-			const DecodingEventHeader header{DecodingEventCommand::eCanceled};
-			if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-				mEventSemaphore.Signal();
-			else
-				os_log_fault(sLog, "Error writing decoder canceled event");
-		}
-		else {
-			decoderState->mFlags.fetch_or(DecoderState::eFlagCancelRequested, std::memory_order_acq_rel);
-			mDecodingSemaphore.Signal();
-		}
-	};
-
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 
 	// Cancel all active decoders in sequence
 	if(auto decoderState = GetFirstDecoderStateWithRenderingNotComplete(); decoderState) {
-		cancelDecoder(decoderState);
-		if(!cancelAllActive)
-			return;
-		decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->mSequenceNumber);
-		while(decoderState) {
-			cancelDecoder(decoderState);
+		decoderState->mFlags.fetch_or(DecoderState::eFlagCancelRequested, std::memory_order_acq_rel);
+		if(cancelAllActive) {
 			decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->mSequenceNumber);
+			while(decoderState) {
+				decoderState->mFlags.fetch_or(DecoderState::eFlagCancelRequested, std::memory_order_acq_rel);
+				decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->mSequenceNumber);
+			}
 		}
+
+		mDecodingSemaphore.Signal();
 	}
 }
 
@@ -704,24 +687,21 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 		{
 			std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 			decoderState = GetFirstDecoderStateWithRenderingNotComplete();
-		}
 
-		// Process cancelations
-		while(decoderState && (decoderState->mFlags.load(std::memory_order_acquire) & DecoderState::eFlagCancelRequested)) {
-			os_log_debug(sLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
+			// Process cancelations
+			while(decoderState && (decoderState->mFlags.load(std::memory_order_acquire) & DecoderState::eFlagCancelRequested)) {
+				os_log_debug(sLog, "Canceling decoding for %{public}@", decoderState->mDecoder);
 
-			mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
-			decoderState->mFlags.fetch_or(DecoderState::eFlagIsCanceled, std::memory_order_acq_rel);
+				mFlags.fetch_or(eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
+				decoderState->mFlags.fetch_or(DecoderState::eFlagIsCanceled, std::memory_order_acq_rel);
 
-			// Submit the decoder canceled event
-			const DecodingEventHeader header{DecodingEventCommand::eCanceled};
-			if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
-				mEventSemaphore.Signal();
-			else
-				os_log_fault(sLog, "Error writing decoder canceled event");
+				// Submit the decoder canceled event
+				const DecodingEventHeader header{DecodingEventCommand::eCanceled};
+				if(mDecodeEventRingBuffer.WriteValues(header, decoderState->mSequenceNumber))
+					mEventSemaphore.Signal();
+				else
+					os_log_fault(sLog, "Error writing decoder canceled event");
 
-			{
-				std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 				decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->mSequenceNumber);
 			}
 		}
