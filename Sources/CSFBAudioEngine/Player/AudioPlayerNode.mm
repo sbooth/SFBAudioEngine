@@ -1319,8 +1319,8 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateW
 
 	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [](const auto& decoderState){
 		const auto flags = decoderState->mFlags.load(std::memory_order_acquire);
-		const auto canceled = flags & DecoderState::eFlagIsCanceled;
-		const auto decodingComplete = flags & DecoderState::eFlagDecodingComplete;
+		const bool canceled = flags & DecoderState::eFlagIsCanceled;
+		const bool decodingComplete = flags & DecoderState::eFlagDecodingComplete;
 		return !canceled && !decodingComplete;
 	});
 	if(iter == mActiveDecoders.end())
@@ -1336,8 +1336,8 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateW
 
 	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [](const auto& decoderState){
 		const auto flags = decoderState->mFlags.load(std::memory_order_acquire);
-		const auto canceled = flags & DecoderState::eFlagIsCanceled;
-		const auto renderingComplete = flags & DecoderState::eFlagRenderingComplete;
+		const bool canceled = flags & DecoderState::eFlagIsCanceled;
+		const bool renderingComplete = flags & DecoderState::eFlagRenderingComplete;
 		return !canceled && !renderingComplete;
 	});
 	if(iter == mActiveDecoders.end())
@@ -1355,8 +1355,8 @@ SFB::AudioPlayerNode::DecoderState * SFB::AudioPlayerNode::GetFirstDecoderStateF
 		if(decoderState->mSequenceNumber <= sequenceNumber)
 			return false;
 		const auto flags = decoderState->mFlags.load(std::memory_order_acquire);
-		const auto canceled = flags & DecoderState::eFlagIsCanceled;
-		const auto renderingComplete = flags & DecoderState::eFlagRenderingComplete;
+		const bool canceled = flags & DecoderState::eFlagIsCanceled;
+		const bool renderingComplete = flags & DecoderState::eFlagRenderingComplete;
 		return !canceled && !renderingComplete;
 	});
 	if(iter == mActiveDecoders.end())
