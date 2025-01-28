@@ -784,41 +784,42 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 			}
 		}
 
-		if(decoderState) {
-			// Reset the ring buffer if required, to prevent audible artifacts
-			if(mFlags.load(std::memory_order_acquire) & eFlagRingBufferNeedsReset) {
-				mFlags.fetch_and(~eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
+		// Reset the ring buffer if required, to prevent audible artifacts
+		if(mFlags.load(std::memory_order_acquire) & eFlagRingBufferNeedsReset) {
+			mFlags.fetch_and(~eFlagRingBufferNeedsReset, std::memory_order_acq_rel);
 
-				// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
-				if(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
-					if(mNode.engine.isRunning) {
-						mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
+			// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
+			if(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
+				if(mNode.engine.isRunning) {
+					mFlags.fetch_or(eFlagMuteRequested, std::memory_order_acq_rel);
 
-						// The render block will clear eFlagMuteRequested and set eFlagIsMuted
-						while(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
-							auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
-							// If the timeout occurred the engine may have stopped since the initial check
-							// with no subsequent opportunity for the render block to set eFlagIsMuted
-							if(!timeout && !mNode.engine.isRunning) {
-								mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
-								mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
-								break;
-							}
+					// The render block will clear eFlagMuteRequested and set eFlagIsMuted
+					while(!(mFlags.load(std::memory_order_acquire) & eFlagIsMuted)) {
+						auto timeout = mDecodingSemaphore.Wait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
+						// If the timeout occurred the engine may have stopped since the initial check
+						// with no subsequent opportunity for the render block to set eFlagIsMuted
+						if(!timeout && !mNode.engine.isRunning) {
+							mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
+							mFlags.fetch_and(~eFlagMuteRequested, std::memory_order_acq_rel);
+							break;
 						}
 					}
-					else
-						mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
 				}
-
-				// Reset() is not thread-safe but the render block is outputting silence
-				mAudioRingBuffer.Reset();
-
-				// Clear the mute flag
-				mFlags.fetch_and(~eFlagIsMuted, std::memory_order_acq_rel);
+				else
+					mFlags.fetch_or(eFlagIsMuted, std::memory_order_acq_rel);
 			}
 
+			// Reset() is not thread-safe but the render block is outputting silence
+			mAudioRingBuffer.Reset();
+
+			// Clear the mute flag
+			mFlags.fetch_and(~eFlagIsMuted, std::memory_order_acq_rel);
+		}
+
+		if(decoderState) {
 			// Decode and write chunks to the ring buffer
 			while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
+				// Decoding started
 				if(const auto flags = decoderState->mFlags.load(std::memory_order_acquire); !(flags & DecoderState::eFlagDecodingStarted)) {
 					const bool suspended = flags & DecoderState::eFlagDecodingSuspended;
 
@@ -851,6 +852,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 				if(framesWritten != buffer.frameLength)
 					os_log_error(sLog, "SFB::AudioRingBuffer::Write() failed");
 
+				// Decoding complete
 				if(const auto flags = decoderState->mFlags.load(std::memory_order_acquire); flags & DecoderState::eFlagDecodingComplete) {
 					const bool resumed = flags & DecoderState::eFlagDecodingResumed;
 
