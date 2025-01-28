@@ -284,16 +284,16 @@ private:
 #pragma mark - Active Decoder Management
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed decoding
-	DecoderState * _Nullable GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
+	DecoderState * const _Nullable GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed rendering
-	DecoderState * _Nullable GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
+	DecoderState * const _Nullable GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
-	DecoderState * _Nullable GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
+	DecoderState * const _Nullable GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
+	DecoderState * const _Nullable GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
 	/// Removes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
 	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
