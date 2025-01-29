@@ -431,17 +431,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (void)setNowPlaying:(id<SFBPCMDecoding>)nowPlaying
 {
+	id<SFBPCMDecoding> previouslyPlaying = nil;
 	{
 		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
 		if(_nowPlaying == nowPlaying)
 			return;
+		previouslyPlaying = _nowPlaying;
 		_nowPlaying = nowPlaying;
 	}
 
 	os_log_debug(_audioPlayerLog, "Now playing changed to %{public}@", nowPlaying);
 
-	if([_delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)])
-		[_delegate audioPlayer:self nowPlayingChanged:nowPlaying];
+	if([_delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:previouslyPlaying:)])
+		[_delegate audioPlayer:self nowPlayingChanged:nowPlaying previouslyPlaying:previouslyPlaying];
 }
 
 #pragma mark - Playback Properties
