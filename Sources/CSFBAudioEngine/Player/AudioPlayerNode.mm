@@ -26,12 +26,6 @@ namespace {
 /// The minimum number of frames to write to the ring buffer
 constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
 
-/// libdispatch destructor function for `NSError` objects
-void release_nserror_f(void * _Nullable context)
-{
-	(void)(__bridge_transfer NSError *)context;
-}
-
 } /* namespace */
 
 namespace SFB {
@@ -1194,7 +1188,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 				DecoderState *decoderState = nullptr;
 				AVAudioFramePosition framesRemainingToDistribute = framesRendered;
 				while(framesRemainingToDistribute > 0) {
-					uint64_t hostTime;
+					uint64_t hostTime = 0;
 					Decoder startedDecoder = nil;
 					Decoder nextDecoder = nil;
 					Decoder completeDecoder = nil;
