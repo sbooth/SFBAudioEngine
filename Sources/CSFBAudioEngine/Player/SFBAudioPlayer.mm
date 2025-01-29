@@ -433,9 +433,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
 	{
 		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-#if DEBUG
-		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change to %@", nowPlaying);
-#endif /* DEBUG */
+		if(_nowPlaying == nowPlaying)
+			return;
 		_nowPlaying = nowPlaying;
 	}
 
@@ -830,8 +829,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(!success) {
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
-		if(self.nowPlaying)
-			self.nowPlaying = nil;
+		self.nowPlaying = nil;
 		return NO;
 	}
 
@@ -844,8 +842,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(!success) {
-		if(self.nowPlaying)
-			self.nowPlaying = nil;
+		self.nowPlaying = nil;
 		return NO;
 	}
 
@@ -1213,8 +1210,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(audioPlayerNode == _playerNode) {
 		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		if(const auto flags = _flags.load(std::memory_order_acquire); !(flags & eAudioPlayerFlagHavePendingDecoder) && !(flags & eAudioPlayerFlagEngineIsRunning))
-			if(self.nowPlaying)
-				self.nowPlaying = nil;
+			self.nowPlaying = nil;
 	}
 }
 
