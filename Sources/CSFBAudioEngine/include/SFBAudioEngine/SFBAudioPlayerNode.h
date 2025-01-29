@@ -65,7 +65,7 @@ NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
 /// decoder that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are
 /// automatically dequeued and become current when the final frame of the current decoder is pushed in the render block.
 ///
-/// `SFBAudioPlayerNode` decodes audio in a high-priority dispatch queue into a ring buffer and renders on
+/// `SFBAudioPlayerNode` decodes audio in a high-priority thread into a ring buffer and renders on
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
@@ -79,7 +79,7 @@ NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
 ///  6. Decoder canceled
 ///  7. Asynchronous error encountered
 ///
-/// All callbacks are performed on a dedicated notification queue.
+/// All callbacks are performed on a dedicated event thread.
 NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 /// Returns an initialized `SFBAudioPlayerNode` object for stereo audio at 44,100 Hz
@@ -140,6 +140,15 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
+/// Dequeues and returns the next decoder from the decoder queue
+- (nullable id <SFBPCMDecoding>) dequeueDecoder;
+
+/// Empties the decoder queue
+- (void)clearQueue;
+
+/// Returns `YES` if the decoder queue is empty
+@property (nonatomic, readonly) BOOL queueIsEmpty;
+
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
@@ -152,12 +161,6 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// A transition period occurs when decoder *A* has completed decoding but not yet completed rendering
 /// and decoder *B* has started decoding but not yet started rendering.
 - (void)cancelActiveDecoders;
-
-/// Empties the decoder queue
-- (void)clearQueue;
-
-/// Returns `YES` if the decoder queue is empty
-@property (nonatomic, readonly) BOOL queueIsEmpty;
 
 #pragma mark - Playback Control
 

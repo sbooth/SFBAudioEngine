@@ -8,9 +8,10 @@
 
 #import <atomic>
 #import <deque>
-#import <list>
 #import <memory>
 #import <mutex>
+#import <thread>
+#import <vector>
 
 #import <os/log.h>
 
@@ -54,16 +55,16 @@ private:
 	struct DecoderState;
 
 	using DecoderQueue 				= std::deque<Decoder>;
-	using DecoderStateList 			= std::list<DecoderState *>;
+	using DecoderStateVector 		= std::vector<std::unique_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 					*mRenderingFormat		= nil;
 
-	/// Ring buffer used to transfer audio between the decoding dispatch queue and the render block
+	/// Ring buffer used to transfer audio between the decoding thread and the render block
 	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
 
 	/// Active decoders and associated state
-	DecoderStateList 				mActiveDecoders;
+	DecoderStateVector 				mActiveDecoders;
 	/// Lock used to protect access to `mActiveDecoders`
 	mutable SFB::UnfairLock			mDecoderLock;
 
@@ -72,46 +73,42 @@ private:
 	/// Lock used to protect access to `mQueuedDecoders`
 	mutable SFB::UnfairLock			mQueueLock;
 
-	/// Dispatch queue used for decoding
-	dispatch_queue_t				mDecodingQueue 			= nullptr;
-	/// Dispatch semaphore used for communication with the decoding queue
+	/// Thread used for decoding
+	std::thread 					mDecodingThread;
+	/// Dispatch semaphore used for communication with the decoding thread
 	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
-	/// Dispatch group used to track decoding tasks
-	dispatch_group_t 				mDecodingGroup			= nullptr;
 
-	/// Ring buffer used to communicate events from the decoding queue
+	/// Thread used for event processing
+	std::thread 					mEventThread;
+	/// Dispatch semaphore used for communication with the event processing thread
+	SFB::DispatchSemaphore			mEventSemaphore 		{0};
+
+	/// Ring buffer used to communicate events from the decoding thread
 	SFB::RingBuffer					mDecodeEventRingBuffer;
 	/// Ring buffer used to communicate events from the render block
 	SFB::RingBuffer					mRenderEventRingBuffer;
-
-public:
-	/// Dispatch queue used for event processing and delegate messaging
-	dispatch_queue_t				mEventProcessingQueue	= nullptr;
-
-private:
-	/// Dispatch source initiating event processing by the render block
-	dispatch_source_t				mEventProcessingSource 	= nullptr;
-	/// Dispatch group used to track event processing initiated by the decoding queue
-	dispatch_group_t 				mEventProcessingGroup	= nullptr;
 
 	/// Possible `AudioPlayerNode` flag values
 	enum AudioPlayerNodeFlags : unsigned int {
 		/// The render block is outputting audio
 		eFlagIsPlaying 				= 1u << 0,
+		/// The decoding thread requested that the render block set `eFlagIsMuted` during the next render cycle
+		eFlagMuteRequested 			= 1u << 1,
 		/// The render block is outputting silence
-		eFlagIsMuted 				= 1u << 1,
-		/// The decoding dispatch queue requested the render block to set `eFlagIsMuted` during the next render cycle
-		eFlagMuteRequested 			= 1u << 2,
+		eFlagIsMuted 				= 1u << 2,
+		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
+		eFlagUmuteAfterDequeue 		= 1u << 3,
 		/// The audio ring buffer requires a non-threadsafe reset
-		eFlagRingBufferNeedsReset 	= 1u << 3,
+		eFlagRingBufferNeedsReset 	= 1u << 4,
+		/// The decoding thread should exit
+		eFlagStopDecodingThread		= 1u << 5,
+		/// The event thread should exit
+		eFlagStopEventThread		= 1u << 6,
 	};
 
 	/// Flags
 	std::atomic_uint 				mFlags 					= 0;
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
-
-	/// Counter used for unique keys to `dispatch_queue_set_specific`
-	std::atomic_uint64_t 			mDispatchKeyCounter 	= 1;
 
 public:
 	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
@@ -154,7 +151,8 @@ public:
 
 	bool IsReady() const noexcept
 	{
-		return GetActiveDecoderStateWithSmallestSequenceNumber() != nullptr;
+		std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+		return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
 #pragma mark - Playback Properties
@@ -185,18 +183,13 @@ public:
 
 	bool EnqueueDecoder(Decoder _Nonnull decoder, bool reset, NSError * _Nullable * _Nullable error) noexcept;
 
-private:
 	/// Pops the next decoder from the decoder queue
 	Decoder _Nullable DequeueDecoder() noexcept;
-
-public:
-	Decoder _Nullable CurrentDecoder() const noexcept;
-	void CancelActiveDecoders(bool cancelAllActive) noexcept;
 
 	void ClearQueue() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
-		mQueuedDecoders.resize(0);
+		mQueuedDecoders.clear();
 	}
 
 	bool QueueIsEmpty() const noexcept
@@ -211,11 +204,18 @@ public:
 		CancelActiveDecoders(true);
 	}
 
+	Decoder _Nullable CurrentDecoder() const noexcept;
+	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+
 private:
 #pragma mark - Decoding
 
-	/// Pops the next decoder from the decoder queue and submits it for processing on the decoding dispatch queue
-	void DequeueAndProcessDecoder(bool unmuteNeeded) noexcept;
+	/// Dequeues and processes decoders from the decoder queue
+	/// - note: This is the thread entry point for the decoding thread
+	void ProcessDecoders() noexcept;
+
+	/// Writes an error event to `mDecodeEventRingBuffer` and signals `mEventSemaphore`
+	void SubmitDecodingErrorEvent(NSError *error) noexcept;
 
 #pragma mark - Rendering
 
@@ -244,7 +244,7 @@ private:
 
 #pragma mark Decoding Events
 
-	/// Decoding queue events
+	/// Decoding thread events
 	enum class DecodingEventCommand : uint32_t {
 		/// Decoding started
 		eStarted 	= 1,
@@ -272,10 +272,9 @@ private:
 
 #pragma mark - Event Processing
 
-public:
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
-	/// - warning: This function is not part of the public API
-	void ProcessPendingEvents() noexcept;
+	/// - note: This is the thread entry point for the event thread
+	void ProcessEvents() noexcept;
 
 private:
 	/// Processes an event from `mDecodeEventRingBuffer`
@@ -283,19 +282,22 @@ private:
 	/// Processes an event from `mRenderEventRingBuffer`
 	void ProcessEvent(const RenderingEventHeader& header) noexcept;
 
-#pragma mark - Decoder State Array
+#pragma mark - Active Decoder Management
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not completed rendering
-	DecoderState * _Nullable GetActiveDecoderStateWithSmallestSequenceNumber() const noexcept;
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed decoding
+	DecoderState * const _Nullable GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
-	DecoderState * _Nullable GetActiveDecoderStateFollowingSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed rendering
+	DecoderState * const _Nullable GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
+
+	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
+	DecoderState * const _Nullable GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
 	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	DecoderState * _Nullable GetDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) const noexcept;
+	DecoderState * const _Nullable GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
-	/// Deletes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
-	bool DeleteDecoderStateWithSequenceNumber(const uint64_t& sequenceNumber) noexcept;
+	/// Removes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
+	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
 
 };
 

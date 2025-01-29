@@ -125,6 +125,21 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _impl->EnqueueDecoder(decoder, false, error);
 }
 
+- (id<SFBPCMDecoding>)dequeueDecoder
+{
+	return _impl->DequeueDecoder();
+}
+
+- (void)clearQueue
+{
+	_impl->ClearQueue();
+}
+
+- (BOOL)queueIsEmpty
+{
+	return _impl->QueueIsEmpty();
+}
+
 - (id<SFBPCMDecoding>)currentDecoder
 {
 	return _impl->CurrentDecoder();
@@ -138,16 +153,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (void)cancelActiveDecoders
 {
 	_impl->CancelActiveDecoders(true);
-}
-
-- (void)clearQueue
-{
-	_impl->ClearQueue();
-}
-
-- (BOOL)queueIsEmpty
-{
-	return _impl->QueueIsEmpty();
 }
 
 // AVAudioNode override
