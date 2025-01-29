@@ -151,6 +151,7 @@ public:
 
 	bool IsReady() const noexcept
 	{
+		std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
 		return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
