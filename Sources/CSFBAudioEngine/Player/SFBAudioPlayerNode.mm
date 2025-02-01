@@ -155,10 +155,10 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	_impl->CancelActiveDecoders(true);
 }
 
-- (BOOL)cancelDecoder:(id<SFBPCMDecoding>)decoder
+- (BOOL)cancelActiveDecoder:(id<SFBPCMDecoding>)decoder
 {
 	NSParameterAssert(decoder != nil);
-	return _impl->CancelDecoder(decoder);
+	return _impl->CancelActiveDecoder(decoder);
 }
 
 // AVAudioNode override

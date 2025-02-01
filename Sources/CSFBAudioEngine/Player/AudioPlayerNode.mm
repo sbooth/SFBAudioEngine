@@ -651,7 +651,7 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 	}
 }
 
-bool SFB::AudioPlayerNode::CancelDecoder(Decoder _Nonnull decoder) noexcept
+bool SFB::AudioPlayerNode::CancelActiveDecoder(Decoder _Nonnull decoder) noexcept
 {
 #if DEBUG
 	assert(decoder != nil);
