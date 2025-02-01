@@ -186,6 +186,8 @@ public:
 	/// Pops the next decoder from the decoder queue
 	Decoder _Nullable DequeueDecoder() noexcept;
 
+	bool RemoveDecoderFromQueue(Decoder _Nonnull decoder) noexcept;
+
 	void ClearQueue() noexcept
 	{
 		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);

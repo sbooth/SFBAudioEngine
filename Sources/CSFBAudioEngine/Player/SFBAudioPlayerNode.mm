@@ -130,6 +130,12 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _impl->DequeueDecoder();
 }
 
+- (BOOL)removeDecoderFromQueue:(id<SFBPCMDecoding>)decoder
+{
+	NSParameterAssert(decoder != nil);
+	return _impl->RemoveDecoderFromQueue(decoder);
+}
+
 - (void)clearQueue
 {
 	_impl->ClearQueue();

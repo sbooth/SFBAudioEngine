@@ -143,6 +143,10 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// Dequeues and returns the next decoder from the decoder queue
 - (nullable id <SFBPCMDecoding>) dequeueDecoder;
 
+/// Removes a decoder from the decoder queue
+/// - parameter decoder: The decoder to remove
+/// - returns: `YES` if the decoder was removed successfully
+- (BOOL)removeDecoderFromQueue:(id<SFBPCMDecoding>)decoder;
 /// Empties the decoder queue
 - (void)clearQueue;
 
