@@ -623,6 +623,20 @@ SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::DequeueDecoder() noexcept
 	return decoder;
 }
 
+bool SFB::AudioPlayerNode::RemoveDecoderFromQueue(Decoder decoder) noexcept
+{
+#if DEBUG
+	assert(decoder != nil);
+#endif /* DEBUG */
+
+	std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+	const auto iter = std::find(mQueuedDecoders.cbegin(), mQueuedDecoders.cend(), decoder);
+	if(iter == mQueuedDecoders.cend())
+		return false;
+	mQueuedDecoders.erase(iter);
+	return true;
+}
+
 SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
