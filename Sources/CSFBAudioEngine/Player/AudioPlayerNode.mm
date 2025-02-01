@@ -651,6 +651,23 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 	}
 }
 
+bool SFB::AudioPlayerNode::CancelDecoder(Decoder _Nonnull decoder) noexcept
+{
+#if DEBUG
+	assert(decoder != nil);
+#endif /* DEBUG */
+
+	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
+	const auto iter = std::find_if(mActiveDecoders.cbegin(), mActiveDecoders.cend(), [&decoder](const auto& decoderState){
+		return decoderState->mDecoder == decoder;
+	});
+	if(iter == mActiveDecoders.cend())
+		return false;
+	(*iter)->mFlags.fetch_or(DecoderState::eFlagCancelRequested, std::memory_order_acq_rel);
+	mDecodingSemaphore.Signal();
+	return true;
+}
+
 #pragma mark - Decoding
 
 void SFB::AudioPlayerNode::ProcessDecoders() noexcept

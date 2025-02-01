@@ -161,6 +161,10 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// A transition period occurs when decoder *A* has completed decoding but not yet completed rendering
 /// and decoder *B* has started decoding but not yet started rendering.
 - (void)cancelActiveDecoders;
+/// Cancels an active decoder
+/// - parameter decoder: The decoder to cancel
+/// - returns: `YES` if the decoder was canceled successfully
+- (BOOL)cancelDecoder:(id<SFBPCMDecoding>)decoder;
 
 #pragma mark - Playback Control
 
