@@ -146,6 +146,9 @@
 		328E81672CF7891A00BFCEB2 /* tta-cpp in Frameworks */ = {isa = PBXBuildFile; productRef = 328E81662CF7891A00BFCEB2 /* tta-cpp */; };
 		328E816A2CF7898C00BFCEB2 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328E81692CF7898C00BFCEB2 /* ImageIO.framework */; };
 		328E816C2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328E816B2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework */; };
+		32B6CAB32D5318880093855B /* SFBPlaybackTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B6CAB22D5318880093855B /* SFBPlaybackTime.swift */; };
+		32B6CAB42D5318880093855B /* SFBPlaybackPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B6CAB12D5318880093855B /* SFBPlaybackPosition.swift */; };
+		32B6CAB62D5318AF0093855B /* SFBAudioEngineTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B6CAB52D5318AF0093855B /* SFBAudioEngineTypes.m */; };
 		32F6E5C02D2B02F00029B972 /* SFBLibsndfileUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F6E5BF2D2B02F00029B972 /* SFBLibsndfileUtilities.m */; };
 		32F6E5C12D2B02F00029B972 /* SFBLibsndfileUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F6E5BE2D2B02F00029B972 /* SFBLibsndfileUtilities.h */; };
 		32F6E5C22D2B031D0029B972 /* NSData+SFBExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1902CF785DD0084AA51 /* NSData+SFBExtensions.h */; };
@@ -420,6 +423,9 @@
 		3237E1A52CF785DD0084AA51 /* SFBAudioEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioEngineTests.swift; sourceTree = "<group>"; };
 		328E81692CF7898C00BFCEB2 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.1.sdk/System/Library/Frameworks/ImageIO.framework; sourceTree = DEVELOPER_DIR; };
 		328E816B2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.1.sdk/System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = DEVELOPER_DIR; };
+		32B6CAB12D5318880093855B /* SFBPlaybackPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBPlaybackPosition.swift; sourceTree = "<group>"; };
+		32B6CAB22D5318880093855B /* SFBPlaybackTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBPlaybackTime.swift; sourceTree = "<group>"; };
+		32B6CAB52D5318AF0093855B /* SFBAudioEngineTypes.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBAudioEngineTypes.m; sourceTree = "<group>"; };
 		32F6E5BE2D2B02F00029B972 /* SFBLibsndfileUtilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBLibsndfileUtilities.h; sourceTree = "<group>"; };
 		32F6E5BF2D2B02F00029B972 /* SFBLibsndfileUtilities.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBLibsndfileUtilities.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -728,6 +734,7 @@
 				3237E1932CF785DD0084AA51 /* NSError+SFBURLPresentation.m */,
 				3237E1942CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.h */,
 				3237E1952CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.m */,
+				32B6CAB52D5318AF0093855B /* SFBAudioEngineTypes.m */,
 				3237E1962CF785DD0084AA51 /* SFBCStringForOSType.h */,
 				32F6E5BE2D2B02F00029B972 /* SFBLibsndfileUtilities.h */,
 				32F6E5BF2D2B02F00029B972 /* SFBLibsndfileUtilities.m */,
@@ -763,6 +770,8 @@
 				3237E19E2CF785DD0084AA51 /* SFBAudioProperties.swift */,
 				3237E19F2CF785DD0084AA51 /* SFBInputSource.swift */,
 				3237E1A02CF785DD0084AA51 /* SFBOutputSource.swift */,
+				32B6CAB12D5318880093855B /* SFBPlaybackPosition.swift */,
+				32B6CAB22D5318880093855B /* SFBPlaybackTime.swift */,
 				3237E1A12CF785DD0084AA51 /* SFBReplayGainAnalyzer.swift */,
 			);
 			path = SFBAudioEngine;
@@ -1047,6 +1056,8 @@
 				3237E1C32CF7868B0084AA51 /* SFBFLACDecoder.mm in Sources */,
 				3237E1C42CF7868B0084AA51 /* SFBReplayGainAnalyzer.m in Sources */,
 				3237E1C52CF7868B0084AA51 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,
+				32B6CAB32D5318880093855B /* SFBPlaybackTime.swift in Sources */,
+				32B6CAB42D5318880093855B /* SFBPlaybackPosition.swift in Sources */,
 				3237E1C62CF7868B0084AA51 /* SFBDSFFile.mm in Sources */,
 				3237E1C72CF7868B0084AA51 /* SFBMP4File.mm in Sources */,
 				3237E1C82CF7868B0084AA51 /* NSFileHandle+SFBHeaderReading.m in Sources */,
@@ -1057,6 +1068,7 @@
 				3237E1CD2CF7868B0084AA51 /* SFBMutableDataOutputSource.m in Sources */,
 				3237E1CE2CF7868B0084AA51 /* SFBAudioMetadata+TagLibXiphComment.mm in Sources */,
 				3237E1CF2CF7868B0084AA51 /* SFBDSDDecoder.m in Sources */,
+				32B6CAB62D5318AF0093855B /* SFBAudioEngineTypes.m in Sources */,
 				3237E1D02CF7868B0084AA51 /* SFBShortenDecoder.mm in Sources */,
 				3237E1D12CF7868B0084AA51 /* SFBImpulseTrackerModuleFile.mm in Sources */,
 				3237E1D22CF7868B0084AA51 /* SFBScreamTracker3ModuleFile.mm in Sources */,
