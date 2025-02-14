@@ -160,7 +160,6 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
 			return NO;
 		}
 
-
 		return YES;
 	}
 	catch(const std::exception& e) {
