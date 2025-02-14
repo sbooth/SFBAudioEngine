@@ -108,7 +108,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 		return YES;
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioFileLog, "Error writing WAVE metadata: %{public}s", e.what());
+		os_log_error(gSFBAudioFileLog, "Error reading WAVE properties and metadata: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
 		return NO;

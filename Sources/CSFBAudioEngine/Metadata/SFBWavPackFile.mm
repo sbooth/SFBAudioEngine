@@ -108,7 +108,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
 		return YES;
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioFileLog, "Error writing WavPack metadata: %{public}s", e.what());
+		os_log_error(gSFBAudioFileLog, "Error reading WavPack properties and metadata: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
 		return NO;
