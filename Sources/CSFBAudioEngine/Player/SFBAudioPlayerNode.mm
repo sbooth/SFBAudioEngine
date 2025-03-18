@@ -8,9 +8,6 @@
 
 #import "SFBAudioPlayerNode+Internal.h"
 
-const NSTimeInterval 		SFBUnknownTime 					= -1;
-const SFBPlaybackPosition 	SFBInvalidPlaybackPosition 		= { .framePosition =  SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength};
-const SFBPlaybackTime 		SFBInvalidPlaybackTime 			= { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime};
 NSErrorDomain const 		SFBAudioPlayerNodeErrorDomain 	= @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 namespace {
@@ -128,6 +125,12 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (id<SFBPCMDecoding>)dequeueDecoder
 {
 	return _impl->DequeueDecoder();
+}
+
+- (BOOL)removeDecoderFromQueue:(id<SFBPCMDecoding>)decoder
+{
+	NSParameterAssert(decoder != nil);
+	return _impl->RemoveDecoderFromQueue(decoder);
 }
 
 - (void)clearQueue

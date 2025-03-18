@@ -106,7 +106,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns `YES` if audio with `format` will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
 
-/// Empties the decoder queue
+/// Clears the decoder queue
 - (void)clearQueue;
 
 /// Returns `YES` if the decoder queue is empty
