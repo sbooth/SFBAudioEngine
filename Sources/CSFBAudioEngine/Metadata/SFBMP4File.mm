@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -58,99 +58,115 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
 {
-	TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
-	if(!stream.isOpen()) {
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Input/output error", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
-		return NO;
-	}
-
-	TagLib::MP4::File file(&stream);
-	if(!file.isValid()) {
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Not a MPEG-4 file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
-	}
-
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"MP4" forKey:SFBAudioPropertiesKeyFormatName];
-	if(file.audioProperties()) {
-		auto properties = file.audioProperties();
-		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
-
-		if(properties->bitsPerSample())
-			propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
-		switch(properties->codec()) {
-			case TagLib::MP4::Properties::Codec::AAC:
-				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"AAC";
-				break;
-			case TagLib::MP4::Properties::Codec::ALAC:
-				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Apple Lossless";
-				break;
-			default:
-				break;
+	try {
+		TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
+		if(!stream.isOpen()) {
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+												 code:SFBAudioFileErrorCodeInputOutput
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
+												  url:self.url
+										failureReason:NSLocalizedString(@"Input/output error", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+			return NO;
 		}
+
+		TagLib::MP4::File file(&stream);
+		if(!file.isValid()) {
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+												 code:SFBAudioFileErrorCodeInvalidFormat
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @"")
+												  url:self.url
+										failureReason:NSLocalizedString(@"Not a MPEG-4 file", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			return NO;
+		}
+
+		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"MP4" forKey:SFBAudioPropertiesKeyFormatName];
+		if(file.audioProperties()) {
+			auto properties = file.audioProperties();
+			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+
+			if(properties->bitsPerSample())
+				propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
+			switch(properties->codec()) {
+				case TagLib::MP4::Properties::Codec::AAC:
+					propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"AAC";
+					break;
+				case TagLib::MP4::Properties::Codec::ALAC:
+					propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Apple Lossless";
+					break;
+				default:
+					break;
+			}
+		}
+
+		SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
+		if(file.tag())
+			[metadata addMetadataFromTagLibMP4Tag:file.tag()];
+
+		self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
+		self.metadata = metadata;
+
+		return YES;
 	}
-
-	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-	if(file.tag())
-		[metadata addMetadataFromTagLibMP4Tag:file.tag()];
-
-	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
-	self.metadata = metadata;
-	return YES;
+	catch(const std::exception& e) {
+		os_log_error(gSFBAudioFileLog, "Error reading MPEG-4 properties and metadata: %{public}s", e.what());
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
 }
 
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
-	TagLib::FileStream stream(self.url.fileSystemRepresentation);
-	if(!stream.isOpen()) {
+	try {
+		TagLib::FileStream stream(self.url.fileSystemRepresentation);
+		if(!stream.isOpen()) {
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+												 code:SFBAudioFileErrorCodeInputOutput
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
+												  url:self.url
+										failureReason:NSLocalizedString(@"Input/output error", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+			return NO;
+		}
+
+		TagLib::MP4::File file(&stream, false);
+		if(!file.isValid()) {
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+												 code:SFBAudioFileErrorCodeInvalidFormat
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @"")
+												  url:self.url
+										failureReason:NSLocalizedString(@"Not a MPEG-4 file", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			return NO;
+		}
+
+		SFB::Audio::SetMP4TagFromMetadata(self.metadata, file.tag());
+
+		if(!file.save()) {
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
+												 code:SFBAudioFileErrorCodeInputOutput
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
+												  url:self.url
+										failureReason:NSLocalizedString(@"Unable to write metadata", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			return NO;
+		}
+
+		return YES;
+	}
+	catch(const std::exception& e) {
+		os_log_error(gSFBAudioFileLog, "Error writing MPEG-4 metadata: %{public}s", e.what());
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Input/output error", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
-
-	TagLib::MP4::File file(&stream, false);
-	if(!file.isValid()) {
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Not a MPEG-4 file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
-	}
-
-	SFB::Audio::SetMP4TagFromMetadata(self.metadata, file.tag());
-
-	if(!file.save()) {
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
-	}
-
-
-	return YES;
 }
 
 @end
