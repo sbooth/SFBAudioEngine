@@ -8,9 +8,6 @@
 
 #import "SFBAudioPlayerNode+Internal.h"
 
-const NSTimeInterval 		SFBUnknownTime 					= -1;
-const SFBPlaybackPosition 	SFBInvalidPlaybackPosition 		= { .framePosition =  SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength};
-const SFBPlaybackTime 		SFBInvalidPlaybackTime 			= { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime};
 NSErrorDomain const 		SFBAudioPlayerNodeErrorDomain 	= @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 namespace {
