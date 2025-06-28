@@ -1,21 +1,23 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <taglib/modfile.h>
 #import <taglib/tfilestream.h>
+#import <taglib/shortenfile.h>
 
-#import "SFBProTrackerModuleFile.h"
+#import "SFBShortenFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
+#import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
-SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sbooth.AudioEngine.File.ProTrackerModule";
+SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioEngine.File.Shorten";
 
-@implementation SFBProTrackerModuleFile
+@implementation SFBShortenFile
 
 + (void)load
 {
@@ -24,17 +26,17 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithObject:@"mod"];
+	return [NSSet setWithObject:@"shn"];
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/mod", @"audio/x-mod"]];
+	return [NSSet setWithObject:@"audio/x-shorten"];
 }
 
 + (SFBAudioFileFormatName)formatName
 {
-	return SFBAudioFileFormatNameProTrackerModule;
+	return SFBAudioFileFormatNameShorten;
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -42,7 +44,14 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 	NSParameterAssert(fileHandle != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	*formatIsSupported = SFBTernaryTruthValueUnknown;
+	NSData *header = [fileHandle readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
+	if(!header)
+		return NO;
+
+	if([header isShortenHeader])
+		*formatIsSupported = SFBTernaryTruthValueTrue;
+	else
+		*formatIsSupported = SFBTernaryTruthValueFalse;
 
 	return YES;
 }
@@ -62,19 +71,19 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 			return NO;
 		}
 
-		TagLib::Mod::File file(&stream);
+		TagLib::Shorten::File file(&stream);
 		if(!file.isValid()) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid ProTracker module file.", @"")
+												 code:SFBAudioFileErrorCodeInvalidFormat
+						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:self.url
-										failureReason:NSLocalizedString(@"Not a ProTracker module file", @"")
+										failureReason:NSLocalizedString(@"Not a Shorten file", @"")
 								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 			return NO;
 		}
 
-		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"ProTracker Module" forKey:SFBAudioPropertiesKeyFormatName];
+		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Shorten" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties())
 			SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 
@@ -88,7 +97,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 		return YES;
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioFileLog, "Error reading ProTracker module properties and metadata: %{public}s", e.what());
+		os_log_error(gSFBAudioFileLog, "Error reading Shorten properties and metadata: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
 		return NO;
@@ -97,7 +106,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
-	os_log_error(gSFBAudioFileLog, "Writing ProTracker module metadata is not supported");
+	os_log_error(gSFBAudioFileLog, "Writing Shorten metadata is not supported");
 
 	if(error)
 		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
@@ -105,7 +114,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
 										  url:self.url
 								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-						   recoverySuggestion:NSLocalizedString(@"Writing ProTracker module metadata is not supported.", @"")];
+						   recoverySuggestion:NSLocalizedString(@"Writing Shorten metadata is not supported.", @"")];
 	return NO;
 }
 

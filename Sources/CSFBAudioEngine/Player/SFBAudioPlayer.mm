@@ -87,6 +87,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	id <SFBPCMDecoding> 	_nowPlaying;
 	/// Flags
 	std::atomic_uint		_flags;
+	/// The dispatch queue used for asynchronous events
+	dispatch_queue_t		_eventQueue;
 }
 /// Returns true if the internal queue of decoders is empty
 - (BOOL)internalDecoderQueueIsEmpty;
@@ -122,7 +124,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (instancetype)init
 {
 	if((self = [super init])) {
-		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineIsolationQueue", DISPATCH_QUEUE_SERIAL);
+		_engineQueue = dispatch_queue_create("AudioPlayer.AVAudioEngineIsolation", DISPATCH_QUEUE_SERIAL);
 		if(!_engineQueue) {
 			os_log_error(_audioPlayerLog, "Unable to create AVAudioEngine isolation dispatch queue: dispatch_queue_create failed");
 			return nil;
@@ -137,6 +139,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 		// Register for configuration change notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleAudioEngineConfigurationChange:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
+
+		// Create the dispatch queue used for event processing
+		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
+		if(!attr) {
+			os_log_error(_audioPlayerLog, "dispatch_queue_attr_make_with_qos_class failed");
+			return nil;
+		}
+
+		_eventQueue = dispatch_queue_create_with_target("AudioPlayer.Events", attr, DISPATCH_TARGET_QUEUE_DEFAULT);
+		if(!_eventQueue) {
+			os_log_error(_audioPlayerLog, "Unable to create event dispatch queue: dispatch_queue_create failed");
+			return nil;
+		}
 
 #if TARGET_OS_IPHONE
 		// Register for audio session interruption notifications
@@ -436,18 +451,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (void)setNowPlaying:(id<SFBPCMDecoding>)nowPlaying
 {
+	id<SFBPCMDecoding> previouslyPlaying = nil;
 	{
 		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-#if DEBUG
-		NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change to %@", nowPlaying);
-#endif /* DEBUG */
+		if(_nowPlaying == nowPlaying)
+			return;
+		previouslyPlaying = _nowPlaying;
 		_nowPlaying = nowPlaying;
 	}
 
 	os_log_debug(_audioPlayerLog, "Now playing changed to %{public}@", nowPlaying);
 
-	if([_delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)])
-		[_delegate audioPlayer:self nowPlayingChanged:nowPlaying];
+	if([_delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:previouslyPlaying:)])
+		[_delegate audioPlayer:self nowPlayingChanged:nowPlaying previouslyPlaying:previouslyPlaying];
 }
 
 #pragma mark - Playback Properties
@@ -713,7 +729,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)clearInternalDecoderQueue
 {
 	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-	_queuedDecoders.resize(0);
+	_queuedDecoders.clear();
 }
 
 - (BOOL)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
@@ -857,8 +873,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(!success) {
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
-		if(self.nowPlaying)
-			self.nowPlaying = nil;
+		self.nowPlaying = nil;
 		return NO;
 	}
 
@@ -874,8 +889,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(!success) {
-		if(self.nowPlaying)
-			self.nowPlaying = nil;
+		self.nowPlaying = nil;
 		return NO;
 	}
 
@@ -1044,9 +1058,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			audioUnit.maximumFramesToRender = maximumFramesToRender;
 
 			NSError *error;
-			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error]) {
+			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error])
 				os_log_error(_audioPlayerLog, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@", error);
-			}
 		}
 	}
 
@@ -1071,7 +1084,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && audioPlayerNode->_impl->IsPlaying()) && audioPlayerNode->_impl->CurrentDecoder() == decoder) {
+	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && audioPlayerNode->_node->IsPlaying()) && audioPlayerNode->_node->CurrentDecoder() == decoder) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		self.nowPlaying = decoder;
 	}
@@ -1098,7 +1111,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	dispatch_after(hostTime, audioPlayerNode->_impl->mEventProcessingQueue, ^{
+	dispatch_after(hostTime, _eventQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillStart:atHostTime:", decoder);
 			return;
@@ -1137,7 +1150,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	dispatch_after(hostTime, audioPlayerNode->_impl->mEventProcessingQueue, ^{
+	dispatch_after(hostTime, _eventQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:", decoder);
 			return;
@@ -1185,7 +1198,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return;
 	}
 
-	dispatch_after(hostTime, audioPlayerNode->_impl->mEventProcessingQueue, ^{
+	dispatch_after(hostTime, _eventQueue, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(_audioPlayerLog, "%{public}@ canceled after receiving -audioPlayerNode:renderingWillComplete:atHostTime:", decoder);
 			return;
@@ -1259,8 +1272,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(audioPlayerNode == playerNode) {
 		_flags.fetch_and(~eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		if(const auto flags = _flags.load(std::memory_order_acquire); !(flags & eAudioPlayerFlagHavePendingDecoder) && !(flags & eAudioPlayerFlagEngineIsRunning))
-			if(self.nowPlaying)
-				self.nowPlaying = nil;
+			self.nowPlaying = nil;
 	}
 }
 

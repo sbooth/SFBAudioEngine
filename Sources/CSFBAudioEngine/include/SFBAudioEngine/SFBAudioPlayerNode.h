@@ -13,44 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerNodeDelegate;
 
-#pragma mark - Playback position and time information
-
-/// Playback position information
-struct NS_SWIFT_SENDABLE SFBPlaybackPosition {
-	/// The current frame position or `SFBUnknownFramePosition` if unknown
-	AVAudioFramePosition framePosition;
-	/// The total number of frames or `SFBUnknownFrameLength` if unknown
-	AVAudioFramePosition frameLength;
-} NS_SWIFT_NAME(PlaybackPosition);
-typedef struct SFBPlaybackPosition SFBPlaybackPosition;
-
-/// Value representing an invalid or unknown playback position
-extern const SFBPlaybackPosition SFBInvalidPlaybackPosition NS_SWIFT_NAME(PlaybackPosition.invalid);
-
-/// Returns `YES` if the current frame position and total number of frames in `playbackPosition` are valid
-NS_INLINE BOOL SFBPlaybackPositionIsValid(SFBPlaybackPosition playbackPosition) {
-	return playbackPosition.framePosition != SFBUnknownFramePosition && playbackPosition.frameLength != SFBUnknownFrameLength;
-}
-
-/// Playback time information
-struct NS_SWIFT_SENDABLE SFBPlaybackTime {
-	/// The current time or `SFBUnknownTime` if unknown
-	NSTimeInterval currentTime;
-	/// The total time or `SFBUnknownTime` if unknown
-	NSTimeInterval totalTime;
-} NS_SWIFT_NAME(PlaybackTime);
-typedef struct SFBPlaybackTime SFBPlaybackTime;
-
-/// Value representing an invalid or unknown playback time
-extern const SFBPlaybackTime SFBInvalidPlaybackTime NS_SWIFT_NAME(PlaybackTime.invalid);
-
-/// Returns `YES` if the current time and total time in `playbackTime` are valid
-NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
-	return playbackTime.currentTime != SFBUnknownTime && playbackTime.totalTime != SFBUnknownTime;
-}
-
-#pragma mark - SFBAudioPlayerNode
-
 /// An `AVAudioSourceNode` supporting gapless playback for PCM formats
 ///
 /// The output format of `SFBAudioPlayerNode` is specified at object initialization and cannot be changed. The output
@@ -65,7 +27,7 @@ NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
 /// decoder that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are
 /// automatically dequeued and become current when the final frame of the current decoder is pushed in the render block.
 ///
-/// `SFBAudioPlayerNode` decodes audio in a high-priority dispatch queue into a ring buffer and renders on
+/// `SFBAudioPlayerNode` decodes audio in a high-priority thread into a ring buffer and renders on
 /// demand. Rendering occurs in a realtime thread when the render block is called; the render block always supplies
 /// audio. When playback is paused or insufficient audio is available the render block outputs silence.
 ///
@@ -79,7 +41,7 @@ NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
 ///  6. Decoder canceled
 ///  7. Asynchronous error encountered
 ///
-/// All callbacks are performed on a dedicated notification queue.
+/// All callbacks are performed on a dedicated event thread.
 NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 /// Returns an initialized `SFBAudioPlayerNode` object for stereo audio at 44,100 Hz
@@ -140,15 +102,31 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
-/// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
-/// - warning: Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+/// Dequeues and returns the next decoder from the decoder queue
+- (nullable id <SFBPCMDecoding>) dequeueDecoder;
 
-/// Empties the decoder queue
+/// Removes a decoder from the decoder queue
+/// - parameter decoder: The decoder to remove
+/// - returns: `YES` if the decoder was removed successfully
+- (BOOL)removeDecoderFromQueue:(id<SFBPCMDecoding>)decoder;
+/// Clears the decoder queue
 - (void)clearQueue;
 
 /// Returns `YES` if the decoder queue is empty
 @property (nonatomic, readonly) BOOL queueIsEmpty;
+
+/// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
+/// - warning: Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+/// Cancels the current decoder
+/// - note: It is normally recommended to use `-cancelActiveDecoders` instead
+- (void)cancelCurrentDecoder;
+/// Cancels all active decoders
+///
+/// Although there is normally only one active decoder at a time, two are active during transition periods.
+/// A transition period occurs when decoder *A* has completed decoding but not yet completed rendering
+/// and decoder *B* has started decoding but not yet started rendering.
+- (void)cancelActiveDecoders;
 
 #pragma mark - Playback Control
 
@@ -156,7 +134,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 - (void)play;
 /// Pauses audio from the current decoder and pushes silence
 - (void)pause;
-/// Cancels the current decoder, clears any queued decoders, and pushes silence
+/// Cancels all active decoders, clears any queued decoders, and pushes silence
 - (void)stop;
 /// Toggles the playback state
 - (void)togglePlayPause;

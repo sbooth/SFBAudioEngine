@@ -106,7 +106,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns `YES` if audio with `format` will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
 
-/// Empties the decoder queue
+/// Clears the decoder queue
 - (void)clearQueue;
 
 /// Returns `YES` if the decoder queue is empty
@@ -314,10 +314,11 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter decoder: The decoder for which rendering is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
 /// Called to notify the delegate when the now playing item changes
-/// - warning: Do not change any properties of `nowPlaying`
+/// - warning: Do not change any properties of `nowPlaying` or `previouslyPlaying`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter nowPlaying: The decoder that is now playing
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id <SFBPCMDecoding>)nowPlaying;
+/// - parameter previouslyPlaying: The decoder that was playing previously
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id <SFBPCMDecoding>)nowPlaying previouslyPlaying:(nullable id <SFBPCMDecoding>)previouslyPlaying;
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter playbackState: The current playback state
