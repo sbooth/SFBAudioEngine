@@ -928,7 +928,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 	}
 
-	uint8_t headerBytes [headerSize];
+	std::vector<uint8_t> headerBytes(headerSize);
 	for(int32_t i = 0; i < headerSize; ++i) {
 		int32_t byte;
 		if(!_input.GetRiceGolombCode(byte, kVerbatimByteCodeSize)) {
@@ -940,19 +940,19 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		headerBytes[i] = static_cast<uint8_t>(byte);
 	}
 
-	// header_bytes is at least kCanonicalHeaderSizeBytes (44) in size
+	// headerBytes is at least kCanonicalHeaderSizeBytes (44) in size
 
-	auto chunkID = OSReadBigInt32(headerBytes, 0);
-//	auto chunkSize = OSReadBigInt32(header_bytes, 4);
+	auto chunkID = OSReadBigInt32(&headerBytes[0], 0);
+//	auto chunkSize = OSReadBigInt32(&headerBytes[4], 0);
 
 	// WAVE
 	if(chunkID == 'RIFF') {
-		if(![self parseRIFFChunk:(headerBytes + 8) size:(headerSize - 8) error:error])
+		if(![self parseRIFFChunk:&headerBytes[8] size:(headerSize - 8) error:error])
 			return NO;
 	}
 	// AIFF
 	else if(chunkID == 'FORM') {
-		if(![self parseFORMChunk:(headerBytes + 8) size:(headerSize - 8) error:error])
+		if(![self parseFORMChunk:&headerBytes[8] size:(headerSize - 8) error:error])
 			return NO;
 	}
 	else {
