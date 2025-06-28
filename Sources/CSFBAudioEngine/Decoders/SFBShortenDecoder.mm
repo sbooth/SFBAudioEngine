@@ -942,17 +942,17 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	// headerBytes is at least kCanonicalHeaderSizeBytes (44) in size
 
-	auto chunkID = OSReadBigInt32(&headerBytes[0], 0);
-//	auto chunkSize = OSReadBigInt32(&headerBytes[4], 0);
+	auto chunkID = OSReadBigInt32(headerBytes.data(), 0);
+//	auto chunkSize = OSReadBigInt32(headerBytes.data(), 4);
 
 	// WAVE
 	if(chunkID == 'RIFF') {
-		if(![self parseRIFFChunk:&headerBytes[8] size:(headerSize - 8) error:error])
+		if(![self parseRIFFChunk:(headerBytes.data() + 8) size:(headerSize - 8) error:error])
 			return NO;
 	}
 	// AIFF
 	else if(chunkID == 'FORM') {
-		if(![self parseFORMChunk:&headerBytes[8] size:(headerSize - 8) error:error])
+		if(![self parseFORMChunk:(headerBytes.data() + 8) size:(headerSize - 8) error:error])
 			return NO;
 	}
 	else {

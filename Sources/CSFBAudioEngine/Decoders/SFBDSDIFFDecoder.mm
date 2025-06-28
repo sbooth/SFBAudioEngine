@@ -353,7 +353,7 @@ std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFBInputSource *
 
 	std::vector<char> compressionName(count);
 	NSInteger bytesRead;
-	if(![inputSource readBytes:&compressionName[0] length:count bytesRead:&bytesRead error:nil] || bytesRead != count) {
+	if(![inputSource readBytes:compressionName.data() length:count bytesRead:&bytesRead error:nil] || bytesRead != count) {
 		os_log_error(gSFBDSDDecoderLog, "Unable to read compressionName in 'CMPR' chunk");
 		return nullptr;
 	}
