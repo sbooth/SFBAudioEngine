@@ -106,7 +106,6 @@
 		3237E1F42CF7868B0084AA51 /* SFBMonkeysAudioEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3237E10E2CF785DD0084AA51 /* SFBMonkeysAudioEncoder.mm */; };
 		3237E1F52CF7868B0084AA51 /* SFBMemoryMappedFileInputSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 3237E1432CF785DD0084AA51 /* SFBMemoryMappedFileInputSource.m */; };
 		3237E1F62CF7868B0084AA51 /* SFBMusepackFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3237E16B2CF785DD0084AA51 /* SFBMusepackFile.mm */; };
-		3237E1F72CF7868B0084AA51 /* SFBShortenFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 3237E1792CF785DD0084AA51 /* SFBShortenFile.m */; };
 		3237E1F82CF7868B0084AA51 /* SFBOggOpusDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3237E0F92CF785DD0084AA51 /* SFBOggOpusDecoder.m */; };
 		3237E1F92CF7868B0084AA51 /* SFBMP3File.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3237E1672CF785DD0084AA51 /* SFBMP3File.mm */; };
 		3237E1FA2CF7868B0084AA51 /* SFBMonkeysAudioDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3237E0F32CF785DD0084AA51 /* SFBMonkeysAudioDecoder.mm */; };
@@ -142,6 +141,7 @@
 		3237E2182CF786BA0084AA51 /* SFBAudioEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1242CF785DD0084AA51 /* SFBAudioEncoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3237E21B2CF787230084AA51 /* CXXAudioUtilities in Frameworks */ = {isa = PBXBuildFile; productRef = 3237E21A2CF787230084AA51 /* CXXAudioUtilities */; };
 		3237E21E2CF787330084AA51 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 3237E21D2CF787330084AA51 /* AVFAudioExtensions */; };
+		328997AA2E117BB70083CD7D /* SFBShortenFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 328997A92E117BB70083CD7D /* SFBShortenFile.mm */; };
 		328E81642CF7890700BFCEB2 /* sndfile in Frameworks */ = {isa = PBXBuildFile; productRef = 328E81632CF7890700BFCEB2 /* sndfile */; };
 		328E81672CF7891A00BFCEB2 /* tta-cpp in Frameworks */ = {isa = PBXBuildFile; productRef = 328E81662CF7891A00BFCEB2 /* tta-cpp */; };
 		328E816A2CF7898C00BFCEB2 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328E81692CF7898C00BFCEB2 /* ImageIO.framework */; };
@@ -386,7 +386,6 @@
 		3237E1762CF785DD0084AA51 /* SFBScreamTracker3ModuleFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBScreamTracker3ModuleFile.h; sourceTree = "<group>"; };
 		3237E1772CF785DD0084AA51 /* SFBScreamTracker3ModuleFile.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBScreamTracker3ModuleFile.mm; sourceTree = "<group>"; };
 		3237E1782CF785DD0084AA51 /* SFBShortenFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBShortenFile.h; sourceTree = "<group>"; };
-		3237E1792CF785DD0084AA51 /* SFBShortenFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBShortenFile.m; sourceTree = "<group>"; };
 		3237E17A2CF785DD0084AA51 /* SFBTrueAudioFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBTrueAudioFile.h; sourceTree = "<group>"; };
 		3237E17B2CF785DD0084AA51 /* SFBTrueAudioFile.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBTrueAudioFile.mm; sourceTree = "<group>"; };
 		3237E17C2CF785DD0084AA51 /* SFBWAVEFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBWAVEFile.h; sourceTree = "<group>"; };
@@ -421,6 +420,7 @@
 		3237E1A02CF785DD0084AA51 /* SFBOutputSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBOutputSource.swift; sourceTree = "<group>"; };
 		3237E1A12CF785DD0084AA51 /* SFBReplayGainAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBReplayGainAnalyzer.swift; sourceTree = "<group>"; };
 		3237E1A52CF785DD0084AA51 /* SFBAudioEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioEngineTests.swift; sourceTree = "<group>"; };
+		328997A92E117BB70083CD7D /* SFBShortenFile.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBShortenFile.mm; sourceTree = "<group>"; };
 		328E81692CF7898C00BFCEB2 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.1.sdk/System/Library/Frameworks/ImageIO.framework; sourceTree = DEVELOPER_DIR; };
 		328E816B2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.1.sdk/System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = DEVELOPER_DIR; };
 		32B6CAB12D5318880093855B /* SFBPlaybackPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBPlaybackPosition.swift; sourceTree = "<group>"; };
@@ -680,7 +680,7 @@
 				3237E1762CF785DD0084AA51 /* SFBScreamTracker3ModuleFile.h */,
 				3237E1772CF785DD0084AA51 /* SFBScreamTracker3ModuleFile.mm */,
 				3237E1782CF785DD0084AA51 /* SFBShortenFile.h */,
-				3237E1792CF785DD0084AA51 /* SFBShortenFile.m */,
+				328997A92E117BB70083CD7D /* SFBShortenFile.mm */,
 				3237E17A2CF785DD0084AA51 /* SFBTrueAudioFile.h */,
 				3237E17B2CF785DD0084AA51 /* SFBTrueAudioFile.mm */,
 				3237E17C2CF785DD0084AA51 /* SFBWAVEFile.h */,
@@ -1084,6 +1084,7 @@
 				3237E1DC2CF7868B0084AA51 /* SFBAudioMetadata+TagLibTag.mm in Sources */,
 				3237E1DD2CF7868B0084AA51 /* SFBOggSpeexEncoder.m in Sources */,
 				3237E1DE2CF7868B0084AA51 /* SFBAudioProperties.m in Sources */,
+				328997AA2E117BB70083CD7D /* SFBShortenFile.mm in Sources */,
 				3237E1DF2CF7868B0084AA51 /* SFBTrueAudioDecoder.mm in Sources */,
 				3237E1E02CF7868B0084AA51 /* SFBAudioMetadata+TagLibID3v2Tag.mm in Sources */,
 				3237E1E12CF7868B0084AA51 /* SFBFileInputSource.m in Sources */,
@@ -1109,7 +1110,6 @@
 				3237E1F42CF7868B0084AA51 /* SFBMonkeysAudioEncoder.mm in Sources */,
 				3237E1F52CF7868B0084AA51 /* SFBMemoryMappedFileInputSource.m in Sources */,
 				3237E1F62CF7868B0084AA51 /* SFBMusepackFile.mm in Sources */,
-				3237E1F72CF7868B0084AA51 /* SFBShortenFile.m in Sources */,
 				3237E1F82CF7868B0084AA51 /* SFBOggOpusDecoder.m in Sources */,
 				3237E1F92CF7868B0084AA51 /* SFBMP3File.mm in Sources */,
 				3237E1FA2CF7868B0084AA51 /* SFBMonkeysAudioDecoder.mm in Sources */,
