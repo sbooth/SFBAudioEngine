@@ -1029,7 +1029,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 
-	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && audioPlayerNode->_impl->IsPlaying()) && audioPlayerNode->_impl->CurrentDecoder() == decoder) {
+	if(const auto flags = _flags.load(std::memory_order_acquire); (flags & eAudioPlayerFlagHavePendingDecoder) && !((flags & eAudioPlayerFlagEngineIsRunning) && audioPlayerNode->_node->IsPlaying()) && audioPlayerNode->_node->CurrentDecoder() == decoder) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive, std::memory_order_acq_rel);
 		self.nowPlaying = decoder;
 	}

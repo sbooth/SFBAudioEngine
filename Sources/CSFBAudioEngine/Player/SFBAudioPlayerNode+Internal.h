@@ -11,6 +11,6 @@
 @interface SFBAudioPlayerNode ()
 {
 @package
-	SFB::AudioPlayerNode::unique_ptr _impl;
+	SFB::AudioPlayerNode::unique_ptr _node;
 }
 @end
