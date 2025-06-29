@@ -815,6 +815,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
+	_packetPosition = 0;
 	_packetCount = static_cast<AVAudioFramePosition>(soundDataChunk->mDataSize - 12) / (kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])

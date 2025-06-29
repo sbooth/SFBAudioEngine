@@ -188,6 +188,8 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		return NO;
 	}
 
+	_framePosition = 0;
+
 	long rate;
 	int channels, encoding;
 	if(mpg123_getformat(_mpg123, &rate, &channels, &encoding) != MPG123_OK || encoding != MPG123_ENC_FLOAT_32 || channels <= 0) {
