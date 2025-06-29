@@ -54,19 +54,19 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	NSParameterAssert(format != nil);
 	NSParameterAssert(format.isStandard);
 
-	std::unique_ptr<SFB::AudioPlayerNode> impl;
+	std::unique_ptr<SFB::AudioPlayerNode> node;
 
 	try {
-		impl = std::make_unique<SFB::AudioPlayerNode>(format, ringBufferSize);
+		node = std::make_unique<SFB::AudioPlayerNode>(format, ringBufferSize);
 	}
 	catch(const std::exception& e) {
 		os_log_error(SFB::AudioPlayerNode::sLog, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
 		return nil;
 	}
 
-	if((self = [super initWithFormat:format renderBlock:impl->mRenderBlock])) {
-		_impl = std::move(impl);
-		_impl->mNode = self;
+	if((self = [super initWithFormat:format renderBlock:node->mRenderBlock])) {
+		_node = std::move(node);
+		_node->mNode = self;
 	}
 
 	return self;
@@ -74,20 +74,20 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 - (void)dealloc
 {
-	_impl.reset();
+	_node.reset();
 }
 
 #pragma mark - Format Information
 
 - (AVAudioFormat *)renderingFormat
 {
-	return _impl->RenderingFormat();
+	return _node->RenderingFormat();
 }
 
 - (BOOL)supportsFormat:(AVAudioFormat *)format
 {
 	NSParameterAssert(format != nil);
-	return _impl->SupportsFormat(format);
+	return _node->SupportsFormat(format);
 }
 
 #pragma mark - Queue Management
@@ -98,13 +98,13 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-	return _impl->EnqueueDecoder(decoder, true, error);
+	return _node->EnqueueDecoder(decoder, true, error);
 }
 
 - (BOOL)resetAndEnqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-	return _impl->EnqueueDecoder(decoder, true, error);
+	return _node->EnqueueDecoder(decoder, true, error);
 }
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
@@ -113,141 +113,141 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-	return _impl->EnqueueDecoder(decoder, false, error);
+	return _node->EnqueueDecoder(decoder, false, error);
 }
 
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-	return _impl->EnqueueDecoder(decoder, false, error);
+	return _node->EnqueueDecoder(decoder, false, error);
 }
 
 - (id<SFBPCMDecoding>)dequeueDecoder
 {
-	return _impl->DequeueDecoder();
+	return _node->DequeueDecoder();
 }
 
 - (BOOL)removeDecoderFromQueue:(id<SFBPCMDecoding>)decoder
 {
 	NSParameterAssert(decoder != nil);
-	return _impl->RemoveDecoderFromQueue(decoder);
+	return _node->RemoveDecoderFromQueue(decoder);
 }
 
 - (void)clearQueue
 {
-	_impl->ClearQueue();
+	_node->ClearQueue();
 }
 
 - (BOOL)queueIsEmpty
 {
-	return _impl->QueueIsEmpty();
+	return _node->QueueIsEmpty();
 }
 
 - (id<SFBPCMDecoding>)currentDecoder
 {
-	return _impl->CurrentDecoder();
+	return _node->CurrentDecoder();
 }
 
 - (void)cancelCurrentDecoder
 {
-	_impl->CancelActiveDecoders(false);
+	_node->CancelActiveDecoders(false);
 }
 
 - (void)cancelActiveDecoders
 {
-	_impl->CancelActiveDecoders(true);
+	_node->CancelActiveDecoders(true);
 }
 
 // AVAudioNode override
 - (void)reset
 {
 	[super reset];
-	_impl->Reset();
+	_node->Reset();
 }
 
 #pragma mark - Playback Control
 
 - (void)play
 {
-	_impl->Play();
+	_node->Play();
 }
 
 - (void)pause
 {
-	_impl->Pause();
+	_node->Pause();
 }
 
 - (void)stop
 {
-	_impl->Stop();
+	_node->Stop();
 	// Stop() calls Reset() internally so there is no need for [self reset]
 	[super reset];
 }
 
 - (void)togglePlayPause
 {
-	_impl->TogglePlayPause();
+	_node->TogglePlayPause();
 }
 
 #pragma mark - State
 
 - (BOOL)isPlaying
 {
-	return _impl->IsPlaying();
+	return _node->IsPlaying();
 }
 
 - (BOOL)isReady
 {
-	return _impl->IsReady();
+	return _node->IsReady();
 }
 
 #pragma mark - Playback Properties
 
 - (SFBPlaybackPosition)playbackPosition
 {
-	return _impl->PlaybackPosition();
+	return _node->PlaybackPosition();
 }
 
 - (SFBPlaybackTime)playbackTime
 {
-	return _impl->PlaybackTime();
+	return _node->PlaybackTime();
 }
 
 - (BOOL)getPlaybackPosition:(SFBPlaybackPosition *)playbackPosition andTime:(SFBPlaybackTime *)playbackTime
 {
-	return _impl->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
+	return _node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 }
 
 #pragma mark - Seeking
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	return _impl->SeekForward(secondsToSkip);
+	return _node->SeekForward(secondsToSkip);
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	return _impl->SeekBackward(secondsToSkip);
+	return _node->SeekBackward(secondsToSkip);
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds
 {
-	return _impl->SeekToTime(timeInSeconds);
+	return _node->SeekToTime(timeInSeconds);
 }
 
 - (BOOL)seekToPosition:(double)position
 {
-	return _impl->SeekToPosition(position);
+	return _node->SeekToPosition(position);
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame
 {
-	return _impl->SeekToFrame(frame);
+	return _node->SeekToFrame(frame);
 }
 
 - (BOOL)supportsSeeking
 {
-	return _impl->SupportsSeeking();
+	return _node->SupportsSeeking();
 }
 
 @end
