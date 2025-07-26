@@ -1152,8 +1152,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 			}
 
 			NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-			if(!mDecodeEventRingBuffer.Read(data.mutableBytes, dataSize)) {
-				os_log_fault(sLog, "Missing archived NSError for decoding error event");
+			if(mDecodeEventRingBuffer.Read(data.mutableBytes, dataSize, false) != dataSize) {
+				os_log_fault(sLog, "Missing or incomplete archived NSError for decoding error event");
 				break;
 			}
 
