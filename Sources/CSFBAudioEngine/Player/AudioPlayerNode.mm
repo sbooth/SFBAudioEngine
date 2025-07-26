@@ -904,12 +904,6 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		return;
 	}
 
-	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
-	if(spaceNeeded > mDecodeEventRingBuffer.BytesAvailableToWrite()) {
-		os_log_fault(sLog, "Insufficient space to write decoding error event");
-		return;
-	}
-
 	// Event header and payload
 	const DecodingEventHeader header{DecodingEventCommand::eError};
 	const uint32_t dataSize = static_cast<uint32_t>(errorData.length);
@@ -917,6 +911,12 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 	uint32_t bytesWritten = 0;
 	auto wvec = mDecodeEventRingBuffer.WriteVector();
+
+	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
+	if(wvec.first.mBufferCapacity + wvec.second.mBufferCapacity < spaceNeeded) {
+		os_log_fault(sLog, "Insufficient space to write decoding error event");
+		return;
+	}
 
 	const auto do_write = [&bytesWritten, wvec](const void *arg, uint32_t sz) noexcept {
 		auto bytesRemaining = sz;
@@ -1152,8 +1152,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 			}
 
 			NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-			if(!mDecodeEventRingBuffer.Read(data.mutableBytes, dataSize)) {
-				os_log_fault(sLog, "Missing archived NSError for decoding error event");
+			if(mDecodeEventRingBuffer.Read(data.mutableBytes, dataSize, false) != dataSize) {
+				os_log_fault(sLog, "Missing or incomplete archived NSError for decoding error event");
 				break;
 			}
 
