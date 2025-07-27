@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMonkeysAudio",
       "state" : {
-        "revision" : "4b7170f68d604fbc5b5dd6c5a806bdf456499b1f",
-        "version" : "11.0.0"
+        "revision" : "f576cd43884179960733a7ff6b44e3aa920e9768",
+        "version" : "11.22.0"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
       "state" : {
-        "revision" : "a0e6af681acccd4a2e949ead379137ea67a82774",
-        "version" : "2.0.2"
+        "revision" : "4d2f78912ee2127e0ffee2f3e1a8a0ccbc4518e9",
+        "version" : "2.1.0"
       }
     },
     {

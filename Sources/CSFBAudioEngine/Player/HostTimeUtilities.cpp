@@ -11,8 +11,9 @@
 
 namespace {
 
-// On Intel processors mach_timebase_info is always 1/1. However,
-// on PPC it is either 1000000000/33333335 or 1000000000/25000000.
+// On Intel processors mach_timebase_info is always 1/1.
+// On PPC it is either 1000000000/33333335 or 1000000000/25000000.
+// On Apple Silicon it is 125/3.
 
 /// Returns a fraction used to convert host ticks to nanoseconds
 auto MachTimebase() noexcept
