@@ -298,7 +298,7 @@ private:
 		return NO;
 	}
 
-	result = _compressor->StartEx(_ioInterface.get(), &wve, MAX_AUDIO_BYTES_UNKNOWN, compressionLevel);
+	result = _compressor->StartEx(_ioInterface.get(), &wve, false, MAX_AUDIO_BYTES_UNKNOWN, compressionLevel);
 	if(result != ERROR_SUCCESS) {
 		os_log_error(gSFBAudioEncoderLog, "_compressor->StartEx() failed: %d", result);
 		if(error)
