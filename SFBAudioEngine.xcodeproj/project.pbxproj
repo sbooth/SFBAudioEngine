@@ -1423,7 +1423,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXMonkeysAudio";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 10.76.0;
+				minimumVersion = 11.22.0;
 			};
 		};
 		322CE3482CF7878D0070996C /* XCRemoteSwiftPackageReference "CXXTagLib" */ = {
@@ -1471,7 +1471,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXAudioUtilities";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.1;
+				minimumVersion = 0.3.2;
 			};
 		};
 		3237E21C2CF787330084AA51 /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */ = {
