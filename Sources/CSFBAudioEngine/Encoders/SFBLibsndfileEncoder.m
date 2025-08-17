@@ -652,25 +652,15 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	AVAudioChannelLayout *processingFormatChannelLayout = _processingFormat.channelLayout;
 	if(processingFormatChannelLayout) {
 		int channel_map [_sfinfo.channels];
-
-		if(!SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, error)) {
+		if(SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, error)) {
+			// Not all of libsndfile's format support channel maps; rather
+			// than failing for those formats log the error and continue
+			int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+			if(result != SF_TRUE)
+				os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
+		}
+		else
 			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@", processingFormatChannelLayout.layoutName);
-			return NO;
-		}
-
-		int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
-		if(result != SF_TRUE) {
-			os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
-
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:@{
-					NSLocalizedDescriptionKey: NSLocalizedString(@"The output format is not supported by Libsndfile.", @""),
-					NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unsupported channel layout", @""),
-					NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The format is not supported.", @"")
-				}];
-
-			return NO;
-		}
 	}
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
