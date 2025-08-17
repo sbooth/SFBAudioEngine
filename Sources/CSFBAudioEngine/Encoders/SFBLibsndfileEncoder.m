@@ -652,7 +652,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	AVAudioChannelLayout *processingFormatChannelLayout = _processingFormat.channelLayout;
 	if(processingFormatChannelLayout) {
 		int channel_map [_sfinfo.channels];
-		if(SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, error)) {
+		// Don't propagate non-failing errors to the caller
+		NSError *err = nil;
+		if(SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, &err)) {
 			// Not all formats supported by libsndfile handle channel maps; currently
 			// only aiff, wav, rf64, and caf are supported (with opus marked as todo)
 			// There is no way to distinguish lack of support from failure to set since
@@ -663,7 +665,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 				os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
 		}
 		else
-			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@", processingFormatChannelLayout.layoutName, error);
+			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@", processingFormatChannelLayout.layoutName, err);
 	}
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
