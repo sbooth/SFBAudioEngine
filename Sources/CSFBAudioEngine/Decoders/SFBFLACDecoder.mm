@@ -239,6 +239,8 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		return NO;
 	}
 
+	_framePosition = 0;
+
 	// Set up the processing format
 	AudioStreamBasicDescription processingStreamDescription{};
 
