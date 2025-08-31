@@ -652,25 +652,20 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	AVAudioChannelLayout *processingFormatChannelLayout = _processingFormat.channelLayout;
 	if(processingFormatChannelLayout) {
 		int channel_map [_sfinfo.channels];
-
-		if(!SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, error)) {
-			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@", processingFormatChannelLayout.layoutName);
-			return NO;
+		// Don't propagate non-failing errors to the caller
+		NSError *err = nil;
+		if(SndfileChannelMapFromChannelLayout(channel_map, _sfinfo.channels, processingFormatChannelLayout, &err)) {
+			// Not all formats supported by libsndfile handle channel maps; currently
+			// only aiff, wav, rf64, and caf are supported (with opus marked as todo)
+			// There is no way to distinguish lack of support from failure to set since
+			// in both cases sf_command returns 0 and the underlying error is not set
+			// Rather than failing just log the error and continue
+			int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+			if(result != SF_TRUE)
+				os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
 		}
-
-		int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
-		if(result != SF_TRUE) {
-			os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
-
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:@{
-					NSLocalizedDescriptionKey: NSLocalizedString(@"The output format is not supported by Libsndfile.", @""),
-					NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unsupported channel layout", @""),
-					NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The format is not supported.", @"")
-				}];
-
-			return NO;
-		}
+		else
+			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@", processingFormatChannelLayout.layoutName, err);
 	}
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
