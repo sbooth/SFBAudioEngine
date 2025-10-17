@@ -107,6 +107,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 	if(![super openReturningError:error])
 		return NO;
 
+	_framePosition = 0;
 	_frameLength = SFBUnknownFrameLength;
 	_serialNumber = -1;
 

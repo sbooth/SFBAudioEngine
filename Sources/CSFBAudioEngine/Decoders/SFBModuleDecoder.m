@@ -270,6 +270,7 @@ static dumb_off_t get_size_callback(void *f)
 		return NO;
 	}
 
+	_framePosition = 0;
 	// NB: This must change if the sample rate changes because it is based on 65536 Hz
 	_frameLength = duh_get_length(_duh);
 

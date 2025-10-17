@@ -201,6 +201,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
+	_framePosition = 0;
 	_frameLength = streamInfo.samples;
 
 	// Set up the source format
