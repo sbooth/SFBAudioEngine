@@ -24,7 +24,7 @@
 	NSParameterAssert(buffer != nil);
 	NSParameterAssert(capacity > 0);
 
-	if((self = [super init])) {
+	if((self = [super initWithURL:nil])) {
 		_buffer = buffer;
 		_capacity = capacity;
 	}
