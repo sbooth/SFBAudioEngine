@@ -1,11 +1,10 @@
 //
-// Copyright (c) 2010-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
 #import "SFBFileContentsInputSource.h"
-#import "SFBInputSource+Internal.h"
 
 @implementation SFBFileContentsInputSource
 
@@ -18,9 +17,7 @@
 	if(data == nil)
 		return nil;
 	
-	if((self = [super initWithData:data]))
-		_url = url;
-	return self;
+	return [super initWithData:data url:url];
 }
 
 @end
