@@ -51,7 +51,8 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 	len_ = s.st_size;
 	pos_ = 0;
 
-	return {};}
+	return {};
+}
 
 std::expected<void, int> SFB::FileContentsInput::_Close() noexcept
 {
