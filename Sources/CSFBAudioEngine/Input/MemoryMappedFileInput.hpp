@@ -14,7 +14,7 @@ class MemoryMappedFileInput: public InputSource
 {
 public:
 	explicit MemoryMappedFileInput(CFURLRef _Nonnull url) noexcept;
-	virtual ~MemoryMappedFileInput() = default;
+	virtual ~MemoryMappedFileInput();
 
 	// This class is non-copyable.
 	MemoryMappedFileInput(const MemoryMappedFileInput& rhs) = delete;

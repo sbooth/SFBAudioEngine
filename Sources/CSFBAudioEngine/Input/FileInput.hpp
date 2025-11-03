@@ -16,7 +16,7 @@ class FileInput: public InputSource
 {
 public:
 	explicit FileInput(CFURLRef _Nonnull url) noexcept;
-	virtual ~FileInput() = default;
+	virtual ~FileInput();
 
 	// This class is non-copyable.
 	FileInput(const FileInput& rhs) = delete;

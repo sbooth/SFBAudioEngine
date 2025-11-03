@@ -13,6 +13,12 @@ SFB::FileInput::FileInput(CFURLRef url) noexcept
 : InputSource(url)
 {}
 
+SFB::FileInput::~FileInput()
+{
+	if(file_)
+		std::fclose(file_);
+}
+
 std::expected<void, int> SFB::FileInput::_Open() noexcept
 {
 	UInt8 path [PATH_MAX];

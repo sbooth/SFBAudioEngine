@@ -15,6 +15,11 @@ SFB::FileContentsInput::FileContentsInput(CFURLRef url) noexcept
 : InputSource(url)
 {}
 
+SFB::FileContentsInput::~FileContentsInput()
+{
+	free(buf_);
+}
+
 std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 {
 	CFURLRef url = GetURL();

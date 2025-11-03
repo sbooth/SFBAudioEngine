@@ -24,8 +24,6 @@ SFB::InputSource::InputSource(CFURLRef url) noexcept
 
 SFB::InputSource::~InputSource()
 {
-	if(isOpen_)
-		Close();
 	if(url_)
 		CFRelease(url_);
 }

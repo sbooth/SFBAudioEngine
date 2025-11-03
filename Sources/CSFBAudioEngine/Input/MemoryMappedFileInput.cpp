@@ -16,6 +16,12 @@ SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url) noexcept
 : InputSource(url)
 {}
 
+SFB::MemoryMappedFileInput::~MemoryMappedFileInput()
+{
+	if(region_)
+		munmap(region_, len_);
+}
+
 std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 {
 	CFURLRef url = GetURL();
