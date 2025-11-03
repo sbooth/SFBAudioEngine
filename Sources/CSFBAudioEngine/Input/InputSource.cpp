@@ -10,6 +10,8 @@
 #import "DataInput.hpp"
 #import "FileInput.hpp"
 
+#import "scope_exit.hpp"
+
 namespace SFB {
 
 const os_log_t InputSource::sLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
@@ -48,16 +50,18 @@ std::expected<void, int> SFB::InputSource::Close() noexcept
 		return {};
 	}
 
-	auto result = _Close();
-	isOpen_ = false;
-	return result;
+	auto defer = scope_exit{[&] noexcept {
+		isOpen_ = false;
+	}};
+
+	return _Close();
 }
 
 std::expected<int64_t, int> SFB::InputSource::Read(void *buffer, int64_t count) noexcept
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "Read() called on an InputSource that hasn't been opened");
-		return std::unexpected(EINVAL);
+		return std::unexpected(EPERM);
 	}
 
 	if(!buffer || count < 0) {
@@ -72,7 +76,7 @@ std::expected<bool, int> SFB::InputSource::AtEOF() const noexcept
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "AtEOF() called on an InputSource that hasn't been opened");
-		return std::unexpected(EINVAL);
+		return std::unexpected(EPERM);
 	}
 
 	return _AtEOF();
@@ -82,7 +86,7 @@ std::expected<int64_t, int> SFB::InputSource::GetOffset() const noexcept
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "GetOffset() called on an InputSource that hasn't been opened");
-		return std::unexpected(EINVAL);
+		return std::unexpected(EPERM);
 	}
 
 	return _GetOffset();
@@ -92,7 +96,7 @@ std::expected<int64_t, int> SFB::InputSource::GetLength() const noexcept
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "GetLength() called on an InputSource that hasn't been opened");
-		return std::unexpected(EINVAL);
+		return std::unexpected(EPERM);
 	}
 
 	return _GetLength();
@@ -107,7 +111,12 @@ std::expected<void, int> SFB::InputSource::SeekToOffset(int64_t offset, int when
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "SeekToOffset() called on an InputSource that hasn't been opened");
-		return std::unexpected(EINVAL);
+		return std::unexpected(EPERM);
+	}
+
+	if(!_SupportsSeeking()) {
+		os_log_debug(sLog, "SeekToOffset() called on an InputSource that doesn't support seeking");
+		return std::unexpected(ENOTSUP);
 	}
 
 	return _SeekToOffset(offset, whence);
@@ -122,5 +131,5 @@ bool SFB::InputSource::_SupportsSeeking() const noexcept
 
 std::expected<void, int> SFB::InputSource::_SeekToOffset(int64_t offset, int whence) noexcept
 {
-	return std::unexpected(EBADF);
+	return std::unexpected(EPERM);
 }
