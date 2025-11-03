@@ -34,7 +34,7 @@ std::expected<void, int> SFB::InputSource::Open() noexcept
 {
 	if(IsOpen()) {
 		os_log_debug(sLog, "Open() called on an InputSource that is already open");
-		return;
+		return {};
 	}
 
 	auto result = _Open();
@@ -47,7 +47,7 @@ std::expected<void, int> SFB::InputSource::Close() noexcept
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "Close() called on an InputSource that hasn't been opened");
-		return;
+		return {};
 	}
 
 	auto result = _Close();
