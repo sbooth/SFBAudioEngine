@@ -48,7 +48,7 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 
 	// Only regular files can be mapped
 	if(!S_ISREG(s.st_mode))
-		return std::unexpected(EBADF);
+		return std::unexpected(ENOTSUP);
 
 	// Map the file to memory
 	auto region = mmap(nullptr, s.st_size, PROT_READ, MAP_SHARED, fd, 0);
