@@ -6,26 +6,15 @@
 
 #import "SFBInputSource+Internal.h"
 
-#import "SFBDataInputSource.h"
-#import "SFBFileContentsInputSource.h"
-#import "SFBFileInputSource.h"
-#import "SFBMemoryMappedFileInputSource.h"
+#import "DataInput.hpp"
+#import "FileContentsInput.hpp"
+#import "FileInput.hpp"
+#import "MemoryMappedFileInput.hpp"
 
 #import "NSData+SFBExtensions.h"
 
 // NSError domain for InputSource and subclasses
 NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSource";
-
-os_log_t gSFBInputSourceLog = NULL;
-
-static void SFBCreateInputSourceLog(void) __attribute__ ((constructor));
-static void SFBCreateInputSourceLog(void)
-{
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBInputSourceLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
-	});
-}
 
 @implementation SFBInputSource
 
@@ -56,107 +45,179 @@ static void SFBCreateInputSourceLog(void)
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL);
 
-	if(flags & SFBInputSourceFlagsMemoryMapFiles)
-		return [[SFBMemoryMappedFileInputSource alloc] initWithURL:url error:error];
-	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
-		return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
-	else
-		return [[SFBFileInputSource alloc] initWithURL:url];
+	SFB::InputSource::unique_ptr up;
 
-	return nil;
+	if(flags & SFBInputSourceFlagsMemoryMapFiles)
+		up = std::make_unique<SFB::MemoryMappedFileInput>((__bridge CFURLRef)url);
+	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
+		up = std::make_unique<SFB::FileContentsInput>((__bridge CFURLRef)url);
+	else
+		up = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
+
+	if(up == nullptr)
+		return nil;
+
+	SFBInputSource *inputSource = [[SFBInputSource alloc] init];
+	if(inputSource == nil)
+		return nil;
+
+	inputSource->_input = std::move(up);
+	return inputSource;
 }
 
 + (instancetype)inputSourceWithData:(NSData *)data
 {
 	NSParameterAssert(data != nil);
-	return [[SFBDataInputSource alloc] initWithData:data];
+
+	auto up = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
+	if(up == nullptr)
+		return nil;
+
+	SFBInputSource *is = [[SFBInputSource alloc] init];
+	if(is == nil)
+		return nil;
+
+	is->_input = std::move(up);
+	return is;
 }
 
 + (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length
 {
-	NSParameterAssert(bytes != NULL);
+	NSParameterAssert(bytes != nullptr);
 	NSParameterAssert(length >= 0);
+
 	NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
 	if(data == nil)
 		return nil;
-	return [[SFBDataInputSource alloc] initWithData:data];
+	return [SFBInputSource inputSourceWithData:data];
 }
 
 + (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone
 {
-	NSParameterAssert(bytes != NULL);
+	NSParameterAssert(bytes != nullptr);
 	NSParameterAssert(length >= 0);
+
 	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
 	if(data == nil)
 		return nil;
-	return [[SFBDataInputSource alloc] initWithData:data];
-}
-
-- (instancetype)initWithURL:(NSURL *)url
-{
-	if((self = [super init]))
-		_url = url;
-	return self;
+	return [SFBInputSource inputSourceWithData:data];
 }
 
 - (void)dealloc
 {
-	if(self.isOpen)
-		[self closeReturningError:nil];
+	_input.reset();
+}
+
+- (NSURL *)url
+{
+	return (__bridge NSURL *)_input->GetURL();
 }
 
 - (BOOL)openReturningError:(NSError **)error
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	auto result = _input->Open();
+	if(!result) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
+		return NO;
+	}
+	return YES;
 }
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	auto result = _input->Close();
+	if(!result) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
+		return NO;
+	}
+	return YES;
 }
 
 - (BOOL)isOpen
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	return _input->IsOpen();
 }
 
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	NSParameterAssert(bytesRead != nullptr);
+
+	auto result = _input->Read(buffer, length);
+	if(!result) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
+		return NO;
+	}
+
+	*bytesRead = result.value();
+
+	return YES;
+}
+
+- (BOOL)atEOF
+{
+	auto result = _input->AtEOF();
+	if(!result)
+		// FIXME
+		return NO;
+
+	return result.value();
 }
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	NSParameterAssert(offset != nullptr);
+
+	auto result = _input->GetOffset();
+	if(!result) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
+		return NO;
+	}
+
+	*offset = result.value();
+	return YES;
 }
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	NSParameterAssert(length != nullptr);
+
+	auto result = _input->GetLength();
+	if(!result) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
+		return NO;
+	}
+
+	*length = result.value();
+	return YES;
 }
 
 - (BOOL)supportsSeeking
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	return _input->SupportsSeeking();
 }
 
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
+	auto result = _input->SeekToOffset(offset, SEEK_SET);
+	if(!result) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (NSString *)description
 {
-	if(_url)
-		return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:_url.path]];
+	NSURL *url = (__bridge NSURL *)_input->GetURL();
+	if(url)
+		return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:url.path]];
 	else
 		return [NSString stringWithFormat:@"<%@ %p>", [self class], self];
 }
