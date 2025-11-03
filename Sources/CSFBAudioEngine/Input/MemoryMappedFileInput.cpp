@@ -65,7 +65,7 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 
 std::expected<void, int> SFB::MemoryMappedFileInput::_Close() noexcept
 {
-	auto defer = scope_exit{[&] noexcept {
+	auto defer = scope_exit{[this] noexcept {
 		region_ = nullptr;
 		len_ = 0;
 	}};
