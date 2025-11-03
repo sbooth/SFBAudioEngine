@@ -14,7 +14,7 @@ class FileContentsInput: public InputSource
 {
 public:
 	explicit FileContentsInput(CFURLRef _Nonnull url) noexcept;
-	virtual ~FileContentsInput();
+	~FileContentsInput() noexcept;
 
 	// This class is non-copyable.
 	FileContentsInput(const FileContentsInput& rhs) = delete;
@@ -25,14 +25,14 @@ public:
 	FileContentsInput& operator=(FileContentsInput&& rhs) = delete;
 
 private:
-	virtual std::expected<void, int> _Open() noexcept;
-	virtual std::expected<void, int> _Close() noexcept;
-	virtual std::expected<int64_t, int> _Read(void * _Nonnull buffer, int64_t count) noexcept;
-	virtual std::expected<bool, int> _AtEOF() const noexcept;
-	virtual std::expected<int64_t, int> _GetOffset() const noexcept;
-	virtual std::expected<int64_t, int> _GetLength() const noexcept;
-	virtual bool _SupportsSeeking() const noexcept;
-	virtual std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept;
+	std::expected<void, int> _Open() noexcept override;
+	std::expected<void, int> _Close() noexcept override;
+	std::expected<int64_t, int> _Read(void * _Nonnull buffer, int64_t count) noexcept override;
+	std::expected<bool, int> _AtEOF() const noexcept override;
+	std::expected<int64_t, int> _GetOffset() const noexcept override;
+	std::expected<int64_t, int> _GetLength() const noexcept override;
+	bool _SupportsSeeking() const noexcept override;
+	std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept override;
 
 	void * _Nullable buf_ = nullptr;
 	int64_t len_ = 0;

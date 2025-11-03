@@ -23,7 +23,7 @@ public:
 
 	using unique_ptr = std::unique_ptr<InputSource>;
 
-	virtual ~InputSource();
+	virtual ~InputSource() noexcept;
 
 	// This class is non-copyable.
 	InputSource(const InputSource& rhs) = delete;
