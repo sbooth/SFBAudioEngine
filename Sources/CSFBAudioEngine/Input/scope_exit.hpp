@@ -8,10 +8,7 @@
 
 namespace SFB {
 
-template<typename T>
-concept IsNothrowInvocable = std::is_nothrow_invocable_v<T>;
-
-template<IsNothrowInvocable F>
+template<typename F> requires std::is_nothrow_invocable_v<F>
 class scope_exit final {
 public:
 	explicit scope_exit(F&& f) noexcept(std::is_nothrow_constructible_v<F>) : exit_func_(f) {}
