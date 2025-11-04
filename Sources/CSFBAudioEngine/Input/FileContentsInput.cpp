@@ -5,6 +5,7 @@
 //
 
 #import <cstdio>
+#import <cstdlib>
 
 #import <sys/stat.h>
 
@@ -17,7 +18,7 @@ SFB::FileContentsInput::FileContentsInput(CFURLRef url) noexcept
 
 SFB::FileContentsInput::~FileContentsInput() noexcept
 {
-	free(buf_);
+	std::free(buf_);
 }
 
 std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
@@ -44,7 +45,7 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 	if(::fstat(fd, &s))
 		return std::unexpected(errno);
 
-	buf_ = malloc(s.st_size);
+	buf_ = std::malloc(s.st_size);
 	if(!buf_)
 		return std::unexpected(ENOMEM);
 
