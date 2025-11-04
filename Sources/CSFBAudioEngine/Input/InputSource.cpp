@@ -24,7 +24,7 @@ SFB::InputSource::InputSource(CFURLRef url) noexcept
 		url_ = (CFURLRef)CFRetain(url);
 }
 
-SFB::InputSource::~InputSource()
+SFB::InputSource::~InputSource() noexcept
 {
 	if(url_)
 		CFRelease(url_);
