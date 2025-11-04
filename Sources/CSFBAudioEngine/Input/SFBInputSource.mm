@@ -54,11 +54,11 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	else
 		up = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
 
-	if(up == nullptr)
+	if(!up)
 		return nil;
 
 	SFBInputSource *inputSource = [[SFBInputSource alloc] init];
-	if(inputSource == nil)
+	if(!inputSource)
 		return nil;
 
 	inputSource->_input = std::move(up);
@@ -70,15 +70,15 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(data != nil);
 
 	auto up = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
-	if(up == nullptr)
+	if(!up)
 		return nil;
 
-	SFBInputSource *is = [[SFBInputSource alloc] init];
-	if(is == nil)
+	SFBInputSource *inputSource = [[SFBInputSource alloc] init];
+	if(!inputSource)
 		return nil;
 
-	is->_input = std::move(up);
-	return is;
+	inputSource->_input = std::move(up);
+	return inputSource;
 }
 
 + (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length
@@ -87,7 +87,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length >= 0);
 
 	NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-	if(data == nil)
+	if(!data)
 		return nil;
 	return [SFBInputSource inputSourceWithData:data];
 }
@@ -98,7 +98,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length >= 0);
 
 	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-	if(data == nil)
+	if(!data)
 		return nil;
 	return [SFBInputSource inputSourceWithData:data];
 }
@@ -159,10 +159,9 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)atEOF
 {
 	auto result = _input->AtEOF();
+	// FIXME: Is `NO` the best error return?
 	if(!result)
-		// FIXME
 		return NO;
-
 	return result.value();
 }
 
