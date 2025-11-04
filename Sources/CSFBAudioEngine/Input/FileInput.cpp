@@ -13,7 +13,7 @@ SFB::FileInput::FileInput(CFURLRef url) noexcept
 : InputSource(url)
 {}
 
-SFB::FileInput::~FileInput()
+SFB::FileInput::~FileInput() noexcept
 {
 	if(file_)
 		std::fclose(file_);

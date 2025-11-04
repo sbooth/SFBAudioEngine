@@ -15,7 +15,7 @@ SFB::FileContentsInput::FileContentsInput(CFURLRef url) noexcept
 : InputSource(url)
 {}
 
-SFB::FileContentsInput::~FileContentsInput()
+SFB::FileContentsInput::~FileContentsInput() noexcept
 {
 	free(buf_);
 }

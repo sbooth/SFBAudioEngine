@@ -12,7 +12,7 @@ SFB::DataInput::DataInput(CFDataRef data) noexcept
 		data_ = (CFDataRef)CFRetain(data);
 }
 
-SFB::DataInput::~DataInput()
+SFB::DataInput::~DataInput() noexcept
 {
 	if(data_)
 		CFRelease(data_);

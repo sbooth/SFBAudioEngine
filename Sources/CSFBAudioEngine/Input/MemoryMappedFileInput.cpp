@@ -16,7 +16,7 @@ SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url) noexcept
 : InputSource(url)
 {}
 
-SFB::MemoryMappedFileInput::~MemoryMappedFileInput()
+SFB::MemoryMappedFileInput::~MemoryMappedFileInput() noexcept
 {
 	if(region_)
 		munmap(region_, len_);
