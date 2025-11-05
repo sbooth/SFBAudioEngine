@@ -234,15 +234,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(self.internalDecoderQueueIsEmpty) {
 		// Enqueue the decoder on _playerNode if the decoder's processing format is supported
 		if([_playerNode supportsFormat:decoder.processingFormat]) {
-			// Enqueuing is expected to succeed since the formats are compatible
 			_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
-			return [_playerNode enqueueDecoder:decoder error:error];
+			const auto result = [_playerNode enqueueDecoder:decoder error:error];
+			if(!result)
+				_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
+			return result;
 		}
 
-		// If the decoder's processing format isn't supported and _playerNode does not have a current decoder,
-		// configure the audio processing graph for the decoder's processing format
+		// Reconfigure the audio processing graph for the decoder's processing format
+		// only if _playerNode does not have a current decoder
 		if(!_playerNode.currentDecoder)
 			return configureForAndEnqueueDecoder(false);
+
+		// _playerNode has a current decoder; fall through and push the decoder to the internal queue
 	}
 
 	// Otherwise push the decoder to the internal queue
