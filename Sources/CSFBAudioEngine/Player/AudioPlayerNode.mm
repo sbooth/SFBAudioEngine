@@ -556,8 +556,7 @@ bool SFB::AudioPlayerNode::SupportsFormat(AVAudioFormat *format) const noexcept
 #endif /* DEBUG */
 
 	// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
-	const auto channelLayoutsAreEquivalent = AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
-	return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && channelLayoutsAreEquivalent;
+	return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
 }
 
 #pragma mark - Queue Management
