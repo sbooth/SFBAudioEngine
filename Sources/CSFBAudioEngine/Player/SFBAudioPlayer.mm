@@ -212,42 +212,46 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
-	AVAudioFormat *format = decoder.processingFormat;
-	BOOL formatSupported = [_playerNode supportsFormat:format];
-
-	// The player is stopped and the decoder's processing format is not supported
-	if(!(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && !formatSupported)
-		forImmediatePlayback = YES;
-
-	// Reconfigure the audio processing graph for the decoder's processing format if requested or required
-	if(forImmediatePlayback) {
+	auto configureForAndEnqueueDecoder = [&](bool clearQueueAndReset) -> BOOL {
 		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
-		const auto result = [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
+		const auto result = [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:clearQueueAndReset error:error];
 		if(!result)
 			_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 		return result;
-	}
+	};
+
+	// Reconfigure the audio processing graph for the decoder's processing format if requested
+	if(forImmediatePlayback)
+		return configureForAndEnqueueDecoder(true);
+
 	// To preserve the order of enqueued decoders, when the internal queue is not empty
-	// enqueue all decoders there regardless of format compability with _playerNode
+	// push all decoders there regardless of format compability with _playerNode
 	// This prevents incorrect playback order arising from the scenario where
 	// decoders A and AA have formats supported by _playerNode and decoder B does not;
 	// bypassing the internal queue for supported formats when enqueueing A, B, AA
 	// would result in playback order A, AA, B
-	else if(self.internalDecoderQueueIsEmpty && formatSupported) {
-		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
-		// Enqueuing is expected to succeed since the formats are compatible
-		return [_playerNode enqueueDecoder:decoder error:error];
-	}
-	// If the internal queue is not empty or _playerNode doesn't support
-	// the decoder's processing format add the decoder to our internal queue
-	else {
-		if(![self pushDecoderToInternalQueue:decoder]) {
-			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-			return NO;
+
+	if(self.internalDecoderQueueIsEmpty) {
+		// If _playerNode does not have a current decoder ensure the audio processing graph is configured for playback
+		if(!_playerNode.currentDecoder)
+			return configureForAndEnqueueDecoder(false);
+
+		// Enqueue the decoder on _playerNode if the processing format is supported
+		if([_playerNode supportsFormat:decoder.processingFormat]) {
+			// Enqueuing is expected to succeed since the formats are compatible
+			_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
+			return [_playerNode enqueueDecoder:decoder error:error];
 		}
-		return YES;
 	}
+
+	// Otherwise push the decoder to the internal queue
+	if(![self pushDecoderToInternalQueue:decoder]) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
@@ -710,6 +714,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return NO;
 	}
 
+	os_log_info(_audioPlayerLog, "Pushed %{public}@", decoder);
+
 	return YES;
 }
 
@@ -721,6 +727,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		decoder = _queuedDecoders.front();
 		_queuedDecoders.pop_front();
 	}
+	os_log_info(_audioPlayerLog, "Popped %{public}@", decoder);
 	return decoder;
 }
 
