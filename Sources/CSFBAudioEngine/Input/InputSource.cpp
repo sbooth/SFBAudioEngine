@@ -4,12 +4,7 @@
 // MIT license
 //
 
-#import <memory>
-
 #import "InputSource.hpp"
-#import "DataInput.hpp"
-#import "FileInput.hpp"
-
 #import "scope_exit.hpp"
 
 namespace SFB {
