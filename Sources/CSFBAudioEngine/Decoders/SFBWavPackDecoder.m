@@ -333,6 +333,7 @@ static int can_seek_callback(void *id)
 		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 	}
 
+	_framePosition = 0;
 	_frameLength = WavpackGetNumSamples64(_wpc);
 
 	// Set up the source format
