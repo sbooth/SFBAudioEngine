@@ -205,6 +205,7 @@ public:
 
 	Decoder _Nullable CurrentDecoder() const noexcept;
 	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+	bool CancelActiveDecoder(Decoder _Nonnull decoder) noexcept;
 
 private:
 #pragma mark - Decoding
