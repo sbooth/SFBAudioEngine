@@ -10,6 +10,7 @@
 #import <deque>
 #import <memory>
 #import <mutex>
+#import <stop_token>
 #import <thread>
 #import <vector>
 
@@ -74,12 +75,12 @@ private:
 	mutable SFB::UnfairLock			mQueueLock;
 
 	/// Thread used for decoding
-	std::thread 					mDecodingThread;
+	std::jthread 					mDecodingThread;
 	/// Dispatch semaphore used for communication with the decoding thread
 	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
 
 	/// Thread used for event processing
-	std::thread 					mEventThread;
+	std::jthread 					mEventThread;
 	/// Dispatch semaphore used for communication with the event processing thread
 	SFB::DispatchSemaphore			mEventSemaphore 		{0};
 
@@ -100,10 +101,6 @@ private:
 		eFlagUmuteAfterDequeue 		= 1u << 3,
 		/// The audio ring buffer requires a non-threadsafe reset
 		eFlagRingBufferNeedsReset 	= 1u << 4,
-		/// The decoding thread should exit
-		eFlagStopDecodingThread		= 1u << 5,
-		/// The event thread should exit
-		eFlagStopEventThread		= 1u << 6,
 	};
 
 	/// Flags
@@ -215,7 +212,7 @@ private:
 
 	/// Dequeues and processes decoders from the decoder queue
 	/// - note: This is the thread entry point for the decoding thread
-	void ProcessDecoders() noexcept;
+	void ProcessDecoders(std::stop_token stoken) noexcept;
 
 	/// Writes an error event to `mDecodeEventRingBuffer` and signals `mEventSemaphore`
 	void SubmitDecodingErrorEvent(NSError *error) noexcept;
@@ -277,7 +274,7 @@ private:
 
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
 	/// - note: This is the thread entry point for the event thread
-	void ProcessEvents() noexcept;
+	void ProcessEvents(std::stop_token stoken) noexcept;
 
 private:
 	/// Processes an event from `mDecodeEventRingBuffer`

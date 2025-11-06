@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,9 +18,14 @@
 
 - (instancetype)initWithData:(NSData *)data
 {
+	return [self initWithData:data url:nil];
+}
+
+- (instancetype)initWithData:(NSData *)data url:(NSURL *)url
+{
 	NSParameterAssert(data != nil);
 
-	if((self = [super init]))
+	if((self = [super initWithURL:url]))
 		_data = [data copy];
 	return self;
 }
