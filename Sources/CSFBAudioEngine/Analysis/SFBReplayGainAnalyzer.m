@@ -306,8 +306,8 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	uint64_t		_totsamp;
 	double			_lsum;
 	double			_rsum;
-	uint32_t		_A			[(size_t)(STEPS_per_dB * MAX_dB)];
-	uint32_t		_B			[(size_t)(STEPS_per_dB * MAX_dB)];
+	uint32_t		_A			[(size_t)STEPS_per_dB * (size_t)MAX_dB];
+	uint32_t		_B			[(size_t)STEPS_per_dB * (size_t)MAX_dB];
 
 	struct ReplayGainFilter _filter;
 

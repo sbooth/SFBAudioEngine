@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -26,8 +26,8 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// - returns: An initialized `SFBOutputSource` object
 + (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
 
-//+ (instancetype)new NS_UNAVAILABLE;
-//- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 /// Returns the URL corresponding to this output source or `nil` if none
 @property (nonatomic, nullable, readonly) NSURL * url;

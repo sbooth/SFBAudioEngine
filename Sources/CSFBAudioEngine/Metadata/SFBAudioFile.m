@@ -166,9 +166,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 	NSString *lowercaseExtension = url.pathExtension.lowercaseString;
 	NSString *lowercaseMIMEType = mimeTypeHint.lowercaseString;
 
-	NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingFromURL:url error:error];
-	if(!fileHandle)
-		return nil;
+	NSFileHandle *fileHandle = nil;
+	if(detectContentType) {
+		fileHandle = [NSFileHandle fileHandleForReadingFromURL:url error:error];
+		if(!fileHandle)
+			return nil;
+	}
 
 	int score = 10;
 	Class subclass = nil;
