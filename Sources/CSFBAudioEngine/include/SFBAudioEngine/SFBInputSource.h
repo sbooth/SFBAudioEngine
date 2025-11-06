@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -53,8 +53,8 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - returns: An initialized `SFBInputSource` object or `nil` on faliure
 + (nullable instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone;
 
-//+ (instancetype)new NS_UNAVAILABLE;
-//- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 /// Returns the URL corresponding to this input source or `nil` if none
 @property (nonatomic, nullable, readonly) NSURL * url;

@@ -4,7 +4,6 @@
 // MIT license
 //
 
-#import "SFBInputSource.h"
 #import "SFBInputSource+Internal.h"
 
 #import "SFBDataInputSource.h"
@@ -62,7 +61,7 @@ static void SFBCreateInputSourceLog(void)
 	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
 		return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
 	else
-		return [[SFBFileInputSource alloc] initWithURL:url error:error];
+		return [[SFBFileInputSource alloc] initWithURL:url];
 
 	return nil;
 }
@@ -91,6 +90,13 @@ static void SFBCreateInputSourceLog(void)
 	if(data == nil)
 		return nil;
 	return [[SFBDataInputSource alloc] initWithData:data];
+}
+
+- (instancetype)initWithURL:(NSURL *)url
+{
+	if((self = [super init]))
+		_url = url;
+	return self;
 }
 
 - (void)dealloc
