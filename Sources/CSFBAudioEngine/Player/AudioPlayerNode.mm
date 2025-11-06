@@ -9,6 +9,7 @@
 #import <cmath>
 #import <cstring>
 #import <exception>
+#import <functional>
 #import <system_error>
 
 #import <AVFAudio/AVFAudio.h>
@@ -312,8 +313,8 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 
 	// Launch the decoding and event processing threads
 	try {
-		mDecodingThread = std::thread(&SFB::AudioPlayerNode::ProcessDecoders, this);
-		mEventThread = std::thread(&SFB::AudioPlayerNode::ProcessEvents, this);
+		mDecodingThread = std::jthread(std::bind_front(&SFB::AudioPlayerNode::ProcessDecoders, this));
+		mEventThread = std::jthread(std::bind_front(&SFB::AudioPlayerNode::ProcessEvents, this));
 	}
 	catch(const std::exception& e) {
 		os_log_error(sLog, "Unable to create thread: %{public}s", e.what());
@@ -325,29 +326,21 @@ SFB::AudioPlayerNode::~AudioPlayerNode()
 {
 	Stop();
 
-	// Stop the decoding thread
-	mFlags.fetch_or(eFlagStopDecodingThread, std::memory_order_acq_rel);
-	mDecodingSemaphore.Signal();
+	// Register a stop callback for the decoding thread
+	std::stop_callback decodingThreadStopCallback(mDecodingThread.get_stop_token(), [this] {
+		mDecodingSemaphore.Signal();
+	});
 
-	// Wait for the decoding thread to exit
-	try {
-		mDecodingThread.join();
-	}
-	catch(const std::exception& e) {
-		os_log_debug(sLog, "Error joining decoding thread: %{public}s", e.what());
-	}
+	// Stop the decoding thread and wait for it to exit
+	mDecodingThread = {};
 
-	// Stop the event processing thread
-	mFlags.fetch_or(eFlagStopEventThread, std::memory_order_acq_rel);
-	mEventSemaphore.Signal();
+	// Register a stop callback for the event processing thread
+	std::stop_callback eventThreadStopCallback(mEventThread.get_stop_token(), [this] {
+		mEventSemaphore.Signal();
+	});
 
-	// Wait for the event processing thread to exit
-	try {
-		mEventThread.join();
-	}
-	catch(const std::exception& e) {
-		os_log_debug(sLog, "Error joining event processing thread: %{public}s", e.what());
-	}
+	// Stop the event processing thread and wait for it to exit
+	mEventThread = {};
 
 	// Delete any remaining decoder state
 	mActiveDecoders.clear();
@@ -666,12 +659,8 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 
 #pragma mark - Decoding
 
-void SFB::AudioPlayerNode::ProcessDecoders() noexcept
+void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 {
-#if DEBUG
-	assert(std::this_thread::get_id() == mDecodingThread.get_id());
-#endif /* DEBUG */
-
 	pthread_setname_np("AudioPlayerNode.Decoding");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
@@ -714,7 +703,7 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 		}
 
 		// Terminate the thread if requested after processing cancelations
-		if(mFlags.load(std::memory_order_acquire) & eFlagStopDecodingThread)
+		if(stoken.stop_requested())
 		   break;
 
 		// Process pending seeks
@@ -891,9 +880,6 @@ void SFB::AudioPlayerNode::ProcessDecoders() noexcept
 
 void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 {
-#if DEBUG
-	assert(std::this_thread::get_id() == mDecodingThread.get_id());
-#endif /* DEBUG */
 	NSCParameterAssert(error != nil);
 
 	NSError *err = nil;
@@ -1018,18 +1004,14 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 
 #pragma mark - Event Processing
 
-void SFB::AudioPlayerNode::ProcessEvents() noexcept
+void SFB::AudioPlayerNode::ProcessEvents(std::stop_token stoken) noexcept
 {
-#if DEBUG
-	assert(std::this_thread::get_id() == mEventThread.get_id());
-#endif /* DEBUG */
-
 	pthread_setname_np("AudioPlayerNode.Events");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
 	os_log_debug(sLog, "Event processing thread starting");
 
-	while(!(mFlags.load(std::memory_order_acquire) & eFlagStopEventThread)) {
+	while(!stoken.stop_requested()) {
 		auto decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 		auto renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 
@@ -1068,10 +1050,6 @@ void SFB::AudioPlayerNode::ProcessEvents() noexcept
 
 void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexcept
 {
-#if DEBUG
-	assert(std::this_thread::get_id() == mEventThread.get_id());
-#endif /* DEBUG */
-
 	switch(header.mCommand) {
 		case DecodingEventCommand::eStarted:
 			if(uint64_t decoderSequenceNumber; mDecodeEventRingBuffer.ReadValue(decoderSequenceNumber)) {
@@ -1176,10 +1154,6 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 
 void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noexcept
 {
-#if DEBUG
-	assert(std::this_thread::get_id() == mEventThread.get_id());
-#endif /* DEBUG */
-
 	switch(header.mCommand) {
 		case RenderingEventCommand::eFramesRendered:
 			// The timestamp of the render cycle
