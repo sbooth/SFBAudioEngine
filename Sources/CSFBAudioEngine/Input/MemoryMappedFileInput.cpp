@@ -26,16 +26,16 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 {
 	CFURLRef url = GetURL();
 	if(!url)
-		return std::unexpected(ENOENT);
+		return std::unexpected{ENOENT};
 
 	UInt8 path [PATH_MAX];
 	auto success = CFURLGetFileSystemRepresentation(url, FALSE, path, PATH_MAX);
 	if(!success)
-		return std::unexpected(EIO);
+		return std::unexpected{EIO};
 
 	auto file = std::fopen(reinterpret_cast<const char *>(path), "r");
 	if(!file)
-		return std::unexpected(errno);
+		return std::unexpected{errno};
 
 	// Ensure the file is closed
 	auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
@@ -44,17 +44,17 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 
 	struct stat s;
 	if(::fstat(fd, &s))
-		return std::unexpected(errno);
+		return std::unexpected{errno};
 
 	// Only regular files can be mapped
 	if(!S_ISREG(s.st_mode))
-		return std::unexpected(ENOTSUP);
+		return std::unexpected{ENOTSUP};
 
 	// Map the file to memory
 	auto region = mmap(nullptr, s.st_size, PROT_READ, MAP_SHARED, fd, 0);
 
 	if(region == MAP_FAILED)
-		return std::unexpected(errno);
+		return std::unexpected{errno};
 
 	region_ = region;
 	len_ = s.st_size;
@@ -71,7 +71,7 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Close() noexcept
 	}};
 
 	if(munmap(region_, len_))
-		return std::unexpected(errno);
+		return std::unexpected{errno};
 	return {};
 }
 
@@ -118,11 +118,11 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_SeekToOffset(int64_t offse
 			offset += len_;
 			break;
 		default:
-			return std::unexpected(EINVAL);
+			return std::unexpected{EINVAL};
 	}
 
 	if(offset < 0 || offset > len_)
-		return std::unexpected(EINVAL);
+		return std::unexpected{EINVAL};
 
 	pos_ = offset;
 	return {};

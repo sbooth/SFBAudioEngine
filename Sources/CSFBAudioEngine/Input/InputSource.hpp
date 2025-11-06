@@ -72,8 +72,8 @@ private:
 	virtual bool _SupportsSeeking() const noexcept;
 	virtual std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept;
 
-	CFURLRef _Nullable url_ = nullptr;
-	bool isOpen_ = false;
+	CFURLRef _Nullable url_ {nullptr};
+	bool isOpen_ {false};
 };
 
 } /* namespace SFB */

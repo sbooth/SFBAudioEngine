@@ -36,8 +36,8 @@ private:
 	bool _SupportsSeeking() const noexcept override;
 	std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept override;
 
-	FILE * _Nullable file_ = nullptr;
-	int64_t len_ = 0;
+	FILE * _Nullable file_ {nullptr};
+	int64_t len_ {0};
 };
 
 } /* namespace SFB */

@@ -25,16 +25,16 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 {
 	CFURLRef url = GetURL();
 	if(!url)
-		return std::unexpected(ENOENT);
+		return std::unexpected{ENOENT};
 
 	UInt8 path [PATH_MAX];
 	auto success = CFURLGetFileSystemRepresentation(url, FALSE, path, PATH_MAX);
 	if(!success)
-		return std::unexpected(EIO);
+		return std::unexpected{EIO};
 
 	auto file = std::fopen(reinterpret_cast<const char *>(path), "r");
 	if(!file)
-		return std::unexpected(errno);
+		return std::unexpected{errno};
 
 	// Ensure the file is closed
 	auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
@@ -43,11 +43,11 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 
 	struct stat s;
 	if(::fstat(fd, &s))
-		return std::unexpected(errno);
+		return std::unexpected{errno};
 
 	buf_ = std::malloc(s.st_size);
 	if(!buf_)
-		return std::unexpected(ENOMEM);
+		return std::unexpected{ENOMEM};
 
 	len_ = s.st_size;
 	pos_ = 0;
@@ -107,11 +107,11 @@ std::expected<void, int> SFB::FileContentsInput::_SeekToOffset(int64_t offset, i
 			offset += len_;
 			break;
 		default:
-			return std::unexpected(EINVAL);
+			return std::unexpected{EINVAL};
 	}
 
 	if(offset < 0 || offset > len_)
-		return std::unexpected(EINVAL);
+		return std::unexpected{EINVAL};
 
 	pos_ = offset;
 	return {};

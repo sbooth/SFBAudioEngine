@@ -21,7 +21,7 @@ SFB::DataInput::~DataInput() noexcept
 std::expected<void, int> SFB::DataInput::_Open() noexcept
 {
 	if(!data_)
-		return std::unexpected(ENOENT);
+		return std::unexpected{ENOENT};
 	pos_ = 0;
 	return {};
 }
@@ -78,11 +78,11 @@ std::expected<void, int> SFB::DataInput::_SeekToOffset(int64_t offset, int whenc
 			offset += length;
 			break;
 		default:
-			return std::unexpected(EINVAL);
+			return std::unexpected{EINVAL};
 	}
 
 	if(offset < 0 || offset > length)
-		return std::unexpected(EINVAL);
+		return std::unexpected{EINVAL};
 
 	pos_ = offset;
 	return {};

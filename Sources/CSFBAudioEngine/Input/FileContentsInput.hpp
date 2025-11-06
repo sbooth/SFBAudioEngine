@@ -34,9 +34,9 @@ private:
 	bool _SupportsSeeking() const noexcept override;
 	std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept override;
 
-	void * _Nullable buf_ = nullptr;
-	int64_t len_ = 0;
-	int64_t pos_ = 0;
+	void * _Nullable buf_ {nullptr};
+	int64_t len_ {0};
+	int64_t pos_ {0};
 };
 
 } /* namespace SFB */

@@ -34,8 +34,8 @@ private:
 	bool _SupportsSeeking() const noexcept override;
 	std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept override;
 
-	CFDataRef _Nullable data_ = nullptr;
-	CFIndex pos_ = 0;
+	CFDataRef _Nullable data_ {nullptr};
+	CFIndex pos_ {0};
 };
 
 } /* namespace SFB */
