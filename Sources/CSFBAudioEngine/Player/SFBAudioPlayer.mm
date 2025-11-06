@@ -104,10 +104,10 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (void)handleAudioSessionInterruption:(NSNotification *)notification;
 #endif /* TARGET_OS_IPHONE */
 /// Configures the player to render audio from `decoder` and enqueues `decoder` on the player node
-/// - parameter forImmediatePlayback: If `YES` the internal decoder queue is cleared and the player node is reset
+/// - parameter clearQueueAndReset: If `YES` the internal decoder queue is cleared and the player node is reset
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the player was successfully configured
-- (BOOL)configureForAndEnqueueDecoder:(nonnull id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error;
+- (BOOL)configureForAndEnqueueDecoder:(nonnull id <SFBPCMDecoding>)decoder clearQueueAndReset:(BOOL)clearQueueAndReset error:(NSError **)error;
 /// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
 ///
 /// This method does nothing if the current rendering format is equal to `format`
@@ -212,35 +212,51 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
-	// Reconfigure the audio processing graph for the decoder's processing format if requested
-	if(forImmediatePlayback) {
+	auto configureForAndEnqueueDecoder = [&](bool clearQueueAndReset) -> BOOL {
 		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
-		const auto result = [self configureForAndEnqueueDecoder:decoder forImmediatePlayback:YES error:error];
+		const auto result = [self configureForAndEnqueueDecoder:decoder clearQueueAndReset:clearQueueAndReset error:error];
 		if(!result)
 			_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
 		return result;
-	}
+	};
+
+	// Reconfigure the audio processing graph for the decoder's processing format if requested
+	if(forImmediatePlayback)
+		return configureForAndEnqueueDecoder(true);
+
 	// To preserve the order of enqueued decoders, when the internal queue is not empty
-	// enqueue all decoders there regardless of format compability with _playerNode
+	// push all decoders there regardless of format compability with _playerNode
 	// This prevents incorrect playback order arising from the scenario where
 	// decoders A and AA have formats supported by _playerNode and decoder B does not;
 	// bypassing the internal queue for supported formats when enqueueing A, B, AA
 	// would result in playback order A, AA, B
-	else if(self.internalDecoderQueueIsEmpty && [_playerNode supportsFormat:decoder.processingFormat]) {
-		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
-		// Enqueuing is expected to succeed since the formats are compatible
-		return [_playerNode enqueueDecoder:decoder error:error];
-	}
-	// If the internal queue is not empty or _playerNode doesn't support
-	// the decoder's processing format add the decoder to our internal queue
-	else {
-		if(![self pushDecoderToInternalQueue:decoder]) {
-			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-			return NO;
+
+	if(self.internalDecoderQueueIsEmpty) {
+		// Enqueue the decoder on _playerNode if the decoder's processing format is supported
+		if([_playerNode supportsFormat:decoder.processingFormat]) {
+			_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
+			const auto result = [_playerNode enqueueDecoder:decoder error:error];
+			if(!result)
+				_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder, std::memory_order_acq_rel);
+			return result;
 		}
-		return YES;
+
+		// Reconfigure the audio processing graph for the decoder's processing format
+		// only if _playerNode does not have a current decoder
+		if(!_playerNode.currentDecoder)
+			return configureForAndEnqueueDecoder(false);
+
+		// _playerNode has a current decoder; fall through and push the decoder to the internal queue
 	}
+
+	// Otherwise push the decoder to the internal queue
+	if(![self pushDecoderToInternalQueue:decoder]) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
@@ -703,6 +719,8 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return NO;
 	}
 
+	os_log_info(_audioPlayerLog, "Pushed %{public}@", decoder);
+
 	return YES;
 }
 
@@ -714,6 +732,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		decoder = _queuedDecoders.front();
 		_queuedDecoders.pop_front();
 	}
+	os_log_info(_audioPlayerLog, "Popped %{public}@", decoder);
 	return decoder;
 }
 
@@ -811,7 +830,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 }
 #endif /* TARGET_OS_IPHONE */
 
-- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
+- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearQueueAndReset:(BOOL)clearQueueAndReset error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -835,7 +854,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		return NO;
 	}
 
-	if(forImmediatePlayback) {
+	if(clearQueueAndReset) {
 		[self clearInternalDecoderQueue];
 		success = [_playerNode resetAndEnqueueDecoder:decoder error:error];
 	}
@@ -872,7 +891,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	}
 
 #if DEBUG
-	NSAssert(engineWasRunning == static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:forImmediatePlayback:error:");
+	NSAssert(engineWasRunning == static_cast<bool>(_flags.load(std::memory_order_acquire) & eAudioPlayerFlagEngineIsRunning) && playerNodeWasPlaying == _playerNode.isPlaying, @"Incorrect playback state in -configureForAndEnqueueDecoder:clearQueueAndReset:error:");
 #endif /* DEBUG */
 
 	return YES;
@@ -1167,7 +1186,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		// Dequeue the next decoder
 		if(id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue]; decoder) {
 			NSError *error = nil;
-			if(![self configureForAndEnqueueDecoder:decoder forImmediatePlayback:NO error:&error]) {
+			if(![self configureForAndEnqueueDecoder:decoder clearQueueAndReset:NO error:&error]) {
 				if(error && [self->_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[self->_delegate audioPlayer:self encounteredError:error];
 			}

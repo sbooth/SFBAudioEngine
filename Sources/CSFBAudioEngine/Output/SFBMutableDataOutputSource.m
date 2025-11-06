@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,7 +18,7 @@
 
 - (instancetype)init
 {
-	if((self = [super init]))
+	if((self = [super initWithURL:nil]))
 		_data = [NSMutableData data];
 	return self;
 }
