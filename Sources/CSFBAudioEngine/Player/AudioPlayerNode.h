@@ -14,12 +14,12 @@
 #import <thread>
 #import <vector>
 
+#import <dispatch/dispatch.h>
 #import <os/log.h>
 
 #import <AVFAudio/AVFAudio.h>
 
 #import <SFBAudioRingBuffer.hpp>
-#import <SFBDispatchSemaphore.hpp>
 #import <SFBRingBuffer.hpp>
 #import <SFBUnfairLock.hpp>
 
@@ -47,10 +47,10 @@ public:
 	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
-	__unsafe_unretained SFBAudioPlayerNode *mNode 			= nil;
+	__unsafe_unretained SFBAudioPlayerNode *mNode 			{nil};
 
 	/// The render block supplying audio
-	AVAudioSourceNodeRenderBlock 	mRenderBlock 			= nullptr;
+	AVAudioSourceNodeRenderBlock 	mRenderBlock 			{nullptr};
 
 private:
 	struct DecoderState;
@@ -59,10 +59,10 @@ private:
 	using DecoderStateVector 		= std::vector<std::unique_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
-	AVAudioFormat 					*mRenderingFormat		= nil;
+	AVAudioFormat 					*mRenderingFormat		{nil};
 
 	/// Ring buffer used to transfer audio between the decoding thread and the render block
-	SFB::AudioRingBuffer			mAudioRingBuffer 		= {};
+	SFB::AudioRingBuffer			mAudioRingBuffer 		{};
 
 	/// Active decoders and associated state
 	DecoderStateVector 				mActiveDecoders;
@@ -70,19 +70,19 @@ private:
 	mutable SFB::UnfairLock			mDecoderLock;
 
 	/// Decoders enqueued for playback that are not yet active
-	DecoderQueue 					mQueuedDecoders 		= {};
+	DecoderQueue 					mQueuedDecoders 		{};
 	/// Lock used to protect access to `mQueuedDecoders`
 	mutable SFB::UnfairLock			mQueueLock;
 
 	/// Thread used for decoding
 	std::jthread 					mDecodingThread;
 	/// Dispatch semaphore used for communication with the decoding thread
-	SFB::DispatchSemaphore			mDecodingSemaphore 		{0};
+	dispatch_semaphore_t			mDecodingSemaphore 		{};
 
 	/// Thread used for event processing
 	std::jthread 					mEventThread;
 	/// Dispatch semaphore used for communication with the event processing thread
-	SFB::DispatchSemaphore			mEventSemaphore 		{0};
+	dispatch_semaphore_t			mEventSemaphore 		{};
 
 	/// Ring buffer used to communicate events from the decoding thread
 	SFB::RingBuffer					mDecodeEventRingBuffer;
@@ -104,7 +104,7 @@ private:
 	};
 
 	/// Flags
-	std::atomic_uint 				mFlags 					= 0;
+	std::atomic_uint 				mFlags 					{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
