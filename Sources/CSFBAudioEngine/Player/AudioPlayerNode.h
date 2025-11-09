@@ -109,11 +109,11 @@ private:
 
 public:
 	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
-	~AudioPlayerNode();
+	~AudioPlayerNode() noexcept;
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
-	AudioPlayerNode& operator=(const AudioPlayerNode&) = delete;
 	AudioPlayerNode(const AudioPlayerNode&&) = delete;
+	AudioPlayerNode& operator=(const AudioPlayerNode&) = delete;
 	AudioPlayerNode& operator=(const AudioPlayerNode&&) = delete;
 
 #pragma mark - Playback Control

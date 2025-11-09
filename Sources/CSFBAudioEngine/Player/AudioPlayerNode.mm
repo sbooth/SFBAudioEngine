@@ -334,7 +334,7 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	}
 }
 
-SFB::AudioPlayerNode::~AudioPlayerNode()
+SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 {
 	Stop();
 
