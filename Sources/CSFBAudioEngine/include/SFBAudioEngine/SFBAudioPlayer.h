@@ -42,7 +42,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// based on whether the underlying `AVAudioEngine` is running (`SFBAudioPlayer.engineIsRunning`)
 /// and the `SFBAudioPlayerNode` is playing (`SFBAudioPlayer.playerNodeIsPlaying`).
 ///
-/// `SFBAudioPlayer` supports delegate-based callbacks for the following events:
+/// `SFBAudioPlayer` supports delegate-based notifications for the following events:
 ///
 ///  1. Decoding started
 ///  2. Decoding complete
@@ -58,8 +58,8 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  12. `AVAudioEngineConfigurationChange` notification received
 ///  13. Asynchronous error encountered
 ///
-/// The dispatch queue on which callbacks are performed is not specified.
-NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
+/// The dispatch queue on which delegate messages are sent is not specified.
+NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - Playlist Management
 
