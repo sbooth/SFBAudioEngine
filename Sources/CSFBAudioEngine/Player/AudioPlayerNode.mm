@@ -1150,7 +1150,6 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 					decoder = decoderState->mDecoder;
 				}
 
-
 				if(mDecodingCompleteBlock)
 					mDecodingCompleteBlock(decoder);
 			}
@@ -1337,7 +1336,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 						}
 					}
 
-					// Invoke callbacks after unlock
+					// Call blocks after unlock
 					if(startedDecoder && mRenderingWillStartBlock)
 						mRenderingWillStartBlock(startedDecoder, hostTime);
 
