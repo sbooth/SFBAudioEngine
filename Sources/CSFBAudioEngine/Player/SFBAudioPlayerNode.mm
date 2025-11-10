@@ -77,7 +77,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	_node.reset();
 }
 
-#pragma mark - Format Information
+// MARK: - Format Information
 
 - (AVAudioFormat *)renderingFormat
 {
@@ -90,7 +90,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _node->SupportsFormat(format);
 }
 
-#pragma mark - Queue Management
+// MARK: - Queue Management
 
 - (BOOL)resetAndEnqueueURL:(NSURL *)url error:(NSError **)error
 {
@@ -165,7 +165,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	_node->Reset();
 }
 
-#pragma mark - Playback Control
+// MARK: - Playback Control
 
 - (void)play
 {
@@ -189,7 +189,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	_node->TogglePlayPause();
 }
 
-#pragma mark - State
+// MARK: - Playback State
 
 - (BOOL)isPlaying
 {
@@ -201,7 +201,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _node->IsReady();
 }
 
-#pragma mark - Playback Properties
+// MARK: - Playback Properties
 
 - (SFBPlaybackPosition)playbackPosition
 {
@@ -218,7 +218,7 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	return _node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 }
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
@@ -248,6 +248,74 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 - (BOOL)supportsSeeking
 {
 	return _node->SupportsSeeking();
+}
+
+// MARK: - Event Notification
+
+- (SFBAudioPlayerNodeDecodingStartedBlock)decodingStartedBlock
+{
+	return _node->mDecodingStartedBlock;
+}
+- (void)setDecodingStartedBlock:(SFBAudioPlayerNodeDecodingStartedBlock)decodingStartedBlock
+{
+	_node->mDecodingStartedBlock = decodingStartedBlock;
+}
+
+- (SFBAudioPlayerNodeDecodingCompleteBlock)decodingCompleteBlock
+{
+	return _node->mDecodingCompleteBlock;
+}
+- (void)setDecodingCompleteBlock:(SFBAudioPlayerNodeDecodingCompleteBlock)decodingCompleteBlock
+{
+	_node->mDecodingCompleteBlock = decodingCompleteBlock;
+}
+
+
+- (SFBAudioPlayerNodeRenderingWillStartBlock)renderingWillStartBlock
+{
+	return _node->mRenderingWillStartBlock;
+}
+- (void)setRenderingWillStartBlock:(SFBAudioPlayerNodeRenderingWillStartBlock)renderingWillStartBlock
+{
+	_node->mRenderingWillStartBlock = renderingWillStartBlock;
+}
+
+- (SFBAudioPlayerNodeRenderingDecoderWillChangeBlock)renderingDecoderWillChangeBlock
+{
+	return _node->mRenderingDecoderWillChangeBlock;
+}
+- (void)setRenderingDecoderWillChangeBlock:(SFBAudioPlayerNodeRenderingDecoderWillChangeBlock)renderingDecoderWillChangeBlock
+{
+	_node->mRenderingDecoderWillChangeBlock = renderingDecoderWillChangeBlock;
+}
+
+- (SFBAudioPlayerNodeRenderingWillCompleteBlock)renderingWillCompleteBlock
+{
+	return _node->mRenderingWillCompleteBlock;
+}
+- (void)setRenderingWillCompleteBlock:(SFBAudioPlayerNodeRenderingWillCompleteBlock)renderingWillCompleteBlock
+{
+	_node->mRenderingWillCompleteBlock = renderingWillCompleteBlock;
+}
+
+
+- (SFBAudioPlayerNodeDecoderCanceledBlock)decoderCanceledBlock
+{
+	return _node->mDecoderCanceledBlock;
+}
+- (void)setDecoderCanceledBlock:(SFBAudioPlayerNodeDecoderCanceledBlock)decoderCanceledBlock
+{
+	_node->mDecoderCanceledBlock = decoderCanceledBlock;
+}
+
+
+- (SFBAudioPlayerNodeAsynchronousErrorBlock)asynchronousErrorBlock
+{
+	return _node->mAsynchronousErrorBlock;
+}
+- (void)setAsynchronousErrorBlock:(SFBAudioPlayerNodeAsynchronousErrorBlock)asynchronousErrorBlock
+{
+	_node->mAsynchronousErrorBlock = asynchronousErrorBlock;
 }
 
 @end

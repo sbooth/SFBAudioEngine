@@ -447,12 +447,6 @@ bool SFB::AudioPlayerNode::QueueIsEmpty() const noexcept
 	return mQueuedDecoders.empty();
 }
 
-void SFB::AudioPlayerNode::Reset() noexcept
-{
-	ClearQueue();
-	CancelActiveDecoders(true);
-}
-
 SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
 	std::lock_guard<SFB::UnfairLock> lock(mDecoderLock);
@@ -479,6 +473,12 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 
 		dispatch_semaphore_signal(mDecodingSemaphore);
 	}
+}
+
+void SFB::AudioPlayerNode::Reset() noexcept
+{
+	ClearQueue();
+	CancelActiveDecoders(true);
 }
 
 // MARK: - Playback Control
@@ -1129,8 +1129,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 					decoder = decoderState->mDecoder;
 				}
 
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)])
-					[mNode.delegate audioPlayerNode:mNode decodingStarted:decoder];
+				if(mDecodingStartedBlock)
+					mDecodingStartedBlock(decoder);
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number for decoding started event");
@@ -1150,8 +1150,9 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 					decoder = decoderState->mDecoder;
 				}
 
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)])
-					[mNode.delegate audioPlayerNode:mNode decodingComplete:decoder];
+
+				if(mDecodingCompleteBlock)
+					mDecodingCompleteBlock(decoder);
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number for decoding complete event");
@@ -1177,8 +1178,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 						os_log_fault(sLog, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
 				}
 
-				if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:decoderCanceled:framesRendered:)])
-					[mNode.delegate audioPlayerNode:mNode decoderCanceled:decoder framesRendered:framesRendered];
+				if(mDecoderCanceledBlock)
+					mDecoderCanceledBlock(decoder, framesRendered);
 			}
 			else
 				os_log_fault(sLog, "Missing decoder sequence number for decoder canceled event");
@@ -1205,8 +1206,8 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 				break;
 			}
 
-			if([mNode.delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
-				[mNode.delegate audioPlayerNode:mNode encounteredError:error];
+			if(mAsynchronousErrorBlock)
+				mAsynchronousErrorBlock(error);
 			break;
 		}
 
@@ -1336,14 +1337,14 @@ void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noex
 						}
 					}
 
-					// Send delegate messages after unlock
-					if(startedDecoder && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)])
-						[mNode.delegate audioPlayerNode:mNode renderingWillStart:startedDecoder atHostTime:hostTime];
+					// Invoke callbacks after unlock
+					if(startedDecoder && mRenderingWillStartBlock)
+						mRenderingWillStartBlock(startedDecoder, hostTime);
 
-					if(nextDecoder && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingDecoder:willChangeToDecoder:atHostTime:)])
-						[mNode.delegate audioPlayerNode:mNode renderingDecoder:completeDecoder willChangeToDecoder:nextDecoder atHostTime:hostTime];
-					else if(completeDecoder && [mNode.delegate respondsToSelector:@selector(audioPlayerNode:renderingWillComplete:atHostTime:)])
-						[mNode.delegate audioPlayerNode:mNode renderingWillComplete:completeDecoder atHostTime:hostTime];
+					if(nextDecoder && mRenderingDecoderWillChangeBlock)
+						mRenderingDecoderWillChangeBlock(completeDecoder, nextDecoder, hostTime);
+					else if(completeDecoder && mRenderingWillCompleteBlock)
+						mRenderingWillCompleteBlock(completeDecoder, hostTime);
 				}
 			}
 			else
