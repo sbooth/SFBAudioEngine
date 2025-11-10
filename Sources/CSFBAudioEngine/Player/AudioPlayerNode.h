@@ -43,6 +43,17 @@ public:
 	using unique_ptr 	= std::unique_ptr<AudioPlayerNode>;
 	using Decoder 		= id<SFBPCMDecoding>;
 
+	SFBAudioPlayerNodeDecodingStartedBlock 				mDecodingStartedBlock 				{nil};
+	SFBAudioPlayerNodeDecodingCompleteBlock 			mDecodingCompleteBlock 				{nil};
+
+	SFBAudioPlayerNodeRenderingWillStartBlock 			mRenderingWillStartBlock 			{nil};
+	SFBAudioPlayerNodeRenderingDecoderWillChangeBlock 	mRenderingDecoderWillChangeBlock 	{nil};
+	SFBAudioPlayerNodeRenderingWillCompleteBlock 		mRenderingWillCompleteBlock			{nil};
+
+	SFBAudioPlayerNodeDecoderCanceledBlock 				mDecoderCanceledBlock 				{nil};
+
+	SFBAudioPlayerNodeAsynchronousErrorBlock 			mAsynchronousErrorBlock 			{nil};
+
 	/// The shared log for all `AudioPlayerNode` instances
 	static const os_log_t sLog;
 
@@ -114,10 +125,10 @@ public:
 
 	bool QueueIsEmpty() const noexcept;
 
-	void Reset() noexcept;
-
 	Decoder _Nullable CurrentDecoder() const noexcept;
 	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+
+	void Reset() noexcept;
 
 	// MARK: - Playback Control
 
