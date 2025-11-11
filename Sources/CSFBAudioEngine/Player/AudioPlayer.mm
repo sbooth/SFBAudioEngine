@@ -950,7 +950,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		}
 	}
 
-
 #if DEBUG
 	LogProcessingGraphDescription(sLog, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
