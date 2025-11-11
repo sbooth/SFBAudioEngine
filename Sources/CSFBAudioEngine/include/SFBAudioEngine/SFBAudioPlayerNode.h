@@ -31,7 +31,7 @@ typedef void(^SFBAudioPlayerNodeRenderingWillStartBlock)(id<SFBPCMDecoding> _Non
 /// - parameter decoder: The decoder for which rendering will complete.
 /// - parameter nextDecoder: The decoder for which rendering will start.
 /// - parameter hostTime: The host time at which the first audio frame from `nextDecoder` will reach the device.
-typedef void(^SFBAudioPlayerNodeRenderingDecoderWillChangeBlock)(id<SFBPCMDecoding> _Nonnull decoder, id<SFBPCMDecoding> _Nonnull nextDecoder, uint64_t hostTime)NS_SWIFT_NAME(AudioPlayerNode.RenderingDecoderWillChangeBlock);
+typedef void(^SFBAudioPlayerNodeRenderingDecoderWillChangeBlock)(id<SFBPCMDecoding> _Nonnull decoder, id<SFBPCMDecoding> _Nonnull nextDecoder, uint64_t hostTime) NS_SWIFT_NAME(AudioPlayerNode.RenderingDecoderWillChangeBlock);
 /// A block that is called when the final audio frame from the last available decoder will render.
 /// - warning: Do not change any properties of `decoder`.
 /// - parameter decoder: The decoder for which rendering will complete.
