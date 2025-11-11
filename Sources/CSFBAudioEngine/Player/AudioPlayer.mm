@@ -53,7 +53,9 @@ void AVAudioSessionInterruptionNotificationCallback(CFNotificationCenterRef cent
 /// This is the value of `kAudioObjectPropertyName` in the output scope on the main element
 NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
+#if DEBUG
 	assert(audioUnit != nil);
+#endif /* DEBUG */
 
 	AudioObjectPropertyAddress address = {
 		.mSelector = kAudioObjectPropertyName,
@@ -112,6 +114,10 @@ SFB::AudioPlayer::AudioPlayer()
 	// Register for audio session interruption notifications
 	CFNotificationCenterAddObserver(notificationCenter, this, AVAudioSessionInterruptionNotificationCallback, (__bridge CFStringRef)AVAudioSessionInterruptionNotification, (__bridge void *)[AVAudioSession sharedInstance], CFNotificationSuspensionBehaviorDeliverImmediately);
 #endif /* TARGET_OS_IPHONE */
+
+#if DEBUG
+	assert(mPlayerNode != nil);
+#endif /* DEBUG */
 }
 
 SFB::AudioPlayer::~AudioPlayer() noexcept
@@ -124,7 +130,9 @@ SFB::AudioPlayer::~AudioPlayer() noexcept
 
 bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback, NSError **error) noexcept
 {
+#if DEBUG
 	assert(decoder != nil);
+#endif /* DEBUG */
 
 	// Open the decoder if necessary
 	if(!decoder.isOpen && ![decoder openReturningError:error])
@@ -179,7 +187,10 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) const noexcept
 {
+#if DEBUG
 	assert(format != nil);
+#endif /* DEBUG */
+
 	return mPlayerNode->_node->SupportsFormat(format);
 }
 
@@ -220,7 +231,9 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 		return false;
 	}
 
+#if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Play()");
+#endif /* DEBUG */
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[mPlayer.delegate audioPlayer:mPlayer playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -235,7 +248,9 @@ void SFB::AudioPlayer::Pause() noexcept
 
 	mPlayerNode->_node->Pause();
 
+#if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePaused && "Incorrect playback state in Pause()");
+#endif /* DEBUG */
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[mPlayer.delegate audioPlayer:mPlayer playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
@@ -248,7 +263,9 @@ void SFB::AudioPlayer::Resume() noexcept
 
 	mPlayerNode->_node->Play();
 
+#if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Resume()");
+#endif /* DEBUG */
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[mPlayer.delegate audioPlayer:mPlayer playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -267,7 +284,9 @@ void SFB::AudioPlayer::Stop() noexcept
 
 	ClearInternalDecoderQueue();
 
+#if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStateStopped && "Incorrect playback state in Stop()");
+#endif /* DEBUG */
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[mPlayer.delegate audioPlayer:mPlayer playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
@@ -305,7 +324,9 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 	__block BOOL isRunning;
 	dispatch_async_and_wait(mEngineQueue, ^{
 		isRunning = mEngine.isRunning;
+#if DEBUG
 		assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) == isRunning && "Cached value for mEngine.isRunning invalid");
+#endif /* DEBUG */
 	});
 	return isRunning;
 }
@@ -703,7 +724,9 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 
 bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clearQueueAndReset, NSError **error) noexcept
 {
+#if DEBUG
 	assert(decoder != nil);
+#endif /* DEBUG */
 
 	// Attempt to preserve the playback state
 	const bool engineWasRunning = mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning);
@@ -759,15 +782,18 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 		}
 	}
 
-	assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) == engineWasRunning && "Incorrect audio engine state in ConfigureForAndEnqueueDecoder()");
-	assert(mPlayerNode->_node->IsPlaying() == playerNodeWasPlaying && "Incorrect player node state in ConfigureForAndEnqueueDecoder()");
+#if DEBUG
+	assert(engineWasRunning == static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && playerNodeWasPlaying == mPlayerNode->_node->IsPlaying() && "Incorrect playback state in ConfigureForAndEnqueueDecoder");
+#endif /* DEBUG */
 
 	return true;
 }
 
 bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, bool forceUpdate) noexcept
 {
+#if DEBUG
 	assert(format != nil);
+#endif /* DEBUG */
 
 	// AudioPlayerNode requires the standard format
 	if(!format.isStandard) {

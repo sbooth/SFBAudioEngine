@@ -105,8 +105,10 @@ struct AudioPlayerNode::DecoderState final {
 	DecoderState(Decoder _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = 1024)
 	: mFrameLength{decoder.frameLength}, mDecoder{decoder}, mSampleRate{format.sampleRate}
 	{
+#if DEBUG
 		assert(decoder != nil);
 		assert(format != nil);
+#endif /* DEBUG */
 
 		mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 		if(!mConverter) {
@@ -140,8 +142,10 @@ struct AudioPlayerNode::DecoderState final {
 
 	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept
 	{
+#if DEBUG
 		assert(buffer != nil);
 		assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
+#endif /* DEBUG */
 
 		if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
 			return false;
@@ -270,7 +274,9 @@ uint64_t AudioPlayerNode::DecoderState::sSequenceNumber = 1;
 SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBufferSize)
 : mRenderingFormat{format}
 {
+#if DEBUG
 	assert(format != nil);
+#endif /* DEBUG */
 
 	os_log_debug(sLog, "Created <AudioPlayerNode: %p>, rendering format %{public}@", this, SFB::StringDescribingAVAudioFormat(mRenderingFormat));
 
@@ -368,7 +374,9 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 
 bool SFB::AudioPlayerNode::EnqueueDecoder(Decoder decoder, bool reset, NSError **error) noexcept
 {
+#if DEBUG
 	assert(decoder != nil);
+#endif /* DEBUG */
 
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return false;
@@ -427,7 +435,9 @@ SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::DequeueDecoder() noexcept
 
 bool SFB::AudioPlayerNode::RemoveDecoderFromQueue(Decoder decoder) noexcept
 {
+#if DEBUG
 	assert(decoder != nil);
+#endif /* DEBUG */
 
 	std::lock_guard lock(mQueueLock);
 	const auto iter = std::find(mQueuedDecoders.cbegin(), mQueuedDecoders.cend(), decoder);
@@ -715,7 +725,10 @@ bool SFB::AudioPlayerNode::SupportsSeeking() const noexcept
 
 bool SFB::AudioPlayerNode::SupportsFormat(AVAudioFormat *format) const noexcept
 {
+#if DEBUG
 	assert(format != nil);
+#endif /* DEBUG */
+
 	// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
 	return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
 }
@@ -1225,7 +1238,9 @@ void SFB::AudioPlayerNode::ProcessRenderingEvent(const RenderingEventHeader& hea
 			uint32_t framesRendered;
 
 			if(mRenderEventRingBuffer.ReadValues(timestamp, framesRendered)) {
+#if DEBUG
 				assert(framesRendered > 0);
+#endif /* DEBUG */
 
 				// Perform bookkeeping to apportion the rendered frames appropriately
 				//
@@ -1286,7 +1301,10 @@ void SFB::AudioPlayerNode::ProcessRenderingEvent(const RenderingEventHeader& hea
 								const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
 								const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
 
+#if DEBUG
 								assert(!nextDecoderState->HasRenderingStarted());
+#endif /* DEBUG */
+
 								nextDecoderState->mFlags.fetch_or(static_cast<unsigned int>(DecoderState::Flags::eRenderingStarted), std::memory_order_acq_rel);
 
 								nextDecoderState->AddFramesRendered(framesFromNextDecoder);
