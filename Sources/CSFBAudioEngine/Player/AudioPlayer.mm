@@ -533,7 +533,7 @@ void SFB::AudioPlayer::WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexce
 void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept
 {
 	dispatch_async(mEngineQueue, ^{
-		NSMutableString *string = [NSMutableString stringWithFormat:@"%@ audio processing graph:\n", mPlayer];
+		NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
 
 		const auto playerNode = mPlayerNode;
 		const auto engine = mEngine;
