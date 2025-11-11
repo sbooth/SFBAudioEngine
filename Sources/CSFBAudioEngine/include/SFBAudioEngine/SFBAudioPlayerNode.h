@@ -23,7 +23,7 @@ typedef void(^SFBAudioPlayerNodeDecodingStartedBlock)(id<SFBPCMDecoding> _Nonnul
 typedef void(^SFBAudioPlayerNodeDecodingCompleteBlock)(id<SFBPCMDecoding> _Nonnull decoder) NS_SWIFT_NAME(AudioPlayerNode.DecodingCompleteBlock);
 
 /// A block that is called when the first audio frame from the first available decoder will render.
-/// - warning: Do not change any properties of `decoder`
+/// - warning: Do not change any properties of `decoder`.
 /// - parameter decoder: The decoder for which rendering will start.
 /// - parameter hostTime: The host time at which the first audio frame from `decoder` will reach the device.
 typedef void(^SFBAudioPlayerNodeRenderingWillStartBlock)(id<SFBPCMDecoding> _Nonnull decoder, uint64_t hostTime) NS_SWIFT_NAME(AudioPlayerNode.RenderingWillStartBlock);
