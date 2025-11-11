@@ -43,6 +43,17 @@ public:
 	using unique_ptr 	= std::unique_ptr<AudioPlayerNode>;
 	using Decoder 		= id<SFBPCMDecoding>;
 
+	SFBAudioPlayerNodeDecodingStartedBlock 				mDecodingStartedBlock 				{nil};
+	SFBAudioPlayerNodeDecodingCompleteBlock 			mDecodingCompleteBlock 				{nil};
+
+	SFBAudioPlayerNodeRenderingWillStartBlock 			mRenderingWillStartBlock 			{nil};
+	SFBAudioPlayerNodeRenderingDecoderWillChangeBlock 	mRenderingDecoderWillChangeBlock 	{nil};
+	SFBAudioPlayerNodeRenderingWillCompleteBlock 		mRenderingWillCompleteBlock			{nil};
+
+	SFBAudioPlayerNodeDecoderCanceledBlock 				mDecoderCanceledBlock 				{nil};
+
+	SFBAudioPlayerNodeAsynchronousErrorBlock 			mAsynchronousErrorBlock 			{nil};
+
 	/// The shared log for all `AudioPlayerNode` instances
 	static const os_log_t sLog;
 
@@ -98,9 +109,9 @@ public:
 	~AudioPlayerNode() noexcept;
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
-	AudioPlayerNode(const AudioPlayerNode&&) = delete;
+	AudioPlayerNode(AudioPlayerNode&&) = delete;
 	AudioPlayerNode& operator=(const AudioPlayerNode&) = delete;
-	AudioPlayerNode& operator=(const AudioPlayerNode&&) = delete;
+	AudioPlayerNode& operator=(AudioPlayerNode&&) = delete;
 
 	// MARK: - Queue Management
 
@@ -114,10 +125,10 @@ public:
 
 	bool QueueIsEmpty() const noexcept;
 
-	void Reset() noexcept;
-
 	Decoder _Nullable CurrentDecoder() const noexcept;
 	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+
+	void Reset() noexcept;
 
 	// MARK: - Playback Control
 
@@ -238,12 +249,12 @@ private:
 
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
 	/// - note: This is the thread entry point for the event thread
-	void ProcessEvents(std::stop_token stoken) noexcept;
+	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
 	/// Processes an event from `mDecodeEventRingBuffer`
-	void ProcessEvent(const DecodingEventHeader& header) noexcept;
+	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
 	/// Processes an event from `mRenderEventRingBuffer`
-	void ProcessEvent(const RenderingEventHeader& header) noexcept;
+	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
 	// MARK: - Active Decoder Management
 
