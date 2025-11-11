@@ -51,7 +51,7 @@ private:
 	mutable SFB::UnfairLock	mQueueLock;
 	/// Decoders enqueued for non-gapless playback
 	DecoderQueue 			mQueuedDecoders;
-	/// The lock used to protect access to `_nowPlaying`
+	/// The lock used to protect access to `mNowPlaying`
 	mutable SFB::UnfairLock	mNowPlayingLock;
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 	mNowPlaying 			{nil};
