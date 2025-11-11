@@ -59,7 +59,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  13. Asynchronous error encountered
 ///
 /// The dispatch queue on which callbacks are performed is not specified.
-NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
+NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - Playlist Management
 

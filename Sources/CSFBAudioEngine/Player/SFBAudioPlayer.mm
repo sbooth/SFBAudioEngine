@@ -116,6 +116,14 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 /// - parameter forceUpdate: Whether the graph should be rebuilt even if the current rendering format is equal to `format`
 /// - returns: `YES` if the processing graph was successfully configured
 - (BOOL)configureProcessingGraphForFormat:(nonnull AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
+
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingDecoder:(id<SFBPCMDecoding>)decoder willChangeToDecoder:(id<SFBPCMDecoding>)nextDecoder atHostTime:(uint64_t)hostTime;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillComplete:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode encounteredError:(NSError *)error;
 @end
 
 @implementation SFBAudioPlayer
@@ -160,7 +168,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return self;
 }
 
-#pragma mark - Playlist Management
+// MARK: - Playlist Management
 
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error
 {
@@ -276,7 +284,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return _playerNode.queueIsEmpty && self.internalDecoderQueueIsEmpty;
 }
 
-#pragma mark - Playback Control
+// MARK: - Playback Control
 
 - (BOOL)playReturningError:(NSError **)error
 {
@@ -387,7 +395,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	[self clearInternalDecoderQueue];
 }
 
-#pragma mark - Player State
+// MARK: - Player State
 
 - (BOOL)engineIsRunning
 {
@@ -462,7 +470,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 		[_delegate audioPlayer:self nowPlayingChanged:nowPlaying previouslyPlaying:previouslyPlaying];
 }
 
-#pragma mark - Playback Properties
+// MARK: - Playback Properties
 
 - (AVAudioFramePosition)framePosition
 {
@@ -499,7 +507,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return [_playerNode getPlaybackPosition:playbackPosition andTime:playbackTime];
 }
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 - (BOOL)seekForward
 {
@@ -543,7 +551,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #if !TARGET_OS_IPHONE
 
-#pragma mark - Volume Control
+// MARK: - Volume Control
 
 - (float)volume
 {
@@ -596,7 +604,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return success;
 }
 
-#pragma mark - Output Device
+// MARK: - Output Device
 
 - (AUAudioObjectID)outputDeviceID
 {
@@ -628,7 +636,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 #endif /* !TARGET_OS_IPHONE */
 
-#pragma mark - AVAudioEngine
+// MARK: - AVAudioEngine
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
@@ -640,7 +648,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	});
 }
 
-#pragma mark - Debugging
+// MARK: - Debugging
 
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type
 {
@@ -694,7 +702,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	});
 }
 
-#pragma mark - Decoder Queue
+// MARK: - Decoder Queue
 
 - (BOOL)internalDecoderQueueIsEmpty
 {
@@ -736,7 +744,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return decoder;
 }
 
-#pragma mark - Internals
+// MARK: - Internals
 
 - (void)handleAudioEngineConfigurationChange:(NSNotification *)notification
 {
@@ -934,7 +942,34 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 			return NO;
 		}
 
-		playerNode.delegate = self;
+		// Avoid keeping a strong reference to `playerNode` in the event notification blocks
+		// to prevent a retain cycle.
+		__weak SFBAudioPlayerNode *node = playerNode;
+
+		playerNode->_node->mDecodingStartedBlock = ^(id<SFBPCMDecoding> decoder){
+			[self audioPlayerNode:node decodingStarted:decoder];
+		};
+		playerNode->_node->mDecodingCompleteBlock = ^(id<SFBPCMDecoding> decoder){
+			[self audioPlayerNode:node decodingComplete:decoder];
+		};
+
+		playerNode->_node->mRenderingWillStartBlock = ^(id<SFBPCMDecoding> decoder, uint64_t hostTime){
+			[self audioPlayerNode:node renderingWillStart:decoder atHostTime:hostTime];
+		};
+		playerNode->_node->mRenderingDecoderWillChangeBlock = ^(id<SFBPCMDecoding> decoder, id<SFBPCMDecoding> nextDecoder, uint64_t hostTime) {
+			[self audioPlayerNode:node renderingDecoder:decoder willChangeToDecoder:nextDecoder atHostTime:hostTime];
+		};
+		playerNode->_node->mRenderingWillCompleteBlock = ^(id<SFBPCMDecoding> decoder, uint64_t hostTime){
+			[self audioPlayerNode:node renderingWillComplete:decoder atHostTime:hostTime];
+		};
+
+		playerNode->_node->mDecoderCanceledBlock = ^(id<SFBPCMDecoding> decoder, AVAudioFramePosition framesRendered) {
+			[self audioPlayerNode:node decoderCanceled:decoder framesRendered:framesRendered];
+		};
+
+		playerNode->_node->mAsynchronousErrorBlock = ^(NSError *error) {
+			[self audioPlayerNode:node encounteredError:error];
+		};
 	}
 
 	AVAudioOutputNode *outputNode = _engine.outputNode;
@@ -1036,7 +1071,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return YES;
 }
 
-#pragma mark - SFBAudioPlayerNodeDelegate
+// MARK: - Event Notifications
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder
 {
