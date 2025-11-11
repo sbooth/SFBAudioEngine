@@ -341,18 +341,28 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 		dispatch_semaphore_signal(mDecodingSemaphore);
 	});
 
-	// Stop the decoding thread and wait for it to exit
+	// Issue a stop request to the decoding thread and wait for it to exit
 	mDecodingThread.request_stop();
-	mDecodingThread.join();
+	try {
+		mDecodingThread.join();
+	}
+	catch(const std::exception& e) {
+		os_log_error(sLog, "Unable to join decoding thread: %{public}s", e.what());
+	}
 
 	// Register a stop callback for the event processing thread
 	std::stop_callback eventThreadStopCallback(mEventThread.get_stop_token(), [this] {
 		dispatch_semaphore_signal(mEventSemaphore);
 	});
 
-	// Stop the event processing thread and wait for it to exit
+	// Issue a stop request to the event processing thread and wait for it to exit
 	mEventThread.request_stop();
-	mEventThread.join();
+	try {
+		mEventThread.join();
+	}
+	catch(const std::exception& e) {
+		os_log_error(sLog, "Unable to join event processing thread: %{public}s", e.what());
+	}
 
 	// Delete any remaining decoder state
 	mActiveDecoders.clear();
