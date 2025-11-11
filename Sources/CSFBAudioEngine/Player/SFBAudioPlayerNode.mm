@@ -270,7 +270,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	_node->mDecodingCompleteBlock = decodingCompleteBlock;
 }
 
-
 - (SFBAudioPlayerNodeRenderingWillStartBlock)renderingWillStartBlock
 {
 	return _node->mRenderingWillStartBlock;
@@ -298,7 +297,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 	_node->mRenderingWillCompleteBlock = renderingWillCompleteBlock;
 }
 
-
 - (SFBAudioPlayerNodeDecoderCanceledBlock)decoderCanceledBlock
 {
 	return _node->mDecoderCanceledBlock;
@@ -307,7 +305,6 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 {
 	_node->mDecoderCanceledBlock = decoderCanceledBlock;
 }
-
 
 - (SFBAudioPlayerNodeAsynchronousErrorBlock)asynchronousErrorBlock
 {
