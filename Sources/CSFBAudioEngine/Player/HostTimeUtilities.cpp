@@ -15,36 +15,45 @@ namespace {
 // On PPC it is either 1000000000/33333335 or 1000000000/25000000.
 // On Apple Silicon it is 125/3.
 
-/// Returns a fraction used to convert host ticks to nanoseconds
+/// Returns a fraction used to convert host ticks to nanoseconds.
 auto MachTimebase() noexcept
 {
+	// If `mach_timebase_info()` doesn't succeed there is no way to convert to/from host times.
+	// Luckily the function seems to only return `KERN_SUCCESS`:
+	// https://github.com/apple-oss-distributions/xnu/blob/main/libsyscall/wrappers/mach_timebase_info.c#L29
+	// https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/clock.c#L407
+
 	mach_timebase_info_data_t timebase_info;
 	auto result = mach_timebase_info(&timebase_info);
 	assert(result == KERN_SUCCESS);
 	return std::make_pair(timebase_info.numer, timebase_info.denom);
 }
 
-/// Mach timebase information
+/// Mach timebase information.
 const auto kMachTimebase = MachTimebase();
 
 } /* namespace */
 
 uint64_t SFB::ConvertHostTimeToNanoseconds(uint64_t t) noexcept
 {
-	__uint128_t ns = t;
 	if(kMachTimebase.first != kMachTimebase.second) {
+		__uint128_t ns = t;
 		ns *= kMachTimebase.first;
 		ns /= kMachTimebase.second;
+		return static_cast<uint64_t>(ns);
 	}
-	return static_cast<uint64_t>(ns);
+
+	return t;
 }
 
 uint64_t SFB::ConvertNanosecondsToHostTime(uint64_t ns) noexcept
 {
-	__uint128_t t = ns;
 	if(kMachTimebase.first != kMachTimebase.second) {
+		__uint128_t t = ns;
 		t *= kMachTimebase.second;
 		t /= kMachTimebase.first;
+		return static_cast<uint64_t>(t);
 	}
-	return static_cast<uint64_t>(t);
+
+	return ns;
 }
