@@ -28,6 +28,7 @@ typedef void(^SFBAudioPlayerNodeDecodingCompleteBlock)(id<SFBPCMDecoding> _Nonnu
 /// - parameter hostTime: The host time at which the first audio frame from `decoder` will reach the device.
 typedef void(^SFBAudioPlayerNodeRenderingWillStartBlock)(id<SFBPCMDecoding> _Nonnull decoder, uint64_t hostTime) NS_SWIFT_NAME(AudioPlayerNode.RenderingWillStartBlock);
 /// A block that is called when a transition between rendering decoders will occur.
+/// - warning: Do not change any properties of `decoder` or `nextDecoder`.
 /// - parameter decoder: The decoder for which rendering will complete.
 /// - parameter nextDecoder: The decoder for which rendering will start.
 /// - parameter hostTime: The host time at which the first audio frame from `nextDecoder` will reach the device.
@@ -239,7 +240,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// Called when the decoding and rendering process for a decoder has been canceled.
 @property (nonatomic, nullable) SFBAudioPlayerNodeDecoderCanceledBlock decoderCanceledBlock;
 
-/// Called to notify the delegate when an asynchronous error occurs.
+/// Called when an asynchronous error occurs.
 @property (nonatomic, nullable) SFBAudioPlayerNodeAsynchronousErrorBlock asynchronousErrorBlock;
 
 @end
