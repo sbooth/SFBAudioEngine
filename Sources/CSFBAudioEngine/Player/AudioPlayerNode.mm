@@ -342,7 +342,8 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 	});
 
 	// Stop the decoding thread and wait for it to exit
-	mDecodingThread = {};
+	mDecodingThread.request_stop();
+	mDecodingThread.join();
 
 	// Register a stop callback for the event processing thread
 	std::stop_callback eventThreadStopCallback(mEventThread.get_stop_token(), [this] {
@@ -350,7 +351,8 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 	});
 
 	// Stop the event processing thread and wait for it to exit
-	mEventThread = {};
+	mEventThread.request_stop();
+	mEventThread.join();
 
 	// Delete any remaining decoder state
 	mActiveDecoders.clear();
