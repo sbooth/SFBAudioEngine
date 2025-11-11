@@ -366,7 +366,7 @@ bool SFB::AudioPlayer::IsReady() const noexcept
 
 SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
 {
-	mPlayerNode->_node->CurrentDecoder();
+	return mPlayerNode->_node->CurrentDecoder();
 }
 
 SFB::AudioPlayer::Decoder SFB::AudioPlayer::NowPlaying() const noexcept
@@ -428,7 +428,7 @@ bool SFB::AudioPlayer::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 
 bool SFB::AudioPlayer::SeekToPosition(double position) noexcept
 {
-	mPlayerNode->_node->SeekToPosition(position);
+	return mPlayerNode->_node->SeekToPosition(position);
 }
 
 bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
