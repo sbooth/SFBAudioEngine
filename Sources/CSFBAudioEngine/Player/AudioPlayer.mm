@@ -369,7 +369,7 @@ SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
 
 SFB::AudioPlayer::Decoder SFB::AudioPlayer::NowPlaying() const noexcept
 {
-	std::lock_guard<SFB::UnfairLock> lock(mNowPlayingLock);
+	std::lock_guard lock(mNowPlayingLock);
 	return mNowPlaying;
 }
 
@@ -377,7 +377,7 @@ void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 {
 	Decoder previouslyPlaying = nil;
 	{
-		std::lock_guard<SFB::UnfairLock> lock(mNowPlayingLock);
+		std::lock_guard lock(mNowPlayingLock);
 		if(mNowPlaying == nowPlaying)
 			return;
 		previouslyPlaying = mNowPlaying;
@@ -586,20 +586,20 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 
 bool SFB::AudioPlayer::InternalDecoderQueueIsEmpty() const noexcept
 {
-	std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+	std::lock_guard lock(mQueueLock);
 	return mQueuedDecoders.empty();
 }
 
 void SFB::AudioPlayer::ClearInternalDecoderQueue() noexcept
 {
-	std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+	std::lock_guard lock(mQueueLock);
 	mQueuedDecoders.clear();
 }
 
 bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 {
 	try {
-		std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+		std::lock_guard lock(mQueueLock);
 		mQueuedDecoders.push_back(decoder);
 	}
 	catch(const std::exception& e) {
@@ -615,7 +615,7 @@ bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 SFB::AudioPlayer::Decoder SFB::AudioPlayer::PopDecoderFromInternalQueue() noexcept
 {
 	Decoder decoder = nil;
-	std::lock_guard<SFB::UnfairLock> lock(mQueueLock);
+	std::lock_guard lock(mQueueLock);
 	if(!mQueuedDecoders.empty()) {
 		decoder = mQueuedDecoders.front();
 		mQueuedDecoders.pop_front();
