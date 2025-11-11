@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#pragma mark - Event Notification Blocks
+// MARK: - Event Notification Blocks
 
 /// A block that is called before decoding the first frame of audio from a decoder.
 /// - warning: Do not change any properties of `decoder`.
@@ -101,7 +101,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 - (instancetype)initWithRenderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;
 - (instancetype)initWithFormat:(AVAudioFormat *)format renderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;
 
-#pragma mark - Format Information
+// MARK: - Format Information
 
 /// Returns the format supplied by this object's render block
 @property (nonatomic, readonly) AVAudioFormat * renderingFormat;
@@ -110,7 +110,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `YES` if `format` has the same number of channels and sample rate as the rendering format
 - (BOOL)supportsFormat:(AVAudioFormat *)format;
 
-#pragma mark - Queue Management
+// MARK: - Queue Management
 
 /// Cancels the current decoder, clears any queued decoders, and creates and enqueues a decoder for subsequent playback
 /// - note: This is equivalent to `-reset` followed by `-enqueueURL:error:`
@@ -163,7 +163,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// and decoder *B* has started decoding but not yet started rendering.
 - (void)cancelActiveDecoders;
 
-#pragma mark - Playback Control
+// MARK: - Playback Control
 
 /// Begins pushing audio from the current decoder
 - (void)play;
@@ -174,7 +174,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// Toggles the playback state
 - (void)togglePlayPause;
 
-#pragma mark - Playback State
+// MARK: - Playback State
 
  /// Returns `YES` if the `SFBAudioPlayerNode` is playing
 @property (nonatomic, readonly) BOOL isPlaying;
@@ -182,7 +182,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
  /// Returns `YES` if a decoder is available to supply audio for the next render cycle
 @property (nonatomic, readonly) BOOL isReady;
 
-#pragma mark - Playback Properties
+// MARK: - Playback Properties
 
 /// Returns the playback position in the current decoder or `SFBInvalidPlaybackPosition` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBPlaybackPosition playbackPosition;
@@ -195,7 +195,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition andTime:(nullable SFBPlaybackTime *)playbackTime;
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 /// Seeks forward in the current decoder by the specified number of seconds
 /// - parameter secondsToSkip: The number of seconds to skip forward
@@ -222,7 +222,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 /// Returns `YES` if the current decoder supports seeking
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-#pragma mark - Event Notification
+// MARK: - Event Notification
 
 /// Called before decoding the first frame of audio from a decoder.
 @property (nonatomic, nullable) SFBAudioPlayerNodeDecodingStartedBlock decodingStartedBlock;
@@ -244,7 +244,7 @@ NS_SWIFT_NAME(AudioPlayerNode) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioPlayerNode`
 extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlayerNode.ErrorDomain);

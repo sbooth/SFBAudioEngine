@@ -61,7 +61,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
-#pragma mark - Playlist Management
+// MARK: - Playlist Management
 
 /// Cancels the current decoder, clears any queued decoders, creates and enqueues a decoder, and starts playback
 /// - note: This is equivalent to `-enqueueURL:forImmediatePlayback:error:` with `YES` for `forImmediatePlayback` followed by `-playReturningError:`
@@ -112,7 +112,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// Returns `YES` if the decoder queue is empty
 @property (nonatomic, readonly) BOOL queueIsEmpty;
 
-#pragma mark - Playback Control
+// MARK: - Playback Control
 
 /// Starts the underlying `AVAudioEngine` and plays the `SFBAudioPlayerNode`
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
@@ -140,7 +140,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - note: This method cancels the current decoder and clears any queued decoders
 - (void)reset;
 
-#pragma mark - Player State
+// MARK: - Player State
 
  /// Returns `YES` if the `AVAudioEngine` is running
 @property (nonatomic, readonly) BOOL engineIsRunning;
@@ -166,7 +166,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> nowPlaying;
 
-#pragma mark - Playback Properties
+// MARK: - Playback Properties
 
 /// Returns the frame position in the current decoder or `SFBUnknownFramePosition` if the current decoder is `nil`
 @property (nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
@@ -188,7 +188,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - returns: `NO` if the current decoder is `nil`
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition andTime:(nullable SFBPlaybackTime *)playbackTime;
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
 /// - returns: `NO` if the current decoder is `nil`
@@ -223,7 +223,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
 #if !TARGET_OS_IPHONE
-#pragma mark - Volume Control
+// MARK: - Volume Control
 
 /// Returns `kHALOutputParam_Volume` on channel `0` for `AVAudioEngine.outputNode.audioUnit` or `NaN` on error
 @property (nonatomic, readonly) float volume;
@@ -242,7 +242,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - returns: `YES` if the volume was successfully set
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error;
 
-#pragma mark - Output Device
+// MARK: - Output Device
 
 /// Returns the output device object ID for `AVAudioEngine.outputNode`
 @property (nonatomic, readonly) AUAudioObjectID outputDeviceID;
@@ -253,12 +253,12 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
 #endif /* !TARGET_OS_IPHONE */
 
-#pragma mark - Delegate
+// MARK: - Delegate
 
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerDelegate> delegate;
 
-#pragma mark - AVAudioEngine Access
+// MARK: - AVAudioEngine Access
 
 /// Peforms an operation on the underlying `AVAudioEngine`
 /// - important: Graph modifications may only be made between `playerNode` and `engine.mainMixerNode`
@@ -267,7 +267,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
 @property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
 
-#pragma mark - Debugging
+// MARK: - Debugging
 
 /// Asynchronously logs a description of the player's audio processing graph
 /// - parameter log: An `os_log_t` object to receive the message
@@ -276,7 +276,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 @end
 
-#pragma mark - SFBAudioPlayerDelegate
+// MARK: - SFBAudioPlayerDelegate
 
 /// Delegate methods supported by `SFBAudioPlayer`
 NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
