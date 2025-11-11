@@ -990,6 +990,11 @@ void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Dec
 
 	// Schedule the rendering started notification at the expected host time
 	dispatch_after(hostTime, mEventQueue, ^{
+		if(mPlayerNode != node.mNode) {
+			os_log_debug(sLog, "Ignoring stale rendering started notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(sLog, "%{public}@ canceled after rendering will start notification", decoder);
 			return;
@@ -1002,11 +1007,6 @@ void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Dec
 		if(delta > tolerance)
 			os_log_debug(sLog, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
-
-		if(mPlayerNode != node.mNode) {
-			os_log_debug(sLog, "Ignoring stale rendering started notification from <AudioPlayerNode: %p>", &node);
-			return;
-		}
 
 		if(!(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::ePendingDecoderBecameActive)))
 			SetNowPlaying(decoder);
@@ -1029,6 +1029,11 @@ void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& n
 
 	// Schedule the rendering decoder changed notification at the expected host time
 	dispatch_after(hostTime, mEventQueue, ^{
+		if(mPlayerNode != node.mNode) {
+			os_log_debug(sLog, "Ignoring stale rendering decoder changed notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(sLog, "%{public}@ canceled after rendering decoder will change notification", decoder);
 			return;
@@ -1046,11 +1051,6 @@ void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& n
 		if(delta > tolerance)
 			os_log_debug(sLog, "Rendering decoder changed notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
-
-		if(mPlayerNode != node.mNode) {
-			os_log_debug(sLog, "Ignoring stale rendering decoder changed notification from <AudioPlayerNode: %p>", &node);
-			return;
-		}
 
 		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[mPlayer.delegate audioPlayer:mPlayer renderingComplete:decoder];
@@ -1077,6 +1077,11 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 
 	// Schedule the rendering completed notification at the expected host time
 	dispatch_after(hostTime, mEventQueue, ^{
+		if(mPlayerNode != node.mNode) {
+			os_log_debug(sLog, "Ignoring stale rendering complete notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(sLog, "%{public}@ canceled after rendering will complete notification", decoder);
 			return;
@@ -1089,11 +1094,6 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 		if(delta > tolerance)
 			os_log_debug(sLog, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
-
-		if(mPlayerNode != node.mNode) {
-			os_log_debug(sLog, "Ignoring stale rendering complete notification from <AudioPlayerNode: %p>", &node);
-			return;
-		}
 
 		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[mPlayer.delegate audioPlayer:mPlayer renderingComplete:decoder];
