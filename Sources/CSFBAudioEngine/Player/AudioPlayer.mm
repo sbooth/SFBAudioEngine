@@ -1130,10 +1130,7 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 
 void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decoder decoder, AVAudioFramePosition framesRendered) noexcept
 {
-	// It is not necessary to ignore the notification if the player nodes don't match because
-	// when the audio processing graph is reconfigured the existing player node may be replaced,
-	// but any pending events will still be delivered before the instance is deallocated
-
+	// Mark the decoder as canceled for any scheduled render notifications
 	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
