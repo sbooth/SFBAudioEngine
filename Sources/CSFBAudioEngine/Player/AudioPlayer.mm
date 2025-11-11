@@ -472,7 +472,7 @@ bool SFB::AudioPlayer::SetVolumeForChannel(float volume, AudioObjectPropertyElem
 		AudioUnitParameterValue channelVolume = volume;
 		const auto result = AudioUnitSetParameter(mEngine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
 		if(result != noErr) {
-			os_log_error(sLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
+			os_log_error(sLog, "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
 			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 			return;
 		}
