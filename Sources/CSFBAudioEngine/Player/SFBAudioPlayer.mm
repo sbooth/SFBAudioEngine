@@ -449,7 +449,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (id<SFBPCMDecoding>)nowPlaying
 {
-	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+	std::lock_guard lock(_nowPlayingLock);
 	return _nowPlaying;
 }
 
@@ -457,7 +457,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
 	id<SFBPCMDecoding> previouslyPlaying = nil;
 	{
-		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+		std::lock_guard lock(_nowPlayingLock);
 		if(_nowPlaying == nowPlaying)
 			return;
 		previouslyPlaying = _nowPlaying;
@@ -706,20 +706,20 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 - (BOOL)internalDecoderQueueIsEmpty
 {
-	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	std::lock_guard lock(_queueLock);
 	return _queuedDecoders.empty();
 }
 
 - (void)clearInternalDecoderQueue
 {
-	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	std::lock_guard lock(_queueLock);
 	_queuedDecoders.clear();
 }
 
 - (BOOL)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
 {
 	try {
-		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+		std::lock_guard lock(_queueLock);
 		_queuedDecoders.push_back(decoder);
 	}
 	catch(const std::exception& e) {
@@ -735,7 +735,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 - (id <SFBPCMDecoding>)popDecoderFromInternalQueue
 {
 	id <SFBPCMDecoding> decoder = nil;
-	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	std::lock_guard lock(_queueLock);
 	if(!_queuedDecoders.empty()) {
 		decoder = _queuedDecoders.front();
 		_queuedDecoders.pop_front();
