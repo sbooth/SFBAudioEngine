@@ -324,7 +324,7 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 	// Launch the decoding and event processing threads
 	try {
 		mDecodingThread = std::jthread(std::bind_front(&SFB::AudioPlayerNode::ProcessDecoders, this));
-		mEventThread = std::jthread(std::bind_front(&SFB::AudioPlayerNode::ProcessEvents, this));
+		mEventThread = std::jthread(std::bind_front(&SFB::AudioPlayerNode::SequenceAndProcessEvents, this));
 	}
 	catch(const std::exception& e) {
 		os_log_error(sLog, "Unable to create thread: %{public}s", e.what());
@@ -1080,7 +1080,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 
 // MARK: - Event Processing
 
-void SFB::AudioPlayerNode::ProcessEvents(std::stop_token stoken) noexcept
+void SFB::AudioPlayerNode::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 {
 	pthread_setname_np("AudioPlayerNode.Events");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
@@ -1098,21 +1098,21 @@ void SFB::AudioPlayerNode::ProcessEvents(std::stop_token stoken) noexcept
 				break;
 			// Process the decode event
 			else if(decodeEventHeader && !renderEventHeader) {
-				ProcessEvent(*decodeEventHeader);
+				ProcessDecodingEvent(*decodeEventHeader);
 				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 			}
 			// Process the render event
 			else if(!decodeEventHeader && renderEventHeader) {
-				ProcessEvent(*renderEventHeader);
+				ProcessRenderingEvent(*renderEventHeader);
 				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 			}
 			// Process the event with an earlier identification number
 			else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
-				ProcessEvent(*decodeEventHeader);
+				ProcessDecodingEvent(*decodeEventHeader);
 				decodeEventHeader = mDecodeEventRingBuffer.ReadValue<DecodingEventHeader>();
 			}
 			else {
-				ProcessEvent(*renderEventHeader);
+				ProcessRenderingEvent(*renderEventHeader);
 				renderEventHeader = mRenderEventRingBuffer.ReadValue<RenderingEventHeader>();
 			}
 		}
@@ -1124,7 +1124,7 @@ void SFB::AudioPlayerNode::ProcessEvents(std::stop_token stoken) noexcept
 	os_log_debug(sLog, "Event processing thread complete");
 }
 
-void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexcept
+void SFB::AudioPlayerNode::ProcessDecodingEvent(const DecodingEventHeader& header) noexcept
 {
 	switch(header.mCommand) {
 		case DecodingEventCommand::eStarted:
@@ -1228,7 +1228,7 @@ void SFB::AudioPlayerNode::ProcessEvent(const DecodingEventHeader& header) noexc
 	}
 }
 
-void SFB::AudioPlayerNode::ProcessEvent(const RenderingEventHeader& header) noexcept
+void SFB::AudioPlayerNode::ProcessRenderingEvent(const RenderingEventHeader& header) noexcept
 {
 	switch(header.mCommand) {
 		case RenderingEventCommand::eFramesRendered:

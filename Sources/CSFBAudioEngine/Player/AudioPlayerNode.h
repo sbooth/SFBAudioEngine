@@ -249,12 +249,12 @@ private:
 
 	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
 	/// - note: This is the thread entry point for the event thread
-	void ProcessEvents(std::stop_token stoken) noexcept;
+	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
 	/// Processes an event from `mDecodeEventRingBuffer`
-	void ProcessEvent(const DecodingEventHeader& header) noexcept;
+	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
 	/// Processes an event from `mRenderEventRingBuffer`
-	void ProcessEvent(const RenderingEventHeader& header) noexcept;
+	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
 	// MARK: - Active Decoder Management
 
