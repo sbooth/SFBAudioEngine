@@ -151,7 +151,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		return configureForAndEnqueueDecoder(true);
 
 	// To preserve the order of enqueued decoders, when the internal queue is not empty
-	// push all decoders there regardless of format compability with _playerNode
+	// push all decoders there regardless of format compatibility with _playerNode
 	// This prevents incorrect playback order arising from the scenario where
 	// decoders A and AA have formats supported by _playerNode and decoder B does not;
 	// bypassing the internal queue for supported formats when enqueueing A, B, AA
