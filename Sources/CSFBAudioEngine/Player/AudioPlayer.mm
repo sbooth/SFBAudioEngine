@@ -883,8 +883,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 			[mEngine detachNode:mPlayerNode];
 		}
 
-		[mEngine attachNode:playerNode];
-
 		// When an audio player node is deallocated the destructor synchronously waits
 		// for decoder cancelation (if there is an active decoder) and then for any
 		// final events to be processed and event notification blocks called.
@@ -897,6 +895,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		// Assuming there are no external references to the audio player node,
 		// setting it here sends -dealloc
 		mPlayerNode = playerNode;
+		[mEngine attachNode:mPlayerNode];
 
 		// Reconnect the player node to the next node in the processing chain
 		// This is the mixer node in the default configuration, but additional nodes may
@@ -956,8 +955,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 
 void SFB::AudioPlayer::HandleDecodingStarted(const AudioPlayerNode& node, Decoder decoder) noexcept
 {
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in decoding started notification");
+	if(mPlayerNode != node.mNode) {
+		os_log_debug(sLog, "Ignoring stale decoding started notification from <AudioPlayerNode: %p>", &node);
 		return;
 	}
 
@@ -973,8 +972,8 @@ void SFB::AudioPlayer::HandleDecodingStarted(const AudioPlayerNode& node, Decode
 
 void SFB::AudioPlayer::HandleDecodingComplete(const AudioPlayerNode& node, Decoder decoder) noexcept
 {
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in decoding complete notification");
+	if(mPlayerNode != node.mNode) {
+		os_log_debug(sLog, "Ignoring stale decoding complete notification from <AudioPlayerNode: %p>", &node);
 		return;
 	}
 
@@ -984,8 +983,8 @@ void SFB::AudioPlayer::HandleDecodingComplete(const AudioPlayerNode& node, Decod
 
 void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Decoder decoder, uint64_t hostTime) noexcept
 {
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in rendering will start notification");
+	if(mPlayerNode != node.mNode) {
+		os_log_debug(sLog, "Ignoring stale rendering will start notification from <AudioPlayerNode: %p>", &node);
 		return;
 	}
 
@@ -1004,8 +1003,8 @@ void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Dec
 			os_log_debug(sLog, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if(mPlayerNode->_node.get() != &node) {
-			os_log_fault(sLog, "Unexpected AudioPlayerNode in rendering started notification");
+		if(mPlayerNode != node.mNode) {
+			os_log_debug(sLog, "Ignoring stale rendering started notification from <AudioPlayerNode: %p>", &node);
 			return;
 		}
 
@@ -1023,8 +1022,8 @@ void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Dec
 
 void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& node, Decoder decoder, Decoder nextDecoder, uint64_t hostTime) noexcept
 {
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in rendering decoder will change notification");
+	if(mPlayerNode != node.mNode) {
+		os_log_debug(sLog, "Ignoring stale rendering decoder will change notification from <AudioPlayerNode: %p>", &node);
 		return;
 	}
 
@@ -1048,8 +1047,8 @@ void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& n
 			os_log_debug(sLog, "Rendering decoder changed notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if(mPlayerNode->_node.get() != &node) {
-			os_log_fault(sLog, "Unexpected AudioPlayerNode instance in rendering decoder changed notification");
+		if(mPlayerNode != node.mNode) {
+			os_log_debug(sLog, "Ignoring stale rendering decoder changed notification from <AudioPlayerNode: %p>", &node);
 			return;
 		}
 
@@ -1071,8 +1070,8 @@ void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& n
 
 void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept
 {
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in rendering will complete notification");
+	if(mPlayerNode != node.mNode) {
+		os_log_debug(sLog, "Ignoring stale rendering will complete notification from <AudioPlayerNode: %p>", &node);
 		return;
 	}
 
@@ -1091,8 +1090,8 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 			os_log_debug(sLog, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if(mPlayerNode->_node.get() != &node) {
-			os_log_fault(sLog, "Unexpected AudioPlayerNode instance in rendering complete notification");
+		if(mPlayerNode != node.mNode) {
+			os_log_debug(sLog, "Ignoring stale rendering complete notification from <AudioPlayerNode: %p>", &node);
 			return;
 		}
 
@@ -1131,22 +1130,16 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 
 void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decoder decoder, AVAudioFramePosition framesRendered) noexcept
 {
-	// It is not an error in this case if the player nodes don't match because when the
-	// audio processing graph is reconfigured the existing player node may be replaced,
+	// It is not necessary to ignore the notification if the player nodes don't match because
+	// when the audio processing graph is reconfigured the existing player node may be replaced,
 	// but any pending events will still be delivered before the instance is deallocated
-#if false
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in decoder canceled notification");
-		return;
-	}
-#endif /* false */
 
 	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
 		[mPlayer.delegate audioPlayer:mPlayer decoderCanceled:decoder framesRendered:framesRendered];
 
-	if(mPlayerNode->_node.get() == &node) {
+	if(mPlayerNode == node.mNode) {
 		mFlags.fetch_and(~static_cast<unsigned int>(Flags::ePendingDecoderBecameActive), std::memory_order_acq_rel);
 		if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::eHavePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::eEngineIsRunning)))
 			SetNowPlaying(nil);
@@ -1155,8 +1148,8 @@ void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decode
 
 void SFB::AudioPlayer::HandleAsynchronousError(const AudioPlayerNode& node, NSError *error) noexcept
 {
-	if(mPlayerNode->_node.get() != &node) {
-		os_log_fault(sLog, "Unexpected AudioPlayerNode instance in asynchronous error notification");
+	if(mPlayerNode != node.mNode) {
+		os_log_debug(sLog, "Ignoring stale asynchronous error notification from <AudioPlayerNode: %p>", &node);
 		return;
 	}
 
