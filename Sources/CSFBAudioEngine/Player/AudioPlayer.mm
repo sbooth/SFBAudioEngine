@@ -53,7 +53,9 @@ void AVAudioSessionInterruptionNotificationCallback(CFNotificationCenterRef cent
 /// This is the value of `kAudioObjectPropertyName` in the output scope on the main element
 NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 {
-	NSCParameterAssert(audioUnit != nil);
+#if DEBUG
+	assert(audioUnit != nil);
+#endif /* DEBUG */
 
 	AudioObjectPropertyAddress address = {
 		.mSelector = kAudioObjectPropertyName,
@@ -337,19 +339,19 @@ bool SFB::AudioPlayer::PlayerNodeIsPlaying() const noexcept
 SFBAudioPlayerPlaybackState SFB::AudioPlayer::PlaybackState() const noexcept
 {
 	if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))
-		return PlayerNodeIsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		return mPlayerNode->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 	else
 		return SFBAudioPlayerPlaybackStateStopped;
 }
 
 bool SFB::AudioPlayer::IsPlaying() const noexcept
 {
-	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && PlayerNodeIsPlaying();
+	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && mPlayerNode->_node->IsPlaying();
 }
 
 bool SFB::AudioPlayer::IsPaused() const noexcept
 {
-	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !PlayerNodeIsPlaying();
+	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !mPlayerNode->_node->IsPlaying();
 }
 
 bool SFB::AudioPlayer::IsStopped() const noexcept
@@ -522,9 +524,9 @@ void SFB::AudioPlayer::WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexce
 {
 	dispatch_async_and_wait(mEngineQueue, ^{
 		block(mEngine);
-		// SFBAudioPlayer requires that the mixer node be connected to the output node
-		NSCAssert([mEngine inputConnectionPointForNode:mEngine.outputNode inputBus:0].node == mEngine.mainMixerNode, @"Illegal AVAudioEngine configuration");
-		NSCAssert(mEngine.isRunning == static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)), @"AVAudioEngine may not be started or stopped outside of AudioPlayer");
+		// AudioPlayer requires that the mixer node be connected to the output node
+		assert([mEngine inputConnectionPointForNode:mEngine.outputNode inputBus:0].node == mEngine.mainMixerNode && "Illegal AVAudioEngine configuration");
+		assert(mEngine.isRunning == static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && "AVAudioEngine may not be started or stopped outside of AudioPlayer");
 	});
 }
 
@@ -722,13 +724,15 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 
 bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clearQueueAndReset, NSError **error) noexcept
 {
-	NSCParameterAssert(decoder != nil);
+#if DEBUG
+	assert(decoder != nil);
+#endif /* DEBUG */
 
 	// Attempt to preserve the playback state
 	const bool engineWasRunning = mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning);
 	const auto playerNodeWasPlaying = mPlayerNode->_node->IsPlaying();
 
-	// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+	// If the current player node doesn't support the decoder's format (required for gapless join),
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 	if(auto format = decoder.processingFormat; !mPlayerNode->_node->SupportsFormat(format)) {
 		__block auto success = true;
@@ -787,9 +791,11 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 
 bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, bool forceUpdate) noexcept
 {
-	NSCParameterAssert(format != nil);
+#if DEBUG
+	assert(format != nil);
+#endif /* DEBUG */
 
-	// SFBAudioPlayerNode requires the standard format
+	// AudioPlayerNode requires the standard format
 	if(!format.isStandard) {
 		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
 		if(!standardEquivalentFormat) {
@@ -799,7 +805,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		format = standardEquivalentFormat;
 	}
 
-	// mPlayerNode may be null since this method is called from the constructor
+	// mPlayerNode may be nil since this method is called from the constructor
 	const auto formatsEqual = mPlayerNode && [format isEqual:mPlayerNode->_node->RenderingFormat()];
 	if(formatsEqual && !forceUpdate)
 		return true;
@@ -813,7 +819,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	if(mPlayerNode && mPlayerNode->_node->IsPlaying())
 		mPlayerNode->_node->Stop();
 
-	// Avoid creating a new SFBAudioPlayerNode if not necessary
+	// Avoid creating a new AudioPlayerNode if not necessary
 	SFBAudioPlayerNode *playerNode = nil;
 	if(!formatsEqual) {
 		playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
@@ -857,7 +863,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	AVAudioOutputNode *outputNode = mEngine.outputNode;
 	AVAudioMixerNode *mixerNode = mEngine.mainMixerNode;
 
-	// SFBAudioPlayer requires that the main mixer node be connected to the output node
+	// This class requires that the main mixer node be connected to the output node
 	assert([mEngine inputConnectionPointForNode:outputNode inputBus:0].node == mixerNode && "Illegal AVAudioEngine configuration");
 
 	AVAudioFormat *outputNodeOutputFormat = [outputNode outputFormatForBus:0];
