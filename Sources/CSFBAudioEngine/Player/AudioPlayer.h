@@ -43,7 +43,7 @@ public:
 private:
 	/// The underlying `AVAudioEngine` instance
 	AVAudioEngine 			*mEngine 				{nil};
-	/// The dispatch queue used to access `_engine`
+	/// The dispatch queue used to access `mEngine`
 	dispatch_queue_t		mEngineQueue 			{nil};
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*mPlayerNode 			{nil};
