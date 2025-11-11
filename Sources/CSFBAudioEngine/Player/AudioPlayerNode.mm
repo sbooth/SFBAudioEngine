@@ -956,7 +956,9 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 {
-	NSCParameterAssert(error != nil);
+#if DEBUG
+	assert(error != nil);
+#endif /* DEBUG */
 
 	NSError *err = nil;
 	NSData *errorData = [NSKeyedArchiver archivedDataWithRootObject:error requiringSecureCoding:YES error:&err];
