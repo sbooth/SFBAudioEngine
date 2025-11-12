@@ -75,10 +75,24 @@ public:
 
 	bool EnqueueDecoder(Decoder _Nonnull decoder, bool forImmediatePlayback, NSError **error) noexcept;
 
-	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept;
+	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept
+	{
+#if DEBUG
+		assert(format != nil);
+#endif /* DEBUG */
+		return mPlayerNode->_node->SupportsFormat(format);
+	}
 
-	void ClearQueue() noexcept;
-	bool QueueIsEmpty() const noexcept;
+	void ClearQueue() noexcept
+	{
+		mPlayerNode->_node->ClearQueue();
+		ClearInternalDecoderQueue();
+	}
+
+	bool QueueIsEmpty() const noexcept
+	{
+		return mPlayerNode->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
+	}
 
 	// MARK: - Playback Control
 
@@ -93,38 +107,103 @@ public:
 	// MARK: - Player State
 
 	bool EngineIsRunning() const noexcept;
-	bool PlayerNodeIsPlaying() const noexcept;
 
-	SFBAudioPlayerPlaybackState PlaybackState() const noexcept;
+	bool PlayerNodeIsPlaying() const noexcept
+	{
+		return mPlayerNode->_node->IsPlaying();
+	}
 
-	bool IsPlaying() const noexcept;
-	bool IsPaused() const noexcept;
-	bool IsStopped() const noexcept;
-	bool IsReady() const noexcept;
+	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
+	{
+		if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))
+			return mPlayerNode->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		else
+			return SFBAudioPlayerPlaybackStateStopped;
+	}
 
-	Decoder _Nullable CurrentDecoder() const noexcept;
+	bool IsPlaying() const noexcept
+	{
+		return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && mPlayerNode->_node->IsPlaying();
+	}
 
-	Decoder _Nullable NowPlaying() const noexcept;
+	bool IsPaused() const noexcept
+	{
+		return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !mPlayerNode->_node->IsPlaying();
+	}
+
+	bool IsStopped() const noexcept
+	{
+		return !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning));
+	}
+
+	bool IsReady() const noexcept
+	{
+		return mPlayerNode->_node->IsReady();
+	}
+
+	Decoder _Nullable CurrentDecoder() const noexcept
+	{
+		return mPlayerNode->_node->CurrentDecoder();
+	}
+
+	Decoder _Nullable NowPlaying() const noexcept
+	{
+		std::lock_guard lock(mNowPlayingLock);
+		return mNowPlaying;
+	}
+
 private:
 	void SetNowPlaying(Decoder _Nullable nowPlaying) noexcept;
 
 public:
 	// MARK: - Playback Properties
 
-	SFBPlaybackPosition PlaybackPosition() const noexcept;
-	SFBPlaybackTime PlaybackTime() const noexcept;
-	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept;
+	SFBPlaybackPosition PlaybackPosition() const noexcept
+	{
+		return mPlayerNode->_node->PlaybackPosition();
+	}
+
+	SFBPlaybackTime PlaybackTime() const noexcept
+	{
+		return mPlayerNode->_node->PlaybackTime();
+	}
+
+	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept
+	{
+		return mPlayerNode->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
+	}
 
 	// MARK: - Seeking
 
-	bool SeekForward(NSTimeInterval secondsToSkip) noexcept;
-	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept;
+	bool SeekForward(NSTimeInterval secondsToSkip) noexcept
+	{
+		return mPlayerNode->_node->SeekForward(secondsToSkip);
+	}
+	
+	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept
+	{
+		return mPlayerNode->_node->SeekBackward(secondsToSkip);
+	}
 
-	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept;
-	bool SeekToPosition(double position) noexcept;
-	bool SeekToFrame(AVAudioFramePosition frame) noexcept;
+	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept
+	{
+		return mPlayerNode->_node->SeekToTime(timeInSeconds);
+	}
 
-	bool SupportsSeeking() const noexcept;
+	bool SeekToPosition(double position) noexcept
+	{
+		return mPlayerNode->_node->SeekToPosition(position);
+	}
+
+	bool SeekToFrame(AVAudioFramePosition frame) noexcept
+	{
+		return mPlayerNode->_node->SeekToFrame(frame);
+	}
+
+	bool SupportsSeeking() const noexcept
+	{
+		return mPlayerNode->_node->SupportsSeeking();
+	}
 
 #if !TARGET_OS_IPHONE
 
@@ -143,7 +222,11 @@ public:
 	// MARK: - AVAudioEngine
 
 	void WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexcept;
-	SFBAudioPlayerNode * GetPlayerNode() const noexcept;
+
+	SFBAudioPlayerNode * GetPlayerNode() const noexcept
+	{
+		return mPlayerNode;
+	}
 
 	// MARK: - Debugging
 
