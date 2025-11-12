@@ -45,10 +45,7 @@ std::expected<void, int> SFB::InputSource::Close() noexcept
 		return {};
 	}
 
-	auto defer = scope_exit{[this] noexcept {
-		isOpen_ = false;
-	}};
-
+	const auto defer = scope_exit{[this] noexcept { isOpen_ = false; }};
 	return _Close();
 }
 
