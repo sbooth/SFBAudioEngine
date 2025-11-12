@@ -36,7 +36,7 @@ std::expected<int64_t, int> SFB::DataInput::_Read(void *buffer, int64_t count) n
 	int64_t remaining = CFDataGetLength(data_) - pos_;
 	count = std::min(count, remaining);
 
-	auto range = CFRangeMake(pos_, pos_ + count);
+	auto range = CFRangeMake(pos_, count);
 	CFDataGetBytes(data_, range, static_cast<UInt8 *>(buffer));
 
 	pos_ += count;
