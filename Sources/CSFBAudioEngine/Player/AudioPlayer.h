@@ -288,16 +288,12 @@ private:
 	/// - returns: `true` if the processing graph was successfully configured
 	bool ConfigureProcessingGraphForFormat(AVAudioFormat * _Nonnull format, bool forceUpdate) noexcept;
 
-	// Event notification handlers
 	void HandleDecodingStarted(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
 	void HandleDecodingComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
-
 	void HandleRenderingWillStart(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 	void HandleRenderingDecoderWillChange(const AudioPlayerNode& node, Decoder _Nonnull decoder, Decoder _Nonnull nextDecoder, uint64_t hostTime) noexcept;
 	void HandleRenderingWillComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
-
 	void HandleDecoderCanceled(const AudioPlayerNode& node, Decoder _Nonnull decoder, AVAudioFramePosition framesRendered) noexcept;
-
 	void HandleAsynchronousError(const AudioPlayerNode& node, NSError * _Nonnull error) noexcept;
 };
 

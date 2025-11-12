@@ -45,13 +45,10 @@ public:
 
 	SFBAudioPlayerNodeDecodingStartedBlock 				mDecodingStartedBlock 				{nil};
 	SFBAudioPlayerNodeDecodingCompleteBlock 			mDecodingCompleteBlock 				{nil};
-
 	SFBAudioPlayerNodeRenderingWillStartBlock 			mRenderingWillStartBlock 			{nil};
 	SFBAudioPlayerNodeRenderingDecoderWillChangeBlock 	mRenderingDecoderWillChangeBlock 	{nil};
 	SFBAudioPlayerNodeRenderingWillCompleteBlock 		mRenderingWillCompleteBlock			{nil};
-
 	SFBAudioPlayerNodeDecoderCanceledBlock 				mDecoderCanceledBlock 				{nil};
-
 	SFBAudioPlayerNodeAsynchronousErrorBlock 			mAsynchronousErrorBlock 			{nil};
 
 	/// The shared log for all `AudioPlayerNode` instances
@@ -290,6 +287,7 @@ private:
 
 	/// Processes an event from `mDecodeEventRingBuffer`
 	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
+
 	/// Processes an event from `mRenderEventRingBuffer`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
