@@ -69,7 +69,7 @@ std::expected<bool, int> SFB::FileInput::_AtEOF() const noexcept
 
 std::expected<int64_t, int> SFB::FileInput::_GetOffset() const noexcept
 {
-	auto offset = std::ftell(file_);
+	auto offset = ::ftello(file_);
 	if(offset == -1)
 		return std::unexpected{errno};
 	return offset;
@@ -87,7 +87,7 @@ bool SFB::FileInput::_SupportsSeeking() const noexcept
 
 std::expected<void, int> SFB::FileInput::_SeekToOffset(int64_t offset, int whence) noexcept
 {
-	if(std::fseek(file_, offset, whence))
+	if(::fseeko(file_, offset, whence))
 		return std::unexpected{errno};
 	return {};
 }
