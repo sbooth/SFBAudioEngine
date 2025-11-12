@@ -38,7 +38,7 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 		return std::unexpected{errno};
 
 	// Ensure the file is closed
-	auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
+	const auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
 
 	auto fd = ::fileno(file);
 
@@ -65,11 +65,7 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 
 std::expected<void, int> SFB::MemoryMappedFileInput::_Close() noexcept
 {
-	auto defer = scope_exit{[this] noexcept {
-		region_ = nullptr;
-		len_ = 0;
-	}};
-
+	const auto defer = scope_exit{[this] noexcept { region_ = nullptr; }};
 	if(munmap(region_, len_))
 		return std::unexpected{errno};
 	return {};

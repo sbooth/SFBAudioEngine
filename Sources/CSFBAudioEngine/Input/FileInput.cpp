@@ -44,10 +44,7 @@ std::expected<void, int> SFB::FileInput::_Open() noexcept
 
 std::expected<void, int> SFB::FileInput::_Close() noexcept
 {
-	auto defer = scope_exit{[this] noexcept {
-		file_ = nullptr;
-	}};
-
+	const auto defer = scope_exit{[this] noexcept { file_ = nullptr; }};
 	if(std::fclose(file_))
 		return std::unexpected{errno};
 	return {};

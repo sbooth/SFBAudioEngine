@@ -37,7 +37,7 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 		return std::unexpected{errno};
 
 	// Ensure the file is closed
-	auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
+	const auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
 
 	auto fd = ::fileno(file);
 
