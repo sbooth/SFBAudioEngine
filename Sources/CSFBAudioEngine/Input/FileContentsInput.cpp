@@ -62,6 +62,7 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 std::expected<void, int> SFB::FileContentsInput::_Close() noexcept
 {
 	std::free(buf_);
+	buf_ = nullptr;
 	return {};
 }
 
