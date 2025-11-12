@@ -185,26 +185,6 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	return true;
 }
 
-bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) const noexcept
-{
-#if DEBUG
-	assert(format != nil);
-#endif /* DEBUG */
-
-	return mPlayerNode->_node->SupportsFormat(format);
-}
-
-void SFB::AudioPlayer::ClearQueue() noexcept
-{
-	mPlayerNode->_node->ClearQueue();
-	ClearInternalDecoderQueue();
-}
-
-bool SFB::AudioPlayer::QueueIsEmpty() const noexcept
-{
-	return mPlayerNode->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
-}
-
 // MARK: - Playback Control
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
@@ -331,50 +311,6 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 	return isRunning;
 }
 
-bool SFB::AudioPlayer::PlayerNodeIsPlaying() const noexcept
-{
-	return mPlayerNode->_node->IsPlaying();
-}
-
-SFBAudioPlayerPlaybackState SFB::AudioPlayer::PlaybackState() const noexcept
-{
-	if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))
-		return mPlayerNode->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
-	else
-		return SFBAudioPlayerPlaybackStateStopped;
-}
-
-bool SFB::AudioPlayer::IsPlaying() const noexcept
-{
-	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && mPlayerNode->_node->IsPlaying();
-}
-
-bool SFB::AudioPlayer::IsPaused() const noexcept
-{
-	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !mPlayerNode->_node->IsPlaying();
-}
-
-bool SFB::AudioPlayer::IsStopped() const noexcept
-{
-	return !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning));
-}
-
-bool SFB::AudioPlayer::IsReady() const noexcept
-{
-	return mPlayerNode->_node->IsReady();
-}
-
-SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
-{
-	return mPlayerNode->_node->CurrentDecoder();
-}
-
-SFB::AudioPlayer::Decoder SFB::AudioPlayer::NowPlaying() const noexcept
-{
-	std::lock_guard lock(mNowPlayingLock);
-	return mNowPlaying;
-}
-
 void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 {
 	Decoder previouslyPlaying = nil;
@@ -390,55 +326,6 @@ void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:previouslyPlaying:)])
 		[mPlayer.delegate audioPlayer:mPlayer nowPlayingChanged:nowPlaying previouslyPlaying:previouslyPlaying];
-}
-
-// MARK: - Playback Properties
-
-SFBPlaybackPosition SFB::AudioPlayer::PlaybackPosition() const noexcept
-{
-	return mPlayerNode->_node->PlaybackPosition();
-}
-
-SFBPlaybackTime SFB::AudioPlayer::PlaybackTime() const noexcept
-{
-	return mPlayerNode->_node->PlaybackTime();
-}
-
-bool SFB::AudioPlayer::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition, SFBPlaybackTime *playbackTime) const noexcept
-{
-	return mPlayerNode->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
-}
-
-// MARK: - Seeking
-
-bool SFB::AudioPlayer::SeekForward(NSTimeInterval secondsToSkip) noexcept
-{
-	return mPlayerNode->_node->SeekForward(secondsToSkip);
-}
-
-bool SFB::AudioPlayer::SeekBackward(NSTimeInterval secondsToSkip) noexcept
-{
-	return mPlayerNode->_node->SeekBackward(secondsToSkip);
-}
-
-bool SFB::AudioPlayer::SeekToTime(NSTimeInterval timeInSeconds) noexcept
-{
-	return mPlayerNode->_node->SeekToTime(timeInSeconds);
-}
-
-bool SFB::AudioPlayer::SeekToPosition(double position) noexcept
-{
-	return mPlayerNode->_node->SeekToPosition(position);
-}
-
-bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
-{
-	return mPlayerNode->_node->SeekToFrame(frame);
-}
-
-bool SFB::AudioPlayer::SupportsSeeking() const noexcept
-{
-	return mPlayerNode->_node->SupportsSeeking();
 }
 
 #if !TARGET_OS_IPHONE
@@ -530,11 +417,6 @@ void SFB::AudioPlayer::WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexce
 	});
 }
 
-SFBAudioPlayerNode * SFB::AudioPlayer::GetPlayerNode() const noexcept
-{
-	return mPlayerNode;
-}
-
 // MARK: - Debugging
 
 void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept
@@ -590,18 +472,6 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 }
 
 // MARK: - Decoder Queue
-
-bool SFB::AudioPlayer::InternalDecoderQueueIsEmpty() const noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	return mQueuedDecoders.empty();
-}
-
-void SFB::AudioPlayer::ClearInternalDecoderQueue() noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	mQueuedDecoders.clear();
-}
 
 bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 {

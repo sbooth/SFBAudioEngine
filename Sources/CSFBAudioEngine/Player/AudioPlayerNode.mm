@@ -447,18 +447,6 @@ bool SFB::AudioPlayerNode::RemoveDecoderFromQueue(Decoder decoder) noexcept
 	return true;
 }
 
-void SFB::AudioPlayerNode::ClearQueue() noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	mQueuedDecoders.clear();
-}
-
-bool SFB::AudioPlayerNode::QueueIsEmpty() const noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	return mQueuedDecoders.empty();
-}
-
 SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
 	std::lock_guard lock(mDecoderLock);
@@ -485,48 +473,6 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 
 		dispatch_semaphore_signal(mDecodingSemaphore);
 	}
-}
-
-void SFB::AudioPlayerNode::Reset() noexcept
-{
-	ClearQueue();
-	CancelActiveDecoders(true);
-}
-
-// MARK: - Playback Control
-
-void SFB::AudioPlayerNode::Play() noexcept
-{
-	mFlags.fetch_or(static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
-}
-
-void SFB::AudioPlayerNode::Pause() noexcept
-{
-	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
-}
-
-void SFB::AudioPlayerNode::Stop() noexcept
-{
-	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
-	Reset();
-}
-
-void SFB::AudioPlayerNode::TogglePlayPause() noexcept
-{
-	mFlags.fetch_xor(static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
-}
-
-// MARK: - Playback State
-
-bool SFB::AudioPlayerNode::IsPlaying() const noexcept
-{
-	return mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eIsPlaying);
-}
-
-bool SFB::AudioPlayerNode::IsReady() const noexcept
-{
-	std::lock_guard lock(mDecoderLock);
-	return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
 }
 
 // MARK: - Playback Properties
