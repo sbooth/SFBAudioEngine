@@ -46,7 +46,6 @@ std::expected<void, int> SFB::FileInput::_Close() noexcept
 {
 	auto defer = scope_exit{[this] noexcept {
 		file_ = nullptr;
-		len_ = 0;
 	}};
 
 	if(std::fclose(file_))
@@ -56,7 +55,9 @@ std::expected<void, int> SFB::FileInput::_Close() noexcept
 
 std::expected<int64_t, int> SFB::FileInput::_Read(void *buffer, int64_t count) noexcept
 {
-	auto nitems = std::fread(buffer, 1, count, file_);
+	if(count > SIZE_T_MAX)
+		return std::unexpected{EINVAL};
+	const auto nitems = std::fread(buffer, 1, count, file_);
 	if(nitems != count && std::ferror(file_))
 		return std::unexpected{errno};
 	return nitems;
@@ -69,7 +70,7 @@ std::expected<bool, int> SFB::FileInput::_AtEOF() const noexcept
 
 std::expected<int64_t, int> SFB::FileInput::_GetOffset() const noexcept
 {
-	auto offset = ::ftello(file_);
+	const auto offset = ::ftello(file_);
 	if(offset == -1)
 		return std::unexpected{errno};
 	return offset;
@@ -87,7 +88,7 @@ bool SFB::FileInput::_SupportsSeeking() const noexcept
 
 std::expected<void, int> SFB::FileInput::_SeekToOffset(int64_t offset, int whence) noexcept
 {
-	if(::fseeko(file_, offset, whence))
+	if(::fseeko(file_, static_cast<off_t>(offset), whence))
 		return std::unexpected{errno};
 	return {};
 }

@@ -62,20 +62,17 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 std::expected<void, int> SFB::FileContentsInput::_Close() noexcept
 {
 	std::free(buf_);
-	buf_ = nullptr;
-	len_ = 0;
-
 	return {};
 }
 
 std::expected<int64_t, int> SFB::FileContentsInput::_Read(void *buffer, int64_t count) noexcept
 {
-	auto remaining = len_ - pos_;
+	if(count > SIZE_T_MAX)
+		return std::unexpected{EINVAL};
+	const auto remaining = len_ - pos_;
 	count = std::min(count, remaining);
-
 	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
 	pos_ += count;
-
 	return count;
 }
 

@@ -77,12 +77,12 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Close() noexcept
 
 std::expected<int64_t, int> SFB::MemoryMappedFileInput::_Read(void *buffer, int64_t count) noexcept
 {
-	auto remaining = len_ - pos_;
+	if(count > SIZE_T_MAX)
+		return std::unexpected{EINVAL};
+	const auto remaining = len_ - pos_;
 	count = std::min(count, remaining);
-
 	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(region_) + pos_), count);
 	pos_ += count;
-
 	return count;
 }
 

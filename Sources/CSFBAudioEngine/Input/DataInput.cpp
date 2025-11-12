@@ -33,14 +33,13 @@ std::expected<void, int> SFB::DataInput::_Close() noexcept
 
 std::expected<int64_t, int> SFB::DataInput::_Read(void *buffer, int64_t count) noexcept
 {
-	int64_t remaining = CFDataGetLength(data_) - pos_;
+	if(count > LONG_MAX)
+		return std::unexpected{EINVAL};
+	const int64_t remaining = CFDataGetLength(data_) - pos_;
 	count = std::min(count, remaining);
-
-	auto range = CFRangeMake(pos_, count);
+	const auto range = CFRangeMake(pos_, count);
 	CFDataGetBytes(data_, range, static_cast<UInt8 *>(buffer));
-
 	pos_ += count;
-
 	return count;
 }
 
@@ -66,7 +65,7 @@ bool SFB::DataInput::_SupportsSeeking() const noexcept
 
 std::expected<void, int> SFB::DataInput::_SeekToOffset(int64_t offset, int whence) noexcept
 {
-	auto length = CFDataGetLength(data_);
+	const auto length = CFDataGetLength(data_);
 
 	switch(whence) {
 		case SEEK_SET:
