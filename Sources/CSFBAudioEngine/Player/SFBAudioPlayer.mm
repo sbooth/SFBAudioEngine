@@ -305,6 +305,11 @@
 	_player->WithEngine(block);
 }
 
+- (SFBAudioPlayerNode *)audioPlayerNode
+{
+	return _player->GetPlayerNode();
+}
+
 // MARK: - Debugging
 
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type
