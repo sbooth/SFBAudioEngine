@@ -23,7 +23,8 @@ public:
 
 	using unique_ptr = std::unique_ptr<InputSource>;
 
-	virtual ~InputSource() noexcept;
+	virtual ~InputSource() noexcept
+	{ if(url_) CFRelease(url_); }
 
 	// This class is non-copyable.
 	InputSource(const InputSource& rhs) = delete;
@@ -33,13 +34,15 @@ public:
 	InputSource& operator=(const InputSource& rhs) = delete;
 	InputSource& operator=(InputSource&& rhs) = delete;
 
-	CFURLRef _Nullable GetURL() const noexcept;
+	CFURLRef _Nullable GetURL() const noexcept
+	{ return url_; }
 
 	// Opening and closing
 	std::expected<void, int> Open() noexcept;
 	std::expected<void, int> Close() noexcept;
 
-	bool IsOpen() const noexcept;
+	bool IsOpen() const noexcept
+	{ return isOpen_; }
 
 	// Reading
 	std::expected<int64_t, int> Read(void * _Nonnull buffer, int64_t count) noexcept;
@@ -56,7 +59,9 @@ public:
 protected:
 
 	explicit InputSource() noexcept = default;
-	explicit InputSource(CFURLRef _Nullable url) noexcept;
+
+	explicit InputSource(CFURLRef _Nullable url) noexcept
+	{ if(url) url_ = (CFURLRef)CFRetain(url); }
 
 private:
 
@@ -69,10 +74,15 @@ private:
 	virtual std::expected<int64_t, int> _GetLength() const noexcept = 0;
 
 	// Optional seeking support
-	virtual bool _SupportsSeeking() const noexcept;
-	virtual std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept;
+	virtual bool _SupportsSeeking() const noexcept
+	{ return false; }
 
+	virtual std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept
+	{ return std::unexpected{EPERM}; }
+
+	/// The location of the bytes to be read
 	CFURLRef _Nullable url_ {nullptr};
+	/// `true` if the input source is open
 	bool isOpen_ {false};
 };
 

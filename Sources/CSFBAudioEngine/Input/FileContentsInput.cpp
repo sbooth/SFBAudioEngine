@@ -5,21 +5,11 @@
 //
 
 #import <cstdio>
-#import <cstdlib>
 
 #import <sys/stat.h>
 
 #import "FileContentsInput.hpp"
 #import "scope_exit.hpp"
-
-SFB::FileContentsInput::FileContentsInput(CFURLRef url) noexcept
-: InputSource(url)
-{}
-
-SFB::FileContentsInput::~FileContentsInput() noexcept
-{
-	std::free(buf_);
-}
 
 std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 {
@@ -59,13 +49,6 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 	return {};
 }
 
-std::expected<void, int> SFB::FileContentsInput::_Close() noexcept
-{
-	std::free(buf_);
-	buf_ = nullptr;
-	return {};
-}
-
 std::expected<int64_t, int> SFB::FileContentsInput::_Read(void *buffer, int64_t count) noexcept
 {
 	if(count > SIZE_T_MAX)
@@ -75,26 +58,6 @@ std::expected<int64_t, int> SFB::FileContentsInput::_Read(void *buffer, int64_t 
 	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
 	pos_ += count;
 	return count;
-}
-
-std::expected<bool, int> SFB::FileContentsInput::_AtEOF() const noexcept
-{
-	return len_ == pos_;
-}
-
-std::expected<int64_t, int> SFB::FileContentsInput::_GetOffset() const noexcept
-{
-	return pos_;
-}
-
-std::expected<int64_t, int> SFB::FileContentsInput::_GetLength() const noexcept
-{
-	return len_;
-}
-
-bool SFB::FileContentsInput::_SupportsSeeking() const noexcept
-{
-	return true;
 }
 
 std::expected<void, int> SFB::FileContentsInput::_SeekToOffset(int64_t offset, int whence) noexcept

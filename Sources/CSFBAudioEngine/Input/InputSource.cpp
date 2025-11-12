@@ -13,23 +13,6 @@ const os_log_t InputSource::sLog = os_log_create("org.sbooth.AudioEngine", "Inpu
 
 } /* namespace SFB */
 
-SFB::InputSource::InputSource(CFURLRef url) noexcept
-{
-	if(url)
-		url_ = (CFURLRef)CFRetain(url);
-}
-
-SFB::InputSource::~InputSource() noexcept
-{
-	if(url_)
-		CFRelease(url_);
-}
-
-CFURLRef SFB::InputSource::GetURL() const noexcept
-{
-	return url_;
-}
-
 std::expected<void, int> SFB::InputSource::Open() noexcept
 {
 	if(IsOpen()) {
@@ -52,11 +35,6 @@ std::expected<void, int> SFB::InputSource::Close() noexcept
 
 	const auto defer = scope_exit{[this] noexcept { isOpen_ = false; }};
 	return _Close();
-}
-
-bool SFB::InputSource::IsOpen() const noexcept
-{
-	return isOpen_;
 }
 
 std::expected<int64_t, int> SFB::InputSource::Read(void *buffer, int64_t count) noexcept
@@ -122,16 +100,4 @@ std::expected<void, int> SFB::InputSource::SeekToOffset(int64_t offset, int when
 	}
 
 	return _SeekToOffset(offset, whence);
-}
-
-// Seeking support is optional
-
-bool SFB::InputSource::_SupportsSeeking() const noexcept
-{
-	return false;
-}
-
-std::expected<void, int> SFB::InputSource::_SeekToOffset(int64_t offset, int whence) noexcept
-{
-	return std::unexpected{EPERM};
 }

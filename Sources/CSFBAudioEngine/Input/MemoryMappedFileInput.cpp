@@ -10,17 +10,6 @@
 #import <sys/stat.h>
 
 #import "MemoryMappedFileInput.hpp"
-#import "scope_exit.hpp"
-
-SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url) noexcept
-: InputSource(url)
-{}
-
-SFB::MemoryMappedFileInput::~MemoryMappedFileInput() noexcept
-{
-	if(region_)
-		munmap(region_, len_);
-}
 
 std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 {
@@ -63,14 +52,6 @@ std::expected<void, int> SFB::MemoryMappedFileInput::_Open() noexcept
 	return {};
 }
 
-std::expected<void, int> SFB::MemoryMappedFileInput::_Close() noexcept
-{
-	const auto defer = scope_exit{[this] noexcept { region_ = nullptr; }};
-	if(munmap(region_, len_))
-		return std::unexpected{errno};
-	return {};
-}
-
 std::expected<int64_t, int> SFB::MemoryMappedFileInput::_Read(void *buffer, int64_t count) noexcept
 {
 	if(count > SIZE_T_MAX)
@@ -80,26 +61,6 @@ std::expected<int64_t, int> SFB::MemoryMappedFileInput::_Read(void *buffer, int6
 	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(region_) + pos_), count);
 	pos_ += count;
 	return count;
-}
-
-std::expected<bool, int> SFB::MemoryMappedFileInput::_AtEOF() const noexcept
-{
-	return len_ == pos_;
-}
-
-std::expected<int64_t, int> SFB::MemoryMappedFileInput::_GetOffset() const noexcept
-{
-	return pos_;
-}
-
-std::expected<int64_t, int> SFB::MemoryMappedFileInput::_GetLength() const noexcept
-{
-	return len_;
-}
-
-bool SFB::MemoryMappedFileInput::_SupportsSeeking() const noexcept
-{
-	return true;
 }
 
 std::expected<void, int> SFB::MemoryMappedFileInput::_SeekToOffset(int64_t offset, int whence) noexcept

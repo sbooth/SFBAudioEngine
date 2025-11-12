@@ -7,17 +7,6 @@
 #import <sys/stat.h>
 
 #import "FileInput.hpp"
-#import "scope_exit.hpp"
-
-SFB::FileInput::FileInput(CFURLRef url) noexcept
-: InputSource(url)
-{}
-
-SFB::FileInput::~FileInput() noexcept
-{
-	if(file_)
-		std::fclose(file_);
-}
 
 std::expected<void, int> SFB::FileInput::_Open() noexcept
 {
@@ -42,14 +31,6 @@ std::expected<void, int> SFB::FileInput::_Open() noexcept
 	return {};
 }
 
-std::expected<void, int> SFB::FileInput::_Close() noexcept
-{
-	const auto defer = scope_exit{[this] noexcept { file_ = nullptr; }};
-	if(std::fclose(file_))
-		return std::unexpected{errno};
-	return {};
-}
-
 std::expected<int64_t, int> SFB::FileInput::_Read(void *buffer, int64_t count) noexcept
 {
 	if(count > SIZE_T_MAX)
@@ -58,34 +39,4 @@ std::expected<int64_t, int> SFB::FileInput::_Read(void *buffer, int64_t count) n
 	if(nitems != count && std::ferror(file_))
 		return std::unexpected{errno};
 	return nitems;
-}
-
-std::expected<bool, int> SFB::FileInput::_AtEOF() const noexcept
-{
-	return std::feof(file_) != 0;
-}
-
-std::expected<int64_t, int> SFB::FileInput::_GetOffset() const noexcept
-{
-	const auto offset = ::ftello(file_);
-	if(offset == -1)
-		return std::unexpected{errno};
-	return offset;
-}
-
-std::expected<int64_t, int> SFB::FileInput::_GetLength() const noexcept
-{
-	return len_;
-}
-
-bool SFB::FileInput::_SupportsSeeking() const noexcept
-{
-	return true;
-}
-
-std::expected<void, int> SFB::FileInput::_SeekToOffset(int64_t offset, int whence) noexcept
-{
-	if(::fseeko(file_, static_cast<off_t>(offset), whence))
-		return std::unexpected{errno};
-	return {};
 }
