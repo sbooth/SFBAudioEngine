@@ -49,7 +49,11 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 	if(!buf_)
 		return std::unexpected{ENOMEM};
 
-	len_ = s.st_size;
+	const auto nitems = std::fread(buf_, 1, s.st_size, file);
+	if(nitems != s.st_size && std::ferror(file))
+		return std::unexpected{errno};
+
+	len_ = nitems;
 	pos_ = 0;
 
 	return {};
@@ -57,7 +61,7 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 
 std::expected<void, int> SFB::FileContentsInput::_Close() noexcept
 {
-	free(buf_);
+	std::free(buf_);
 	buf_ = nullptr;
 	len_ = 0;
 
