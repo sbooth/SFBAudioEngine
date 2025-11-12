@@ -143,6 +143,7 @@ public:
 	// MARK: - AVAudioEngine
 
 	void WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexcept;
+	SFBAudioPlayerNode * GetPlayerNode() const noexcept;
 
 	// MARK: - Debugging
 

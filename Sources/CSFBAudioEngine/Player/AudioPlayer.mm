@@ -530,6 +530,11 @@ void SFB::AudioPlayer::WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexce
 	});
 }
 
+SFBAudioPlayerNode * SFB::AudioPlayer::GetPlayerNode() const noexcept
+{
+	return mPlayerNode;
+}
+
 // MARK: - Debugging
 
 void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept
