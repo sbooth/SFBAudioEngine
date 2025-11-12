@@ -25,6 +25,11 @@ SFB::InputSource::~InputSource() noexcept
 		CFRelease(url_);
 }
 
+CFURLRef SFB::InputSource::GetURL() const noexcept
+{
+	return url_;
+}
+
 std::expected<void, int> SFB::InputSource::Open() noexcept
 {
 	if(IsOpen()) {
@@ -47,6 +52,11 @@ std::expected<void, int> SFB::InputSource::Close() noexcept
 
 	const auto defer = scope_exit{[this] noexcept { isOpen_ = false; }};
 	return _Close();
+}
+
+bool SFB::InputSource::IsOpen() const noexcept
+{
+	return isOpen_;
 }
 
 std::expected<int64_t, int> SFB::InputSource::Read(void *buffer, int64_t count) noexcept

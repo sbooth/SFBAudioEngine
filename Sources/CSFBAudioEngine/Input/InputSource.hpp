@@ -33,13 +33,13 @@ public:
 	InputSource& operator=(const InputSource& rhs) = delete;
 	InputSource& operator=(InputSource&& rhs) = delete;
 
-	CFURLRef _Nullable GetURL() const noexcept { return url_; }
+	CFURLRef _Nullable GetURL() const noexcept;
 
 	// Opening and closing
 	std::expected<void, int> Open() noexcept;
 	std::expected<void, int> Close() noexcept;
 
-	bool IsOpen() const noexcept { return isOpen_; }
+	bool IsOpen() const noexcept;
 
 	// Reading
 	std::expected<int64_t, int> Read(void * _Nonnull buffer, int64_t count) noexcept;
