@@ -473,18 +473,6 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 
 // MARK: - Decoder Queue
 
-bool SFB::AudioPlayer::InternalDecoderQueueIsEmpty() const noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	return mQueuedDecoders.empty();
-}
-
-void SFB::AudioPlayer::ClearInternalDecoderQueue() noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	mQueuedDecoders.clear();
-}
-
 bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 {
 	try {

@@ -244,17 +244,29 @@ private:
 	};
 
 	/// Returns true if the internal queue of decoders is empty
-	bool InternalDecoderQueueIsEmpty() const noexcept;
+	bool InternalDecoderQueueIsEmpty() const noexcept
+	{
+		std::lock_guard lock(mQueueLock);
+		return mQueuedDecoders.empty();
+	}
+
 	/// Removes all decoders from the internal decoder queue
-	void ClearInternalDecoderQueue() noexcept;
+	void ClearInternalDecoderQueue() noexcept
+	{
+		std::lock_guard lock(mQueueLock);
+		mQueuedDecoders.clear();
+	}
+
 	/// Inserts `decoder` at the end of the internal decoder queue
 	bool PushDecoderToInternalQueue(Decoder _Nonnull decoder) noexcept;
+
 	/// Removes and returns the first decoder from the internal decoder queue
 	Decoder _Nullable PopDecoderFromInternalQueue() noexcept;
 
 public:
 	/// Called to process `AVAudioEngineConfigurationChangeNotification`
 	void HandleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;
+
 #if TARGET_OS_IPHONE
 	/// Called to process `AVAudioSessionInterruptionNotification`
 	void HandleAudioSessionInterruption(NSDictionary * _Nullable userInfo) noexcept;
@@ -266,6 +278,7 @@ private:
 	/// - parameter error: An optional pointer to an `NSError` object to receive error information
 	/// - returns: `true` if the player was successfully configured
 	bool ConfigureForAndEnqueueDecoder(Decoder _Nonnull decoder, bool clearQueueAndReset, NSError **error) noexcept;
+
 	/// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
 	///
 	/// This method does nothing if the current rendering format is equal to `format`
