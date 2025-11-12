@@ -54,12 +54,18 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	else
 		up = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
 
-	if(!up)
+	if(!up) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return nil;
+	}
 
 	SFBInputSource *inputSource = [[SFBInputSource alloc] init];
-	if(!inputSource)
+	if(!inputSource) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return nil;
+	}
 
 	inputSource->_input = std::move(up);
 	return inputSource;
@@ -115,7 +121,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)openReturningError:(NSError **)error
 {
-	auto result = _input->Open();
+	const auto result = _input->Open();
 	if(!result) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
@@ -126,7 +132,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	auto result = _input->Close();
+	const auto result = _input->Close();
 	if(!result) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
@@ -144,7 +150,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(bytesRead != nullptr);
 
-	auto result = _input->Read(buffer, length);
+	const auto result = _input->Read(buffer, length);
 	if(!result) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
@@ -158,7 +164,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)atEOF
 {
-	auto result = _input->AtEOF();
+	const auto result = _input->AtEOF();
 	// FIXME: Is `NO` the best error return?
 	if(!result)
 		return NO;
@@ -169,7 +175,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(offset != nullptr);
 
-	auto result = _input->GetOffset();
+	const auto result = _input->GetOffset();
 	if(!result) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
@@ -184,7 +190,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(length != nullptr);
 
-	auto result = _input->GetLength();
+	const auto result = _input->GetLength();
 	if(!result) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
@@ -202,7 +208,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
-	auto result = _input->SeekToOffset(offset, SEEK_SET);
+	const auto result = _input->SeekToOffset(offset, SEEK_SET);
 	if(!result) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:result.error() userInfo:nil];
