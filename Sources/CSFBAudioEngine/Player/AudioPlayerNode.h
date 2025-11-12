@@ -121,26 +121,63 @@ public:
 	Decoder _Nullable DequeueDecoder() noexcept;
 
 	bool RemoveDecoderFromQueue(Decoder _Nonnull decoder) noexcept;
-	void ClearQueue() noexcept;
 
-	bool QueueIsEmpty() const noexcept;
+	void ClearQueue() noexcept
+	{
+		std::lock_guard lock(mQueueLock);
+		mQueuedDecoders.clear();
+	}
+
+	bool QueueIsEmpty() const noexcept
+	{
+		std::lock_guard lock(mQueueLock);
+		return mQueuedDecoders.empty();
+	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept;
 	void CancelActiveDecoders(bool cancelAllActive) noexcept;
 
-	void Reset() noexcept;
+	void Reset() noexcept
+	{
+		ClearQueue();
+		CancelActiveDecoders(true);
+	}
 
 	// MARK: - Playback Control
 
-	void Play() noexcept;
-	void Pause() noexcept;
-	void Stop() noexcept;
-	void TogglePlayPause() noexcept;
+	void Play() noexcept
+	{
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+	}
+
+	void Pause() noexcept
+	{
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+	}
+
+	void Stop() noexcept
+	{
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+		Reset();
+	}
+
+	void TogglePlayPause() noexcept
+	{
+		mFlags.fetch_xor(static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+	}
 
 	// MARK: - Playback State
 
-	bool IsPlaying() const noexcept;
-	bool IsReady() const noexcept;
+	bool IsPlaying() const noexcept
+	{
+		return mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eIsPlaying);
+	}
+
+	bool IsReady() const noexcept
+	{
+		std::lock_guard lock(mDecoderLock);
+		return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
+	}
 
 	// MARK: - Playback Properties
 
