@@ -47,7 +47,7 @@ private:
 	dispatch_queue_t				mEngineQueue 		{nil};
 
 	/// The player node driving the audio processing graph
-	AudioPlayerNode::atomic_ptr 	mPlayerNode 		{nil};
+	AudioPlayerNode::atomic_ptr 	mPlayerNode 		{nullptr};
 
 	/// The lock used to protect access to `mQueuedDecoders`
 	mutable SFB::UnfairLock			mQueueLock;
