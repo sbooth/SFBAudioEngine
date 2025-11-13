@@ -385,7 +385,6 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 		outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
 		if(![outputFormat isEqual:inputFormat])
 			[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
-
 		else
 			[string appendFormat:@"→ %@\n", connectionPoint.node];
 
