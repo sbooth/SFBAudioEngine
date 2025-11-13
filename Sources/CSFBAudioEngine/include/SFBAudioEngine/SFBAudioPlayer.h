@@ -265,7 +265,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Debugging
 
-/// Asynchronously logs a description of the player's audio processing graph
+/// Logs a description of the player's audio processing graph
 /// - parameter log: An `os_log_t` object to receive the message
 /// - parameter type: The type of log message
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type;
