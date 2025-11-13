@@ -20,9 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
-/// A block accepting a single `AVAudioEngine` parameter
-typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
-
 /// The possible playback states for `SFBAudioPlayer`
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	/// `SFBAudioPlayer.engineIsRunning` and `SFBAudioPlayer.playerNodeIsPlaying`
@@ -260,16 +257,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - AVAudioEngine Access
 
-/// Peforms an operation on the underlying `AVAudioEngine`
-/// - important: Graph modifications may only be made between `playerNode` and `engine.mainMixerNode`
-/// - parameter block: A block performing operations on the underlying `AVAudioEngine`
-- (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
+/// Returns the underlying `AVAudioEngine`
+/// - important: Graph modifications may only be made between `playerNode` and `mainMixerNode`
+/// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
+@property (nonatomic, nonnull, readonly) AVAudioEngine *audioEngine;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
 @property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
 
 // MARK: - Debugging
 
-/// Asynchronously logs a description of the player's audio processing graph
+/// Logs a description of the player's audio processing graph
 /// - parameter log: An `os_log_t` object to receive the message
 /// - parameter type: The type of log message
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type;

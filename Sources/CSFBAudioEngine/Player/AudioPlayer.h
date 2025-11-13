@@ -43,8 +43,6 @@ public:
 private:
 	/// The underlying `AVAudioEngine` instance
 	AVAudioEngine 			*mEngine 				{nil};
-	/// The dispatch queue used to access `mEngine`
-	dispatch_queue_t		mEngineQueue 			{nil};
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*mPlayerNode 			{nil};
 	/// The lock used to protect access to `mQueuedDecoders`
@@ -221,7 +219,10 @@ public:
 
 	// MARK: - AVAudioEngine
 
-	void WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexcept;
+	AVAudioEngine * GetAudioEngine() const noexcept
+	{
+		return mEngine;
+	}
 
 	SFBAudioPlayerNode * GetPlayerNode() const noexcept
 	{
