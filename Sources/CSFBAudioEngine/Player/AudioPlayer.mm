@@ -349,10 +349,7 @@ bool SFB::AudioPlayer::SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError
 {
 	os_log_info(sLog, "Setting output device to 0x%x", outputDeviceID);
 
-
-	NSError *err = nil;
-	const auto result = [mEngine.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err];
-	if(!result) {
+	if(NSError *err = nil; ![mEngine.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err]) {
 		os_log_error(sLog, "Error setting output device: %{public}@", err);
 		if(error)
 			*error = err;
@@ -470,9 +467,10 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	if(!ConfigureProcessingGraphForFormat(mPlayerNode->_node->RenderingFormat(), true)) {
 		os_log_error(sLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(mPlayerNode->_node->RenderingFormat()));
 		// The graph is not in a working state
-		NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
-		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
+			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[mPlayer.delegate audioPlayer:mPlayer encounteredError:error];
+		}
 		return;
 	}
 
