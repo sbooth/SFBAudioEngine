@@ -40,6 +40,7 @@ uint64_t NextEventIdentificationNumber() noexcept;
 /// SFBAudioPlayerNode implementation
 class AudioPlayerNode final {
 public:
+	using atomic_ptr 	= std::atomic<AudioPlayerNode *>;
 	using unique_ptr 	= std::unique_ptr<AudioPlayerNode>;
 	using Decoder 		= id<SFBPCMDecoding>;
 
