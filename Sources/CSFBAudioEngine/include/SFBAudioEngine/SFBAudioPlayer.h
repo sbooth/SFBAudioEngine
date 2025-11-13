@@ -259,6 +259,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 /// Returns the underlying `AVAudioEngine`
 /// - important: Graph modifications may only be made between `playerNode` and `mainMixerNode`
+/// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
 @property (nonatomic, nonnull, readonly) AVAudioEngine *audioEngine;
 /// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
 @property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
