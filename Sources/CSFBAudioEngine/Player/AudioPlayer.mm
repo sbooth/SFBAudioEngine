@@ -226,10 +226,10 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 void SFB::AudioPlayer::Pause() noexcept
 {
-	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && PlayerNodeIsPlaying()))
+	auto node = mPlayerNode.load(std::memory_order_acquire);
+	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && node->IsPlaying()))
 		return;
 
-	auto node = mPlayerNode.load(std::memory_order_acquire);
 	node->Pause();
 
 #if DEBUG
@@ -242,10 +242,10 @@ void SFB::AudioPlayer::Pause() noexcept
 
 void SFB::AudioPlayer::Resume() noexcept
 {
-	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !PlayerNodeIsPlaying()))
+	auto node = mPlayerNode.load(std::memory_order_acquire);
+	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !node->IsPlaying()))
 		return;
 
-	auto node = mPlayerNode.load(std::memory_order_acquire);
 	node->Play();
 
 #if DEBUG
