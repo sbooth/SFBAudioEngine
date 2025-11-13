@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2012-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,6 +10,8 @@ import XCTest
 final class SFBAudioEngineTests: XCTestCase {
 	func testInputSourceFromData() throws {
 		let input = InputSource(data: Data(repeating: 0xfe, count: 16))
+		XCTAssertEqual(input.isOpen, false)
+		try input.open()
 		XCTAssertEqual(input.isOpen, true)
 		XCTAssertEqual(input.supportsSeeking, true)
 		XCTAssertEqual(try input.offset, 0)
