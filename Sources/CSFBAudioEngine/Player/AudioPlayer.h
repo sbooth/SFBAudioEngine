@@ -38,26 +38,30 @@ public:
 	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer *mPlayer 	{nil};
+	__unsafe_unretained SFBAudioPlayer 	*mPlayer 			{nil};
 
 private:
 	/// The underlying `AVAudioEngine` instance
-	AVAudioEngine 			*mEngine 				{nil};
+	AVAudioEngine 						*mEngine 			{nil};
+
 	/// The player driving the audio processing graph
-	SFBAudioPlayerNode		*mPlayerNode 			{nil};
+	SFBAudioPlayerNode					*mPlayerNode 		{nil};
+
 	/// The lock used to protect access to `mQueuedDecoders`
-	mutable SFB::OSUnfairLock	mQueueLock;
+	mutable SFB::OSUnfairLock			mQueueLock;
 	/// Decoders enqueued for non-gapless playback
-	DecoderQueue 			mQueuedDecoders;
+	DecoderQueue 						mQueuedDecoders;
+
 	/// The lock used to protect access to `mNowPlaying`
-	mutable SFB::OSUnfairLock	mNowPlayingLock;
+	mutable SFB::OSUnfairLock 			mNowPlayingLock;
 	/// The currently rendering decoder
-	id <SFBPCMDecoding> 	mNowPlaying 			{nil};
+	id <SFBPCMDecoding> 				mNowPlaying 		{nil};
+
 	/// The dispatch queue used for asynchronous events
-	dispatch_queue_t		mEventQueue 			{nil};
+	dispatch_queue_t					mEventQueue 		{nil};
 
 	/// Flags
-	std::atomic_uint 		mFlags 					{0};
+	std::atomic_uint 					mFlags 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
