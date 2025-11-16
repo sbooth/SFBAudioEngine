@@ -11,7 +11,7 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import <CAStreamDescription.hpp>
+#import <CXXCoreAudio/CAStreamDescription.hpp>
 #import <SFBAudioFileWrapper.hpp>
 #import <SFBExtAudioFileWrapper.hpp>
 

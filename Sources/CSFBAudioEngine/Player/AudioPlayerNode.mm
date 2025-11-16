@@ -14,7 +14,7 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <CAChannelLayout.hpp>
+#import <CXXCoreAudio/CAChannelLayout.hpp>
 
 #import "AudioPlayerNode.h"
 

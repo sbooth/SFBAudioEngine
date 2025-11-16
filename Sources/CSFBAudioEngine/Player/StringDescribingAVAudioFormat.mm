@@ -4,8 +4,8 @@
 // MIT license
 //
 
-#import <CAChannelLayout.hpp>
-#import <CAStreamDescription.hpp>
+#import <CXXCoreAudio/CAChannelLayout.hpp>
+#import <CXXCoreAudio/CAStreamDescription.hpp>
 
 #import "StringDescribingAVAudioFormat.h"
 
