@@ -55,16 +55,16 @@ public:
 	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
-	__unsafe_unretained SFBAudioPlayerNode *mNode 			{nil};
+	__unsafe_unretained SFBAudioPlayerNode 	*mNode 			{nil};
 
 	/// The render block supplying audio
-	AVAudioSourceNodeRenderBlock 		mRenderBlock 		{nullptr};
+	AVAudioSourceNodeRenderBlock 			mRenderBlock 	{nullptr};
 
 private:
 	struct DecoderState;
 
-	using DecoderQueue 				= std::deque<Decoder>;
-	using DecoderStateVector 		= std::vector<std::unique_ptr<DecoderState>>;
+	using DecoderQueue 			= std::deque<Decoder>;
+	using DecoderStateVector 	= std::vector<std::unique_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
 	AVAudioFormat 						*mRenderingFormat	{nil};
