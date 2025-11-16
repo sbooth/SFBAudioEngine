@@ -21,6 +21,7 @@ let package = Package(
 	dependencies: [
 		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.1"),
 		.package(url: "https://github.com/sbooth/CXXCoreAudio", branch: "main"),
+		.package(url: "https://github.com/sbooth/CXXAudioToolbox", branch: "main"),
 		.package(url: "https://github.com/sbooth/CXXOSUnfairLock", branch: "main"),
 		.package(url: "https://github.com/sbooth/CXXRingBuffer", branch: "main"),
 
@@ -57,6 +58,7 @@ let package = Package(
 			name: "CSFBAudioEngine",
 			dependencies: [
 				.product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
+				.product(name: "CXXAudioToolbox", package: "CXXAudioToolbox"),
 				.product(name: "CXXCoreAudio", package: "CXXCoreAudio"),
 				.product(name: "CXXOSUnfairLock", package: "CXXOSUnfairLock"),
 				.product(name: "CXXRingBuffer", package: "CXXRingBuffer"),
