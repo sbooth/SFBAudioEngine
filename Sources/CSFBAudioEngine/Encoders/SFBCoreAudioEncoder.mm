@@ -11,8 +11,8 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
+#import <CAStreamDescription.hpp>
 #import <SFBAudioFileWrapper.hpp>
-#import <SFBCAStreamBasicDescription.hpp>
 #import <SFBExtAudioFileWrapper.hpp>
 
 #import "SFBCoreAudioEncoder.h"
@@ -387,7 +387,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 	else
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; mBitsPerChannel will be zero which is probably incorrect");
 
-	SFB::CAStreamBasicDescription format{};
+	CXXCoreAudio::CAStreamDescription format{};
 
 	format.mFormatID 			= formatID;
 	format.mFormatFlags 		= formatFlags;

@@ -14,9 +14,10 @@
 
 #import <AVFAudio/AVFAudio.h>
 
+#import <CAChannelLayout.hpp>
+
 #import "AudioPlayerNode.h"
 
-#import "AVAudioChannelLayoutsAreEquivalent.h"
 #import "HostTimeUtilities.hpp"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
@@ -676,7 +677,7 @@ bool SFB::AudioPlayerNode::SupportsFormat(AVAudioFormat *format) const noexcept
 #endif /* DEBUG */
 
 	// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
-	return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
+	return format.channelCount == mRenderingFormat.channelCount && format.sampleRate == mRenderingFormat.sampleRate && CXXCoreAudio::AVAudioChannelLayoutsAreEquivalent(format.channelLayout, mRenderingFormat.channelLayout);
 }
 
 // MARK: - Decoding
@@ -836,7 +837,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 		if(decoderState) {
 			// Decode and write chunks to the ring buffer
-			while(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize) {
+			while(mAudioRingBuffer.AvailableWriteCount() >= kRingBufferChunkSize) {
 				// Decoding started
 				if(const auto flags = decoderState->mFlags.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::eDecodingStarted))) {
 					const bool suspended = flags & static_cast<unsigned int>(DecoderState::Flags::eDecodingSuspended);
@@ -919,10 +920,10 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 	const void *data = errorData.bytes;
 
 	uint32_t bytesWritten = 0;
-	auto wvec = mDecodeEventRingBuffer.WriteVector();
+	auto wvec = mDecodeEventRingBuffer.GetWriteVector();
 
 	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
-	if(wvec.first.mBufferCapacity + wvec.second.mBufferCapacity < spaceNeeded) {
+	if(wvec.first.capacity_ + wvec.second.capacity_ < spaceNeeded) {
 		os_log_fault(sLog, "Insufficient space to write decoding error event");
 		return;
 	}
@@ -930,9 +931,9 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 	const auto do_write = [&bytesWritten, wvec](const void *arg, uint32_t sz) noexcept {
 		auto bytesRemaining = sz;
 		// Write to wvec.first if space is available
-		if(wvec.first.mBufferCapacity > bytesWritten) {
-			const auto n = std::min(bytesRemaining, wvec.first.mBufferCapacity - bytesWritten);
-			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.first.mBuffer) + bytesWritten),
+		if(wvec.first.capacity_ > bytesWritten) {
+			const auto n = std::min(bytesRemaining, wvec.first.capacity_ - bytesWritten);
+			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.first.buffer_) + bytesWritten),
 						arg,
 						n);
 			bytesRemaining -= n;
@@ -941,7 +942,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		// Write to wvec.second
 		if(bytesRemaining > 0){
 			const auto n = bytesRemaining;
-			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.mBuffer) + (bytesWritten - wvec.first.mBufferCapacity)),
+			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.buffer_) + (bytesWritten - wvec.first.capacity_)),
 						arg,
 						n);
 			bytesWritten += n;
@@ -982,7 +983,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	}
 
 	// If there are audio frames available to read from the ring buffer read as many as possible
-	if(const auto framesAvailableToRead = mAudioRingBuffer.FramesAvailableToRead(); framesAvailableToRead > 0) {
+	if(const auto framesAvailableToRead = mAudioRingBuffer.AvailableReadCount(); framesAvailableToRead > 0) {
 		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
 		const uint32_t framesRead = mAudioRingBuffer.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
@@ -1004,7 +1005,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		}
 
 		// If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		if(mAudioRingBuffer.FramesAvailableToWrite() >= kRingBufferChunkSize)
+		if(mAudioRingBuffer.AvailableWriteCount() >= kRingBufferChunkSize)
 			dispatch_semaphore_signal(mDecodingSemaphore);
 
 		const RenderingEventHeader header{RenderingEventCommand::eFramesRendered};

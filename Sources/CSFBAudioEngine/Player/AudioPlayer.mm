@@ -13,7 +13,7 @@
 
 #import <AVAudioFormat+SFBFormatTransformation.h>
 
-#import <SFBUnfairLock.hpp>
+#import <SFBOSUnfairLock.hpp>
 
 #import "AudioPlayer.h"
 

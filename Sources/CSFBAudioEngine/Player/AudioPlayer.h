@@ -14,7 +14,7 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <SFBUnfairLock.hpp>
+#import <SFBOSUnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
@@ -46,11 +46,11 @@ private:
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*mPlayerNode 			{nil};
 	/// The lock used to protect access to `mQueuedDecoders`
-	mutable SFB::UnfairLock	mQueueLock;
+	mutable SFB::OSUnfairLock	mQueueLock;
 	/// Decoders enqueued for non-gapless playback
 	DecoderQueue 			mQueuedDecoders;
 	/// The lock used to protect access to `mNowPlaying`
-	mutable SFB::UnfairLock	mNowPlayingLock;
+	mutable SFB::OSUnfairLock	mNowPlayingLock;
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 	mNowPlaying 			{nil};
 	/// The dispatch queue used for asynchronous events

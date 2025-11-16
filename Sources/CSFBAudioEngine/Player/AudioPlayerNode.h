@@ -19,9 +19,9 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <SFBAudioRingBuffer.hpp>
+#import <CAAudioRingBuffer.hpp>
+#import <SFBOSUnfairLock.hpp>
 #import <SFBRingBuffer.hpp>
-#import <SFBUnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
@@ -70,17 +70,17 @@ private:
 	AVAudioFormat 					*mRenderingFormat		{nil};
 
 	/// Ring buffer used to transfer audio between the decoding thread and the render block
-	SFB::AudioRingBuffer			mAudioRingBuffer 		{};
+	CXXCoreAudio::CAAudioRingBuffer 	mAudioRingBuffer 		{};
 
 	/// Active decoders and associated state
 	DecoderStateVector 				mActiveDecoders;
 	/// Lock used to protect access to `mActiveDecoders`
-	mutable SFB::UnfairLock			mDecoderLock;
+	mutable SFB::OSUnfairLock		mDecoderLock;
 
 	/// Decoders enqueued for playback that are not yet active
 	DecoderQueue 					mQueuedDecoders 		{};
 	/// Lock used to protect access to `mQueuedDecoders`
-	mutable SFB::UnfairLock			mQueueLock;
+	mutable SFB::OSUnfairLock		mQueueLock;
 
 	/// Thread used for decoding
 	std::jthread 					mDecodingThread;
