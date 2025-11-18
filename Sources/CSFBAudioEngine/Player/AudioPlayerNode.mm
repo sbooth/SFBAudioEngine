@@ -286,8 +286,8 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 
 	// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 	if(!mAudioRingBuffer.Allocate(*(mRenderingFormat.streamDescription), ringBufferSize)) {
-		os_log_error(sLog, "Unable to create audio ring buffer: SFB::AudioRingBuffer::Allocate failed");
-		throw std::runtime_error("SFB::AudioRingBuffer::Allocate failed");
+		os_log_error(sLog, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed");
+		throw std::runtime_error("CXXCoreAudio::AudioRingBuffer::Allocate failed");
 	}
 
 	// Set up the render block
@@ -869,7 +869,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 				// Write the decoded audio to the ring buffer for rendering
 				const auto framesWritten = mAudioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
 				if(framesWritten != buffer.frameLength)
-					os_log_error(sLog, "SFB::AudioRingBuffer::Write() failed");
+					os_log_error(sLog, "CXXCoreAudio::AudioRingBuffer::Write() failed");
 
 				// Decoding complete
 				if(const auto flags = decoderState->mFlags.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::eDecodingComplete)) {
@@ -987,7 +987,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
 		const uint32_t framesRead = mAudioRingBuffer.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
-			os_log_fault(sLog, "SFB::AudioRingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
+			os_log_fault(sLog, "CXXCoreAudio::AudioRingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
 		// If the ring buffer didn't contain as many frames as requested fill the remainder with silence
 		if(framesRead != frameCount) {
