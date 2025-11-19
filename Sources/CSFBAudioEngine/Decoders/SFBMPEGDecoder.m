@@ -25,7 +25,7 @@ static void Setupmpg123(void)
 	// What happens if this fails?
 	int result = mpg123_init();
 	if(result != MPG123_OK)
-		os_log_error(gSFBAudioDecoderLog, "Unable to initialize mpg123: %{public}s", mpg123_plain_strerror(result));
+		os_log_fault(gSFBAudioDecoderLog, "Unable to initialize mpg123: %{public}s", mpg123_plain_strerror(result));
 }
 
 static void Teardownmpg123(void) __attribute__ ((destructor));
