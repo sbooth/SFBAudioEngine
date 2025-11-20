@@ -20,7 +20,7 @@
 #import <AVFAudio/AVFAudio.h>
 
 #import <CXXCoreAudio/AudioRingBuffer.hpp>
-#import <CXXOSUnfairLock/OSUnfairLock.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 #import <CXXRingBuffer/RingBuffer.hpp>
 
 #import "SFBAudioDecoder.h"
@@ -79,7 +79,7 @@ private:
 	/// Decoders enqueued for playback that are not yet active
 	std::deque<Decoder>						mQueuedDecoders 	{};
 	/// Lock used to protect access to `mQueuedDecoders`
-	mutable CXXOSUnfairLock::OSUnfairLock 	mQueueLock;
+	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
 
 	/// Thread used for decoding
 	std::jthread 							mDecodingThread;

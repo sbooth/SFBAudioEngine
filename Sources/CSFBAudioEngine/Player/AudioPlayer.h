@@ -14,7 +14,7 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <CXXOSUnfairLock/OSUnfairLock.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
@@ -49,12 +49,12 @@ private:
 	/// Decoders enqueued for non-gapless playback
 	std::deque<Decoder>						mQueuedDecoders;
 	/// The lock used to protect access to `mQueuedDecoders`
-	mutable CXXOSUnfairLock::OSUnfairLock 	mQueueLock;
+	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
 
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 					mNowPlaying 		{nil};
 	/// The lock used to protect access to `mNowPlaying`
-	mutable CXXOSUnfairLock::OSUnfairLock 	mNowPlayingLock;
+	mutable CXXUnfairLock::UnfairLock 		mNowPlayingLock;
 
 	/// The dispatch queue used for asynchronous events
 	dispatch_queue_t						mEventQueue 		{nil};
