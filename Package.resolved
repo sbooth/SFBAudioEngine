@@ -28,12 +28,21 @@
       }
     },
     {
-      "identity" : "cxxaudioutilities",
+      "identity" : "cxxaudiotoolbox",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXAudioUtilities",
+      "location" : "https://github.com/sbooth/CXXAudioToolbox",
       "state" : {
-        "revision" : "b381f7dfcece39b28b91913e1f763d2ecf196bef",
-        "version" : "0.3.2"
+        "revision" : "015be5ec6ede8410856a9fcac96fdb39ccca2ca1",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "cxxcoreaudio",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXCoreAudio",
+      "state" : {
+        "revision" : "f801cbff3ca5e3972db8b6d47d0dbbc1bd48d2ed",
+        "version" : "0.1.0"
       }
     },
     {
@@ -46,12 +55,30 @@
       }
     },
     {
+      "identity" : "cxxringbuffer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXRingBuffer",
+      "state" : {
+        "revision" : "85681ee616701bc243e8840afd480ff3bcba148f",
+        "version" : "0.1.0"
+      }
+    },
+    {
       "identity" : "cxxtaglib",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
       "state" : {
-        "revision" : "4d2f78912ee2127e0ffee2f3e1a8a0ccbc4518e9",
-        "version" : "2.1.0"
+        "revision" : "a243fefb04d56eeade7669b4ec90dc2997089fbb",
+        "version" : "2.1.1"
+      }
+    },
+    {
+      "identity" : "cxxunfairlock",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXUnfairLock",
+      "state" : {
+        "revision" : "2d4662d15f63178229948f8624171a9ac9df865f",
+        "version" : "0.1.0"
       }
     },
     {
