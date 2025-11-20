@@ -74,7 +74,7 @@ private:
 	/// Active decoders and associated state
 	DecoderStateVector 						mActiveDecoders;
 	/// Lock used to protect access to `mActiveDecoders`
-	mutable CXXOSUnfairLock::OSUnfairLock 	mDecoderLock;
+	mutable CXXUnfairLock::UnfairLock 		mDecoderLock;
 
 	/// Decoders enqueued for playback that are not yet active
 	std::deque<Decoder>						mQueuedDecoders 	{};
