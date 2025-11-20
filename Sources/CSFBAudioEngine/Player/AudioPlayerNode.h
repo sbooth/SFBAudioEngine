@@ -20,8 +20,8 @@
 #import <AVFAudio/AVFAudio.h>
 
 #import <CXXCoreAudio/AudioRingBuffer.hpp>
-#import <CXXUnfairLock/UnfairLock.hpp>
 #import <CXXRingBuffer/RingBuffer.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
