@@ -14,7 +14,7 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <SFBUnfairLock.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
@@ -32,32 +32,35 @@ class AudioPlayer final {
 public:
 	using unique_ptr 	= std::unique_ptr<AudioPlayer>;
 	using Decoder 		= id<SFBPCMDecoding>;
-	using DecoderQueue 	= std::deque<Decoder>;
 
 	/// The shared log for all `AudioPlayer` instances
 	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer *mPlayer 	{nil};
+	__unsafe_unretained SFBAudioPlayer 		*mPlayer 			{nil};
 
 private:
 	/// The underlying `AVAudioEngine` instance
-	AVAudioEngine 			*mEngine 				{nil};
+	AVAudioEngine 							*mEngine 			{nil};
+
 	/// The player driving the audio processing graph
-	SFBAudioPlayerNode		*mPlayerNode 			{nil};
-	/// The lock used to protect access to `mQueuedDecoders`
-	mutable SFB::UnfairLock	mQueueLock;
+	SFBAudioPlayerNode						*mPlayerNode 		{nil};
+
 	/// Decoders enqueued for non-gapless playback
-	DecoderQueue 			mQueuedDecoders;
-	/// The lock used to protect access to `mNowPlaying`
-	mutable SFB::UnfairLock	mNowPlayingLock;
+	std::deque<Decoder>						mQueuedDecoders;
+	/// The lock used to protect access to `mQueuedDecoders`
+	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
+
 	/// The currently rendering decoder
-	id <SFBPCMDecoding> 	mNowPlaying 			{nil};
+	id <SFBPCMDecoding> 					mNowPlaying 		{nil};
+	/// The lock used to protect access to `mNowPlaying`
+	mutable CXXUnfairLock::UnfairLock 		mNowPlayingLock;
+
 	/// The dispatch queue used for asynchronous events
-	dispatch_queue_t		mEventQueue 			{nil};
+	dispatch_queue_t						mEventQueue 		{nil};
 
 	/// Flags
-	std::atomic_uint 		mFlags 					{0};
+	std::atomic_uint 						mFlags 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:

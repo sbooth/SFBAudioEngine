@@ -13,8 +13,6 @@
 
 #import <AVAudioFormat+SFBFormatTransformation.h>
 
-#import <SFBUnfairLock.hpp>
-
 #import "AudioPlayer.h"
 
 #import "HostTimeUtilities.hpp"
