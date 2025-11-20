@@ -22,8 +22,8 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.1"),
 		.package(url: "https://github.com/sbooth/CXXCoreAudio", branch: "main"),
 		.package(url: "https://github.com/sbooth/CXXAudioToolbox", branch: "main"),
-		.package(url: "https://github.com/sbooth/CXXUnfairLock", from: "0.1.0"),
 		.package(url: "https://github.com/sbooth/CXXRingBuffer", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/CXXUnfairLock", from: "0.1.0"),
 
 		// Standalone dependencies from source
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
@@ -60,8 +60,8 @@ let package = Package(
 				.product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
 				.product(name: "CXXAudioToolbox", package: "CXXAudioToolbox"),
 				.product(name: "CXXCoreAudio", package: "CXXCoreAudio"),
-				.product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
 				.product(name: "CXXRingBuffer", package: "CXXRingBuffer"),
+				.product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
 				// Standalone dependencies
 				.product(name: "dumb", package: "CDUMB"),
 				.product(name: "MAC", package: "CXXMonkeysAudio"),
