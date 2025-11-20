@@ -60,7 +60,7 @@ let package = Package(
 				.product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
 				.product(name: "CXXAudioToolbox", package: "CXXAudioToolbox"),
 				.product(name: "CXXCoreAudio", package: "CXXCoreAudio"),
-				.product(name: "CXXOSUnfairLock", package: "CXXOSUnfairLock"),
+				.product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
 				.product(name: "CXXRingBuffer", package: "CXXRingBuffer"),
 				// Standalone dependencies
 				.product(name: "dumb", package: "CDUMB"),
