@@ -87,12 +87,15 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_header(uint8_t *buf, NSInte
 	NSCParameterAssert(buf != NULL);
 	NSCParameterAssert(len >= 3);
 
-	for(NSInteger i = 0; i < len - 3; ++i) {
-		// Search for MP3 sync word
-		if(buf[i] == 0xff && buf[i + 1] & 0xe0 == 0xe0) {
-			// Perform a minimal check for a valid MP3 frame header
-			if((buf[i + 1] & 0x18) != 0x08 && (buf[i + 1] & 0x06) != 0 && (buf[i + 2] & 0xf0) != 0xf0 && (buf[i + 2] & 0x0c) != 0x0c)
+	uint8_t *loc = buf;
+	while(loc) {
+		// Search for first byte of MP3 sync word
+		loc = memchr(loc, 0xff, len - 3);
+		if(loc) {
+			// Check whether a complete MP3 sync word was found and perform a minimal check for a valid MP3 frame header
+			if(*(loc+1) & 0xe0 == 0xe0 && (*(loc+1) & 0x18) != 0x08 && (*(loc+1) & 0x06) != 0 && (*(loc+2) & 0xf0) != 0xf0 && (*(loc+2) & 0x0c) != 0x0c)
 				return YES;
+			len -= (loc - buf);
 		}
 	}
 
