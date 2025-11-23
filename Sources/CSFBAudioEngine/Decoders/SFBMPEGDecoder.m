@@ -122,7 +122,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 	uint8_t *loc = buf;
 	for(;;) {
 		// Search for first byte of MP3 sync word
-		loc = memchr(loc, 0xff, len - (loc - buf) - 3);
+		loc = memchr(loc, 0xff, len - (loc - buf) - 2);
 		if(!loc)
 			break;
 
