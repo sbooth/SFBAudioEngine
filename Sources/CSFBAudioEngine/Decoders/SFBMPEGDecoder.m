@@ -149,6 +149,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(uint8_t *buf, 
 
 	// Attempt to detect and minimally parse an ID3v2 tag header
 	NSData *data = [inputSource readDataOfLength:SFBID3v2HeaderSize error:error];
+	if(!data)
+		return NO;
 	if([data isID3v2Header])
 		offset = [data id3v2TagTotalSize];
 	// Skip tag data
