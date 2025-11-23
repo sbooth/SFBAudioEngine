@@ -105,9 +105,10 @@ static BOOL is_id3v2_tag_header(const uint8_t *buf)
 
 /// Returns the total size in bytes of the ID3v2 tag with @c header.
 /// @warning @c header must be at least 10 bytes in size.
-static size_t id3v2_tag_total_size(const uint8_t *header)
+static uint32_t id3v2_tag_total_size(const uint8_t *header)
 {
 	uint8_t flags = header[5];
+	// The size is stored as a 32-bit synchsafe integer with 28 effective bits
 	uint32_t size = (header[6] << 21) | (header[7] << 14) | (header[8] << 7) | header[9];
 	return 10 + size + (flags & 0x10 ? 10 : 0);
 }
