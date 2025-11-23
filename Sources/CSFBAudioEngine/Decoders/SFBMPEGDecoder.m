@@ -192,7 +192,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 		// Skip tag data
 
 		// Ensure 3 bytes are available for MP3 frame header check
-		if(searchStartOffset < len - 3) {
+		if(searchStartOffset <= len - 3) {
 			memmove(buf, buf + searchStartOffset, len - searchStartOffset);
 			len -= searchStartOffset;
 		}
