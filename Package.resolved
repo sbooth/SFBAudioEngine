@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMonkeysAudio",
       "state" : {
-        "revision" : "f576cd43884179960733a7ff6b44e3aa920e9768",
-        "version" : "11.22.0"
+        "revision" : "f8f445c5e545cf78ec8c097a3c236659e1e4ba8b",
+        "version" : "11.82.0"
       }
     },
     {

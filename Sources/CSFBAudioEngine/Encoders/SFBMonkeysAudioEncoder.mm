@@ -14,7 +14,7 @@
 #define PLATFORM_APPLE
 
 #include <MAC/All.h>
-#include <MAC/IO.h>
+#include <MAC/IAPEIO.h>
 #include <MAC/MACLib.h>
 
 #undef PLATFORM_APPLE
@@ -36,7 +36,7 @@ SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsV
 namespace {
 
 // The I/O interface for MAC
-class APEIOInterface final : public APE::CIO
+class APEIOInterface final : public APE::IAPEIO
 {
 public:
 	explicit APEIOInterface(SFBOutputSource *outputSource)
