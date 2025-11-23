@@ -113,7 +113,7 @@ static uint32_t id3v2_tag_total_size(const uint8_t *header)
 	return 10 + size + (flags & 0x10 ? 10 : 0);
 }
 
-/// Returns true if @c buf contains an MP3 sync word and minimal valid frame header.
+/// Searches for an MP3 sync word and minimal valid frame header in @c buf.
 static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t *buf, NSInteger len)
 {
 	NSCParameterAssert(buf != NULL);
