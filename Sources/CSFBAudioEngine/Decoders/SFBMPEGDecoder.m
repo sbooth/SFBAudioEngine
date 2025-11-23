@@ -82,6 +82,23 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	return offset;
 }
 
+static BOOL contains_mp3_sync_word_and_minimal_valid_header(uint8_t *buf, NSInteger len)
+{
+	NSCParameterAssert(buf != NULL);
+	NSCParameterAssert(len >= 3);
+
+	for(NSInteger i = 0; i < len - 3; ++i) {
+		// Search for MP3 sync word
+		if(buf[i] == 0xff && buf[i + 1] & 0xe0 == 0xe0) {
+			// Perform a minimal check for a valid MP3 frame header
+			if((buf[i + 1] & 0x18) != 0x08 && (buf[i + 1] & 0x06) != 0 && (buf[i + 2] & 0xf0) != 0xf0 && (buf[i + 2] & 0x0c) != 0x0c)
+				return YES;
+		}
+	}
+
+	return NO;
+}
+
 @interface SFBMPEGDecoder ()
 {
 @private
@@ -118,14 +135,60 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:SFBMP3DetectionSize skipID3v2Tag:YES error:error];
-	if(!header)
+	NSInteger originalOffset;
+	if(![inputSource getOffset:&originalOffset error:error])
 		return NO;
 
-	if([header isMP3Header])
-		*formatIsSupported = SFBTernaryTruthValueTrue;
-	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
+	if(![inputSource seekToOffset:0 error:error])
+		return NO;
+
+	NSInteger offset = 0;
+
+	// Attempt to detect and minimally parse an ID3v2 tag header
+	NSData *data = [inputSource readDataOfLength:SFBID3v2HeaderSize error:error];
+	if([data isID3v2Header])
+		offset = [data id3v2TagTotalSize];
+	// Skip tag data
+	if(![inputSource seekToOffset:offset error:error])
+		return NO;
+
+	uint8_t buf [512];
+	NSInteger len;
+	if(![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error])
+		return NO;
+
+	for(;;) {
+		if(len < 2 * SFBMP3DetectionSize) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: inputSource.url }];
+			return NO;
+		}
+
+		// Search for an MP3 sync word and a frame header that appears to be valid
+		if(contains_mp3_sync_word_and_minimal_valid_header(buf, len - 3)) {
+			*formatIsSupported = SFBTernaryTruthValueTrue;
+			break;
+		}
+
+		// Slide last 3 bytes to beginning to restart search
+		memmove(buf, buf + len - 3, 3);
+		if(![inputSource readBytes:buf + 3 length:sizeof buf - 3 bytesRead:&len error:error])
+			return NO;
+		len += 3;
+
+		// Limit searches to 2 KB
+		NSInteger currentOffset;
+		if(![inputSource getOffset:&currentOffset error:error])
+			return NO;
+
+		if(currentOffset > offset + 2048) {
+			*formatIsSupported = SFBTernaryTruthValueFalse;
+			break;
+		}
+	}
+
+	if(![inputSource seekToOffset:originalOffset error:error])
+		return NO;
 
 	return YES;
 }
