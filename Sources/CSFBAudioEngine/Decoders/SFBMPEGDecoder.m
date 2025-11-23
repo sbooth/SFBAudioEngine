@@ -119,16 +119,17 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 	NSCParameterAssert(buf != NULL);
 	NSCParameterAssert(len >= 3);
 
-	uint8_t *loc = buf;
+	const uint8_t *loc = buf;
 	for(;;) {
 		// Search for first byte of MP3 sync word
-		loc = memchr(loc, 0xff, len - (loc - buf) - 2);
+		loc = (const uint8_t *)memchr(loc, 0xff, len - (loc - buf) - 2);
 		if(!loc)
 			break;
 
 		// Check whether a complete MP3 sync word was found and perform a minimal check for a valid MP3 frame header
 		if((*(loc+1) & 0xe0) == 0xe0 && (*(loc+1) & 0x18) != 0x08 && (*(loc+1) & 0x06) != 0 && (*(loc+2) & 0xf0) != 0xf0 && (*(loc+2) & 0x0c) != 0x0c)
 			return YES;
+
 		loc++;
 	}
 
