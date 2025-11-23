@@ -82,7 +82,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	return offset;
 }
 
-static BOOL contains_mp3_sync_word_and_minimal_valid_header(uint8_t *buf, NSInteger len)
+static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(uint8_t *buf, NSInteger len)
 {
 	NSCParameterAssert(buf != NULL);
 	NSCParameterAssert(len >= 3);
@@ -168,7 +168,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_header(uint8_t *buf, NSInte
 		}
 
 		// Search for an MP3 sync word and a frame header that appears to be valid
-		if(contains_mp3_sync_word_and_minimal_valid_header(buf, len - 3)) {
+		if(contains_mp3_sync_word_and_minimal_valid_frame_header(buf, len - 3)) {
 			*formatIsSupported = SFBTernaryTruthValueTrue;
 			break;
 		}
