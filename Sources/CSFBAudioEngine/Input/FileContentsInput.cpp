@@ -5,26 +5,25 @@
 //
 
 #import <cstdio>
+#import <system_error>
 
 #import <sys/stat.h>
 
 #import "FileContentsInput.hpp"
 #import "scope_exit.hpp"
 
-std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
+void SFB::FileContentsInput::_Open()
 {
 	CFURLRef url = GetURL();
-	if(!url)
-		return std::unexpected{ENOENT};
 
 	UInt8 path [PATH_MAX];
 	auto success = CFURLGetFileSystemRepresentation(url, FALSE, path, PATH_MAX);
 	if(!success)
-		return std::unexpected{EIO};
+		throw std::runtime_error("Unable to get URL file system representation");
 
 	auto file = std::fopen(reinterpret_cast<const char *>(path), "r");
 	if(!file)
-		return std::unexpected{errno};
+		throw std::system_error{errno, std::generic_category()};
 
 	// Ensure the file is closed
 	const auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
@@ -33,26 +32,24 @@ std::expected<void, int> SFB::FileContentsInput::_Open() noexcept
 
 	struct stat s;
 	if(::fstat(fd, &s))
-		return std::unexpected{errno};
+		throw std::system_error{errno, std::generic_category()};
 
 	buf_ = std::malloc(s.st_size);
 	if(!buf_)
-		return std::unexpected{ENOMEM};
+		throw std::bad_alloc();
 
 	const auto nitems = std::fread(buf_, 1, s.st_size, file);
 	if(nitems != s.st_size && std::ferror(file))
-		return std::unexpected{errno};
+		throw std::system_error{errno, std::generic_category()};
 
 	len_ = nitems;
 	pos_ = 0;
-
-	return {};
 }
 
-std::expected<int64_t, int> SFB::FileContentsInput::_Read(void *buffer, int64_t count) noexcept
+int64_t SFB::FileContentsInput::_Read(void *buffer, int64_t count)
 {
 	if(count > SIZE_T_MAX)
-		return std::unexpected{EINVAL};
+		throw std::invalid_argument("Count too large");
 	const auto remaining = len_ - pos_;
 	count = std::min(count, remaining);
 	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
@@ -60,7 +57,7 @@ std::expected<int64_t, int> SFB::FileContentsInput::_Read(void *buffer, int64_t 
 	return count;
 }
 
-std::expected<void, int> SFB::FileContentsInput::_SeekToOffset(int64_t offset, int whence) noexcept
+void SFB::FileContentsInput::_SeekToOffset(int64_t offset, int whence)
 {
 	switch(whence) {
 		case SEEK_SET:
@@ -72,13 +69,12 @@ std::expected<void, int> SFB::FileContentsInput::_SeekToOffset(int64_t offset, i
 			offset += len_;
 			break;
 		default:
-			return std::unexpected{EINVAL};
+			throw std::invalid_argument("Unknown whence");
 	}
 
 	if(offset < 0 || offset > len_)
-		return std::unexpected{EINVAL};
+		throw std::out_of_range("Invalid seek offset");
 
 	pos_ = offset;
-	return {};
 }
 

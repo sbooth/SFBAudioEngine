@@ -6,8 +6,8 @@
 
 #pragma once
 
-#import <expected>
 #import <memory>
+#import <stdexcept>
 
 #import <os/log.h>
 
@@ -38,47 +38,47 @@ public:
 	{ return url_; }
 
 	// Opening and closing
-	std::expected<void, int> Open() noexcept;
-	std::expected<void, int> Close() noexcept;
+	void Open();
+	void Close();
 
 	bool IsOpen() const noexcept
 	{ return isOpen_; }
 
 	// Reading
-	std::expected<int64_t, int> Read(void * _Nonnull buffer, int64_t count) noexcept;
+	int64_t Read(void * _Nonnull buffer, int64_t count);
 
-	std::expected<bool, int> AtEOF() const noexcept;
+	bool AtEOF() const;
 
-	std::expected<int64_t, int> GetOffset() const noexcept;
-	std::expected<int64_t, int> GetLength() const noexcept;
+	int64_t GetOffset() const;
+	int64_t GetLength() const;
 
 	// Seeking
 	bool SupportsSeeking() const noexcept;
-	std::expected<void, int> SeekToOffset(int64_t offset, int whence) noexcept;
+	void SeekToOffset(int64_t offset, int whence);
 
 protected:
 
 	explicit InputSource() noexcept = default;
 
 	explicit InputSource(CFURLRef _Nullable url) noexcept
-	{ if(url) url_ = (CFURLRef)CFRetain(url); }
+	{ if(url) url_ = static_cast<CFURLRef>(CFRetain(url)); }
 
 private:
 
 	// Subclasses must implement the following methods
-	virtual std::expected<void, int> _Open() noexcept = 0;
-	virtual std::expected<void, int> _Close() noexcept = 0;
-	virtual std::expected<int64_t, int> _Read(void * _Nonnull buffer, int64_t count) noexcept = 0;
-	virtual std::expected<bool, int> _AtEOF() const noexcept = 0;
-	virtual std::expected<int64_t, int> _GetOffset() const noexcept = 0;
-	virtual std::expected<int64_t, int> _GetLength() const noexcept = 0;
+	virtual void _Open() = 0;
+	virtual void _Close() = 0;
+	virtual int64_t _Read(void * _Nonnull buffer, int64_t count) = 0;
+	virtual bool _AtEOF() const = 0;
+	virtual int64_t _GetOffset() const = 0;
+	virtual int64_t _GetLength() const = 0;
 
 	// Optional seeking support
 	virtual bool _SupportsSeeking() const noexcept
 	{ return false; }
 
-	virtual std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept
-	{ return std::unexpected{EPERM}; }
+	virtual void _SeekToOffset(int64_t offset, int whence)
+	{ throw std::logic_error("Seeking not supported"); }
 
 	/// The location of the bytes to be read
 	CFURLRef _Nullable url_ {nullptr};

@@ -4,39 +4,39 @@
 // MIT license
 //
 
+#import <system_error>
+
 #import <sys/stat.h>
 
 #import "FileInput.hpp"
 
-std::expected<void, int> SFB::FileInput::_Open() noexcept
+void SFB::FileInput::_Open()
 {
 	UInt8 path [PATH_MAX];
 	auto success = CFURLGetFileSystemRepresentation(GetURL(), FALSE, path, PATH_MAX);
 	if(!success)
-		return std::unexpected{EIO};
+		throw std::runtime_error("Unable to get URL file system representation");
 
 	file_ = std::fopen(reinterpret_cast<const char *>(path), "r");
 	if(!file_)
-		return std::unexpected{errno};
+		throw std::system_error{errno, std::generic_category()};
 
 	struct stat s;
 	if(::fstat(::fileno(file_), &s)) {
 		std::fclose(file_);
 		file_ = nullptr;
-		return std::unexpected{errno};
+		throw std::system_error{errno, std::generic_category()};
 	}
 
 	len_ = s.st_size;
-
-	return {};
 }
 
-std::expected<int64_t, int> SFB::FileInput::_Read(void *buffer, int64_t count) noexcept
+int64_t SFB::FileInput::_Read(void *buffer, int64_t count)
 {
 	if(count > SIZE_T_MAX)
-		return std::unexpected{EINVAL};
+		throw std::invalid_argument("Count too large");
 	const auto nitems = std::fread(buffer, 1, count, file_);
 	if(nitems != count && std::ferror(file_))
-		return std::unexpected{errno};
+		throw std::system_error{errno, std::generic_category()};
 	return nitems;
 }

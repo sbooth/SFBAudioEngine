@@ -6,10 +6,17 @@
 
 #import "DataInput.hpp"
 
-std::expected<int64_t, int> SFB::DataInput::_Read(void *buffer, int64_t count) noexcept
+SFB::DataInput::DataInput(CFDataRef data)
+{
+	if(!data)
+		throw std::invalid_argument("Null data");
+	data_ = static_cast<CFDataRef>(CFRetain(data));
+}
+
+int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 {
 	if(count > LONG_MAX)
-		return std::unexpected{EINVAL};
+		throw std::invalid_argument("Count too large");
 	const int64_t remaining = CFDataGetLength(data_) - pos_;
 	count = std::min(count, remaining);
 	const auto range = CFRangeMake(pos_, count);
@@ -18,7 +25,7 @@ std::expected<int64_t, int> SFB::DataInput::_Read(void *buffer, int64_t count) n
 	return count;
 }
 
-std::expected<void, int> SFB::DataInput::_SeekToOffset(int64_t offset, int whence) noexcept
+void SFB::DataInput::_SeekToOffset(int64_t offset, int whence)
 {
 	const auto length = CFDataGetLength(data_);
 
@@ -32,12 +39,11 @@ std::expected<void, int> SFB::DataInput::_SeekToOffset(int64_t offset, int whenc
 			offset += length;
 			break;
 		default:
-			return std::unexpected{EINVAL};
+			throw std::invalid_argument("Unknown whence");
 	}
 
 	if(offset < 0 || offset > length)
-		return std::unexpected{EINVAL};
+		throw std::out_of_range("Invalid seek offset");
 
 	pos_ = offset;
-	return {};
 }

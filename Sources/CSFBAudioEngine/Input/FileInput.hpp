@@ -7,6 +7,7 @@
 #pragma once
 
 #import <cstdio>
+#import <system_error>
 
 #import "InputSource.hpp"
 #import "scope_exit.hpp"
@@ -16,8 +17,9 @@ namespace SFB {
 class FileInput: public InputSource
 {
 public:
-	explicit FileInput(CFURLRef _Nonnull url) noexcept
-	: InputSource(url) {}
+	explicit FileInput(CFURLRef _Nonnull url)
+	: InputSource(url)
+	{ if(!url) throw std::invalid_argument("Null URL"); }
 
 	~FileInput() noexcept
 	{ if(file_) std::fclose(file_); }
@@ -31,38 +33,38 @@ public:
 	FileInput& operator=(FileInput&& rhs) = delete;
 
 private:
-	std::expected<void, int> _Open() noexcept override;
+	void _Open() override;
 
-	std::expected<void, int> _Close() noexcept override
+	void _Close() override
 	{
 		const auto defer = scope_exit{[this] noexcept { file_ = nullptr; }};
-		if(std::fclose(file_)) return std::unexpected{errno};
-		return {};
+		if(std::fclose(file_))
+			throw std::system_error{errno, std::generic_category()};
 	}
 
-	std::expected<int64_t, int> _Read(void * _Nonnull buffer, int64_t count) noexcept override;
+	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 
-	std::expected<bool, int> _AtEOF() const noexcept override
+	bool _AtEOF() const noexcept override
 	{ return std::feof(file_) != 0; }
 
-	std::expected<int64_t, int> _GetOffset() const noexcept override
+	int64_t _GetOffset() const override
 	{
 		const auto offset = ::ftello(file_);
-		if(offset == -1) return std::unexpected{errno};
+		if(offset == -1)
+			throw std::system_error{errno, std::generic_category()};
 		return offset;
 	}
 
-	std::expected<int64_t, int> _GetLength() const noexcept override
+	int64_t _GetLength() const noexcept override
 	{ return len_; }
 
 	bool _SupportsSeeking() const noexcept override
 	{ return true; }
 
-	std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept override
+	void _SeekToOffset(int64_t offset, int whence) override
 	{
 		if(::fseeko(file_, static_cast<off_t>(offset), whence))
-			return std::unexpected{errno};
-		return {};
+			throw std::system_error{errno, std::generic_category()};
 	}
 
 	// Data members

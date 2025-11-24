@@ -113,5 +113,5 @@ let package = Package(
 			])
 	],
 	cLanguageStandard: .c11,
-	cxxLanguageStandard: .cxx2b
+	cxxLanguageStandard: .cxx20
 )

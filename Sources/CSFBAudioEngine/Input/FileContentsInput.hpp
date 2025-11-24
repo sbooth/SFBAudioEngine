@@ -15,8 +15,9 @@ namespace SFB {
 class FileContentsInput: public InputSource
 {
 public:
-	explicit FileContentsInput(CFURLRef _Nonnull url) noexcept
-	: InputSource(url) {}
+	explicit FileContentsInput(CFURLRef _Nonnull url)
+	: InputSource(url)
+	{ if(!url) throw std::invalid_argument("Null URL"); }
 
 	~FileContentsInput() noexcept
 	{ std::free(buf_); }
@@ -30,30 +31,29 @@ public:
 	FileContentsInput& operator=(FileContentsInput&& rhs) = delete;
 
 private:
-	std::expected<void, int> _Open() noexcept override;
+	void _Open() override;
 
-	std::expected<void, int> _Close() noexcept override
+	void _Close() noexcept override
 	{
 		std::free(buf_);
 		buf_ = nullptr;
-		return {};
 	}
 
-	std::expected<int64_t, int> _Read(void * _Nonnull buffer, int64_t count) noexcept override;
+	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 
-	std::expected<bool, int> _AtEOF() const noexcept override
+	bool _AtEOF() const noexcept override
 	{ return len_ == pos_; }
 
-	std::expected<int64_t, int> _GetOffset() const noexcept override
+	int64_t _GetOffset() const noexcept override
 	{ return pos_; }
 
-	std::expected<int64_t, int> _GetLength() const noexcept override
+	int64_t _GetLength() const noexcept override
 	{ return len_; }
 
 	bool _SupportsSeeking() const noexcept override
 	{ return true; }
 
-	std::expected<void, int> _SeekToOffset(int64_t offset, int whence) noexcept override;
+	void _SeekToOffset(int64_t offset, int whence) override;
 
 	// Data members
 	void * _Nullable buf_ {nullptr};
