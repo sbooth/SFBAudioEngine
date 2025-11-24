@@ -35,7 +35,7 @@ private:
 	void _Open() override;
 	void _Close() override
 	{
-		const auto defer = scope_exit{[this] noexcept { region_ = nullptr; }};
+		const auto defer = scope_exit{[this]() noexcept { region_ = nullptr; }};
 		if(munmap(region_, len_))
 			throw std::system_error{errno, std::generic_category()};
 	}

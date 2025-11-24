@@ -33,7 +33,7 @@ void SFB::InputSource::Close()
 		return;
 	}
 
-	const auto defer = scope_exit{[this] noexcept { isOpen_ = false; }};
+	const auto defer = scope_exit{[this]() noexcept { isOpen_ = false; }};
 	_Close();
 }
 
@@ -46,7 +46,7 @@ int64_t SFB::InputSource::Read(void *buffer, int64_t count)
 
 	if(!buffer || count < 0) {
 		os_log_debug(sLog, "Read() called with null buffer or invalid count");
-		throw std::out_of_range("Null buffer or negative count");
+		throw std::invalid_argument("Null buffer or negative count");
 	}
 
 	return _Read(buffer, count);

@@ -26,7 +26,7 @@ void SFB::FileContentsInput::_Open()
 		throw std::system_error{errno, std::generic_category()};
 
 	// Ensure the file is closed
-	const auto guard = scope_exit{[&file] noexcept { std::fclose(file); }};
+	const auto guard = scope_exit{[&file]() noexcept { std::fclose(file); }};
 
 	auto fd = ::fileno(file);
 

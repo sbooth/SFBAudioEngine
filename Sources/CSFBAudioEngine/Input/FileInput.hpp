@@ -37,7 +37,7 @@ private:
 
 	void _Close() override
 	{
-		const auto defer = scope_exit{[this] noexcept { file_ = nullptr; }};
+		const auto defer = scope_exit{[this]() noexcept { file_ = nullptr; }};
 		if(std::fclose(file_))
 			throw std::system_error{errno, std::generic_category()};
 	}
