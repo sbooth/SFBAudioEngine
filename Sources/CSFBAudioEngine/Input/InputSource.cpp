@@ -62,24 +62,24 @@ bool SFB::InputSource::AtEOF() const
 	return _AtEOF();
 }
 
-int64_t SFB::InputSource::GetOffset() const
+int64_t SFB::InputSource::Offset() const
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "GetOffset() called on an InputSource that hasn't been opened");
 		throw std::logic_error("Input source not open");
 	}
 
-	return _GetOffset();
+	return _Offset();
 }
 
-int64_t SFB::InputSource::GetLength() const
+int64_t SFB::InputSource::Length() const
 {
 	if(!IsOpen()) {
 		os_log_debug(sLog, "GetLength() called on an InputSource that hasn't been opened");
 		throw std::logic_error("Input source not open");
 	}
 
-	return _GetLength();
+	return _Length();
 }
 
 bool SFB::InputSource::SupportsSeeking() const noexcept

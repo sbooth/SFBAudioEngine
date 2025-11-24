@@ -47,7 +47,7 @@ private:
 	bool _AtEOF() const noexcept override
 	{ return std::feof(file_) != 0; }
 
-	int64_t _GetOffset() const override
+	int64_t _Offset() const override
 	{
 		const auto offset = ::ftello(file_);
 		if(offset == -1)
@@ -55,7 +55,7 @@ private:
 		return offset;
 	}
 
-	int64_t _GetLength() const noexcept override
+	int64_t _Length() const noexcept override
 	{ return len_; }
 
 	bool _SupportsSeeking() const noexcept override

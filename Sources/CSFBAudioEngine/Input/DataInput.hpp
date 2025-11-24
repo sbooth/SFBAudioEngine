@@ -38,10 +38,10 @@ private:
 	bool _AtEOF() const noexcept override
 	{ return CFDataGetLength(data_) == pos_; }
 
-	int64_t _GetOffset() const noexcept override
+	int64_t _Offset() const noexcept override
 	{ return pos_; }
 
-	int64_t _GetLength() const noexcept override
+	int64_t _Length() const noexcept override
 	{ return CFDataGetLength(data_); }
 
 	bool _SupportsSeeking() const noexcept override

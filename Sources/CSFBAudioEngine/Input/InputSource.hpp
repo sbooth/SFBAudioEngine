@@ -49,8 +49,8 @@ public:
 
 	bool AtEOF() const;
 
-	int64_t GetOffset() const;
-	int64_t GetLength() const;
+	int64_t Offset() const;
+	int64_t Length() const;
 
 	// Seeking
 	bool SupportsSeeking() const noexcept;
@@ -70,8 +70,8 @@ private:
 	virtual void _Close() = 0;
 	virtual int64_t _Read(void * _Nonnull buffer, int64_t count) = 0;
 	virtual bool _AtEOF() const = 0;
-	virtual int64_t _GetOffset() const = 0;
-	virtual int64_t _GetLength() const = 0;
+	virtual int64_t _Offset() const = 0;
+	virtual int64_t _Length() const = 0;
 
 	// Optional seeking support
 	virtual bool _SupportsSeeking() const noexcept

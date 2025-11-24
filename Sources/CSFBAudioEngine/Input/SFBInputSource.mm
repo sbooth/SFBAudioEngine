@@ -181,7 +181,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(offset != nullptr);
 
 	try {
-		*offset = _input->GetOffset();
+		*offset = _input->Offset();
 		return YES;
 	}
 	catch(const std::exception& e) {
@@ -196,7 +196,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length != nullptr);
 
 	try {
-		*length = _input->GetLength();
+		*length = _input->Length();
 		return YES;
 	}
 	catch(const std::exception& e) {
