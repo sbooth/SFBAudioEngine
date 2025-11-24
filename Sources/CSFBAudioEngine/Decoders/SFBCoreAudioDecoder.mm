@@ -10,8 +10,8 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import <SFBCAAudioFile.hpp>
-#import <SFBCAExtAudioFile.hpp>
+#import <CXXAudioToolbox/CAAudioFile.hpp>
+#import <CXXAudioToolbox/CAExtAudioFile.hpp>
 
 #import "SFBCoreAudioDecoder.h"
 
@@ -71,8 +71,8 @@ SInt64 get_size_callback(void *inClientData) noexcept
 @interface SFBCoreAudioDecoder ()
 {
 @private
-	SFB::CAAudioFile _af;
-	SFB::CAExtAudioFile _eaf;
+	CXXAudioToolbox::CAAudioFile _af;
+	CXXAudioToolbox::CAExtAudioFile _eaf;
 }
 @end
 
@@ -92,21 +92,21 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		try {
 			NSMutableSet *supportedPathExtensions = [NSMutableSet set];
 
-			auto readableTypes = SFB::CAAudioFile::ReadableTypes();
+			auto readableTypes = CXXAudioToolbox::CAAudioFile::ReadableTypes();
 			for(const auto& type : readableTypes) {
 				try {
-					auto extensionsForType = SFB::CAAudioFile::ExtensionsForType(type);
-					[supportedPathExtensions addObjectsFromArray:(NSArray *)extensionsForType];
+					NSArray *extensionsForType = (__bridge_transfer NSArray *)CXXAudioToolbox::CAAudioFile::CopyExtensionsForType(type);
+					[supportedPathExtensions addObjectsFromArray:extensionsForType];
 				}
 				catch(const std::exception& e) {
-					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ExtensionsForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
+					os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::ExtensionsForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
 				}
 			}
 
 			pathExtensions = [supportedPathExtensions copy];
 		}
 		catch(const std::exception& e) {
-			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %{public}s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::ReadableTypes failed: %{public}s", e.what());
 			pathExtensions = [NSSet set];
 		}
 	});
@@ -123,21 +123,21 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		try {
 			NSMutableSet *supportedMIMETypes = [NSMutableSet set];
 
-			auto readableTypes = SFB::CAAudioFile::ReadableTypes();
+			auto readableTypes = CXXAudioToolbox::CAAudioFile::ReadableTypes();
 			for(const auto& type : readableTypes) {
 				try {
-					auto mimeTypesForType = SFB::CAAudioFile::MIMETypesForType(type);
-					[supportedMIMETypes addObjectsFromArray:(NSArray *)mimeTypesForType];
+					NSArray *mimeTypesForType = (__bridge_transfer NSArray *)CXXAudioToolbox::CAAudioFile::CopyMIMETypesForType(type);
+					[supportedMIMETypes addObjectsFromArray:mimeTypesForType];
 				}
 				catch(const std::exception& e) {
-					os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::MIMETypesForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
+					os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::MIMETypesForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
 				}
 			}
 
 			mimeTypes = [supportedMIMETypes copy];
 		}
 		catch(const std::exception& e) {
-			os_log_error(gSFBAudioDecoderLog, "SFB::CAAudioFile::ReadableTypes failed: %{public}s", e.what());
+			os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::ReadableTypes failed: %{public}s", e.what());
 			mimeTypes = [NSSet set];
 		}
 	});
@@ -328,7 +328,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		return _eaf.Tell();
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Tell failed: %{public}s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAExtAudioFile::Tell failed: %{public}s", e.what());
 		return SFBUnknownFramePosition;
 	}
 }
@@ -339,7 +339,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		return _eaf.FrameLength();
 	}
 	catch(const std::exception& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::FrameLength failed: %{public}s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAExtAudioFile::FrameLength failed: %{public}s", e.what());
 		return SFBUnknownFrameLength;
 	}
 }
@@ -365,7 +365,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		return YES;
 	}
 	catch(const std::system_error& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Read failed: %{public}s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAExtAudioFile::Read failed: %{public}s", e.what());
 		buffer.frameLength = 0;
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:e.code().value() userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -381,7 +381,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		return YES;
 	}
 	catch(const std::system_error& e) {
-		os_log_error(gSFBAudioDecoderLog, "SFB::CAExtAudioFile::Seek failed: %{public}s", e.what());
+		os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAExtAudioFile::Seek failed: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:e.code().value() userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
