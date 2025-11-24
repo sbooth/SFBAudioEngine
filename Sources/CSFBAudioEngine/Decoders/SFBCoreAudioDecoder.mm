@@ -99,7 +99,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 					[supportedPathExtensions addObjectsFromArray:extensionsForType];
 				}
 				catch(const std::exception& e) {
-					os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::ExtensionsForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
+					os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::CopyExtensionsForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
 				}
 			}
 
@@ -130,7 +130,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 					[supportedMIMETypes addObjectsFromArray:mimeTypesForType];
 				}
 				catch(const std::exception& e) {
-					os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::MIMETypesForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
+					os_log_error(gSFBAudioDecoderLog, "CXXAudioToolbox::CAAudioFile::CopyMIMETypesForType failed for '%{public}.4s': %{public}s", SFBCStringForOSType(type), e.what());
 				}
 			}
 
