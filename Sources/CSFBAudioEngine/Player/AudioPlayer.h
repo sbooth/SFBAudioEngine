@@ -14,7 +14,7 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <SFBUnfairLock.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
@@ -32,34 +32,35 @@ class AudioPlayer final {
 public:
 	using unique_ptr 	= std::unique_ptr<AudioPlayer>;
 	using Decoder 		= id<SFBPCMDecoding>;
-	using DecoderQueue 	= std::deque<Decoder>;
 
 	/// The shared log for all `AudioPlayer` instances
 	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer *mPlayer 	{nil};
+	__unsafe_unretained SFBAudioPlayer 		*mPlayer 			{nil};
 
 private:
 	/// The underlying `AVAudioEngine` instance
-	AVAudioEngine 			*mEngine 				{nil};
-	/// The dispatch queue used to access `mEngine`
-	dispatch_queue_t		mEngineQueue 			{nil};
+	AVAudioEngine 							*mEngine 			{nil};
+
 	/// The player driving the audio processing graph
-	SFBAudioPlayerNode		*mPlayerNode 			{nil};
-	/// The lock used to protect access to `mQueuedDecoders`
-	mutable SFB::UnfairLock	mQueueLock;
+	SFBAudioPlayerNode						*mPlayerNode 		{nil};
+
 	/// Decoders enqueued for non-gapless playback
-	DecoderQueue 			mQueuedDecoders;
-	/// The lock used to protect access to `mNowPlaying`
-	mutable SFB::UnfairLock	mNowPlayingLock;
+	std::deque<Decoder>						mQueuedDecoders;
+	/// The lock used to protect access to `mQueuedDecoders`
+	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
+
 	/// The currently rendering decoder
-	id <SFBPCMDecoding> 	mNowPlaying 			{nil};
+	id <SFBPCMDecoding> 					mNowPlaying 		{nil};
+	/// The lock used to protect access to `mNowPlaying`
+	mutable CXXUnfairLock::UnfairLock 		mNowPlayingLock;
+
 	/// The dispatch queue used for asynchronous events
-	dispatch_queue_t		mEventQueue 			{nil};
+	dispatch_queue_t						mEventQueue 		{nil};
 
 	/// Flags
-	std::atomic_uint 		mFlags 					{0};
+	std::atomic_uint 						mFlags 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
@@ -75,10 +76,24 @@ public:
 
 	bool EnqueueDecoder(Decoder _Nonnull decoder, bool forImmediatePlayback, NSError **error) noexcept;
 
-	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept;
+	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept
+	{
+#if DEBUG
+		assert(format != nil);
+#endif /* DEBUG */
+		return mPlayerNode->_node->SupportsFormat(format);
+	}
 
-	void ClearQueue() noexcept;
-	bool QueueIsEmpty() const noexcept;
+	void ClearQueue() noexcept
+	{
+		mPlayerNode->_node->ClearQueue();
+		ClearInternalDecoderQueue();
+	}
+
+	bool QueueIsEmpty() const noexcept
+	{
+		return mPlayerNode->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
+	}
 
 	// MARK: - Playback Control
 
@@ -93,38 +108,103 @@ public:
 	// MARK: - Player State
 
 	bool EngineIsRunning() const noexcept;
-	bool PlayerNodeIsPlaying() const noexcept;
 
-	SFBAudioPlayerPlaybackState PlaybackState() const noexcept;
+	bool PlayerNodeIsPlaying() const noexcept
+	{
+		return mPlayerNode->_node->IsPlaying();
+	}
 
-	bool IsPlaying() const noexcept;
-	bool IsPaused() const noexcept;
-	bool IsStopped() const noexcept;
-	bool IsReady() const noexcept;
+	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
+	{
+		if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))
+			return mPlayerNode->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		else
+			return SFBAudioPlayerPlaybackStateStopped;
+	}
 
-	Decoder _Nullable CurrentDecoder() const noexcept;
+	bool IsPlaying() const noexcept
+	{
+		return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && mPlayerNode->_node->IsPlaying();
+	}
 
-	Decoder _Nullable NowPlaying() const noexcept;
+	bool IsPaused() const noexcept
+	{
+		return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !mPlayerNode->_node->IsPlaying();
+	}
+
+	bool IsStopped() const noexcept
+	{
+		return !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning));
+	}
+
+	bool IsReady() const noexcept
+	{
+		return mPlayerNode->_node->IsReady();
+	}
+
+	Decoder _Nullable CurrentDecoder() const noexcept
+	{
+		return mPlayerNode->_node->CurrentDecoder();
+	}
+
+	Decoder _Nullable NowPlaying() const noexcept
+	{
+		std::lock_guard lock(mNowPlayingLock);
+		return mNowPlaying;
+	}
+
 private:
 	void SetNowPlaying(Decoder _Nullable nowPlaying) noexcept;
 
 public:
 	// MARK: - Playback Properties
 
-	SFBPlaybackPosition PlaybackPosition() const noexcept;
-	SFBPlaybackTime PlaybackTime() const noexcept;
-	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept;
+	SFBPlaybackPosition PlaybackPosition() const noexcept
+	{
+		return mPlayerNode->_node->PlaybackPosition();
+	}
+
+	SFBPlaybackTime PlaybackTime() const noexcept
+	{
+		return mPlayerNode->_node->PlaybackTime();
+	}
+
+	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept
+	{
+		return mPlayerNode->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
+	}
 
 	// MARK: - Seeking
 
-	bool SeekForward(NSTimeInterval secondsToSkip) noexcept;
-	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept;
+	bool SeekForward(NSTimeInterval secondsToSkip) noexcept
+	{
+		return mPlayerNode->_node->SeekForward(secondsToSkip);
+	}
+	
+	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept
+	{
+		return mPlayerNode->_node->SeekBackward(secondsToSkip);
+	}
 
-	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept;
-	bool SeekToPosition(double position) noexcept;
-	bool SeekToFrame(AVAudioFramePosition frame) noexcept;
+	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept
+	{
+		return mPlayerNode->_node->SeekToTime(timeInSeconds);
+	}
 
-	bool SupportsSeeking() const noexcept;
+	bool SeekToPosition(double position) noexcept
+	{
+		return mPlayerNode->_node->SeekToPosition(position);
+	}
+
+	bool SeekToFrame(AVAudioFramePosition frame) noexcept
+	{
+		return mPlayerNode->_node->SeekToFrame(frame);
+	}
+
+	bool SupportsSeeking() const noexcept
+	{
+		return mPlayerNode->_node->SupportsSeeking();
+	}
 
 #if !TARGET_OS_IPHONE
 
@@ -142,7 +222,15 @@ public:
 
 	// MARK: - AVAudioEngine
 
-	void WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexcept;
+	AVAudioEngine * GetAudioEngine() const noexcept
+	{
+		return mEngine;
+	}
+
+	SFBAudioPlayerNode * GetPlayerNode() const noexcept
+	{
+		return mPlayerNode;
+	}
 
 	// MARK: - Debugging
 
@@ -160,17 +248,29 @@ private:
 	};
 
 	/// Returns true if the internal queue of decoders is empty
-	bool InternalDecoderQueueIsEmpty() const noexcept;
+	bool InternalDecoderQueueIsEmpty() const noexcept
+	{
+		std::lock_guard lock(mQueueLock);
+		return mQueuedDecoders.empty();
+	}
+
 	/// Removes all decoders from the internal decoder queue
-	void ClearInternalDecoderQueue() noexcept;
+	void ClearInternalDecoderQueue() noexcept
+	{
+		std::lock_guard lock(mQueueLock);
+		mQueuedDecoders.clear();
+	}
+
 	/// Inserts `decoder` at the end of the internal decoder queue
 	bool PushDecoderToInternalQueue(Decoder _Nonnull decoder) noexcept;
+
 	/// Removes and returns the first decoder from the internal decoder queue
 	Decoder _Nullable PopDecoderFromInternalQueue() noexcept;
 
 public:
 	/// Called to process `AVAudioEngineConfigurationChangeNotification`
 	void HandleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;
+
 #if TARGET_OS_IPHONE
 	/// Called to process `AVAudioSessionInterruptionNotification`
 	void HandleAudioSessionInterruption(NSDictionary * _Nullable userInfo) noexcept;
@@ -182,6 +282,7 @@ private:
 	/// - parameter error: An optional pointer to an `NSError` object to receive error information
 	/// - returns: `true` if the player was successfully configured
 	bool ConfigureForAndEnqueueDecoder(Decoder _Nonnull decoder, bool clearQueueAndReset, NSError **error) noexcept;
+
 	/// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
 	///
 	/// This method does nothing if the current rendering format is equal to `format`
@@ -191,16 +292,12 @@ private:
 	/// - returns: `true` if the processing graph was successfully configured
 	bool ConfigureProcessingGraphForFormat(AVAudioFormat * _Nonnull format, bool forceUpdate) noexcept;
 
-	// Event notification handlers
 	void HandleDecodingStarted(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
 	void HandleDecodingComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
-
 	void HandleRenderingWillStart(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 	void HandleRenderingDecoderWillChange(const AudioPlayerNode& node, Decoder _Nonnull decoder, Decoder _Nonnull nextDecoder, uint64_t hostTime) noexcept;
 	void HandleRenderingWillComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
-
 	void HandleDecoderCanceled(const AudioPlayerNode& node, Decoder _Nonnull decoder, AVAudioFramePosition framesRendered) noexcept;
-
 	void HandleAsynchronousError(const AudioPlayerNode& node, NSError * _Nonnull error) noexcept;
 };
 

@@ -19,12 +19,15 @@ let package = Package(
 			]),
 	],
 	dependencies: [
-		.package(url: "https://github.com/sbooth/CXXAudioUtilities", from: "0.3.2"),
 		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.1"),
+		.package(url: "https://github.com/sbooth/CXXCoreAudio", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/CXXAudioToolbox", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/CXXRingBuffer", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/CXXUnfairLock", from: "0.1.0"),
 
 		// Standalone dependencies from source
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
-		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "11.22.0"),
+		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "11.82.0"),
 		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.1.0"),
 
 		// Standalone dependencies not easily packaged using SPM
@@ -54,8 +57,11 @@ let package = Package(
 		.target(
 			name: "CSFBAudioEngine",
 			dependencies: [
-				.product(name: "CXXAudioUtilities", package: "CXXAudioUtilities"),
 				.product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
+				.product(name: "CXXAudioToolbox", package: "CXXAudioToolbox"),
+				.product(name: "CXXCoreAudio", package: "CXXCoreAudio"),
+				.product(name: "CXXRingBuffer", package: "CXXRingBuffer"),
+				.product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
 				// Standalone dependencies
 				.product(name: "dumb", package: "CDUMB"),
 				.product(name: "MAC", package: "CXXMonkeysAudio"),

@@ -300,9 +300,14 @@
 
 // MARK: - AVAudioEngine
 
-- (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
+- (AVAudioEngine *)audioEngine
 {
-	_player->WithEngine(block);
+	return _player->GetAudioEngine();
+}
+
+- (SFBAudioPlayerNode *)audioPlayerNode
+{
+	return _player->GetPlayerNode();
 }
 
 // MARK: - Debugging

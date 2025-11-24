@@ -13,8 +13,6 @@
 
 #import <AVAudioFormat+SFBFormatTransformation.h>
 
-#import <SFBUnfairLock.hpp>
-
 #import "AudioPlayer.h"
 
 #import "HostTimeUtilities.hpp"
@@ -79,12 +77,6 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 
 SFB::AudioPlayer::AudioPlayer()
 {
-	mEngineQueue = dispatch_queue_create("AudioPlayer.AVAudioEngineIsolation", DISPATCH_QUEUE_SERIAL);
-	if(!mEngineQueue) {
-		os_log_error(sLog, "Unable to create AVAudioEngine isolation dispatch queue: dispatch_queue_create failed");
-		throw std::runtime_error("dispatch_queue_create failed");
-	}
-
 	// Create the audio processing graph
 	mEngine = [[AVAudioEngine alloc] init];
 	AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
@@ -185,26 +177,6 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	return true;
 }
 
-bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) const noexcept
-{
-#if DEBUG
-	assert(format != nil);
-#endif /* DEBUG */
-
-	return mPlayerNode->_node->SupportsFormat(format);
-}
-
-void SFB::AudioPlayer::ClearQueue() noexcept
-{
-	mPlayerNode->_node->ClearQueue();
-	ClearInternalDecoderQueue();
-}
-
-bool SFB::AudioPlayer::QueueIsEmpty() const noexcept
-{
-	return mPlayerNode->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
-}
-
 // MARK: - Playback Control
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
@@ -212,24 +184,16 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 	if((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && PlayerNodeIsPlaying())
 		return true;
 
-	__block BOOL engineStarted = NO;
-	__block NSError *err = nil;
-	dispatch_async_and_wait(mEngineQueue, ^{
-		engineStarted = [mEngine startAndReturnError:&err];
-		if(engineStarted) {
-			mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-			mPlayerNode->_node->Play();
-		}
-		else
-			mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-	});
-
-	if(!engineStarted) {
+	if(NSError *err = nil; ![mEngine startAndReturnError:&err]) {
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
 		os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", err);
 		if(error)
 			*error = err;
 		return false;
 	}
+
+	mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+	mPlayerNode->_node->Play();
 
 #if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Play()");
@@ -276,11 +240,9 @@ void SFB::AudioPlayer::Stop() noexcept
 	if(!(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)))
 		return;
 
-	dispatch_async_and_wait(mEngineQueue, ^{
-		[mEngine stop];
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-		mPlayerNode->_node->Stop();
-	});
+	[mEngine stop];
+	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+	mPlayerNode->_node->Stop();
 
 	ClearInternalDecoderQueue();
 
@@ -309,10 +271,8 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 
 void SFB::AudioPlayer::Reset() noexcept
 {
-	dispatch_async_and_wait(mEngineQueue, ^{
-		mPlayerNode->_node->Reset();
-		[mEngine reset];
-	});
+	mPlayerNode->_node->Reset();
+	[mEngine reset];
 
 	ClearInternalDecoderQueue();
 }
@@ -321,58 +281,11 @@ void SFB::AudioPlayer::Reset() noexcept
 
 bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 {
-	__block BOOL isRunning;
-	dispatch_async_and_wait(mEngineQueue, ^{
-		isRunning = mEngine.isRunning;
+	const auto isRunning = mEngine.isRunning;
 #if DEBUG
 		assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) == isRunning && "Cached value for mEngine.isRunning invalid");
 #endif /* DEBUG */
-	});
 	return isRunning;
-}
-
-bool SFB::AudioPlayer::PlayerNodeIsPlaying() const noexcept
-{
-	return mPlayerNode->_node->IsPlaying();
-}
-
-SFBAudioPlayerPlaybackState SFB::AudioPlayer::PlaybackState() const noexcept
-{
-	if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))
-		return mPlayerNode->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
-	else
-		return SFBAudioPlayerPlaybackStateStopped;
-}
-
-bool SFB::AudioPlayer::IsPlaying() const noexcept
-{
-	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && mPlayerNode->_node->IsPlaying();
-}
-
-bool SFB::AudioPlayer::IsPaused() const noexcept
-{
-	return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !mPlayerNode->_node->IsPlaying();
-}
-
-bool SFB::AudioPlayer::IsStopped() const noexcept
-{
-	return !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning));
-}
-
-bool SFB::AudioPlayer::IsReady() const noexcept
-{
-	return mPlayerNode->_node->IsReady();
-}
-
-SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
-{
-	return mPlayerNode->_node->CurrentDecoder();
-}
-
-SFB::AudioPlayer::Decoder SFB::AudioPlayer::NowPlaying() const noexcept
-{
-	std::lock_guard lock(mNowPlayingLock);
-	return mNowPlaying;
 }
 
 void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
@@ -392,72 +305,18 @@ void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 		[mPlayer.delegate audioPlayer:mPlayer nowPlayingChanged:nowPlaying previouslyPlaying:previouslyPlaying];
 }
 
-// MARK: - Playback Properties
-
-SFBPlaybackPosition SFB::AudioPlayer::PlaybackPosition() const noexcept
-{
-	return mPlayerNode->_node->PlaybackPosition();
-}
-
-SFBPlaybackTime SFB::AudioPlayer::PlaybackTime() const noexcept
-{
-	return mPlayerNode->_node->PlaybackTime();
-}
-
-bool SFB::AudioPlayer::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition, SFBPlaybackTime *playbackTime) const noexcept
-{
-	return mPlayerNode->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
-}
-
-// MARK: - Seeking
-
-bool SFB::AudioPlayer::SeekForward(NSTimeInterval secondsToSkip) noexcept
-{
-	return mPlayerNode->_node->SeekForward(secondsToSkip);
-}
-
-bool SFB::AudioPlayer::SeekBackward(NSTimeInterval secondsToSkip) noexcept
-{
-	return mPlayerNode->_node->SeekBackward(secondsToSkip);
-}
-
-bool SFB::AudioPlayer::SeekToTime(NSTimeInterval timeInSeconds) noexcept
-{
-	return mPlayerNode->_node->SeekToTime(timeInSeconds);
-}
-
-bool SFB::AudioPlayer::SeekToPosition(double position) noexcept
-{
-	return mPlayerNode->_node->SeekToPosition(position);
-}
-
-bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
-{
-	return mPlayerNode->_node->SeekToFrame(frame);
-}
-
-bool SFB::AudioPlayer::SupportsSeeking() const noexcept
-{
-	return mPlayerNode->_node->SupportsSeeking();
-}
-
 #if !TARGET_OS_IPHONE
 
 // MARK: - Volume Control
 
 float SFB::AudioPlayer::VolumeForChannel(AudioObjectPropertyElement channel) const noexcept
 {
-	__block auto volume = std::nanf("1");
-	dispatch_async_and_wait(mEngineQueue, ^{
-		AudioUnitParameterValue channelVolume;
-		const auto result = AudioUnitGetParameter(mEngine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
-		if(result != noErr) {
-			os_log_error(sLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
-			return;
-		}
-
-		volume = channelVolume;
-	});
+	AudioUnitParameterValue volume;
+	const auto result = AudioUnitGetParameter(mEngine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &volume);
+	if(result != noErr) {
+		os_log_error(sLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
+		return std::nanf("1");
+	}
 
 	return volume;
 }
@@ -466,137 +325,92 @@ bool SFB::AudioPlayer::SetVolumeForChannel(float volume, AudioObjectPropertyElem
 {
 	os_log_info(sLog, "Setting volume for channel %u to %g", channel, volume);
 
-	__block bool success = false;
-	__block NSError *err = nil;
-	dispatch_async_and_wait(mEngineQueue, ^{
-		AudioUnitParameterValue channelVolume = volume;
-		const auto result = AudioUnitSetParameter(mEngine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
-		if(result != noErr) {
-			os_log_error(sLog, "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
-			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
-			return;
-		}
+	const auto result = AudioUnitSetParameter(mEngine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, volume, 0);
+	if(result != noErr) {
+		os_log_error(sLog, "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return false;
+	}
 
-		success = true;
-	});
-
-	if(!success && error)
-		*error = err;
-
-	return success;
+	return true;
 }
 
 // MARK: - Output Device
 
 AUAudioObjectID SFB::AudioPlayer::OutputDeviceID() const noexcept
 {
-	__block AUAudioObjectID objectID = kAudioObjectUnknown;
-	dispatch_async_and_wait(mEngineQueue, ^{
-		objectID = mEngine.outputNode.AUAudioUnit.deviceID;
-	});
-	return objectID;
+	return mEngine.outputNode.AUAudioUnit.deviceID;
 }
 
 bool SFB::AudioPlayer::SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept
 {
 	os_log_info(sLog, "Setting output device to 0x%x", outputDeviceID);
 
-	__block BOOL result;
-	__block NSError *err = nil;
-	dispatch_async_and_wait(mEngineQueue, ^{
-		result = [mEngine.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err];
-	});
-
-	if(!result) {
+	if(NSError *err = nil; ![mEngine.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err]) {
 		os_log_error(sLog, "Error setting output device: %{public}@", err);
 		if(error)
 			*error = err;
+		return false;
 	}
 
-	return result;
+	return true;
 }
 
 #endif /* !TARGET_OS_IPHONE */
-
-// MARK: - AVAudioEngine
-
-void SFB::AudioPlayer::WithEngine(SFBAudioPlayerAVAudioEngineBlock block) noexcept
-{
-	dispatch_async_and_wait(mEngineQueue, ^{
-		block(mEngine);
-		// AudioPlayer requires that the mixer node be connected to the output node
-		assert([mEngine inputConnectionPointForNode:mEngine.outputNode inputBus:0].node == mEngine.mainMixerNode && "Illegal AVAudioEngine configuration");
-		assert(mEngine.isRunning == static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && "AVAudioEngine may not be started or stopped outside of AudioPlayer");
-	});
-}
 
 // MARK: - Debugging
 
 void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept
 {
-	dispatch_async(mEngineQueue, ^{
-		NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
+	NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
 
-		const auto playerNode = mPlayerNode;
-		const auto engine = mEngine;
+	const auto playerNode = mPlayerNode;
+	const auto engine = mEngine;
 
-		AVAudioFormat *inputFormat = playerNode.renderingFormat;
-		[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
+	AVAudioFormat *inputFormat = playerNode.renderingFormat;
+	[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
 
-		AVAudioFormat *outputFormat = [playerNode outputFormatForBus:0];
+	AVAudioFormat *outputFormat = [playerNode outputFormatForBus:0];
+	if(![outputFormat isEqual:inputFormat])
+		[string appendFormat:@"→ %@\n    %@\n", playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+	else
+		[string appendFormat:@"→ %@\n", playerNode];
+
+	AVAudioConnectionPoint *connectionPoint = [[engine outputConnectionPointsForNode:playerNode outputBus:0] firstObject];
+	while(connectionPoint.node != engine.mainMixerNode) {
+		inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
+		outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
 		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", playerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+			[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
 		else
-			[string appendFormat:@"→ %@\n", playerNode];
+			[string appendFormat:@"→ %@\n", connectionPoint.node];
 
-		AVAudioConnectionPoint *connectionPoint = [[engine outputConnectionPointsForNode:playerNode outputBus:0] firstObject];
-		while(connectionPoint.node != engine.mainMixerNode) {
-			inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
-			outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
-			if(![outputFormat isEqual:inputFormat])
-				[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
+		connectionPoint = [[engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
+	}
 
-			else
-				[string appendFormat:@"→ %@\n", connectionPoint.node];
+	inputFormat = [engine.mainMixerNode inputFormatForBus:0];
+	outputFormat = [engine.mainMixerNode outputFormatForBus:0];
+	if(![outputFormat isEqual:inputFormat])
+		[string appendFormat:@"→ %@\n    %@\n", engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+	else
+		[string appendFormat:@"→ %@\n", engine.mainMixerNode];
 
-			connectionPoint = [[engine outputConnectionPointsForNode:connectionPoint.node outputBus:0] firstObject];
-		}
-
-		inputFormat = [engine.mainMixerNode inputFormatForBus:0];
-		outputFormat = [engine.mainMixerNode outputFormatForBus:0];
-		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
-		else
-			[string appendFormat:@"→ %@\n", engine.mainMixerNode];
-
-		inputFormat = [engine.outputNode inputFormatForBus:0];
-		outputFormat = [engine.outputNode outputFormatForBus:0];
-		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@]", engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
-		else
-			[string appendFormat:@"→ %@", engine.outputNode];
+	inputFormat = [engine.outputNode inputFormatForBus:0];
+	outputFormat = [engine.outputNode outputFormatForBus:0];
+	if(![outputFormat isEqual:inputFormat])
+		[string appendFormat:@"→ %@\n    %@]", engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+	else
+		[string appendFormat:@"→ %@", engine.outputNode];
 
 #if !TARGET_OS_IPHONE
-		[string appendFormat:@"\n↓ \"%@\"", AudioDeviceName(engine.outputNode.AUAudioUnit)];
+	[string appendFormat:@"\n↓ \"%@\"", AudioDeviceName(engine.outputNode.AUAudioUnit)];
 #endif /* !TARGET_OS_IPHONE */
 
-		os_log_with_type(log, type, "%{public}@", string);
-	});
+	os_log_with_type(log, type, "%{public}@", string);
 }
 
 // MARK: - Decoder Queue
-
-bool SFB::AudioPlayer::InternalDecoderQueueIsEmpty() const noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	return mQueuedDecoders.empty();
-}
-
-void SFB::AudioPlayer::ClearInternalDecoderQueue() noexcept
-{
-	std::lock_guard lock(mQueueLock);
-	mQueuedDecoders.clear();
-}
 
 bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 {
@@ -633,6 +447,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		return;
 	}
 
+	// AVAudioEngine posts this notification from a dedicated queue
 	os_log_debug(sLog, "Received AVAudioEngineConfigurationChangeNotification");
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
@@ -643,41 +458,33 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	// Attempt to preserve the playback state
 	const auto playerNodeWasPlaying = mPlayerNode->_node->IsPlaying();
 
-	// AVAudioEngine posts this notification from a dedicated queue
-	__block bool success;
-	__block NSError *error = nil;
-	dispatch_async_and_wait(mEngineQueue, ^{
-		mPlayerNode->_node->Pause();
+	mPlayerNode->_node->Pause();
 
-		// Force an update of the audio processing graph
-		success = ConfigureProcessingGraphForFormat(mPlayerNode->_node->RenderingFormat(), true);
-		if(!success) {
-			os_log_error(sLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(mPlayerNode->_node->RenderingFormat()));
-			error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+	// Force an update of the audio processing graph
+	if(!ConfigureProcessingGraphForFormat(mPlayerNode->_node->RenderingFormat(), true)) {
+		os_log_error(sLog, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(mPlayerNode->_node->RenderingFormat()));
+		// The graph is not in a working state
+		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
+			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+			[mPlayer.delegate audioPlayer:mPlayer encounteredError:error];
+		}
+		return;
+	}
+
+	// Restart AVAudioEngine if previously running
+	if(engineWasRunning) {
+		if(NSError *error = nil; ![mEngine startAndReturnError:&error]) {
+			os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", error);
+//			if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+//				[mPlayer.delegate audioPlayer:mPlayer encounteredError:error];
 			return;
 		}
 
-		// Restart AVAudioEngine if previously running
-		if(engineWasRunning) {
-			BOOL engineStarted = [mEngine startAndReturnError:&error];
-			if(!engineStarted) {
-				os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", error);
-				return;
-			}
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
 
-			mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-
-			// Restart the player node if needed
-			if(playerNodeWasPlaying)
-				mPlayerNode->_node->Play();
-		}
-	});
-
-	// Success in this context means the graph is in a working state, not that the engine was restarted successfully
-	if(!success) {
-		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-			[mPlayer.delegate audioPlayer:mPlayer encounteredError:error];
-		return;
+		// Restart the player node if needed
+		if(playerNodeWasPlaying)
+			mPlayerNode->_node->Play();
 	}
 
 	if((engineWasRunning != static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) || playerNodeWasPlaying != mPlayerNode->_node->IsPlaying()) && [mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
@@ -704,14 +511,11 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			// However, Flags::eEngineIsRunning indicates if the engine was running before the interruption
 			if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) {
 				mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-				dispatch_async_and_wait(mEngineQueue, ^{
-					NSError *error = nil;
-					BOOL engineStarted = [mEngine startAndReturnError:&error];
-					if(engineStarted)
-						mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-					else
-						os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", error);
-				});
+				if(NSError *error = nil; ![mEngine startAndReturnError:&error]) {
+					os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", error);
+					return;
+				}
+				mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
 			}
 			break;
 
@@ -735,12 +539,7 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	// If the current player node doesn't support the decoder's format (required for gapless join),
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 	if(auto format = decoder.processingFormat; !mPlayerNode->_node->SupportsFormat(format)) {
-		__block auto success = true;
-		dispatch_async_and_wait(mEngineQueue, ^{
-			success = ConfigureProcessingGraphForFormat(format, false);
-		});
-
-		if(!success) {
+		if(!ConfigureProcessingGraphForFormat(format, false)) {
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			SetNowPlaying(nil);
@@ -763,23 +562,16 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	// If this is the case and it was previously running, restart it and the player node
 	// as appropriate
 	if(engineWasRunning && !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))) {
-		__block BOOL engineStarted = NO;
-		__block NSError *err = nil;
-		dispatch_async_and_wait(mEngineQueue, ^{
-			engineStarted = [mEngine startAndReturnError:&err];
-			if(engineStarted) {
-				mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
-				if(playerNodeWasPlaying)
-					mPlayerNode->_node->Play();
-			}
-		});
-
-		if(!engineStarted) {
+		if(NSError *err = nil; ![mEngine startAndReturnError:&err]) {
 			os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", err);
 			if(error)
 				*error = err;
 			return false;
 		}
+
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+		if(playerNodeWasPlaying)
+			mPlayerNode->_node->Play();
 	}
 
 #if DEBUG
