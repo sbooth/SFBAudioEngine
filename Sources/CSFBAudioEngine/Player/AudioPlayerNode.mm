@@ -38,7 +38,7 @@ uint64_t NextEventIdentificationNumber() noexcept
 {
 	static std::atomic_uint64_t nextIdentificationNumber = 1;
 	static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
-	return nextIdentificationNumber.fetch_add(1);
+	return nextIdentificationNumber.fetch_add(1, std::memory_order_acq_rel);
 }
 
 const os_log_t AudioPlayerNode::sLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
@@ -125,20 +125,20 @@ struct AudioPlayerNode::DecoderState final {
 			throw std::system_error(std::error_code(ENOMEM, std::generic_category()));
 
 		if(const auto framePosition = decoder.framePosition; framePosition != 0) {
-			mFramesDecoded.store(framePosition);
-			mFramesConverted.store(framePosition);
-			mFramesRendered.store(framePosition);
+			mFramesDecoded.store(framePosition, std::memory_order_release);
+			mFramesConverted.store(framePosition, std::memory_order_release);
+			mFramesRendered.store(framePosition, std::memory_order_release);
 		}
 	}
 
 	AVAudioFramePosition FramePosition() const noexcept
 	{
-		return IsSeekPending() ? mFrameToSeek.load() : mFramesRendered.load();
+		return IsSeekPending() ? mFrameToSeek.load(std::memory_order_acquire) : mFramesRendered.load(std::memory_order_acquire);
 	}
 
 	AVAudioFramePosition FrameLength() const noexcept
 	{
-		return mFrameLength.load();
+		return mFrameLength.load(std::memory_order_acquire);
 	}
 
 	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept
@@ -157,19 +157,19 @@ struct AudioPlayerNode::DecoderState final {
 #if false
 			// Some formats may not know the exact number of frames in advance
 			// without processing the entire file, which is a potentially slow operation
-			mFrameLength.store(mDecoder.framePosition);
+			mFrameLength.store(mDecoder.framePosition, std::memory_order_release);
 #endif /* false */
 
 			buffer.frameLength = 0;
 			return true;
 		}
 
-		this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
+		this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength, std::memory_order_acq_rel);
 
 		// Only PCM to PCM conversions are performed
 		if(![mConverter convertToBuffer:buffer fromBuffer:mDecodeBuffer error:error])
 			return false;
-		mFramesConverted.fetch_add(buffer.frameLength);
+		mFramesConverted.fetch_add(buffer.frameLength, std::memory_order_acq_rel);
 
 		// If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
 		// decoding is complete
@@ -196,7 +196,7 @@ struct AudioPlayerNode::DecoderState final {
 	/// This is the difference between the number of frames converted and the number of frames rendered
 	AVAudioFramePosition FramesAvailableToRender() const noexcept
 	{
-		return mFramesConverted.load() - mFramesRendered.load();
+		return mFramesConverted.load(std::memory_order_acquire) - mFramesRendered.load(std::memory_order_acquire);
 	}
 
 	/// Returns `true` if there are no frames available to render.
@@ -208,13 +208,13 @@ struct AudioPlayerNode::DecoderState final {
 	/// Returns the number of frames rendered.
 	AVAudioFramePosition FramesRendered() const noexcept
 	{
-		return mFramesRendered.load();
+		return mFramesRendered.load(std::memory_order_acquire);
 	}
 
 	/// Adds `count` number of frames to the total count of frames rendered.
 	void AddFramesRendered(AVAudioFramePosition count) noexcept
 	{
-		mFramesRendered.fetch_add(count);
+		mFramesRendered.fetch_add(count, std::memory_order_acq_rel);
 	}
 
 	/// Returns `true` if `Flags::eSeekPending` is set
@@ -226,7 +226,7 @@ struct AudioPlayerNode::DecoderState final {
 	/// Sets the pending seek request to `frame`
 	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept
 	{
-		mFrameToSeek.store(frame);
+		mFrameToSeek.store(frame, std::memory_order_release);
 		mFlags.fetch_or(static_cast<unsigned int>(Flags::eSeekPending), std::memory_order_acq_rel);
 	}
 
@@ -236,7 +236,7 @@ struct AudioPlayerNode::DecoderState final {
 		if(!IsSeekPending())
 			return true;
 
-		auto seekOffset = mFrameToSeek.load();
+		auto seekOffset = mFrameToSeek.load(std::memory_order_acquire);
 		os_log_debug(sLog, "Seeking to frame %lld in %{public}@ ", seekOffset, mDecoder);
 
 		if([mDecoder seekToFrame:seekOffset error:nil])
@@ -257,9 +257,9 @@ struct AudioPlayerNode::DecoderState final {
 		// Update the frame counters accordingly
 		// A seek is handled in essentially the same way as initial playback
 		if(newFrame != SFBUnknownFramePosition) {
-			mFramesDecoded.store(newFrame);
-			mFramesConverted.store(seekOffset);
-			mFramesRendered.store(seekOffset);
+			mFramesDecoded.store(newFrame, std::memory_order_release);
+			mFramesConverted.store(seekOffset, std::memory_order_release);
+			mFramesRendered.store(seekOffset, std::memory_order_release);
 		}
 
 		return newFrame != SFBUnknownFramePosition;
@@ -758,7 +758,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 						nextDecoderState->PerformSeekIfRequired();
 					}
 					else
-						os_log_error(sLog, "Discarding %lld frames from %{public}@", nextDecoderState->mFramesDecoded.load(), nextDecoderState->mDecoder);
+						os_log_error(sLog, "Discarding %lld frames from %{public}@", nextDecoderState->mFramesDecoded.load(std::memory_order_acquire), nextDecoderState->mDecoder);
 
 					nextDecoderState->mFlags.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::eDecodingStarted), std::memory_order_acq_rel);
 					nextDecoderState->mFlags.fetch_or(static_cast<unsigned int>(DecoderState::Flags::eDecodingSuspended), std::memory_order_acq_rel);
