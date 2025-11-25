@@ -8,15 +8,19 @@
 
 SFB::DataInput::DataInput(CFDataRef data)
 {
-	if(!data)
+	if(!data) {
+		os_log_error(sLog, "Cannot create DataInput with null CFData");
 		throw std::invalid_argument("Null data");
+	}
 	data_ = static_cast<CFDataRef>(CFRetain(data));
 }
 
 int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 {
-	if(count > LONG_MAX)
-		throw std::invalid_argument("Count too large");
+	if(count > LONG_MAX) {
+		os_log_error(sLog, "_Read() called on <DataInput: %p> with count greater than maximum allowable value", this);
+		throw std::invalid_argument("Count greater than maximum allowable value");
+	}
 	const int64_t remaining = CFDataGetLength(data_) - pos_;
 	count = std::min(count, remaining);
 	const auto range = CFRangeMake(pos_, count);
@@ -39,11 +43,14 @@ void SFB::DataInput::_SeekToOffset(int64_t offset, int whence)
 			offset += length;
 			break;
 		default:
+			os_log_error(sLog, "_SeekToOffset() called on <DataInput: %p> with unknown whence %d", this, whence);
 			throw std::invalid_argument("Unknown whence");
 	}
 
-	if(offset < 0 || offset > length)
+	if(offset < 0 || offset > length) {
+		os_log_error(sLog, "_SeekToOffset() called on <DataInput: %p> with invalid seek offset %lld", this, offset);
 		throw std::out_of_range("Invalid seek offset");
+	}
 
 	pos_ = offset;
 }

@@ -16,9 +16,7 @@ namespace SFB {
 class MemoryMappedFileInput: public InputSource
 {
 public:
-	explicit MemoryMappedFileInput(CFURLRef _Nonnull url)
-	: InputSource(url)
-	{ if(!url) throw std::invalid_argument("Null URL"); }
+	explicit MemoryMappedFileInput(CFURLRef _Nonnull url);
 
 	~MemoryMappedFileInput() noexcept
 	{ if(region_) munmap(region_, len_); }

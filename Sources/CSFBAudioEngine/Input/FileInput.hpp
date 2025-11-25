@@ -17,9 +17,7 @@ namespace SFB {
 class FileInput: public InputSource
 {
 public:
-	explicit FileInput(CFURLRef _Nonnull url)
-	: InputSource(url)
-	{ if(!url) throw std::invalid_argument("Null URL"); }
+	explicit FileInput(CFURLRef _Nonnull url);
 
 	~FileInput() noexcept
 	{ if(file_) std::fclose(file_); }

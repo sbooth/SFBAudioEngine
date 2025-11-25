@@ -10,6 +10,15 @@
 
 #import "FileInput.hpp"
 
+SFB::FileInput::FileInput(CFURLRef url)
+: InputSource(url)
+{
+	if(!url) {
+		os_log_error(sLog, "Cannot create FileInput with null CFURL");
+		throw std::invalid_argument("Null URL");
+	}
+}
+
 void SFB::FileInput::_Open()
 {
 	UInt8 path [PATH_MAX];
@@ -33,8 +42,10 @@ void SFB::FileInput::_Open()
 
 int64_t SFB::FileInput::_Read(void *buffer, int64_t count)
 {
-	if(count > SIZE_T_MAX)
-		throw std::invalid_argument("Count too large");
+	if(count > SIZE_T_MAX) {
+		os_log_error(sLog, "_Read() called on <FileInput: %p> with count greater than maximum allowable value", this);
+		throw std::invalid_argument("Count greater than maximum allowable value");
+	}
 	const auto nitems = std::fread(buffer, 1, count, file_);
 	if(nitems != count && std::ferror(file_))
 		throw std::system_error{errno, std::generic_category()};
