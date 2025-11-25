@@ -19,9 +19,9 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <SFBAudioRingBuffer.hpp>
-#import <SFBRingBuffer.hpp>
-#import <SFBUnfairLock.hpp>
+#import <CXXCoreAudio/AudioRingBuffer.hpp>
+#import <CXXRingBuffer/RingBuffer.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayerNode.h"
@@ -56,50 +56,49 @@ public:
 	static const os_log_t sLog;
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
-	__unsafe_unretained SFBAudioPlayerNode *mNode 			{nil};
+	__unsafe_unretained SFBAudioPlayerNode 	*mNode 				{nil};
 
 	/// The render block supplying audio
-	AVAudioSourceNodeRenderBlock 	mRenderBlock 			{nullptr};
+	AVAudioSourceNodeRenderBlock 			mRenderBlock 		{nullptr};
 
 private:
 	struct DecoderState;
 
-	using DecoderQueue 				= std::deque<Decoder>;
-	using DecoderStateVector 		= std::vector<std::unique_ptr<DecoderState>>;
+	using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
 	/// The format of the audio supplied by `mRenderBlock`
-	AVAudioFormat 					*mRenderingFormat		{nil};
+	AVAudioFormat 							*mRenderingFormat	{nil};
 
 	/// Ring buffer used to transfer audio between the decoding thread and the render block
-	SFB::AudioRingBuffer			mAudioRingBuffer 		{};
+	CXXCoreAudio::AudioRingBuffer 			mAudioRingBuffer 	{};
 
 	/// Active decoders and associated state
-	DecoderStateVector 				mActiveDecoders;
+	DecoderStateVector 						mActiveDecoders;
 	/// Lock used to protect access to `mActiveDecoders`
-	mutable SFB::UnfairLock			mDecoderLock;
+	mutable CXXUnfairLock::UnfairLock 		mDecoderLock;
 
 	/// Decoders enqueued for playback that are not yet active
-	DecoderQueue 					mQueuedDecoders 		{};
+	std::deque<Decoder>						mQueuedDecoders 	{};
 	/// Lock used to protect access to `mQueuedDecoders`
-	mutable SFB::UnfairLock			mQueueLock;
+	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
 
 	/// Thread used for decoding
-	std::jthread 					mDecodingThread;
+	std::jthread 							mDecodingThread;
 	/// Dispatch semaphore used for communication with the decoding thread
-	dispatch_semaphore_t			mDecodingSemaphore 		{};
+	dispatch_semaphore_t					mDecodingSemaphore 	{};
 
 	/// Thread used for event processing
-	std::jthread 					mEventThread;
+	std::jthread 							mEventThread;
 	/// Dispatch semaphore used for communication with the event processing thread
-	dispatch_semaphore_t			mEventSemaphore 		{};
+	dispatch_semaphore_t					mEventSemaphore 	{};
 
 	/// Ring buffer used to communicate events from the decoding thread
-	SFB::RingBuffer					mDecodeEventRingBuffer;
+	CXXRingBuffer::RingBuffer				mDecodeEventRingBuffer;
 	/// Ring buffer used to communicate events from the render block
-	SFB::RingBuffer					mRenderEventRingBuffer;
+	CXXRingBuffer::RingBuffer				mRenderEventRingBuffer;
 
 	/// Flags
-	std::atomic_uint 				mFlags 					{0};
+	std::atomic_uint 						mFlags 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
