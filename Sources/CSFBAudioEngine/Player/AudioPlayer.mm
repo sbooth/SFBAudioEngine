@@ -707,9 +707,17 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 			// The potential therefore exists to block the calling thread for a perceptible amount
 			// of time, especially if the block calls take longer than ideal.
 			//
-			// Assuming there are no external references to the audio player node,
-			// detaching it here sends -dealloc
+			// AVAudioEngine uses a recursive mutex to protect its state. There is a possible deadlock
+			// between the call to -detachNode: below and the audio player node's decoding thread
+			// (which may make calls to -isRunning) when the player node's destructor waits for the
+			// thread to finish executing.
+			//
+			// To avoid the deadlock store a strong reference to the player node which
+			// will be deallocated after the node is detached.
+
+			SFBAudioPlayerNode *playerNodeToDealloc = currentNode->mNode;
 			[mEngine detachNode:currentNode->mNode];
+			playerNodeToDealloc = nil;
 		}
 
 		// Reconnect the player node to the next node in the processing chain
