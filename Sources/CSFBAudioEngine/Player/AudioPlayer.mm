@@ -142,7 +142,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	if(forImmediatePlayback)
 		return configureForAndEnqueueDecoder(true);
 
-	auto playerNode = mPlayerNode.load(std::memory_order_acquire)->mNode;
+	const auto node = mPlayerNode.load(std::memory_order_acquire);
 
 	// To preserve the order of enqueued decoders, when the internal queue is not empty
 	// push all decoders there regardless of format compatibility with the player node
@@ -153,9 +153,9 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 	if(InternalDecoderQueueIsEmpty()) {
 		// Enqueue the decoder on mPlayerNode if the decoder's processing format is supported
-		if(playerNode->_node->SupportsFormat(decoder.processingFormat)) {
+		if(node->SupportsFormat(decoder.processingFormat)) {
 			mFlags.fetch_or(static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
-			const auto result = playerNode->_node->EnqueueDecoder(decoder, false, error);
+			const auto result = node->EnqueueDecoder(decoder, false, error);
 			if(!result)
 				mFlags.fetch_and(~static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
 			return result;
@@ -163,7 +163,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 		// Reconfigure the audio processing graph for the decoder's processing format
 		// only if the player node does not have a current decoder
-		if(!playerNode->_node->CurrentDecoder())
+		if(!node->CurrentDecoder())
 			return configureForAndEnqueueDecoder(false);
 
 		// The player node has a current decoder; fall through and push the decoder to the internal queue
@@ -183,7 +183,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
-	auto node = mPlayerNode.load(std::memory_order_acquire);
+	const auto node = mPlayerNode.load(std::memory_order_acquire);
 	if((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && node->IsPlaying())
 		return true;
 
@@ -210,7 +210,7 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 void SFB::AudioPlayer::Pause() noexcept
 {
-	auto node = mPlayerNode.load(std::memory_order_acquire);
+	const auto node = mPlayerNode.load(std::memory_order_acquire);
 	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && node->IsPlaying()))
 		return;
 
@@ -226,7 +226,7 @@ void SFB::AudioPlayer::Pause() noexcept
 
 void SFB::AudioPlayer::Resume() noexcept
 {
-	auto node = mPlayerNode.load(std::memory_order_acquire);
+	const auto node = mPlayerNode.load(std::memory_order_acquire);
 	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !node->IsPlaying()))
 		return;
 
@@ -370,8 +370,7 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 {
 	NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
 
-	const auto node = mPlayerNode.load(std::memory_order_acquire);
-	const auto playerNode = node->mNode;
+	const auto playerNode = mPlayerNode.load(std::memory_order_acquire)->mNode;
 	const auto engine = mEngine;
 
 	AVAudioFormat *inputFormat = playerNode.renderingFormat;
@@ -695,8 +694,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	}
 
 	if(newPlayerNode) {
-		mPlayerNode.store(newPlayerNode->_node.get(), std::memory_order_release);
 		[mEngine attachNode:newPlayerNode];
+		mPlayerNode.store(newPlayerNode->_node.get(), std::memory_order_release);
 
 		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = nil;
 		if(currentNode) {
@@ -707,9 +706,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 			// final events to be processed and event notification blocks called.
 			// The potential therefore exists to block the calling thread for a perceptible amount
 			// of time, especially if the block calls take longer than ideal.
-			//
-			// In my measurements the baseline with an empty delegate implementation of
-			// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
 			//
 			// Assuming there are no external references to the audio player node,
 			// detaching it here sends -dealloc
