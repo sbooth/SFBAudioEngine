@@ -18,7 +18,7 @@ const os_log_t InputSource::sLog = os_log_create("org.sbooth.AudioEngine", "Inpu
 void SFB::InputSource::Open()
 {
 	if(IsOpen()) {
-		os_log_debug(sLog, "Open() called on an InputSource that is already open");
+		os_log_debug(sLog, "Open() called on <InputSource: %p> that is already open", this);
 		return;
 	}
 
@@ -29,7 +29,7 @@ void SFB::InputSource::Open()
 void SFB::InputSource::Close()
 {
 	if(!IsOpen()) {
-		os_log_debug(sLog, "Close() called on an InputSource that hasn't been opened");
+		os_log_debug(sLog, "Close() called on <InputSource: %p> that hasn't been opened", this);
 		return;
 	}
 
@@ -40,12 +40,12 @@ void SFB::InputSource::Close()
 int64_t SFB::InputSource::Read(void *buffer, int64_t count)
 {
 	if(!IsOpen()) {
-		os_log_debug(sLog, "Read() called on an InputSource that hasn't been opened");
+		os_log_error(sLog, "Read() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
 	if(!buffer || count < 0) {
-		os_log_debug(sLog, "Read() called with null buffer or invalid count");
+		os_log_error(sLog, "Read() called on <InputSource: %p> with null buffer or invalid count", this);
 		throw std::invalid_argument("Null buffer or negative count");
 	}
 
@@ -55,7 +55,7 @@ int64_t SFB::InputSource::Read(void *buffer, int64_t count)
 bool SFB::InputSource::AtEOF() const
 {
 	if(!IsOpen()) {
-		os_log_debug(sLog, "AtEOF() called on an InputSource that hasn't been opened");
+		os_log_error(sLog, "AtEOF() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
@@ -65,7 +65,7 @@ bool SFB::InputSource::AtEOF() const
 int64_t SFB::InputSource::Offset() const
 {
 	if(!IsOpen()) {
-		os_log_debug(sLog, "GetOffset() called on an InputSource that hasn't been opened");
+		os_log_error(sLog, "GetOffset() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
@@ -75,7 +75,7 @@ int64_t SFB::InputSource::Offset() const
 int64_t SFB::InputSource::Length() const
 {
 	if(!IsOpen()) {
-		os_log_debug(sLog, "GetLength() called on an InputSource that hasn't been opened");
+		os_log_error(sLog, "GetLength() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
@@ -90,12 +90,12 @@ bool SFB::InputSource::SupportsSeeking() const noexcept
 void SFB::InputSource::SeekToOffset(int64_t offset, int whence)
 {
 	if(!IsOpen()) {
-		os_log_debug(sLog, "SeekToOffset() called on an InputSource that hasn't been opened");
+		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
 	if(!_SupportsSeeking()) {
-		os_log_debug(sLog, "SeekToOffset() called on an InputSource that doesn't support seeking");
+		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> that doesn't support seeking", this);
 		throw std::logic_error("Seeking not supported");
 	}
 
