@@ -22,15 +22,16 @@ public:
 	{ if(region_) munmap(region_, len_); }
 
 	// This class is non-copyable.
-	MemoryMappedFileInput(const MemoryMappedFileInput& rhs) = delete;
-	MemoryMappedFileInput(MemoryMappedFileInput&& rhs) = delete;
+	MemoryMappedFileInput(const MemoryMappedFileInput&) = delete;
+	MemoryMappedFileInput(MemoryMappedFileInput&&) = delete;
 
 	// This class is non-assignable.
-	MemoryMappedFileInput& operator=(const MemoryMappedFileInput& rhs) = delete;
-	MemoryMappedFileInput& operator=(MemoryMappedFileInput&& rhs) = delete;
+	MemoryMappedFileInput& operator=(const MemoryMappedFileInput&) = delete;
+	MemoryMappedFileInput& operator=(MemoryMappedFileInput&&) = delete;
 
 private:
 	void _Open() override;
+
 	void _Close() override
 	{
 		const auto defer = scope_exit{[this]() noexcept { region_ = nullptr; }};

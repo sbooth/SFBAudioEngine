@@ -19,12 +19,12 @@ public:
 	{ CFRelease(data_); }
 
 	// This class is non-copyable.
-	DataInput(const DataInput& rhs) = delete;
-	DataInput(DataInput&& rhs) = delete;
+	DataInput(const DataInput&) = delete;
+	DataInput(DataInput&&) = delete;
 
 	// This class is non-assignable.
-	DataInput& operator=(const DataInput& rhs) = delete;
-	DataInput& operator=(DataInput&& rhs) = delete;
+	DataInput& operator=(const DataInput&) = delete;
+	DataInput& operator=(DataInput&&) = delete;
 
 private:
 	void _Open() noexcept override

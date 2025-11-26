@@ -21,12 +21,12 @@ public:
 	{ std::free(buf_); }
 
 	// This class is non-copyable.
-	FileContentsInput(const FileContentsInput& rhs) = delete;
-	FileContentsInput(FileContentsInput&& rhs) = delete;
+	FileContentsInput(const FileContentsInput&) = delete;
+	FileContentsInput(FileContentsInput&&) = delete;
 
 	// This class is non-assignable.
-	FileContentsInput& operator=(const FileContentsInput& rhs) = delete;
-	FileContentsInput& operator=(FileContentsInput&& rhs) = delete;
+	FileContentsInput& operator=(const FileContentsInput&) = delete;
+	FileContentsInput& operator=(FileContentsInput&&) = delete;
 
 private:
 	void _Open() override;

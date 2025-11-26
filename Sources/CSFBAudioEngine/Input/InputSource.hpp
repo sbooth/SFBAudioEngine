@@ -27,12 +27,12 @@ public:
 	{ if(url_) CFRelease(url_); }
 
 	// This class is non-copyable.
-	InputSource(const InputSource& rhs) = delete;
-	InputSource(InputSource&& rhs) = delete;
+	InputSource(const InputSource&) = delete;
+	InputSource(InputSource&&) = delete;
 
 	// This class is non-assignable.
-	InputSource& operator=(const InputSource& rhs) = delete;
-	InputSource& operator=(InputSource&& rhs) = delete;
+	InputSource& operator=(const InputSource&) = delete;
+	InputSource& operator=(InputSource&&) = delete;
 
 	CFURLRef _Nullable GetURL() const noexcept
 	{ return url_; }

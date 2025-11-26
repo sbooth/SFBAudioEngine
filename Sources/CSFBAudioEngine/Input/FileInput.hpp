@@ -23,12 +23,12 @@ public:
 	{ if(file_) std::fclose(file_); }
 
 	// This class is non-copyable.
-	FileInput(const FileInput& rhs) = delete;
-	FileInput(FileInput&& rhs) = delete;
+	FileInput(const FileInput&) = delete;
+	FileInput(FileInput&&) = delete;
 
 	// This class is non-assignable.
-	FileInput& operator=(const FileInput& rhs) = delete;
-	FileInput& operator=(FileInput&& rhs) = delete;
+	FileInput& operator=(const FileInput&) = delete;
+	FileInput& operator=(FileInput&&) = delete;
 
 private:
 	void _Open() override;
