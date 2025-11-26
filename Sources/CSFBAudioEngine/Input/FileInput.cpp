@@ -85,5 +85,5 @@ CFStringRef SFB::FileInput::_CopyDescription() const noexcept
 {
 	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(GetURL());
 	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileInput %p: \%{public@}\""), this, lastPathComponent);
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileInput %p: \"%{public}@\""), this, lastPathComponent);
 }
