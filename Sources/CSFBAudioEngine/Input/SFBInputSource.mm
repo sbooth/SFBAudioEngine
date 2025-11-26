@@ -6,6 +6,7 @@
 
 #import "SFBInputSource+Internal.h"
 
+#import "BufferInput.hpp"
 #import "DataInput.hpp"
 #import "FileContentsInput.hpp"
 #import "FileInput.hpp"
@@ -45,46 +46,54 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL);
 
-	SFB::InputSource::unique_ptr up;
+	try {
+		SFB::InputSource::unique_ptr up;
 
-	if(flags & SFBInputSourceFlagsMemoryMapFiles)
-		up = std::make_unique<SFB::MemoryMappedFileInput>((__bridge CFURLRef)url);
-	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
-		up = std::make_unique<SFB::FileContentsInput>((__bridge CFURLRef)url);
-	else
-		up = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
+		if(flags & SFBInputSourceFlagsMemoryMapFiles)
+			up = std::make_unique<SFB::MemoryMappedFileInput>((__bridge CFURLRef)url);
+		else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
+			up = std::make_unique<SFB::FileContentsInput>((__bridge CFURLRef)url);
+		else
+			up = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
 
-	if(!up) {
-		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		if(!up) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return nil;
+		}
+
+		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
+		if(!inputSource) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return nil;
+		}
+
+		inputSource->_input = std::move(up);
+		return inputSource;
+	}
+	catch(const std::exception& e) {
 		return nil;
 	}
-
-	SFBInputSource *inputSource = [[SFBInputSource alloc] init];
-	if(!inputSource) {
-		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-		return nil;
-	}
-
-	inputSource->_input = std::move(up);
-	return inputSource;
 }
 
 + (instancetype)inputSourceWithData:(NSData *)data
 {
 	NSParameterAssert(data != nil);
 
-	auto up = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
-	if(!up)
-		return nil;
+	try {
+		auto up = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
+		if(!up)
+			return nil;
 
-	SFBInputSource *inputSource = [[SFBInputSource alloc] init];
-	if(!inputSource)
+		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
+		if(inputSource)
+			inputSource->_input = std::move(up);
+		return inputSource;
+	}
+	catch(const std::exception& e) {
 		return nil;
-
-	inputSource->_input = std::move(up);
-	return inputSource;
+	}
 }
 
 + (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length
@@ -92,10 +101,19 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(bytes != nullptr);
 	NSParameterAssert(length >= 0);
 
-	NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-	if(!data)
+	try {
+		auto up = std::make_unique<SFB::BufferInput>(bytes, length, SFB::BufferInput::BufferAdoption::copy);
+		if(!up)
+			return nil;
+		
+		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
+		if(inputSource)
+			inputSource->_input = std::move(up);
+		return inputSource;
+	}
+	catch(const std::exception& e) {
 		return nil;
-	return [SFBInputSource inputSourceWithData:data];
+	}
 }
 
 + (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone
@@ -103,10 +121,19 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(bytes != nullptr);
 	NSParameterAssert(length >= 0);
 
-	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-	if(!data)
+	try {
+		auto up = std::make_unique<SFB::BufferInput>(bytes, length, freeWhenDone ? SFB::BufferInput::BufferAdoption::noCopyAndFree : SFB::BufferInput::BufferAdoption::noCopy);
+		if(!up)
+			return nil;
+
+		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
+		if(inputSource)
+			inputSource->_input = std::move(up);
+		return inputSource;
+	}
+	catch(const std::exception& e) {
 		return nil;
-	return [SFBInputSource inputSourceWithData:data];
+	}
 }
 
 - (void)dealloc

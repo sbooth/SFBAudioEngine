@@ -14,7 +14,7 @@ class BufferInput: public InputSource
 {
 public:
 	enum class BufferAdoption { copy, noCopy, noCopyAndFree };
-	BufferInput(const void * _Nonnull buf, int64_t len, BufferAdoption owned = BufferAdoption::copy);
+	BufferInput(const void * _Nonnull buf, int64_t len, BufferAdoption behavior = BufferAdoption::copy);
 	~BufferInput() noexcept;
 
 	// This class is non-copyable.
