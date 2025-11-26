@@ -9,7 +9,7 @@
 SFB::DataInput::DataInput(CFDataRef data)
 {
 	if(!data) {
-		os_log_error(sLog, "Cannot create DataInput with null CFData");
+		os_log_error(sLog, "Cannot create DataInput with null data");
 		throw std::invalid_argument("Null data");
 	}
 	data_ = static_cast<CFDataRef>(CFRetain(data));

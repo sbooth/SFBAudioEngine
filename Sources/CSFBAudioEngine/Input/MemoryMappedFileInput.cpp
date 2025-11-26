@@ -16,7 +16,7 @@ SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url)
 : InputSource(url)
 {
 	if(!url) {
-		os_log_error(sLog, "Cannot create MemoryMappedFileInput with null CFURL");
+		os_log_error(sLog, "Cannot create MemoryMappedFileInput with null URL");
 		throw std::invalid_argument("Null URL");
 	}
 }

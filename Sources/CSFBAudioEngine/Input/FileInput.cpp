@@ -14,7 +14,7 @@ SFB::FileInput::FileInput(CFURLRef url)
 : InputSource(url)
 {
 	if(!url) {
-		os_log_error(sLog, "Cannot create FileInput with null CFURL");
+		os_log_error(sLog, "Cannot create FileInput with null URL");
 		throw std::invalid_argument("Null URL");
 	}
 }
