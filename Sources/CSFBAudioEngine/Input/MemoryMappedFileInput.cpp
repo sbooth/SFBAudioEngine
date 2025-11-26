@@ -11,6 +11,7 @@
 #import <sys/stat.h>
 
 #import "MemoryMappedFileInput.hpp"
+#import "scope_exit.hpp"
 
 SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url)
 : InputSource(url)
@@ -19,6 +20,12 @@ SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url)
 		os_log_error(sLog, "Cannot create MemoryMappedFileInput with null URL");
 		throw std::invalid_argument("Null URL");
 	}
+}
+
+SFB::MemoryMappedFileInput::~MemoryMappedFileInput() noexcept
+{
+	if(region_)
+		munmap(region_, len_);
 }
 
 void SFB::MemoryMappedFileInput::_Open()
@@ -55,6 +62,13 @@ void SFB::MemoryMappedFileInput::_Open()
 	region_ = region;
 	len_ = s.st_size;
 	pos_ = 0;
+}
+
+void SFB::MemoryMappedFileInput::_Close()
+{
+	const auto defer = scope_exit{[this]() noexcept { region_ = nullptr; }};
+	if(munmap(region_, len_))
+		throw std::system_error{errno, std::generic_category()};
 }
 
 int64_t SFB::MemoryMappedFileInput::_Read(void *buffer, int64_t count)

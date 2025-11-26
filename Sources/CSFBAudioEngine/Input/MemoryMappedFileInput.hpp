@@ -9,7 +9,6 @@
 #import <system_error>
 
 #import "InputSource.hpp"
-#import "scope_exit.hpp"
 
 namespace SFB {
 
@@ -17,9 +16,7 @@ class MemoryMappedFileInput: public InputSource
 {
 public:
 	explicit MemoryMappedFileInput(CFURLRef _Nonnull url);
-
-	~MemoryMappedFileInput() noexcept
-	{ if(region_) munmap(region_, len_); }
+	~MemoryMappedFileInput() noexcept;
 
 	// This class is non-copyable.
 	MemoryMappedFileInput(const MemoryMappedFileInput&) = delete;
@@ -31,13 +28,7 @@ public:
 
 private:
 	void _Open() override;
-
-	void _Close() override
-	{
-		const auto defer = scope_exit{[this]() noexcept { region_ = nullptr; }};
-		if(munmap(region_, len_))
-			throw std::system_error{errno, std::generic_category()};
-	}
+	void _Close() override;
 
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 

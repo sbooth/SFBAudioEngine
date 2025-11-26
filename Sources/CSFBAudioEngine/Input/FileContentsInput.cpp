@@ -21,6 +21,11 @@ SFB::FileContentsInput::FileContentsInput(CFURLRef url)
 	}
 }
 
+SFB::FileContentsInput::~FileContentsInput() noexcept
+{
+	std::free(buf_);
+}
+
 void SFB::FileContentsInput::_Open()
 {
 	CFURLRef url = GetURL();
@@ -53,6 +58,12 @@ void SFB::FileContentsInput::_Open()
 
 	len_ = nitems;
 	pos_ = 0;
+}
+
+void SFB::FileContentsInput::_Close() noexcept
+{
+	std::free(buf_);
+	buf_ = nullptr;
 }
 
 int64_t SFB::FileContentsInput::_Read(void *buffer, int64_t count)

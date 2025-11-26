@@ -9,6 +9,7 @@
 #import <sys/stat.h>
 
 #import "FileInput.hpp"
+#import "scope_exit.hpp"
 
 SFB::FileInput::FileInput(CFURLRef url)
 : InputSource(url)
@@ -17,6 +18,12 @@ SFB::FileInput::FileInput(CFURLRef url)
 		os_log_error(sLog, "Cannot create FileInput with null URL");
 		throw std::invalid_argument("Null URL");
 	}
+}
+
+SFB::FileInput::~FileInput() noexcept
+{
+	if(file_)
+		std::fclose(file_);
 }
 
 void SFB::FileInput::_Open()
@@ -38,6 +45,13 @@ void SFB::FileInput::_Open()
 	}
 
 	len_ = s.st_size;
+}
+
+void SFB::FileInput::_Close()
+{
+	const auto defer = scope_exit{[this]() noexcept { file_ = nullptr; }};
+	if(std::fclose(file_))
+		throw std::system_error{errno, std::generic_category()};
 }
 
 int64_t SFB::FileInput::_Read(void *buffer, int64_t count)

@@ -10,7 +10,6 @@
 #import <system_error>
 
 #import "InputSource.hpp"
-#import "scope_exit.hpp"
 
 namespace SFB {
 
@@ -18,9 +17,7 @@ class FileInput: public InputSource
 {
 public:
 	explicit FileInput(CFURLRef _Nonnull url);
-
-	~FileInput() noexcept
-	{ if(file_) std::fclose(file_); }
+	~FileInput() noexcept;
 
 	// This class is non-copyable.
 	FileInput(const FileInput&) = delete;
@@ -32,13 +29,7 @@ public:
 
 private:
 	void _Open() override;
-
-	void _Close() override
-	{
-		const auto defer = scope_exit{[this]() noexcept { file_ = nullptr; }};
-		if(std::fclose(file_))
-			throw std::system_error{errno, std::generic_category()};
-	}
+	void _Close() override;
 
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 

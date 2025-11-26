@@ -16,9 +16,7 @@ class FileContentsInput: public InputSource
 {
 public:
 	explicit FileContentsInput(CFURLRef _Nonnull url);
-
-	~FileContentsInput() noexcept
-	{ std::free(buf_); }
+	~FileContentsInput() noexcept;
 
 	// This class is non-copyable.
 	FileContentsInput(const FileContentsInput&) = delete;
@@ -30,12 +28,7 @@ public:
 
 private:
 	void _Open() override;
-
-	void _Close() noexcept override
-	{
-		std::free(buf_);
-		buf_ = nullptr;
-	}
+	void _Close() noexcept override;
 
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 

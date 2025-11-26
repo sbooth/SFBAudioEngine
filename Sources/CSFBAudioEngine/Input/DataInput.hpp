@@ -14,9 +14,7 @@ class DataInput: public InputSource
 {
 public:
 	explicit DataInput(CFDataRef _Nonnull data);
-
-	~DataInput() noexcept
-	{ CFRelease(data_); }
+	~DataInput() noexcept;
 
 	// This class is non-copyable.
 	DataInput(const DataInput&) = delete;

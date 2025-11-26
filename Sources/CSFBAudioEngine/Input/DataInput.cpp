@@ -15,6 +15,11 @@ SFB::DataInput::DataInput(CFDataRef data)
 	data_ = static_cast<CFDataRef>(CFRetain(data));
 }
 
+SFB::DataInput::~DataInput() noexcept
+{
+	CFRelease(data_);
+}
+
 int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 {
 	if(count > LONG_MAX) {
