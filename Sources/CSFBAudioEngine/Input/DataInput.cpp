@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#import <algorithm>
+
 #import "DataInput.hpp"
 
 SFB::DataInput::DataInput(CFDataRef data)

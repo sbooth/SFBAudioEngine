@@ -6,8 +6,6 @@
 
 #pragma once
 
-#import <system_error>
-
 #import "InputSource.hpp"
 
 namespace SFB {

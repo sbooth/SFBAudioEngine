@@ -7,7 +7,6 @@
 #pragma once
 
 #import <cstdio>
-#import <system_error>
 
 #import "InputSource.hpp"
 

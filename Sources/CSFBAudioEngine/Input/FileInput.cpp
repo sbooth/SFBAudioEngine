@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <cstdio>
 #import <system_error>
 
 #import <sys/stat.h>
