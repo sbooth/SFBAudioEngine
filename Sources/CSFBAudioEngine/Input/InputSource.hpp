@@ -18,13 +18,9 @@ namespace SFB {
 class InputSource
 {
 public:
-	/// The shared log for all `InputSource` instances
-	static const os_log_t _Nonnull sLog;
-
 	using unique_ptr = std::unique_ptr<InputSource>;
 
-	virtual ~InputSource() noexcept
-	{ if(url_) CFRelease(url_); }
+	virtual ~InputSource() noexcept;
 
 	// This class is non-copyable.
 	InputSource(const InputSource&) = delete;
@@ -34,21 +30,18 @@ public:
 	InputSource& operator=(const InputSource&) = delete;
 	InputSource& operator=(InputSource&&) = delete;
 
-	CFURLRef _Nullable GetURL() const noexcept
-	{ return url_; }
+	CFURLRef _Nullable GetURL() const noexcept 	{ return url_; }
 
 	// Opening and closing
 	void Open();
 	void Close();
-
-	bool IsOpen() const noexcept
-	{ return isOpen_; }
+	bool IsOpen() const noexcept 	{ return isOpen_; }
 
 	// Reading
 	int64_t Read(void * _Nonnull buffer, int64_t count);
 
+	// Position
 	bool AtEOF() const;
-
 	int64_t Offset() const;
 	int64_t Length() const;
 
@@ -57,6 +50,8 @@ public:
 	void SeekToOffset(int64_t offset, int whence);
 
 protected:
+	/// The shared log for all `InputSource` instances
+	static const os_log_t _Nonnull sLog;
 
 	explicit InputSource() noexcept = default;
 
@@ -64,7 +59,6 @@ protected:
 	{ if(url) url_ = static_cast<CFURLRef>(CFRetain(url)); }
 
 private:
-
 	// Subclasses must implement the following methods
 	virtual void _Open() = 0;
 	virtual void _Close() = 0;
@@ -72,13 +66,9 @@ private:
 	virtual bool _AtEOF() const = 0;
 	virtual int64_t _Offset() const = 0;
 	virtual int64_t _Length() const = 0;
-
 	// Optional seeking support
-	virtual bool _SupportsSeeking() const noexcept
-	{ return false; }
-
-	virtual void _SeekToOffset(int64_t offset, int whence)
-	{ throw std::logic_error("Seeking not supported"); }
+	virtual bool _SupportsSeeking() const noexcept			{ return false; }
+	virtual void _SeekToOffset(int64_t offset, int whence) 	{ throw std::logic_error("Seeking not supported"); }
 
 	/// The location of the bytes to be read
 	CFURLRef _Nullable url_ {nullptr};

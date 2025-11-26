@@ -15,6 +15,12 @@ const os_log_t InputSource::sLog = os_log_create("org.sbooth.AudioEngine", "Inpu
 
 } /* namespace SFB */
 
+SFB::InputSource::~InputSource() noexcept
+{
+	if(url_)
+		CFRelease(url_);
+}
+
 void SFB::InputSource::Open()
 {
 	if(IsOpen()) {
