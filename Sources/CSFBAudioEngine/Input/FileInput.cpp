@@ -65,3 +65,17 @@ int64_t SFB::FileInput::_Read(void *buffer, int64_t count)
 		throw std::system_error{errno, std::generic_category()};
 	return nitems;
 }
+
+int64_t SFB::FileInput::_Offset() const
+{
+	const auto offset = ::ftello(file_);
+	if(offset == -1)
+		throw std::system_error{errno, std::generic_category()};
+	return offset;
+}
+
+void SFB::FileInput::_SeekToOffset(int64_t offset, int whence)
+{
+	if(::fseeko(file_, static_cast<off_t>(offset), whence))
+		throw std::system_error{errno, std::generic_category()};
+}

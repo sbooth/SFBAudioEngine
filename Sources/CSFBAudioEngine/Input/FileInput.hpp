@@ -28,35 +28,16 @@ public:
 	FileInput& operator=(FileInput&&) = delete;
 
 private:
+	bool _AtEOF() const noexcept override 				{ return std::feof(file_) != 0; }
+	int64_t _Length() const noexcept override 			{ return len_; }
+	bool _SupportsSeeking() const noexcept override 	{ return true; }
+
 	void _Open() override;
 	void _Close() override;
-
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
+	int64_t _Offset() const override;
+	void _SeekToOffset(int64_t offset, int whence) override;
 
-	bool _AtEOF() const noexcept override
-	{ return std::feof(file_) != 0; }
-
-	int64_t _Offset() const override
-	{
-		const auto offset = ::ftello(file_);
-		if(offset == -1)
-			throw std::system_error{errno, std::generic_category()};
-		return offset;
-	}
-
-	int64_t _Length() const noexcept override
-	{ return len_; }
-
-	bool _SupportsSeeking() const noexcept override
-	{ return true; }
-
-	void _SeekToOffset(int64_t offset, int whence) override
-	{
-		if(::fseeko(file_, static_cast<off_t>(offset), whence))
-			throw std::system_error{errno, std::generic_category()};
-	}
-
-	// Data members
 	FILE * _Nullable file_ {nullptr};
 	int64_t len_ {0};
 };
