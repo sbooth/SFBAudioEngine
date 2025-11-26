@@ -253,11 +253,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (NSString *)description
 {
-	NSURL *url = (__bridge NSURL *)_input->GetURL();
-	if(url)
-		return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:url.path]];
-	else
-		return [NSString stringWithFormat:@"<%@ %p>", [self class], self];
+	return (__bridge_transfer NSString *)_input->CopyDescription();
 }
 
 @end
