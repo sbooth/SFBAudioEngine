@@ -113,5 +113,5 @@ CFStringRef SFB::MemoryMappedFileInput::_CopyDescription() const noexcept
 {
 	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(GetURL());
 	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<MemoryMappedFileInput %p: %lld bytes mapped at %p from \"%{public}@\">"), this, len_, region_, lastPathComponent);
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<MemoryMappedFileInput %p: %lld bytes mapped at %p from \"%@\">"), this, len_, region_, lastPathComponent);
 }

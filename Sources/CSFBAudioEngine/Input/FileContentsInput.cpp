@@ -108,5 +108,5 @@ CFStringRef SFB::FileContentsInput::_CopyDescription() const noexcept
 {
 	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(GetURL());
 	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileContentsInput %p: %lld bytes copied to %p from \"%{public}@\">"), this, len_, buf_, lastPathComponent);
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileContentsInput %p: %lld bytes copied to %p from \"%@\">"), this, len_, buf_, lastPathComponent);
 }

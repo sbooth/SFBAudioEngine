@@ -64,5 +64,5 @@ void SFB::DataInput::_SeekToOffset(int64_t offset, int whence)
 
 CFStringRef SFB::DataInput::_CopyDescription() const noexcept
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<DataInput %p: %{public}@}>"), this, data_);
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<DataInput %p: %@>"), this, data_);
 }
