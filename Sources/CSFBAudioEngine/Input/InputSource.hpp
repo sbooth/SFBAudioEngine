@@ -39,6 +39,7 @@ public:
 
 	// Reading
 	int64_t Read(void * _Nonnull buffer, int64_t count);
+	CFDataRef _Nullable CopyDataWithLength(int64_t length);
 
 	// Position
 	bool AtEOF() const;
