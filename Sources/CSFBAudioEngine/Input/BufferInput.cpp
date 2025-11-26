@@ -1,0 +1,74 @@
+//
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/SFBAudioEngine
+// MIT license
+//
+
+#import <algorithm>
+#import <cstdio>
+#import <cstdlib>
+#import <system_error>
+
+#import <sys/stat.h>
+
+#import "BufferInput.hpp"
+
+SFB::BufferInput::BufferInput(const void *buf, int64_t len, bool copy)
+: buf_{const_cast<void *>(buf)}, len_{len}, free_{copy}
+{
+	if(!buf || len < 0) {
+		os_log_error(sLog, "Cannot create BufferInput with null buffer or negative length");
+		throw std::invalid_argument("Null buffer or negative length");
+	}
+
+	if(copy) {
+		buf_ = std::malloc(len_);
+		if(!buf_)
+			throw std::bad_alloc();
+		std::memcpy(buf_, buf, len_);
+	}
+}
+
+SFB::BufferInput::~BufferInput() noexcept
+{
+	if(free_)
+		std::free(buf_);
+}
+
+int64_t SFB::BufferInput::_Read(void *buffer, int64_t count)
+{
+	if(count > SIZE_T_MAX) {
+		os_log_error(sLog, "_Read() called on <BufferInput: %p> with count greater than maximum allowable value", this);
+		throw std::invalid_argument("Count greater than maximum allowable value");
+	}
+	const auto remaining = len_ - pos_;
+	count = std::min(count, remaining);
+	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
+	pos_ += count;
+	return count;
+}
+
+void SFB::BufferInput::_SeekToOffset(int64_t offset, int whence)
+{
+	switch(whence) {
+		case SEEK_SET:
+			break;
+		case SEEK_CUR:
+			offset += pos_;
+			break;
+		case SEEK_END:
+			offset += len_;
+			break;
+		default:
+			os_log_error(sLog, "_SeekToOffset() called on <BufferInput: %p> with unknown whence %d", this, whence);
+			throw std::invalid_argument("Unknown whence");
+	}
+
+	if(offset < 0 || offset > len_) {
+		os_log_error(sLog, "_SeekToOffset() called on <BufferInput: %p> with invalid seek offset %lld", this, offset);
+		throw std::out_of_range("Invalid seek offset");
+	}
+
+	pos_ = offset;
+}
+
