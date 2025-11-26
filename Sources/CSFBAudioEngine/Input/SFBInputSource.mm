@@ -4,6 +4,8 @@
 // MIT license
 //
 
+#import <system_error>
+
 #import "SFBInputSource+Internal.h"
 
 #import "BufferInput.hpp"
@@ -13,6 +15,26 @@
 #import "MemoryMappedFileInput.hpp"
 
 #import "NSData+SFBExtensions.h"
+
+namespace {
+
+NSError * NSErrorFromInputSourceException(const std::exception *e) noexcept
+{
+	NSCParameterAssert(e != nullptr);
+
+	if(const auto se = dynamic_cast<const std::system_error *>(e); se)
+		return [NSError errorWithDomain:NSPOSIXErrorDomain code:se->code().value() userInfo:@{ NSDebugDescriptionErrorKey: @(se->code().message().c_str()) }];
+
+	if(const auto ia = dynamic_cast<const std::invalid_argument *>(e); ia)
+		return [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSDebugDescriptionErrorKey: @(ia->what()) }];
+
+	if(const auto oor = dynamic_cast<const std::out_of_range *>(e); oor)
+		return [NSError errorWithDomain:NSPOSIXErrorDomain code:EDOM userInfo:@{ NSDebugDescriptionErrorKey: @(oor->what()) }];
+
+	return [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:@{ NSDebugDescriptionErrorKey: @(e->what()) }];
+}
+
+} /* namespace */
 
 // NSError domain for InputSource and subclasses
 NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSource";
@@ -154,7 +176,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
 	}
 }
@@ -167,7 +189,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
 	}
 }
@@ -187,7 +209,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
 	}
 }
@@ -213,7 +235,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
 	}
 }
@@ -228,7 +250,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
 	}
 }
@@ -246,7 +268,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeInputOutput userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
 	}
 }
@@ -363,7 +385,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			*error = NSErrorFromInputSourceException(&e);
 		return nil;
 	}
 }
