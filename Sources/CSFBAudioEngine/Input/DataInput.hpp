@@ -34,6 +34,7 @@ private:
 
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 	void _SeekToOffset(int64_t offset, int whence) override;
+	CFStringRef _CopyDescription() const noexcept override;
 
 	CFDataRef _Nonnull data_ {nullptr};
 	CFIndex pos_ {0};

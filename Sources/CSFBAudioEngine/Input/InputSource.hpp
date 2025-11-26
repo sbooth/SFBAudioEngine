@@ -49,6 +49,8 @@ public:
 	bool SupportsSeeking() const noexcept;
 	void SeekToOffset(int64_t offset, int whence);
 
+	CFStringRef CopyDescription() const noexcept;
+
 protected:
 	/// The shared log for all `InputSource` instances
 	static const os_log_t _Nonnull sLog;
@@ -69,6 +71,8 @@ private:
 	// Optional seeking support
 	virtual bool _SupportsSeeking() const noexcept			{ return false; }
 	virtual void _SeekToOffset(int64_t offset, int whence) 	{ throw std::logic_error("Seeking not supported"); }
+	// Optional description
+	virtual CFStringRef _CopyDescription() const noexcept 	{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
 
 	/// The location of the bytes to be read
 	CFURLRef _Nullable url_ {nullptr};

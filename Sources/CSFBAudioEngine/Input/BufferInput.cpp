@@ -72,3 +72,7 @@ void SFB::BufferInput::_SeekToOffset(int64_t offset, int whence)
 	pos_ = offset;
 }
 
+CFStringRef SFB::BufferInput::_CopyDescription() const noexcept
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<BufferInput %p: %lld bytes at %p>"), this, len_, buf_);
+}

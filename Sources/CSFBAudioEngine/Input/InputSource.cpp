@@ -107,3 +107,8 @@ void SFB::InputSource::SeekToOffset(int64_t offset, int whence)
 
 	return _SeekToOffset(offset, whence);
 }
+
+CFStringRef SFB::InputSource::CopyDescription() const noexcept
+{
+	return _CopyDescription();
+}

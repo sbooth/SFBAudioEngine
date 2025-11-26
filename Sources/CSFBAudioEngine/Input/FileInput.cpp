@@ -80,3 +80,10 @@ void SFB::FileInput::_SeekToOffset(int64_t offset, int whence)
 	if(::fseeko(file_, static_cast<off_t>(offset), whence))
 		throw std::system_error{errno, std::generic_category()};
 }
+
+CFStringRef SFB::FileInput::_CopyDescription() const noexcept
+{
+	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(GetURL());
+	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileInput %p: \%{public@}\""), this, lastPathComponent);
+}

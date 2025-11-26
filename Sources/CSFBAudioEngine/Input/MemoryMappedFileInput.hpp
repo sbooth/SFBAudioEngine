@@ -34,6 +34,7 @@ private:
 	void _Close() override;
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
 	void _SeekToOffset(int64_t offset, int whence) override;
+	CFStringRef _CopyDescription() const noexcept override;
 
 	void * _Nullable region_ {nullptr};
 	int64_t len_ {0};
