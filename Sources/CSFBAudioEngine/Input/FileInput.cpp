@@ -57,10 +57,6 @@ void SFB::FileInput::_Close()
 
 int64_t SFB::FileInput::_Read(void *buffer, int64_t count)
 {
-	if(count > SIZE_T_MAX) {
-		os_log_error(sLog, "_Read() called on <FileInput: %p> with count greater than maximum allowable value", this);
-		throw std::invalid_argument("Count greater than maximum allowable value");
-	}
 	const auto nitems = std::fread(buffer, 1, count, file_);
 	if(nitems != count && std::ferror(file_))
 		throw std::system_error{errno, std::generic_category()};

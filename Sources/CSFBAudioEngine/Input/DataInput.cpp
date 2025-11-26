@@ -5,6 +5,7 @@
 //
 
 #import <algorithm>
+#import <limits>
 
 #import "DataInput.hpp"
 
@@ -24,7 +25,7 @@ SFB::DataInput::~DataInput() noexcept
 
 int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 {
-	if(count > LONG_MAX) {
+	if(count > std::numeric_limits<CFIndex>::max()) {
 		os_log_error(sLog, "_Read() called on <DataInput: %p> with count greater than maximum allowable value", this);
 		throw std::invalid_argument("Count greater than maximum allowable value");
 	}
