@@ -13,15 +13,15 @@
 
 #import "BufferInput.hpp"
 
-SFB::BufferInput::BufferInput(const void *buf, int64_t len, bool copy)
-: buf_{const_cast<void *>(buf)}, len_{len}, free_{copy}
+SFB::BufferInput::BufferInput(const void *buf, int64_t len, BufferAdoption owned)
+: buf_{const_cast<void *>(buf)}, free_{owned == BufferAdoption::copy || owned == BufferAdoption::noCopyAndFree}, len_{len}
 {
 	if(!buf || len < 0) {
 		os_log_error(sLog, "Cannot create BufferInput with null buffer or negative length");
 		throw std::invalid_argument("Null buffer or negative length");
 	}
 
-	if(copy) {
+	if(owned == BufferAdoption::copy) {
 		buf_ = std::malloc(len_);
 		if(!buf_)
 			throw std::bad_alloc();

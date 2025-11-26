@@ -13,7 +13,8 @@ namespace SFB {
 class BufferInput: public InputSource
 {
 public:
-	BufferInput(const void * _Nonnull buf, int64_t len, bool copy = true);
+	enum class BufferAdoption { copy, noCopy, noCopyAndFree };
+	BufferInput(const void * _Nonnull buf, int64_t len, BufferAdoption owned = BufferAdoption::copy);
 	~BufferInput() noexcept;
 
 	// This class is non-copyable.
