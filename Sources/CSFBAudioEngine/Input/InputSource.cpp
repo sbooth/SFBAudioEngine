@@ -125,7 +125,7 @@ bool SFB::InputSource::SupportsSeeking() const noexcept
 	return _SupportsSeeking();
 }
 
-void SFB::InputSource::SeekToOffset(int64_t offset, int whence)
+void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
 {
 	if(!IsOpen()) {
 		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> that hasn't been opened", this);

@@ -8,13 +8,16 @@
 
 #import <memory>
 #import <stdexcept>
+#import <type_traits>
 
+#import <libkern/OSByteOrder.h>
 #import <os/log.h>
 
 #import <CoreFoundation/CoreFoundation.h>
 
 namespace SFB {
 
+/// An input source.
 class InputSource
 {
 public:
@@ -30,30 +33,96 @@ public:
 	InputSource& operator=(const InputSource&) = delete;
 	InputSource& operator=(InputSource&&) = delete;
 
+	/// Returns the URL, if any, of the input source.
 	CFURLRef _Nullable GetURL() const noexcept 	{ return url_; }
 
 	// Opening and closing
+	/// Opens the input source.
 	void Open();
+	/// Closes the input source.
 	void Close();
+	/// Returns `true` if the input source is open.
 	bool IsOpen() const noexcept 	{ return isOpen_; }
 
 	// Reading
+	/// Attempts to read `count` bytes from the input source into `buffer` and returns the number of bytes read.
 	int64_t Read(void * _Nonnull buffer, int64_t count);
+	/// Attempts to read `length` bytes from the input source into a `CFData` object and returns it.
 	CFDataRef _Nullable CopyDataWithLength(int64_t length);
 
 	// Position
+	/// Returns `true` if the input source is at the end of input.
 	bool AtEOF() const;
+	/// Returns the current read position of the input source in bytes.
 	int64_t Offset() const;
+	/// Returns the number of bytes in the input source.
 	int64_t Length() const;
 
 	// Seeking
+	/// Returns `true` if the inputs source is seekable.
 	bool SupportsSeeking() const noexcept;
-	void SeekToOffset(int64_t offset, int whence);
+	/// Possible seek anchor points.
+	enum class SeekAnchor { start, current, end, };
+	/// Seeks to `offset` bytes relative to `whence`.
+	void SeekToOffset(int64_t offset, SeekAnchor whence);
 
+	/// Returns a description of the input source.
 	CFStringRef CopyDescription() const noexcept;
 
+	// Helpers
+	/// Possible byte orders.
+	enum class ByteOrder { little, big, host, swapped, };
+
+	/// Reads and returns an unsigned integer value in the specified byte order.
+	template <typename U, typename = std::enable_if_t<std::is_same_v<U, std::uint16_t> || std::is_same_v<U, std::uint32_t> || std::is_same_v<U, std::uint64_t>>>
+	U ReadUnsigned(ByteOrder order = ByteOrder::host)
+	{
+		if(!IsOpen()) {
+			os_log_error(sLog, "ReadUnsigned() called on <InputSource: %p> that hasn't been opened", this);
+			throw std::logic_error("Input source not open");
+		}
+
+		U value;
+		if(_Read(&value, sizeof(U)) != sizeof(U))
+			throw std::runtime_error("Insufficient data");
+
+		if constexpr (std::is_same_v<U, std::uint16_t>) {
+			switch(order) {
+				case ByteOrder::little: 	return OSSwapLittleToHostInt16(value);
+				case ByteOrder::big: 		return OSSwapBigToHostInt16(value);
+				case ByteOrder::host: 		return value;
+				case ByteOrder::swapped: 	return OSSwapInt16(value);
+			}
+		}
+		else if constexpr (std::is_same_v<U, std::uint32_t>) {
+			switch(order) {
+				case ByteOrder::little: 	return OSSwapLittleToHostInt32(value);
+				case ByteOrder::big: 		return OSSwapBigToHostInt32(value);
+				case ByteOrder::host: 		return value;
+				case ByteOrder::swapped: 	return OSSwapInt32(value);
+			}
+		}
+		else if constexpr (std::is_same_v<U, std::uint64_t>) {
+			switch(order) {
+				case ByteOrder::little: 	return OSSwapLittleToHostInt64(value);
+				case ByteOrder::big: 		return OSSwapBigToHostInt64(value);
+				case ByteOrder::host: 		return value;
+				case ByteOrder::swapped: 	return OSSwapInt64(value);
+			}
+		}
+		else
+			static_assert(false, "Unsupported unsigned integer type");
+	}
+
+	/// Reads and returns a signed integer value in the specified byte order.
+	template <typename S, typename = std::enable_if_t<std::is_same_v<S, std::int16_t> || std::is_same_v<S, std::int32_t> || std::is_same_v<S, std::int64_t>>>
+	S ReadSigned(ByteOrder order = ByteOrder::host)
+	{
+		return std::make_signed(ReadUnsigned<std::make_unsigned<S>>(order));
+	}
+
 protected:
-	/// The shared log for all `InputSource` instances
+	/// The shared log for all `InputSource` instances.
 	static const os_log_t _Nonnull sLog;
 
 	explicit InputSource() noexcept = default;
@@ -70,14 +139,14 @@ private:
 	virtual int64_t _Offset() const = 0;
 	virtual int64_t _Length() const = 0;
 	// Optional seeking support
-	virtual bool _SupportsSeeking() const noexcept			{ return false; }
-	virtual void _SeekToOffset(int64_t offset, int whence) 	{ throw std::logic_error("Seeking not supported"); }
+	virtual bool _SupportsSeeking() const noexcept					{ return false; }
+	virtual void _SeekToOffset(int64_t offset, SeekAnchor whence) 	{ throw std::logic_error("Seeking not supported"); }
 	// Optional description
-	virtual CFStringRef _CopyDescription() const noexcept 	{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
+	virtual CFStringRef _CopyDescription() const noexcept 			{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
 
-	/// The location of the bytes to be read
+	/// The location of the bytes to be read.
 	CFURLRef _Nullable url_ {nullptr};
-	/// `true` if the input source is open
+	/// `true` if the input source is open.
 	bool isOpen_ {false};
 };
 

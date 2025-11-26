@@ -263,7 +263,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
 	try {
-		_input->SeekToOffset(offset, SEEK_SET);
+		_input->SeekToOffset(offset, SFB::BufferInput::SeekAnchor::start);
 		return YES;
 	}
 	catch(const std::exception& e) {
@@ -296,20 +296,44 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)readUInt16:(uint16_t *)ui16 error:(NSError **)error
 {
-	NSInteger bytesRead;
-	return [self readBytes:ui16 length:sizeof(uint16_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint16_t);
+	NSParameterAssert(ui16 != nil);
+	try {
+		*ui16 = _input->ReadUnsigned<uint16_t>();
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
+		return NO;
+	}
 }
 
 - (BOOL)readUInt32:(uint32_t *)ui32 error:(NSError **)error
 {
-	NSInteger bytesRead;
-	return [self readBytes:ui32 length:sizeof(uint32_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint32_t);
+	NSParameterAssert(ui32 != nil);
+	try {
+		*ui32 = _input->ReadUnsigned<uint32_t>();
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
+		return NO;
+	}
 }
 
 - (BOOL)readUInt64:(uint64_t *)ui64 error:(NSError **)error
 {
-	NSInteger bytesRead;
-	return [self readBytes:ui64 length:sizeof(uint64_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint64_t);
+	NSParameterAssert(ui64 != nil);
+	try {
+		*ui64 = _input->ReadUnsigned<uint64_t>();
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
+		return NO;
+	}
 }
 
 @end
@@ -319,28 +343,43 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error
 {
 	NSParameterAssert(ui16 != nil);
-	if(![self readUInt16:ui16 error:error])
+	try {
+		*ui16 = _input->ReadUnsigned<uint16_t>(SFB::InputSource::ByteOrder::big);
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
-	*ui16 = OSSwapHostToBigInt16(*ui16);
-	return YES;
+	}
 }
 
 - (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error
 {
 	NSParameterAssert(ui32 != nil);
-	if(![self readUInt32:ui32 error:error])
+	try {
+		*ui32 = _input->ReadUnsigned<uint32_t>(SFB::InputSource::ByteOrder::big);
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
-	*ui32 = OSSwapHostToBigInt32(*ui32);
-	return YES;
+	}
 }
 
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error
 {
 	NSParameterAssert(ui64 != nil);
-	if(![self readUInt64:ui64 error:error])
+	try {
+		*ui64 = _input->ReadUnsigned<uint64_t>(SFB::InputSource::ByteOrder::big);
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
-	*ui64 = OSSwapHostToBigInt64(*ui64);
-	return YES;
+	}
 }
 
 @end
@@ -350,28 +389,43 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error
 {
 	NSParameterAssert(ui16 != nil);
-	if(![self readUInt16:ui16 error:error])
+	try {
+		*ui16 = _input->ReadUnsigned<uint16_t>(SFB::InputSource::ByteOrder::little);
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
-	*ui16 = OSSwapHostToLittleInt16(*ui16);
-	return YES;
+	}
 }
 
 - (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error
 {
 	NSParameterAssert(ui32 != nil);
-	if(![self readUInt32:ui32 error:error])
+	try {
+		*ui32 = _input->ReadUnsigned<uint32_t>(SFB::InputSource::ByteOrder::little);
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
-	*ui32 = OSSwapHostToLittleInt32(*ui32);
-	return YES;
+	}
 }
 
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error
 {
 	NSParameterAssert(ui64 != nil);
-	if(![self readUInt64:ui64 error:error])
+	try {
+		*ui64 = _input->ReadUnsigned<uint64_t>(SFB::InputSource::ByteOrder::little);
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return NO;
-	*ui64 = OSSwapHostToLittleInt64(*ui64);
-	return YES;
+	}
 }
 
 @end

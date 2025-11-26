@@ -81,20 +81,12 @@ int64_t SFB::MemoryMappedFileInput::_Read(void *buffer, int64_t count)
 	return count;
 }
 
-void SFB::MemoryMappedFileInput::_SeekToOffset(int64_t offset, int whence)
+void SFB::MemoryMappedFileInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
 {
 	switch(whence) {
-		case SEEK_SET:
-			break;
-		case SEEK_CUR:
-			offset += pos_;
-			break;
-		case SEEK_END:
-			offset += len_;
-			break;
-		default:
-			os_log_error(sLog, "_SeekToOffset() called on <MemoryMappedFileInput: %p> with unknown whence %d", this, whence);
-			throw std::invalid_argument("Unknown whence");
+		case SeekAnchor::start: 	/* unchanged */		break;
+		case SeekAnchor::current: 	offset += pos_; 	break;
+		case SeekAnchor::end:		offset += len_; 	break;
 	}
 
 	if(offset < 0 || offset > len_) {

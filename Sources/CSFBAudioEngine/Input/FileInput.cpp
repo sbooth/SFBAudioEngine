@@ -71,9 +71,15 @@ int64_t SFB::FileInput::_Offset() const
 	return offset;
 }
 
-void SFB::FileInput::_SeekToOffset(int64_t offset, int whence)
+void SFB::FileInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
 {
-	if(::fseeko(file_, static_cast<off_t>(offset), whence))
+	int _whence;
+	switch(whence) {
+		case SeekAnchor::start: 	_whence = SEEK_SET; 	break;
+		case SeekAnchor::current: 	_whence = SEEK_CUR; 	break;
+		case SeekAnchor::end:		_whence = SEEK_END; 	break;
+	}
+	if(::fseeko(file_, static_cast<off_t>(offset), _whence))
 		throw std::system_error{errno, std::generic_category()};
 }
 

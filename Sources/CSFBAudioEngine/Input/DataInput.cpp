@@ -37,22 +37,14 @@ int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 	return count;
 }
 
-void SFB::DataInput::_SeekToOffset(int64_t offset, int whence)
+void SFB::DataInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
 {
 	const auto length = CFDataGetLength(data_);
 
 	switch(whence) {
-		case SEEK_SET:
-			break;
-		case SEEK_CUR:
-			offset += pos_;
-			break;
-		case SEEK_END:
-			offset += length;
-			break;
-		default:
-			os_log_error(sLog, "_SeekToOffset() called on <DataInput: %p> with unknown whence %d", this, whence);
-			throw std::invalid_argument("Unknown whence");
+		case SeekAnchor::start: 	/* unchanged */		break;
+		case SeekAnchor::current: 	offset += pos_; 	break;
+		case SeekAnchor::end:		offset += length; 	break;
 	}
 
 	if(offset < 0 || offset > length) {
