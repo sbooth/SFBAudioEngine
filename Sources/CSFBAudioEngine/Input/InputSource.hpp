@@ -9,6 +9,7 @@
 #import <memory>
 #import <stdexcept>
 #import <type_traits>
+#import <vector>
 
 #import <libkern/OSByteOrder.h>
 #import <os/log.h>
@@ -45,10 +46,12 @@ public:
 	bool IsOpen() const noexcept 	{ return isOpen_; }
 
 	// Reading
-	/// Attempts to read `count` bytes from the input source into `buffer` and returns the number of bytes read.
+	/// Attempts to read up to `count` bytes from the input source into `buffer` and returns the number of bytes read.
 	int64_t Read(void * _Nonnull buffer, int64_t count);
-	/// Attempts to read `count` bytes from the input source into a `CFData` object and returns it.
+	/// Reads and returns up to `count` bytes from the input source in a `CFData` object.
 	CFDataRef _Nullable CopyData(int64_t count);
+	/// Reads and returns up to `count` bytes from the input source in a `std::vector` object.
+	std::vector<uint8_t> ReadBlock(std::vector<uint8_t>::size_type count);
 
 	// Position
 	/// Returns `true` if the input source is at the end of input.

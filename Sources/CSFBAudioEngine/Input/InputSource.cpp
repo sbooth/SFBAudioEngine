@@ -91,6 +91,27 @@ CFDataRef SFB::InputSource::CopyData(int64_t count)
 	}
 }
 
+std::vector<uint8_t> SFB::InputSource::ReadBlock(std::vector<uint8_t>::size_type count)
+{
+	if(!IsOpen()) {
+		os_log_error(sLog, "ReadBlock() called on <InputSource: %p> that hasn't been opened", this);
+		throw std::logic_error("Input source not open");
+	}
+
+	if(count < 0) {
+		os_log_error(sLog, "ReadBlock() called on <InputSource: %p> with invalid count", this);
+		throw std::invalid_argument("Invalid count");
+	}
+
+	if(count == 0)
+		return {};
+
+	std::vector<uint8_t> vec;
+	vec.reserve(count);
+	vec.resize(_Read(vec.data(), vec.capacity()));
+	return vec;
+}
+
 bool SFB::InputSource::AtEOF() const
 {
 	if(!IsOpen()) {
