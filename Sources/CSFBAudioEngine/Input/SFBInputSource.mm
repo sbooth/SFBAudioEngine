@@ -208,7 +208,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(offset != nullptr);
 
 	try {
-		*offset = _input->Offset();
+		*offset = _input->Position();
 		return YES;
 	}
 	catch(const std::exception& e) {
@@ -445,7 +445,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 
 	try {
-		const auto originalOffset = _input->Offset();
+		const auto originalOffset = _input->Position();
 		_input->SeekToOffset(0);
 
 		if(skipID3v2Tag) {

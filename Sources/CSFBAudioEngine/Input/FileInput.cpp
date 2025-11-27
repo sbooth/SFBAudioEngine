@@ -60,7 +60,7 @@ int64_t SFB::FileInput::_Read(void *buffer, int64_t count)
 	return nitems;
 }
 
-int64_t SFB::FileInput::_Offset() const
+int64_t SFB::FileInput::_Position() const
 {
 	const auto offset = ::ftello(file_);
 	if(offset == -1)

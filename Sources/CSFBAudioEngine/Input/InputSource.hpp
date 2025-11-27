@@ -63,7 +63,7 @@ public:
 	/// Returns `true` if the input source is at the end of input.
 	bool AtEOF() const;
 	/// Returns the current read position of the input source in bytes.
-	int64_t Offset() const;
+	int64_t Position() const;
 	/// Returns the number of bytes in the input source.
 	int64_t Length() const;
 
@@ -160,11 +160,11 @@ private:
 	virtual void _Close() = 0;
 	virtual int64_t _Read(void * _Nonnull buffer, int64_t count) = 0;
 	virtual bool _AtEOF() const = 0;
-	virtual int64_t _Offset() const = 0;
+	virtual int64_t _Position() const = 0;
 	virtual int64_t _Length() const = 0;
 	// Optional seeking support
 	virtual bool _SupportsSeeking() const noexcept 			{ return false; }
-	virtual void _SeekToOffset(int64_t offset) 				{ throw std::logic_error("Seeking not supported"); }
+	virtual void _SeekToPosition(int64_t position) 			{ throw std::logic_error("Seeking not supported"); }
 	// Optional description
 	virtual CFStringRef _CopyDescription() const noexcept 	{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
 

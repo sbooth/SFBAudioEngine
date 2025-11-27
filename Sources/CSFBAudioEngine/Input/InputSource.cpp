@@ -147,20 +147,20 @@ bool SFB::InputSource::AtEOF() const
 	return _AtEOF();
 }
 
-int64_t SFB::InputSource::Offset() const
+int64_t SFB::InputSource::Position() const
 {
 	if(!IsOpen()) {
-		os_log_error(sLog, "GetOffset() called on <InputSource: %p> that hasn't been opened", this);
+		os_log_error(sLog, "Position() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
-	return _Offset();
+	return _Position();
 }
 
 int64_t SFB::InputSource::Length() const
 {
 	if(!IsOpen()) {
-		os_log_error(sLog, "GetLength() called on <InputSource: %p> that hasn't been opened", this);
+		os_log_error(sLog, "Length() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
@@ -184,7 +184,7 @@ void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
 		throw std::logic_error("Seeking not supported");
 	}
 
-	const auto pos = _Offset();
+	const auto pos = _Position();
 	const auto len = _Length();
 
 	switch(whence) {
@@ -196,11 +196,11 @@ void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
 	}
 
 	if(offset < 0 || offset > len) {
-		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> with invalid seek offset %lld", this, offset);
-		throw std::out_of_range("Invalid seek offset");
+		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> with invalid position %lld", this, offset);
+		throw std::out_of_range("Invalid seek position");
 	}
 
-	return _SeekToOffset(offset);
+	return _SeekToPosition(offset);
 }
 
 CFStringRef SFB::InputSource::CopyDescription() const noexcept

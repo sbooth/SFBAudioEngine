@@ -31,12 +31,12 @@ private:
 	bool _AtEOF() const noexcept override 				{ return std::feof(file_) != 0; }
 	int64_t _Length() const noexcept override 			{ return len_; }
 	bool _SupportsSeeking() const noexcept override 	{ return true; }
-	void _SeekToOffset(int64_t offset) override 		{ if(::fseeko(file_, static_cast<off_t>(offset), SEEK_SET)) throw std::system_error{errno, std::generic_category()}; }
+	void _SeekToPosition(int64_t position) override 	{ if(::fseeko(file_, static_cast<off_t>(position), SEEK_SET)) throw std::system_error{errno, std::generic_category()}; }
 
 	void _Open() override;
 	void _Close() override;
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	int64_t _Offset() const override;
+	int64_t _Position() const override;
 	CFStringRef _CopyDescription() const noexcept override;
 
 	FILE * _Nullable file_ {nullptr};
