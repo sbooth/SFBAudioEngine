@@ -98,11 +98,6 @@ std::vector<uint8_t> SFB::InputSource::ReadBlock(std::vector<uint8_t>::size_type
 		throw std::logic_error("Input source not open");
 	}
 
-	if(count < 0) {
-		os_log_error(sLog, "ReadBlock() called on <InputSource: %p> with invalid count", this);
-		throw std::invalid_argument("Invalid count");
-	}
-
 	if(count == 0)
 		return {};
 
