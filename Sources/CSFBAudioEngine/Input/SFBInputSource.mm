@@ -266,8 +266,16 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 @implementation SFBInputSource (SFBUnsignedIntegerReading)
 - (BOOL)readUInt8:(uint8_t *)ui8 error:(NSError **)error
 {
-	NSInteger bytesRead;
-	return [self readBytes:ui8 length:sizeof(uint8_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint8_t);
+	NSParameterAssert(ui8 != nil);
+	try {
+		*ui8 = _input->ReadValue<uint8_t>();
+		return YES;
+	}
+	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
+		return NO;
+	}
 }
 
 - (BOOL)readUInt16:(uint16_t *)ui16 error:(NSError **)error
