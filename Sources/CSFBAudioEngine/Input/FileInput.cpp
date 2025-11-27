@@ -4,9 +4,6 @@
 // MIT license
 //
 
-#import <cstdio>
-#import <system_error>
-
 #import <sys/stat.h>
 
 #import "FileInput.hpp"
@@ -69,18 +66,6 @@ int64_t SFB::FileInput::_Offset() const
 	if(offset == -1)
 		throw std::system_error{errno, std::generic_category()};
 	return offset;
-}
-
-void SFB::FileInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
-{
-	int _whence;
-	switch(whence) {
-		case SeekAnchor::start: 	_whence = SEEK_SET; 	break;
-		case SeekAnchor::current: 	_whence = SEEK_CUR; 	break;
-		case SeekAnchor::end:		_whence = SEEK_END; 	break;
-	}
-	if(::fseeko(file_, static_cast<off_t>(offset), _whence))
-		throw std::system_error{errno, std::generic_category()};
 }
 
 CFStringRef SFB::FileInput::_CopyDescription() const noexcept

@@ -37,24 +37,6 @@ int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 	return count;
 }
 
-void SFB::DataInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
-{
-	const auto length = CFDataGetLength(data_);
-
-	switch(whence) {
-		case SeekAnchor::start: 	/* unchanged */		break;
-		case SeekAnchor::current: 	offset += pos_; 	break;
-		case SeekAnchor::end:		offset += length; 	break;
-	}
-
-	if(offset < 0 || offset > length) {
-		os_log_error(sLog, "_SeekToOffset() called on <DataInput: %p> with invalid seek offset %lld", this, offset);
-		throw std::out_of_range("Invalid seek offset");
-	}
-
-	pos_ = offset;
-}
-
 CFStringRef SFB::DataInput::_CopyDescription() const noexcept
 {
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<DataInput %p: %@>"), this, data_);

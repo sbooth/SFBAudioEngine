@@ -45,9 +45,9 @@ private:
 	int64_t _Offset() const noexcept override 			{ return pos_; }
 	int64_t _Length() const noexcept override 			{ return len_; }
 	bool _SupportsSeeking() const noexcept override 	{ return true; }
+	void _SeekToOffset(int64_t offset) override 		{ pos_ = offset; }
 
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	void _SeekToOffset(int64_t offset, SeekAnchor whence) override;
 	CFStringRef _CopyDescription() const noexcept override;
 };
 

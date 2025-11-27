@@ -163,10 +163,10 @@ private:
 	virtual int64_t _Offset() const = 0;
 	virtual int64_t _Length() const = 0;
 	// Optional seeking support
-	virtual bool _SupportsSeeking() const noexcept					{ return false; }
-	virtual void _SeekToOffset(int64_t offset, SeekAnchor whence) 	{ throw std::logic_error("Seeking not supported"); }
+	virtual bool _SupportsSeeking() const noexcept 			{ return false; }
+	virtual void _SeekToOffset(int64_t offset) 				{ throw std::logic_error("Seeking not supported"); }
 	// Optional description
-	virtual CFStringRef _CopyDescription() const noexcept 			{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
+	virtual CFStringRef _CopyDescription() const noexcept 	{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
 
 	/// `true` if the input source is open.
 	bool isOpen_ {false};

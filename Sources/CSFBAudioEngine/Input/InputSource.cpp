@@ -184,7 +184,23 @@ void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
 		throw std::logic_error("Seeking not supported");
 	}
 
-	return _SeekToOffset(offset, whence);
+	const auto pos = _Offset();
+	const auto len = _Length();
+
+	switch(whence) {
+#if false
+		case SeekAnchor::start: 	/* unchanged */	break;
+#endif
+		case SeekAnchor::current: 	offset += pos; 	break;
+		case SeekAnchor::end:		offset += len; 	break;
+	}
+
+	if(offset < 0 || offset > len) {
+		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> with invalid seek offset %lld", this, offset);
+		throw std::out_of_range("Invalid seek offset");
+	}
+
+	return _SeekToOffset(offset);
 }
 
 CFStringRef SFB::InputSource::CopyDescription() const noexcept

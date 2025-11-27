@@ -44,24 +44,6 @@ int64_t SFB::BufferInput::_Read(void *buffer, int64_t count)
 	return count;
 }
 
-void SFB::BufferInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
-{
-	switch(whence) {
-#if false
-		case SeekAnchor::start: 	/* unchanged */		break;
-#endif
-		case SeekAnchor::current: 	offset += pos_; 	break;
-		case SeekAnchor::end:		offset += len_; 	break;
-	}
-
-	if(offset < 0 || offset > len_) {
-		os_log_error(sLog, "_SeekToOffset() called on <BufferInput: %p> with invalid seek offset %lld", this, offset);
-		throw std::out_of_range("Invalid seek offset");
-	}
-
-	pos_ = offset;
-}
-
 CFStringRef SFB::BufferInput::_CopyDescription() const noexcept
 {
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<BufferInput %p: %lld bytes at %p>"), this, len_, buf_);
