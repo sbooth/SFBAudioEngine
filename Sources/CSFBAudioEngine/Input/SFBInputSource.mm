@@ -81,6 +81,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 		return inputSource;
 	}
 	catch(const std::exception& e) {
+		if(error)
+			*error = NSErrorFromInputSourceException(&e);
 		return nil;
 	}
 }
