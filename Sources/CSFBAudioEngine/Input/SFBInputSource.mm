@@ -124,7 +124,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length >= 0);
 
 	try {
-		auto up = std::make_unique<SFB::BufferInput>(bytes, length, SFB::BufferInput::BufferAdoption::copy);
+		auto up = std::make_unique<SFB::BufferInput>(bytes, length);
 		if(!up)
 			return nil;
 		
