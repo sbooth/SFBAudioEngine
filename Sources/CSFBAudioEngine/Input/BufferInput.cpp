@@ -8,8 +8,6 @@
 #import <cstdio>
 #import <cstdlib>
 
-#import <sys/stat.h>
-
 #import "BufferInput.hpp"
 
 SFB::BufferInput::BufferInput(const void *buf, int64_t len, BufferAdoption behavior)
