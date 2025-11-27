@@ -70,6 +70,7 @@ public:
 	CFStringRef CopyDescription() const noexcept;
 
 	// Helpers
+	/// Reads and returns a value from the input source.
 	template <typename V, typename = std::enable_if_t<std::is_trivially_copyable_v<V> && std::is_trivially_default_constructible_v<V>>>
 	V ReadValue()
 	{
