@@ -10,7 +10,7 @@
 #import <cstring>
 #import <exception>
 #import <functional>
-#import <system_error>
+#import <stdexcept>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -38,7 +38,7 @@ uint64_t NextEventIdentificationNumber() noexcept
 {
 	static std::atomic_uint64_t nextIdentificationNumber = 1;
 	static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
-	return nextIdentificationNumber.fetch_add(1, std::memory_order_acq_rel);
+	return nextIdentificationNumber.fetch_add(1, std::memory_order_relaxed);
 }
 
 const os_log_t AudioPlayerNode::sLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
@@ -122,7 +122,7 @@ struct AudioPlayerNode::DecoderState final {
 
 		mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:frameCapacity];
 		if(!mDecodeBuffer)
-			throw std::system_error(std::error_code(ENOMEM, std::generic_category()));
+			throw std::bad_alloc();
 
 		if(const auto framePosition = decoder.framePosition; framePosition != 0) {
 			mFramesDecoded.store(framePosition, std::memory_order_release);
