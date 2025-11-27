@@ -10,11 +10,41 @@
 #import "InputSource.hpp"
 #import "scope_exit.hpp"
 
+#import "BufferInput.hpp"
+#import "DataInput.hpp"
+#import "FileContentsInput.hpp"
+#import "FileInput.hpp"
+#import "MemoryMappedFileInput.hpp"
+
 namespace SFB {
 
 const os_log_t InputSource::sLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
 
 } /* namespace SFB */
+
+SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, FileReadMode mode)
+{
+	switch(mode) {
+		case FileReadMode::normal: 			return std::make_unique<FileInput>(url);
+		case FileReadMode::memoryMap: 		return std::make_unique<MemoryMappedFileInput>(url);
+		case FileReadMode::loadInMemory: 	return std::make_unique<FileContentsInput>(url);
+	}
+}
+
+SFB::InputSource::unique_ptr SFB::InputSource::CreateWithData(CFDataRef data)
+{
+	return std::make_unique<DataInput>(data);
+}
+
+SFB::InputSource::unique_ptr SFB::InputSource::CreateWithBytes(const void *buf, int64_t len)
+{
+	return std::make_unique<BufferInput>(buf, len, BufferInput::BufferAdoption::copy);
+}
+
+SFB::InputSource::unique_ptr SFB::InputSource::CreateWithBytesNoCopy(const void *buf, int64_t len, bool free)
+{
+	return std::make_unique<BufferInput>(buf, len, free ? BufferInput::BufferAdoption::noCopyAndFree : BufferInput::BufferAdoption::noCopy);
+}
 
 SFB::InputSource::~InputSource() noexcept
 {
