@@ -52,7 +52,7 @@ public:
 	bool IsOpen() const noexcept 	{ return isOpen_; }
 
 	// Reading
-	/// Attempts to read up to `count` bytes from the input source into `buffer` and returns the number of bytes read.
+	/// Reads up to `count` bytes from the input source into `buffer` and returns the number of bytes read.
 	int64_t Read(void * _Nonnull buffer, int64_t count);
 	/// Reads and returns up to `count` bytes from the input source in a `CFData` object.
 	CFDataRef _Nullable CopyData(int64_t count);
