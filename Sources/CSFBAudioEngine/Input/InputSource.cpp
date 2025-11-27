@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <limits>
 #import <stdexcept>
 
 #import "InputSource.hpp"
@@ -65,7 +66,7 @@ CFDataRef SFB::InputSource::CopyData(int64_t count)
 		throw std::logic_error("Input source not open");
 	}
 
-	if(count < 0 || count > LONG_MAX) {
+	if(count < 0 || count > std::numeric_limits<CFIndex>::max()) {
 		os_log_error(sLog, "CopyData() called on <InputSource: %p> with invalid count", this);
 		throw std::invalid_argument("Invalid count");
 	}
