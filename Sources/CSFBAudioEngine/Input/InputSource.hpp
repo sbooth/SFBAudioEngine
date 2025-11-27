@@ -47,8 +47,8 @@ public:
 	// Reading
 	/// Attempts to read `count` bytes from the input source into `buffer` and returns the number of bytes read.
 	int64_t Read(void * _Nonnull buffer, int64_t count);
-	/// Attempts to read `length` bytes from the input source into a `CFData` object and returns it.
-	CFDataRef _Nullable CopyDataWithLength(int64_t length);
+	/// Attempts to read `count` bytes from the input source into a `CFData` object and returns it.
+	CFDataRef _Nullable CopyData(int64_t count);
 
 	// Position
 	/// Returns `true` if the input source is at the end of input.
@@ -70,6 +70,20 @@ public:
 	CFStringRef CopyDescription() const noexcept;
 
 	// Helpers
+	template <typename V, typename = std::enable_if_t<std::is_trivially_copyable_v<V> && std::is_trivially_default_constructible_v<V>>>
+	V ReadValue()
+	{
+		if(!IsOpen()) {
+			os_log_error(sLog, "ReadValue() called on <InputSource: %p> that hasn't been opened", this);
+			throw std::logic_error("Input source not open");
+		}
+
+		V value;
+		if(_Read(&value, sizeof(V)) != sizeof(V))
+			throw std::runtime_error("Insufficient data");
+		return value;
+	}
+
 	/// Possible byte orders.
 	enum class ByteOrder { little, big, host, swapped, };
 

@@ -435,7 +435,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (NSData *)readDataOfLength:(NSUInteger)length error:(NSError **)error
 {
 	try {
-		return (__bridge_transfer NSData *)_input->CopyDataWithLength(length);
+		return (__bridge_transfer NSData *)_input->CopyData(length);
 	}
 	catch(const std::exception& e) {
 		if(error)

@@ -58,27 +58,27 @@ int64_t SFB::InputSource::Read(void *buffer, int64_t count)
 	return _Read(buffer, count);
 }
 
-CFDataRef SFB::InputSource::CopyDataWithLength(int64_t length)
+CFDataRef SFB::InputSource::CopyData(int64_t count)
 {
 	if(!IsOpen()) {
-		os_log_error(sLog, "CopyDataOfLength() called on <InputSource: %p> that hasn't been opened", this);
+		os_log_error(sLog, "CopyData() called on <InputSource: %p> that hasn't been opened", this);
 		throw std::logic_error("Input source not open");
 	}
 
-	if(length < 0 || length > LONG_MAX) {
-		os_log_error(sLog, "CopyDataOfLength() called on <InputSource: %p> with invalid length", this);
-		throw std::invalid_argument("Invalid length");
+	if(count < 0 || count > LONG_MAX) {
+		os_log_error(sLog, "CopyData() called on <InputSource: %p> with invalid count", this);
+		throw std::invalid_argument("Invalid count");
 	}
 
-	if(length == 0)
+	if(count == 0)
 		return CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, nullptr, 0, kCFAllocatorNull);
 
-	void *buf = std::malloc(length);
+	void *buf = std::malloc(count);
 	if(!buf)
 		throw std::bad_alloc();
 
 	try {
-		const auto read = _Read(buf, length);
+		const auto read = _Read(buf, count);
 		auto data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, static_cast<UInt8 *>(buf), read, kCFAllocatorMalloc);
 		if(!data)
 			std::free(buf);
