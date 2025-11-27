@@ -6,15 +6,15 @@
 
 #pragma once
 
-#import "InputSource.hpp"
+#import "BufferInput.hpp"
 
 namespace SFB {
 
-class FileContentsInput: public InputSource
+class FileContentsInput: public BufferInput
 {
 public:
 	explicit FileContentsInput(CFURLRef _Nonnull url);
-	~FileContentsInput() noexcept;
+	~FileContentsInput() noexcept = default;
 
 	// This class is non-copyable.
 	FileContentsInput(const FileContentsInput&) = delete;
@@ -25,20 +25,9 @@ public:
 	FileContentsInput& operator=(FileContentsInput&&) = delete;
 
 private:
-	bool _AtEOF() const noexcept override 				{ return len_ == pos_; }
-	int64_t _Offset() const noexcept override 			{ return pos_; }
-	int64_t _Length() const noexcept override 			{ return len_; }
-	bool _SupportsSeeking() const noexcept override 	{ return true; }
-
 	void _Open() override;
 	void _Close() noexcept override;
-	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	void _SeekToOffset(int64_t offset, SeekAnchor whence) override;
 	CFStringRef _CopyDescription() const noexcept override;
-
-	void * _Nullable buf_ {nullptr};
-	int64_t len_ {0};
-	int64_t pos_ {0};
 };
 
 } /* namespace SFB */

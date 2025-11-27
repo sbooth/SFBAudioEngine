@@ -6,11 +6,11 @@
 
 #pragma once
 
-#import "InputSource.hpp"
+#import "BufferInput.hpp"
 
 namespace SFB {
 
-class MemoryMappedFileInput: public InputSource
+class MemoryMappedFileInput: public BufferInput
 {
 public:
 	explicit MemoryMappedFileInput(CFURLRef _Nonnull url);
@@ -25,20 +25,9 @@ public:
 	MemoryMappedFileInput& operator=(MemoryMappedFileInput&&) = delete;
 
 private:
-	bool _AtEOF() const noexcept override 				{ return len_ == pos_; }
-	int64_t _Offset() const noexcept override 			{ return pos_; }
-	int64_t _Length() const noexcept override 			{ return len_; }
-	bool _SupportsSeeking() const noexcept override 	{ return true; }
-
 	void _Open() override;
 	void _Close() override;
-	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	void _SeekToOffset(int64_t offset, SeekAnchor whence) override;
 	CFStringRef _CopyDescription() const noexcept override;
-
-	void * _Nullable region_ {nullptr};
-	int64_t len_ {0};
-	int64_t pos_ {0};
 };
 
 } /* namespace SFB */

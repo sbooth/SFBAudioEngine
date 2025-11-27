@@ -47,7 +47,9 @@ int64_t SFB::BufferInput::_Read(void *buffer, int64_t count)
 void SFB::BufferInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
 {
 	switch(whence) {
+#if false
 		case SeekAnchor::start: 	/* unchanged */		break;
+#endif
 		case SeekAnchor::current: 	offset += pos_; 	break;
 		case SeekAnchor::end:		offset += len_; 	break;
 	}

@@ -151,8 +151,8 @@ protected:
 
 	explicit InputSource() noexcept = default;
 
-	explicit InputSource(CFURLRef _Nullable url) noexcept
-	{ if(url) url_ = static_cast<CFURLRef>(CFRetain(url)); }
+	/// The location of the input.
+	CFURLRef _Nullable url_ {nullptr};
 
 private:
 	// Subclasses must implement the following methods
@@ -168,8 +168,6 @@ private:
 	// Optional description
 	virtual CFStringRef _CopyDescription() const noexcept 			{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
 
-	/// The location of the bytes to be read.
-	CFURLRef _Nullable url_ {nullptr};
 	/// `true` if the input source is open.
 	bool isOpen_ {false};
 };

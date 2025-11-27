@@ -13,12 +13,12 @@
 #import "scope_exit.hpp"
 
 SFB::FileInput::FileInput(CFURLRef url)
-: InputSource(url)
 {
 	if(!url) {
 		os_log_error(sLog, "Cannot create FileInput with null URL");
 		throw std::invalid_argument("Null URL");
 	}
+	url_ = static_cast<CFURLRef>(CFRetain(url));
 }
 
 SFB::FileInput::~FileInput() noexcept
@@ -30,7 +30,7 @@ SFB::FileInput::~FileInput() noexcept
 void SFB::FileInput::_Open()
 {
 	UInt8 path [PATH_MAX];
-	auto success = CFURLGetFileSystemRepresentation(GetURL(), FALSE, path, PATH_MAX);
+	auto success = CFURLGetFileSystemRepresentation(url_, FALSE, path, PATH_MAX);
 	if(!success)
 		throw std::runtime_error("Unable to get URL file system representation");
 
@@ -85,7 +85,7 @@ void SFB::FileInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
 
 CFStringRef SFB::FileInput::_CopyDescription() const noexcept
 {
-	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(GetURL());
+	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
 	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileInput %p: \"%@\">"), this, lastPathComponent);
 }

@@ -14,25 +14,19 @@
 #import "scope_exit.hpp"
 
 SFB::FileContentsInput::FileContentsInput(CFURLRef url)
-: InputSource(url)
 {
 	if(!url) {
 		os_log_error(sLog, "Cannot create FileContentsInput with null URL");
 		throw std::invalid_argument("Null URL");
 	}
-}
-
-SFB::FileContentsInput::~FileContentsInput() noexcept
-{
-	std::free(buf_);
+	url_ = static_cast<CFURLRef>(CFRetain(url));
+	free_ = true;
 }
 
 void SFB::FileContentsInput::_Open()
 {
-	CFURLRef url = GetURL();
-
 	UInt8 path [PATH_MAX];
-	auto success = CFURLGetFileSystemRepresentation(url, FALSE, path, PATH_MAX);
+	auto success = CFURLGetFileSystemRepresentation(url_, FALSE, path, PATH_MAX);
 	if(!success)
 		throw std::runtime_error("Unable to get URL file system representation");
 
@@ -67,34 +61,9 @@ void SFB::FileContentsInput::_Close() noexcept
 	buf_ = nullptr;
 }
 
-int64_t SFB::FileContentsInput::_Read(void *buffer, int64_t count)
-{
-	const auto remaining = len_ - pos_;
-	count = std::min(count, remaining);
-	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
-	pos_ += count;
-	return count;
-}
-
-void SFB::FileContentsInput::_SeekToOffset(int64_t offset, SeekAnchor whence)
-{
-	switch(whence) {
-		case SeekAnchor::start: 	/* unchanged */		break;
-		case SeekAnchor::current: 	offset += pos_; 	break;
-		case SeekAnchor::end:		offset += len_; 	break;
-	}
-
-	if(offset < 0 || offset > len_) {
-		os_log_error(sLog, "_SeekToOffset() called on <FileContentsInput: %p> with invalid seek offset %lld", this, offset);
-		throw std::out_of_range("Invalid seek offset");
-	}
-
-	pos_ = offset;
-}
-
 CFStringRef SFB::FileContentsInput::_CopyDescription() const noexcept
 {
-	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(GetURL());
+	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
 	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileContentsInput %p: %lld bytes copied to %p from \"%@\">"), this, len_, buf_, lastPathComponent);
 }
