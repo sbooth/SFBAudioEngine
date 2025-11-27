@@ -69,29 +69,15 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(url.isFileURL);
 
 	try {
-		SFB::InputSource::unique_ptr up;
-
-		if(flags & SFBInputSourceFlagsMemoryMapFiles)
-			up = std::make_unique<SFB::MemoryMappedFileInput>((__bridge CFURLRef)url);
-		else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
-			up = std::make_unique<SFB::FileContentsInput>((__bridge CFURLRef)url);
-		else
-			up = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
-
-		if(!up) {
-			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-			return nil;
-		}
-
 		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
-		if(!inputSource) {
-			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-			return nil;
+		if(inputSource) {
+			if(flags & SFBInputSourceFlagsMemoryMapFiles)
+				inputSource->_input = std::make_unique<SFB::MemoryMappedFileInput>((__bridge CFURLRef)url);
+			else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
+				inputSource->_input = std::make_unique<SFB::FileContentsInput>((__bridge CFURLRef)url);
+			else
+				inputSource->_input = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
 		}
-
-		inputSource->_input = std::move(up);
 		return inputSource;
 	}
 	catch(const std::exception& e) {
@@ -104,13 +90,9 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(data != nil);
 
 	try {
-		auto up = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
-		if(!up)
-			return nil;
-
 		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
 		if(inputSource)
-			inputSource->_input = std::move(up);
+			inputSource->_input = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
 		return inputSource;
 	}
 	catch(const std::exception& e) {
@@ -124,13 +106,9 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length >= 0);
 
 	try {
-		auto up = std::make_unique<SFB::BufferInput>(bytes, length);
-		if(!up)
-			return nil;
-		
 		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
 		if(inputSource)
-			inputSource->_input = std::move(up);
+			inputSource->_input = std::make_unique<SFB::BufferInput>(bytes, length);
 		return inputSource;
 	}
 	catch(const std::exception& e) {
@@ -144,13 +122,9 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length >= 0);
 
 	try {
-		auto up = std::make_unique<SFB::BufferInput>(bytes, length, freeWhenDone ? SFB::BufferInput::BufferAdoption::noCopyAndFree : SFB::BufferInput::BufferAdoption::noCopy);
-		if(!up)
-			return nil;
-
 		SFBInputSource *inputSource = [[SFBInputSource alloc] init];
 		if(inputSource)
-			inputSource->_input = std::move(up);
+			inputSource->_input = std::make_unique<SFB::BufferInput>(bytes, length, freeWhenDone ? SFB::BufferInput::BufferAdoption::noCopyAndFree : SFB::BufferInput::BufferAdoption::noCopy);
 		return inputSource;
 	}
 	catch(const std::exception& e) {
