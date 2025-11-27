@@ -22,6 +22,8 @@ NSError * NSErrorFromInputSourceException(const std::exception *e) noexcept
 {
 	NSCParameterAssert(e != nullptr);
 
+	// TODO: Set NSURLErrorKey?
+
 	if(const auto se = dynamic_cast<const std::system_error *>(e); se)
 		return [NSError errorWithDomain:NSPOSIXErrorDomain code:se->code().value() userInfo:@{ NSDebugDescriptionErrorKey: @(se->code().message().c_str()) }];
 
