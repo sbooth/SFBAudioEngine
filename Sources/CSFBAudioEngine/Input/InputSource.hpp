@@ -64,7 +64,7 @@ public:
 	/// Possible seek anchor points.
 	enum class SeekAnchor { start, current, end, };
 	/// Seeks to `offset` bytes relative to `whence`.
-	void SeekToOffset(int64_t offset, SeekAnchor whence);
+	void SeekToOffset(int64_t offset, SeekAnchor whence = SeekAnchor::start);
 
 	/// Returns a description of the input source.
 	CFStringRef CopyDescription() const noexcept;

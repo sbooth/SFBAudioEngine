@@ -263,7 +263,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
 	try {
-		_input->SeekToOffset(offset, SFB::BufferInput::SeekAnchor::start);
+		_input->SeekToOffset(offset);
 		return YES;
 	}
 	catch(const std::exception& e) {
@@ -452,45 +452,43 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(length > 0);
 
-	if(!self.supportsSeeking) {
+	if(!_input->SupportsSeeking()) {
 		if(error)
 			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeNotSeekable userInfo:nil];
 		return nil;
 	}
 
-	NSInteger originalOffset;
-	if(![self getOffset:&originalOffset error:error])
-		return nil;
+	try {
+		const auto originalOffset = _input->Offset();
+		_input->SeekToOffset(0);
 
-	if(![self seekToOffset:0 error:error])
-		return nil;
+		if(skipID3v2Tag) {
+			int64_t offset = 0;
 
-	if(skipID3v2Tag) {
-		NSInteger offset = 0;
+			// Attempt to detect and minimally parse an ID3v2 tag header
+			NSData *data = (__bridge_transfer NSData *)_input->CopyData(SFBID3v2HeaderSize);
+			if([data isID3v2Header])
+				offset = [data id3v2TagTotalSize];
 
-		// Attempt to detect and minimally parse an ID3v2 tag header
-		NSData *data = [self readDataOfLength:SFBID3v2HeaderSize error:error];
-		if([data isID3v2Header])
-			offset = [data id3v2TagTotalSize];
+			_input->SeekToOffset(offset);
+		}
 
-		if(![self seekToOffset:offset error:error])
+		NSData *data = (__bridge_transfer NSData *)_input->CopyData(length);
+		if(data.length < length) {
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
 			return nil;
+		}
+
+		_input->SeekToOffset(originalOffset);
+
+		return data;
 	}
-
-	NSData *data = [self readDataOfLength:length error:error];
-	if(!data)
-		return nil;
-
-	if(data.length < length) {
+	catch(const std::exception& e) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
+			*error = NSErrorFromInputSourceException(&e);
 		return nil;
 	}
-
-	if(![self seekToOffset:originalOffset error:error])
-		return nil;
-
-	return data;
 }
 
 @end
