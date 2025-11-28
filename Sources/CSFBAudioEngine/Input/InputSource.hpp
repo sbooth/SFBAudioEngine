@@ -68,7 +68,7 @@ public:
 	int64_t Length() const;
 
 	// Seeking
-	/// Returns `true` if the inputs source is seekable.
+	/// Returns `true` if the input source is seekable.
 	bool SupportsSeeking() const noexcept;
 	/// Possible seek anchor points.
 	enum class SeekAnchor { start, current, end, };

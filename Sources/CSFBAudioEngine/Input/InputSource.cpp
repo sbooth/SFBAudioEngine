@@ -169,6 +169,11 @@ int64_t SFB::InputSource::Length() const
 
 bool SFB::InputSource::SupportsSeeking() const noexcept
 {
+	if(!IsOpen()) {
+		os_log_error(sLog, "SupportsSeeking() called on <InputSource: %p> that hasn't been opened", this);
+		throw std::logic_error("Input source not open");
+	}
+
 	return _SupportsSeeking();
 }
 
