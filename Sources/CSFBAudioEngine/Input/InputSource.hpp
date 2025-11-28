@@ -117,33 +117,27 @@ public:
 				case ByteOrder::host: 		return value;
 				case ByteOrder::swapped: 	return OSSwapInt16(value);
 			}
-		}
-		else if constexpr (std::is_same_v<U, std::uint32_t>) {
+		} else if constexpr (std::is_same_v<U, std::uint32_t>) {
 			switch(order) {
 				case ByteOrder::little: 	return OSSwapLittleToHostInt32(value);
 				case ByteOrder::big: 		return OSSwapBigToHostInt32(value);
 				case ByteOrder::host: 		return value;
 				case ByteOrder::swapped: 	return OSSwapInt32(value);
 			}
-		}
-		else if constexpr (std::is_same_v<U, std::uint64_t>) {
+		} else if constexpr (std::is_same_v<U, std::uint64_t>) {
 			switch(order) {
 				case ByteOrder::little: 	return OSSwapLittleToHostInt64(value);
 				case ByteOrder::big: 		return OSSwapBigToHostInt64(value);
 				case ByteOrder::host: 		return value;
 				case ByteOrder::swapped: 	return OSSwapInt64(value);
 			}
-		}
-		else
+		} else
 			static_assert(false, "Unsupported unsigned integer type");
 	}
 
 	/// Reads and returns a signed integer value in the specified byte order.
 	template <typename S, typename = std::enable_if_t<std::is_same_v<S, std::int16_t> || std::is_same_v<S, std::int32_t> || std::is_same_v<S, std::int64_t>>>
-	S ReadSigned(ByteOrder order = ByteOrder::host)
-	{
-		return std::make_signed(ReadUnsigned<std::make_unsigned<S>>(order));
-	}
+	S ReadSigned(ByteOrder order = ByteOrder::host) 	{ return std::make_signed(ReadUnsigned<std::make_unsigned<S>>(order)); }
 
 protected:
 	/// The shared log for all `InputSource` instances.

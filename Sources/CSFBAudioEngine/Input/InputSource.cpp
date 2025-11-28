@@ -114,8 +114,7 @@ CFDataRef SFB::InputSource::CopyData(int64_t count)
 		if(!data)
 			std::free(buf);
 		return data;
-	}
-	catch(...) {
+	} catch(...) {
 		std::free(buf);
 		throw;
 	}
