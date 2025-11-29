@@ -131,10 +131,10 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		return false;
 
 	auto configureForAndEnqueueDecoder = [&](bool clearQueueAndReset) -> BOOL {
-		mFlags.fetch_or(static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 		const auto result = ConfigureForAndEnqueueDecoder(decoder, clearQueueAndReset, error);
 		if(!result)
-			mFlags.fetch_and(~static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
+			mFlags.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 		return result;
 	};
 
@@ -152,10 +152,10 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	if(InternalDecoderQueueIsEmpty()) {
 		// Enqueue the decoder on mPlayerNode if the decoder's processing format is supported
 		if(mPlayerNode->_node->SupportsFormat(decoder.processingFormat)) {
-			mFlags.fetch_or(static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
+			mFlags.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 			const auto result = mPlayerNode->_node->EnqueueDecoder(decoder, false, error);
 			if(!result)
-				mFlags.fetch_and(~static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
+				mFlags.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 			return result;
 		}
 
@@ -181,18 +181,18 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
-	if((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && PlayerNodeIsPlaying())
+	if((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && PlayerNodeIsPlaying())
 		return true;
 
 	if(NSError *err = nil; ![mEngine startAndReturnError:&err]) {
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 		os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", err);
 		if(error)
 			*error = err;
 		return false;
 	}
 
-	mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+	mFlags.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 	mPlayerNode->_node->Play();
 
 #if DEBUG
@@ -207,7 +207,7 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 void SFB::AudioPlayer::Pause() noexcept
 {
-	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && PlayerNodeIsPlaying()))
+	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && PlayerNodeIsPlaying()))
 		return;
 
 	mPlayerNode->_node->Pause();
@@ -222,7 +222,7 @@ void SFB::AudioPlayer::Pause() noexcept
 
 void SFB::AudioPlayer::Resume() noexcept
 {
-	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !PlayerNodeIsPlaying()))
+	if(!((mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !PlayerNodeIsPlaying()))
 		return;
 
 	mPlayerNode->_node->Play();
@@ -237,11 +237,11 @@ void SFB::AudioPlayer::Resume() noexcept
 
 void SFB::AudioPlayer::Stop() noexcept
 {
-	if(!(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)))
+	if(!(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
 		return;
 
 	[mEngine stop];
-	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+	mFlags.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 	mPlayerNode->_node->Stop();
 
 	ClearInternalDecoderQueue();
@@ -283,7 +283,7 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 {
 	const auto isRunning = mEngine.isRunning;
 #if DEBUG
-		assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) == isRunning && "Cached value for mEngine.isRunning invalid");
+		assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) == isRunning && "Cached value for mEngine.isRunning invalid");
 #endif /* DEBUG */
 	return isRunning;
 }
@@ -452,8 +452,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
-	const bool engineWasRunning = mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning);
-	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+	const bool engineWasRunning = mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning);
+	mFlags.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
 	// Attempt to preserve the playback state
 	const auto playerNodeWasPlaying = mPlayerNode->_node->IsPlaying();
@@ -480,14 +480,14 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 			return;
 		}
 
-		mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
 		// Restart the player node if needed
 		if(playerNodeWasPlaying)
 			mPlayerNode->_node->Play();
 	}
 
-	if((engineWasRunning != static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) || playerNodeWasPlaying != mPlayerNode->_node->IsPlaying()) && [mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+	if((engineWasRunning != static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != mPlayerNode->_node->IsPlaying()) && [mPlayer.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[mPlayer.delegate audioPlayer:mPlayer playbackStateChanged:PlaybackState()];
 
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
@@ -508,14 +508,14 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			os_log_debug(sLog, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
-			// However, Flags::eEngineIsRunning indicates if the engine was running before the interruption
-			if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) {
-				mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+			// However, Flags::engineIsRunning indicates if the engine was running before the interruption
+			if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+				mFlags.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 				if(NSError *error = nil; ![mEngine startAndReturnError:&error]) {
 					os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", error);
 					return;
 				}
-				mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+				mFlags.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
 			break;
 
@@ -533,7 +533,7 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 #endif /* DEBUG */
 
 	// Attempt to preserve the playback state
-	const bool engineWasRunning = mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning);
+	const bool engineWasRunning = mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning);
 	const auto playerNodeWasPlaying = mPlayerNode->_node->IsPlaying();
 
 	// If the current player node doesn't support the decoder's format (required for gapless join),
@@ -561,7 +561,7 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	// AVAudioEngine may have been stopped in `ConfigureProcessingGraphForFormat()`
 	// If this is the case and it was previously running, restart it and the player node
 	// as appropriate
-	if(engineWasRunning && !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))) {
+	if(engineWasRunning && !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
 		if(NSError *err = nil; ![mEngine startAndReturnError:&err]) {
 			os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", err);
 			if(error)
@@ -569,13 +569,13 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 			return false;
 		}
 
-		mFlags.fetch_or(static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 		if(playerNodeWasPlaying)
 			mPlayerNode->_node->Play();
 	}
 
 #if DEBUG
-	assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) == engineWasRunning && "Incorrect audio engine state in ConfigureForAndEnqueueDecoder()");
+	assert(static_cast<bool>(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) == engineWasRunning && "Incorrect audio engine state in ConfigureForAndEnqueueDecoder()");
 	assert(mPlayerNode->_node->IsPlaying() == playerNodeWasPlaying && "Incorrect player node state in ConfigureForAndEnqueueDecoder()");
 #endif /* DEBUG */
 
@@ -607,7 +607,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	// Empirically this is necessary when transitioning between formats with different
 	// channel counts, although it seems that it shouldn't be
 	[mEngine stop];
-	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eEngineIsRunning), std::memory_order_acq_rel);
+	mFlags.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
 	if(mPlayerNode && mPlayerNode->_node->IsPlaying())
 		mPlayerNode->_node->Stop();
@@ -761,11 +761,11 @@ void SFB::AudioPlayer::HandleDecodingStarted(const AudioPlayerNode& node, Decode
 	if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[mPlayer.delegate audioPlayer:mPlayer decodingStarted:decoder];
 
-	if(const auto flags = mFlags.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::eHavePendingDecoder)) && !((flags & static_cast<unsigned int>(Flags::eEngineIsRunning)) && node.IsPlaying()) && node.CurrentDecoder() == decoder) {
-		mFlags.fetch_or(static_cast<unsigned int>(Flags::ePendingDecoderBecameActive), std::memory_order_acq_rel);
+	if(const auto flags = mFlags.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && node.IsPlaying()) && node.CurrentDecoder() == decoder) {
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
 		SetNowPlaying(decoder);
 	}
-	mFlags.fetch_and(~static_cast<unsigned int>(Flags::eHavePendingDecoder), std::memory_order_acq_rel);
+	mFlags.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 }
 
 void SFB::AudioPlayer::HandleDecodingComplete(const AudioPlayerNode& node, Decoder decoder) noexcept
@@ -806,9 +806,9 @@ void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Dec
 			os_log_debug(sLog, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if(!(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::ePendingDecoderBecameActive)))
+		if(!(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::pendingDecoderBecameActive)))
 			SetNowPlaying(decoder);
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::ePendingDecoderBecameActive), std::memory_order_acq_rel);
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
 
 		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 			[mPlayer.delegate audioPlayer:mPlayer renderingStarted:decoder];
@@ -896,7 +896,7 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 		if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[mPlayer.delegate audioPlayer:mPlayer renderingComplete:decoder];
 
-		if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eHavePendingDecoder))
+		if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::havePendingDecoder))
 			return;
 
 		// Dequeue the next decoder
@@ -935,8 +935,8 @@ void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decode
 		[mPlayer.delegate audioPlayer:mPlayer decoderCanceled:decoder framesRendered:framesRendered];
 
 	if(mPlayerNode == node.mNode) {
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::ePendingDecoderBecameActive), std::memory_order_acq_rel);
-		if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::eHavePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::eEngineIsRunning)))
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
+		if(const auto flags = mFlags.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
 			SetNowPlaying(nil);
 	}
 }
