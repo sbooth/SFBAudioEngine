@@ -21,7 +21,7 @@ let package = Package(
 	dependencies: [
 		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.1"),
 		.package(url: "https://github.com/sbooth/CXXCoreAudio", from: "0.1.0"),
-		.package(url: "https://github.com/sbooth/CXXAudioToolbox", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/CXXAudioToolbox", from: "0.1.1"),
 		.package(url: "https://github.com/sbooth/CXXRingBuffer", from: "0.1.0"),
 		.package(url: "https://github.com/sbooth/CXXUnfairLock", from: "0.1.0"),
 

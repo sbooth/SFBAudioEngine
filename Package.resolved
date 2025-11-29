@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioToolbox",
       "state" : {
-        "revision" : "015be5ec6ede8410856a9fcac96fdb39ccca2ca1",
-        "version" : "0.1.0"
+        "revision" : "299d53edf437e7de1e4ef02f4cd1c5e92a3c77c5",
+        "version" : "0.1.1"
       }
     },
     {
