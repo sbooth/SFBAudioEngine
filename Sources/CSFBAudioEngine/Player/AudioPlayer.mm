@@ -79,11 +79,30 @@ SFB::AudioPlayer::AudioPlayer()
 {
 	// Create the audio processing graph
 	engine_ = [[AVAudioEngine alloc] init];
-	AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
-	if(!ConfigureProcessingGraphForFormat(format, false)) {
-		os_log_error(log_, "Unable to create audio processing graph for 44.1 kHz stereo");
-		throw std::runtime_error("ConfigureProcessingGraphForFormat failed");
+	if(!engine_) {
+		os_log_error(log_, "Unable to create AVAudioEngine instance");
+		throw std::runtime_error("Unable to create AVAudioEngine");
 	}
+
+	AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
+	if(!format) {
+		os_log_error(log_, "Unable to create AVAudioFormat for 44.1 kHz stereo");
+		throw std::runtime_error("Unable to create AVAudioFormat");
+	}
+
+	playerNode_ = CreatePlayerNode(format);
+	if(!playerNode_)
+		throw std::runtime_error("Unable to create audio player node");
+
+	[engine_ attachNode:playerNode_];
+	[engine_ connect:playerNode_ to:engine_.mainMixerNode format:format];
+	[engine_ prepare];
+
+	// TODO: Is it necessary to adjust the player node's maximum frames to render for 44.1?
+
+#if DEBUG
+	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
+#endif /* DEBUG */
 
 	// Register for configuration change notifications
 	auto notificationCenter = CFNotificationCenterGetLocalCenter();
@@ -417,8 +436,7 @@ bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 	try {
 		std::lock_guard lock(queueLock_);
 		queuedDecoders_.push_back(decoder);
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(log_, "Error pushing %{public}@ to queuedDecoders_: %{public}s", decoder, e.what());
 		return false;
 	}
@@ -526,6 +544,52 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 }
 #endif /* TARGET_OS_IPHONE */
 
+SFBAudioPlayerNode * SFB::AudioPlayer::CreatePlayerNode(AVAudioFormat *format) noexcept
+{
+#if DEBUG
+	assert(format != nil);
+#endif /* DEBUG */
+
+	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
+	if(!playerNode) {
+		os_log_error(log_, "Unable to create SFBAudioPlayerNode with format %{public}@", SFB::StringDescribingAVAudioFormat(format));
+		return nil;
+	}
+
+	// Avoid keeping a strong reference to `playerNode` in the event notification blocks
+	// to prevent a retain cycle. This is safe in this case because the AudioPlayerNode
+	// destructor synchronously waits for all event notifications to complete so the blocks
+	// will never be called with an invalid reference.
+	const auto& node = *(playerNode->_node);
+
+	playerNode->_node->decodingStartedBlock_ = ^(Decoder decoder){
+		HandleDecodingStarted(node, decoder);
+	};
+	playerNode->_node->decodingCompleteBlock_ = ^(Decoder decoder){
+		HandleDecodingComplete(node, decoder);
+	};
+
+	playerNode->_node->renderingWillStartBlock_ = ^(Decoder decoder, uint64_t hostTime){
+		HandleRenderingWillStart(node, decoder, hostTime);
+	};
+	playerNode->_node->renderingDecoderWillChangeBlock_ = ^(Decoder decoder, Decoder nextDecoder, uint64_t hostTime) {
+		HandleRenderingDecoderWillChange(node, decoder, nextDecoder, hostTime);
+	};
+	playerNode->_node->renderingWillCompleteBlock_ = ^(Decoder decoder, uint64_t hostTime){
+		HandleRenderingWillComplete(node, decoder, hostTime);
+	};
+
+	playerNode->_node->decoderCanceledBlock_ = ^(Decoder decoder, AVAudioFramePosition framesRendered) {
+		HandleDecoderCanceled(node, decoder, framesRendered);
+	};
+
+	playerNode->_node->asynchronousErrorBlock_ = ^(NSError *error) {
+		HandleAsynchronousError(node, error);
+	};
+
+	return playerNode;
+}
+
 bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clearQueueAndReset, NSError **error) noexcept
 {
 #if DEBUG
@@ -598,8 +662,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		format = standardEquivalentFormat;
 	}
 
-	// mPlayerNode may be nil since this method is called from the constructor
-	const auto formatsEqual = playerNode_ && [format isEqual:playerNode_->_node->RenderingFormat()];
+	const auto formatsEqual = [format isEqual:playerNode_->_node->RenderingFormat()];
 	if(formatsEqual && !forceUpdate)
 		return true;
 
@@ -614,44 +677,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 
 	// Avoid creating a new AudioPlayerNode if not necessary
 	SFBAudioPlayerNode *playerNode = nil;
-	if(!formatsEqual) {
-		playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
-		if(!playerNode) {
-			os_log_error(log_, "Unable to create SFBAudioPlayerNode with format %{public}@", SFB::StringDescribingAVAudioFormat(format));
-			return false;
-		}
-
-		// Avoid keeping a strong reference to `playerNode` in the event notification blocks
-		// to prevent a retain cycle. This is safe in this case because the AudioPlayerNode
-		// destructor synchronously waits for all event notifications to complete so the blocks
-		// will never be called with an invalid reference.
-		const auto& node = *(playerNode->_node);
-
-		playerNode->_node->decodingStartedBlock_ = ^(Decoder decoder){
-			HandleDecodingStarted(node, decoder);
-		};
-		playerNode->_node->decodingCompleteBlock_ = ^(Decoder decoder){
-			HandleDecodingComplete(node, decoder);
-		};
-
-		playerNode->_node->renderingWillStartBlock_ = ^(Decoder decoder, uint64_t hostTime){
-			HandleRenderingWillStart(node, decoder, hostTime);
-		};
-		playerNode->_node->renderingDecoderWillChangeBlock_ = ^(Decoder decoder, Decoder nextDecoder, uint64_t hostTime) {
-			HandleRenderingDecoderWillChange(node, decoder, nextDecoder, hostTime);
-		};
-		playerNode->_node->renderingWillCompleteBlock_ = ^(Decoder decoder, uint64_t hostTime){
-			HandleRenderingWillComplete(node, decoder, hostTime);
-		};
-
-		playerNode->_node->decoderCanceledBlock_ = ^(Decoder decoder, AVAudioFramePosition framesRendered) {
-			HandleDecoderCanceled(node, decoder, framesRendered);
-		};
-
-		playerNode->_node->asynchronousErrorBlock_ = ^(NSError *error) {
-			HandleAsynchronousError(node, error);
-		};
-	}
+	if(!formatsEqual && !(playerNode = CreatePlayerNode(format)))
+		return false;
 
 	AVAudioOutputNode *outputNode = engine_.outputNode;
 	AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
@@ -706,11 +733,9 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 				// Ensure the delegate returned a valid node
 				assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
 				[engine_ connect:playerNode_ to:node format:format];
-			}
-			else
+			} else
 				[engine_ connect:playerNode_ to:playerNodeOutputConnectionPoint.node format:format];
-		}
-		else
+		} else
 			[engine_ connect:playerNode_ to:mixerNode format:format];
 	}
 
@@ -906,9 +931,8 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 				if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[player_.delegate audioPlayer:player_ encounteredError:error];
 			}
-		}
-		// End of audio
-		else {
+		} else {
+			// End of audio
 #if DEBUG
 			os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */

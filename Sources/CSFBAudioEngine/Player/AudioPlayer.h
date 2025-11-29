@@ -277,6 +277,9 @@ public:
 #endif /* TARGET_OS_IPHONE */
 
 private:
+	/// Creates and returns an audio player node for `format` or `nil` on error
+	SFBAudioPlayerNode * _Nullable CreatePlayerNode(AVAudioFormat * _Nonnull format) noexcept;
+
 	/// Configures the player to render audio from `decoder` and enqueues `decoder` on the player node
 	/// - parameter clearQueueAndReset: If `true` the internal decoder queue is cleared and the player node is reset
 	/// - parameter error: An optional pointer to an `NSError` object to receive error information
