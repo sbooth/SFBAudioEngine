@@ -125,10 +125,6 @@ SFB::AudioPlayer::AudioPlayer()
 	// Register for audio session interruption notifications
 	CFNotificationCenterAddObserver(notificationCenter, this, AVAudioSessionInterruptionNotificationCallback, (__bridge CFStringRef)AVAudioSessionInterruptionNotification, (__bridge void *)[AVAudioSession sharedInstance], CFNotificationSuspensionBehaviorDeliverImmediately);
 #endif /* TARGET_OS_IPHONE */
-
-#if DEBUG
-	assert(playerNode_ != nil);
-#endif /* DEBUG */
 }
 
 SFB::AudioPlayer::~AudioPlayer() noexcept
