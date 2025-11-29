@@ -152,7 +152,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	// would result in playback order A, AA, B
 
 	if(InternalDecoderQueueIsEmpty()) {
-		// Enqueue the decoder on playerNode_ if the decoder's processing format is supported
+		// Enqueue the decoder on the current player node if the decoder's processing format is supported
 		if(node->SupportsFormat(decoder.processingFormat)) {
 			flags_.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 			const auto result = node->EnqueueDecoder(decoder, false, error);
