@@ -298,7 +298,7 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 {
 	const auto isRunning = engine_.isRunning;
 #if DEBUG
-		assert(static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) == isRunning && "Cached value for mEngine.isRunning invalid");
+		assert(static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) == isRunning && "Cached value for engine_.isRunning invalid");
 #endif /* DEBUG */
 	return isRunning;
 }
@@ -525,7 +525,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			// However, Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-				if(NSError *error = nil; ![mEngine startAndReturnError:&error]) {
+				if(NSError *error = nil; ![engine_ startAndReturnError:&error]) {
 					os_log_error(sLog, "Error starting AVAudioEngine: %{public}@", error);
 					return;
 				}
