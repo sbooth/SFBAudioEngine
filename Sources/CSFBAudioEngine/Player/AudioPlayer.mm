@@ -200,11 +200,6 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
-#if false
-	if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && PlayerNodeIsPlaying())
-		return true;
-#endif
-
 	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
 		if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
 			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
@@ -235,11 +230,6 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 void SFB::AudioPlayer::Pause() noexcept
 {
-#if false
-	if(!((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && PlayerNodeIsPlaying()))
-		return;
-#endif
-
 	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
 		return;
 
@@ -260,11 +250,6 @@ void SFB::AudioPlayer::Pause() noexcept
 
 void SFB::AudioPlayer::Resume() noexcept
 {
-#if false
-	if(!((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !PlayerNodeIsPlaying()))
-		return;
-#endif
-
 	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
 		return;
 
@@ -324,8 +309,8 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 void SFB::AudioPlayer::Reset() noexcept
 {
 	{
-		playerNode_->_node->Reset();
 		std::lock_guard lock(playerNodeLock_);
+		playerNode_->_node->Reset();
 	}
 
 	[engine_ reset];
@@ -661,7 +646,7 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 		std::lock_guard lock(playerNodeLock_);
 		playerNodeWasPlaying = playerNode_->_node->IsPlaying();
 		playerNodeSupportsFormat = playerNode_->_node->SupportsFormat(format);
-		AVAudioFormat *renderingFormat = playerNode_->_node->RenderingFormat();
+		renderingFormat = playerNode_->_node->RenderingFormat();
 	}
 
 	// If the current player node doesn't support the decoder's format (required for gapless join),
