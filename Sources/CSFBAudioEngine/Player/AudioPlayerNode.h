@@ -143,30 +143,30 @@ public:
 
 	void Play() noexcept
 	{
-		mFlags.fetch_or(static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+		mFlags.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
 
 	void Pause() noexcept
 	{
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
 
 	void Stop() noexcept
 	{
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+		mFlags.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 		Reset();
 	}
 
 	void TogglePlayPause() noexcept
 	{
-		mFlags.fetch_xor(static_cast<unsigned int>(Flags::eIsPlaying), std::memory_order_acq_rel);
+		mFlags.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
 
 	// MARK: - Playback State
 
 	bool IsPlaying() const noexcept
 	{
-		return mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eIsPlaying);
+		return mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isPlaying);
 	}
 
 	bool IsReady() const noexcept
@@ -205,15 +205,15 @@ private:
 	/// Possible bits in `mFlags`
 	enum class Flags : unsigned int {
 		/// The render block is outputting audio
-		eIsPlaying 				= 1u << 0,
+		isPlaying 				= 1u << 0,
 		/// The decoding thread requested that the render block set `eIsMuted` during the next render cycle
-		eMuteRequested 			= 1u << 1,
+		muteRequested 			= 1u << 1,
 		/// The render block is outputting silence
-		eIsMuted 				= 1u << 2,
+		isMuted 				= 1u << 2,
 		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
-		eUmuteAfterDequeue 		= 1u << 3,
+		unmuteAfterDequeue 		= 1u << 3,
 		/// The audio ring buffer requires a non-threadsafe reset
-		eRingBufferNeedsReset 	= 1u << 4,
+		ringBufferNeedsReset 	= 1u << 4,
 	};
 
 	// MARK: - Decoding
@@ -255,13 +255,13 @@ private:
 	/// Decoding thread events
 	enum class DecodingEventCommand : uint32_t {
 		/// Decoding started
-		eStarted 	= 1,
+		started 	= 1,
 		/// Decoding complete
-		eComplete 	= 2,
+		complete 	= 2,
 		/// Decoder canceled
-		eCanceled 	= 3,
+		canceled 	= 3,
 		/// Decoding error
-		eError 		= 4,
+		error 		= 4,
 	};
 
 	/// A decoding event header
@@ -272,7 +272,7 @@ private:
 	/// Render block events
 	enum class RenderingEventCommand : uint32_t {
 		/// Timestamp and frames rendered
-		eFramesRendered 	= 1,
+		framesRendered 	= 1,
 	};
 
 	/// A rendering event command and identification number
