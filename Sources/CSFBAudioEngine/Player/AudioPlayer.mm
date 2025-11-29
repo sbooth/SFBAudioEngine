@@ -668,7 +668,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	[engine_ stop];
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
-	if(playerNode_ && playerNode_->_node->IsPlaying())
+	if(playerNode_->_node->IsPlaying())
 		playerNode_->_node->Stop();
 
 	// Avoid creating a new AudioPlayerNode if not necessary
@@ -699,11 +699,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	}
 
 	if(playerNode) {
-		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = nil;
-		if(playerNode_) {
-			playerNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:playerNode_ outputBus:0] firstObject];
-			[engine_ detachNode:playerNode_];
-		}
+		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:playerNode_ outputBus:0] firstObject];
+		[engine_ detachNode:playerNode_];
 
 		// When an audio player node is deallocated the destructor synchronously waits
 		// for decoder cancelation (if there is an active decoder) and then for any
