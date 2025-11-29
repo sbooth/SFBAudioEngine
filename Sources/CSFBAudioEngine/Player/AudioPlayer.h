@@ -44,7 +44,7 @@ private:
 	AVAudioEngine 							*engine_ 			{nil};
 
 	/// The player driving the audio processing graph
-	SFBAudioPlayerNode						*playerNode_ 		{nil};
+	AudioPlayerNode::atomic_ptr 			playerNode_ 		{nullptr};
 
 	/// Decoders enqueued for non-gapless playback
 	std::deque<Decoder>						queuedDecoders_;
@@ -81,18 +81,18 @@ public:
 #if DEBUG
 		assert(format != nil);
 #endif /* DEBUG */
-		return playerNode_->_node->SupportsFormat(format);
+		return playerNode_.load(std::memory_order_acquire)->SupportsFormat(format);
 	}
 
 	void ClearQueue() noexcept
 	{
-		playerNode_->_node->ClearQueue();
+		playerNode_.load(std::memory_order_acquire)->ClearQueue();
 		ClearInternalDecoderQueue();
 	}
 
 	bool QueueIsEmpty() const noexcept
 	{
-		return playerNode_->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
+		return playerNode_.load(std::memory_order_acquire)->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
 	}
 
 	// MARK: - Playback Control
@@ -111,25 +111,25 @@ public:
 
 	bool PlayerNodeIsPlaying() const noexcept
 	{
-		return playerNode_->_node->IsPlaying();
+		return playerNode_.load(std::memory_order_acquire)->IsPlaying();
 	}
 
 	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
 	{
 		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))
-			return playerNode_->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+			return playerNode_.load(std::memory_order_acquire)->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 		else
 			return SFBAudioPlayerPlaybackStateStopped;
 	}
 
 	bool IsPlaying() const noexcept
 	{
-		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && playerNode_->_node->IsPlaying();
+		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && playerNode_.load(std::memory_order_acquire)->IsPlaying();
 	}
 
 	bool IsPaused() const noexcept
 	{
-		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !playerNode_->_node->IsPlaying();
+		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !playerNode_.load(std::memory_order_acquire)->IsPlaying();
 	}
 
 	bool IsStopped() const noexcept
@@ -139,12 +139,12 @@ public:
 
 	bool IsReady() const noexcept
 	{
-		return playerNode_->_node->IsReady();
+		return playerNode_.load(std::memory_order_acquire)->IsReady();
 	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept
 	{
-		return playerNode_->_node->CurrentDecoder();
+		return playerNode_.load(std::memory_order_acquire)->CurrentDecoder();
 	}
 
 	Decoder _Nullable NowPlaying() const noexcept
@@ -161,49 +161,49 @@ public:
 
 	SFBPlaybackPosition PlaybackPosition() const noexcept
 	{
-		return playerNode_->_node->PlaybackPosition();
+		return playerNode_.load(std::memory_order_acquire)->PlaybackPosition();
 	}
 
 	SFBPlaybackTime PlaybackTime() const noexcept
 	{
-		return playerNode_->_node->PlaybackTime();
+		return playerNode_.load(std::memory_order_acquire)->PlaybackTime();
 	}
 
 	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept
 	{
-		return playerNode_->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
+		return playerNode_.load(std::memory_order_acquire)->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 	}
 
 	// MARK: - Seeking
 
 	bool SeekForward(NSTimeInterval secondsToSkip) noexcept
 	{
-		return playerNode_->_node->SeekForward(secondsToSkip);
+		return playerNode_.load(std::memory_order_acquire)->SeekForward(secondsToSkip);
 	}
 	
 	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	{
-		return playerNode_->_node->SeekBackward(secondsToSkip);
+		return playerNode_.load(std::memory_order_acquire)->SeekBackward(secondsToSkip);
 	}
 
 	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept
 	{
-		return playerNode_->_node->SeekToTime(timeInSeconds);
+		return playerNode_.load(std::memory_order_acquire)->SeekToTime(timeInSeconds);
 	}
 
 	bool SeekToPosition(double position) noexcept
 	{
-		return playerNode_->_node->SeekToPosition(position);
+		return playerNode_.load(std::memory_order_acquire)->SeekToPosition(position);
 	}
 
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept
 	{
-		return playerNode_->_node->SeekToFrame(frame);
+		return playerNode_.load(std::memory_order_acquire)->SeekToFrame(frame);
 	}
 
 	bool SupportsSeeking() const noexcept
 	{
-		return playerNode_->_node->SupportsSeeking();
+		return playerNode_.load(std::memory_order_acquire)->SupportsSeeking();
 	}
 
 #if !TARGET_OS_IPHONE
@@ -229,7 +229,7 @@ public:
 
 	SFBAudioPlayerNode * GetPlayerNode() const noexcept
 	{
-		return playerNode_;
+		return playerNode_.load(std::memory_order_acquire)->node_;
 	}
 
 	// MARK: - Debugging
