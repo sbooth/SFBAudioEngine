@@ -18,13 +18,13 @@
 		player = std::make_unique<SFB::AudioPlayer>();
 	}
 	catch(const std::exception& e) {
-		os_log_error(SFB::AudioPlayer::sLog, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
+		os_log_error(SFB::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
 		return nil;
 	}
 
 	if((self = [super init])) {
 		_player = std::move(player);
-		_player->mPlayer = self;
+		_player->player_ = self;
 	}
 
 	return self;

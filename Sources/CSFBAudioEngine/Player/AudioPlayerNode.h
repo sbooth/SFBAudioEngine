@@ -43,61 +43,61 @@ public:
 	using unique_ptr 	= std::unique_ptr<AudioPlayerNode>;
 	using Decoder 		= id<SFBPCMDecoding>;
 
-	SFBAudioPlayerNodeDecodingStartedBlock 				mDecodingStartedBlock 				{nil};
-	SFBAudioPlayerNodeDecodingCompleteBlock 			mDecodingCompleteBlock 				{nil};
-	SFBAudioPlayerNodeRenderingWillStartBlock 			mRenderingWillStartBlock 			{nil};
-	SFBAudioPlayerNodeRenderingDecoderWillChangeBlock 	mRenderingDecoderWillChangeBlock 	{nil};
-	SFBAudioPlayerNodeRenderingWillCompleteBlock 		mRenderingWillCompleteBlock			{nil};
-	SFBAudioPlayerNodeDecoderCanceledBlock 				mDecoderCanceledBlock 				{nil};
-	SFBAudioPlayerNodeAsynchronousErrorBlock 			mAsynchronousErrorBlock 			{nil};
+	SFBAudioPlayerNodeDecodingStartedBlock 				decodingStartedBlock_ 				{nil};
+	SFBAudioPlayerNodeDecodingCompleteBlock 			decodingCompleteBlock_ 				{nil};
+	SFBAudioPlayerNodeRenderingWillStartBlock 			renderingWillStartBlock_ 			{nil};
+	SFBAudioPlayerNodeRenderingDecoderWillChangeBlock 	renderingDecoderWillChangeBlock_ 	{nil};
+	SFBAudioPlayerNodeRenderingWillCompleteBlock 		renderingWillCompleteBlock_			{nil};
+	SFBAudioPlayerNodeDecoderCanceledBlock 				decoderCanceledBlock_ 				{nil};
+	SFBAudioPlayerNodeAsynchronousErrorBlock 			asynchronousErrorBlock_ 			{nil};
 
 	/// The shared log for all `AudioPlayerNode` instances
-	static const os_log_t sLog;
+	static const os_log_t log_;
 
 	/// Unsafe reference to owning `SFBAudioPlayerNode` instance
-	__unsafe_unretained SFBAudioPlayerNode 	*mNode 				{nil};
+	__unsafe_unretained SFBAudioPlayerNode 	*node_ 				{nil};
 
 	/// The render block supplying audio
-	AVAudioSourceNodeRenderBlock 			mRenderBlock 		{nullptr};
+	AVAudioSourceNodeRenderBlock 			renderBlock_ 		{nullptr};
 
 private:
 	struct DecoderState;
 
 	using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
-	/// The format of the audio supplied by `mRenderBlock`
-	AVAudioFormat 							*mRenderingFormat	{nil};
+	/// The format of the audio supplied by `renderBlock_`
+	AVAudioFormat 							*renderingFormat_	{nil};
 
 	/// Ring buffer used to transfer audio between the decoding thread and the render block
-	CXXCoreAudio::AudioRingBuffer 			mAudioRingBuffer 	{};
+	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_ 	{};
 
 	/// Active decoders and associated state
-	DecoderStateVector 						mActiveDecoders;
-	/// Lock used to protect access to `mActiveDecoders`
-	mutable CXXUnfairLock::UnfairLock 		mDecoderLock;
+	DecoderStateVector 						activeDecoders_;
+	/// Lock used to protect access to `activeDecoders_`
+	mutable CXXUnfairLock::UnfairLock 		decoderLock_;
 
 	/// Decoders enqueued for playback that are not yet active
-	std::deque<Decoder>						mQueuedDecoders 	{};
-	/// Lock used to protect access to `mQueuedDecoders`
-	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
+	std::deque<Decoder>						queuedDecoders_ 	{};
+	/// Lock used to protect access to `queuedDecoders_`
+	mutable CXXUnfairLock::UnfairLock 		queueLock_;
 
 	/// Thread used for decoding
-	std::jthread 							mDecodingThread;
+	std::jthread 							decodingThread_;
 	/// Dispatch semaphore used for communication with the decoding thread
-	dispatch_semaphore_t					mDecodingSemaphore 	{};
+	dispatch_semaphore_t					decodingSemaphore_ 	{};
 
 	/// Thread used for event processing
-	std::jthread 							mEventThread;
+	std::jthread 							eventThread_;
 	/// Dispatch semaphore used for communication with the event processing thread
-	dispatch_semaphore_t					mEventSemaphore 	{};
+	dispatch_semaphore_t					eventSemaphore_ 	{};
 
 	/// Ring buffer used to communicate events from the decoding thread
-	CXXRingBuffer::RingBuffer				mDecodeEventRingBuffer;
+	CXXRingBuffer::RingBuffer				decodeEventRingBuffer_;
 	/// Ring buffer used to communicate events from the render block
-	CXXRingBuffer::RingBuffer				mRenderEventRingBuffer;
+	CXXRingBuffer::RingBuffer				renderEventRingBuffer_;
 
 	/// Flags
-	std::atomic_uint 						mFlags 				{0};
+	std::atomic_uint 						flags_ 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
@@ -120,14 +120,14 @@ public:
 
 	void ClearQueue() noexcept
 	{
-		std::lock_guard lock(mQueueLock);
-		mQueuedDecoders.clear();
+		std::lock_guard lock(queueLock_);
+		queuedDecoders_.clear();
 	}
 
 	bool QueueIsEmpty() const noexcept
 	{
-		std::lock_guard lock(mQueueLock);
-		return mQueuedDecoders.empty();
+		std::lock_guard lock(queueLock_);
+		return queuedDecoders_.empty();
 	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept;
@@ -143,35 +143,35 @@ public:
 
 	void Play() noexcept
 	{
-		mFlags.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
 
 	void Pause() noexcept
 	{
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
 
 	void Stop() noexcept
 	{
-		mFlags.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 		Reset();
 	}
 
 	void TogglePlayPause() noexcept
 	{
-		mFlags.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
 
 	// MARK: - Playback State
 
 	bool IsPlaying() const noexcept
 	{
-		return mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isPlaying);
+		return flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isPlaying);
 	}
 
 	bool IsReady() const noexcept
 	{
-		std::lock_guard lock(mDecoderLock);
+		std::lock_guard lock(decoderLock_);
 		return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
@@ -194,7 +194,7 @@ public:
 
 	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
 	{
-		return mRenderingFormat;
+		return renderingFormat_;
 	}
 
 	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
@@ -202,7 +202,7 @@ public:
 private:
 	// MARK: - Flags
 
-	/// Possible bits in `mFlags`
+	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
 		/// The render block is outputting audio
 		isPlaying 				= 1u << 0,
@@ -222,7 +222,7 @@ private:
 	/// - note: This is the thread entry point for the decoding thread
 	void ProcessDecoders(std::stop_token stoken) noexcept;
 
-	/// Writes an error event to `mDecodeEventRingBuffer` and signals `mEventSemaphore`
+	/// Writes an error event to `decodeEventRingBuffer_` and signals `eventSemaphore_`
 	void SubmitDecodingErrorEvent(NSError *error) noexcept;
 
 	// MARK: - Rendering
@@ -280,31 +280,31 @@ private:
 
 	// MARK: - Event Processing
 
-	/// Sequences events from from `mDecodeEventRingBuffer` and `mRenderEventRingBuffer` for processing in order
+	/// Sequences events from from `decodeEventRingBuffer_` and `renderEventRingBuffer_` for processing in order
 	/// - note: This is the thread entry point for the event thread
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-	/// Processes an event from `mDecodeEventRingBuffer`
+	/// Processes an event from `decodeEventRingBuffer_`
 	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
 
-	/// Processes an event from `mRenderEventRingBuffer`
+	/// Processes an event from `renderEventRingBuffer_`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
 	// MARK: - Active Decoder Management
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed decoding
+	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
 	DecoderState * const _Nullable GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number that has not been canceled and has not completed rendering
+	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed rendering
 	DecoderState * const _Nullable GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
 
-	/// Returns the decoder state in `mActiveDecoders` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
+	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
 	DecoderState * const _Nullable GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
-	/// Returns the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
+	/// Returns the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
 	DecoderState * const _Nullable GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
-	/// Removes the decoder state in `mActiveDecoders` with sequence number equal to `sequenceNumber`
+	/// Removes the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
 	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
 
 };
