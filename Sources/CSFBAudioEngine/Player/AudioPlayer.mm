@@ -165,6 +165,8 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	// would result in playback order A, AA, B
 
 	if(InternalDecoderQueueIsEmpty()) {
+		std::unique_lock lock(playerNodeLock_);
+
 		// Enqueue the decoder on playerNode_ if the decoder's processing format is supported
 		if(playerNode_->_node->SupportsFormat(decoder.processingFormat)) {
 			flags_.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
@@ -176,8 +178,10 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 		// Reconfigure the audio processing graph for the decoder's processing format
 		// only if the player node does not have a current decoder
-		if(!playerNode_->_node->CurrentDecoder())
+		if(!playerNode_->_node->CurrentDecoder()) {
+			lock.unlock();
 			return configureForAndEnqueueDecoder(false);
+		}
 
 		// playerNode_ has a current decoder; fall through and push the decoder to the internal queue
 	}
@@ -196,19 +200,28 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
+#if false
 	if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && PlayerNodeIsPlaying())
 		return true;
+#endif
 
-	if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-		os_log_error(log_, "Error starting AVAudioEngine: %{public}@", err);
-		if(error)
-			*error = err;
-		return false;
+	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
+		if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", err);
+			if(error)
+				*error = err;
+			return false;
+		}
+		flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 	}
 
-	flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-	playerNode_->_node->Play();
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_->_node->IsPlaying())
+			return true;
+		playerNode_->_node->Play();
+	}
 
 #if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Play()");
@@ -222,10 +235,20 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 void SFB::AudioPlayer::Pause() noexcept
 {
+#if false
 	if(!((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && PlayerNodeIsPlaying()))
 		return;
+#endif
 
-	playerNode_->_node->Pause();
+	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+		return;
+
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(!playerNode_->_node->IsPlaying())
+			return;
+		playerNode_->_node->Pause();
+	}
 
 #if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePaused && "Incorrect playback state in Pause()");
@@ -237,10 +260,20 @@ void SFB::AudioPlayer::Pause() noexcept
 
 void SFB::AudioPlayer::Resume() noexcept
 {
+#if false
 	if(!((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !PlayerNodeIsPlaying()))
 		return;
+#endif
 
-	playerNode_->_node->Play();
+	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+		return;
+
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_->_node->IsPlaying())
+			return;
+		playerNode_->_node->Play();
+	}
 
 #if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Resume()");
@@ -257,7 +290,11 @@ void SFB::AudioPlayer::Stop() noexcept
 
 	[engine_ stop];
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-	playerNode_->_node->Stop();
+
+	{
+		std::lock_guard lock(playerNodeLock_);
+		playerNode_->_node->Stop();
+	}
 
 	ClearInternalDecoderQueue();
 
@@ -286,7 +323,11 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 
 void SFB::AudioPlayer::Reset() noexcept
 {
-	playerNode_->_node->Reset();
+	{
+		playerNode_->_node->Reset();
+		std::lock_guard lock(playerNodeLock_);
+	}
+
 	[engine_ reset];
 
 	ClearInternalDecoderQueue();
@@ -380,7 +421,11 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 {
 	NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
 
-	const auto playerNode = playerNode_;
+	SFBAudioPlayerNode *playerNode = nil;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		playerNode = playerNode_;
+	}
 	const auto engine = engine_;
 
 	AVAudioFormat *inputFormat = playerNode.renderingFormat;
@@ -470,14 +515,20 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
 	// Attempt to preserve the playback state
-	const auto playerNodeWasPlaying = playerNode_->_node->IsPlaying();
-
-	playerNode_->_node->Pause();
+	bool playerNodeWasPlaying, playerNodeIsPlaying;
+	AVAudioFormat *renderingFormat;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		playerNodeWasPlaying = playerNode_->_node->IsPlaying();
+		playerNode_->_node->Pause();
+		playerNodeIsPlaying = false;
+		renderingFormat = playerNode_->_node->RenderingFormat();
+	}
 
 	// Force an update of the audio processing graph
-	if(!ConfigureProcessingGraphForFormat(playerNode_->_node->RenderingFormat(), true)) {
-		os_log_error(log_, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
+	if(!ConfigureProcessingGraphForFormat(renderingFormat, false)) {
 		// The graph is not in a working state
+		os_log_error(log_, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(renderingFormat));
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[player_.delegate audioPlayer:player_ encounteredError:error];
@@ -485,23 +536,30 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		return;
 	}
 
+#if DEBUG
+	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
+#endif /* DEBUG */
+
 	// Restart AVAudioEngine if previously running
 	if(engineWasRunning) {
 		if(NSError *error = nil; ![engine_ startAndReturnError:&error]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", error);
-//			if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-//				[mPlayer.delegate audioPlayer:mPlayer encounteredError:error];
+//			if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+//				[player_.delegate audioPlayer:player_ encounteredError:error];
 			return;
 		}
 
 		flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
 		// Restart the player node if needed
-		if(playerNodeWasPlaying)
+		if(playerNodeWasPlaying) {
+			std::lock_guard lock(playerNodeLock_);
 			playerNode_->_node->Play();
+			playerNodeIsPlaying = true;
+		}
 	}
 
-	if((engineWasRunning != static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != playerNode_->_node->IsPlaying()) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+	if((engineWasRunning != static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != playerNodeIsPlaying) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:PlaybackState()];
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
@@ -594,26 +652,54 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 
 	// Attempt to preserve the playback state
 	const bool engineWasRunning = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning);
-	const auto playerNodeWasPlaying = playerNode_->_node->IsPlaying();
+
+	auto format = decoder.processingFormat;
+
+	bool playerNodeWasPlaying, playerNodeSupportsFormat;
+	AVAudioFormat *renderingFormat;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		playerNodeWasPlaying = playerNode_->_node->IsPlaying();
+		playerNodeSupportsFormat = playerNode_->_node->SupportsFormat(format);
+		AVAudioFormat *renderingFormat = playerNode_->_node->RenderingFormat();
+	}
 
 	// If the current player node doesn't support the decoder's format (required for gapless join),
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-	if(auto format = decoder.processingFormat; !playerNode_->_node->SupportsFormat(format)) {
-		if(!ConfigureProcessingGraphForFormat(format, false)) {
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
-			SetNowPlaying(nil);
-			return false;
+	if(!playerNodeSupportsFormat) {
+		// AudioPlayerNode requires the standard format
+		if(!format.isStandard) {
+			AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
+			if(!standardEquivalentFormat) {
+				os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+				SetNowPlaying(nil);
+				return false;
+			}
+			format = standardEquivalentFormat;
+		}
+
+		if(![format isEqual:renderingFormat]) {
+			if(!ConfigureProcessingGraphForFormat(format, true)) {
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+				SetNowPlaying(nil);
+				return false;
+			}
+#if DEBUG
+			LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
+#endif /* DEBUG */
 		}
 	}
 
 	if(clearQueueAndReset)
 		ClearInternalDecoderQueue();
 
-	const auto success = playerNode_->_node->EnqueueDecoder(decoder, clearQueueAndReset, error);
+	std::lock_guard lock(playerNodeLock_);
 
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
-	if(!success) {
+	if(!playerNode_->_node->EnqueueDecoder(decoder, clearQueueAndReset, error)) {
 		SetNowPlaying(nil);
 		return false;
 	}
@@ -642,25 +728,17 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	return true;
 }
 
-bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, bool forceUpdate) noexcept
+bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, bool isFormatChange) noexcept
 {
 #if DEBUG
 	assert(format != nil);
+	assert(format.isStandard);
 #endif /* DEBUG */
 
-	// AudioPlayerNode requires the standard format
-	if(!format.isStandard) {
-		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
-		if(!standardEquivalentFormat) {
-			os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
-			return false;
-		}
-		format = standardEquivalentFormat;
-	}
-
-	const auto formatsEqual = [format isEqual:playerNode_->_node->RenderingFormat()];
-	if(formatsEqual && !forceUpdate)
-		return true;
+	// Avoid creating a new AudioPlayerNode if not necessary
+	SFBAudioPlayerNode *playerNode = nil;
+	if(isFormatChange && !(playerNode = CreatePlayerNode(format)))
+		return false;
 
 	// Even if the engine isn't running, call stop to force release of any render resources
 	// Empirically this is necessary when transitioning between formats with different
@@ -668,13 +746,9 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 	[engine_ stop];
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
+	std::unique_lock lock(playerNodeLock_);
 	if(playerNode_->_node->IsPlaying())
 		playerNode_->_node->Stop();
-
-	// Avoid creating a new AudioPlayerNode if not necessary
-	SFBAudioPlayerNode *playerNode = nil;
-	if(!formatsEqual && !(playerNode = CreatePlayerNode(format)))
-		return false;
 
 	AVAudioOutputNode *outputNode = engine_.outputNode;
 	AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
@@ -698,21 +772,13 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		[engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
 	}
 
+	SFBAudioPlayerNode *playerNodeToDealloc = nil;
 	if(playerNode) {
+		playerNodeToDealloc = playerNode_;
+
 		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:playerNode_ outputBus:0] firstObject];
 		[engine_ detachNode:playerNode_];
 
-		// When an audio player node is deallocated the destructor synchronously waits
-		// for decoder cancelation (if there is an active decoder) and then for any
-		// final events to be processed and event notification blocks called.
-		// The potential therefore exists to block the calling thread for a perceptible amount
-		// of time, especially if the block calls take longer than ideal.
-		//
-		// In my measurements the baseline with an empty delegate implementation of
-		// -audioPlayer:decoderCanceled:framesRendered: seems to be around 100 µsec
-		//
-		// Assuming there are no external references to the audio player node,
-		// setting it here sends -dealloc
 		playerNode_ = playerNode;
 		[engine_ attachNode:playerNode_];
 
@@ -722,6 +788,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		// to make any necessary adjustments based on the format change if desired.
 		if(playerNodeOutputConnectionPoint && playerNodeOutputConnectionPoint.node != mixerNode) {
 			if([player_.delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:withFormat:)]) {
+				// TODO: Should the lock be held during a delegate message?
 				AVAudioNode *node = [player_.delegate audioPlayer:player_ reconfigureProcessingGraph:engine_ withFormat:format];
 				// Ensure the delegate returned a valid node
 				assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
@@ -731,6 +798,9 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		} else
 			[engine_ connect:playerNode_ to:mixerNode format:format];
 	}
+
+	auto audioUnit = playerNode_.AUAudioUnit;
+	lock.unlock();
 
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
 	// (maximum frames per slice) greater than the default for AVAudioSourceNode (1156).
@@ -747,7 +817,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		const double ratio = format.sampleRate / outputNodeOutputFormat.sampleRate;
 		const auto maximumFramesToRender = static_cast<AUAudioFrameCount>(std::ceil(512 * ratio));
 
-		if(auto audioUnit = playerNode_.AUAudioUnit; audioUnit.maximumFramesToRender < maximumFramesToRender) {
+		if(audioUnit.maximumFramesToRender < maximumFramesToRender) {
 			const auto renderResourcesAllocated = audioUnit.renderResourcesAllocated;
 			if(renderResourcesAllocated)
 				[audioUnit deallocateRenderResources];
@@ -761,19 +831,31 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 		}
 	}
 
-#if DEBUG
-	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
-#endif /* DEBUG */
-
 	[engine_ prepare];
+
+	// When an audio player node is deallocated the destructor synchronously waits
+	// for decoder cancelation (if there is an active decoder) and then for any
+	// final events to be processed and event notification blocks called.
+	// The potential therefore exists to block the calling thread for a perceptible amount
+	// of time, especially if the block calls take longer than ideal.
+	//
+	// Assuming there are no external references to the audio player node,
+	// setting it to nil here sends -dealloc
+	//
+	// N.B. If the player node lock is held a deadlock will occur
+	playerNodeToDealloc = nil;
+
 	return true;
 }
 
 void SFB::AudioPlayer::HandleDecodingStarted(const AudioPlayerNode& node, Decoder decoder) noexcept
 {
-	if(playerNode_ != node.node_) {
-		os_log_debug(log_, "Ignoring stale decoding started notification from <AudioPlayerNode: %p>", &node);
-		return;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_ != node.node_) {
+			os_log_debug(log_, "Ignoring stale decoding started notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
@@ -788,9 +870,12 @@ void SFB::AudioPlayer::HandleDecodingStarted(const AudioPlayerNode& node, Decode
 
 void SFB::AudioPlayer::HandleDecodingComplete(const AudioPlayerNode& node, Decoder decoder) noexcept
 {
-	if(playerNode_ != node.node_) {
-		os_log_debug(log_, "Ignoring stale decoding complete notification from <AudioPlayerNode: %p>", &node);
-		return;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_ != node.node_) {
+			os_log_debug(log_, "Ignoring stale decoding complete notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
@@ -799,16 +884,22 @@ void SFB::AudioPlayer::HandleDecodingComplete(const AudioPlayerNode& node, Decod
 
 void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Decoder decoder, uint64_t hostTime) noexcept
 {
-	if(playerNode_ != node.node_) {
-		os_log_debug(log_, "Ignoring stale rendering will start notification from <AudioPlayerNode: %p>", &node);
-		return;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_ != node.node_) {
+			os_log_debug(log_, "Ignoring stale rendering will start notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
 	}
 
 	// Schedule the rendering started notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
-		if(playerNode_ != node.node_) {
-			os_log_debug(log_, "Ignoring stale rendering started notification from <AudioPlayerNode: %p>", &node);
-			return;
+		{
+			std::lock_guard lock(playerNodeLock_);
+			if(playerNode_ != node.node_) {
+				os_log_debug(log_, "Ignoring stale rendering started notification from <AudioPlayerNode: %p>", &node);
+				return;
+			}
 		}
 
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
@@ -838,16 +929,22 @@ void SFB::AudioPlayer::HandleRenderingWillStart(const AudioPlayerNode& node, Dec
 
 void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& node, Decoder decoder, Decoder nextDecoder, uint64_t hostTime) noexcept
 {
-	if(playerNode_ != node.node_) {
-		os_log_debug(log_, "Ignoring stale rendering decoder will change notification from <AudioPlayerNode: %p>", &node);
-		return;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_ != node.node_) {
+			os_log_debug(log_, "Ignoring stale rendering decoder will change notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
 	}
 
 	// Schedule the rendering decoder changed notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
-		if(playerNode_ != node.node_) {
-			os_log_debug(log_, "Ignoring stale rendering decoder changed notification from <AudioPlayerNode: %p>", &node);
-			return;
+		{
+			std::lock_guard lock(playerNodeLock_);
+			if(playerNode_ != node.node_) {
+				os_log_debug(log_, "Ignoring stale rendering decoder changed notification from <AudioPlayerNode: %p>", &node);
+				return;
+			}
 		}
 
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
@@ -886,16 +983,22 @@ void SFB::AudioPlayer::HandleRenderingDecoderWillChange(const AudioPlayerNode& n
 
 void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept
 {
-	if(playerNode_ != node.node_) {
-		os_log_debug(log_, "Ignoring stale rendering will complete notification from <AudioPlayerNode: %p>", &node);
-		return;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_ != node.node_) {
+			os_log_debug(log_, "Ignoring stale rendering will complete notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
 	}
 
 	// Schedule the rendering completed notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
-		if(playerNode_ != node.node_) {
-			os_log_debug(log_, "Ignoring stale rendering complete notification from <AudioPlayerNode: %p>", &node);
-			return;
+		{
+			std::lock_guard lock(playerNodeLock_);
+			if(playerNode_ != node.node_) {
+				os_log_debug(log_, "Ignoring stale rendering complete notification from <AudioPlayerNode: %p>", &node);
+				return;
+			}
 		}
 
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
@@ -951,6 +1054,7 @@ void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decode
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
 		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
 
+	std::lock_guard lock(playerNodeLock_);
 	if(playerNode_ == node.node_) {
 		flags_.fetch_and(~static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
 		if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
@@ -960,9 +1064,12 @@ void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decode
 
 void SFB::AudioPlayer::HandleAsynchronousError(const AudioPlayerNode& node, NSError *error) noexcept
 {
-	if(playerNode_ != node.node_) {
-		os_log_debug(log_, "Ignoring stale asynchronous error notification from <AudioPlayerNode: %p>", &node);
-		return;
+	{
+		std::lock_guard lock(playerNodeLock_);
+		if(playerNode_ != node.node_) {
+			os_log_debug(log_, "Ignoring stale asynchronous error notification from <AudioPlayerNode: %p>", &node);
+			return;
+		}
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
