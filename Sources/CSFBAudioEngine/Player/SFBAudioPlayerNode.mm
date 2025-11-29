@@ -60,13 +60,13 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 		node = std::make_unique<SFB::AudioPlayerNode>(format, ringBufferSize);
 	}
 	catch(const std::exception& e) {
-		os_log_error(SFB::AudioPlayerNode::sLog, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
+		os_log_error(SFB::AudioPlayerNode::log_, "Unable to create std::unique_ptr<AudioPlayerNode>: %{public}s", e.what());
 		return nil;
 	}
 
-	if((self = [super initWithFormat:format renderBlock:node->mRenderBlock])) {
+	if((self = [super initWithFormat:format renderBlock:node->renderBlock_])) {
 		_node = std::move(node);
-		_node->mNode = self;
+		_node->node_ = self;
 	}
 
 	return self;
@@ -254,65 +254,65 @@ constexpr AVAudioFrameCount kDefaultRingBufferFrameCapacity = 16384;
 
 - (SFBAudioPlayerNodeDecodingStartedBlock)decodingStartedBlock
 {
-	return _node->mDecodingStartedBlock;
+	return _node->decodingStartedBlock_;
 }
 - (void)setDecodingStartedBlock:(SFBAudioPlayerNodeDecodingStartedBlock)decodingStartedBlock
 {
-	_node->mDecodingStartedBlock = decodingStartedBlock;
+	_node->decodingStartedBlock_ = decodingStartedBlock;
 }
 
 - (SFBAudioPlayerNodeDecodingCompleteBlock)decodingCompleteBlock
 {
-	return _node->mDecodingCompleteBlock;
+	return _node->decodingCompleteBlock_;
 }
 - (void)setDecodingCompleteBlock:(SFBAudioPlayerNodeDecodingCompleteBlock)decodingCompleteBlock
 {
-	_node->mDecodingCompleteBlock = decodingCompleteBlock;
+	_node->decodingCompleteBlock_ = decodingCompleteBlock;
 }
 
 - (SFBAudioPlayerNodeRenderingWillStartBlock)renderingWillStartBlock
 {
-	return _node->mRenderingWillStartBlock;
+	return _node->renderingWillStartBlock_;
 }
 - (void)setRenderingWillStartBlock:(SFBAudioPlayerNodeRenderingWillStartBlock)renderingWillStartBlock
 {
-	_node->mRenderingWillStartBlock = renderingWillStartBlock;
+	_node->renderingWillStartBlock_ = renderingWillStartBlock;
 }
 
 - (SFBAudioPlayerNodeRenderingDecoderWillChangeBlock)renderingDecoderWillChangeBlock
 {
-	return _node->mRenderingDecoderWillChangeBlock;
+	return _node->renderingDecoderWillChangeBlock_;
 }
 - (void)setRenderingDecoderWillChangeBlock:(SFBAudioPlayerNodeRenderingDecoderWillChangeBlock)renderingDecoderWillChangeBlock
 {
-	_node->mRenderingDecoderWillChangeBlock = renderingDecoderWillChangeBlock;
+	_node->renderingDecoderWillChangeBlock_ = renderingDecoderWillChangeBlock;
 }
 
 - (SFBAudioPlayerNodeRenderingWillCompleteBlock)renderingWillCompleteBlock
 {
-	return _node->mRenderingWillCompleteBlock;
+	return _node->renderingWillCompleteBlock_;
 }
 - (void)setRenderingWillCompleteBlock:(SFBAudioPlayerNodeRenderingWillCompleteBlock)renderingWillCompleteBlock
 {
-	_node->mRenderingWillCompleteBlock = renderingWillCompleteBlock;
+	_node->renderingWillCompleteBlock_ = renderingWillCompleteBlock;
 }
 
 - (SFBAudioPlayerNodeDecoderCanceledBlock)decoderCanceledBlock
 {
-	return _node->mDecoderCanceledBlock;
+	return _node->decoderCanceledBlock_;
 }
 - (void)setDecoderCanceledBlock:(SFBAudioPlayerNodeDecoderCanceledBlock)decoderCanceledBlock
 {
-	_node->mDecoderCanceledBlock = decoderCanceledBlock;
+	_node->decoderCanceledBlock_ = decoderCanceledBlock;
 }
 
 - (SFBAudioPlayerNodeAsynchronousErrorBlock)asynchronousErrorBlock
 {
-	return _node->mAsynchronousErrorBlock;
+	return _node->asynchronousErrorBlock_;
 }
 - (void)setAsynchronousErrorBlock:(SFBAudioPlayerNodeAsynchronousErrorBlock)asynchronousErrorBlock
 {
-	_node->mAsynchronousErrorBlock = asynchronousErrorBlock;
+	_node->asynchronousErrorBlock_ = asynchronousErrorBlock;
 }
 
 @end

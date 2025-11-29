@@ -34,33 +34,33 @@ public:
 	using Decoder 		= id<SFBPCMDecoding>;
 
 	/// The shared log for all `AudioPlayer` instances
-	static const os_log_t sLog;
+	static const os_log_t log_;
 
 	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer 		*mPlayer 			{nil};
+	__unsafe_unretained SFBAudioPlayer 		*player_ 			{nil};
 
 private:
 	/// The underlying `AVAudioEngine` instance
-	AVAudioEngine 							*mEngine 			{nil};
+	AVAudioEngine 							*engine_ 			{nil};
 
 	/// The player driving the audio processing graph
-	AudioPlayerNode::atomic_ptr 			mPlayerNode 		{nullptr};
+	AudioPlayerNode::atomic_ptr 			playerNode_ 		{nullptr};
 
 	/// Decoders enqueued for non-gapless playback
-	std::deque<Decoder>						mQueuedDecoders;
-	/// The lock used to protect access to `mQueuedDecoders`
-	mutable CXXUnfairLock::UnfairLock 		mQueueLock;
+	std::deque<Decoder>						queuedDecoders_;
+	/// The lock used to protect access to `queuedDecoders_`
+	mutable CXXUnfairLock::UnfairLock 		queueLock_;
 
 	/// The currently rendering decoder
-	id <SFBPCMDecoding> 					mNowPlaying 		{nil};
-	/// The lock used to protect access to `mNowPlaying`
-	mutable CXXUnfairLock::UnfairLock 		mNowPlayingLock;
+	id <SFBPCMDecoding> 					nowPlaying_ 		{nil};
+	/// The lock used to protect access to `nowPlaying_`
+	mutable CXXUnfairLock::UnfairLock 		nowPlayingLock_;
 
 	/// The dispatch queue used for asynchronous events
-	dispatch_queue_t						mEventQueue 		{nil};
+	dispatch_queue_t						eventQueue_ 		{nil};
 
 	/// Flags
-	std::atomic_uint 						mFlags 				{0};
+	std::atomic_uint 						flags_ 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 public:
@@ -81,18 +81,18 @@ public:
 #if DEBUG
 		assert(format != nil);
 #endif /* DEBUG */
-		return mPlayerNode.load(std::memory_order_acquire)->SupportsFormat(format);
+		return playerNode_.load(std::memory_order_acquire)->SupportsFormat(format);
 	}
 
 	void ClearQueue() noexcept
 	{
-		mPlayerNode.load(std::memory_order_acquire)->ClearQueue();
+		playerNode_.load(std::memory_order_acquire)->ClearQueue();
 		ClearInternalDecoderQueue();
 	}
 
 	bool QueueIsEmpty() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
+		return playerNode_.load(std::memory_order_acquire)->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
 	}
 
 	// MARK: - Playback Control
@@ -111,46 +111,46 @@ public:
 
 	bool PlayerNodeIsPlaying() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->IsPlaying();
+		return playerNode_.load(std::memory_order_acquire)->IsPlaying();
 	}
 
 	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
 	{
-		if(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning))
-			return mPlayerNode.load(std::memory_order_acquire)->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))
+			return playerNode_.load(std::memory_order_acquire)->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 		else
 			return SFBAudioPlayerPlaybackStateStopped;
 	}
 
 	bool IsPlaying() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && mPlayerNode.load(std::memory_order_acquire)->IsPlaying();
+		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && playerNode_.load(std::memory_order_acquire)->IsPlaying();
 	}
 
 	bool IsPaused() const noexcept
 	{
-		return (mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning)) && !mPlayerNode.load(std::memory_order_acquire)->IsPlaying();
+		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !playerNode_.load(std::memory_order_acquire)->IsPlaying();
 	}
 
 	bool IsStopped() const noexcept
 	{
-		return !(mFlags.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::eEngineIsRunning));
+		return !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning));
 	}
 
 	bool IsReady() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->IsReady();
+		return playerNode_.load(std::memory_order_acquire)->IsReady();
 	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->CurrentDecoder();
+		return playerNode_.load(std::memory_order_acquire)->CurrentDecoder();
 	}
 
 	Decoder _Nullable NowPlaying() const noexcept
 	{
-		std::lock_guard lock(mNowPlayingLock);
-		return mNowPlaying;
+		std::lock_guard lock(nowPlayingLock_);
+		return nowPlaying_;
 	}
 
 private:
@@ -161,49 +161,49 @@ public:
 
 	SFBPlaybackPosition PlaybackPosition() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->PlaybackPosition();
+		return playerNode_.load(std::memory_order_acquire)->PlaybackPosition();
 	}
 
 	SFBPlaybackTime PlaybackTime() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->PlaybackTime();
+		return playerNode_.load(std::memory_order_acquire)->PlaybackTime();
 	}
 
 	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
+		return playerNode_.load(std::memory_order_acquire)->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 	}
 
 	// MARK: - Seeking
 
 	bool SeekForward(NSTimeInterval secondsToSkip) noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->SeekForward(secondsToSkip);
+		return playerNode_.load(std::memory_order_acquire)->SeekForward(secondsToSkip);
 	}
 	
 	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->SeekBackward(secondsToSkip);
+		return playerNode_.load(std::memory_order_acquire)->SeekBackward(secondsToSkip);
 	}
 
 	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->SeekToTime(timeInSeconds);
+		return playerNode_.load(std::memory_order_acquire)->SeekToTime(timeInSeconds);
 	}
 
 	bool SeekToPosition(double position) noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->SeekToPosition(position);
+		return playerNode_.load(std::memory_order_acquire)->SeekToPosition(position);
 	}
 
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->SeekToFrame(frame);
+		return playerNode_.load(std::memory_order_acquire)->SeekToFrame(frame);
 	}
 
 	bool SupportsSeeking() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->SupportsSeeking();
+		return playerNode_.load(std::memory_order_acquire)->SupportsSeeking();
 	}
 
 #if !TARGET_OS_IPHONE
@@ -224,12 +224,12 @@ public:
 
 	AVAudioEngine * GetAudioEngine() const noexcept
 	{
-		return mEngine;
+		return engine_;
 	}
 
 	SFBAudioPlayerNode * GetPlayerNode() const noexcept
 	{
-		return mPlayerNode.load(std::memory_order_acquire)->mNode;
+		return playerNode_.load(std::memory_order_acquire)->node_;
 	}
 
 	// MARK: - Debugging
@@ -237,28 +237,28 @@ public:
 	void LogProcessingGraphDescription(os_log_t _Nonnull log, os_log_type_t type) const noexcept;
 
 private:
-	/// Possible bits in `mFlags`
+	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
 		/// Cached value of `_audioEngine.isRunning`
-		eEngineIsRunning				= 1u << 0,
+		engineIsRunning				= 1u << 0,
 		/// Set if there is a decoder being enqueued on the player node that has not yet started decoding
-		eHavePendingDecoder				= 1u << 1,
+		havePendingDecoder			= 1u << 1,
 		/// Set if the pending decoder becomes active when the player is not playing
-		ePendingDecoderBecameActive		= 1u << 2,
+		pendingDecoderBecameActive 	= 1u << 2,
 	};
 
 	/// Returns true if the internal queue of decoders is empty
 	bool InternalDecoderQueueIsEmpty() const noexcept
 	{
-		std::lock_guard lock(mQueueLock);
-		return mQueuedDecoders.empty();
+		std::lock_guard lock(queueLock_);
+		return queuedDecoders_.empty();
 	}
 
 	/// Removes all decoders from the internal decoder queue
 	void ClearInternalDecoderQueue() noexcept
 	{
-		std::lock_guard lock(mQueueLock);
-		mQueuedDecoders.clear();
+		std::lock_guard lock(queueLock_);
+		queuedDecoders_.clear();
 	}
 
 	/// Inserts `decoder` at the end of the internal decoder queue
