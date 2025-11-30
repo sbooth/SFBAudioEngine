@@ -17,23 +17,6 @@
 SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
 
 // ========================================
-// Initialization
-static void Setupmpg123(void) __attribute__ ((constructor));
-static void Setupmpg123(void)
-{
-	// What happens if this fails?
-	int result = mpg123_init();
-	if(result != MPG123_OK)
-		os_log_fault(gSFBAudioDecoderLog, "Unable to initialize mpg123: %{public}s", mpg123_plain_strerror(result));
-}
-
-static void Teardownmpg123(void) __attribute__ ((destructor));
-static void Teardownmpg123(void)
-{
-	mpg123_exit();
-}
-
-// ========================================
 // Callbacks
 static ssize_t read_callback(void *iohandle, void *ptr, size_t size)
 {
@@ -268,8 +251,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 	}
 
 	// Force decode to floating point instead of 16-bit signed integer
-	mpg123_param(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
-	mpg123_param(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
+	mpg123_param2(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
+	mpg123_param2(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
 
 	if(mpg123_replace_reader_handle(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
 		mpg123_delete(_mpg123);
@@ -338,8 +321,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 
 	sourceStreamDescription.mFormatID			= kAudioFormatMPEGLayer3;
 
-	struct mpg123_frameinfo mi;
-	if(mpg123_info(_mpg123, &mi) == MPG123_OK) {
+	struct mpg123_frameinfo2 mi;
+	if(mpg123_info2(_mpg123, &mi) == MPG123_OK) {
 		switch(mi.layer) {
 			case 1: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer1; 	break;
 			case 2: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer2; 	break;
