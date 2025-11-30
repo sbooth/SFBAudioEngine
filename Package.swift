@@ -19,22 +19,22 @@ let package = Package(
 			]),
 	],
 	dependencies: [
-		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.1"),
-		.package(url: "https://github.com/sbooth/CXXCoreAudio", from: "0.1.0"),
-		.package(url: "https://github.com/sbooth/CXXAudioToolbox", from: "0.1.0"),
-		.package(url: "https://github.com/sbooth/CXXRingBuffer", from: "0.1.0"),
+		.package(url: "https://github.com/sbooth/AVFAudioExtensions", from: "0.4.2"),
+		.package(url: "https://github.com/sbooth/CXXCoreAudio", from: "0.2.0"),
+		.package(url: "https://github.com/sbooth/CXXAudioToolbox", from: "0.1.2"),
+		.package(url: "https://github.com/sbooth/CXXRingBuffer", from: "0.2.0"),
 		.package(url: "https://github.com/sbooth/CXXUnfairLock", from: "0.1.0"),
 
 		// Standalone dependencies from source
 		.package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
 		.package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "11.82.0"),
-		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.1.0"),
+		.package(url: "https://github.com/sbooth/CXXTagLib", from: "2.1.1"),
 
 		// Standalone dependencies not easily packaged using SPM
 		.package(url: "https://github.com/sbooth/wavpack-binary-xcframework", from: "0.1.2"),
 
 		// Xiph ecosystem
-		.package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.2"),
+		.package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.3"),
 		// flac-binary-xcframework requires ogg-binary-xcframework
 		.package(url: "https://github.com/sbooth/flac-binary-xcframework", from: "0.2.0"),
 		// opus-binary-xcframework requires ogg-binary-xcframework
@@ -48,7 +48,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/lame-binary-xcframework", from: "0.1.2"),
 		// Technically only the musepack *encoder* is LGPL'd but for now the decoder and encoder are packaged together
 		.package(url: "https://github.com/sbooth/mpc-binary-xcframework", from: "0.1.2"),
-		.package(url: "https://github.com/sbooth/mpg123-binary-xcframework", from: "0.2.3"),
+		.package(url: "https://github.com/sbooth/mpg123-binary-xcframework", from: "0.3.0"),
 		// sndfile-binary-xcframework requires ogg-binary-xcframework, flac-binary-xcframework, opus-binary-xcframework, and vorbis-binary-xcframework
 		.package(url: "https://github.com/sbooth/sndfile-binary-xcframework", from: "0.1.2"),
 		.package(url: "https://github.com/sbooth/tta-cpp-binary-xcframework", from: "0.1.2"),
