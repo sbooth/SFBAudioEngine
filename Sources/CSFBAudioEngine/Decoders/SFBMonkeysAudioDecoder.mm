@@ -11,7 +11,7 @@
 #define PLATFORM_APPLE
 
 #include <MAC/All.h>
-#include <MAC/IO.h>
+#include <MAC/IAPEIO.h>
 #include <MAC/MACLib.h>
 
 #undef PLATFORM_APPLE
@@ -52,7 +52,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAve
 namespace {
 
 // The I/O interface for MAC
-class APEIOInterface final : public APE::CIO
+class APEIOInterface final : public APE::IAPEIO
 {
 public:
 	explicit APEIOInterface(SFBInputSource *inputSource)

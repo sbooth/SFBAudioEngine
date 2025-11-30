@@ -4,7 +4,6 @@
 // MIT license
 //
 
-#import "SFBOutputSource.h"
 #import "SFBOutputSource+Internal.h"
 
 #import "SFBBufferOutputSource.h"
@@ -47,7 +46,7 @@ static void SFBCreateOutputSourceLog(void)
 	NSParameterAssert(url != nil);
 
 	if(url.isFileURL)
-		return [[SFBFileOutputSource alloc] initWithURL:url error:error];
+		return [[SFBFileOutputSource alloc] initWithURL:url];
 	return nil;
 }
 
@@ -61,6 +60,13 @@ static void SFBCreateOutputSourceLog(void)
 	NSParameterAssert(buffer != NULL);
 	NSParameterAssert(capacity >= 0);
 	return [[SFBBufferOutputSource alloc] initWithBuffer:buffer capacity:(size_t)capacity];
+}
+
+- (instancetype)initWithURL:(NSURL *)url
+{
+	if((self = [super init]))
+		_url = url;
+	return self;
 }
 
 - (void)dealloc

@@ -11,9 +11,9 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import <SFBAudioFileWrapper.hpp>
-#import <SFBCAStreamBasicDescription.hpp>
-#import <SFBExtAudioFileWrapper.hpp>
+#import <CXXCoreAudio/CAStreamDescription.hpp>
+#import <CXXAudioToolbox/AudioFileWrapper.hpp>
+#import <CXXAudioToolbox/ExtAudioFileWrapper.hpp>
 
 #import "SFBCoreAudioEncoder.h"
 
@@ -190,8 +190,8 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 @interface SFBCoreAudioEncoder ()
 {
 @private
-	SFB::AudioFileWrapper _af;
-	SFB::ExtAudioFileWrapper _eaf;
+	CXXAudioToolbox::AudioFileWrapper _af;
+	CXXAudioToolbox::ExtAudioFileWrapper _eaf;
 }
 @end
 
@@ -387,7 +387,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 	else
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; mBitsPerChannel will be zero which is probably incorrect");
 
-	SFB::CAStreamBasicDescription format{};
+	CXXCoreAudio::CAStreamDescription format{};
 
 	format.mFormatID 			= formatID;
 	format.mFormatFlags 		= formatFlags;
@@ -422,7 +422,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 		return NO;
 	}
 
-	auto af = SFB::AudioFileWrapper(audioFile);
+	auto af = CXXAudioToolbox::AudioFileWrapper(audioFile);
 
 	ExtAudioFileRef extAudioFile;
 	result = ExtAudioFileWrapAudioFileID(af, true, &extAudioFile);
@@ -433,7 +433,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 		return NO;
 	}
 
-	auto eaf = SFB::ExtAudioFileWrapper(extAudioFile);
+	auto eaf = CXXAudioToolbox::ExtAudioFileWrapper(extAudioFile);
 
 	result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {

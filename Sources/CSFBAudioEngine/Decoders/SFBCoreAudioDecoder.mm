@@ -10,8 +10,8 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import <SFBAudioFileWrapper.hpp>
-#import <SFBExtAudioFileWrapper.hpp>
+#import <CXXAudioToolbox/AudioFileWrapper.hpp>
+#import <CXXAudioToolbox/ExtAudioFileWrapper.hpp>
 
 #import "SFBCoreAudioDecoder.h"
 
@@ -71,8 +71,8 @@ SInt64 get_size_callback(void *inClientData) noexcept
 @interface SFBCoreAudioDecoder ()
 {
 @private
-	SFB::AudioFileWrapper _af;
-	SFB::ExtAudioFileWrapper _eaf;
+	CXXAudioToolbox::AudioFileWrapper _af;
+	CXXAudioToolbox::ExtAudioFileWrapper _eaf;
 }
 @end
 
@@ -237,7 +237,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		return NO;
 	}
 
-	auto af = SFB::AudioFileWrapper(audioFile);
+	auto af = CXXAudioToolbox::AudioFileWrapper(audioFile);
 
 	ExtAudioFileRef extAudioFile;
 	result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
@@ -255,7 +255,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		return NO;
 	}
 
-	auto eaf = SFB::ExtAudioFileWrapper(extAudioFile);
+	auto eaf = CXXAudioToolbox::ExtAudioFileWrapper(extAudioFile);
 
 	// Query file format
 	AudioStreamBasicDescription format{};
