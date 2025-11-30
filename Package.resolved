@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/mpg123-binary-xcframework",
       "state" : {
-        "revision" : "a678f1f21ed6f0350fc1ded94259ebe1f8e802b9",
-        "version" : "0.2.3"
+        "revision" : "54f515998ff4604e87bd27cf15e57089881cf3ff",
+        "version" : "0.3.0"
       }
     },
     {
