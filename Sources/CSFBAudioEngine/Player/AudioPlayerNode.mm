@@ -921,7 +921,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		return;
 	}
 
-	const auto do_write = [&bytesWritten, wvec](const void *arg, uint32_t sz) noexcept {
+	const auto do_write = [&bytesWritten, &wvec](const void *arg, uint32_t sz) noexcept {
 		auto bytesRemaining = sz;
 		// Write to wvec.first if space is available
 		if(wvec.first.capacity_ > bytesWritten) {
