@@ -25,7 +25,7 @@ public:
 	using unique_ptr = std::unique_ptr<InputSource>;
 
 	enum class FileReadMode { normal, memoryMap, loadInMemory, };
-	static unique_ptr CreateForURL(CFURLRef url, FileReadMode mode = FileReadMode::normal);
+	static unique_ptr CreateForURL(CFURLRef _Nonnull url, FileReadMode mode = FileReadMode::normal);
 	static unique_ptr CreateWithData(CFDataRef _Nonnull data);
 	static unique_ptr CreateWithBytes(const void * _Nonnull buf, int64_t len);
 	static unique_ptr CreateWithBytesNoCopy(const void * _Nonnull buf, int64_t len, bool free = true);
