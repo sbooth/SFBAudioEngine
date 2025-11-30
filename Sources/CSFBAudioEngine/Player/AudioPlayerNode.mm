@@ -830,7 +830,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 		if(decoderState) {
 			// Decode and write chunks to the ring buffer
-			while(audioRingBuffer_.AvailableWriteCount() >= kRingBufferChunkSize) {
+			while(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize) {
 				// Decoding started
 				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted))) {
 					const bool suspended = flags & static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
@@ -921,7 +921,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		return;
 	}
 
-	const auto do_write = [&bytesWritten, wvec](const void *arg, uint32_t sz) noexcept {
+	const auto do_write = [&bytesWritten, &wvec](const void *arg, uint32_t sz) noexcept {
 		auto bytesRemaining = sz;
 		// Write to wvec.first if space is available
 		if(wvec.first.capacity_ > bytesWritten) {
@@ -976,8 +976,8 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	}
 
 	// If there are audio frames available to read from the ring buffer read as many as possible
-	if(const auto framesAvailableToRead = audioRingBuffer_.AvailableReadCount(); framesAvailableToRead > 0) {
-		const auto framesToRead = std::min(framesAvailableToRead, frameCount);
+	if(const auto availableFrames = audioRingBuffer_.AvailableFrames(); availableFrames > 0) {
+		const auto framesToRead = std::min(availableFrames, frameCount);
 		const uint32_t framesRead = audioRingBuffer_.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
 			os_log_fault(log_, "CXXCoreAudio::AudioRingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
@@ -998,7 +998,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 		}
 
 		// If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		if(audioRingBuffer_.AvailableWriteCount() >= kRingBufferChunkSize)
+		if(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize)
 			dispatch_semaphore_signal(decodingSemaphore_);
 
 		const RenderingEventHeader header{RenderingEventCommand::framesRendered};
