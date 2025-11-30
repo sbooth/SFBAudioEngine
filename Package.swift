@@ -34,7 +34,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/wavpack-binary-xcframework", from: "0.1.2"),
 
 		// Xiph ecosystem
-		.package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.2"),
+		.package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.3"),
 		// flac-binary-xcframework requires ogg-binary-xcframework
 		.package(url: "https://github.com/sbooth/flac-binary-xcframework", from: "0.2.0"),
 		// opus-binary-xcframework requires ogg-binary-xcframework
