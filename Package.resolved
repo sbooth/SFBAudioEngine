@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/AVFAudioExtensions",
       "state" : {
-        "revision" : "a9616556eb3ed9751fc6e036c2197540036567ee",
-        "version" : "0.4.1"
+        "revision" : "16b850dd542bbe8001b02596595309c8171f002d",
+        "version" : "0.4.2"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioToolbox",
       "state" : {
-        "revision" : "299d53edf437e7de1e4ef02f4cd1c5e92a3c77c5",
-        "version" : "0.1.1"
+        "revision" : "5a80775ba2512ec5dfa6ff043901b601f1020757",
+        "version" : "0.1.2"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXCoreAudio",
       "state" : {
-        "revision" : "f801cbff3ca5e3972db8b6d47d0dbbc1bd48d2ed",
-        "version" : "0.1.0"
+        "revision" : "463da36ac52f8c578f9e5e8f13dd438acafc73aa",
+        "version" : "0.2.0"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXRingBuffer",
       "state" : {
-        "revision" : "85681ee616701bc243e8840afd480ff3bcba148f",
-        "version" : "0.1.0"
+        "revision" : "7f4542248dca706c5a95bfe0df13f951e3254dce",
+        "version" : "0.2.0"
       }
     },
     {
