@@ -18,7 +18,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Dec
 
 // ========================================
 // Callbacks
-static ssize_t read_callback(void *iohandle, void *ptr, size_t size)
+static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read)
 {
 	NSCParameterAssert(iohandle != NULL);
 
@@ -27,7 +27,8 @@ static ssize_t read_callback(void *iohandle, void *ptr, size_t size)
 	NSInteger bytesRead;
 	if(![decoder->_inputSource readBytes:ptr length:(NSInteger)size bytesRead:&bytesRead error:nil])
 		return -1;
-	return (ssize_t)bytesRead;
+	*read = bytesRead;
+	return 0;
 }
 
 static off_t lseek_callback(void *iohandle, off_t offset, int whence)
@@ -254,7 +255,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 	mpg123_param2(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
 	mpg123_param2(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
 
-	if(mpg123_replace_reader_handle(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
+	if(mpg123_reader64(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
 		mpg123_delete(_mpg123);
 		_mpg123 = NULL;
 
