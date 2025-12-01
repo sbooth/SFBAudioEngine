@@ -30,7 +30,7 @@ public:
 private:
 	bool _AtEOF() const noexcept override 				{ return std::feof(file_) != 0; }
 	int64_t _Length() const noexcept override 			{ return len_; }
-	bool _SupportsSeeking() const noexcept override 	{ return true; }
+	bool _SupportsSeeking() const noexcept override 	{ return seekable_; }
 	void _SeekToPosition(int64_t position) override 	{ if(::fseeko(file_, static_cast<off_t>(position), SEEK_SET)) throw std::system_error{errno, std::generic_category()}; }
 
 	void _Open() override;
@@ -41,6 +41,7 @@ private:
 
 	FILE * _Nullable file_ {nullptr};
 	int64_t len_ {0};
+	bool seekable_{false};
 };
 
 } /* namespace SFB */

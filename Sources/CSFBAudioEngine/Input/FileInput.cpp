@@ -43,6 +43,14 @@ void SFB::FileInput::_Open()
 	}
 
 	len_ = s.st_size;
+
+	// Regular files are always seekable
+	if(S_ISREG(s.st_mode))
+		seekable_ = true;
+	else if(const auto offset = ::ftello(file_); offset != -1) {
+		if(::fseeko(file_, offset, SEEK_SET) == 0)
+			seekable_ = true;
+	}
 }
 
 void SFB::FileInput::_Close()

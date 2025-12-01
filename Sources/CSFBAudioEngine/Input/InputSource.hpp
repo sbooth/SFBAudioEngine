@@ -79,7 +79,7 @@ public:
 	// MARK: Seeking
 
 	/// Returns `true` if the input source is seekable.
-	bool SupportsSeeking() const noexcept;
+	bool SupportsSeeking() const;
 
 	/// Possible seek anchor points.
 	enum class SeekAnchor { start, current, end, };
@@ -173,7 +173,7 @@ private:
 	virtual int64_t _Length() const = 0;
 
 	// Optional seeking support
-	virtual bool _SupportsSeeking() const noexcept
+	virtual bool _SupportsSeeking() const
 	{
 		return false;
 	}
