@@ -225,7 +225,11 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)supportsSeeking
 {
-	return _input->SupportsSeeking();
+	try {
+		return _input->SupportsSeeking();
+	} catch(...) {
+		return NO;
+	}
 }
 
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
