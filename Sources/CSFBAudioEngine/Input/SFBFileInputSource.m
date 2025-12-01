@@ -125,7 +125,9 @@
 
 - (BOOL)supportsSeeking
 {
-	return YES;
+	// Regular files are always seekable.
+	// Punt on testing whether ftello() and fseeko() actually work.
+	return S_ISREG(_filestats.st_mode);
 }
 
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
