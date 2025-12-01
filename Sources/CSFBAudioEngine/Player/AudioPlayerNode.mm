@@ -370,7 +370,7 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 	// Issue a stop request to the event processing thread and wait for it to exit
 	eventThread_.request_stop();
 #else
-	// Stop the decoding thread
+	// Stop the event processing thread
 	flags_.fetch_or(static_cast<unsigned int>(Flags::stopEventThread), std::memory_order_acq_rel);
 	dispatch_semaphore_signal(eventSemaphore_);
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
