@@ -324,8 +324,13 @@ SFB::AudioPlayerNode::AudioPlayerNode(AVAudioFormat *format, uint32_t ringBuffer
 
 	// Launch the decoding and event processing threads
 	try {
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 		decodingThread_ = std::jthread(std::bind_front(&SFB::AudioPlayerNode::ProcessDecoders, this));
 		eventThread_ = std::jthread(std::bind_front(&SFB::AudioPlayerNode::SequenceAndProcessEvents, this));
+#else
+		decodingThread_ = std::thread(&SFB::AudioPlayerNode::ProcessDecoders, this);
+		eventThread_ = std::thread(&SFB::AudioPlayerNode::SequenceAndProcessEvents, this);
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 	} catch(const std::exception& e) {
 		os_log_error(log_, "Unable to create thread: %{public}s", e.what());
 		throw;
@@ -336,6 +341,7 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 {
 	Stop();
 
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	// Register a stop callback for the decoding thread
 	std::stop_callback decodingThreadStopCallback(decodingThread_.get_stop_token(), [this] {
 		dispatch_semaphore_signal(decodingSemaphore_);
@@ -343,12 +349,19 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 
 	// Issue a stop request to the decoding thread and wait for it to exit
 	decodingThread_.request_stop();
+#else
+	// Stop the decoding thread
+	flags_.fetch_or(static_cast<unsigned int>(Flags::stopDecodingThread), std::memory_order_acq_rel);
+	dispatch_semaphore_signal(decodingSemaphore_);
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
+
 	try {
 		decodingThread_.join();
 	} catch(const std::exception& e) {
 		os_log_error(log_, "Unable to join decoding thread: %{public}s", e.what());
 	}
 
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	// Register a stop callback for the event processing thread
 	std::stop_callback eventThreadStopCallback(eventThread_.get_stop_token(), [this] {
 		dispatch_semaphore_signal(eventSemaphore_);
@@ -356,6 +369,12 @@ SFB::AudioPlayerNode::~AudioPlayerNode() noexcept
 
 	// Issue a stop request to the event processing thread and wait for it to exit
 	eventThread_.request_stop();
+#else
+	// Stop the decoding thread
+	flags_.fetch_or(static_cast<unsigned int>(Flags::stopEventThread), std::memory_order_acq_rel);
+	dispatch_semaphore_signal(eventSemaphore_);
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
+
 	try {
 		eventThread_.join();
 	} catch(const std::exception& e) {
@@ -678,7 +697,11 @@ bool SFB::AudioPlayerNode::SupportsFormat(AVAudioFormat *format) const noexcept
 
 // MARK: - Decoding
 
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
+#else
+void SFB::AudioPlayerNode::ProcessDecoders() noexcept
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 {
 	pthread_setname_np("AudioPlayerNode.Decoding");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
@@ -722,8 +745,14 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		}
 
 		// Terminate the thread if requested after processing cancelations
-		if(stoken.stop_requested())
-		   break;
+		if(
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
+		   stoken.stop_requested()
+#else
+		   flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopDecodingThread)
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
+		   )
+			break;
 
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
@@ -1021,14 +1050,24 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 
 // MARK: - Event Processing
 
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 void SFB::AudioPlayerNode::SequenceAndProcessEvents(std::stop_token stoken) noexcept
+#else
+void SFB::AudioPlayerNode::SequenceAndProcessEvents() noexcept
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 {
 	pthread_setname_np("AudioPlayerNode.Events");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
 	os_log_debug(log_, "Event processing thread starting");
 
-	while(!stoken.stop_requested()) {
+	while(
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
+		  !stoken.stop_requested()
+#else
+		  !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopEventThread))
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
+		  ) {
 		auto decodeEventHeader = decodeEventRingBuffer_.ReadValue<DecodingEventHeader>();
 		auto renderEventHeader = renderEventRingBuffer_.ReadValue<RenderingEventHeader>();
 

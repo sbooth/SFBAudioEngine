@@ -10,7 +10,9 @@
 #import <deque>
 #import <memory>
 #import <mutex>
+#if __has_include(<stop_token>)
 #import <stop_token>
+#endif /* __has_include(<stop_token>) */
 #import <thread>
 #import <vector>
 
@@ -82,12 +84,20 @@ private:
 	mutable CXXUnfairLock::UnfairLock 		queueLock_;
 
 	/// Thread used for decoding
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	std::jthread 							decodingThread_;
+#else
+	std::thread 							decodingThread_;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 	/// Dispatch semaphore used for communication with the decoding thread
 	dispatch_semaphore_t					decodingSemaphore_ 	{};
 
 	/// Thread used for event processing
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	std::jthread 							eventThread_;
+#else
+	std::thread 							eventThread_;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 	/// Dispatch semaphore used for communication with the event processing thread
 	dispatch_semaphore_t					eventSemaphore_ 	{};
 
@@ -214,13 +224,23 @@ private:
 		unmuteAfterDequeue 		= 1u << 3,
 		/// The audio ring buffer requires a non-threadsafe reset
 		ringBufferNeedsReset 	= 1u << 4,
+#if !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L)
+		/// The decoding thread should exit
+		stopDecodingThread		= 1u << 5,
+		/// The event thread should exit
+		stopEventThread			= 1u << 6,
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 	};
 
 	// MARK: - Decoding
 
 	/// Dequeues and processes decoders from the decoder queue
 	/// - note: This is the thread entry point for the decoding thread
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	void ProcessDecoders(std::stop_token stoken) noexcept;
+#else
+	void ProcessDecoders() noexcept;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
 	/// Writes an error event to `decodeEventRingBuffer_` and signals `eventSemaphore_`
 	void SubmitDecodingErrorEvent(NSError *error) noexcept;
@@ -282,7 +302,11 @@ private:
 
 	/// Sequences events from from `decodeEventRingBuffer_` and `renderEventRingBuffer_` for processing in order
 	/// - note: This is the thread entry point for the event thread
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
+#else
+	void SequenceAndProcessEvents() noexcept;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
 	/// Processes an event from `decodeEventRingBuffer_`
 	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
