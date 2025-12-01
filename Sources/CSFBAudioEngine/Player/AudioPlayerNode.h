@@ -10,9 +10,9 @@
 #import <deque>
 #import <memory>
 #import <mutex>
-#if __has_include(<stop_token>)
+#if defined(__has_include) && __has_include(<stop_token>)
 #import <stop_token>
-#endif /* __has_include(<stop_token>) */
+#endif /* defined(__has_include) && __has_include(<stop_token>) */
 #import <thread>
 #import <vector>
 
