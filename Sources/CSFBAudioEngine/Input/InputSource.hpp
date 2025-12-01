@@ -41,9 +41,12 @@ public:
 	InputSource& operator=(InputSource&&) = delete;
 
 	/// Returns the URL, if any, of the input source.
-	CFURLRef _Nullable GetURL() const noexcept 	{ return url_; }
+	CFURLRef _Nullable GetURL() const noexcept
+	{
+		return url_;
+	}
 
-	// MARK: Opening and closing
+	// MARK: Opening and Closing
 
 	/// Opens the input source.
 	void Open();
@@ -52,7 +55,10 @@ public:
 	void Close();
 
 	/// Returns `true` if the input source is open.
-	bool IsOpen() const noexcept 	{ return isOpen_; }
+	bool IsOpen() const noexcept
+	{
+		return isOpen_;
+	}
 
 	// MARK: Reading
 
