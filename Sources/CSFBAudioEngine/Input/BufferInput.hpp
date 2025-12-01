@@ -48,7 +48,7 @@ private:
 	void _SeekToPosition(int64_t position) override 	{ pos_ = position; }
 
 	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	CFStringRef _CopyDescription() const noexcept override;
+	CFStringRef _Nonnull _CopyDescription() const noexcept override;
 };
 
 } /* namespace SFB */

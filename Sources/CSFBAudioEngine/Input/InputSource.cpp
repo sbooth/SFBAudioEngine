@@ -188,15 +188,20 @@ void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
 		throw std::logic_error("Seeking not supported");
 	}
 
-	const auto pos = _Position();
 	const auto len = _Length();
 
 	switch(whence) {
-#if false
-		case SeekAnchor::start: 	/* unchanged */	break;
-#endif
-		case SeekAnchor::current: 	offset += pos; 	break;
-		case SeekAnchor::end:		offset += len; 	break;
+		case SeekAnchor::start:
+			/* unchanged */
+			break;
+
+		case SeekAnchor::current:
+			offset += _Position();
+			break;
+
+		case SeekAnchor::end:
+			offset += len;
+			break;
 	}
 
 	if(offset < 0 || offset > len) {

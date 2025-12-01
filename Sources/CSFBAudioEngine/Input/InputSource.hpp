@@ -43,42 +43,52 @@ public:
 	/// Returns the URL, if any, of the input source.
 	CFURLRef _Nullable GetURL() const noexcept 	{ return url_; }
 
-	// Opening and closing
+	// MARK: Opening and closing
+
 	/// Opens the input source.
 	void Open();
+
 	/// Closes the input source.
 	void Close();
+
 	/// Returns `true` if the input source is open.
 	bool IsOpen() const noexcept 	{ return isOpen_; }
 
-	// Reading
+	// MARK: Reading
+
 	/// Reads up to `count` bytes from the input source into `buffer` and returns the number of bytes read.
 	int64_t Read(void * _Nonnull buffer, int64_t count);
+
 	/// Reads and returns up to `count` bytes from the input source in a `CFData` object.
 	CFDataRef _Nullable CopyData(int64_t count);
+
 	/// Reads and returns up to `count` bytes from the input source in a `std::vector` object.
 	std::vector<uint8_t> ReadBlock(std::vector<uint8_t>::size_type count);
 
-	// Position
+	// MARK: Position
+
 	/// Returns `true` if the input source is at the end of input.
 	bool AtEOF() const;
+
 	/// Returns the current read position of the input source in bytes.
 	int64_t Position() const;
+
 	/// Returns the number of bytes in the input source.
 	int64_t Length() const;
 
-	// Seeking
+	// MARK: Seeking
+
 	/// Returns `true` if the input source is seekable.
 	bool SupportsSeeking() const noexcept;
+
 	/// Possible seek anchor points.
 	enum class SeekAnchor { start, current, end, };
+
 	/// Seeks to `offset` bytes relative to `whence`.
 	void SeekToOffset(int64_t offset, SeekAnchor whence = SeekAnchor::start);
 
-	/// Returns a description of the input source.
-	CFStringRef CopyDescription() const noexcept;
+	// MARK: Helpers
 
-	// Helpers
 	/// Reads and returns a value from the input source.
 	template <typename V, typename = std::enable_if_t<std::is_trivially_copyable_v<V> && std::is_trivially_default_constructible_v<V>>>
 	V ReadValue()
@@ -139,6 +149,11 @@ public:
 	template <typename S, typename = std::enable_if_t<std::is_same_v<S, std::int16_t> || std::is_same_v<S, std::int32_t> || std::is_same_v<S, std::int64_t>>>
 	S ReadSigned(ByteOrder order = ByteOrder::host) 	{ return std::make_signed(ReadUnsigned<std::make_unsigned<S>>(order)); }
 
+	// MARK: Debugging
+
+	/// Returns a description of the input source.
+	CFStringRef _Nonnull CopyDescription() const noexcept;
+
 protected:
 	/// The shared log for all `InputSource` instances.
 	static const os_log_t _Nonnull sLog;
@@ -156,11 +171,23 @@ private:
 	virtual bool _AtEOF() const = 0;
 	virtual int64_t _Position() const = 0;
 	virtual int64_t _Length() const = 0;
+
 	// Optional seeking support
-	virtual bool _SupportsSeeking() const noexcept 			{ return false; }
-	virtual void _SeekToPosition(int64_t position) 			{ throw std::logic_error("Seeking not supported"); }
+	virtual bool _SupportsSeeking() const noexcept
+	{
+		return false;
+	}
+
+	virtual void _SeekToPosition(int64_t position)
+	{
+		throw std::logic_error("Seeking not supported");
+	}
+
 	// Optional description
-	virtual CFStringRef _CopyDescription() const noexcept 	{ return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this); }
+	virtual CFStringRef _Nonnull _CopyDescription() const noexcept
+	{
+		return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this);
+	}
 
 	/// `true` if the input source is open.
 	bool isOpen_ {false};

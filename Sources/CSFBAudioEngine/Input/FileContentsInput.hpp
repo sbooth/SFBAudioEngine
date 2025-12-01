@@ -27,7 +27,7 @@ public:
 private:
 	void _Open() override;
 	void _Close() noexcept override;
-	CFStringRef _CopyDescription() const noexcept override;
+	CFStringRef _Nonnull _CopyDescription() const noexcept override;
 };
 
 } /* namespace SFB */
