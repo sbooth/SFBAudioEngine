@@ -450,7 +450,8 @@ SFB::AudioPlayer::Decoder SFB::AudioPlayer::PopDecoderFromInternalQueue() noexce
 		decoder = queuedDecoders_.front();
 		queuedDecoders_.pop_front();
 	}
-	os_log_info(log_, "Popped %{public}@", decoder);
+	if(decoder)
+		os_log_info(log_, "Popped %{public}@", decoder);
 	return decoder;
 }
 
@@ -918,7 +919,7 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 			return;
 
 		// Dequeue the next decoder
-		if(id<SFBPCMDecoding> decoder = PopDecoderFromInternalQueue(); decoder) {
+		if(Decoder decoder = PopDecoderFromInternalQueue(); decoder) {
 			NSError *error = nil;
 			if(!ConfigureForAndEnqueueDecoder(decoder, false, &error)) {
 				if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
