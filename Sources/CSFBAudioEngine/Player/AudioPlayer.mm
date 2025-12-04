@@ -153,6 +153,9 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		return result;
 	};
 
+	// Ensure only one decoder can be enqueued at a time
+	std::lock_guard lock{lock_};
+
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
 	if(forImmediatePlayback)
 		return configureForAndEnqueueDecoder(true);
@@ -465,6 +468,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	// AVAudioEngine posts this notification from a dedicated queue
 	os_log_debug(log_, "Received AVAudioEngineConfigurationChangeNotification");
 
+	std::unique_lock lock{lock_};
+
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
 	const bool engineWasRunning = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning);
@@ -477,6 +482,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 	// Force an update of the audio processing graph
 	if(!ConfigureProcessingGraphForFormat(playerNode_->_node->RenderingFormat(), true)) {
+		lock.unlock();
 		os_log_error(log_, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
 		// The graph is not in a working state
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
@@ -501,6 +507,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		if(playerNodeWasPlaying)
 			playerNode_->_node->Play();
 	}
+
+	lock.unlock();
 
 	if((engineWasRunning != static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != playerNode_->_node->IsPlaying()) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:PlaybackState()];
@@ -591,6 +599,7 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 {
 #if DEBUG
 	assert(decoder != nil);
+	lock_.assert_owner();
 #endif /* DEBUG */
 
 	// Attempt to preserve the playback state
@@ -611,10 +620,8 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	if(clearQueueAndReset)
 		ClearInternalDecoderQueue();
 
-	const auto success = playerNode_->_node->EnqueueDecoder(decoder, clearQueueAndReset, error);
-
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
-	if(!success) {
+	if(!playerNode_->_node->EnqueueDecoder(decoder, clearQueueAndReset, error)) {
 		SetNowPlaying(nil);
 		return false;
 	}
@@ -647,6 +654,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 {
 #if DEBUG
 	assert(format != nil);
+	lock_.assert_owner();
 #endif /* DEBUG */
 
 	// AudioPlayerNode requires the standard format
@@ -921,7 +929,7 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 		// Dequeue the next decoder
 		if(Decoder decoder = PopDecoderFromInternalQueue(); decoder) {
 			NSError *error = nil;
-			if(!ConfigureForAndEnqueueDecoder(decoder, false, &error)) {
+			if(![&] {std::lock_guard lock{lock_}; return ConfigureForAndEnqueueDecoder(decoder, false, &error); }()) {
 				if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[player_.delegate audioPlayer:player_ encounteredError:error];
 			}
