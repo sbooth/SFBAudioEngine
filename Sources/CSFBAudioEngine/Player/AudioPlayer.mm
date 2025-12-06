@@ -483,6 +483,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		std::lock_guard lock{lock_};
 		return ConfigureProcessingGraphForFormat(playerNode_->_node->RenderingFormat(), true);
 	}();
+
 	if(!success) {
 		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
 		// The graph is not in a working state
@@ -932,6 +933,7 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 				std::lock_guard lock{lock_};
 				return ConfigureForAndEnqueueDecoder(decoder, false, &error);
 			}();
+
 			if(!success) {
 				if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[player_.delegate audioPlayer:player_ encounteredError:error];
