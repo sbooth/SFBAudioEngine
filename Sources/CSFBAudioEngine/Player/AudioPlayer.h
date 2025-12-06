@@ -45,6 +45,8 @@ private:
 
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode						*playerNode_ 		{nil};
+	/// Lock used to protect access to `playerNode_`
+	mutable CXXUnfairLock::UnfairLock 		playerNodeLock_;
 
 	/// Decoders enqueued for non-gapless playback
 	std::deque<Decoder>						queuedDecoders_;
@@ -81,17 +83,22 @@ public:
 #if DEBUG
 		assert(format != nil);
 #endif /* DEBUG */
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SupportsFormat(format);
 	}
 
 	void ClearQueue() noexcept
 	{
-		playerNode_->_node->ClearQueue();
+		{
+			std::lock_guard lock(playerNodeLock_);
+			playerNode_->_node->ClearQueue();
+		}
 		ClearInternalDecoderQueue();
 	}
 
 	bool QueueIsEmpty() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
 	}
 
@@ -111,25 +118,34 @@ public:
 
 	bool PlayerNodeIsPlaying() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->IsPlaying();
 	}
 
 	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
 	{
-		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))
+		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+			std::lock_guard lock(playerNodeLock_);
 			return playerNode_->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		}
 		else
 			return SFBAudioPlayerPlaybackStateStopped;
 	}
 
 	bool IsPlaying() const noexcept
 	{
-		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && playerNode_->_node->IsPlaying();
+		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+			return false;
+		std::lock_guard lock(playerNodeLock_);
+		return playerNode_->_node->IsPlaying();
 	}
 
 	bool IsPaused() const noexcept
 	{
-		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !playerNode_->_node->IsPlaying();
+		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+			return false;
+		std::lock_guard lock(playerNodeLock_);
+		return !playerNode_->_node->IsPlaying();
 	}
 
 	bool IsStopped() const noexcept
@@ -139,11 +155,13 @@ public:
 
 	bool IsReady() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->IsReady();
 	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->CurrentDecoder();
 	}
 
@@ -161,16 +179,19 @@ public:
 
 	SFBPlaybackPosition PlaybackPosition() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->PlaybackPosition();
 	}
 
 	SFBPlaybackTime PlaybackTime() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->PlaybackTime();
 	}
 
 	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 	}
 
@@ -178,31 +199,37 @@ public:
 
 	bool SeekForward(NSTimeInterval secondsToSkip) noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SeekForward(secondsToSkip);
 	}
 	
 	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SeekBackward(secondsToSkip);
 	}
 
 	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SeekToTime(timeInSeconds);
 	}
 
 	bool SeekToPosition(double position) noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SeekToPosition(position);
 	}
 
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SeekToFrame(frame);
 	}
 
 	bool SupportsSeeking() const noexcept
 	{
+		std::lock_guard lock(playerNodeLock_);
 		return playerNode_->_node->SupportsSeeking();
 	}
 
@@ -229,6 +256,7 @@ public:
 
 	SFBAudioPlayerNode * GetPlayerNode() const noexcept
 	{
+		// FIXME: Should there be a WithPlayerNode(^(SFBAudioPlayerNode *node)) method?
 		return playerNode_;
 	}
 
@@ -287,13 +315,11 @@ private:
 	bool ConfigureForAndEnqueueDecoder(Decoder _Nonnull decoder, bool clearQueueAndReset, NSError **error) noexcept;
 
 	/// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
-	///
-	/// This method does nothing if the current rendering format is equal to `format`
-	/// - important: This stops the audio engine if reconfiguration is necessary
+	/// - important: This stops the audio engine
 	/// - parameter format: The desired audio format
-	/// - parameter forceUpdate: Whether the graph should be rebuilt even if the current rendering format is equal to `format`
+	/// - parameter isFormatChange: `true` if `format` is not equal to the player node's rendering format
 	/// - returns: `true` if the processing graph was successfully configured
-	bool ConfigureProcessingGraphForFormat(AVAudioFormat * _Nonnull format, bool forceUpdate) noexcept;
+	bool ConfigureProcessingGraphForFormat(AVAudioFormat * _Nonnull format, bool isFormatChange) noexcept;
 
 	void HandleDecodingStarted(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
 	void HandleDecodingComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
