@@ -46,6 +46,9 @@ private:
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode						*playerNode_ 		{nil};
 
+	/// The lock used to serialize enqueues and engine configuration changes
+	mutable CXXUnfairLock::UnfairLock 		lock_;
+
 	/// Decoders enqueued for non-gapless playback
 	std::deque<Decoder>						queuedDecoders_;
 	/// The lock used to protect access to `queuedDecoders_`
