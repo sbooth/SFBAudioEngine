@@ -172,7 +172,7 @@ public:
 	bool IsReady() const noexcept
 	{
 		std::lock_guard lock(decoderLock_);
-		return GetFirstDecoderStateWithRenderingNotComplete() != nullptr;
+		return FirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
 	// MARK: - Playback Properties
@@ -293,20 +293,19 @@ private:
 	// MARK: - Active Decoder Management
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
-	DecoderState * const _Nullable GetFirstDecoderStateWithDecodingNotComplete() const noexcept;
+	DecoderState * const _Nullable FirstDecoderStateWithDecodingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed rendering
-	DecoderState * const _Nullable GetFirstDecoderStateWithRenderingNotComplete() const noexcept;
+	DecoderState * const _Nullable FirstDecoderStateWithRenderingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
-	DecoderState * const _Nullable GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
+	DecoderState * const _Nullable FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
-	DecoderState * const _Nullable GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
+	DecoderState * const _Nullable DecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
 	/// Removes the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
 	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
-
 };
 
 } /* namespace SFB */
