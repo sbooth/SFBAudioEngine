@@ -537,10 +537,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
 		// Restart the player node if needed
-		if(playerNodeWasPlaying) {
-			std::shared_lock lock{playerNodeMutex_};
+		if(playerNodeWasPlaying)
 			playerNode_->_node->Play();
-		}
 	}
 
 	if((engineWasRunning != static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != playerNode_->_node->IsPlaying()) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
