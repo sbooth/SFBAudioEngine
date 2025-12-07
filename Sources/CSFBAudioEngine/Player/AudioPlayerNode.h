@@ -102,12 +102,14 @@ private:
 
 public:
 	AudioPlayerNode(AVAudioFormat * _Nonnull format, uint32_t ringBufferSize);
-	~AudioPlayerNode() noexcept;
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
-	AudioPlayerNode(AudioPlayerNode&&) = delete;
 	AudioPlayerNode& operator=(const AudioPlayerNode&) = delete;
-	AudioPlayerNode& operator=(AudioPlayerNode&&) = delete;
+
+//	AudioPlayerNode(AudioPlayerNode&&) = delete;
+//	AudioPlayerNode& operator=(AudioPlayerNode&&) = delete;
+
+	~AudioPlayerNode() noexcept;
 
 	// MARK: - Queue Management
 
