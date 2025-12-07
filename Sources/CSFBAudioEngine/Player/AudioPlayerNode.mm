@@ -933,7 +933,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 			bytesWritten += n;
 		}
 		// Write to wvec.second
-		if(bytesRemaining > 0){
+		if(bytesRemaining > 0) {
 			const auto n = bytesRemaining;
 			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.buffer_) + (bytesWritten - wvec.first.capacity_)),
 						arg,
@@ -1309,7 +1309,7 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::FirstDecoderSta
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
 		const bool decodingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete);
@@ -1326,7 +1326,7 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::FirstDecoderSta
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
 		const bool renderingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
@@ -1343,7 +1343,7 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::FirstDecoderSta
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState) {
 		if(decoderState->sequenceNumber_ <= sequenceNumber)
 			return false;
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
@@ -1362,7 +1362,7 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::DecoderStateWit
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState) {
 		return decoderState->sequenceNumber_ == sequenceNumber;
 	});
 	if(iter == activeDecoders_.cend())
@@ -1376,7 +1376,7 @@ bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t s
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState) {
 		return decoderState->sequenceNumber_ == sequenceNumber;
 	});
 	if(iter == activeDecoders_.cend())
