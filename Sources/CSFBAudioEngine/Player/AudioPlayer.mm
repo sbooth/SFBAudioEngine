@@ -475,9 +475,9 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 	playerNode_->_node->Pause();
 
-	// Force an update of the audio processing graph
-	if(!ConfigureProcessingGraphForFormat(playerNode_->_node->RenderingFormat(), true)) {
-		os_log_error(log_, "Unable to create audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
+	// Update the audio processing graph
+	if(!ConfigureProcessingGraph(playerNode_->_node->RenderingFormat(), false)) {
+		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
 		// The graph is not in a working state
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
@@ -490,8 +490,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	if(engineWasRunning) {
 		if(NSError *error = nil; ![engine_ startAndReturnError:&error]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", error);
-//			if([mPlayer.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-//				[mPlayer.delegate audioPlayer:mPlayer encounteredError:error];
+//			if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+//				[player_.delegate audioPlayer:player_ encounteredError:error];
 			return;
 		}
 
@@ -600,7 +600,19 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	// If the current player node doesn't support the decoder's format (required for gapless join),
 	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 	if(auto format = decoder.processingFormat; !playerNode_->_node->SupportsFormat(format)) {
-		if(!ConfigureProcessingGraphForFormat(format, false)) {
+		// AudioPlayerNode requires the standard format
+		if(!format.isStandard) {
+			AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
+			if(!standardEquivalentFormat) {
+				os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
+				return false;
+			}
+			format = standardEquivalentFormat;
+		}
+
+		if(!ConfigureProcessingGraph(format, true)) {
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			SetNowPlaying(nil);
@@ -611,18 +623,15 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	if(clearQueueAndReset)
 		ClearInternalDecoderQueue();
 
-	const auto success = playerNode_->_node->EnqueueDecoder(decoder, clearQueueAndReset, error);
-
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
-	if(!success) {
+	if(!playerNode_->_node->EnqueueDecoder(decoder, clearQueueAndReset, error)) {
 		SetNowPlaying(nil);
 		return false;
 	}
 
-	// AVAudioEngine may have been stopped in `ConfigureProcessingGraphForFormat()`
-	// If this is the case and it was previously running, restart it and the player node
-	// as appropriate
-	if(engineWasRunning && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
+	// AVAudioEngine is stopped in `ConfigureProcessingGraph()`
+	// If it was previously running, restart it and the player node as appropriate
+	if(engineWasRunning /*&& !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))*/) {
 		if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", err);
 			if(error)
@@ -643,25 +652,17 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	return true;
 }
 
-bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, bool forceUpdate) noexcept
+bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool replacePlayerNode) noexcept
 {
 #if DEBUG
 	assert(format != nil);
+	assert(format.isStandard);
+	assert(replacePlayerNode || [format isEqual:playerNode_->_node->RenderingFormat()]);
 #endif /* DEBUG */
 
-	// AudioPlayerNode requires the standard format
-	if(!format.isStandard) {
-		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
-		if(!standardEquivalentFormat) {
-			os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
-			return false;
-		}
-		format = standardEquivalentFormat;
-	}
-
-	const auto formatsEqual = [format isEqual:playerNode_->_node->RenderingFormat()];
-	if(formatsEqual && !forceUpdate)
-		return true;
+	SFBAudioPlayerNode *playerNode = nil;
+	if(replacePlayerNode && !(playerNode = CreatePlayerNode(format)))
+		return false;
 
 	// Even if the engine isn't running, call stop to force release of any render resources
 	// Empirically this is necessary when transitioning between formats with different
@@ -671,11 +672,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphForFormat(AVAudioFormat *format, 
 
 	if(playerNode_->_node->IsPlaying())
 		playerNode_->_node->Stop();
-
-	// Avoid creating a new AudioPlayerNode if not necessary
-	SFBAudioPlayerNode *playerNode = nil;
-	if(!formatsEqual && !(playerNode = CreatePlayerNode(format)))
-		return false;
 
 	AVAudioOutputNode *outputNode = engine_.outputNode;
 	AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
