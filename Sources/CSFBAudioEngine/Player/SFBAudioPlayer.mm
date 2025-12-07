@@ -305,7 +305,7 @@
 	return _player->GetAudioEngine();
 }
 
-- (SFBAudioPlayerNode *)audioPlayerNode
+- (SFBAudioPlayerNode *)playerNode
 {
 	return _player->GetPlayerNode();
 }
