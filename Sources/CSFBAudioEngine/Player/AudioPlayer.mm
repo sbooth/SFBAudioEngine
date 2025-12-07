@@ -168,7 +168,10 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	// would result in playback order A, AA, B
 
 	if(InternalDecoderQueueIsEmpty()) {
-		std::shared_lock lock{playerNodeMutex_};
+		// Even though the player node is being accessed it isn't necessary to (shared) lock
+		// `playerNodeMutex_` because `lock_` is already taken and protects
+		// any outside modifications that might be made to the player node by additional
+		// enqueues or audio engine configuration changes
 
 		// Enqueue the decoder on playerNode_ if the decoder's processing format is supported
 		if(playerNode_->_node->SupportsFormat(decoder.processingFormat)) {
@@ -179,13 +182,9 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 			return result;
 		}
 
-		const bool playerNodeHasDecoder = playerNode_->_node->CurrentDecoder();
-
-		lock.unlock();
-
 		// Reconfigure the audio processing graph for the decoder's processing format
 		// only if the player node does not have a current decoder
-		if(!playerNodeHasDecoder)
+		if(!playerNode_->_node->CurrentDecoder())
 			return configureForAndEnqueueDecoder(false);
 
 		// playerNode_ has a current decoder; fall through and push the decoder to the internal queue
@@ -511,7 +510,6 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	const auto playerNodeWasPlaying = playerNode_->_node->IsPlaying();
 
 	playerNode_->_node->Pause();
-	AVAudioFormat *renderingFormat = playerNode_->_node->RenderingFormat();
 
 	// Update the audio processing graph
 	const auto success = [&] {
@@ -522,7 +520,6 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	if(!success) {
 		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
 		// The graph is not in a working state
-		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(renderingFormat));
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorCodeFormatNotSupported userInfo:nil];
 			[player_.delegate audioPlayer:player_ encounteredError:error];
@@ -638,8 +635,6 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 	lock_.assert_owner();
 #endif /* DEBUG */
 
-	std::shared_lock lock{playerNodeMutex_};
-
 	// Attempt to preserve the playback state
 	const bool engineWasRunning = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning);
 	const auto playerNodeWasPlaying = playerNode_->_node->IsPlaying();
@@ -712,8 +707,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 	if(replacePlayerNode && !(playerNode = CreatePlayerNode(format)))
 		return false;
 
-	std::shared_lock lock{playerNodeMutex_};
-
 	// Even if the engine isn't running, call stop to force release of any render resources
 	// Empirically this is necessary when transitioning between formats with different
 	// channel counts, although it seems that it shouldn't be
@@ -752,14 +745,11 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:playerNode_ outputBus:0] firstObject];
 		[engine_ detachNode:playerNode_];
 
-		lock.unlock();
 		{
-			// Critical section- obtain write lock
-			// TODO: Upgradable lock
-			std::lock_guard wlock{playerNodeMutex_};
+			// Obtain a write lock for the player node in case any reads are in progress
+			std::lock_guard lock{playerNodeMutex_};
 			playerNode_ = playerNode;
 		}
-		lock.lock();
 		[engine_ attachNode:playerNode_];
 
 		// Reconnect the player node to the next node in the processing chain
