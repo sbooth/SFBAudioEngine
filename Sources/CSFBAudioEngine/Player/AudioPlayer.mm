@@ -738,9 +738,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 		[engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
 	}
 
-	SFBAudioPlayerNode *playerNodeToDealloc = nil;
 	if(playerNode) {
-		playerNodeToDealloc = playerNode_;
+		SFBAudioPlayerNode *playerNodeToDealloc = playerNode_;
 
 		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:playerNode_ outputBus:0] firstObject];
 		[engine_ detachNode:playerNode_];
@@ -766,6 +765,18 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 				[engine_ connect:playerNode_ to:playerNodeOutputConnectionPoint.node format:format];
 		} else
 			[engine_ connect:playerNode_ to:mixerNode format:format];
+
+		// When an audio player node is deallocated the destructor synchronously waits
+		// for decoder cancelation (if there is an active decoder) and then for any
+		// final events to be processed and event notification blocks called.
+		// The potential therefore exists to block the calling thread for a perceptible amount
+		// of time, especially if the block calls take longer than ideal.
+		//
+		// Assuming there are no external references to the audio player node,
+		// setting it to nil here sends -dealloc
+		//
+		// N.B. If the player node lock is held a deadlock will occur
+		playerNodeToDealloc = nil;
 	}
 
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
@@ -802,18 +813,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 #endif /* DEBUG */
 
 	[engine_ prepare];
-
-	// When an audio player node is deallocated the destructor synchronously waits
-	// for decoder cancelation (if there is an active decoder) and then for any
-	// final events to be processed and event notification blocks called.
-	// The potential therefore exists to block the calling thread for a perceptible amount
-	// of time, especially if the block calls take longer than ideal.
-	//
-	// Assuming there are no external references to the audio player node,
-	// setting it to nil here sends -dealloc
-	//
-	// N.B. If the player node lock is held a deadlock will occur
-	playerNodeToDealloc = nil;
 
 	return true;
 }
