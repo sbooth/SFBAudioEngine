@@ -225,12 +225,12 @@ public:
 
 	// MARK: - AVAudioEngine
 
-	AVAudioEngine * GetAudioEngine() const noexcept
+	AVAudioEngine * AudioEngine() const noexcept
 	{
 		return engine_;
 	}
 
-	SFBAudioPlayerNode * GetPlayerNode() const noexcept
+	SFBAudioPlayerNode * PlayerNode() const noexcept
 	{
 		return playerNode_;
 	}
