@@ -638,9 +638,9 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 		return false;
 	}
 
-	// AVAudioEngine is stopped in `ConfigureProcessingGraph()`
+	// AVAudioEngine will be stopped if it was reconfigured
 	// If it was previously running, restart it and the player node as appropriate
-	if(engineWasRunning /*&& !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))*/) {
+	if(engineWasRunning && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
 		if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", err);
 			if(error)
