@@ -289,14 +289,12 @@ private:
 	/// - returns: `true` if the player was successfully configured
 	bool ConfigureForAndEnqueueDecoder(Decoder _Nonnull decoder, bool clearQueueAndReset, NSError **error) noexcept;
 
-	/// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if necessary
-	///
-	/// This method does nothing if the current rendering format is equal to `format`
-	/// - important: This stops the audio engine if reconfiguration is necessary
+	/// Configures the audio processing graph for playback of audio with `format`, replacing the audio player node if `replacePlayerNode` is true
+	/// - important: This stops the audio engine
 	/// - parameter format: The desired audio format
-	/// - parameter forceUpdate: Whether the graph should be rebuilt even if the current rendering format is equal to `format`
+	/// - parameter replacePlayerNode: Whether the audio player node driving the graph should be replaced
 	/// - returns: `true` if the processing graph was successfully configured
-	bool ConfigureProcessingGraphForFormat(AVAudioFormat * _Nonnull format, bool forceUpdate) noexcept;
+	bool ConfigureProcessingGraph(AVAudioFormat * _Nonnull format, bool replacePlayerNode) noexcept;
 
 	void HandleDecodingStarted(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
 	void HandleDecodingComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
