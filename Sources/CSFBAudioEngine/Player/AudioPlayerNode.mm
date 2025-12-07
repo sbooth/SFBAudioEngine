@@ -447,7 +447,7 @@ bool SFB::AudioPlayerNode::RemoveDecoderFromQueue(Decoder decoder) noexcept
 SFB::AudioPlayerNode::Decoder SFB::AudioPlayerNode::CurrentDecoder() const noexcept
 {
 	std::lock_guard lock(decoderLock_);
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return nil;
 	return decoderState->decoder_;
@@ -458,13 +458,13 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 	std::lock_guard lock(decoderLock_);
 
 	// Cancel all active decoders in sequence
-	if(auto decoderState = GetFirstDecoderStateWithRenderingNotComplete(); decoderState) {
+	if(auto decoderState = FirstDecoderStateWithRenderingNotComplete(); decoderState) {
 		decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
 		if(cancelAllActive) {
-			decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+			decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			while(decoderState) {
 				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-				decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			}
 		}
 
@@ -477,7 +477,7 @@ void SFB::AudioPlayerNode::CancelActiveDecoders(bool cancelAllActive) noexcept
 SFBPlaybackPosition SFB::AudioPlayerNode::PlaybackPosition() const noexcept
 {
 	std::lock_guard lock(decoderLock_);
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return SFBInvalidPlaybackPosition;
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
@@ -487,7 +487,7 @@ SFBPlaybackTime SFB::AudioPlayerNode::PlaybackTime() const noexcept
 {
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return SFBInvalidPlaybackTime;
 
@@ -510,7 +510,7 @@ bool SFB::AudioPlayerNode::GetPlaybackPositionAndTime(SFBPlaybackPosition *playb
 {
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState) {
 		if(playbackPosition)
 			*playbackPosition = SFBInvalidPlaybackPosition;
@@ -546,7 +546,7 @@ bool SFB::AudioPlayerNode::SeekForward(NSTimeInterval secondsToSkip) noexcept
 
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -571,7 +571,7 @@ bool SFB::AudioPlayerNode::SeekBackward(NSTimeInterval secondsToSkip) noexcept
 
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -595,7 +595,7 @@ bool SFB::AudioPlayerNode::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -621,7 +621,7 @@ bool SFB::AudioPlayerNode::SeekToPosition(double position) noexcept
 
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -641,7 +641,7 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 
 	std::lock_guard lock(decoderLock_);
 
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -658,7 +658,7 @@ bool SFB::AudioPlayerNode::SeekToFrame(AVAudioFramePosition frame) noexcept
 bool SFB::AudioPlayerNode::SupportsSeeking() const noexcept
 {
 	std::lock_guard lock(decoderLock_);
-	const auto decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return false;
 	return decoderState->decoder_.supportsSeeking;
@@ -701,7 +701,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		// Get the earliest decoder state that has not completed rendering
 		{
 			std::lock_guard lock(decoderLock_);
-			decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+			decoderState = FirstDecoderStateWithRenderingNotComplete();
 
 			// Process cancelations
 			while(decoderState && (decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested))) {
@@ -717,7 +717,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 				else
 					os_log_fault(log_, "Error writing decoder canceled event");
 
-				decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			}
 		}
 
@@ -741,7 +741,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 				DecoderState *nextDecoderState = nullptr;
 				{
 					std::lock_guard lock(decoderLock_);
-					nextDecoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+					nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 				}
 
 				// Rewind ensuing decoder states if possible to avoid discarding frames
@@ -760,7 +760,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 					{
 						std::lock_guard lock(decoderLock_);
-						nextDecoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(nextDecoderState->sequenceNumber_);
+						nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(nextDecoderState->sequenceNumber_);
 					}
 				}
 			}
@@ -769,7 +769,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		// Get the earliest decoder state that has not completed decoding
 		{
 			std::lock_guard lock(decoderLock_);
-			decoderState = GetFirstDecoderStateWithDecodingNotComplete();
+			decoderState = FirstDecoderStateWithDecodingNotComplete();
 		}
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
@@ -933,7 +933,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 			bytesWritten += n;
 		}
 		// Write to wvec.second
-		if(bytesRemaining > 0){
+		if(bytesRemaining > 0) {
 			const auto n = bytesRemaining;
 			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.buffer_) + (bytesWritten - wvec.first.capacity_)),
 						arg,
@@ -1071,7 +1071,7 @@ void SFB::AudioPlayerNode::ProcessDecodingEvent(const DecodingEventHeader& heade
 
 				{
 					std::lock_guard lock(decoderLock_);
-					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
 					if(!decoderState) {
 						os_log_fault(log_, "Decoder state with sequence number %llu missing for decoding started event", decoderSequenceNumber);
 						break;
@@ -1091,7 +1091,7 @@ void SFB::AudioPlayerNode::ProcessDecodingEvent(const DecodingEventHeader& heade
 
 				{
 					std::lock_guard lock(decoderLock_);
-					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
 					if(!decoderState) {
 						os_log_fault(log_, "Decoder state with sequence number %llu missing for decoding complete event", decoderSequenceNumber);
 						break;
@@ -1112,7 +1112,7 @@ void SFB::AudioPlayerNode::ProcessDecodingEvent(const DecodingEventHeader& heade
 
 				{
 					std::lock_guard lock(decoderLock_);
-					const auto decoderState = GetDecoderStateWithSequenceNumber(decoderSequenceNumber);
+					const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
 					if(!decoderState) {
 						os_log_fault(log_, "Decoder state with sequence number %llu missing for decoder canceled event", decoderSequenceNumber);
 						break;
@@ -1194,9 +1194,9 @@ void SFB::AudioPlayerNode::ProcessRenderingEvent(const RenderingEventHeader& hea
 					{
 						std::lock_guard lock(decoderLock_);
 						if(decoderState)
-							decoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+							decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 						else
-							decoderState = GetFirstDecoderStateWithRenderingNotComplete();
+							decoderState = FirstDecoderStateWithRenderingNotComplete();
 						if(!decoderState)
 							break;
 
@@ -1232,7 +1232,7 @@ void SFB::AudioPlayerNode::ProcessRenderingEvent(const RenderingEventHeader& hea
 							completeDecoder = decoderState->decoder_;
 
 							// Check for a decoder transition
-							if(const auto nextDecoderState = GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_); nextDecoderState) {
+							if(const auto nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_); nextDecoderState) {
 								const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
 								const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
 
@@ -1303,13 +1303,13 @@ void SFB::AudioPlayerNode::ProcessRenderingEvent(const RenderingEventHeader& hea
 
 // MARK: - Active Decoder Management
 
-SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetFirstDecoderStateWithDecodingNotComplete() const noexcept
+SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::FirstDecoderStateWithDecodingNotComplete() const noexcept
 {
 #if DEBUG
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
 		const bool decodingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete);
@@ -1320,13 +1320,13 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetFirstDecoder
 	return iter->get();
 }
 
-SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetFirstDecoderStateWithRenderingNotComplete() const noexcept
+SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::FirstDecoderStateWithRenderingNotComplete() const noexcept
 {
 #if DEBUG
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [](const auto& decoderState) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
 		const bool renderingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
@@ -1337,13 +1337,13 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetFirstDecoder
 	return iter->get();
 }
 
-SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetFirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept
+SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept
 {
 #if DEBUG
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState) {
 		if(decoderState->sequenceNumber_ <= sequenceNumber)
 			return false;
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
@@ -1356,13 +1356,13 @@ SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetFirstDecoder
 	return iter->get();
 }
 
-SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::GetDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept
+SFB::AudioPlayerNode::DecoderState * const SFB::AudioPlayerNode::DecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept
 {
 #if DEBUG
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState) {
 		return decoderState->sequenceNumber_ == sequenceNumber;
 	});
 	if(iter == activeDecoders_.cend())
@@ -1376,7 +1376,7 @@ bool SFB::AudioPlayerNode::DeleteDecoderStateWithSequenceNumber(const uint64_t s
 	decoderLock_.assert_owner();
 #endif /* DEBUG */
 
-	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState){
+	const auto iter = std::find_if(activeDecoders_.cbegin(), activeDecoders_.cend(), [sequenceNumber](const auto& decoderState) {
 		return decoderState->sequenceNumber_ == sequenceNumber;
 	});
 	if(iter == activeDecoders_.cend())

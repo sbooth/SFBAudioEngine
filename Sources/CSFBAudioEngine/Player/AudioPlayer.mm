@@ -459,7 +459,7 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 	os_log_with_type(log, type, "%{public}@", string);
 }
 
-// MARK: - Decoder Queue
+// MARK: - Internal Decoder Queue
 
 bool SFB::AudioPlayer::PushDecoderToInternalQueue(Decoder decoder) noexcept
 {
@@ -488,6 +488,8 @@ SFB::AudioPlayer::Decoder SFB::AudioPlayer::PopDecoderFromInternalQueue() noexce
 		os_log_info(log_, "Popped %{public}@", decoder);
 	return decoder;
 }
+
+// MARK: AVAudioEngine Notification Handling
 
 void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engine, NSDictionary *userInfo) noexcept
 {
@@ -581,6 +583,8 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	}
 }
 #endif /* TARGET_OS_IPHONE */
+
+// MARK: - Processing Graph Management
 
 SFBAudioPlayerNode * SFB::AudioPlayer::CreatePlayerNode(AVAudioFormat *format) noexcept
 {
@@ -816,6 +820,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 
 	return true;
 }
+
+// MARK: - Event Notifications
 
 void SFB::AudioPlayer::HandleDecodingStarted(const AudioPlayerNode& node, Decoder decoder) noexcept
 {
