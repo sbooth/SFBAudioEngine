@@ -502,19 +502,20 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	const bool engineWasRunning = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning);
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
+	std::shared_lock lock{playerNodeMutex_};
+
 	// Attempt to preserve the playback state
-	bool playerNodeWasPlaying, playerNodeIsPlaying;
-	AVAudioFormat *renderingFormat;
-	{
-		std::shared_lock lock{playerNodeMutex_};
-		playerNodeWasPlaying = playerNode_->_node->IsPlaying();
-		playerNode_->_node->Pause();
-		playerNodeIsPlaying = false;
-		renderingFormat = playerNode_->_node->RenderingFormat();
-	}
+	const auto playerNodeWasPlaying = playerNode_->_node->IsPlaying();
+
+	playerNode_->_node->Pause();
+	AVAudioFormat *renderingFormat = playerNode_->_node->RenderingFormat();
 
 	// Force an update of the audio processing graph
-	if(!ConfigureProcessingGraphForFormat(renderingFormat, true)) {
+	lock.unlock();
+	const auto success = ConfigureProcessingGraphForFormat(renderingFormat, true);
+	lock.lock();
+
+	if(!success) {
 		// The graph is not in a working state
 		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(renderingFormat));
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
@@ -539,11 +540,10 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		if(playerNodeWasPlaying) {
 			std::shared_lock lock{playerNodeMutex_};
 			playerNode_->_node->Play();
-			playerNodeIsPlaying = true;
 		}
 	}
 
-	if((engineWasRunning != static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != playerNodeIsPlaying) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+	if((engineWasRunning != static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) || playerNodeWasPlaying != playerNode_->_node->IsPlaying()) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:PlaybackState()];
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
