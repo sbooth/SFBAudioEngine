@@ -744,6 +744,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 
 	if(playerNode) {
 		SFBAudioPlayerNode *playerNodeToDealloc = playerNode_;
+		(void)playerNodeToDealloc;
 
 		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:playerNode_ outputBus:0] firstObject];
 		[engine_ detachNode:playerNode_];
