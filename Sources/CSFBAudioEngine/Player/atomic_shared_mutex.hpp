@@ -17,10 +17,17 @@ namespace SFB {
 
 /// A non-recursive shared mutex implemented using atomic operations.
 /// No preference is given to writers over readers.
-class atomic_shared_mutex {
+class __attribute__((capability("mutex"))) __attribute__((shared_capability("mutex"))) atomic_shared_mutex {
 public:
+	atomic_shared_mutex() noexcept = default;
+
+	atomic_shared_mutex(const atomic_shared_mutex&) = delete;
+	atomic_shared_mutex& operator=(const atomic_shared_mutex&) = delete;
+
+	~atomic_shared_mutex() noexcept = default;
+
 	/// Acquires shared ownership of the mutex, blocking if the mutex is not available.
-	void lock_shared() noexcept
+	void lock_shared() noexcept __attribute__((acquire_shared_capability()))
 	{
 		int32_t previous_state;
 		while(true) {
@@ -41,7 +48,7 @@ public:
 	}
 
 	/// Tries to acquire shared ownership of the mutex, returning true if the mutex was acquired.
-	bool try_lock_shared() noexcept
+	bool try_lock_shared() noexcept __attribute__((try_acquire_shared_capability(true)))
 	{
 		// Read the current state
 		auto previous_state = state_.load(std::memory_order_relaxed);
@@ -53,7 +60,7 @@ public:
 	}
 
 	/// Releases shared ownership of the mutex.
-	void unlock_shared() noexcept
+	void unlock_shared() noexcept __attribute__((release_shared_capability()))
 	{
 #ifndef NDEBUG
 		assert(state_.load(std::memory_order_relaxed) >= 1);
@@ -65,7 +72,7 @@ public:
 	}
 
 	/// Acquires exclusive ownership of the mutex, blocking if the mutex is not available.
-	void lock() noexcept
+	void lock() noexcept __attribute__((acquire_capability()))
 	{
 		int32_t expected = 0;
 		// Loop until the state transitions from 0 (unlocked) to -1 (writer active)
@@ -77,7 +84,7 @@ public:
 	}
 
 	/// Tries to acquire exclusive ownership of the mutex, returning true if the mutex was acquired.
-	bool try_lock() noexcept
+	bool try_lock() noexcept __attribute__((try_acquire_capability(true)))
 	{
 		int32_t expected = 0;
 		// Attempt to transition the state from 0 (unlocked) to -1 (writer active)
@@ -85,7 +92,7 @@ public:
 	}
 
 	/// Releases exclusive ownership of the mutex.
-	void unlock() noexcept
+	void unlock() noexcept __attribute__((release_capability()))
 	{
 #ifndef NDEBUG
 		assert(state_.load(std::memory_order_relaxed) == -1);
