@@ -153,6 +153,9 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		return result;
 	};
 
+	// Ensure only one decoder can be enqueued at a time
+	std::lock_guard lock{lock_};
+
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
 	if(forImmediatePlayback)
 		return configureForAndEnqueueDecoder(true);
@@ -476,7 +479,12 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	playerNode_->_node->Pause();
 
 	// Update the audio processing graph
-	if(!ConfigureProcessingGraph(playerNode_->_node->RenderingFormat(), false)) {
+	const auto success = [&] {
+		std::lock_guard lock{lock_};
+		return ConfigureProcessingGraph(playerNode_->_node->RenderingFormat(), false);
+	}();
+
+	if(!success) {
 		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(playerNode_->_node->RenderingFormat()));
 		// The graph is not in a working state
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
@@ -591,6 +599,7 @@ bool SFB::AudioPlayer::ConfigureForAndEnqueueDecoder(Decoder decoder, bool clear
 {
 #if DEBUG
 	assert(decoder != nil);
+	lock_.assert_owner();
 #endif /* DEBUG */
 
 	// Attempt to preserve the playback state
@@ -658,6 +667,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 	assert(format != nil);
 	assert(format.isStandard);
 	assert(replacePlayerNode || [format isEqual:playerNode_->_node->RenderingFormat()]);
+	lock_.assert_owner();
 #endif /* DEBUG */
 
 	SFBAudioPlayerNode *playerNode = nil;
@@ -917,7 +927,12 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(const AudioPlayerNode& node, 
 		// Dequeue the next decoder
 		if(Decoder decoder = PopDecoderFromInternalQueue(); decoder) {
 			NSError *error = nil;
-			if(!ConfigureForAndEnqueueDecoder(decoder, false, &error)) {
+			const auto success = [&] {
+				std::lock_guard lock{lock_};
+				return ConfigureForAndEnqueueDecoder(decoder, false, &error);
+			}();
+
+			if(!success) {
 				if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[player_.delegate audioPlayer:player_ encounteredError:error];
 			}
