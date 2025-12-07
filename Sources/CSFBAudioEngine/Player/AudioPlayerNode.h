@@ -105,9 +105,7 @@ public:
 	~AudioPlayerNode() noexcept;
 
 	AudioPlayerNode(const AudioPlayerNode&) = delete;
-	AudioPlayerNode(AudioPlayerNode&&) = delete;
 	AudioPlayerNode& operator=(const AudioPlayerNode&) = delete;
-	AudioPlayerNode& operator=(AudioPlayerNode&&) = delete;
 
 	// MARK: - Queue Management
 

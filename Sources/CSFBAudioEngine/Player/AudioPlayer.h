@@ -71,9 +71,7 @@ public:
 	~AudioPlayer() noexcept;
 
 	AudioPlayer(const AudioPlayer&) = delete;
-	AudioPlayer(AudioPlayer&&) = delete;
 	AudioPlayer& operator=(const AudioPlayer&) = delete;
-	AudioPlayer& operator=(AudioPlayer&&) = delete;
 
 	// MARK: - Playlist Management
 
