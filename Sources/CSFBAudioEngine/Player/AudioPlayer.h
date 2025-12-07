@@ -240,6 +240,8 @@ public:
 	void LogProcessingGraphDescription(os_log_t _Nonnull log, os_log_type_t type) const noexcept;
 
 private:
+	// MARK: - Internal Decoder Queue
+
 	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
 		/// Cached value of `_audioEngine.isRunning`
@@ -271,6 +273,8 @@ private:
 	Decoder _Nullable PopDecoderFromInternalQueue() noexcept;
 
 public:
+	// MARK: AVAudioEngine Notification Handling
+
 	/// Called to process `AVAudioEngineConfigurationChangeNotification`
 	void HandleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;
 
@@ -280,6 +284,8 @@ public:
 #endif /* TARGET_OS_IPHONE */
 
 private:
+	// MARK: - Processing Graph Management
+
 	/// Creates and returns an audio player node for `format` or `nil` on error
 	SFBAudioPlayerNode * _Nullable CreatePlayerNode(AVAudioFormat * _Nonnull format) noexcept;
 
@@ -296,12 +302,27 @@ private:
 	/// - returns: `true` if the processing graph was successfully configured
 	bool ConfigureProcessingGraph(AVAudioFormat * _Nonnull format, bool replacePlayerNode) noexcept;
 
+	// MARK: - Event Notifications
+
+	/// Called before decoding the first frame of audio from a decoder.
 	void HandleDecodingStarted(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
+
+	/// Called after decoding the final frame of audio from a decoder.
 	void HandleDecodingComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder) noexcept;
+
+	/// Called when the first audio frame from the first available decoder will render.
 	void HandleRenderingWillStart(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+
+	/// Called when a transition between rendering decoders will occur.
 	void HandleRenderingDecoderWillChange(const AudioPlayerNode& node, Decoder _Nonnull decoder, Decoder _Nonnull nextDecoder, uint64_t hostTime) noexcept;
+
+	/// Called when the final audio frame from the last available decoder will render.
 	void HandleRenderingWillComplete(const AudioPlayerNode& node, Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+
+	/// Called when the decoding and rendering process for a decoder has been canceled.
 	void HandleDecoderCanceled(const AudioPlayerNode& node, Decoder _Nonnull decoder, AVAudioFramePosition framesRendered) noexcept;
+
+	/// Called when an asynchronous error occurs.
 	void HandleAsynchronousError(const AudioPlayerNode& node, NSError * _Nonnull error) noexcept;
 };
 
