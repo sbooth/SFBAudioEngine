@@ -410,11 +410,10 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 {
 	NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
 
-	SFBAudioPlayerNode *playerNode = nil;
-	{
+	SFBAudioPlayerNode *playerNode = [&] {
 		std::shared_lock lock{playerNodeMutex_};
-		playerNode = playerNode_;
-	}
+		return playerNode_;
+	}();
 	const auto engine = engine_;
 
 	AVAudioFormat *inputFormat = playerNode.renderingFormat;
