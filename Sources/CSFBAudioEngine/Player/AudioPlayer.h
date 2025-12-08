@@ -264,7 +264,6 @@ public:
 	SFBAudioPlayerNode * PlayerNode() const noexcept
 	{
 		std::shared_lock lock{playerNodeMutex_};
-		// FIXME: Should there be a WithPlayerNode(^(SFBAudioPlayerNode *node)) method?
 		return playerNode_;
 	}
 
