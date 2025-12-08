@@ -7,6 +7,7 @@
 #pragma once
 
 #import <atomic>
+#import <cassert>
 #import <cstdint>
 
 namespace SFB {
