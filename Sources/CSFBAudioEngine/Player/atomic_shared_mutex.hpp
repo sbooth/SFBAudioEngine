@@ -67,7 +67,7 @@ public:
 		assert(state_.load(std::memory_order_relaxed) >= 1);
 #endif
 		// Decrement the reader count
-		if(auto previous_state = state_.fetch_sub(1, std::memory_order_release); previous_state == 1)
+		if(const auto previous_state = state_.fetch_sub(1, std::memory_order_release); previous_state == 1)
 			// If the last reader exited wake any waiting readers or writers
 			state_.notify_all();
 	}
