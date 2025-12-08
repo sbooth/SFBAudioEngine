@@ -31,7 +31,7 @@ public:
 	void lock_shared() noexcept __attribute__((acquire_shared_capability()))
 	{
 		int32_t previous_state;
-		while(true) {
+		for(;;) {
 			// Check the current state
 			previous_state = state_.load(std::memory_order_relaxed);
 			// A writer is active
