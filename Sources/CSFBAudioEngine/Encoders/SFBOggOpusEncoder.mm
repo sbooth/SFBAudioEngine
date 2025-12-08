@@ -324,7 +324,7 @@ int close_callback(void *user_data) noexcept
 	_enc.reset();
 	_comments.reset();
 	_frameBuffer = nil;
-	
+
 	return [super closeReturningError:error];
 }
 
