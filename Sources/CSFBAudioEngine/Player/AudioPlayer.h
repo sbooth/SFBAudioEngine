@@ -135,8 +135,7 @@ public:
 		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
 			std::shared_lock lock{playerNodeMutex_};
 			return playerNode_->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
-		}
-		else
+		} else
 			return SFBAudioPlayerPlaybackStateStopped;
 	}
 
