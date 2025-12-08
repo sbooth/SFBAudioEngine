@@ -331,6 +331,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 	_seektable = std::move(seektable);
 	_padding = std::move(padding);
 
+	_framePosition = 0;
+
 	return YES;
 }
 
