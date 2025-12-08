@@ -314,6 +314,8 @@ int close_callback(void *user_data) noexcept
 	_enc = std::move(enc);
 	_comments = std::move(comments);
 
+	_framePosition = 0;
+
 	return YES;
 }
 
@@ -321,7 +323,8 @@ int close_callback(void *user_data) noexcept
 {
 	_enc.reset();
 	_comments.reset();
-
+	_frameBuffer = nil;
+	
 	return [super closeReturningError:error];
 }
 

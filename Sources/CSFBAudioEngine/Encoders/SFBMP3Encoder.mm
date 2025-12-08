@@ -301,6 +301,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
 	_gfp = std::move(gfp);
 
+	_framePosition = 0;
+
 	return YES;
 }
 

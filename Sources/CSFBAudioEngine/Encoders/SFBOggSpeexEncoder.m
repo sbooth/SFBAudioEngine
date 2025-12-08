@@ -387,6 +387,8 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
+	_framePosition = 0;
+
 	return YES;
 }
 
@@ -403,6 +405,8 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		_preprocess = NULL;
 	}
 	ogg_stream_clear(&_os);
+
+	_frameBuffer = nil;
 
 	return [super closeReturningError:error];
 }

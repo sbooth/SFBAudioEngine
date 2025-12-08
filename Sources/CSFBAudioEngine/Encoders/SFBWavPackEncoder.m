@@ -199,6 +199,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
+	_framePosition = 0;
+
 	return YES;
 }
 
@@ -209,7 +211,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		_wpc = NULL;
 	}
 
-	_firstBlock = NULL;
+	_firstBlock = nil;
 
 	return [super closeReturningError:error];
 }

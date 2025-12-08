@@ -313,6 +313,8 @@ private:
 	outputStreamDescription.mChannelsPerFrame	= wve.nChannels;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
+	_framePosition = 0;
+
 	return YES;
 }
 
