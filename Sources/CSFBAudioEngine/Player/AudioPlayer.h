@@ -16,8 +16,7 @@
 #import <AVFAudio/AVFAudio.h>
 
 #import <CXXUnfairLock/UnfairLock.hpp>
-
-#import "SharedMutex.hpp"
+#import <CXXSharedMutex/SharedMutex.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
@@ -49,7 +48,7 @@ private:
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode						*playerNode_ 		{nil};
 	/// Shared lock used to protect access to `playerNode_`
-	mutable SharedMutex 					playerNodeMutex_;
+	mutable CXXSharedMutex::SharedMutex 	playerNodeMutex_;
 
 	/// The lock used to serialize enqueues and engine configuration changes
 	mutable CXXUnfairLock::UnfairLock 		lock_;

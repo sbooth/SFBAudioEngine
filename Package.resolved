@@ -64,6 +64,15 @@
       }
     },
     {
+      "identity" : "cxxsharedmutex",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXSharedMutex",
+      "state" : {
+        "revision" : "9de324ca10422d6532f888a1aea28c9f51dd2327",
+        "version" : "0.1.0"
+      }
+    },
+    {
       "identity" : "cxxtaglib",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
