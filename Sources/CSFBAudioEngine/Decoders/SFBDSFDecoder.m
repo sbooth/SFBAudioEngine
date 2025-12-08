@@ -244,6 +244,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		return NO;
 	}
 
+	_packetPosition = 0;
 	_packetCount = sampleCount / kSFBPCMFramesPerDSDPacket;
 	NSInteger offset;
 	if(![_inputSource getOffset:&offset error:nil]) {
