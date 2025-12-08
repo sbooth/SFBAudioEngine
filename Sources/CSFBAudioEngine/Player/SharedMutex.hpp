@@ -13,19 +13,19 @@
 namespace SFB {
 
 #ifndef __cpp_lib_atomic_wait
-#error "atomic_shared_mutex requires C++20 or later for std::atomic::wait and notify functions."
+#error "SharedMutex requires C++20 or later for std::atomic::wait and notify functions."
 #endif
 
 /// A non-recursive shared mutex implemented using atomic operations.
 /// No preference is given to writers over readers.
-class __attribute__((capability("mutex"))) __attribute__((shared_capability("mutex"))) atomic_shared_mutex {
+class __attribute__((capability("mutex"))) __attribute__((shared_capability("mutex"))) SharedMutex {
 public:
-	atomic_shared_mutex() noexcept = default;
+	SharedMutex() noexcept = default;
 
-	atomic_shared_mutex(const atomic_shared_mutex&) = delete;
-	atomic_shared_mutex& operator=(const atomic_shared_mutex&) = delete;
+	SharedMutex(const SharedMutex&) = delete;
+	SharedMutex& operator=(const SharedMutex&) = delete;
 
-	~atomic_shared_mutex() noexcept = default;
+	~SharedMutex() noexcept = default;
 
 	/// Acquires shared ownership of the mutex, blocking if the mutex is not available.
 	void lock_shared() noexcept __attribute__((acquire_shared_capability()))
