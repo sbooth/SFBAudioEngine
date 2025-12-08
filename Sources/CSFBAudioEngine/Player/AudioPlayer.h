@@ -49,7 +49,7 @@ private:
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode						*playerNode_ 		{nil};
 	/// Shared lock used to protect access to `playerNode_`
-	mutable SFB::atomic_shared_mutex 		playerNodeMutex_;
+	mutable atomic_shared_mutex 			playerNodeMutex_;
 
 	/// The lock used to serialize enqueues and engine configuration changes
 	mutable CXXUnfairLock::UnfairLock 		lock_;
