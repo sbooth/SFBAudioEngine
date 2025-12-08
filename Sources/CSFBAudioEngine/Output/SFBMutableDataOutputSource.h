@@ -9,6 +9,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBMutableDataOutputSource : SFBOutputSource
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithURL:(nullable NSURL *)url NS_UNAVAILABLE;
 @end
 

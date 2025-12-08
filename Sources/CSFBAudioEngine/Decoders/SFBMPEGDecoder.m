@@ -12,31 +12,13 @@
 
 #import "SFBMPEGDecoder.h"
 
-#import "NSData+SFBExtensions.h"
 #import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
 
 // ========================================
-// Initialization
-static void Setupmpg123(void) __attribute__ ((constructor));
-static void Setupmpg123(void)
-{
-	// What happens if this fails?
-	int result = mpg123_init();
-	if(result != MPG123_OK)
-		os_log_error(gSFBAudioDecoderLog, "Unable to initialize mpg123: %{public}s", mpg123_plain_strerror(result));
-}
-
-static void Teardownmpg123(void) __attribute__ ((destructor));
-static void Teardownmpg123(void)
-{
-	mpg123_exit();
-}
-
-// ========================================
 // Callbacks
-static ssize_t read_callback(void *iohandle, void *ptr, size_t size)
+static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read)
 {
 	NSCParameterAssert(iohandle != NULL);
 
@@ -45,7 +27,8 @@ static ssize_t read_callback(void *iohandle, void *ptr, size_t size)
 	NSInteger bytesRead;
 	if(![decoder->_inputSource readBytes:ptr length:(NSInteger)size bytesRead:&bytesRead error:nil])
 		return -1;
-	return (ssize_t)bytesRead;
+	*read = bytesRead;
+	return 0;
 }
 
 static off_t lseek_callback(void *iohandle, off_t offset, int whence)
@@ -80,6 +63,61 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		return -1;
 
 	return offset;
+}
+
+/// Returns true if @c buf appears to be an ID3v2 tag header.
+/// @warning @c buf must be at least 10 bytes in size.
+static BOOL is_id3v2_tag_header(const uint8_t *buf)
+{
+	/*
+	 An ID3v2 tag can be detected with the following pattern:
+	 $49 44 33 yy yy xx zz zz zz zz
+	 Where yy is less than $FF, xx is the 'flags' byte and zz is less than
+	 $80.
+	 */
+
+	if(buf[0] != 0x49 || buf[1] != 0x44 || buf[2] != 0x33)
+		return NO;
+	if(buf[3] >= 0xff || buf[4] >= 0xff)
+		return NO;
+	if(buf[5] & 0xf)
+		return NO;
+	if(buf[6] >= 0x80 || buf[7] >= 0x80 || buf[8] >= 0x80 || buf[9] >= 0x80)
+		return NO;
+	return YES;
+}
+
+/// Returns the total size in bytes of the ID3v2 tag with @c header.
+/// @warning @c header must be at least 10 bytes in size.
+static uint32_t id3v2_tag_total_size(const uint8_t *header)
+{
+	uint8_t flags = header[5];
+	// The size is stored as a 32-bit synchsafe integer with 28 effective bits
+	uint32_t size = (header[6] << 21) | (header[7] << 14) | (header[8] << 7) | header[9];
+	return 10 + size + (flags & 0x10 ? 10 : 0);
+}
+
+/// Searches for an MP3 sync word and minimal valid frame header in @c buf.
+static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t *buf, NSInteger len)
+{
+	NSCParameterAssert(buf != NULL);
+	NSCParameterAssert(len >= 3);
+
+	const uint8_t *loc = buf;
+	for(;;) {
+		// Search for first byte of MP3 sync word
+		loc = (const uint8_t *)memchr(loc, 0xff, len - (loc - buf) - 2);
+		if(!loc)
+			break;
+
+		// Check whether a complete MP3 sync word was found and perform a minimal check for a valid MP3 frame header
+		if((*(loc+1) & 0xe0) == 0xe0 && (*(loc+1) & 0x18) != 0x08 && (*(loc+1) & 0x06) != 0 && (*(loc+2) & 0xf0) != 0xf0 && (*(loc+2) & 0x0c) != 0x0c)
+			return YES;
+
+		loc++;
+	}
+
+	return NO;
 }
 
 @interface SFBMPEGDecoder ()
@@ -118,14 +156,73 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	NSParameterAssert(inputSource != nil);
 	NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:SFBMP3DetectionSize skipID3v2Tag:YES error:error];
-	if(!header)
+	NSInteger originalOffset;
+	if(![inputSource getOffset:&originalOffset error:error])
 		return NO;
 
-	if([header isMP3Header])
-		*formatIsSupported = SFBTernaryTruthValueTrue;
-	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
+	if(![inputSource seekToOffset:0 error:error])
+		return NO;
+
+	uint8_t buf [512];
+	NSInteger len;
+	if(![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error])
+		return NO;
+
+	NSInteger searchStartOffset = 0;
+
+	// Attempt to detect and minimally parse an ID3v2 tag header
+	if(len >= 10 && is_id3v2_tag_header(buf)) {
+		searchStartOffset = id3v2_tag_total_size(buf);
+
+		// Skip tag data
+
+		// Ensure 3 bytes are available for MP3 frame header check
+		if(searchStartOffset <= len - 3) {
+			memmove(buf, buf + searchStartOffset, len - searchStartOffset);
+			len -= searchStartOffset;
+		}
+		else {
+			if(![inputSource seekToOffset:searchStartOffset error:error])
+				return NO;
+
+			// Read next chunk
+			if(![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error])
+				return NO;
+		}
+	}
+
+	// Search for an MP3 sync word and a frame header that appears to be valid
+	for(;;) {
+		if(len < 3) {
+			*formatIsSupported = SFBTernaryTruthValueFalse;
+			break;
+		}
+
+		if(contains_mp3_sync_word_and_minimal_valid_frame_header(buf, len)) {
+			*formatIsSupported = SFBTernaryTruthValueTrue;
+			break;
+		}
+
+		// The penultimate or final byte in buf could be an undetected frame start,
+		// so copy them to the beginning to ensure a continuous search
+		memmove(buf, buf + len - 2, 2);
+		if(![inputSource readBytes:buf + 2 length:sizeof buf - 2 bytesRead:&len error:error])
+			return NO;
+		len += 2;
+
+		// Limit searches to 2 KB
+		NSInteger currentOffset;
+		if(![inputSource getOffset:&currentOffset error:error])
+			return NO;
+
+		if(currentOffset > searchStartOffset + 2048) {
+			*formatIsSupported = SFBTernaryTruthValueUnknown;
+			break;
+		}
+	}
+
+	if(![inputSource seekToOffset:originalOffset error:error])
+		return NO;
 
 	return YES;
 }
@@ -155,10 +252,10 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	}
 
 	// Force decode to floating point instead of 16-bit signed integer
-	mpg123_param(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
-	mpg123_param(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
+	mpg123_param2(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
+	mpg123_param2(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
 
-	if(mpg123_replace_reader_handle(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
+	if(mpg123_reader64(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
 		mpg123_delete(_mpg123);
 		_mpg123 = NULL;
 
@@ -227,8 +324,8 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 	sourceStreamDescription.mFormatID			= kAudioFormatMPEGLayer3;
 
-	struct mpg123_frameinfo mi;
-	if(mpg123_info(_mpg123, &mi) == MPG123_OK) {
+	struct mpg123_frameinfo2 mi;
+	if(mpg123_info2(_mpg123, &mi) == MPG123_OK) {
 		switch(mi.layer) {
 			case 1: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer1; 	break;
 			case 2: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer2; 	break;
