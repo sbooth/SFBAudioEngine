@@ -302,12 +302,12 @@
 
 - (AVAudioEngine *)audioEngine
 {
-	return _player->GetAudioEngine();
+	return _player->AudioEngine();
 }
 
-- (SFBAudioPlayerNode *)audioPlayerNode
+- (SFBAudioPlayerNode *)playerNode
 {
-	return _player->GetPlayerNode();
+	return _player->PlayerNode();
 }
 
 // MARK: - Debugging
