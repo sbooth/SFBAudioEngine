@@ -15,8 +15,8 @@
 
 #import <AVFAudio/AVFAudio.h>
 
-#import <CXXUnfairLock/UnfairLock.hpp>
 #import <CXXSharedMutex/SharedMutex.hpp>
+#import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
