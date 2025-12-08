@@ -369,6 +369,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 		mpg123_delete(_mpg123);
 		_mpg123 = NULL;
 	}
+	_buffer = nil;
 
 	return [super closeReturningError:error];
 }

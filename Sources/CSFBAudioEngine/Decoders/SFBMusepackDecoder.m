@@ -253,6 +253,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		mpc_demux_exit(_demux);
 		_demux = NULL;
 	}
+	_buffer = nil;
 
 	return [super closeReturningError:error];
 }

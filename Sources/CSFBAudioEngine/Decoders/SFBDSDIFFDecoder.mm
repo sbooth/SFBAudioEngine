@@ -693,7 +693,6 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	AVAudioFramePosition _packetPosition;
 	AVAudioFramePosition _packetCount;
 	int64_t _audioOffset;
-	AVAudioCompressedBuffer *_buffer;
 }
 @end
 

@@ -352,6 +352,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 	ogg_stream_clear(&_streamState);
 	ogg_sync_clear(&_syncState);
 
+	_buffer = nil;
+
 	return [super closeReturningError:error];
 }
 

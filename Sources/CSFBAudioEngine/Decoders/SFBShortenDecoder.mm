@@ -631,6 +631,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		delete [] _qlpc;
 		_qlpc = nullptr;
 	}
+	_frameBuffer = nil;
 
 	return [super closeReturningError:error];
 }
