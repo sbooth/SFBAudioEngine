@@ -23,6 +23,7 @@ let package = Package(
 		.package(url: "https://github.com/sbooth/CXXCoreAudio", from: "0.2.0"),
 		.package(url: "https://github.com/sbooth/CXXAudioToolbox", from: "0.1.2"),
 		.package(url: "https://github.com/sbooth/CXXRingBuffer", from: "0.2.0"),
+		.package(url: "https://github.com/sbooth/CXXSharedMutex", from: "0.1.0"),
 		.package(url: "https://github.com/sbooth/CXXUnfairLock", from: "0.1.0"),
 
 		// Standalone dependencies from source
@@ -61,6 +62,7 @@ let package = Package(
 				.product(name: "CXXAudioToolbox", package: "CXXAudioToolbox"),
 				.product(name: "CXXCoreAudio", package: "CXXCoreAudio"),
 				.product(name: "CXXRingBuffer", package: "CXXRingBuffer"),
+				.product(name: "CXXSharedMutex", package: "CXXSharedMutex"),
 				.product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
 				// Standalone dependencies
 				.product(name: "dumb", package: "CDUMB"),
