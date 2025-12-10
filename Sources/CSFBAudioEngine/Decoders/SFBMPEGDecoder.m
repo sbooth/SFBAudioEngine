@@ -285,6 +285,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 		return NO;
 	}
 
+	_framePosition = 0;
+
 	long rate;
 	int channels, encoding;
 	if(mpg123_getformat(_mpg123, &rate, &channels, &encoding) != MPG123_OK || encoding != MPG123_ENC_FLOAT_32 || channels <= 0) {
@@ -367,6 +369,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 		mpg123_delete(_mpg123);
 		_mpg123 = NULL;
 	}
+	_buffer = nil;
 
 	return [super closeReturningError:error];
 }
