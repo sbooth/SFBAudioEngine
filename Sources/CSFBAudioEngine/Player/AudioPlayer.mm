@@ -488,7 +488,7 @@ SFB::AudioPlayer::Decoder SFB::AudioPlayer::PopDecoderFromInternalQueue() noexce
 	return decoder;
 }
 
-// MARK: AVAudioEngine Notification Handling
+// MARK: - AVAudioEngine Notification Handling
 
 void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engine, NSDictionary *userInfo) noexcept
 {
