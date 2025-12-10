@@ -9,11 +9,13 @@
 #import <atomic>
 #import <deque>
 #import <memory>
+#import <shared_mutex>
 
 #import <os/log.h>
 
 #import <AVFAudio/AVFAudio.h>
 
+#import <CXXSharedMutex/SharedMutex.hpp>
 #import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
@@ -45,6 +47,8 @@ private:
 
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode						*playerNode_ 		{nil};
+	/// Shared mutex used to protect access to `playerNode_`
+	mutable CXXSharedMutex::SharedMutex 	playerNodeMutex_;
 
 	/// The lock used to serialize enqueues and engine configuration changes
 	mutable CXXUnfairLock::UnfairLock 		lock_;
@@ -86,17 +90,22 @@ public:
 #if DEBUG
 		assert(format != nil);
 #endif /* DEBUG */
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SupportsFormat(format);
 	}
 
 	void ClearQueue() noexcept
 	{
-		playerNode_->_node->ClearQueue();
+		{
+			std::shared_lock lock{playerNodeMutex_};
+			playerNode_->_node->ClearQueue();
+		}
 		ClearInternalDecoderQueue();
 	}
 
 	bool QueueIsEmpty() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->QueueIsEmpty() && InternalDecoderQueueIsEmpty();
 	}
 
@@ -116,25 +125,33 @@ public:
 
 	bool PlayerNodeIsPlaying() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->IsPlaying();
 	}
 
 	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
 	{
-		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))
+		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+			std::shared_lock lock{playerNodeMutex_};
 			return playerNode_->_node->IsPlaying() ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
-		else
+		} else
 			return SFBAudioPlayerPlaybackStateStopped;
 	}
 
 	bool IsPlaying() const noexcept
 	{
-		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && playerNode_->_node->IsPlaying();
+		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+			return false;
+		std::shared_lock lock{playerNodeMutex_};
+		return playerNode_->_node->IsPlaying();
 	}
 
 	bool IsPaused() const noexcept
 	{
-		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && !playerNode_->_node->IsPlaying();
+		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+			return false;
+		std::shared_lock lock{playerNodeMutex_};
+		return !playerNode_->_node->IsPlaying();
 	}
 
 	bool IsStopped() const noexcept
@@ -144,11 +161,13 @@ public:
 
 	bool IsReady() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->IsReady();
 	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->CurrentDecoder();
 	}
 
@@ -166,16 +185,19 @@ public:
 
 	SFBPlaybackPosition PlaybackPosition() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->PlaybackPosition();
 	}
 
 	SFBPlaybackTime PlaybackTime() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->PlaybackTime();
 	}
 
 	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
 	}
 
@@ -183,31 +205,37 @@ public:
 
 	bool SeekForward(NSTimeInterval secondsToSkip) noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SeekForward(secondsToSkip);
 	}
 	
 	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SeekBackward(secondsToSkip);
 	}
 
 	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SeekToTime(timeInSeconds);
 	}
 
 	bool SeekToPosition(double position) noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SeekToPosition(position);
 	}
 
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SeekToFrame(frame);
 	}
 
 	bool SupportsSeeking() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_->_node->SupportsSeeking();
 	}
 
@@ -234,6 +262,7 @@ public:
 
 	SFBAudioPlayerNode * PlayerNode() const noexcept
 	{
+		std::shared_lock lock{playerNodeMutex_};
 		return playerNode_;
 	}
 
@@ -275,7 +304,7 @@ private:
 	Decoder _Nullable PopDecoderFromInternalQueue() noexcept;
 
 public:
-	// MARK: AVAudioEngine Notification Handling
+	// MARK: - AVAudioEngine Notification Handling
 
 	/// Called to process `AVAudioEngineConfigurationChangeNotification`
 	void HandleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;

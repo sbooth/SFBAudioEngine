@@ -559,6 +559,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		SFBAudioDecodingPropertiesKeyShortenBigEndian: _bigEndian ? @YES : @NO,
 	};
 
+	_framePosition = 0;
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
 	// Allocate decoding buffers
@@ -630,6 +631,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		delete [] _qlpc;
 		_qlpc = nullptr;
 	}
+	_frameBuffer = nil;
 
 	return [super closeReturningError:error];
 }
