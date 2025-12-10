@@ -304,7 +304,7 @@ private:
 	Decoder _Nullable PopDecoderFromInternalQueue() noexcept;
 
 public:
-	// MARK: AVAudioEngine Notification Handling
+	// MARK: - AVAudioEngine Notification Handling
 
 	/// Called to process `AVAudioEngineConfigurationChangeNotification`
 	void HandleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;
