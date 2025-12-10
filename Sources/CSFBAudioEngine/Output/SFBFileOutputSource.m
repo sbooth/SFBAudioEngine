@@ -18,15 +18,15 @@
 
 @implementation SFBFileOutputSource
 
-- (instancetype)initWithURL:(NSURL *)url error:(NSError **)error
+#if 0
+- (instancetype)initWithURL:(NSURL *)url
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL);
 
-	if((self = [super init]))
-		_url = url;
-	return self;
+	return [super initWithURL:url];
 }
+#endif
 
 - (BOOL)openReturningError:(NSError **)error
 {

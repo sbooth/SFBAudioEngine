@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -14,9 +14,10 @@ extern os_log_t gSFBInputSourceLog;
 
 @interface SFBInputSource ()
 {
-@protected
+@package
 	NSURL *_url;
 }
+- (instancetype)initWithURL:(nullable NSURL *)url NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

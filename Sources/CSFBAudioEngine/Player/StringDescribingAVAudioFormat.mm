@@ -4,8 +4,8 @@
 // MIT license
 //
 
-#import <SFBCAChannelLayout.hpp>
-#import <SFBCAStreamBasicDescription.hpp>
+#import <CXXCoreAudio/CAChannelLayout.hpp>
+#import <CXXCoreAudio/CAStreamDescription.hpp>
 
 #import "StringDescribingAVAudioFormat.h"
 
@@ -16,11 +16,9 @@ NSString * StringDescribingAVAudioFormat(AVAudioFormat *format, bool includeChan
 	if(!format)
 		return nullptr;
 
-	SFB::CAStreamBasicDescription asbd{*(format.streamDescription)};
-	NSString *formatDescription = asbd.FormatDescription();
-
+	NSString *formatDescription = CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*format.streamDescription);
 	if(includeChannelLayout) {
-		NSString *layoutDescription = SFB::AudioChannelLayoutDescription(format.channelLayout.layout);
+		NSString *layoutDescription = CXXCoreAudio::AudioChannelLayoutDescription(format.channelLayout.layout);
 		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [%@]>", format, formatDescription, layoutDescription ?: @"no channel layout"];
 	}
 	else

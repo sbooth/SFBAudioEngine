@@ -182,6 +182,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	mpc_streaminfo streaminfo;
 	mpc_demux_get_info(_demux, &streaminfo);
 
+	_framePosition = 0;
 	_frameLength = mpc_streaminfo_get_length_samples(&streaminfo);
 
 	AVAudioChannelLayout *channelLayout = nil;
@@ -252,6 +253,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		mpc_demux_exit(_demux);
 		_demux = NULL;
 	}
+	_buffer = nil;
 
 	return [super closeReturningError:error];
 }

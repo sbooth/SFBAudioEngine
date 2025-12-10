@@ -9,6 +9,8 @@ on:
 jobs:
   build:
 
+    permissions:
+      contents: read
     runs-on: macos-latest
 
     steps:
@@ -17,7 +19,7 @@ jobs:
       with:
         xcode-version: latest-stable
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Build
       run: swift build -v
     - name: Run tests
