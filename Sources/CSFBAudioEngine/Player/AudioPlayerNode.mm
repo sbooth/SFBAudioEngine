@@ -810,7 +810,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 					// The render block will clear Flags::muteRequested and set Flags::isMuted
 					while(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isMuted))) {
-						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+						std::this_thread::sleep_for(std::chrono::milliseconds(5));
 						// The engine may have stopped since the initial check with no subsequent opportunity for the render block to set Flags::isMuted
 						if(!node_.engine.isRunning) {
 							flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
