@@ -14,7 +14,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #endif /* !TARGET_OS_IPHONE */
 
-#import <SFBAudioEngine/SFBAudioPlayerNode.h>
+#import <SFBAudioEngine/SFBPCMDecoding.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -22,22 +22,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// The possible playback states for `SFBAudioPlayer`
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
-	/// `SFBAudioPlayer.engineIsRunning` and `SFBAudioPlayer.playerNodeIsPlaying`
+	/// The `AVAudioEngine` is running and the player is rendering audio
 	SFBAudioPlayerPlaybackStatePlaying		= 0,
-	/// `SFBAudioPlayer.engineIsRunning` and `!SFBAudioPlayer.playerNodeIsPlaying`
+	/// The `AVAudioEngine` is running and the player is not rendering audio
 	SFBAudioPlayerPlaybackStatePaused		= 1,
-	/// `!SFBAudioPlayer.engineIsRunning`
+	/// The `AVAudioEngine` is not running
 	SFBAudioPlayerPlaybackStateStopped		= 2,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
-/// An audio player wrapping an `AVAudioEngine` processing graph supplied by `SFBAudioPlayerNode`
+/// An audio player wrapping an `AVAudioEngine` processing graph
 ///
 /// `SFBAudioPlayer` supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
 ///
-/// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped. These states are
-/// based on whether the underlying `AVAudioEngine` is running (`SFBAudioPlayer.engineIsRunning`)
-/// and the `SFBAudioPlayerNode` is playing (`SFBAudioPlayer.playerNodeIsPlaying`).
+/// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped.
 ///
 /// `SFBAudioPlayer` supports delegate-based notifications for the following events:
 ///
@@ -111,18 +109,18 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Playback Control
 
-/// Starts the underlying `AVAudioEngine` and plays the `SFBAudioPlayerNode`
+/// Starts the underlying `AVAudioEngine` and begins rendering audio
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the underlying `AVAudioEngine` was successfully started
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
-/// Pauses the `SFBAudioPlayerNode`
+/// Pauses audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 - (void)pause;
-/// Plays the `SFBAudioPlayerNode`
+/// Resumes audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
 - (void)resume;
-/// Stops both the underlying `AVAudioEngine` and `SFBAudioPlayerNode`
+/// Stops the underlying `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
@@ -133,7 +131,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePaused` this method sends `-resume`
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
-/// Resets both the underlying `AVAudioEngine` and `SFBAudioPlayerNode`
+/// Resets the underlying `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 - (void)reset;
 
@@ -141,16 +139,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
  /// Returns `YES` if the `AVAudioEngine` is running
 @property (nonatomic, readonly) BOOL engineIsRunning;
-/// Returns `YES` if the `SFBAudioPlayerNode` is playing
-@property (nonatomic, readonly) BOOL playerNodeIsPlaying;
 
 /// Returns the current playback state
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
-/// Returns `YES` if `engineIsRunning` and `playerNodeIsPlaying`
+/// Returns `YES` if the `AVAudioEngine` is running and the player is rendering audio
 @property (nonatomic, readonly) BOOL isPlaying;
-/// Returns `YES` if `engineIsRunning` and `!playerNodeIsPlaying`
+/// Returns `YES` if the `AVAudioEngine` is running and the player is not rendering audio
 @property (nonatomic, readonly) BOOL isPaused;
-/// Returns `NO` if `engineIsRunning`
+/// Returns `YES` if the `AVAudioEngine` is not running
 @property (nonatomic, readonly) BOOL isStopped;
 
 /// Returns `YES` if a decoder is available to supply audio for the next render cycle
@@ -258,11 +254,11 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 // MARK: - AVAudioEngine Access
 
 /// Returns the underlying `AVAudioEngine`
-/// - important: Graph modifications may only be made between `playerNode` and `mainMixerNode`
+/// - important: Graph modifications may only be made between `sourceNode` and `mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
 @property (nonatomic, nonnull, readonly) AVAudioEngine *audioEngine;
-/// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
-@property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
+/// Returns the `AVAudioSourceNode` that is the source of the audio processing graph
+@property (nonatomic, nonnull, readonly) AVAudioSourceNode *sourceNode;
 
 // MARK: - Debugging
 
@@ -272,6 +268,19 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type;
 
 @end
+
+// MARK: - Error Information
+
+/// The `NSErrorDomain` used by `SFBAudioPlayer`
+extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayer.ErrorDomain);
+
+/// Possible `NSError` error codes used by `SFBAudioPlayer`
+typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode) {
+	/// Internal or unspecified error
+	SFBAudioPlayerErrorCodeInternalError 		= 0,
+	/// Format not supported
+	SFBAudioPlayerErrorCodeFormatNotSupported 	= 1,
+} NS_SWIFT_NAME(AudioPlayer.ErrorCode);
 
 // MARK: - SFBAudioPlayerDelegate
 

@@ -8,7 +8,24 @@
 
 #import "SFBAudioPlayer+Internal.h"
 
+NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPlayer";
+
 @implementation SFBAudioPlayer
+
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioPlayerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+			switch(err.code) {
+				case SFBAudioPlayerErrorCodeInternalError:
+					return NSLocalizedString(@"An internal player error occurred.", @"");
+				case SFBAudioPlayerErrorCodeFormatNotSupported:
+					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
 
 - (instancetype)init
 {
@@ -94,12 +111,12 @@
 
 - (void)clearQueue
 {
-	_player->ClearQueue();
+	_player->ClearDecoderQueue();
 }
 
 - (BOOL)queueIsEmpty
 {
-	return _player->QueueIsEmpty();
+	return _player->DecoderQueueIsEmpty();
 }
 
 // MARK: - Playback Control
@@ -139,11 +156,6 @@
 - (BOOL)engineIsRunning
 {
 	return _player->EngineIsRunning();
-}
-
-- (BOOL)playerNodeIsPlaying
-{
-	return _player->PlayerNodeIsPlaying();
 }
 
 - (SFBAudioPlayerPlaybackState)playbackState
@@ -305,9 +317,9 @@
 	return _player->AudioEngine();
 }
 
-- (SFBAudioPlayerNode *)playerNode
+- (AVAudioSourceNode *)sourceNode
 {
-	return _player->PlayerNode();
+	return _player->SourceNode();
 }
 
 // MARK: - Debugging
