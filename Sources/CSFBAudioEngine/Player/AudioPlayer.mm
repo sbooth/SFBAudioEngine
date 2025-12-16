@@ -636,6 +636,7 @@ void SFB::AudioPlayer::Stop() noexcept
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	ClearDecoderQueue();
+	CancelActiveDecoders(true);
 
 #if DEBUG
 	assert(PlaybackState() == SFBAudioPlayerPlaybackStateStopped && "Incorrect playback state in Stop()");
@@ -1102,7 +1103,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					{
 						std::lock_guard lock{lock_};
 						NSError *error = nil;
+						flags_.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 						if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoder, &error)) {
+							flags_.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 							SubmitDecodingErrorEvent(error);
 							continue;
 						}
