@@ -694,6 +694,8 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		return;
 	}
 
+	const auto ringBufferChunkDuration = kRingBufferChunkSize / audioRingBuffer_.Format().mSampleRate;
+
 	for(;;) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
@@ -808,10 +810,9 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 					// The render block will clear Flags::muteRequested and set Flags::isMuted
 					while(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isMuted))) {
-						const auto timeout = !dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
-						// If the timeout occurred the engine may have stopped since the initial check
-						// with no subsequent opportunity for the render block to set Flags::isMuted
-						if(!timeout && !node_.engine.isRunning) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(5));
+						// The engine may have stopped since the initial check with no subsequent opportunity for the render block to set Flags::isMuted
+						if(!node_.engine.isRunning) {
 							flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 							flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
 							break;
@@ -887,8 +888,8 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		// Wait for additional space in the ring buffer, another event signal, or for another decoder to be enqueued
-		dispatch_semaphore_wait(decodingSemaphore_, DISPATCH_TIME_FOREVER);
+		// Wait for an event signal; timeout after the approximate time for space in the ring buffer to become available
+		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, ringBufferChunkDuration * NSEC_PER_SEC));
 	}
 
 	os_log_debug(log_, "Decoding thread complete");
@@ -958,11 +959,10 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::muteRequested)) {
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 		flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-		dispatch_semaphore_signal(decodingSemaphore_);
 	}
 
 	// N.B. The ring buffer must not be read from or written to when Flags::isMuted is set
-	// because the decoding queue could be performing non-thread safe operations
+	// because the decoding thread could be performing non-thread safe operations
 
 	// Output silence if not playing or muted
 	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted))) {
@@ -997,14 +997,8 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 			}
 		}
 
-		// If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		if(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize)
-			dispatch_semaphore_signal(decodingSemaphore_);
-
 		const RenderingEventHeader header{RenderingEventCommand::framesRendered};
-		if(renderEventRingBuffer_.WriteValues(header, timestamp, framesRead))
-			dispatch_semaphore_signal(eventSemaphore_);
-		else
+		if(!renderEventRingBuffer_.WriteValues(header, timestamp, framesRead))
 			os_log_fault(log_, "Error writing frames rendered event");
 	} else {
 		// Output silence if the ring buffer is empty
@@ -1055,8 +1049,8 @@ void SFB::AudioPlayerNode::SequenceAndProcessEvents(std::stop_token stoken) noex
 			}
 		}
 
-		// Wait for the next event
-		dispatch_semaphore_wait(eventSemaphore_, DISPATCH_TIME_FOREVER);
+		// Decoding events will be signaled; render events are polled using the timeout
+		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, 7.5 * NSEC_PER_MSEC));
 	}
 
 	os_log_debug(log_, "Event processing thread complete");
