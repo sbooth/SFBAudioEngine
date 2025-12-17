@@ -284,6 +284,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	_sourceFormat = nil;
+	_processingFormat = nil;
+	_outputFormat = nil;
+	_settings = nil;
 	if(_outputSource.isOpen)
 		return [_outputSource closeReturningError:error];
 	return YES;
