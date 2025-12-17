@@ -84,8 +84,6 @@ private:
 	/// Ring buffer used to communicate events from the render block
 	CXXRingBuffer::RingBuffer				renderEventRingBuffer_;
 
-
-
 	/// The underlying `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
 
@@ -94,11 +92,6 @@ private:
 
 	/// The lock used to serialize enqueues and engine configuration changes
 	mutable CXXUnfairLock::UnfairLock 		lock_;
-
-//	/// Decoders enqueued for non-gapless playback
-//	std::deque<Decoder>						queuedDecoders_;
-//	/// The lock used to protect access to `queuedDecoders_`
-//	mutable CXXUnfairLock::UnfairLock 		queueLock_;
 
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 					nowPlaying_ 		{nil};
@@ -255,7 +248,7 @@ public:
 
 	AVAudioSourceNode * SourceNode() const noexcept
 	{
-//		std::shared_lock lock{playerNodeMutex_};
+		std::lock_guard lock{lock_};
 		return sourceNode_;
 	}
 

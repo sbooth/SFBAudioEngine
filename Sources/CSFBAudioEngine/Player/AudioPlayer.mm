@@ -1835,8 +1835,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 	if(FormatWillBeGaplessIfEnqueued(format))
 		return true;
 
-	os_log_debug(log_, "Configuring processing graph for %{public}@, processing format %{public}@", decoder, SFB::StringDescribingAVAudioFormat(decoder.processingFormat));
-
 	// Attempt to preserve the playback state
 	const auto flags = flags_.load(std::memory_order_acquire);
 	const auto engineWasRunning = flags & static_cast<unsigned int>(Flags::engineIsRunning);
@@ -1851,7 +1849,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 		return false;
 	}
 
-//	renderingFormat_ = format;
 	if(!audioRingBuffer_.Allocate(*(renderingFormat_.streamDescription), 16384)) {
 		os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed");
 		return false;
@@ -1946,7 +1943,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 
 		sourceNode_ = sourceNode;
 		renderingFormat_ = format;
-		os_log_debug(log_, "Rendering format set to %{public}@", StringDescribingAVAudioFormat(renderingFormat_));
 
 		// Reconnect the player node to the next node in the processing chain
 		// This is the mixer node in the default configuration, but additional nodes may
