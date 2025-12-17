@@ -1574,12 +1574,6 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 
 							completeDecoder = decoderState->decoder_;
 
-//							if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch)) {
-////								flags_.fetch_or(static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-//								flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
-//								dispatch_semaphore_signal(decodingSemaphore_);
-//							}
-
 							// Check for a decoder transition
 							if(const auto nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_); nextDecoderState) {
 								const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
@@ -2115,24 +2109,8 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(Decoder _Nonnull decoder, uin
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
 
-		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::havePendingDecoder))
-			return;
-
-//		// Dequeue the next decoder
-//		if(Decoder decoder = DequeueDecoder(); decoder) {
-//			NSError *error = nil;
-//			const auto success = [&] {
-//				std::lock_guard lock{lock_};
-//				return ConfigureForAndEnqueueDecoder(decoder, false, &error);
-//			}();
-//
-//			if(!success) {
-//				if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-//					[player_.delegate audioPlayer:player_ encounteredError:error];
-//			}
-//		}
-		else {
-			// End of audio
+		// End of audio
+		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::havePendingDecoder))) {
 #if DEBUG
 			os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
