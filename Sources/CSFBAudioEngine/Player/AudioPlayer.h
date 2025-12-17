@@ -20,7 +20,6 @@
 
 #import <CXXCoreAudio/AudioRingBuffer.hpp>
 #import <CXXRingBuffer/RingBuffer.hpp>
-#import <CXXSharedMutex/SharedMutex.hpp>
 #import <CXXUnfairLock/UnfairLock.hpp>
 
 #import "SFBAudioDecoder.h"
@@ -92,8 +91,6 @@ private:
 
 	/// The source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-	/// Shared mutex used to protect access to `sourceNode_`
-	mutable CXXSharedMutex::SharedMutex 	playerNodeMutex_;
 
 	/// The lock used to serialize enqueues and engine configuration changes
 	mutable CXXUnfairLock::UnfairLock 		lock_;
