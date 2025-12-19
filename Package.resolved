@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXRingBuffer",
       "state" : {
-        "revision" : "7f4542248dca706c5a95bfe0df13f951e3254dce",
-        "version" : "0.2.0"
+        "revision" : "a3fb5a22459d51e4b9890400e9831edb1bc1e894",
+        "version" : "0.3.0"
       }
     },
     {
