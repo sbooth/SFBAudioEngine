@@ -11,7 +11,6 @@
 #import <exception>
 #import <functional>
 #import <stdexcept>
-#import <type_traits>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -28,14 +27,6 @@ namespace {
 
 /// The minimum number of frames to write to the ring buffer
 constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
-
-/// Returns the minimum of a and b
-template <typename T, typename U>
-constexpr auto common_type_min(T a, U b)
-{
-	using C = typename std::common_type_t<T, U>;
-	return std::min(static_cast<C>(a), static_cast<C>(b));
-}
 
 } /* namespace */
 
