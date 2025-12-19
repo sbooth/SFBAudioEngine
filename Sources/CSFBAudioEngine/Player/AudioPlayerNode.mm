@@ -910,24 +910,24 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 	// Event header and payload
 	const DecodingEventHeader header{DecodingEventCommand::error};
-	const uint32_t dataSize = static_cast<uint32_t>(errorData.length);
+	const auto dataSize = errorData.length;
 	const void *data = errorData.bytes;
 
-	uint32_t bytesWritten = 0;
+	std::size_t bytesWritten = 0;
 	auto wvec = decodeEventRingBuffer_.GetWriteVector();
 
 	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
-	if(wvec.first.capacity_ + wvec.second.capacity_ < spaceNeeded) {
+	if(wvec.first.size() + wvec.second.size() < spaceNeeded) {
 		os_log_fault(log_, "Insufficient space to write decoding error event");
 		return;
 	}
 
-	const auto do_write = [&bytesWritten, &wvec](const void *arg, uint32_t sz) noexcept {
+	const auto do_write = [&bytesWritten, &wvec](const void *arg, std::size_t sz) noexcept {
 		auto bytesRemaining = sz;
 		// Write to wvec.first if space is available
-		if(wvec.first.capacity_ > bytesWritten) {
-			const auto n = std::min(bytesRemaining, wvec.first.capacity_ - bytesWritten);
-			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.first.buffer_) + bytesWritten),
+		if(wvec.first.size() > bytesWritten) {
+			const auto n = std::min(bytesRemaining, wvec.first.size() - bytesWritten);
+			std::memcpy(wvec.first.data() + bytesWritten,
 						arg,
 						n);
 			bytesRemaining -= n;
@@ -936,7 +936,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		// Write to wvec.second
 		if(bytesRemaining > 0) {
 			const auto n = bytesRemaining;
-			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.buffer_) + (bytesWritten - wvec.first.capacity_)),
+			std::memcpy(wvec.second.data() + (bytesWritten - wvec.first.size()),
 						arg,
 						n);
 			bytesWritten += n;
@@ -947,7 +947,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 	do_write(&dataSize, sizeof(dataSize));
 	do_write(data, dataSize);
 
-	decodeEventRingBuffer_.AdvanceWritePosition(bytesWritten);
+	decodeEventRingBuffer_.CommitWrite(bytesWritten);
 	dispatch_semaphore_signal(eventSemaphore_);
 }
 
@@ -992,7 +992,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 			const auto byteCountToSkip = audioRingBuffer_.Format().FrameCountToByteSize(framesRead);
 			const auto byteCountToZero = audioRingBuffer_.Format().FrameCountToByteSize(framesOfSilence);
 			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-				std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(outputData->mBuffers[i].mData) + byteCountToSkip), 0, byteCountToZero);
+				std::memset(static_cast<uint8_t *>(outputData->mBuffers[i].mData) + byteCountToSkip, 0, byteCountToZero);
 				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
 			}
 		}
@@ -1134,7 +1134,7 @@ void SFB::AudioPlayerNode::ProcessDecodingEvent(const DecodingEventHeader& heade
 			}
 
 			NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-			if(decodeEventRingBuffer_.Read(data.mutableBytes, dataSize, false) != dataSize) {
+			if(decodeEventRingBuffer_.Read(data.mutableBytes, 1, dataSize, false) != dataSize) {
 				os_log_fault(log_, "Missing or incomplete archived NSError for decoding error event");
 				break;
 			}
