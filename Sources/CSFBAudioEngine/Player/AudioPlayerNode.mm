@@ -955,21 +955,21 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept
 {
-	// Mute if requested
-	if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::muteRequested)) {
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-	}
-
 	// N.B. The ring buffer must not be read from or written to when Flags::isMuted is set
 	// because the decoding thread could be performing non-thread safe operations
 
 	// Output silence if not playing or muted
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted))) {
-		const auto byteCountToZero = audioRingBuffer_.Format().FrameCountToByteSize(frameCount);
+	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted)) || (flags & static_cast<unsigned int>(Flags::muteRequested))) {
+		// Mute if requested
+		if(flags & static_cast<unsigned int>(Flags::muteRequested)) {
+			flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
+		}
+		// Zero the output
+		const auto byteCount = frameCount * audioRingBuffer_.Format().mBytesPerFrame;
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
-			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+			std::memset(outputData->mBuffers[i].mData, 0, byteCount);
+			outputData->mBuffers[i].mDataByteSize = byteCount;
 		}
 		isSilence = YES;
 		return noErr;
@@ -1002,10 +1002,10 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 			os_log_fault(log_, "Error writing frames rendered event");
 	} else {
 		// Output silence if the ring buffer is empty
-		const auto byteCountToZero = audioRingBuffer_.Format().FrameCountToByteSize(frameCount);
+		const auto byteCount = frameCount * audioRingBuffer_.Format().mBytesPerFrame;
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
-			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+			std::memset(outputData->mBuffers[i].mData, 0, byteCount);
+			outputData->mBuffers[i].mDataByteSize = byteCount;
 		}
 		isSilence = YES;
 	}
