@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     name: Build and analyze using xcodebuild for all supported architectures
+    permissions:
+      contents: read
     runs-on: macos-latest
 
     steps:
