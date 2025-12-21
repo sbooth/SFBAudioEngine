@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioToolbox",
       "state" : {
-        "revision" : "5a80775ba2512ec5dfa6ff043901b601f1020757",
-        "version" : "0.1.2"
+        "revision" : "781eb0c5f89607d31fcc7450f44b6f9d81a10340",
+        "version" : "0.2.0"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXCoreAudio",
       "state" : {
-        "revision" : "463da36ac52f8c578f9e5e8f13dd438acafc73aa",
-        "version" : "0.2.0"
+        "revision" : "799adaf5990144567a5f693718c24dd157e8303f",
+        "version" : "0.3.2"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXRingBuffer",
       "state" : {
-        "revision" : "7f4542248dca706c5a95bfe0df13f951e3254dce",
-        "version" : "0.2.0"
+        "revision" : "fdf6ecb5fd894fb7e7930f18dc60768a0ab26d9d",
+        "version" : "0.3.2"
       }
     },
     {
