@@ -694,6 +694,8 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		return;
 	}
 
+	const auto ringBufferChunkDuration = kRingBufferChunkSize / audioRingBuffer_.Format().mSampleRate;
+
 	for(;;) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
@@ -808,10 +810,9 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 					// The render block will clear Flags::muteRequested and set Flags::isMuted
 					while(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isMuted))) {
-						const auto timeout = !dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC));
-						// If the timeout occurred the engine may have stopped since the initial check
-						// with no subsequent opportunity for the render block to set Flags::isMuted
-						if(!timeout && !node_.engine.isRunning) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(5));
+						// The engine may have stopped since the initial check with no subsequent opportunity for the render block to set Flags::isMuted
+						if(!node_.engine.isRunning) {
 							flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 							flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
 							break;
@@ -887,8 +888,8 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		// Wait for additional space in the ring buffer, another event signal, or for another decoder to be enqueued
-		dispatch_semaphore_wait(decodingSemaphore_, DISPATCH_TIME_FOREVER);
+		// Wait for an event signal; timeout after the approximate time for space in the ring buffer to become available
+		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, ringBufferChunkDuration * NSEC_PER_SEC));
 	}
 
 	os_log_debug(log_, "Decoding thread complete");
@@ -909,44 +910,39 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 	// Event header and payload
 	const DecodingEventHeader header{DecodingEventCommand::error};
-	const uint32_t dataSize = static_cast<uint32_t>(errorData.length);
+	const auto dataSize = static_cast<uint32_t>(errorData.length);
 	const void *data = errorData.bytes;
 
-	uint32_t bytesWritten = 0;
-	auto wvec = decodeEventRingBuffer_.GetWriteVector();
+	std::size_t bytesWritten = 0;
+	auto [front, back] = decodeEventRingBuffer_.GetWriteVector();
 
+	const auto frontSize = front.size();
 	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
-	if(wvec.first.capacity_ + wvec.second.capacity_ < spaceNeeded) {
+	if(frontSize + back.size() < spaceNeeded) {
 		os_log_fault(log_, "Insufficient space to write decoding error event");
 		return;
 	}
 
-	const auto do_write = [&bytesWritten, &wvec](const void *arg, uint32_t sz) noexcept {
-		auto bytesRemaining = sz;
-		// Write to wvec.first if space is available
-		if(wvec.first.capacity_ > bytesWritten) {
-			const auto n = std::min(bytesRemaining, wvec.first.capacity_ - bytesWritten);
-			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.first.buffer_) + bytesWritten),
-						arg,
-						n);
-			bytesRemaining -= n;
-			bytesWritten += n;
+	std::size_t cursor = 0;
+	auto write_single_arg = [&](const void *arg, std::size_t len) noexcept {
+		const auto *src = static_cast<const uint8_t *>(arg);
+		if(cursor + len <= frontSize)
+			std::memcpy(front.data() + cursor, src, len);
+		else if(cursor >= frontSize)
+			std::memcpy(back.data() + (cursor - frontSize), src, len);
+		else {
+			const size_t toFront = frontSize - cursor;
+			std::memcpy(front.data() + cursor, src, toFront);
+			std::memcpy(back.data(), src + toFront, len - toFront);
 		}
-		// Write to wvec.second
-		if(bytesRemaining > 0) {
-			const auto n = bytesRemaining;
-			std::memcpy(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(wvec.second.buffer_) + (bytesWritten - wvec.first.capacity_)),
-						arg,
-						n);
-			bytesWritten += n;
-		}
+		cursor += len;
 	};
 
-	do_write(&header, sizeof(header));
-	do_write(&dataSize, sizeof(dataSize));
-	do_write(data, dataSize);
+	write_single_arg(&header, sizeof header);
+	write_single_arg(&dataSize, sizeof dataSize);
+	write_single_arg(data, dataSize);
 
-	decodeEventRingBuffer_.AdvanceWritePosition(bytesWritten);
+	decodeEventRingBuffer_.CommitWrite(bytesWritten);
 	dispatch_semaphore_signal(eventSemaphore_);
 }
 
@@ -954,67 +950,34 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept
 {
-	// Mute if requested
-	if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::muteRequested)) {
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-		dispatch_semaphore_signal(decodingSemaphore_);
-	}
-
 	// N.B. The ring buffer must not be read from or written to when Flags::isMuted is set
-	// because the decoding queue could be performing non-thread safe operations
+	// because the decoding thread could be performing non-thread safe operations
 
 	// Output silence if not playing or muted
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted))) {
-		const auto byteCountToZero = audioRingBuffer_.Format().FrameCountToByteSize(frameCount);
-		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
-			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
+	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted)) || (flags & static_cast<unsigned int>(Flags::muteRequested))) {
+		// Mute if requested
+		if(flags & static_cast<unsigned int>(Flags::muteRequested)) {
+			flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
 		}
+		// Zero the output
+		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
+			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
 		isSilence = YES;
 		return noErr;
 	}
 
-	// If there are audio frames available to read from the ring buffer read as many as possible
-	if(const auto availableFrames = audioRingBuffer_.AvailableFrames(); availableFrames > 0) {
-		const auto framesToRead = std::min(availableFrames, frameCount);
-		const uint32_t framesRead = audioRingBuffer_.Read(outputData, framesToRead);
-		if(framesRead != framesToRead)
-			os_log_fault(log_, "CXXCoreAudio::AudioRingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
-
-		// If the ring buffer didn't contain as many frames as requested fill the remainder with silence
-		if(framesRead != frameCount) {
+	// Read audio from the ring buffer
+	if(const auto framesRead = audioRingBuffer_.Read(outputData, frameCount); framesRead > 0) {
 #if DEBUG
-			os_log_debug(log_, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
+		if(framesRead != frameCount)
+			os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead, frameCount);
 #endif /* DEBUG */
-
-			const auto framesOfSilence = frameCount - framesRead;
-			const auto byteCountToSkip = audioRingBuffer_.Format().FrameCountToByteSize(framesRead);
-			const auto byteCountToZero = audioRingBuffer_.Format().FrameCountToByteSize(framesOfSilence);
-			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-				std::memset(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(outputData->mBuffers[i].mData) + byteCountToSkip), 0, byteCountToZero);
-				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
-			}
-		}
-
-		// If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		if(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize)
-			dispatch_semaphore_signal(decodingSemaphore_);
-
 		const RenderingEventHeader header{RenderingEventCommand::framesRendered};
-		if(renderEventRingBuffer_.WriteValues(header, timestamp, framesRead))
-			dispatch_semaphore_signal(eventSemaphore_);
-		else
+		if(!renderEventRingBuffer_.WriteValues(header, timestamp, static_cast<uint32_t>(framesRead)))
 			os_log_fault(log_, "Error writing frames rendered event");
-	} else {
-		// Output silence if the ring buffer is empty
-		const auto byteCountToZero = audioRingBuffer_.Format().FrameCountToByteSize(frameCount);
-		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCountToZero);
-			outputData->mBuffers[i].mDataByteSize = byteCountToZero;
-		}
+	} else
 		isSilence = YES;
-	}
 
 	return noErr;
 }
@@ -1055,8 +1018,8 @@ void SFB::AudioPlayerNode::SequenceAndProcessEvents(std::stop_token stoken) noex
 			}
 		}
 
-		// Wait for the next event
-		dispatch_semaphore_wait(eventSemaphore_, DISPATCH_TIME_FOREVER);
+		// Decoding events will be signaled; render events are polled using the timeout
+		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, 7.5 * NSEC_PER_MSEC));
 	}
 
 	os_log_debug(log_, "Event processing thread complete");
@@ -1140,7 +1103,7 @@ void SFB::AudioPlayerNode::ProcessDecodingEvent(const DecodingEventHeader& heade
 			}
 
 			NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-			if(decodeEventRingBuffer_.Read(data.mutableBytes, dataSize, false) != dataSize) {
+			if(decodeEventRingBuffer_.Read(data.mutableBytes, 1, dataSize, false) != dataSize) {
 				os_log_fault(log_, "Missing or incomplete archived NSError for decoding error event");
 				break;
 			}
