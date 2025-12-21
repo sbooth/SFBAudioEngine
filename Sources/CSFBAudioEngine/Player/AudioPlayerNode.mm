@@ -699,6 +699,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 	for(;;) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
+		auto resetRingBuffer = false;
 
 		// Get the earliest decoder state that has not completed rendering
 		{
@@ -709,7 +710,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 			while(decoderState && (decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested))) {
 				os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
 
-				flags_.fetch_or(static_cast<unsigned int>(Flags::ringBufferNeedsReset), std::memory_order_acq_rel);
+				resetRingBuffer = true;
 				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 
 				// Submit the decoder canceled event
@@ -730,7 +731,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
 			// If a seek is pending request a ring buffer reset
-			flags_.fetch_or(static_cast<unsigned int>(Flags::ringBufferNeedsReset), std::memory_order_acq_rel);
+			resetRingBuffer = true;
 
 			decoderState->PerformSeekIfRequired();
 
@@ -800,9 +801,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 		}
 
 		// Reset the ring buffer if required, to prevent audible artifacts
-		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::ringBufferNeedsReset)) {
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::ringBufferNeedsReset), std::memory_order_acq_rel);
-
+		if(resetRingBuffer) {
 			// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
 			if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isMuted))) {
 				if(node_.engine.isRunning) {
