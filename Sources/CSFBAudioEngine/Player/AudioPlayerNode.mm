@@ -968,7 +968,7 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 	}
 
 	// Read audio from the ring buffer
-	if(const auto framesRead = audioRingBuffer_.Read(outputData, frameCount); framesRead) {
+	if(const auto framesRead = audioRingBuffer_.Read(outputData, frameCount); framesRead > 0) {
 #if DEBUG
 		if(framesRead != frameCount)
 			os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead, frameCount);
