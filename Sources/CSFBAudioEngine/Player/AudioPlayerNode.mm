@@ -910,7 +910,7 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 	// Event header and payload
 	const DecodingEventHeader header{DecodingEventCommand::error};
-	const uint32_t dataSize = errorData.length;
+	const auto dataSize = static_cast<uint32_t>(errorData.length);
 	const void *data = errorData.bytes;
 
 	std::size_t bytesWritten = 0;
@@ -961,49 +961,23 @@ OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& tim
 			flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
 		}
 		// Zero the output
-		const auto byteCount = frameCount * audioRingBuffer_.Format().mBytesPerFrame;
-		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCount);
-			outputData->mBuffers[i].mDataByteSize = byteCount;
-		}
+		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
+			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
 		isSilence = YES;
 		return noErr;
 	}
 
-	// If there are audio frames available to read from the ring buffer read as many as possible
-	if(const auto availableFrames = audioRingBuffer_.AvailableFrames(); availableFrames > 0) {
-		const auto framesToRead = std::min(availableFrames, static_cast<CXXCoreAudio::AudioRingBuffer::size_type>(frameCount));
-		const auto framesRead = audioRingBuffer_.Read(outputData, framesToRead);
-		if(framesRead != framesToRead)
-			os_log_fault(log_, "CXXCoreAudio::AudioRingBuffer::Read failed: Requested %zu frames, got %zu", framesToRead, framesRead);
-
-		// If the ring buffer didn't contain as many frames as requested fill the remainder with silence
-		if(framesRead != frameCount) {
+	// Read audio from the ring buffer
+	if(const auto framesRead = audioRingBuffer_.Read(outputData, frameCount); framesRead) {
 #if DEBUG
+		if(framesRead != frameCount)
 			os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead, frameCount);
 #endif /* DEBUG */
-
-			const auto framesOfSilence = frameCount - framesRead;
-			const auto byteCountToSkip = framesRead * audioRingBuffer_.Format().mBytesPerFrame;
-			const auto byteCountToZero = framesOfSilence * audioRingBuffer_.Format().mBytesPerFrame;
-			for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-				std::memset(static_cast<uint8_t *>(outputData->mBuffers[i].mData) + byteCountToSkip, 0, byteCountToZero);
-				outputData->mBuffers[i].mDataByteSize += byteCountToZero;
-			}
-		}
-
 		const RenderingEventHeader header{RenderingEventCommand::framesRendered};
 		if(!renderEventRingBuffer_.WriteValues(header, timestamp, static_cast<uint32_t>(framesRead)))
 			os_log_fault(log_, "Error writing frames rendered event");
-	} else {
-		// Output silence if the ring buffer is empty
-		const auto byteCount = frameCount * audioRingBuffer_.Format().mBytesPerFrame;
-		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-			std::memset(outputData->mBuffers[i].mData, 0, byteCount);
-			outputData->mBuffers[i].mDataByteSize = byteCount;
-		}
+	} else
 		isSilence = YES;
-	}
 
 	return noErr;
 }
