@@ -910,42 +910,37 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 	// Event header and payload
 	const DecodingEventHeader header{DecodingEventCommand::error};
-	const auto dataSize = errorData.length;
+	const uint32_t dataSize = errorData.length;
 	const void *data = errorData.bytes;
 
 	std::size_t bytesWritten = 0;
-	auto wvec = decodeEventRingBuffer_.GetWriteVector();
+	auto [front, back] = decodeEventRingBuffer_.GetWriteVector();
 
+	const auto frontSize = front.size();
 	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
-	if(wvec.first.size() + wvec.second.size() < spaceNeeded) {
+	if(frontSize + back.size() < spaceNeeded) {
 		os_log_fault(log_, "Insufficient space to write decoding error event");
 		return;
 	}
 
-	const auto do_write = [&bytesWritten, &wvec](const void *arg, std::size_t sz) noexcept {
-		auto bytesRemaining = sz;
-		// Write to wvec.first if space is available
-		if(wvec.first.size() > bytesWritten) {
-			const auto n = std::min(bytesRemaining, wvec.first.size() - bytesWritten);
-			std::memcpy(wvec.first.data() + bytesWritten,
-						arg,
-						n);
-			bytesRemaining -= n;
-			bytesWritten += n;
+	std::size_t cursor = 0;
+	auto write_single_arg = [&](const void *arg, std::size_t len) noexcept {
+		const auto *src = static_cast<const uint8_t *>(arg);
+		if(cursor + len <= frontSize)
+			std::memcpy(front.data() + cursor, src, len);
+		else if(cursor >= frontSize)
+			std::memcpy(back.data() + (cursor - frontSize), src, len);
+		else {
+			const size_t toFront = frontSize - cursor;
+			std::memcpy(front.data() + cursor, src, toFront);
+			std::memcpy(back.data(), src + toFront, len - toFront);
 		}
-		// Write to wvec.second
-		if(bytesRemaining > 0) {
-			const auto n = bytesRemaining;
-			std::memcpy(wvec.second.data() + (bytesWritten - wvec.first.size()),
-						arg,
-						n);
-			bytesWritten += n;
-		}
+		cursor += len;
 	};
 
-	do_write(&header, sizeof(header));
-	do_write(&dataSize, sizeof(dataSize));
-	do_write(data, dataSize);
+	write_single_arg(&header, sizeof header);
+	write_single_arg(&dataSize, sizeof dataSize);
+	write_single_arg(data, dataSize);
 
 	decodeEventRingBuffer_.CommitWrite(bytesWritten);
 	dispatch_semaphore_signal(eventSemaphore_);
