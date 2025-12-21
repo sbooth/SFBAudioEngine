@@ -214,8 +214,6 @@ private:
 		isMuted 				= 1u << 2,
 		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
 		unmuteAfterDequeue 		= 1u << 3,
-		/// The audio ring buffer requires a non-threadsafe reset
-		ringBufferNeedsReset 	= 1u << 4,
 	};
 
 	// MARK: - Decoding
