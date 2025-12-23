@@ -208,10 +208,10 @@ private:
 	enum class Flags : unsigned int {
 		/// The render block is outputting audio
 		isPlaying 				= 1u << 0,
-		/// The decoding thread requested that the render block set `eIsMuted` during the next render cycle
-		muteRequested 			= 1u << 1,
 		/// The render block is outputting silence
-		isMuted 				= 1u << 2,
+		isMuted 				= 1u << 1,
+		/// The ring buffer needs to be drained during the next render cycle
+		drainRequired 			= 1u << 2,
 		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
 		unmuteAfterDequeue 		= 1u << 3,
 	};
