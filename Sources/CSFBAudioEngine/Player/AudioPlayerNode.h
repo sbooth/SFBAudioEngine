@@ -70,6 +70,8 @@ private:
 
 	/// Ring buffer used to transfer audio between the decoding thread and the render block
 	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_ 	{};
+	/// Frames to discard from the ring buffer during the next render cycle.
+	std::atomic_size_t 						staleFrames_ 		{0};
 
 	/// Active decoders and associated state
 	DecoderStateVector 						activeDecoders_;
