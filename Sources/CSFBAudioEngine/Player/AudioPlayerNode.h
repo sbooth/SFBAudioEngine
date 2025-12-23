@@ -210,7 +210,7 @@ private:
 		isPlaying 				= 1u << 0,
 		/// The render block is outputting silence
 		isMuted 				= 1u << 1,
-		/// The decoding thread requests that the render block drain the ring buffer during the next render cycle
+		/// The ring buffer needs to be drained during the next render cycle
 		drainRequired 			= 1u << 2,
 		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
 		unmuteAfterDequeue 		= 1u << 3,
