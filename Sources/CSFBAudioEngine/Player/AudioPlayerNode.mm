@@ -1012,8 +1012,18 @@ void SFB::AudioPlayerNode::SequenceAndProcessEvents(std::stop_token stoken) noex
 			}
 		}
 
+		int64_t deltaNanos;
+		{
+			std::lock_guard lock(decoderLock_);
+			if(FirstDecoderStateWithRenderingNotComplete())
+				deltaNanos = 7.5 * NSEC_PER_MSEC;
+			// Use a longer timeout when idle
+			else
+				deltaNanos = NSEC_PER_SEC / 2;
+		}
+
 		// Decoding events will be signaled; render events are polled using the timeout
-		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, 7.5 * NSEC_PER_MSEC));
+		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 	}
 
 	os_log_debug(log_, "Event processing thread complete");
