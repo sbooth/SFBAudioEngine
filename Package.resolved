@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXCoreAudio",
       "state" : {
-        "branch" : "alignas",
-        "revision" : "0d87988ea8a174f07da2c629afe8ec34f8e6b535"
+        "revision" : "fb391f40a119fcbf3080b68e50e09671f8783ee8",
+        "version" : "0.4.0"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXRingBuffer",
       "state" : {
-        "branch" : "alignas",
-        "revision" : "97a40eb14518af7bff76df561cc05a0f3da0966b"
+        "revision" : "837269c0036143d43819e154880ca6e69ca4e6a3",
+        "version" : "0.4.0"
       }
     },
     {
