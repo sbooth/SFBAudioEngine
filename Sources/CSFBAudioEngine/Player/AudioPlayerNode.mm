@@ -859,23 +859,27 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		// Determine timeout based on ring buffer free space
-		const auto targetMaxFreeSpace = audioRingBuffer_.Capacity() / 4;
-		const auto freeSpace = audioRingBuffer_.FreeSpace();
-
-		int64_t delta;
+		int64_t deltaNanos;
+		// Idling
 		if(!decoderState)
-			delta = NSEC_PER_SEC / 2;
-		else if(freeSpace > targetMaxFreeSpace)
-			// Minimal timeout if the ring buffer has more free space than desired
-			delta =  2.5 * NSEC_PER_MSEC;
+			deltaNanos = NSEC_PER_SEC / 2;
+		// Determine timeout based on ring buffer free space
 		else {
-			const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.Format().mSampleRate;
-			delta = duration * NSEC_PER_SEC;
+			// Attempt to keep the ring buffer 75% full
+			const auto targetMaxFreeSpace = audioRingBuffer_.Capacity() / 4;
+			const auto freeSpace = audioRingBuffer_.FreeSpace();
+
+			// Minimal timeout if the ring buffer has more free space than desired
+			if(freeSpace > targetMaxFreeSpace)
+				deltaNanos =  2.5 * NSEC_PER_MSEC;
+			else {
+				const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.Format().mSampleRate;
+				deltaNanos = duration * NSEC_PER_SEC;
+			}
 		}
 
 		// Wait for an event signal; ring buffer space availability is polled using the timeout
-		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, delta));
+		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 	}
 
 	os_log_debug(log_, "Decoding thread complete");
