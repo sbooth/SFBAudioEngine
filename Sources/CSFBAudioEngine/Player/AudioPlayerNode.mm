@@ -395,7 +395,7 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(Decoder decoder, bool reset, NSError *
 
 	if(reset) {
 		// Mute until the decoder becomes active to prevent spurious events
-		flags_.fetch_or(static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 		Reset();
 		flags_.fetch_or(static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 	}
@@ -408,7 +408,7 @@ bool SFB::AudioPlayerNode::EnqueueDecoder(Decoder decoder, bool reset, NSError *
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		if(reset)
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 		return false;
 	}
 
@@ -699,7 +699,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 	for(;;) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
-		auto emptyRingBuffer = false;
+		auto ringBufferStale = false;
 
 		// Get the earliest decoder state that has not completed rendering
 		{
@@ -710,7 +710,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 			while(decoderState && (decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested))) {
 				os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
 
-				emptyRingBuffer = true;
+				ringBufferStale = true;
 				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 
 				// Submit the decoder canceled event
@@ -730,7 +730,7 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
-			emptyRingBuffer = true;
+			ringBufferStale = true;
 			decoderState->PerformSeekIfRequired();
 
 			if(decoderState->IsDecodingComplete()) {
@@ -767,11 +767,9 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		// Discard old frames in the ring buffer if required, to prevent audible artifacts
-		if(emptyRingBuffer) {
-			if(const auto staleFrames = audioRingBuffer_.Capacity() - audioRingBuffer_.FreeSpace(); staleFrames > 0)
-				staleFrames_.store(staleFrames, std::memory_order_release);
-		}
+		// Request a drain of the ring buffer during the next render cycle to prevent audible artifacts from seeking or cancellation
+		if(ringBufferStale)
+			flags_.fetch_or(static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
 
 		// Get the earliest decoder state that has not completed decoding
 		{
@@ -798,13 +796,13 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 
 				// Clear the mute flags if needed
 				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::muteRequested) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 
 				os_log_debug(log_, "Dequeued %{public}@, processing format %{public}@", decoderState->decoder_, SFB::StringDescribingAVAudioFormat(decoderState->decoder_.processingFormat));
 			}
 		}
 
-		if(decoderState) {
+		if(decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::drainRequired))) {
 			// Decode and write chunks to the ring buffer
 			while(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize) {
 				// Decoding started
@@ -925,24 +923,21 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 OSStatus SFB::AudioPlayerNode::Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept
 {
-	// Discard any stale frames still in the ring buffer from a seek or decoder cancelation
-	if(const auto framesToSkip = staleFrames_.load(std::memory_order_acquire); framesToSkip > 0) {
-		assert(audioRingBuffer_.AvailableFrames() >= framesToSkip && "Invalid stale frame count");
-		if(const auto framesSkipped = audioRingBuffer_.Skip(framesToSkip); framesSkipped > 0) {
-			assert(framesSkipped == framesToSkip);
-//			staleFrames_.store(0, std::memory_order_release);
-			staleFrames_.fetch_sub(framesSkipped, std::memory_order_release);
-		}
+	const auto flags = flags_.load(std::memory_order_acquire);
+
+	// Discard any stale frames in the ring buffer from a seek or decoder cancelation
+	if(flags & static_cast<unsigned int>(Flags::drainRequired)) {
+		audioRingBuffer_.Drain();
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
+
+		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
+			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
+		isSilence = YES;
+		return noErr;
 	}
 
 	// Output silence if not playing or muted
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted)) || (flags & static_cast<unsigned int>(Flags::muteRequested))) {
-		// Mute if requested
-		if(flags & static_cast<unsigned int>(Flags::muteRequested)) {
-			flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-		}
-		// Zero the output
+	if(!(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted))) {
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
 			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
 		isSilence = YES;
