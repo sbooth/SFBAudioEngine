@@ -47,6 +47,9 @@ static void SFBCreateOutputSourceLog(void)
 
 	if(url.isFileURL)
 		return [[SFBFileOutputSource alloc] initWithURL:url];
+
+	if(error)
+		*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:@{ NSURLErrorKey: url }];
 	return nil;
 }
 
