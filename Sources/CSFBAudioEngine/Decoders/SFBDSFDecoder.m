@@ -23,7 +23,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 {
 	NSCParameterAssert(chunkID != NULL);
 
-	char chunkIDBytes [4];
+	unsigned char chunkIDBytes [4];
 	NSInteger bytesRead;
 	if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
 		os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
