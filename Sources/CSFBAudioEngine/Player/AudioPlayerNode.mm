@@ -898,11 +898,6 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		return;
 	}
 
-	// Event header and payload
-	const DecodingEventHeader header{DecodingEventCommand::error};
-	const auto dataSize = static_cast<uint32_t>(errorData.length);
-	const void *data = errorData.bytes;
-
 	auto [front, back] = decodeEventRingBuffer_.GetWriteVector();
 
 	const auto frontSize = front.size();
@@ -927,9 +922,13 @@ void SFB::AudioPlayerNode::SubmitDecodingErrorEvent(NSError *error) noexcept
 		cursor += len;
 	};
 
+	// Event header and payload
+	const DecodingEventHeader header{DecodingEventCommand::error};
+	const auto dataSize = static_cast<uint32_t>(errorData.length);
+
 	write_single_arg(&header, sizeof header);
 	write_single_arg(&dataSize, sizeof dataSize);
-	write_single_arg(data, errorData.length);
+	write_single_arg(errorData.bytes, errorData.length);
 
 	decodeEventRingBuffer_.CommitWrite(cursor);
 	dispatch_semaphore_signal(eventSemaphore_);
