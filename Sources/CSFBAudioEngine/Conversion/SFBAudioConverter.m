@@ -160,6 +160,17 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return self;
 }
 
+- (void)dealloc
+{
+	[self closeReturningError:nil];
+}
+
+- (BOOL)closeReturningError:(NSError **)error
+{
+	BOOL result = [_encoder closeReturningError:error];
+	return [_decoder closeReturningError:error] && result;
+}
+
 - (BOOL)convertReturningError:(NSError **)error
 {
 	AVAudioPCMBuffer *encodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_intermediateConverter.outputFormat frameCapacity:BUFFER_SIZE_FRAMES];
@@ -214,13 +225,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		}
 	}
 
-	if(![_encoder finishEncodingReturningError:error])
-		return NO;
-
-	if(![_encoder closeReturningError:error])
-		return NO;
-
-	return [_decoder closeReturningError:error];
+	return [_encoder finishEncodingReturningError:error];
 }
 
 @end

@@ -114,6 +114,11 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 /// - returns: An initialized `SFBAudioConverter` object for the specified decoder and encoder, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedIntermediateFormat:(AVAudioFormat *(^ _Nullable)(AVAudioFormat *))intermediateFormatBlock error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
+/// Closes the converter
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` on success, `NO` otherwise
+- (BOOL)closeReturningError:(NSError **)error;
+
 #pragma mark - Conversion Information
 
 /// The decoder supplying the audio to be converted
