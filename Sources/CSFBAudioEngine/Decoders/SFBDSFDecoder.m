@@ -23,7 +23,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 {
 	NSCParameterAssert(chunkID != NULL);
 
-	char chunkIDBytes [4];
+	unsigned char chunkIDBytes [4];
 	NSInteger bytesRead;
 	if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
 		os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
@@ -45,7 +45,7 @@ static NSError * CreateInvalidDSFFileError(NSURL * url)
 }
 
 // For the size of matrices this class deals with the naive approach is adequate
-static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict B, NSInteger rows, NSInteger columns)
+static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char * restrict B, NSInteger rows, NSInteger columns)
 {
 	for(NSInteger i = 0; i < rows; ++i) {
 		for(NSInteger j = 0; j < columns; ++j)
@@ -347,13 +347,13 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 		// Copy data from the internal buffer to output
 		uint32_t copySize = packetsToCopy * packetSize;
-		memcpy((uint8_t *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
+		memcpy((unsigned char *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
 		buffer.packetCount += packetsToCopy;
 		buffer.byteLength += copySize;
 
 		// Move remaining data in buffer to beginning
 		if(packetsToCopy != packetsInBuffer) {
-			uint8_t *dst = (uint8_t *)_buffer.data;
+			unsigned char *dst = (unsigned char *)_buffer.data;
 			memmove(dst, dst + copySize, (packetsInBuffer - packetsToCopy) * packetSize);
 		}
 
@@ -404,7 +404,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Move data
 	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
-	const uint8_t *src = (uint8_t *)_buffer.data + (packetsToSkip * packetSize);
+	const unsigned char *src = (unsigned char *)_buffer.data + (packetsToSkip * packetSize);
 	memmove(_buffer.data, src, packetsToMove * packetSize);
 
 	_buffer.packetCount = packetsToMove;
@@ -424,7 +424,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 // Interleaving is accomplished by matrix transposition.
 - (BOOL)readAndInterleaveDSFBlockReturningError:(NSError **)error
 {
-	uint8_t *buf = (uint8_t *)_buffer.data;
+	unsigned char *buf = (unsigned char *)_buffer.data;
 	uint32_t bufsize = _buffer.byteCapacity;
 
 	NSInteger bytesRead;
@@ -443,7 +443,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	// Deinterleave the blocks and interleave the samples into clustered frames
 	AVAudioChannelCount channelCount = _processingFormat.channelCount;
 	assert(channelCount != 0);
-	uint8_t tmp [bufsize];
+	unsigned char tmp [bufsize];
 	MatrixTransposeNaive(buf, tmp, channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);
 	memcpy(buf, tmp, bufsize);
 
