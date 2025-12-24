@@ -45,9 +45,12 @@ static void SFBCreateOutputSourceLog(void)
 {
 	NSParameterAssert(url != nil);
 
-	if(url.isFileURL)
-		return [[SFBFileOutputSource alloc] initWithURL:url];
-	return nil;
+	if(!url.isFileURL) {
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:@{ NSURLErrorKey: url }];
+		return nil;
+	}
+	return [[SFBFileOutputSource alloc] initWithURL:url];
 }
 
 + (instancetype)dataOutputSource
