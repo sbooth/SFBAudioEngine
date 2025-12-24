@@ -876,12 +876,12 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 
 		NSInteger bytesRead;
 		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error]) {
-			os_log_error(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
+			os_log_error(gSFBDSDDecoderLog, "Error reading audio data");
 			return NO;
 		}
 
 		if(bytesRead != bytesToRead) {
-			os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %u bytes, got %ld", bytesToRead, bytesRead);
+			os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
 			if(error)
 				*error = CreateInvalidDSDIFFFileError(_inputSource.url);
 			return NO;

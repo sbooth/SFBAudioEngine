@@ -434,7 +434,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	}
 
 	if(bytesRead != bufsize) {
-		os_log_error(gSFBDSDDecoderLog, "Missing data in audio block: requested %u bytes, got %ld", bufsize, bytesRead);
+		os_log_error(gSFBDSDDecoderLog, "Missing data in audio block: requested %u bytes, got %ld", bufsize, (long)bytesRead);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
