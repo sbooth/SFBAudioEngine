@@ -875,8 +875,15 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 		NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
+		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error]) {
 			os_log_error(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
+			return NO;
+		}
+
+		if(bytesRead != bytesToRead) {
+			os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %u bytes, got %ld", bytesToRead, bytesRead);
+			if(error)
+				*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain code:SFBDSDDecoderErrorCodeInvalidFormat userInfo:nil];
 			return NO;
 		}
 
