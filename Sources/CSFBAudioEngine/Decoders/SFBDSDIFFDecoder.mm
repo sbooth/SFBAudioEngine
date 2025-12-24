@@ -883,7 +883,7 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 		if(bytesRead != bytesToRead) {
 			os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %u bytes, got %ld", bytesToRead, bytesRead);
 			if(error)
-				*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain code:SFBDSDDecoderErrorCodeInvalidFormat userInfo:nil];
+				*error = CreateInvalidDSDIFFFileError(_inputSource.url);
 			return NO;
 		}
 
