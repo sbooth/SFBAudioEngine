@@ -263,20 +263,18 @@ private:
 		engineIsRunning				= 1u << 0,
 		/// The render block is outputting audio
 		isPlaying 					= 1u << 1,
-		/// The decoding thread requested that the render block set `isMuted` during the next render cycle
-		muteRequested 				= 1u << 2,
 		/// The render block is outputting silence
-		isMuted 					= 1u << 3,
+		isMuted 					= 1u << 2,
+		/// The ring buffer needs to be drained during the next render cycle
+		drainRequired 				= 1u << 3,
 		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
 		unmuteAfterDequeue 			= 1u << 4,
-		/// The audio ring buffer requires a non-threadsafe reset
-		ringBufferNeedsReset 		= 1u << 5,
 		/// Mismatch between rendering format and decoder processing format
-		formatMismatch 				= 1u << 6,
+		formatMismatch 				= 1u << 5,
 		/// Set if there is an enqueued decoder that has not yet started decoding
-		havePendingDecoder			= 1u << 7,
+		havePendingDecoder			= 1u << 6,
 		/// Set if the pending decoder becomes active when the player is not playing
-		pendingDecoderBecameActive 	= 1u << 8,
+		pendingDecoderBecameActive 	= 1u << 7,
 	};
 
 	// MARK: - Decoding

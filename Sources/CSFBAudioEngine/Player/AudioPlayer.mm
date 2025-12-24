@@ -473,8 +473,8 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 
 	// Reconfigure the audio processing graph for the decoder's processing format if required
 	const auto reconfigure = [&] {
-		std::lock_guard lock(decoderLock_);
-		return queuedDecoders_.empty() && !FirstDecoderStateWithRenderingNotComplete();
+		std::scoped_lock lock{queueLock_, decoderLock_};
+		return queuedDecoders_.empty() && activeDecoders_.empty();
 	}();
 
 	if(reconfigure) {
@@ -486,14 +486,19 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	}
 
 	if(forImmediatePlayback) {
+		// Mute until the decoder becomes active to prevent spurious events
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 		ClearDecoderQueue();
 		CancelActiveDecoders(true);
+		flags_.fetch_or(static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 	}
 
 	if(!PushDecoderToQueue(decoder)) {
 		flags_.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		if(forImmediatePlayback)
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 		return false;
 	}
 
@@ -1001,6 +1006,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 	for(;;) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
+		auto ringBufferStale = false;
 
 		// Get the earliest decoder state that has not completed rendering
 		{
@@ -1011,7 +1017,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			while(decoderState && (decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested))) {
 				os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
 
-				flags_.fetch_or(static_cast<unsigned int>(Flags::ringBufferNeedsReset), std::memory_order_acq_rel);
+				ringBufferStale = true;
 				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 
 				// Submit the decoder canceled event
@@ -1031,8 +1037,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
-			// If a seek is pending request a ring buffer reset
-			flags_.fetch_or(static_cast<unsigned int>(Flags::ringBufferNeedsReset), std::memory_order_acq_rel);
+			ringBufferStale = true;
 
 			decoderState->PerformSeekIfRequired();
 
@@ -1070,34 +1075,34 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		// Reset the ring buffer if required, to prevent audible artifacts
-		if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::ringBufferNeedsReset)) {
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::ringBufferNeedsReset), std::memory_order_acq_rel);
+		// Request a drain of the ring buffer during the next render cycle to prevent audible artifacts from seeking or cancellation
+		if(ringBufferStale)
+			flags_.fetch_or(static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
 
-			// Ensure rendering is muted before performing operations on the ring buffer that aren't thread-safe
-			if(const auto flags = flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::isPlaying)) && !(flags & static_cast<unsigned int>(Flags::isMuted))) {
-				if(engine_.isRunning) {
-					flags_.fetch_or(static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
+		// Reconfigure the processing graph if required and there are no active decoders
+		const auto activeDecodersEmpty = [&] {
+			std::lock_guard lock(decoderLock_);
+			return activeDecoders_.empty();
+		}();
 
-					// The render block will clear Flags::muteRequested and set Flags::isMuted
-					while(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isMuted))) {
-						std::this_thread::sleep_for(std::chrono::milliseconds(5));
-						// The engine may have stopped since the initial check with no subsequent opportunity for the render block to set Flags::isMuted
-						if(!engine_.isRunning) {
-							flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-							flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-							break;
-						}
+		if(activeDecodersEmpty && (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_release);
+			if(auto decoder = PopDecoderFromQueue(); decoder) {
+				{
+					std::lock_guard lock{lock_};
+					NSError *error = nil;
+					if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoder, &error)) {
+						SubmitDecodingErrorEvent(error);
+						continue;
 					}
-				} else
-					flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
+				}
+
+				// Put it back (again)
+				{
+					std::lock_guard lock(queueLock_);
+					queuedDecoders_.push_front(decoder);
+				}
 			}
-
-			// Reset() is not thread-safe but the render block is outputting silence
-			audioRingBuffer_.Reset();
-
-			// Clear the mute flag
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 		}
 
 		// Get the earliest decoder state that has not completed decoding
@@ -1107,55 +1112,22 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		}
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
-		if(!decoderState) {
+		if(!decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
 			if(auto decoder = PopDecoderFromQueue(); decoder) {
-				// If the rendering format and the decoder's format cannot be gaplessly joined
-				// reconfigure AVAudioEngine with a new AVAudioSourceNode with the correct format
+				// If the next decoder cannot be gaplessly joined, set the mismatch flag and put
+				// the decoder back until the currently rendering decoders complete
 				if(auto format = decoder.processingFormat; !FormatWillBeGaplessIfEnqueued(format)) {
-					flags_.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
-
-					// Wait for the currently rendering decoder to finish
-					for(;;) {
-						{
-							std::lock_guard lock(decoderLock_);
-							if(!FirstDecoderStateWithRenderingNotComplete())
-								break;
-						}
-						std::this_thread::sleep_for(std::chrono::milliseconds(5));
-					}
-
-					if(const auto flags = flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::isPlaying)) && !(flags & static_cast<unsigned int>(Flags::isMuted))) {
-						if(engine_.isRunning) {
-							flags_.fetch_or(static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-
-							// The render block will clear Flags::muteRequested and set Flags::isMuted
-							while(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::isMuted))) {
-								std::this_thread::sleep_for(std::chrono::milliseconds(5));
-								// The engine may have stopped since the initial check with no subsequent opportunity for the render block to set Flags::isMuted
-								if(!engine_.isRunning) {
-									flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-									flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-									break;
-								}
-							}
-						} else
-							flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-					}
+					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 
 					os_log_debug(log_, "Non-gapless join for %{public}@", decoder);
 
+					// Put it back
 					{
-						std::lock_guard lock{lock_};
-						NSError *error = nil;
-						if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoder, &error)) {
-							flags_.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
-							SubmitDecodingErrorEvent(error);
-							continue;
-						}
+						std::lock_guard lock(queueLock_);
+						queuedDecoders_.push_front(decoder);
 					}
 
-					// Clear the mute flag
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
+					continue;
 				}
 
 				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
@@ -1169,7 +1141,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				// Clear the mute flags if needed
 				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::muteRequested) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 
 				try {
 					// Create the decoder state and add it to the list of active decoders
@@ -1189,7 +1161,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		if(decoderState) {
+		if(decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::drainRequired))) {
 			// Decode and write chunks to the ring buffer
 			while(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize) {
 				// Decoding started
@@ -1248,9 +1220,27 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		// Wait for an event signal; timeout after the approximate time for space in the ring buffer to become available
-		const auto ringBufferChunkDuration = kRingBufferChunkSize / audioRingBuffer_.Format().mSampleRate;
-		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, ringBufferChunkDuration * NSEC_PER_SEC));
+		int64_t deltaNanos;
+		// Idling
+		if(!decoderState)
+			deltaNanos = NSEC_PER_SEC / 2;
+		// Determine timeout based on ring buffer free space
+		else {
+			// Attempt to keep the ring buffer 75% full
+			const auto targetMaxFreeSpace = audioRingBuffer_.Capacity() / 4;
+			const auto freeSpace = audioRingBuffer_.FreeSpace();
+
+			// Minimal timeout if the ring buffer has more free space than desired
+			if(freeSpace > targetMaxFreeSpace)
+				deltaNanos =  2.5 * NSEC_PER_MSEC;
+			else {
+				const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.Format().mSampleRate;
+				deltaNanos = duration * NSEC_PER_SEC;
+			}
+		}
+
+		// Wait for an event signal; ring buffer space availability is polled using the timeout
+		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 	}
 
 	os_log_debug(log_, "Decoding thread complete");
@@ -1311,17 +1301,21 @@ void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 OSStatus SFB::AudioPlayer::Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) noexcept
 {
-	// N.B. The ring buffer must not be read from or written to when Flags::isMuted is set
-	// because the decoding thread could be performing non-thread safe operations
+	const auto flags = flags_.load(std::memory_order_acquire);
+
+	// Discard any stale frames in the ring buffer from a seek or decoder cancelation
+	if(flags & static_cast<unsigned int>(Flags::drainRequired)) {
+		audioRingBuffer_.Drain();
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
+
+		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
+			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
+		isSilence = YES;
+		return noErr;
+	}
 
 	// Output silence if not playing or muted
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted)) || (flags & static_cast<unsigned int>(Flags::muteRequested))) {
-		// Mute if requested
-		if(flags & static_cast<unsigned int>(Flags::muteRequested)) {
-			flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::muteRequested), std::memory_order_acq_rel);
-		}
-		// Zero the output
+	if(!(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted))) {
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
 			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
 		isSilence = YES;
@@ -1379,8 +1373,18 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 			}
 		}
 
+		int64_t deltaNanos;
+		{
+			std::lock_guard lock(decoderLock_);
+			if(FirstDecoderStateWithRenderingNotComplete())
+				deltaNanos = 7.5 * NSEC_PER_MSEC;
+			// Use a longer timeout when idle
+			else
+				deltaNanos = NSEC_PER_SEC / 2;
+		}
+
 		// Decoding events will be signaled; render events are polled using the timeout
-		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, 7.5 * NSEC_PER_MSEC));
+		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 	}
 
 	os_log_debug(log_, "Event processing thread complete");
