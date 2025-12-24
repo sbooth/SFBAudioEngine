@@ -347,7 +347,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 		// Copy data from the internal buffer to output
 		uint32_t copySize = packetsToCopy * packetSize;
-		memcpy((void *)((uintptr_t)buffer.data + (packetsToSkip * packetSize)), _buffer.data, copySize);
+		memcpy((uint8_t *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
 		buffer.packetCount += packetsToCopy;
 		buffer.byteLength += copySize;
 
@@ -404,7 +404,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Move data
 	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
-	const void *src = (const void *)((uintptr_t)_buffer.data + (packetsToSkip * packetSize));
+	const uint8_t *src = (uint8_t *)_buffer.data + (packetsToSkip * packetSize);
 	memmove(_buffer.data, src, packetsToMove * packetSize);
 
 	_buffer.packetCount = packetsToMove;

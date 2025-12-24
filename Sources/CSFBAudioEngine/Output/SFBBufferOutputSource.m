@@ -61,7 +61,7 @@
 	}
 
 	size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
-	memcpy(buffer, (const void *)((uintptr_t)_buffer + _pos), bytesToCopy);
+	memcpy(buffer, (const uint8_t *)_buffer + _pos, bytesToCopy);
 	_pos += bytesToCopy;
 	*bytesRead = (NSInteger)bytesToCopy;
 
@@ -82,7 +82,7 @@
 	}
 
 	size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
-	memcpy((void *)((uintptr_t)_buffer + _pos), buffer, bytesToCopy);
+	memcpy((uint8_t *)_buffer + _pos, buffer, bytesToCopy);
 	_pos += bytesToCopy;
 	*bytesWritten = (NSInteger)bytesToCopy;
 

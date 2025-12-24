@@ -485,7 +485,7 @@ private:
 		AVAudioChannelCount channelCount = buffer.format.channelCount;
 		bool isBigEndian = _buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian;
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-			const auto input = static_cast<const uint8_t *>(reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(_buffer.data) + channel));
+			const auto input = static_cast<const uint8_t *>(_buffer.data) + channel;
 			float *output = floatChannelData[channel];
 			_context[channel].Translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
 			// Boost signal by 6 dBFS

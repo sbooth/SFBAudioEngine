@@ -230,8 +230,8 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 		uint8_t marker = _marker;
 		AVAudioChannelCount channelCount = _processingFormat.channelCount;
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-			const uint8_t *input = (const void *)((uintptr_t)_buffer.data + channel);
-			uint8_t *output = (void *)((uintptr_t)buffer.audioBufferList->mBuffers[channel].mData + buffer.audioBufferList->mBuffers[channel].mDataByteSize);
+			const uint8_t *input = (const uint8_t *)_buffer.data + channel;
+			uint8_t *output = (uint8_t *)buffer.audioBufferList->mBuffers[channel].mData + buffer.audioBufferList->mBuffers[channel].mDataByteSize;
 
 			// The DoP marker should match across channels
 			marker = _marker;
