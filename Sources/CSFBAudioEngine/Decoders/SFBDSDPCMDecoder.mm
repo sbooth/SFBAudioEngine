@@ -470,7 +470,7 @@ private:
 		// Grab the DSD audio
 		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * kDSDPacketsPerPCMFrame;
 		if(![_decoder decodeIntoBuffer:_buffer packetCount:std::min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
-			break;
+			return NO;
 
 		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
 		if(dsdPacketsDecoded == 0)
