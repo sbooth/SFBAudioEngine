@@ -829,6 +829,9 @@ void SFB::AudioPlayerNode::ProcessDecoders(std::stop_token stoken) noexcept
 					os_log_error(log_, "Error decoding audio: %{public}@", error);
 					if(error)
 						SubmitDecodingErrorEvent(error);
+					// Assume the decoding error is not recoverable
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+					break;
 				}
 
 				// Write the decoded audio to the ring buffer for rendering

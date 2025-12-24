@@ -1012,7 +1012,7 @@ void SFB::AudioPlayer::HandleDecoderCanceled(const AudioPlayerNode& node, Decode
 
 	if(std::shared_lock lock{playerNodeMutex_}; playerNode_ == node.node_) {
 		flags_.fetch_and(~static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
-		if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
+		if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) /*&& !(flags & static_cast<unsigned int>(Flags::engineIsRunning))*/)
 			SetNowPlaying(nil);
 	}
 }
