@@ -92,11 +92,11 @@ struct AudioPlayer::DecoderState final {
 	/// Monotonically increasing instance counter
 	const uint64_t			sequenceNumber_ 	{sequenceCounter_++};
 
-	/// The sample rate of the audio converter's output format
-	const double 			sampleRate_ 		{0};
-
 	/// Decodes audio from the source representation to PCM
 	const Decoder 			decoder_ 			{nil};
+
+	/// The sample rate of the audio converter's output format
+	const double 			sampleRate_ 		{0};
 
 	/// Flags
 	std::atomic_uint 		flags_ 				{0};
@@ -145,18 +145,24 @@ struct AudioPlayer::DecoderState final {
 		isCanceled 			= 1u << 8,
 	};
 
-	DecoderState(Decoder _Nonnull decoder, AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = 1024)
-	: frameLength_{decoder.frameLength}, decoder_{decoder}, sampleRate_{format.sampleRate}
+	DecoderState(Decoder _Nonnull decoder) noexcept
+	: decoder_{decoder}, frameLength_{decoder.frameLength}, sampleRate_{decoder.processingFormat.sampleRate}
 	{
 #if DEBUG
 		assert(decoder != nil);
+#endif /* DEBUG */
+	}
+
+	bool Allocate(AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = 1024) noexcept
+	{
+#if DEBUG
 		assert(format != nil);
 #endif /* DEBUG */
 
 		converter_ = [[AVAudioConverter alloc] initFromFormat:decoder_.processingFormat toFormat:format];
 		if(!converter_) {
 			os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", decoder_.processingFormat, format);
-			throw std::runtime_error("Error creating AVAudioConverter");
+			return false;
 		}
 
 		// The logic in this class assumes no SRC is performed by mConverter
@@ -164,13 +170,20 @@ struct AudioPlayer::DecoderState final {
 
 		decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
 		if(!decodeBuffer_)
-			throw std::bad_alloc();
+			return false;
 
-		if(const auto framePosition = decoder.framePosition; framePosition != 0) {
+		if(const auto framePosition = decoder_.framePosition; framePosition != 0) {
 			framesDecoded_.store(framePosition, std::memory_order_release);
 			framesConverted_.store(framePosition, std::memory_order_release);
 			framesRendered_.store(framePosition, std::memory_order_release);
 		}
+
+		return true;
+	}
+
+	bool IsAllocated() const noexcept
+	{
+		return converter_ != nil;
 	}
 
 	AVAudioFramePosition FramePosition() const noexcept
@@ -1079,32 +1092,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		if(ringBufferStale)
 			flags_.fetch_or(static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
 
-		// Reconfigure the processing graph if required and there are no active decoders
-		const auto activeDecodersEmpty = [&] {
-			std::lock_guard lock(decoderLock_);
-			return activeDecoders_.empty();
-		}();
-
-		if(activeDecodersEmpty && (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_release);
-			if(auto decoder = PopDecoderFromQueue(); decoder) {
-				{
-					std::lock_guard lock{lock_};
-					NSError *error = nil;
-					if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoder, &error)) {
-						SubmitDecodingErrorEvent(error);
-						continue;
-					}
-				}
-
-				// Put it back (again)
-				{
-					std::lock_guard lock(queueLock_);
-					queuedDecoders_.push_front(decoder);
-				}
-			}
-		}
-
 		// Get the earliest decoder state that has not completed decoding
 		{
 			std::lock_guard lock(decoderLock_);
@@ -1112,43 +1099,12 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		}
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
-		if(!decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
+		if(!decoderState) {
 			if(auto decoder = PopDecoderFromQueue(); decoder) {
-				// If the next decoder cannot be gaplessly joined, set the mismatch flag and put
-				// the decoder back until the currently rendering decoders complete
-				if(auto format = decoder.processingFormat; !FormatWillBeGaplessIfEnqueued(format)) {
-					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
-
-					os_log_debug(log_, "Non-gapless join for %{public}@", decoder);
-
-					// Put it back
-					{
-						std::lock_guard lock(queueLock_);
-						queuedDecoders_.push_front(decoder);
-					}
-
-					continue;
-				}
-
-				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-				buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
-				if(!buffer) {
-					os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
-					NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
-					SubmitDecodingErrorEvent(error);
-					continue;
-				}
-
-				// Clear the mute flags if needed
-				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
-
 				try {
 					// Create the decoder state and add it to the list of active decoders
-					// When the decoder's processing format and rendering format don't match
-					// conversion will be performed in DecoderState::DecodeAudio()
 					std::lock_guard lock(decoderLock_);
-					activeDecoders_.push_back(std::make_unique<DecoderState>(decoder, renderingFormat_, kRingBufferChunkSize));
+					activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
 					decoderState = activeDecoders_.back().get();
 				} catch(const std::exception& e) {
 					os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
@@ -1157,8 +1113,82 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					continue;
 				}
 
+				// Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel layout)
+				if(auto format = decoder.processingFormat; FormatWillBeGaplessIfEnqueued(format)) {
+					if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
+						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+						NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+						SubmitDecodingErrorEvent(error);
+						continue;
+					}
+
+					// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
+					if(!buffer) {
+						buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
+						if(!buffer) {
+							os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
+							NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+							SubmitDecodingErrorEvent(error);
+							continue;
+						}
+					}
+				} else {
+					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
+					// decoding can't start until the processing graph is reconfigured which occurs after
+					// all active decoders complete
+					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
+					os_log_debug(log_, "Non-gapless join for %{public}@", decoder);
+				}
+
+				// Clear the mute flags if needed
+				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+
 				os_log_debug(log_, "Dequeued %{public}@, processing format %{public}@", decoderState->decoder_, SFB::StringDescribingAVAudioFormat(decoderState->decoder_.processingFormat));
 			}
+		}
+
+		// If there a format mismatch the processing graph requires reconfiguration before decoding can begin
+		if(decoderState && (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
+			// Wait until all other decoders complete processing before reconfiguring the graph
+			const auto okToReconfigure = [&] {
+				std::lock_guard lock(decoderLock_);
+				return activeDecoders_.size() == 1;
+			}();
+
+			if(okToReconfigure) {
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_release);
+
+				{
+					std::lock_guard lock{lock_};
+					NSError *error = nil;
+					if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoderState->decoder_, &error)) {
+						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+						SubmitDecodingErrorEvent(error);
+						continue;
+					}
+				}
+
+				if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+					SubmitDecodingErrorEvent(error);
+					continue;
+				}
+
+				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
+				if(AVAudioFormat *format = buffer.format; !buffer || format.channelCount != renderingFormat_.channelCount || format.sampleRate != renderingFormat_.sampleRate) {
+					buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
+					if(!buffer) {
+						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
+						NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+						SubmitDecodingErrorEvent(error);
+						continue;
+					}
+				}
+			}
+			else
+				decoderState = nullptr;
 		}
 
 		if(decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::drainRequired))) {
@@ -1510,7 +1540,6 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 				while(framesRemainingToDistribute > 0) {
 					uint64_t hostTime = 0;
 					Decoder startedDecoder = nil;
-					Decoder nextDecoder = nil;
 					Decoder completeDecoder = nil;
 
 					{
@@ -1553,65 +1582,27 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 
 							completeDecoder = decoderState->decoder_;
 
-							// Check for a decoder transition
-							if(const auto nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_); nextDecoderState) {
-								const auto nextDecoderFramesRemaining = nextDecoderState->FramesAvailableToRender();
-								const auto framesFromNextDecoder = std::min(nextDecoderFramesRemaining, framesRemainingToDistribute);
+							const auto frameOffset = framesRendered - framesRemainingToDistribute;
+							const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
+							hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
 
+							const auto now = SFB::GetCurrentHostTime();
+							if(now > hostTime)
+								os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->decoder_);
 #if DEBUG
-								assert(framesFromNextDecoder > 0);
-								assert(!nextDecoderState->HasRenderingStarted());
+							else
+								os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->decoder_);
 #endif /* DEBUG */
 
-								nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::renderingStarted), std::memory_order_acq_rel);
-
-								nextDecoderState->AddFramesRendered(framesFromNextDecoder);
-								framesRemainingToDistribute -= framesFromNextDecoder;
-
-								const auto frameOffset = framesRendered - framesRemainingToDistribute;
-								const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
-								hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
-
-								const auto now = SFB::GetCurrentHostTime();
-								if(now > hostTime)
-									os_log_error(log_, "Rendering decoder changed event processed %.2f msec late for transition from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->decoder_, nextDecoderState->decoder_);
-#if DEBUG
-								else
-									os_log_debug(log_, "Rendering decoder will change in %.2f msec from %{public}@ to %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->decoder_, nextDecoderState->decoder_);
-#endif /* DEBUG */
-
-								nextDecoder = nextDecoderState->decoder_;
-
-								if(!DeleteDecoderStateWithSequenceNumber(decoderState->sequenceNumber_))
-									os_log_error(log_, "Unable to delete decoder state with sequence number %llu in rendering decoder changed event", decoderState->sequenceNumber_);
-
-								decoderState = nextDecoderState;
-							} else {
-								const auto frameOffset = framesRendered - framesRemainingToDistribute;
-								const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
-								hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
-
-								const auto now = SFB::GetCurrentHostTime();
-								if(now > hostTime)
-									os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->decoder_);
-#if DEBUG
-								else
-									os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->decoder_);
-#endif /* DEBUG */
-
-								if(!DeleteDecoderStateWithSequenceNumber(decoderState->sequenceNumber_))
-									os_log_error(log_, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderState->sequenceNumber_);
-							}
+							if(!DeleteDecoderStateWithSequenceNumber(decoderState->sequenceNumber_))
+								os_log_error(log_, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderState->sequenceNumber_);
 						}
 					}
 
 					// Call blocks after unlock
 					if(startedDecoder)
 						HandleRenderingWillStart(startedDecoder, hostTime);
-
-					if(nextDecoder)
-						HandleRenderingDecoderWillChange(completeDecoder, nextDecoder, hostTime);
-					else if(completeDecoder)
+					if(completeDecoder)
 						HandleRenderingWillComplete(completeDecoder, hostTime);
 				}
 			} else
@@ -2026,44 +2017,6 @@ void SFB::AudioPlayer::HandleRenderingWillStart(Decoder decoder, uint64_t hostTi
 		[player_.delegate audioPlayer:player_ renderingWillStart:decoder atHostTime:hostTime];
 }
 
-void SFB::AudioPlayer::HandleRenderingDecoderWillChange(Decoder decoder, Decoder nextDecoder, uint64_t hostTime) noexcept
-{
-	// Schedule the rendering decoder changed notification at the expected host time
-	dispatch_after(hostTime, eventQueue_, ^{
-		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(log_, "%{public}@ canceled after rendering decoder will change notification", decoder);
-			return;
-		}
-
-		if(NSNumber *isCanceled = objc_getAssociatedObject(nextDecoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(log_, "%{public}@ canceled after rendering decoder will change notification", nextDecoder);
-			return;
-		}
-
-#if DEBUG
-		const auto now = SFB::GetCurrentHostTime();
-		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
-		const auto tolerance = static_cast<uint64_t>(1e9 / renderingFormat_.sampleRate);
-		if(delta > tolerance)
-			os_log_debug(log_, "Rendering decoder changed notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif /* DEBUG */
-
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
-
-		SetNowPlaying(nextDecoder);
-
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
-			[player_.delegate audioPlayer:player_ renderingStarted:nextDecoder];
-	});
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
-		[player_.delegate audioPlayer:player_ renderingWillComplete:decoder atHostTime:hostTime];
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
-		[player_.delegate audioPlayer:player_ renderingWillStart:nextDecoder atHostTime:hostTime];
-}
-
 void SFB::AudioPlayer::HandleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime) noexcept
 {
 	// Schedule the rendering completed notification at the expected host time
@@ -2085,7 +2038,7 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(Decoder _Nonnull decoder, uin
 			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
 
 		// End of audio
-		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::havePendingDecoder))) {
+		if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::formatMismatch)) ) {
 #if DEBUG
 			os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */

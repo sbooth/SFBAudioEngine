@@ -405,9 +405,6 @@ private:
 	/// Called when the first audio frame from the first available decoder will render.
 	void HandleRenderingWillStart(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
-	/// Called when a transition between rendering decoders will occur.
-	void HandleRenderingDecoderWillChange(Decoder _Nonnull decoder, Decoder _Nonnull nextDecoder, uint64_t hostTime) noexcept;
-
 	/// Called when the final audio frame from the last available decoder will render.
 	void HandleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
