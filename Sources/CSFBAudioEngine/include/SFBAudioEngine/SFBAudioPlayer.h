@@ -30,7 +30,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	SFBAudioPlayerPlaybackStateStopped		= 2,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
-/// An audio player wrapping an `AVAudioEngine` processing graph
+/// An audio player using an `AVAudioEngine` processing graph
 ///
 /// `SFBAudioPlayer` supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
@@ -109,10 +109,10 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Playback Control
 
-/// Starts the underlying `AVAudioEngine` and begins rendering audio
+/// Starts the `AVAudioEngine` and begins rendering audio
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: `YES` if the underlying `AVAudioEngine` was successfully started
+/// - returns: `YES` if the `AVAudioEngine` was successfully started
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 /// Pauses audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
@@ -120,7 +120,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// Resumes audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
 - (void)resume;
-/// Stops the underlying `AVAudioEngine`
+/// Stops the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
@@ -131,7 +131,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePaused` this method sends `-resume`
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
-/// Resets the underlying `AVAudioEngine`
+/// Resets the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 - (void)reset;
 
@@ -253,7 +253,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - AVAudioEngine Access
 
-/// Returns the underlying `AVAudioEngine`
+/// Returns the `AVAudioEngine`
 /// - important: Graph modifications may only be made between `sourceNode` and `mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
 @property (nonatomic, nonnull, readonly) AVAudioEngine *audioEngine;
@@ -353,7 +353,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter format: The rendering format of the player node
 /// - returns: The `AVAudioNode` to which the player node should be connected
 - (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer reconfigureProcessingGraph:(AVAudioEngine *)engine withFormat:(AVAudioFormat *)format NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
-/// Called to notify the delegate when the configuration of the underlying `AVAudioEngine` changes
+/// Called to notify the delegate when the configuration of the `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
