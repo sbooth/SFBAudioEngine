@@ -271,10 +271,6 @@ private:
 		unmuteAfterDequeue 			= 1u << 4,
 		/// Mismatch between rendering format and decoder processing format
 		formatMismatch 				= 1u << 5,
-		/// Set if there is an enqueued decoder that has not yet started decoding
-		havePendingDecoder			= 1u << 6,
-		/// Set if the pending decoder becomes active when the player is not playing
-		pendingDecoderBecameActive 	= 1u << 7,
 	};
 
 	// MARK: - Decoding

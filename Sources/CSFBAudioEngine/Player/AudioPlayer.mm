@@ -1136,7 +1136,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}();
 
 			if(okToReconfigure) {
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_release);
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch) & ~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_release);
 
 				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
@@ -1961,11 +1961,8 @@ void SFB::AudioPlayer::HandleDecodingStarted(Decoder decoder) noexcept
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
 
-	if(const auto flags = flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && CurrentDecoder() == decoder) {
-		flags_.fetch_or(static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
+	if(const auto flags = flags_.load(std::memory_order_acquire); !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && CurrentDecoder() == decoder)
 		SetNowPlaying(decoder);
-	}
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 }
 
 void SFB::AudioPlayer::HandleDecodingComplete(Decoder decoder) noexcept
@@ -1991,9 +1988,7 @@ void SFB::AudioPlayer::HandleRenderingWillStart(Decoder decoder, uint64_t hostTi
 			os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::pendingDecoderBecameActive)))
-			SetNowPlaying(decoder);
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
+		SetNowPlaying(decoder);
 
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 			[player_.delegate audioPlayer:player_ renderingStarted:decoder];
@@ -2023,8 +2018,13 @@ void SFB::AudioPlayer::HandleRenderingWillComplete(Decoder _Nonnull decoder, uin
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
 
+		const auto activeDecodersEmpty = [&] {
+			std::lock_guard lock(decoderLock_);
+			return activeDecoders_.empty();
+		}();
+
 		// End of audio
-		if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::formatMismatch)) ) {
+		if(activeDecodersEmpty) {
 #if DEBUG
 			os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
@@ -2050,8 +2050,12 @@ void SFB::AudioPlayer::HandleDecoderCanceled(Decoder decoder, AVAudioFramePositi
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
 		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
 
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::pendingDecoderBecameActive), std::memory_order_acq_rel);
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::havePendingDecoder)) && !(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
+	const auto activeDecodersEmpty = [&] {
+		std::lock_guard lock(decoderLock_);
+		return activeDecoders_.empty();
+	}();
+
+	if(activeDecodersEmpty)
 		SetNowPlaying(nil);
 }
 
