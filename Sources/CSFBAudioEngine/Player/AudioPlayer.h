@@ -402,10 +402,10 @@ private:
 	/// Called after decoding the final frame of audio from a decoder.
 	void HandleDecodingComplete(Decoder _Nonnull decoder) noexcept;
 
-	/// Called when the first audio frame from the first available decoder will render.
+	/// Called when the first audio frame from a decoder will render.
 	void HandleRenderingWillStart(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
-	/// Called when the final audio frame from the last available decoder will render.
+	/// Called when the final audio frame from a decoder will render.
 	void HandleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
 	/// Called when the decoding and rendering process for a decoder has been canceled.
