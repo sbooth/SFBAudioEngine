@@ -335,35 +335,37 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 	if(packetCount == 0)
 		return YES;
 
+	AVAudioPacketCount packetsRemaining = _packetCount - _packetPosition;
+	AVAudioPacketCount packetsToRead = MIN(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsProcessed = 0;
 
 	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
 	for(;;) {
-		AVAudioPacketCount packetsRemaining = packetCount - packetsProcessed;
-		AVAudioPacketCount packetsToSkip = buffer.packetCount;
 		AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
-		AVAudioPacketCount packetsToCopy = MIN(packetsInBuffer, packetsRemaining);
+		AVAudioPacketCount packetsToCopy = MIN(packetsInBuffer, packetsToRead - packetsProcessed);
 
 		// Copy data from the internal buffer to output
-		uint32_t copySize = packetsToCopy * packetSize;
-		memcpy((unsigned char *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
-		buffer.packetCount += packetsToCopy;
-		buffer.byteLength += copySize;
+		if(packetsToCopy) {
+			uint32_t copySize = packetsToCopy * packetSize;
+			memcpy((unsigned char *)buffer.data + (buffer.packetCount * packetSize), _buffer.data, copySize);
+			buffer.packetCount += packetsToCopy;
+			buffer.byteLength += copySize;
 
-		// Move remaining data in buffer to beginning
-		if(packetsToCopy != packetsInBuffer) {
-			unsigned char *dst = (unsigned char *)_buffer.data;
-			memmove(dst, dst + copySize, (packetsInBuffer - packetsToCopy) * packetSize);
+			// Move remaining data in buffer to beginning
+			if(packetsToCopy != packetsInBuffer) {
+				unsigned char *dst = (unsigned char *)_buffer.data;
+				memmove(dst, dst + copySize, (packetsInBuffer - packetsToCopy) * packetSize);
+			}
+
+			_buffer.packetCount -= packetsToCopy;
+			_buffer.byteLength -= copySize;
+
+			packetsProcessed += packetsToCopy;
 		}
 
-		_buffer.packetCount -= packetsToCopy;
-		_buffer.byteLength -= copySize;
-
-		packetsProcessed += packetsToCopy;
-
 		// All requested packets were read
-		if(packetsProcessed == packetCount)
+		if(packetsProcessed == packetsToRead)
 			break;
 
 		// Read  the next block
