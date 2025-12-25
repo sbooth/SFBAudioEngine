@@ -30,7 +30,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	SFBAudioPlayerPlaybackStateStopped		= 2,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
-/// An audio player using an `AVAudioEngine` processing graph
+/// An audio player using an `AVAudioEngine` processing graph for playback
 ///
 /// `SFBAudioPlayer` supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
