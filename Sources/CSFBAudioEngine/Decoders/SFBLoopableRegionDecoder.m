@@ -238,4 +238,9 @@
 	return YES;
 }
 
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+}
+
 @end
