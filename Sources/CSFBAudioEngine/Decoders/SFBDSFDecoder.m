@@ -335,7 +335,7 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 	if(packetCount == 0)
 		return YES;
 
-	AVAudioPacketCount packetsRemaining = _packetCount - _packetPosition;
+	AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
 	AVAudioPacketCount packetsToRead = MIN(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsProcessed = 0;
 
