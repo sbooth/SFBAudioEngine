@@ -484,22 +484,8 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	// Ensure only one decoder can be enqueued at a time
 	std::lock_guard lock{lock_};
 
-	// Reconfigure the audio processing graph for the decoder's processing format if required
-	const auto reconfigure = [&] {
-		std::scoped_lock lock{queueLock_, decoderLock_};
-		return queuedDecoders_.empty() && activeDecoders_.empty();
-	}();
-
-	if(reconfigure) {
-		flags_.fetch_or(static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
-		if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoder, error)) {
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
-			return false;
-		}
-	}
-
 	if(forImmediatePlayback) {
-		// Mute until the decoder becomes active to prevent spurious events
+		// Mute until the decoder becomes active
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 		ClearDecoderQueue();
 		CancelActiveDecoders(true);
@@ -507,7 +493,6 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	}
 
 	if(!PushDecoderToQueue(decoder)) {
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::havePendingDecoder), std::memory_order_acq_rel);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		if(forImmediatePlayback)
@@ -1014,7 +999,13 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 	os_log_debug(log_, "Decoding thread starting");
 
 	// The buffer between the decoder state and the ring buffer
-	AVAudioPCMBuffer *buffer = nil;
+	AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
+	if(!buffer) {
+		os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
+		NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+		SubmitDecodingErrorEvent(error);
+		return;
+	}
 
 	for(;;) {
 		// The decoder state being processed
@@ -1115,6 +1106,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				// Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel layout)
 				if(auto format = decoder.processingFormat; FormatWillBeGaplessIfEnqueued(format)) {
+					// Allocate decoder state internals
 					if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
 						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 						NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
@@ -1122,25 +1114,14 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						continue;
 					}
 
-					// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-					if(!buffer) {
-						buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
-						if(!buffer) {
-							os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
-							NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
-							SubmitDecodingErrorEvent(error);
-							continue;
-						}
-					}
+					// Clear the mute flags if needed
+					if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
+						flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 				} else
 					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
 					// decoding can't start until the processing graph is reconfigured which occurs after
 					// all active decoders complete
 					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
-
-				// Clear the mute flags if needed
-				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 
 				os_log_debug(log_, "Dequeued %{public}@, processing format %{public}@", decoderState->decoder_, SFB::StringDescribingAVAudioFormat(decoderState->decoder_.processingFormat));
 			}
@@ -1169,15 +1150,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					}
 				}
 
-				if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-					NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
-					SubmitDecodingErrorEvent(error);
-					continue;
-				}
-
 				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-				if(AVAudioFormat *format = buffer.format; !buffer || format.channelCount != renderingFormat_.channelCount || format.sampleRate != renderingFormat_.sampleRate) {
+				if(AVAudioFormat *format = buffer.format; format.channelCount != renderingFormat_.channelCount || format.sampleRate != renderingFormat_.sampleRate) {
 					buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
 					if(!buffer) {
 						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
@@ -1186,6 +1160,18 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						continue;
 					}
 				}
+
+				// Allocate decoder state internals
+				if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+					SubmitDecodingErrorEvent(error);
+					continue;
+				}
+
+				// Clear the mute flags if needed
+				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 			}
 			else
 				decoderState = nullptr;
