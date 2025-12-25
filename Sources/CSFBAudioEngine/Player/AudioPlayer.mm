@@ -1132,13 +1132,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 							continue;
 						}
 					}
-				} else {
+				} else
 					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
 					// decoding can't start until the processing graph is reconfigured which occurs after
 					// all active decoders complete
 					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
-					os_log_debug(log_, "Non-gapless join for %{public}@", decoder);
-				}
 
 				// Clear the mute flags if needed
 				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
@@ -1158,6 +1156,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 			if(okToReconfigure) {
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_release);
+
+				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
 				{
 					std::lock_guard lock{lock_};
@@ -1930,6 +1930,10 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 			[engine_ connect:sourceNode_ to:mixerNode format:format];
 	}
 
+#if DEBUG
+	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
+#endif /* DEBUG */
+
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
 	// (maximum frames per slice) greater than the default for AVAudioSourceNode (1156).
 	//
@@ -1958,10 +1962,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 				os_log_error(log_, "Error allocating AUAudioUnit render resources for AVAudioSourceNode: %{public}@", error);
 		}
 	}
-
-#if DEBUG
-	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
-#endif /* DEBUG */
 
 	[engine_ prepare];
 
