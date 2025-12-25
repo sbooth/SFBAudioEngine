@@ -1259,12 +1259,6 @@ void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
 		return;
 	}
 
-	// Event header and payload
-	const DecodingEventHeader header{DecodingEventCommand::error};
-	const auto dataSize = static_cast<uint32_t>(errorData.length);
-	const void *data = errorData.bytes;
-
-	std::size_t bytesWritten = 0;
 	auto [front, back] = decodeEventRingBuffer_.GetWriteVector();
 
 	const auto frontSize = front.size();
@@ -1276,7 +1270,7 @@ void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
 
 	std::size_t cursor = 0;
 	auto write_single_arg = [&](const void *arg, std::size_t len) noexcept {
-		const auto *src = static_cast<const uint8_t *>(arg);
+		const auto *src = static_cast<const unsigned char *>(arg);
 		if(cursor + len <= frontSize)
 			std::memcpy(front.data() + cursor, src, len);
 		else if(cursor >= frontSize)
@@ -1289,11 +1283,15 @@ void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
 		cursor += len;
 	};
 
+	// Event header and payload
+	const DecodingEventHeader header{DecodingEventCommand::error};
+	const auto dataSize = static_cast<uint32_t>(errorData.length);
+
 	write_single_arg(&header, sizeof header);
 	write_single_arg(&dataSize, sizeof dataSize);
-	write_single_arg(data, dataSize);
+	write_single_arg(errorData.bytes, errorData.length);
 
-	decodeEventRingBuffer_.CommitWrite(bytesWritten);
+	decodeEventRingBuffer_.CommitWrite(cursor);
 	dispatch_semaphore_signal(eventSemaphore_);
 }
 
