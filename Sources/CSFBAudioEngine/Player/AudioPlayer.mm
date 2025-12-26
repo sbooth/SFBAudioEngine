@@ -516,67 +516,6 @@ bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) cons
 	return format.channelCount == renderingFormat_.channelCount && format.sampleRate == renderingFormat_.sampleRate && CXXCoreAudio::AVAudioChannelLayoutsAreEquivalent(format.channelLayout, renderingFormat_.channelLayout);
 }
 
-bool SFB::AudioPlayer::PushDecoderToQueue(Decoder decoder) noexcept
-{
-	try {
-		std::lock_guard lock{queueLock_};
-		queuedDecoders_.push_back(decoder);
-	} catch(const std::exception& e) {
-		os_log_error(log_, "Error pushing %{public}@ to queuedDecoders_: %{public}s", decoder, e.what());
-		return false;
-	}
-
-	return true;
-}
-
-SFB::AudioPlayer::Decoder SFB::AudioPlayer::PopDecoderFromQueue() noexcept
-{
-	Decoder decoder = nil;
-	std::lock_guard lock{queueLock_};
-	if(!queuedDecoders_.empty()) {
-		decoder = queuedDecoders_.front();
-		queuedDecoders_.pop_front();
-	}
-	return decoder;
-}
-
-SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
-{
-	std::lock_guard lock{decoderLock_};
-	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
-	if(!decoderState)
-		return nil;
-	return decoderState->decoder_;
-}
-
-void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
-{
-	std::lock_guard lock{decoderLock_};
-
-	// Cancel all active decoders in sequence
-	if(auto decoderState = FirstDecoderStateWithRenderingNotComplete(); decoderState) {
-		decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-		if(cancelAllActive) {
-			decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
-			while(decoderState) {
-				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
-			}
-		}
-
-		dispatch_semaphore_signal(decodingSemaphore_);
-	}
-}
-
-void SFB::AudioPlayer::Reset() noexcept
-{
-	// FIXME: Should `engineLock_` be locked for `reset`?
-//	std::lock_guard lock{engineLock_};
-	[engine_ reset];
-	ClearDecoderQueue();
-	CancelActiveDecoders(true);
-}
-
 // MARK: - Playback Control
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
@@ -678,6 +617,15 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 	}
 }
 
+void SFB::AudioPlayer::Reset() noexcept
+{
+	// FIXME: Should `engineLock_` be locked for `reset`?
+//	std::lock_guard lock{engineLock_};
+	[engine_ reset];
+	ClearDecoderQueue();
+	CancelActiveDecoders(true);
+}
+
 // MARK: - Player State
 
 bool SFB::AudioPlayer::EngineIsRunning() const noexcept
@@ -687,6 +635,15 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 		assert(static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) == isRunning && "Cached value for engine_.isRunning invalid");
 #endif /* DEBUG */
 	return isRunning;
+}
+
+SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
+{
+	std::lock_guard lock{decoderLock_};
+	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
+	if(!decoderState)
+		return nil;
+	return decoderState->decoder_;
 }
 
 void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
@@ -1121,7 +1078,18 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
 		if(!decoderState) {
-			if(auto decoder = PopDecoderFromQueue(); decoder) {
+			/// Removes and returns the first decoder from the decoder queue
+			const auto popDecoder = [&] {
+				Decoder decoder = nil;
+				std::lock_guard lock{queueLock_};
+				if(!queuedDecoders_.empty()) {
+					decoder = queuedDecoders_.front();
+					queuedDecoders_.pop_front();
+				}
+				return decoder;
+			};
+
+			if(auto decoder = popDecoder(); decoder) {
 				try {
 					// Create the decoder state and add it to the list of active decoders
 					std::lock_guard lock{decoderLock_};
@@ -1451,7 +1419,7 @@ void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) n
 					decoder = decoderState->decoder_;
 				}
 
-				HandleDecodingStarted(decoder);
+				HandleDecodingStartedEvent(decoder);
 			} else
 				os_log_error(log_, "Missing decoder sequence number for decoding started event");
 			break;
@@ -1470,7 +1438,7 @@ void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) n
 					decoder = decoderState->decoder_;
 				}
 
-				HandleDecodingComplete(decoder);
+				HandleDecodingCompleteEvent(decoder);
 			} else
 				os_log_error(log_, "Missing decoder sequence number for decoding complete event");
 			break;
@@ -1495,7 +1463,7 @@ void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) n
 						os_log_error(log_, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
 				}
 
-				HandleDecoderCanceled(decoder, framesRendered);
+				HandleDecoderCanceledEvent(decoder, framesRendered);
 			} else
 				os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
 			break;
@@ -1521,7 +1489,7 @@ void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) n
 				break;
 			}
 
-			HandleAsynchronousError(error);
+			HandleAsynchronousErrorEvent(error);
 			break;
 		}
 
@@ -1617,9 +1585,9 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 
 					// Call blocks after unlock
 					if(startedDecoder)
-						HandleRenderingWillStart(startedDecoder, hostTime);
+						HandleRenderingWillStartEvent(startedDecoder, hostTime);
 					if(completeDecoder)
-						HandleRenderingWillComplete(completeDecoder, hostTime);
+						HandleRenderingWillCompleteEvent(completeDecoder, hostTime);
 				}
 			} else
 				os_log_error(log_, "Missing timestamp or frames rendered for frames rendered event");
@@ -1631,7 +1599,135 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 	}
 }
 
+void SFB::AudioPlayer::HandleDecodingStartedEvent(Decoder decoder) noexcept
+{
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
+		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
+
+	if(const auto flags = flags_.load(std::memory_order_acquire); !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && CurrentDecoder() == decoder)
+		SetNowPlaying(decoder);
+}
+
+void SFB::AudioPlayer::HandleDecodingCompleteEvent(Decoder decoder) noexcept
+{
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
+		[player_.delegate audioPlayer:player_ decodingComplete:decoder];
+}
+
+void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept
+{
+	// Schedule the rendering started notification at the expected host time
+	dispatch_after(hostTime, eventQueue_, ^{
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
+			return;
+		}
+
+#if DEBUG
+		const auto now = SFB::GetCurrentHostTime();
+		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
+		const auto tolerance = static_cast<uint64_t>(1e9 / renderingFormat_.sampleRate);
+		if(delta > tolerance)
+			os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
+#endif /* DEBUG */
+
+		SetNowPlaying(decoder);
+
+		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
+			[player_.delegate audioPlayer:player_ renderingStarted:decoder];
+	});
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
+		[player_.delegate audioPlayer:player_ renderingWillStart:decoder atHostTime:hostTime];
+}
+
+void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept
+{
+	// Schedule the rendering completed notification at the expected host time
+	dispatch_after(hostTime, eventQueue_, ^{
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+			os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
+			return;
+		}
+
+#if DEBUG
+		const auto now = SFB::GetCurrentHostTime();
+		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
+		const auto tolerance = static_cast<uint64_t>(1e9 / renderingFormat_.sampleRate);
+		if(delta > tolerance)
+			os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
+#endif /* DEBUG */
+
+		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
+
+		const auto activeDecodersEmpty = [&] {
+			std::lock_guard lock{decoderLock_};
+			return activeDecoders_.empty();
+		}();
+
+		// End of audio
+		if(activeDecodersEmpty) {
+#if DEBUG
+			os_log_debug(log_, "End of audio reached");
+#endif /* DEBUG */
+
+			SetNowPlaying(nil);
+
+			if([player_.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
+				[player_.delegate audioPlayerEndOfAudio:player_];
+			else
+				Stop();
+		}
+	});
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
+		[player_.delegate audioPlayer:player_ renderingWillComplete:decoder atHostTime:hostTime];
+}
+
+void SFB::AudioPlayer::HandleDecoderCanceledEvent(Decoder decoder, AVAudioFramePosition framesRendered) noexcept
+{
+	// Mark the decoder as canceled for any scheduled render notifications
+	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
+		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
+
+	const auto activeDecodersEmpty = [&] {
+		std::lock_guard lock{decoderLock_};
+		return activeDecoders_.empty();
+	}();
+
+	if(activeDecodersEmpty)
+		SetNowPlaying(nil);
+}
+
+void SFB::AudioPlayer::HandleAsynchronousErrorEvent(NSError *error) noexcept
+{
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+		[player_.delegate audioPlayer:player_ encounteredError:error];
+}
+
 // MARK: - Active Decoder Management
+
+void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
+{
+	std::lock_guard lock{decoderLock_};
+
+	// Cancel all active decoders in sequence
+	if(auto decoderState = FirstDecoderStateWithRenderingNotComplete(); decoderState) {
+		decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+		if(cancelAllActive) {
+			decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+			while(decoderState) {
+				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
+			}
+		}
+
+		dispatch_semaphore_signal(decodingSemaphore_);
+	}
+}
 
 SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithDecodingNotComplete() const noexcept
 {
@@ -1992,115 +2088,4 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 	[engine_ prepare];
 
 	return true;
-}
-
-// MARK: - Event Notifications
-
-void SFB::AudioPlayer::HandleDecodingStarted(Decoder decoder) noexcept
-{
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
-		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
-
-	if(const auto flags = flags_.load(std::memory_order_acquire); !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && CurrentDecoder() == decoder)
-		SetNowPlaying(decoder);
-}
-
-void SFB::AudioPlayer::HandleDecodingComplete(Decoder decoder) noexcept
-{
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
-		[player_.delegate audioPlayer:player_ decodingComplete:decoder];
-}
-
-void SFB::AudioPlayer::HandleRenderingWillStart(Decoder decoder, uint64_t hostTime) noexcept
-{
-	// Schedule the rendering started notification at the expected host time
-	dispatch_after(hostTime, eventQueue_, ^{
-		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
-			return;
-		}
-
-#if DEBUG
-		const auto now = SFB::GetCurrentHostTime();
-		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
-		const auto tolerance = static_cast<uint64_t>(1e9 / renderingFormat_.sampleRate);
-		if(delta > tolerance)
-			os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif /* DEBUG */
-
-		SetNowPlaying(decoder);
-
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
-			[player_.delegate audioPlayer:player_ renderingStarted:decoder];
-	});
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
-		[player_.delegate audioPlayer:player_ renderingWillStart:decoder atHostTime:hostTime];
-}
-
-void SFB::AudioPlayer::HandleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime) noexcept
-{
-	// Schedule the rendering completed notification at the expected host time
-	dispatch_after(hostTime, eventQueue_, ^{
-		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
-			os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
-			return;
-		}
-
-#if DEBUG
-		const auto now = SFB::GetCurrentHostTime();
-		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
-		const auto tolerance = static_cast<uint64_t>(1e9 / renderingFormat_.sampleRate);
-		if(delta > tolerance)
-			os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
-#endif /* DEBUG */
-
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
-
-		const auto activeDecodersEmpty = [&] {
-			std::lock_guard lock{decoderLock_};
-			return activeDecoders_.empty();
-		}();
-
-		// End of audio
-		if(activeDecodersEmpty) {
-#if DEBUG
-			os_log_debug(log_, "End of audio reached");
-#endif /* DEBUG */
-
-			SetNowPlaying(nil);
-
-			if([player_.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
-				[player_.delegate audioPlayerEndOfAudio:player_];
-			else
-				Stop();
-		}
-	});
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
-		[player_.delegate audioPlayer:player_ renderingWillComplete:decoder atHostTime:hostTime];
-}
-
-void SFB::AudioPlayer::HandleDecoderCanceled(Decoder decoder, AVAudioFramePosition framesRendered) noexcept
-{
-	// Mark the decoder as canceled for any scheduled render notifications
-	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
-		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
-
-	const auto activeDecodersEmpty = [&] {
-		std::lock_guard lock{decoderLock_};
-		return activeDecoders_.empty();
-	}();
-
-	if(activeDecodersEmpty)
-		SetNowPlaying(nil);
-}
-
-void SFB::AudioPlayer::HandleAsynchronousError(NSError *error) noexcept
-{
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-		[player_.delegate audioPlayer:player_ encounteredError:error];
 }

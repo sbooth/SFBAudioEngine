@@ -132,17 +132,6 @@ public:
 		return queuedDecoders_.empty();
 	}
 
-	/// Inserts `decoder` at the end of the decoder queue
-	bool PushDecoderToQueue(Decoder _Nonnull decoder) noexcept;
-
-	/// Removes and returns the first decoder from the decoder queue
-	Decoder _Nullable PopDecoderFromQueue() noexcept;
-
-	Decoder _Nullable CurrentDecoder() const noexcept;
-	void CancelActiveDecoders(bool cancelAllActive) noexcept;
-
-	void Reset() noexcept;
-
 	// MARK: - Playback Control
 
 	bool Play(NSError **error) noexcept;
@@ -150,6 +139,8 @@ public:
 	void Resume() noexcept;
 	void Stop() noexcept;
 	bool TogglePlayPause(NSError **error) noexcept;
+
+	void Reset() noexcept;
 
 	// MARK: - Player State
 
@@ -189,6 +180,8 @@ public:
 		return FirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
+	Decoder _Nullable CurrentDecoder() const noexcept;
+
 	Decoder _Nullable NowPlaying() const noexcept
 	{
 		std::lock_guard lock{nowPlayingLock_};
@@ -213,15 +206,6 @@ public:
 	bool SeekToPosition(double position) noexcept;
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept;
 	bool SupportsSeeking() const noexcept;
-
-	// MARK: - Format Information
-
-	AVAudioFormat * _Nonnull RenderingFormat() const noexcept
-	{
-		return renderingFormat_;
-	}
-
-	bool SupportsFormat(AVAudioFormat * _Nonnull format) const noexcept;
 
 #if !TARGET_OS_IPHONE
 
@@ -336,7 +320,28 @@ private:
 	/// Processes an event from `renderEventRingBuffer_`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
+	/// Called before decoding the first frame of audio from a decoder.
+	void HandleDecodingStartedEvent(Decoder _Nonnull decoder) noexcept;
+
+	/// Called after decoding the final frame of audio from a decoder.
+	void HandleDecodingCompleteEvent(Decoder _Nonnull decoder) noexcept;
+
+	/// Called when the first audio frame from a decoder will render.
+	void HandleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+
+	/// Called when the final audio frame from a decoder will render.
+	void HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+
+	/// Called when the decoding and rendering process for a decoder has been canceled.
+	void HandleDecoderCanceledEvent(Decoder _Nonnull decoder, AVAudioFramePosition framesRendered) noexcept;
+
+	/// Called when an asynchronous error occurs.
+	void HandleAsynchronousErrorEvent(NSError * _Nonnull error) noexcept;
+
 	// MARK: - Active Decoder Management
+
+	/// Cancels active decoders in sequence
+	void CancelActiveDecoders(bool cancelAllActive) noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
 	DecoderState * const _Nullable FirstDecoderStateWithDecodingNotComplete() const noexcept;
@@ -378,26 +383,6 @@ private:
 	/// - parameter replaceSourceNode: Whether the audio source node driving the graph should be replaced
 	/// - returns: `true` if the processing graph was successfully configured
 	bool ConfigureProcessingGraph(AVAudioFormat * _Nonnull format, bool replaceSourceNode) noexcept;
-
-	// MARK: - Event Notifications
-
-	/// Called before decoding the first frame of audio from a decoder.
-	void HandleDecodingStarted(Decoder _Nonnull decoder) noexcept;
-
-	/// Called after decoding the final frame of audio from a decoder.
-	void HandleDecodingComplete(Decoder _Nonnull decoder) noexcept;
-
-	/// Called when the first audio frame from a decoder will render.
-	void HandleRenderingWillStart(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
-
-	/// Called when the final audio frame from a decoder will render.
-	void HandleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
-
-	/// Called when the decoding and rendering process for a decoder has been canceled.
-	void HandleDecoderCanceled(Decoder _Nonnull decoder, AVAudioFramePosition framesRendered) noexcept;
-
-	/// Called when an asynchronous error occurs.
-	void HandleAsynchronousError(NSError * _Nonnull error) noexcept;
 };
 
 } /* namespace SFB */

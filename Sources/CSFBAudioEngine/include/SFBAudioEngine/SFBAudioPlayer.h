@@ -256,7 +256,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerDelegate> delegate;
 
-// MARK: - AVAudioEngine Access
+// MARK: - AVAudioEngine Modification
 
 /// Peforms an operation on the `AVAudioEngine`
 /// - important: Graph modifications may only be made between `sourceNode` and `engine.mainMixerNode`
