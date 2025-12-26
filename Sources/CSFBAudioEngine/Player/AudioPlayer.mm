@@ -1406,97 +1406,138 @@ void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) n
 {
 	switch(header.mCommand) {
 		case DecodingEventCommand::started:
-			if(uint64_t decoderSequenceNumber; decodeEventRingBuffer_.ReadValue(decoderSequenceNumber)) {
-				Decoder decoder;
-
-				{
-					std::lock_guard lock{decoderLock_};
-					const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
-					if(!decoderState) {
-						os_log_error(log_, "Decoder state with sequence number %llu missing for decoding started event", decoderSequenceNumber);
-						break;
-					}
-					decoder = decoderState->decoder_;
-				}
-
-				HandleDecodingStartedEvent(decoder);
-			} else
-				os_log_error(log_, "Missing decoder sequence number for decoding started event");
+			ProcessDecodingStartedEvent();
 			break;
 
 		case DecodingEventCommand::complete:
-			if(uint64_t decoderSequenceNumber; decodeEventRingBuffer_.ReadValue(decoderSequenceNumber)) {
-				Decoder decoder;
-
-				{
-					std::lock_guard lock{decoderLock_};
-					const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
-					if(!decoderState) {
-						os_log_error(log_, "Decoder state with sequence number %llu missing for decoding complete event", decoderSequenceNumber);
-						break;
-					}
-					decoder = decoderState->decoder_;
-				}
-
-				HandleDecodingCompleteEvent(decoder);
-			} else
-				os_log_error(log_, "Missing decoder sequence number for decoding complete event");
+			ProcessDecodingCompleteEvent();
 			break;
 
 		case DecodingEventCommand::canceled:
-			if(uint64_t decoderSequenceNumber; decodeEventRingBuffer_.ReadValue(decoderSequenceNumber)) {
-				Decoder decoder;
-				AVAudioFramePosition framesRendered;
-
-				{
-					std::lock_guard lock{decoderLock_};
-					const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
-					if(!decoderState) {
-						os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event", decoderSequenceNumber);
-						break;
-					}
-
-					decoder = decoderState->decoder_;
-					framesRendered = decoderState->FramesRendered();
-
-					if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
-						os_log_error(log_, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
-				}
-
-				HandleDecoderCanceledEvent(decoder, framesRendered);
-			} else
-				os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
+			ProcessDecoderCanceledEvent();
 			break;
 
 		case DecodingEventCommand::error:
-		{
-			uint32_t dataSize;
-			if(!decodeEventRingBuffer_.ReadValue(dataSize)) {
-				os_log_error(log_, "Missing data size for decoding error event");
-				break;
-			}
-
-			NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-			if(decodeEventRingBuffer_.Read(data.mutableBytes, 1, dataSize, false) != dataSize) {
-				os_log_error(log_, "Missing or incomplete archived NSError for decoding error event");
-				break;
-			}
-
-			NSError *err = nil;
-			NSError *error = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSError class] fromData:data error:&err];
-			if(!error) {
-				os_log_error(log_, "Error unarchiving NSError for decoding error event: %{public}@", err);
-				break;
-			}
-
-			HandleAsynchronousErrorEvent(error);
+			ProcessAsynchronousDecodingErrorEvent();
 			break;
-		}
 
 		default:
 			os_log_error(log_, "Unknown decode event command: %u", header.mCommand);
 			break;
 	}
+}
+
+void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
+{
+	uint64_t decoderSequenceNumber;
+	if(!decodeEventRingBuffer_.ReadValue(decoderSequenceNumber)) {
+		os_log_error(log_, "Missing decoder sequence number for decoding started event");
+		return;
+	}
+
+	const auto decoder = [&] -> auto {
+		std::lock_guard lock{decoderLock_};
+		const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
+		return decoderState ? decoderState->decoder_ : nil;
+	}();
+
+	if(!decoder) {
+		os_log_error(log_, "Decoder state with sequence number %llu missing for decoding started event", decoderSequenceNumber);
+		return;
+	}
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
+		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
+
+	if(const auto flags = flags_.load(std::memory_order_acquire); !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && CurrentDecoder() == decoder)
+		SetNowPlaying(decoder);
+}
+
+void SFB::AudioPlayer::ProcessDecodingCompleteEvent() noexcept
+{
+	uint64_t decoderSequenceNumber;
+	if(!decodeEventRingBuffer_.ReadValue(decoderSequenceNumber)) {
+		os_log_error(log_, "Missing decoder sequence number for decoding complete event");
+		return;
+	}
+
+	const auto decoder = [&] -> auto {
+		std::lock_guard lock{decoderLock_};
+		const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
+		return decoderState ? decoderState->decoder_ : nil;
+	}();
+
+	if(!decoder) {
+		os_log_error(log_, "Decoder state with sequence number %llu missing for decoding complete event", decoderSequenceNumber);
+		return;
+	}
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
+		[player_.delegate audioPlayer:player_ decodingComplete:decoder];
+}
+
+void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
+{
+	uint64_t decoderSequenceNumber;
+	if(!decodeEventRingBuffer_.ReadValue(decoderSequenceNumber)) {
+		os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
+		return;
+	}
+
+	Decoder decoder;
+	AVAudioFramePosition framesRendered;
+	bool activeDecodersEmpty;
+
+	{
+		std::lock_guard lock{decoderLock_};
+		const auto decoderState = DecoderStateWithSequenceNumber(decoderSequenceNumber);
+		if(!decoderState) {
+			os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event", decoderSequenceNumber);
+			return;
+		}
+
+		decoder = decoderState->decoder_;
+		framesRendered = decoderState->FramesRendered();
+
+		if(!DeleteDecoderStateWithSequenceNumber(decoderSequenceNumber))
+			os_log_error(log_, "Unable to delete decoder state with sequence number %llu in decoder canceled event", decoderSequenceNumber);
+
+		activeDecodersEmpty = activeDecoders_.empty();
+	}
+
+	// Mark the decoder as canceled for any scheduled render notifications
+	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
+		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
+
+	if(activeDecodersEmpty)
+		SetNowPlaying(nil);
+}
+
+void SFB::AudioPlayer::ProcessAsynchronousDecodingErrorEvent() noexcept
+{
+	uint32_t dataSize;
+	if(!decodeEventRingBuffer_.ReadValue(dataSize)) {
+		os_log_error(log_, "Missing data size for decoding error event");
+		return;
+	}
+
+	NSMutableData *data = [NSMutableData dataWithLength:dataSize];
+	if(decodeEventRingBuffer_.Read(data.mutableBytes, 1, dataSize, false) != dataSize) {
+		os_log_error(log_, "Missing or incomplete archived NSError for decoding error event");
+		return;
+	}
+
+	NSError *err = nil;
+	NSError *error = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSError class] fromData:data error:&err];
+	if(!error) {
+		os_log_error(log_, "Error unarchiving NSError for decoding error event: %{public}@", err);
+		return;
+	}
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+		[player_.delegate audioPlayer:player_ encounteredError:error];
 }
 
 void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header) noexcept
@@ -1599,21 +1640,6 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 	}
 }
 
-void SFB::AudioPlayer::HandleDecodingStartedEvent(Decoder decoder) noexcept
-{
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
-		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
-
-	if(const auto flags = flags_.load(std::memory_order_acquire); !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && CurrentDecoder() == decoder)
-		SetNowPlaying(decoder);
-}
-
-void SFB::AudioPlayer::HandleDecodingCompleteEvent(Decoder decoder) noexcept
-{
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
-		[player_.delegate audioPlayer:player_ decodingComplete:decoder];
-}
-
 void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept
 {
 	// Schedule the rendering started notification at the expected host time
@@ -1683,29 +1709,6 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillComplete:atHostTime:)])
 		[player_.delegate audioPlayer:player_ renderingWillComplete:decoder atHostTime:hostTime];
-}
-
-void SFB::AudioPlayer::HandleDecoderCanceledEvent(Decoder decoder, AVAudioFramePosition framesRendered) noexcept
-{
-	// Mark the decoder as canceled for any scheduled render notifications
-	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
-		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
-
-	const auto activeDecodersEmpty = [&] {
-		std::lock_guard lock{decoderLock_};
-		return activeDecoders_.empty();
-	}();
-
-	if(activeDecodersEmpty)
-		SetNowPlaying(nil);
-}
-
-void SFB::AudioPlayer::HandleAsynchronousErrorEvent(NSError *error) noexcept
-{
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-		[player_.delegate audioPlayer:player_ encounteredError:error];
 }
 
 // MARK: - Active Decoder Management

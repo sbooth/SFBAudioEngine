@@ -317,26 +317,26 @@ private:
 	/// Processes an event from `decodeEventRingBuffer_`
 	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
 
+	/// Processes a decoding started event from `decodeEventRingBuffer_`
+	void ProcessDecodingStartedEvent() noexcept;
+
+	/// Processes a decoding complete event from `decodeEventRingBuffer_`
+	void ProcessDecodingCompleteEvent() noexcept;
+
+	/// Processes a decoder canceled event from `decodeEventRingBuffer_`
+	void ProcessDecoderCanceledEvent() noexcept;
+
+	/// Process an asynchronous error event from `decodeEventRingBuffer_`
+	void ProcessAsynchronousDecodingErrorEvent() noexcept;
+
 	/// Processes an event from `renderEventRingBuffer_`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
-
-	/// Called before decoding the first frame of audio from a decoder.
-	void HandleDecodingStartedEvent(Decoder _Nonnull decoder) noexcept;
-
-	/// Called after decoding the final frame of audio from a decoder.
-	void HandleDecodingCompleteEvent(Decoder _Nonnull decoder) noexcept;
 
 	/// Called when the first audio frame from a decoder will render.
 	void HandleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
 	/// Called when the final audio frame from a decoder will render.
 	void HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
-
-	/// Called when the decoding and rendering process for a decoder has been canceled.
-	void HandleDecoderCanceledEvent(Decoder _Nonnull decoder, AVAudioFramePosition framesRendered) noexcept;
-
-	/// Called when an asynchronous error occurs.
-	void HandleAsynchronousErrorEvent(NSError * _Nonnull error) noexcept;
 
 	// MARK: - Active Decoder Management
 
