@@ -1418,7 +1418,7 @@ void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) n
 			break;
 
 		case DecodingEventCommand::error:
-			ProcessAsynchronousDecodingErrorEvent();
+			ProcessDecodingErrorEvent();
 			break;
 
 		default:
@@ -1515,7 +1515,7 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 		SetNowPlaying(nil);
 }
 
-void SFB::AudioPlayer::ProcessAsynchronousDecodingErrorEvent() noexcept
+void SFB::AudioPlayer::ProcessDecodingErrorEvent() noexcept
 {
 	uint32_t dataSize;
 	if(!decodeEventRingBuffer_.ReadValue(dataSize)) {

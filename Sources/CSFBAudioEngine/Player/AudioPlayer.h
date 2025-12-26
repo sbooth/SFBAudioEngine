@@ -326,8 +326,8 @@ private:
 	/// Processes a decoder canceled event from `decodeEventRingBuffer_`
 	void ProcessDecoderCanceledEvent() noexcept;
 
-	/// Process an asynchronous error event from `decodeEventRingBuffer_`
-	void ProcessAsynchronousDecodingErrorEvent() noexcept;
+	/// Process a decoding error event from `decodeEventRingBuffer_`
+	void ProcessDecodingErrorEvent() noexcept;
 
 	/// Processes an event from `renderEventRingBuffer_`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
