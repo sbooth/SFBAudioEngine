@@ -312,14 +312,10 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 // MARK: - AVAudioEngine
 
-- (AVAudioEngine *)audioEngine
+- (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
-	return _player->AudioEngine();
-}
-
-- (AVAudioSourceNode *)sourceNode
-{
-	return _player->SourceNode();
+	NSParameterAssert(block != nil);
+	_player->WithEngine(block);
 }
 
 // MARK: - Debugging

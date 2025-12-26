@@ -20,6 +20,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
+/// A block accepting an `AVAudioEngine` and `AVAudioSourceNode`
+/// @param engine The `AVAudioEngine`
+/// @param sourceNode The `AVAudioSourceNode`
+typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine, AVAudioSourceNode *sourceNode) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
+
 /// The possible playback states for `SFBAudioPlayer`
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	/// The `AVAudioEngine` is running and the player is rendering audio
@@ -253,12 +258,11 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - AVAudioEngine Access
 
-/// Returns the `AVAudioEngine`
-/// - important: Graph modifications may only be made between `sourceNode` and `mainMixerNode`
+/// Peforms an operation on the `AVAudioEngine`
+/// - important: Graph modifications may only be made between `sourceNode` and `engine.mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
-@property (nonatomic, nonnull, readonly) AVAudioEngine *audioEngine;
-/// Returns the `AVAudioSourceNode` that is the source of the audio processing graph
-@property (nonatomic, nonnull, readonly) AVAudioSourceNode *sourceNode;
+/// - parameter block: A block performing operations on the underlying `AVAudioEngine`
+- (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 
 // MARK: - Debugging
 
@@ -340,18 +344,18 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
-/// Before this method is called the main mixer node will be connected to the output node, and the player node will be attached
+/// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached
 /// to the processing graph with no connections.
 ///
 /// The delegate should establish or update any connections in the processing graph segment between the node to be returned and the main mixer node.
 ///
-/// After this method returns the player node will be connected to the returned node using the specified format.
+/// After this method returns the source node will be connected to the returned node using the specified format.
 /// - important: This method is called from a context where it is safe to modify `engine`
-/// - note: This method is only called when one or more nodes have been inserted between the player node and main mixer node.
+/// - note: This method is only called when one or more nodes have been inserted between the source node and main mixer node.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter engine: The `AVAudioEngine` object
-/// - parameter format: The rendering format of the player node
-/// - returns: The `AVAudioNode` to which the player node should be connected
+/// - parameter format: The rendering format of the source node
+/// - returns: The `AVAudioNode` to which the source node should be connected
 - (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer reconfigureProcessingGraph:(AVAudioEngine *)engine withFormat:(AVAudioFormat *)format NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
 /// Called to notify the delegate when the configuration of the `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
