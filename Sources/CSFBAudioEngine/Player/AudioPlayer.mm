@@ -485,11 +485,10 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	std::lock_guard lock{lock_};
 
 	if(forImmediatePlayback) {
-		// Mute until the decoder becomes active
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 		ClearDecoderQueue();
 		CancelActiveDecoders(true);
-		flags_.fetch_or(static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+		// Mute until the decoder becomes active
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted) | static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 	}
 
 	if(!PushDecoderToQueue(decoder)) {
@@ -1113,10 +1112,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						SubmitDecodingErrorEvent(error);
 						continue;
 					}
-
-					// Clear the mute flags if needed
-					if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-						flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 				} else
 					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
 					// decoding can't start until the processing graph is reconfigured which occurs after
@@ -1168,10 +1163,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					SubmitDecodingErrorEvent(error);
 					continue;
 				}
-
-				// Clear the mute flags if needed
-				if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 			}
 			else
 				decoderState = nullptr;
@@ -1234,6 +1225,10 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					break;
 				}
 			}
+
+			// Clear the mute flags if needed
+			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 		}
 
 		int64_t deltaNanos;
