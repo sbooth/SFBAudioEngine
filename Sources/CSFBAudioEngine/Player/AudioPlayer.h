@@ -124,13 +124,13 @@ public:
 
 	void ClearDecoderQueue() noexcept
 	{
-		std::lock_guard lock(queueLock_);
+		std::lock_guard lock{queueLock_};
 		queuedDecoders_.clear();
 	}
 
 	bool DecoderQueueIsEmpty() const noexcept
 	{
-		std::lock_guard lock(queueLock_);
+		std::lock_guard lock{queueLock_};
 		return queuedDecoders_.empty();
 	}
 
@@ -187,13 +187,13 @@ public:
 
 	bool IsReady() const noexcept
 	{
-		std::lock_guard lock(decoderLock_);
+		std::lock_guard lock{decoderLock_};
 		return FirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
 	Decoder _Nullable NowPlaying() const noexcept
 	{
-		std::lock_guard lock(nowPlayingLock_);
+		std::lock_guard lock{nowPlayingLock_};
 		return nowPlaying_;
 	}
 
