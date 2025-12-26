@@ -481,16 +481,19 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		return false;
 
 	// Ensure only one decoder can be enqueued at a time
-	std::lock_guard lock{lock_};
+	std::lock_guard lock{queueLock_};
 
 	if(forImmediatePlayback) {
-		ClearDecoderQueue();
+		queuedDecoders_.clear();
 		CancelActiveDecoders(true);
 		// Mute until the decoder becomes active
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted) | static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 	}
 
-	if(!PushDecoderToQueue(decoder)) {
+	try {
+		queuedDecoders_.push_back(decoder);
+	} catch(const std::exception& e) {
+		os_log_error(log_, "Error pushing %{public}@ to queuedDecoders_: %{public}s", decoder, e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		if(forImmediatePlayback)
@@ -567,6 +570,8 @@ void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
 
 void SFB::AudioPlayer::Reset() noexcept
 {
+	// FIXME: Should `engineLock_` be locked for `reset`?
+//	std::lock_guard lock{engineLock_};
 	[engine_ reset];
 	ClearDecoderQueue();
 	CancelActiveDecoders(true);
@@ -577,13 +582,20 @@ void SFB::AudioPlayer::Reset() noexcept
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
 	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
-		if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
+		NSError *startError = nil;
+		const auto started = [&] {
+			std::lock_guard lock{engineLock_};
+			return [engine_ startAndReturnError:&startError];
+		}();
+
+		if(!started) {
 			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", err);
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 			if(error)
-				*error = err;
+				*error = startError;
 			return false;
 		}
+
 		flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	} else
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
@@ -633,7 +645,11 @@ void SFB::AudioPlayer::Stop() noexcept
 	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
 		return;
 
-	[engine_ stop];
+	{
+		std::lock_guard lock{engineLock_};
+		[engine_ stop];
+	}
+
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	ClearDecoderQueue();
@@ -936,6 +952,22 @@ bool SFB::AudioPlayer::SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError
 
 #endif /* !TARGET_OS_IPHONE */
 
+// MARK: - AVAudioEngine Modification
+
+void SFB::AudioPlayer::WithEngine(void(^block)(AVAudioEngine *engine, AVAudioSourceNode *sourceNode)) const noexcept
+{
+#if DEBUG
+	assert(block != nil);
+#endif /* DEBUG */
+
+	std::lock_guard lock{engineLock_};
+	block(engine_, sourceNode_);
+
+	assert(sourceNode_.engine == engine_ && "Illegal AVAudioEngine configuration");
+	assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode && "Illegal AVAudioEngine configuration");
+	assert(engine_.isRunning == static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && "AVAudioEngine may not be started or stopped outside of AudioPlayer");
+}
+
 // MARK: - Debugging
 
 void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept
@@ -1135,9 +1167,13 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
 				{
-					std::lock_guard lock{lock_};
 					NSError *error = nil;
-					if(!ConfigureProcessingGraphAndRingBufferForDecoder(decoderState->decoder_, &error)) {
+					const auto success = [&] {
+						std::lock_guard lock{engineLock_};
+						return ConfigureProcessingGraphAndRingBufferForDecoder(decoderState->decoder_, &error);
+					}();
+
+					if(!success) {
 						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 						SubmitDecodingErrorEvent(error);
 						continue;
@@ -1704,7 +1740,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 	// Update the audio processing graph
 	const auto success = [&] {
-		std::lock_guard lock{lock_};
+		std::lock_guard lock{engineLock_};
 		return ConfigureProcessingGraph(renderingFormat_, false);
 	}();
 
@@ -1720,10 +1756,16 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 	// Restart AVAudioEngine if previously running
 	if(engineWasRunning) {
-		if(NSError *error = nil; ![engine_ startAndReturnError:&error]) {
-			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", error);
+		NSError *startError = nil;
+		const auto started = [&] {
+			std::lock_guard lock{engineLock_};
+			return [engine_ startAndReturnError:&startError];
+		}();
+
+		if(!started) {
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 //			if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-//				[player_.delegate audioPlayer:player_ encounteredError:error];
+//				[player_.delegate audioPlayer:player_ encounteredError:startError];
 			return;
 		}
 
@@ -1757,10 +1799,18 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			// However, Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-				if(NSError *error = nil; ![engine_ startAndReturnError:&error]) {
-					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", error);
+
+				NSError *startError = nil;
+				const auto started = [&] {
+					std::lock_guard lock{engineLock_};
+					return [engine_ startAndReturnError:&startError];
+				}();
+
+				if(!started) {
+					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 					return;
 				}
+
 				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
 			break;
@@ -1778,7 +1828,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 {
 #if DEBUG
 	assert(decoder != nil);
-	lock_.assert_owner();
+	engineLock_.assert_owner();
 #endif /* DEBUG */
 
 	// Attempt to preserve the playback state
@@ -1802,10 +1852,10 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 
 	// Restart AVAudioEngine and playback as appropriate
 	if(engineWasRunning && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
-		if(NSError *err = nil; ![engine_ startAndReturnError:&err]) {
-			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", err);
+		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 			if(error)
-				*error = err;
+				*error = startError;
 			return false;
 		}
 
@@ -1831,7 +1881,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 #if DEBUG
 	assert(format != nil);
 	assert(replaceSourceNode || [format isEqual:renderingFormat_]);
-	lock_.assert_owner();
+	engineLock_.assert_owner();
 #endif /* DEBUG */
 
 	if(!format.isStandard) {

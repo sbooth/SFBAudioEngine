@@ -86,12 +86,10 @@ private:
 
 	/// The underlying `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
-
 	/// The source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-
-	/// The lock used to serialize enqueues and engine configuration changes
-	mutable CXXUnfairLock::UnfairLock 		lock_;
+	/// The lock used to protect engine processing graph configuration changes
+	mutable CXXUnfairLock::UnfairLock 		engineLock_;
 
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 					nowPlaying_ 		{nil};
@@ -239,18 +237,9 @@ public:
 
 #endif /* !TARGET_OS_IPHONE */
 
-	// MARK: - AVAudioEngine
+	// MARK: - AVAudioEngine Modification
 
-	AVAudioEngine * AudioEngine() const noexcept
-	{
-		return engine_;
-	}
-
-	AVAudioSourceNode * SourceNode() const noexcept
-	{
-		std::lock_guard lock{lock_};
-		return sourceNode_;
-	}
+	void WithEngine(void(^block)(AVAudioEngine * _Nonnull engine, AVAudioSourceNode * _Nonnull sourceNode)) const noexcept;
 
 	// MARK: - Debugging
 
