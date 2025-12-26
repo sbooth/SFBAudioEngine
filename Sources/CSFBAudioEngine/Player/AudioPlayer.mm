@@ -1782,10 +1782,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 	lock_.assert_owner();
 #endif /* DEBUG */
 
-	auto format = decoder.processingFormat;
-	if(FormatWillBeGaplessIfEnqueued(format))
-		return true;
-
 	// Attempt to preserve the playback state
 	const auto flags = flags_.load(std::memory_order_acquire);
 	const auto engineWasRunning = flags & static_cast<unsigned int>(Flags::engineIsRunning);
@@ -1793,7 +1789,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 
 	// If the rendering format and the decoder's format cannot be gaplessly joined
 	// reconfigure AVAudioEngine with a new AVAudioSourceNode with the correct format
-	if(!ConfigureProcessingGraph(format, true)) {
+	if(auto format = decoder.processingFormat; !ConfigureProcessingGraph(format, true)) {
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeFormatNotSupported userInfo:nil];
 		SetNowPlaying(nil);
