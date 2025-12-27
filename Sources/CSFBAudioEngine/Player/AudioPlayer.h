@@ -56,7 +56,7 @@ private:
 	/// The format of the audio supplied by `renderBlock_`
 	AVAudioFormat 							*renderingFormat_	{nil};
 
-	/// Ring buffer used to transfer audio between the decoding thread and the render block
+	/// Ring buffer transferring audio between the decoding thread and the render block
 	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_ 	{};
 
 	/// Active decoders and associated state
@@ -79,16 +79,16 @@ private:
 	/// Dispatch semaphore used for communication with the event processing thread
 	dispatch_semaphore_t					eventSemaphore_ 	{};
 
-	/// Ring buffer used to communicate events from the decoding thread
+	/// Ring buffer communicating events from the decoding thread to the event processing thread
 	CXXRingBuffer::RingBuffer				decodeEventRingBuffer_;
-	/// Ring buffer used to communicate events from the render block
+	/// Ring buffer communicating events from the render block to the event processing thread
 	CXXRingBuffer::RingBuffer				renderEventRingBuffer_;
 
 	/// The underlying `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
 	/// The source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-	/// The lock used to protect engine processing graph configuration changes
+	/// The lock used to protect processing graph configuration changes
 	mutable CXXUnfairLock::UnfairLock 		engineLock_;
 
 	/// The currently rendering decoder
@@ -96,7 +96,7 @@ private:
 	/// The lock used to protect access to `nowPlaying_`
 	mutable CXXUnfairLock::UnfairLock 		nowPlayingLock_;
 
-	/// The dispatch queue used for asynchronous events
+	/// The dispatch queue used for asynchronous render event notification
 	dispatch_queue_t						eventQueue_ 		{nil};
 
 	/// Flags
