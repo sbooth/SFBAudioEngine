@@ -25,10 +25,10 @@
 namespace {
 
 /// The minimum number of frames to write to the ring buffer
-constexpr AVAudioFrameCount kRingBufferChunkSize = 2048;
+constexpr AVAudioFrameCount ringBufferChunkSize = 2048;
 
 /// Objective-C associated object key indicating if a decoder has been canceled
-constexpr char _decoderIsCanceledKey = '\0';
+constexpr char decoderIsCanceledKey = '\0';
 
 void AVAudioEngineConfigurationChangeNotificationCallback(CFNotificationCenterRef center, void *observer, CFNotificationName name, const void *object, CFDictionaryRef userInfo)
 {
@@ -987,9 +987,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 	os_log_debug(log_, "Decoding thread starting");
 
 	// The buffer between the decoder state and the ring buffer
-	AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
+	AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:ringBufferChunkSize];
 	if(!buffer) {
-		os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
+		os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), ringBufferChunkSize);
 		NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
 		SubmitDecodingErrorEvent(error);
 		return;
@@ -1106,7 +1106,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				// Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel layout)
 				if(auto format = decoder.processingFormat; FormatWillBeGaplessIfEnqueued(format)) {
 					// Allocate decoder state internals
-					if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
+					if(!decoderState->Allocate(renderingFormat_, ringBufferChunkSize)) {
 						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 						NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
 						SubmitDecodingErrorEvent(error);
@@ -1151,9 +1151,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
 				if(AVAudioFormat *format = buffer.format; format.channelCount != renderingFormat_.channelCount || format.sampleRate != renderingFormat_.sampleRate) {
-					buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:kRingBufferChunkSize];
+					buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderingFormat_ frameCapacity:ringBufferChunkSize];
 					if(!buffer) {
-						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), kRingBufferChunkSize);
+						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderingFormat_), ringBufferChunkSize);
 						NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
 						SubmitDecodingErrorEvent(error);
 						continue;
@@ -1161,7 +1161,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				}
 
 				// Allocate decoder state internals
-				if(!decoderState->Allocate(renderingFormat_, kRingBufferChunkSize)) {
+				if(!decoderState->Allocate(renderingFormat_, ringBufferChunkSize)) {
 					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 					NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
 					SubmitDecodingErrorEvent(error);
@@ -1174,7 +1174,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		if(decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::drainRequired))) {
 			// Decode and write chunks to the ring buffer
-			while(audioRingBuffer_.FreeSpace() >= kRingBufferChunkSize) {
+			while(audioRingBuffer_.FreeSpace() >= ringBufferChunkSize) {
 				// Decoding started
 				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted))) {
 					const bool suspended = flags & static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
@@ -1514,7 +1514,7 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 	}
 
 	// Mark the decoder as canceled for any scheduled render notifications
-	objc_setAssociatedObject(decoder, &_decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+	objc_setAssociatedObject(decoder, &decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
 		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
@@ -1662,7 +1662,7 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 {
 	// Schedule the rendering started notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
-		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
 			return;
 		}
@@ -1689,7 +1689,7 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder
 {
 	// Schedule the rendering completed notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
-		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &_decoderIsCanceledKey); isCanceled.boolValue) {
+		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
 			return;
 		}
