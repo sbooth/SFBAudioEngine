@@ -1149,6 +1149,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
 					if(!standardEquivalentFormat) {
 						os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
+						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
 						continue;
 					}
 					format = standardEquivalentFormat;
@@ -1991,6 +1993,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 	os_log_debug(log_, "Audio processing graph reconfigured for %{public}@", SFB::StringDescribingAVAudioFormat(format));
 
 #if DEBUG
+	NSLog(@"%@", engine_.debugDescription);
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
 
