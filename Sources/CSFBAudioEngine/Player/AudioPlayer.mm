@@ -942,7 +942,6 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 	const auto sourceNode = sourceNode_;
 
 	AVAudioFormat *inputFormat = nil;
-//	[string appendFormat:@"↓ rendering\n    %@\n", SFB::StringDescribingAVAudioFormat(inputFormat)];
 
 	AVAudioFormat *outputFormat = [sourceNode outputFormatForBus:0];
 	[string appendFormat:@"→ %@\n    %@\n", sourceNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
