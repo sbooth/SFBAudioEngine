@@ -53,9 +53,6 @@ private:
 
 	using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
-	/// The format of the audio supplied by `renderBlock_`
-	AVAudioFormat 							*renderingFormat_	{nil};
-
 	/// Ring buffer transferring audio between the decoding thread and the render block
 	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_ 	{};
 
