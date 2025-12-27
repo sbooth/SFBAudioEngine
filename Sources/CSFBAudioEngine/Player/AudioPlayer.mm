@@ -1142,18 +1142,22 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
-				{
-					NSError *error = nil;
-					const auto success = [&] {
-						std::lock_guard lock{engineLock_};
-						return ConfigureProcessingGraphAndRingBufferForDecoder(decoderState->decoder_, &error);
-					}();
+				auto format = decoderState->decoder_.processingFormat;
 
-					if(!success) {
-						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-						SubmitDecodingErrorEvent(error);
+				// Convert format to standard equivalent
+				if(!format.isStandard) {
+					AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
+					if(!standardEquivalentFormat) {
+						os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
 						continue;
 					}
+					format = standardEquivalentFormat;
+				}
+
+				if(!ConfigureProcessingGraphAndRingBufferForFormat(format)) {
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
+					continue;
 				}
 
 				auto renderFormat = [sourceNode_ outputFormatForBus:0];
@@ -1836,31 +1840,40 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		return;
 	}
 
-	// AVAudioEngine posts this notification from a dedicated queue
+	// AVAudioEngine posts this notification from a dedicated internal dispatch queue
 	os_log_debug(log_, "Received AVAudioEngineConfigurationChangeNotification");
 
-	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
-	// running before this notification was issued unless the state is cached
+	// AVAudioEngine stops itself when a configuration change occurs
+	// Flags::engineIsRunning indicates if the engine was running before the interruption
 	const auto flags = flags_.load(std::memory_order_acquire);
 	const auto engineWasRunning = flags & static_cast<unsigned int>(Flags::engineIsRunning);
 	const auto wasPlaying = flags & static_cast<unsigned int>(Flags::isPlaying);
 
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
-	auto renderFormat = [sourceNode_ outputFormatForBus:0];
-
-	// Update the audio processing graph
-	const auto success = [&] {
+	// The output hardware’s channel count or sample rate changed
+	{
 		std::lock_guard lock{engineLock_};
-		return ConfigureProcessingGraph(renderFormat);
-	}();
 
-	if(!success) {
-		os_log_error(log_, "Unable to configure audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(renderFormat));
-		// The graph is not in a working state
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-			[player_.delegate audioPlayer:player_ encounteredError:[NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeFormatNotSupported userInfo:nil]];
-		return;
+		AVAudioOutputNode *outputNode = engine_.outputNode;
+		AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
+
+		AVAudioFormat *outputNodeOutputFormat = [outputNode outputFormatForBus:0];
+		AVAudioFormat *mixerNodeOutputFormat = [mixerNode outputFormatForBus:0];
+
+		if(outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount || outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate) {
+			os_log_debug(log_,
+						 "Mismatch between output formats for main mixer and output nodes:\n    mainMixerNode: %{public}@\n       outputNode: %{public}@",
+						 SFB::StringDescribingAVAudioFormat(mixerNodeOutputFormat),
+						 SFB::StringDescribingAVAudioFormat(outputNodeOutputFormat));
+
+			[engine_ disconnectNodeInput:outputNode bus:0];
+
+			// Reconnect the mixer and output nodes using the output node's output format
+			[engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
+
+			[engine_ prepare];
+		}
 	}
 
 	// Restart AVAudioEngine if previously running
@@ -1905,7 +1918,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
-			// However, Flags::engineIsRunning indicates if the engine was running before the interruption
+			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
@@ -1933,109 +1946,31 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 
 // MARK: - Processing Graph Management
 
-bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder decoder, NSError **error) noexcept
-{
-#if DEBUG
-	assert(decoder != nil);
-	engineLock_.assert_owner();
-#endif /* DEBUG */
-
-	// Attempt to preserve the playback state
-	const auto flags = flags_.load(std::memory_order_acquire);
-	const auto engineWasRunning = flags & static_cast<unsigned int>(Flags::engineIsRunning);
-	const auto wasPlaying = flags & static_cast<unsigned int>(Flags::isPlaying);
-
-	// If the rendering format and the decoder's format cannot be gaplessly joined
-	// reconfigure AVAudioEngine with the correct format
-	auto format = decoder.processingFormat;
-
-	// Convert format to standard equivalent
-	if(!format.isStandard) {
-		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
-		if(!standardEquivalentFormat) {
-			os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
-			return false;
-		}
-		format = standardEquivalentFormat;
-	}
-
-	if(!ConfigureProcessingGraph(format)) {
-		if(error)
-			*error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeFormatNotSupported userInfo:nil];
-		SetNowPlaying(nil);
-		return false;
-	}
-
-	if(auto renderFormat = [sourceNode_ outputFormatForBus:0]; !audioRingBuffer_.Allocate(*(renderFormat.streamDescription), ringBufferCapacity)) {
-		os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %lld", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(renderFormat.streamDescription)), ringBufferCapacity);
-		return false;
-	}
-
-	// Restart AVAudioEngine and playback as appropriate
-	if(engineWasRunning && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
-		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
-			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-			if(error)
-				*error = startError;
-			return false;
-		}
-
-		if(wasPlaying)
-			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		else
-			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-	}
-
-#if DEBUG
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		assert((flags & static_cast<unsigned int>(Flags::engineIsRunning)) == engineWasRunning && "Incorrect audio engine state in AudioPlayer::ConfigureForAndEnqueueDecoder");
-		assert((flags & static_cast<unsigned int>(Flags::isPlaying)) == wasPlaying && "Incorrect playback state in AudioPlayer::ConfigureForAndEnqueueDecoder");
-	}
-#endif /* DEBUG */
-
-	return true;
-}
-
-bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format) noexcept
+bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat *format) noexcept
 {
 #if DEBUG
 	assert(format != nil);
 	assert(format.isStandard);
-	engineLock_.assert_owner();
 #endif /* DEBUG */
 
-	// Even if the engine isn't running, call stop to force release of any render resources
-	// Empirically this is necessary when transitioning between formats with different
-	// channel counts, although it seems that it shouldn't be
-	[engine_ stop];
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	std::lock_guard lock{engineLock_};
 
+	// Reconfigure the processing graph
 	AVAudioOutputNode *outputNode = engine_.outputNode;
 	AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
 
 	// This class requires that the main mixer node be connected to the output node
 	assert([engine_ inputConnectionPointForNode:outputNode inputBus:0].node == mixerNode && "Illegal AVAudioEngine configuration");
 
-	AVAudioFormat *outputNodeOutputFormat = [outputNode outputFormatForBus:0];
-	AVAudioFormat *mixerNodeOutputFormat = [mixerNode outputFormatForBus:0];
-
-	const auto outputFormatsMismatch = outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount || outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate;
-	if(outputFormatsMismatch) {
-		os_log_debug(log_,
-					 "Mismatch between output formats for main mixer and output nodes:\n    mainMixerNode: %{public}@\n       outputNode: %{public}@",
-					 SFB::StringDescribingAVAudioFormat(mixerNodeOutputFormat),
-					 SFB::StringDescribingAVAudioFormat(outputNodeOutputFormat));
-
-		[engine_ disconnectNodeInput:outputNode bus:0];
-
-		// Reconnect the mixer and output nodes using the output node's output format
-		[engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
-	}
-
 	if(auto renderFormat = [sourceNode_ outputFormatForBus:0]; ![renderFormat isEqual:format]) {
 		AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_ outputBus:0] firstObject];
 		[engine_ disconnectNodeOutput:sourceNode_];
+
+		// Allocate the ring buffer for the new format
+		if(!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
+			os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %lld", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
+			return false;
+		}
 
 		// Reconnect the player node to the next node in the processing chain
 		// This is the mixer node in the default configuration, but additional nodes may
@@ -2058,8 +1993,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format) noexcept
 #if DEBUG
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
-
-	[engine_ prepare];
 
 	return true;
 }

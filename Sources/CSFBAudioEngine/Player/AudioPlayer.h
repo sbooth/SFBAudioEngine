@@ -369,16 +369,10 @@ public:
 private:
 	// MARK: - Processing Graph Management
 
-	/// Configures the player to render audio from `decoder`
-	/// - parameter error: An optional pointer to an `NSError` object to receive error information
-	/// - returns: `true` if the player was successfully configured
-	bool ConfigureProcessingGraphAndRingBufferForDecoder(Decoder _Nonnull decoder, NSError **error) noexcept;
-
-	/// Configures the audio processing graph to rendering audio with `format`
-	/// - important: This stops the audio engine
+	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
-	/// - returns: `true` if the processing graph was successfully configured
-	bool ConfigureProcessingGraph(AVAudioFormat * _Nonnull format) noexcept;
+	/// - returns: `true` if the player was successfully configured
+	bool ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format) noexcept;
 };
 
 } /* namespace SFB */
