@@ -108,13 +108,9 @@ Three special decoder subclasses that wrap an underlying audio decoder instance 
 
 ## Playback
 
-### [SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h)
-
-[SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h) is a subclass of [AVAudioSourceNode](https://developer.apple.com/documentation/avfaudio/avaudiosourcenode) that provides rich playback functionality within an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph. [SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h) supports gapless playback and comprehensive status notifications through a delegate.
-
 ### [SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h)
 
-[SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayerNode.h). [SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through a delegate.
+[SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h) uses an [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) processing graph driven by [AVAudioSourceNode](https://developer.apple.com/documentation/avfaudio/avaudiosourcenode) for playback. [SFBAudioPlayer](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through a delegate.
 
 ## Encoding
 
