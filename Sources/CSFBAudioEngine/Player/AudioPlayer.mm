@@ -403,8 +403,7 @@ SFB::AudioPlayer::AudioPlayer()
 		throw std::runtime_error("Unable to create AVAudioEngine");
 	}
 
-	sourceNode_ = [[AVAudioSourceNode alloc] initWithFormat:renderingFormat_
-												renderBlock:^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
+	sourceNode_ = [[AVAudioSourceNode alloc] initWithRenderBlock:^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
 		return Render(*isSilence, *timestamp, frameCount, outputData);
 	}];
 	if(!sourceNode_)
@@ -1841,7 +1840,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	// Update the audio processing graph
 	const auto success = [&] {
 		std::lock_guard lock{engineLock_};
-		return ConfigureProcessingGraph(renderingFormat_, false);
+		return ConfigureProcessingGraph(renderingFormat_);
 	}();
 
 	if(!success) {
@@ -1937,8 +1936,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 	const auto wasPlaying = flags & static_cast<unsigned int>(Flags::isPlaying);
 
 	// If the rendering format and the decoder's format cannot be gaplessly joined
-	// reconfigure AVAudioEngine with a new AVAudioSourceNode with the correct format
-	if(auto format = decoder.processingFormat; !ConfigureProcessingGraph(format, true)) {
+	// reconfigure AVAudioEngine with the correct format
+	if(auto format = decoder.processingFormat; !ConfigureProcessingGraph(format)) {
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeFormatNotSupported userInfo:nil];
 		SetNowPlaying(nil);
@@ -1976,14 +1975,14 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForDecoder(Decoder d
 	return true;
 }
 
-bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool replaceSourceNode) noexcept
+bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format) noexcept
 {
 #if DEBUG
 	assert(format != nil);
-	assert(replaceSourceNode || [format isEqual:renderingFormat_]);
 	engineLock_.assert_owner();
 #endif /* DEBUG */
 
+	// Convert format to standard equivalent
 	if(!format.isStandard) {
 		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
 		if(!standardEquivalentFormat) {
@@ -1991,16 +1990,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 			return false;
 		}
 		format = standardEquivalentFormat;
-	}
-
-	AVAudioSourceNode *sourceNode = nil;
-	if(replaceSourceNode) {
-		sourceNode = [[AVAudioSourceNode alloc] initWithFormat:format
-												   renderBlock:^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
-			return Render(*isSilence, *timestamp, frameCount, outputData);
-		}];
-		if(!sourceNode)
-			return false;
 	}
 
 	// Even if the engine isn't running, call stop to force release of any render resources
@@ -2031,13 +2020,10 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 		[engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
 	}
 
-	if(sourceNode) {
-		[engine_ attachNode:sourceNode];
-
+	if(![[sourceNode_ outputFormatForBus:0] isEqual:format]) {
 		AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_ outputBus:0] firstObject];
-		[engine_ detachNode:sourceNode_];
+		[engine_ disconnectNodeOutput:sourceNode_];
 
-		sourceNode_ = sourceNode;
 		renderingFormat_ = format;
 
 		// Reconnect the player node to the next node in the processing chain
@@ -2059,35 +2045,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraph(AVAudioFormat *format, bool repl
 #if DEBUG
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
-
-	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
-	// (maximum frames per slice) greater than the default for AVAudioSourceNode (1156).
-	//
-	// For high sample rates, the sample rate conversion can require more rendered frames than are available by default.
-	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 frames
-	// So if the input and output sample rates on the mixer don't match, adjust
-	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
-	// See http://lists.apple.com/archives/coreaudio-api/2009/Oct/msg00150.html
-	if(format.sampleRate > outputNodeOutputFormat.sampleRate) {
-		os_log_debug(log_, "AVAudioMixerNode input sample rate (%g Hz) and output sample rate (%g Hz) don't match", format.sampleRate, outputNodeOutputFormat.sampleRate);
-
-		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice
-		const double ratio = format.sampleRate / outputNodeOutputFormat.sampleRate;
-		const auto maximumFramesToRender = static_cast<AUAudioFrameCount>(std::ceil(512 * ratio));
-
-		if(auto audioUnit = sourceNode_.AUAudioUnit; audioUnit.maximumFramesToRender < maximumFramesToRender) {
-			const auto renderResourcesAllocated = audioUnit.renderResourcesAllocated;
-			if(renderResourcesAllocated)
-				[audioUnit deallocateRenderResources];
-
-			os_log_debug(log_, "Adjusting AVAudioSourceNode's maximumFramesToRender to %u", maximumFramesToRender);
-			audioUnit.maximumFramesToRender = maximumFramesToRender;
-
-			NSError *error;
-			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error])
-				os_log_error(log_, "Error allocating AUAudioUnit render resources for AVAudioSourceNode: %{public}@", error);
-		}
-	}
 
 	[engine_ prepare];
 

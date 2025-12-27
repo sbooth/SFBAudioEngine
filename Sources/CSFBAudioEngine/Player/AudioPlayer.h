@@ -377,12 +377,11 @@ private:
 	/// - returns: `true` if the player was successfully configured
 	bool ConfigureProcessingGraphAndRingBufferForDecoder(Decoder _Nonnull decoder, NSError **error) noexcept;
 
-	/// Configures the audio processing graph for playback of audio with `format`, replacing the audio source node if `replaceSourceNode` is true
+	/// Configures the audio processing graph to rendering audio with `format`
 	/// - important: This stops the audio engine
 	/// - parameter format: The desired audio format
-	/// - parameter replaceSourceNode: Whether the audio source node driving the graph should be replaced
 	/// - returns: `true` if the processing graph was successfully configured
-	bool ConfigureProcessingGraph(AVAudioFormat * _Nonnull format, bool replaceSourceNode) noexcept;
+	bool ConfigureProcessingGraph(AVAudioFormat * _Nonnull format) noexcept;
 };
 
 } /* namespace SFB */
