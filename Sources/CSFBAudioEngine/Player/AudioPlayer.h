@@ -332,6 +332,9 @@ private:
 	/// Processes an event from `renderEventRingBuffer_`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
+	/// Processes a frames rendered event from `renderEventRingBuffer_`
+	void ProcessFramesRenderedEvent() noexcept;
+
 	/// Called when the first audio frame from a decoder will render.
 	void HandleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
@@ -351,9 +354,6 @@ private:
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
 	DecoderState * const _Nullable FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
-
-	/// Returns the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
-	DecoderState * const _Nullable DecoderStateWithSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
 	/// Removes the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
 	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
