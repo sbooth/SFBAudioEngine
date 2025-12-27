@@ -1142,21 +1142,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
-				auto format = decoderState->decoder_.processingFormat;
-
-				// Convert format to standard equivalent
-				if(!format.isStandard) {
-					AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
-					if(!standardEquivalentFormat) {
-						os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
-						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
-						continue;
-					}
-					format = standardEquivalentFormat;
-				}
-
-				if(!ConfigureProcessingGraphAndRingBufferForFormat(format)) {
+				if(!ConfigureProcessingGraphAndRingBufferForFormat(decoderState->decoder_.processingFormat)) {
 					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 					SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
 					continue;
@@ -1952,8 +1938,17 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 {
 #if DEBUG
 	assert(format != nil);
-	assert(format.isStandard);
 #endif /* DEBUG */
+
+	// Convert format to standard equivalent
+	if(!format.isStandard) {
+		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
+		if(!standardEquivalentFormat) {
+			os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
+			return false;
+		}
+		format = standardEquivalentFormat;
+	}
 
 	std::lock_guard lock{engineLock_};
 
@@ -1993,7 +1988,6 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 	os_log_debug(log_, "Audio processing graph reconfigured for %{public}@", SFB::StringDescribingAVAudioFormat(format));
 
 #if DEBUG
-	NSLog(@"%@", engine_.debugDescription);
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
 
