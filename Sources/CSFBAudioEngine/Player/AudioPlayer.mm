@@ -348,7 +348,7 @@ SFB::AudioPlayer::AudioPlayer()
 
 	// Allocate the audio ring buffer moving audio from the decoder queue to the render block
 	if(!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
-		os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %lld", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
+		os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %zu", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
 		throw std::runtime_error("CXXCoreAudio::AudioRingBuffer::Allocate failed");
 	}
 
@@ -357,7 +357,7 @@ SFB::AudioPlayer::AudioPlayer()
 
 	// The decode event ring buffer is written to by the decoding thread and read from by the event queue
 	if(!decodeEventRingBuffer_.Allocate(decodingEventRingBufferCapacity)) {
-		os_log_error(log_, "Unable to create decode event ring buffer: SFB::RingBuffer::Allocate failed with capacity %lld", decodingEventRingBufferCapacity);
+		os_log_error(log_, "Unable to create decode event ring buffer: SFB::RingBuffer::Allocate failed with capacity %zu", decodingEventRingBufferCapacity);
 		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 	}
 
@@ -369,7 +369,7 @@ SFB::AudioPlayer::AudioPlayer()
 
 	// The render event ring buffer is written to by the render block and read from by the event queue
 	if(!renderEventRingBuffer_.Allocate(renderingEventRingBufferCapacity)) {
-		os_log_error(log_, "Unable to create render event ring buffer: SFB::RingBuffer::Allocate failed with capacity %lld", renderingEventRingBufferCapacity);
+		os_log_error(log_, "Unable to create render event ring buffer: SFB::RingBuffer::Allocate failed with capacity %zu", renderingEventRingBufferCapacity);
 		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
 	}
 
@@ -1964,7 +1964,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
 		// Allocate the ring buffer for the new format
 		if(!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
-			os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %lld", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
+			os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %zu", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
 			return false;
 		}
 
