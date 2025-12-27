@@ -1403,6 +1403,8 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 	os_log_debug(log_, "Event processing thread complete");
 }
 
+// MARK: Decoding Events
+
 void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) noexcept
 {
 	switch(header.mCommand) {
@@ -1547,6 +1549,8 @@ void SFB::AudioPlayer::ProcessDecodingErrorEvent() noexcept
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 		[player_.delegate audioPlayer:player_ encounteredError:error];
 }
+
+// MARK: Rendering Events
 
 void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header) noexcept
 {
