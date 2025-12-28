@@ -811,10 +811,7 @@ bool SFB::AudioPlayer::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 
 bool SFB::AudioPlayer::SeekToPosition(double position) noexcept
 {
-	if(position < 0)
-		position = 0;
-	else if(position >= 1)
-		position = std::nextafter(1.0, 0.0);
+	position = std::clamp(position, 0., std::nextafter(1.0, 0.0));
 
 	std::lock_guard lock{decoderLock_};
 
