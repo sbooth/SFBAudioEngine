@@ -371,8 +371,9 @@ private:
 
 	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
+	/// - parameter error: An optional pointer to an `NSError` object to receive error information
 	/// - returns: `true` if the player was successfully configured
-	bool ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format) noexcept;
+	bool ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format, NSError **error) noexcept;
 };
 
 } /* namespace SFB */

@@ -122,7 +122,7 @@ struct AudioPlayer::DecoderState final {
 
 	static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
-	/// Converts audio from the decoder's processing format to another PCM variant at the same sample rate
+	/// Converts audio from the decoder's processing format to the equivalent standard format
 	AVAudioConverter 		*converter_ 		{nil};
 	/// Buffer used internally for buffering during conversion
 	AVAudioPCMBuffer 		*decodeBuffer_ 		{nil};
@@ -160,15 +160,19 @@ struct AudioPlayer::DecoderState final {
 #endif /* DEBUG */
 	}
 
-	bool Allocate(AVAudioFormat * _Nonnull format, AVAudioFrameCount frameCapacity = 1024) noexcept
+	bool Allocate(AVAudioFrameCount frameCapacity) noexcept
 	{
-#if DEBUG
-		assert(format != nil);
-#endif /* DEBUG */
+		auto format = decoder_.processingFormat;
+		auto standardEquivalentFormat = format.standardEquivalent;
+		if(!standardEquivalentFormat) {
+			os_log_error(log_, "Error converting %{public}@ to standard equivalent format", SFB::StringDescribingAVAudioFormat(format));
+			return false;
+		}
 
-		converter_ = [[AVAudioConverter alloc] initFromFormat:decoder_.processingFormat toFormat:format];
+		// Convert to deinterleaved native-endian float, preserving the channel count and order
+		converter_ = [[AVAudioConverter alloc] initFromFormat:format toFormat:standardEquivalentFormat];
 		if(!converter_) {
-			os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", decoder_.processingFormat, format);
+			os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", SFB::StringDescribingAVAudioFormat(format), SFB::StringDescribingAVAudioFormat(standardEquivalentFormat));
 			return false;
 		}
 
@@ -520,7 +524,8 @@ bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) cons
 	assert(format != nil);
 #endif /* DEBUG */
 	// Gapless playback requires the same number of channels at the same sample rate with the same channel layout
-	return [[sourceNode_ outputFormatForBus:0] isEqual:[format standardEquivalent]];
+	auto renderFormat = [sourceNode_ outputFormatForBus:0];
+	return format.channelCount == renderFormat.channelCount && format.sampleRate == renderFormat.sampleRate && CXXCoreAudio::AVAudioChannelLayoutsAreEquivalent(format.channelLayout, renderFormat.channelLayout);
 }
 
 // MARK: - Playback Control
@@ -942,7 +947,6 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 	const auto sourceNode = sourceNode_;
 
 	AVAudioFormat *inputFormat = nil;
-
 	AVAudioFormat *outputFormat = [sourceNode outputFormatForBus:0];
 	[string appendFormat:@"→ %@\n    %@\n", sourceNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
 
@@ -1098,8 +1102,16 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					continue;
 				}
 
+				// Allocate decoder state internals
+				if(!decoderState->Allocate(ringBufferChunkSize)) {
+					os_log_error(log_, "Error allocating decoder state data: DecoderStateData::Allocate failed with frame capacity %d", ringBufferChunkSize);
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
+					continue;
+				}
+
 				// Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel layout)
-				if(auto renderFormat = [sourceNode_ outputFormatForBus:0]; [renderFormat isEqual:decoder.processingFormat.standardEquivalent]) {
+				if(auto renderFormat = decoderState->converter_.outputFormat; [renderFormat isEqual:[sourceNode_ outputFormatForBus:0]]) {
 					// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
 					if(auto format = buffer.format; format.channelCount != renderFormat.channelCount || format.sampleRate != renderFormat.sampleRate) {
 						buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat frameCapacity:ringBufferChunkSize];
@@ -1109,14 +1121,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 							SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
 							continue;
 						}
-					}
-
-					// Allocate decoder state internals
-					if(!decoderState->Allocate(renderFormat, ringBufferChunkSize)) {
-						os_log_error(log_, "Error allocating decoder state data: DecoderStateData::Allocate failed with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
-						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
-						continue;
 					}
 				} else
 					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
@@ -1141,13 +1145,12 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
-				if(!ConfigureProcessingGraphAndRingBufferForFormat(decoderState->decoder_.processingFormat)) {
+				auto renderFormat = decoderState->converter_.outputFormat;
+				if(NSError *error = nil; !ConfigureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
 					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-					SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
+					SubmitDecodingErrorEvent(error);
 					continue;
 				}
-
-				auto renderFormat = [sourceNode_ outputFormatForBus:0];
 
 				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
 				if(auto format = buffer.format; format.channelCount != renderFormat.channelCount || format.sampleRate != renderFormat.sampleRate) {
@@ -1158,14 +1161,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
 						continue;
 					}
-				}
-
-				// Allocate decoder state internals
-				if(!decoderState->Allocate(renderFormat, ringBufferChunkSize)) {
-					os_log_error(log_, "Error allocating decoder state data: DecoderStateData::Allocate failed with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-					SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
-					continue;
 				}
 			}
 			else
@@ -1933,23 +1928,25 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 
 // MARK: - Processing Graph Management
 
-bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat *format) noexcept
+bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat *format, NSError **error) noexcept
 {
 #if DEBUG
 	assert(format != nil);
+	assert(format.isStandard);
 #endif /* DEBUG */
 
-	// Convert format to standard equivalent
-	if(!format.isStandard) {
-		AVAudioFormat *standardEquivalentFormat = [format standardEquivalent];
-		if(!standardEquivalentFormat) {
-			os_log_error(log_, "Unable to convert format %{public}@ to standard equivalent", SFB::StringDescribingAVAudioFormat(format));
-			return false;
-		}
-		format = standardEquivalentFormat;
-	}
+	os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(format));
 
 	std::lock_guard lock{engineLock_};
+
+	// Even if the engine isn't running, call -stop to force release of any render resources
+	// This is necessary when transitioning between formats with different channel counts
+
+	// Attempt to preserve the playback state
+	const auto flags = flags_.load(std::memory_order_acquire);
+
+	[engine_ stop];
+	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	// Reconfigure the processing graph
 	AVAudioOutputNode *outputNode = engine_.outputNode;
@@ -1965,6 +1962,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 		// Allocate the ring buffer for the new format
 		if(!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
 			os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %zu", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
 			return false;
 		}
 
@@ -1984,11 +1983,26 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 			[engine_ connect:sourceNode_ to:mixerNode format:format];
 	}
 
-	os_log_debug(log_, "Audio processing graph reconfigured for %{public}@", SFB::StringDescribingAVAudioFormat(format));
-
 #if DEBUG
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
+
+	[engine_ prepare];
+
+	// Restart AVAudioEngine and playback as appropriate
+	if(flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
+		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+			if(error)
+				*error = startError;
+			return false;
+		}
+
+		if(flags & static_cast<unsigned int>(Flags::isPlaying))
+			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		else
+			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+	}
 
 	return true;
 }
