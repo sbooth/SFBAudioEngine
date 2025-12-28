@@ -41,8 +41,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 	try {
 		player = std::make_unique<SFB::AudioPlayer>();
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(SFB::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
 		return nil;
 	}
