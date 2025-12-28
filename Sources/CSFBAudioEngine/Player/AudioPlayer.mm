@@ -192,11 +192,6 @@ struct AudioPlayer::DecoderState final {
 		return true;
 	}
 
-	bool IsAllocated() const noexcept
-	{
-		return converter_ != nil;
-	}
-
 	AVAudioFramePosition FramePosition() const noexcept
 	{
 		return IsSeekPending() ? seekOffset_.load(std::memory_order_acquire) : framesRendered_.load(std::memory_order_acquire);
