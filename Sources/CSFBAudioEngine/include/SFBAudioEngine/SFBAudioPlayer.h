@@ -14,30 +14,33 @@
 #import <AudioToolbox/AudioToolbox.h>
 #endif /* !TARGET_OS_IPHONE */
 
-#import <SFBAudioEngine/SFBAudioPlayerNode.h>
+#import <SFBAudioEngine/SFBPCMDecoding.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
+/// A block accepting an `AVAudioEngine` and `AVAudioSourceNode`
+/// @param engine The `AVAudioEngine`
+/// @param sourceNode The `AVAudioSourceNode`
+typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine, AVAudioSourceNode *sourceNode) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
+
 /// The possible playback states for `SFBAudioPlayer`
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
-	/// `SFBAudioPlayer.engineIsRunning` and `SFBAudioPlayer.playerNodeIsPlaying`
+	/// The `AVAudioEngine` is running and the player is rendering audio
 	SFBAudioPlayerPlaybackStatePlaying		= 0,
-	/// `SFBAudioPlayer.engineIsRunning` and `!SFBAudioPlayer.playerNodeIsPlaying`
+	/// The `AVAudioEngine` is running and the player is not rendering audio
 	SFBAudioPlayerPlaybackStatePaused		= 1,
-	/// `!SFBAudioPlayer.engineIsRunning`
+	/// The `AVAudioEngine` is not running
 	SFBAudioPlayerPlaybackStateStopped		= 2,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
-/// An audio player wrapping an `AVAudioEngine` processing graph supplied by `SFBAudioPlayerNode`
+/// An audio player using an `AVAudioEngine` processing graph for playback
 ///
 /// `SFBAudioPlayer` supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
 ///
-/// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped. These states are
-/// based on whether the underlying `AVAudioEngine` is running (`SFBAudioPlayer.engineIsRunning`)
-/// and the `SFBAudioPlayerNode` is playing (`SFBAudioPlayer.playerNodeIsPlaying`).
+/// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped.
 ///
 /// `SFBAudioPlayer` supports delegate-based notifications for the following events:
 ///
@@ -71,7 +74,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - parameter decoder: The decoder to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued and playback started successfully
-- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
+- (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
 /// - note: This is equivalent to `-enqueueURL:forImmediatePlayback:error:` with `NO` for `forImmediatePlayback`
@@ -91,14 +94,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+- (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
 /// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for `decoder.processingFormat` if necessary
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
+- (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 
 /// Returns `YES` if audio with `format` will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
@@ -111,18 +114,18 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Playback Control
 
-/// Starts the underlying `AVAudioEngine` and plays the `SFBAudioPlayerNode`
+/// Starts the `AVAudioEngine` and begins rendering audio
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: `YES` if the underlying `AVAudioEngine` was successfully started
+/// - returns: `YES` if the `AVAudioEngine` was successfully started
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
-/// Pauses the `SFBAudioPlayerNode`
+/// Pauses audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 - (void)pause;
-/// Plays the `SFBAudioPlayerNode`
+/// Resumes audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
 - (void)resume;
-/// Stops both the underlying `AVAudioEngine` and `SFBAudioPlayerNode`
+/// Stops the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
@@ -133,7 +136,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePaused` this method sends `-resume`
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
-/// Resets both the underlying `AVAudioEngine` and `SFBAudioPlayerNode`
+/// Resets the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 - (void)reset;
 
@@ -141,27 +144,25 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
  /// Returns `YES` if the `AVAudioEngine` is running
 @property (nonatomic, readonly) BOOL engineIsRunning;
-/// Returns `YES` if the `SFBAudioPlayerNode` is playing
-@property (nonatomic, readonly) BOOL playerNodeIsPlaying;
 
 /// Returns the current playback state
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
-/// Returns `YES` if `engineIsRunning` and `playerNodeIsPlaying`
+/// Returns `YES` if the `AVAudioEngine` is running and the player is rendering audio
 @property (nonatomic, readonly) BOOL isPlaying;
-/// Returns `YES` if `engineIsRunning` and `!playerNodeIsPlaying`
+/// Returns `YES` if the `AVAudioEngine` is running and the player is not rendering audio
 @property (nonatomic, readonly) BOOL isPaused;
-/// Returns `NO` if `engineIsRunning`
+/// Returns `YES` if the `AVAudioEngine` is not running
 @property (nonatomic, readonly) BOOL isStopped;
 
 /// Returns `YES` if a decoder is available to supply audio for the next render cycle
 @property (nonatomic, readonly) BOOL isReady;
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+@property (nonatomic, nullable, readonly) id<SFBPCMDecoding> currentDecoder;
 /// Returns the decoder approximating what a user would expect to see as the "now playing" item- the decoder that is
 /// currently rendering audio.
 /// - warning: Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> nowPlaying;
+@property (nonatomic, nullable, readonly) id<SFBPCMDecoding> nowPlaying;
 
 // MARK: - Playback Properties
 
@@ -255,14 +256,13 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerDelegate> delegate;
 
-// MARK: - AVAudioEngine Access
+// MARK: - AVAudioEngine Graph Modification
 
-/// Returns the underlying `AVAudioEngine`
-/// - important: Graph modifications may only be made between `playerNode` and `mainMixerNode`
+/// Calls `block` from a context safe to perform operations on the `AVAudioEngine` processing graph
+/// - important: Graph modifications may only be made between `sourceNode` and `engine.mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
-@property (nonatomic, nonnull, readonly) AVAudioEngine *audioEngine;
-/// Returns the `SFBAudioPlayerNode` that is the source of the audio processing graph
-@property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
+/// - parameter block: A block performing operations on the `AVAudioEngine`
+- (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 
 // MARK: - Debugging
 
@@ -272,6 +272,19 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type;
 
 @end
+
+// MARK: - Error Information
+
+/// The `NSErrorDomain` used by `SFBAudioPlayer`
+extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayer.ErrorDomain);
+
+/// Possible `NSError` error codes used by `SFBAudioPlayer`
+typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode) {
+	/// Internal or unspecified error
+	SFBAudioPlayerErrorCodeInternalError 		= 0,
+	/// Format not supported
+	SFBAudioPlayerErrorCodeFormatNotSupported 	= 1,
+} NS_SWIFT_NAME(AudioPlayer.ErrorCode);
 
 // MARK: - SFBAudioPlayerDelegate
 
@@ -315,7 +328,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter nowPlaying: The decoder that is now playing
 /// - parameter previouslyPlaying: The decoder that was playing previously
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id <SFBPCMDecoding>)nowPlaying previouslyPlaying:(nullable id <SFBPCMDecoding>)previouslyPlaying;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id<SFBPCMDecoding>)nowPlaying previouslyPlaying:(nullable id<SFBPCMDecoding>)previouslyPlaying;
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter playbackState: The current playback state
@@ -331,20 +344,20 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
-/// Before this method is called the main mixer node will be connected to the output node, and the player node will be attached
+/// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached
 /// to the processing graph with no connections.
 ///
 /// The delegate should establish or update any connections in the processing graph segment between the node to be returned and the main mixer node.
 ///
-/// After this method returns the player node will be connected to the returned node using the specified format.
+/// After this method returns the source node will be connected to the returned node using the specified format.
 /// - important: This method is called from a context where it is safe to modify `engine`
-/// - note: This method is only called when one or more nodes have been inserted between the player node and main mixer node.
+/// - note: This method is only called when one or more nodes have been inserted between the source node and main mixer node.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter engine: The `AVAudioEngine` object
-/// - parameter format: The rendering format of the player node
-/// - returns: The `AVAudioNode` to which the player node should be connected
+/// - parameter format: The rendering format of the source node
+/// - returns: The `AVAudioNode` to which the source node should be connected
 - (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer reconfigureProcessingGraph:(AVAudioEngine *)engine withFormat:(AVAudioFormat *)format NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
-/// Called to notify the delegate when the configuration of the underlying `AVAudioEngine` changes
+/// Called to notify the delegate when the configuration of the `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
