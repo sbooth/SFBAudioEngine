@@ -74,7 +74,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - parameter decoder: The decoder to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued and playback started successfully
-- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
+- (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
 /// - note: This is equivalent to `-enqueueURL:forImmediatePlayback:error:` with `NO` for `forImmediatePlayback`
@@ -94,14 +94,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+- (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
 /// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for `decoder.processingFormat` if necessary
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
+- (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 
 /// Returns `YES` if audio with `format` will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
@@ -158,11 +158,11 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @property (nonatomic, readonly) BOOL isReady;
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+@property (nonatomic, nullable, readonly) id<SFBPCMDecoding> currentDecoder;
 /// Returns the decoder approximating what a user would expect to see as the "now playing" item- the decoder that is
 /// currently rendering audio.
 /// - warning: Do not change any properties of the returned object
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> nowPlaying;
+@property (nonatomic, nullable, readonly) id<SFBPCMDecoding> nowPlaying;
 
 // MARK: - Playback Properties
 
@@ -330,7 +330,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter nowPlaying: The decoder that is now playing
 /// - parameter previouslyPlaying: The decoder that was playing previously
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id <SFBPCMDecoding>)nowPlaying previouslyPlaying:(nullable id <SFBPCMDecoding>)previouslyPlaying;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id<SFBPCMDecoding>)nowPlaying previouslyPlaying:(nullable id<SFBPCMDecoding>)previouslyPlaying;
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter playbackState: The current playback state
