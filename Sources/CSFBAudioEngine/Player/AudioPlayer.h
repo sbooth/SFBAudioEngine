@@ -58,12 +58,12 @@ private:
 
 	/// Active decoders and associated state
 	DecoderStateVector 						activeDecoders_;
-	/// Lock used to protect access to `activeDecoders_`
+	/// Lock protecting `activeDecoders_`
 	mutable CXXUnfairLock::UnfairLock 		decoderLock_;
 
 	/// Decoders enqueued for playback that are not yet active
 	std::deque<Decoder>						queuedDecoders_ 	{};
-	/// Lock used to protect access to `queuedDecoders_`
+	/// Lock protecting `queuedDecoders_`
 	mutable CXXUnfairLock::UnfairLock 		queueLock_;
 
 	/// Thread used for decoding
@@ -83,20 +83,20 @@ private:
 
 	/// The `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
-	/// The source node driving the audio processing graph
+	/// Source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-	/// The lock used to protect processing graph configuration changes
+	/// Lock protecting processing graph configuration changes
 	mutable CXXUnfairLock::UnfairLock 		engineLock_;
 
-	/// The currently rendering decoder
-	id <SFBPCMDecoding> 					nowPlaying_ 		{nil};
-	/// The lock used to protect access to `nowPlaying_`
+	/// Decoder currently rendering audio
+	Decoder 								nowPlaying_ 		{nil};
+	/// Lock protecting `nowPlaying_`
 	mutable CXXUnfairLock::UnfairLock 		nowPlayingLock_;
 
-	/// The dispatch queue used for asynchronous render event notification
+	/// Dispatch queue used for asynchronous render event notifications
 	dispatch_queue_t						eventQueue_ 		{nil};
 
-	/// Flags
+	/// Player flags
 	std::atomic_uint 						flags_ 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
