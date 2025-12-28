@@ -499,7 +499,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		return false;
 
 	// Ensure only one decoder can be enqueued at a time
-	std::lock_guard lock{queueLock_};
+	std::lock_guard lock{queuedDecodersLock_};
 
 	if(forImmediatePlayback) {
 		queuedDecoders_.clear();
@@ -659,7 +659,7 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 
 SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
 {
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return nil;
@@ -687,7 +687,7 @@ void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 
 SFBPlaybackPosition SFB::AudioPlayer::PlaybackPosition() const noexcept
 {
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return SFBInvalidPlaybackPosition;
@@ -696,7 +696,7 @@ SFBPlaybackPosition SFB::AudioPlayer::PlaybackPosition() const noexcept
 
 SFBPlaybackTime SFB::AudioPlayer::PlaybackTime() const noexcept
 {
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
@@ -719,7 +719,7 @@ SFBPlaybackTime SFB::AudioPlayer::PlaybackTime() const noexcept
 
 bool SFB::AudioPlayer::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition, SFBPlaybackTime *playbackTime) const noexcept
 {
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState) {
@@ -755,7 +755,7 @@ bool SFB::AudioPlayer::SeekForward(NSTimeInterval secondsToSkip) noexcept
 	if(secondsToSkip < 0)
 		secondsToSkip = 0;
 
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
@@ -780,7 +780,7 @@ bool SFB::AudioPlayer::SeekBackward(NSTimeInterval secondsToSkip) noexcept
 	if(secondsToSkip < 0)
 		secondsToSkip = 0;
 
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
@@ -804,7 +804,7 @@ bool SFB::AudioPlayer::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 	if(timeInSeconds < 0)
 		timeInSeconds = 0;
 
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
@@ -827,7 +827,7 @@ bool SFB::AudioPlayer::SeekToPosition(double position) noexcept
 {
 	position = std::clamp(position, 0., std::nextafter(1.0, 0.0));
 
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
@@ -847,7 +847,7 @@ bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
 	if(frame < 0)
 		frame = 0;
 
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
@@ -865,7 +865,7 @@ bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
 
 bool SFB::AudioPlayer::SupportsSeeking() const noexcept
 {
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 	const auto decoderState = FirstDecoderStateWithRenderingNotComplete();
 	if(!decoderState)
 		return false;
@@ -1007,7 +1007,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Get the earliest decoder state that has not completed rendering
 		{
-			std::lock_guard lock{decoderLock_};
+			std::lock_guard lock{activeDecodersLock_};
 			decoderState = FirstDecoderStateWithRenderingNotComplete();
 
 			// Process cancelations
@@ -1046,7 +1046,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				DecoderState *nextDecoderState = nullptr;
 				{
-					std::lock_guard lock{decoderLock_};
+					std::lock_guard lock{activeDecodersLock_};
 					nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 				}
 
@@ -1065,7 +1065,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
 
 					{
-						std::lock_guard lock{decoderLock_};
+						std::lock_guard lock{activeDecodersLock_};
 						nextDecoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(nextDecoderState->sequenceNumber_);
 					}
 				}
@@ -1078,7 +1078,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Get the earliest decoder state that has not completed decoding
 		{
-			std::lock_guard lock{decoderLock_};
+			std::lock_guard lock{activeDecodersLock_};
 			decoderState = FirstDecoderStateWithDecodingNotComplete();
 		}
 
@@ -1087,7 +1087,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			/// Removes and returns the first decoder from the decoder queue
 			const auto popDecoder = [&] {
 				Decoder decoder = nil;
-				std::lock_guard lock{queueLock_};
+				std::lock_guard lock{queuedDecodersLock_};
 				if(!queuedDecoders_.empty()) {
 					decoder = queuedDecoders_.front();
 					queuedDecoders_.pop_front();
@@ -1098,7 +1098,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			if(auto decoder = popDecoder(); decoder) {
 				try {
 					// Create the decoder state and add it to the list of active decoders
-					std::lock_guard lock{decoderLock_};
+					std::lock_guard lock{activeDecodersLock_};
 					activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
 					decoderState = activeDecoders_.back().get();
 				} catch(const std::exception& e) {
@@ -1141,7 +1141,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		if(decoderState && (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
 			// Wait until all other decoders complete processing before reconfiguring the graph
 			const auto okToReconfigure = [&] {
-				std::lock_guard lock{decoderLock_};
+				std::lock_guard lock{activeDecodersLock_};
 				return activeDecoders_.size() == 1;
 			}();
 
@@ -1388,7 +1388,7 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 
 		int64_t deltaNanos;
 		{
-			std::lock_guard lock{decoderLock_};
+			std::lock_guard lock{activeDecodersLock_};
 			if(FirstDecoderStateWithRenderingNotComplete())
 				deltaNanos = 7.5 * NSEC_PER_MSEC;
 			// Use a longer timeout when idle
@@ -1441,7 +1441,7 @@ void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 	Decoder decoder = nil;
 	Decoder currentDecoder = nil;
 	{
-		std::lock_guard lock{decoderLock_};
+		std::lock_guard lock{activeDecodersLock_};
 
 		if(const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_); iter != activeDecoders_.cend())
 			decoder = (*iter)->decoder_;
@@ -1471,7 +1471,7 @@ void SFB::AudioPlayer::ProcessDecodingCompleteEvent() noexcept
 
 	Decoder decoder = nil;
 	{
-		std::lock_guard lock{decoderLock_};
+		std::lock_guard lock{activeDecodersLock_};
 
 		if(const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_); iter != activeDecoders_.cend())
 			decoder = (*iter)->decoder_;
@@ -1497,7 +1497,7 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 	AVAudioFramePosition framesRendered = 0;
 	bool activeDecodersEmpty = false;
 	{
-		std::lock_guard lock{decoderLock_};
+		std::lock_guard lock{activeDecodersLock_};
 
 		if(const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_); iter != activeDecoders_.cend()) {
 			decoder = (*iter)->decoder_;
@@ -1594,7 +1594,7 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 		Decoder completeDecoder = nil;
 
 		{
-			std::lock_guard lock{decoderLock_};
+			std::lock_guard lock{activeDecodersLock_};
 			if(decoderState)
 				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			else
@@ -1706,7 +1706,7 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder
 			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
 
 		const auto activeDecodersEmpty = [&] {
-			std::lock_guard lock{decoderLock_};
+			std::lock_guard lock{activeDecodersLock_};
 			return activeDecoders_.empty();
 		}();
 
@@ -1733,7 +1733,7 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder
 
 void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
 {
-	std::lock_guard lock{decoderLock_};
+	std::lock_guard lock{activeDecodersLock_};
 
 	// Cancel all active decoders in sequence
 	if(auto decoderState = FirstDecoderStateWithRenderingNotComplete(); decoderState) {
@@ -1753,7 +1753,7 @@ void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
 SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithDecodingNotComplete() const noexcept
 {
 #if DEBUG
-	decoderLock_.assert_owner();
+	activeDecodersLock_.assert_owner();
 #endif /* DEBUG */
 
 	const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
@@ -1770,7 +1770,7 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithDe
 SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithRenderingNotComplete() const noexcept
 {
 #if DEBUG
-	decoderLock_.assert_owner();
+	activeDecodersLock_.assert_owner();
 #endif /* DEBUG */
 
 	const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
@@ -1787,7 +1787,7 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithRe
 SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept
 {
 #if DEBUG
-	decoderLock_.assert_owner();
+	activeDecodersLock_.assert_owner();
 #endif /* DEBUG */
 
 	const auto iter = std::ranges::find_if(activeDecoders_, [sequenceNumber](const auto& decoderState) {
@@ -1806,7 +1806,7 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateFollow
 bool SFB::AudioPlayer::DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept
 {
 #if DEBUG
-	decoderLock_.assert_owner();
+	activeDecodersLock_.assert_owner();
 #endif /* DEBUG */
 
 	if(const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_); iter != activeDecoders_.cend()) {

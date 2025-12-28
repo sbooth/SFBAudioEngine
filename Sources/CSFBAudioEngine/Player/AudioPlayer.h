@@ -59,12 +59,12 @@ private:
 	/// Active decoders and associated state
 	DecoderStateVector 						activeDecoders_;
 	/// Lock protecting `activeDecoders_`
-	mutable CXXUnfairLock::UnfairLock 		decoderLock_;
+	mutable CXXUnfairLock::UnfairLock 		activeDecodersLock_;
 
 	/// Decoders enqueued for playback that are not yet active
 	std::deque<Decoder>						queuedDecoders_ 	{};
 	/// Lock protecting `queuedDecoders_`
-	mutable CXXUnfairLock::UnfairLock 		queueLock_;
+	mutable CXXUnfairLock::UnfairLock 		queuedDecodersLock_;
 
 	/// Thread used for decoding
 	std::jthread 							decodingThread_;
@@ -119,13 +119,13 @@ public:
 
 	void ClearDecoderQueue() noexcept
 	{
-		std::lock_guard lock{queueLock_};
+		std::lock_guard lock{queuedDecodersLock_};
 		queuedDecoders_.clear();
 	}
 
 	bool DecoderQueueIsEmpty() const noexcept
 	{
-		std::lock_guard lock{queueLock_};
+		std::lock_guard lock{queuedDecodersLock_};
 		return queuedDecoders_.empty();
 	}
 
@@ -173,7 +173,7 @@ public:
 
 	bool IsReady() const noexcept
 	{
-		std::lock_guard lock{decoderLock_};
+		std::lock_guard lock{activeDecodersLock_};
 		return FirstDecoderStateWithRenderingNotComplete() != nullptr;
 	}
 
