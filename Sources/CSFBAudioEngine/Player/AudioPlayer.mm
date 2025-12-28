@@ -77,6 +77,7 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 }
 #endif /* !TARGET_OS_IPHONE */
 
+/// Returns a string describing `format`
 NSString * StringDescribingAVAudioFormat(AVAudioFormat * _Nullable format, bool includeChannelLayout = true) noexcept
 {
 	if(!format)
