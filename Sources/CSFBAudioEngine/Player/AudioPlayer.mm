@@ -424,8 +424,6 @@ SFB::AudioPlayer::AudioPlayer()
 	[engine_ connect:sourceNode_ to:engine_.mainMixerNode format:format];
 	[engine_ prepare];
 
-	os_log_debug(log_, "Created <AudioPlayer: %p>, source node output format %{public}@", this, SFB::StringDescribingAVAudioFormat(format));
-
 #if DEBUG
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
@@ -907,7 +905,7 @@ AUAudioObjectID SFB::AudioPlayer::OutputDeviceID() const noexcept
 
 bool SFB::AudioPlayer::SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept
 {
-	os_log_info(log_, "Setting output device to 0x%x", outputDeviceID);
+	os_log_info(log_, "Setting <AudioPlayer: %p> output device to 0x%x", this, outputDeviceID);
 
 	if(NSError *err = nil; ![engine_.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err]) {
 		os_log_error(log_, "Error setting output device: %{public}@", err);
@@ -990,7 +988,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 	pthread_setname_np("AudioPlayer.Decoding");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
-	os_log_debug(log_, "Decoding thread starting");
+	os_log_debug(log_, "<AudioPlayer: %p> decoding thread starting", this);
 
 	// The buffer between the decoder state and the ring buffer
 	AVAudioPCMBuffer *buffer = nil;
@@ -1128,7 +1126,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// all active decoders complete
 					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 
-				os_log_debug(log_, "Dequeued %{public}@, processing format %{public}@", decoderState->decoder_, SFB::StringDescribingAVAudioFormat(decoderState->decoder_.processingFormat));
+				os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
 			}
 		}
 
@@ -1253,7 +1251,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 	}
 
-	os_log_debug(log_, "Decoding thread complete");
+	os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
 }
 
 void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
@@ -1352,7 +1350,7 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 	pthread_setname_np("AudioPlayer.Events");
 	pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
-	os_log_debug(log_, "Event processing thread starting");
+	os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
 	while(!stoken.stop_requested()) {
 		auto decodeEventHeader = decodeEventRingBuffer_.ReadValue<DecodingEventHeader>();
@@ -1395,7 +1393,7 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 		dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 	}
 
-	os_log_debug(log_, "Event processing thread complete");
+	os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);
 }
 
 // MARK: Decoding Events
