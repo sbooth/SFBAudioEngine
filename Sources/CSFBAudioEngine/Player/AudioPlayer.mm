@@ -539,16 +539,16 @@ bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) cons
 
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
-	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning))) {
-		NSError *startError = nil;
-		const auto started = [&] {
-			std::lock_guard lock{engineLock_};
-			return [engine_ startAndReturnError:&startError];
-		}();
+	const auto flags = flags_.load(std::memory_order_acquire);
+	if((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying)))
+		return true;
 
-		if(!started) {
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+	if(!(flags & static_cast<unsigned int>(Flags::engineIsRunning))) {
+		std::lock_guard lock{engineLock_};
+
+		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			if(error)
 				*error = startError;
 			return false;
