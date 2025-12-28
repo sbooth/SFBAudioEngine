@@ -1236,11 +1236,15 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		}
 
 		int64_t deltaNanos;
-		// Idling
-		if(!decoderState)
-			deltaNanos = NSEC_PER_SEC / 2;
-		// Determine timeout based on ring buffer free space
-		else {
+		if(!decoderState) {
+			// Shorter timeout if waiting on a decoder to complete rendering for a pending format change
+			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch)))
+				deltaNanos = 25 * NSEC_PER_MSEC;
+			// Idling
+			else
+				deltaNanos = NSEC_PER_SEC / 2;
+		} else {
+			// Determine timeout based on ring buffer free space
 			// Attempt to keep the ring buffer 75% full
 			const auto targetMaxFreeSpace = audioRingBuffer_.Capacity() / 4;
 			const auto freeSpace = audioRingBuffer_.FreeSpace();
