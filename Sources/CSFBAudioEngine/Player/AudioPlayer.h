@@ -81,7 +81,7 @@ private:
 	/// Ring buffer communicating events from the render block to the event processing thread
 	CXXRingBuffer::RingBuffer				renderEventRingBuffer_;
 
-	/// The underlying `AVAudioEngine` instance
+	/// The `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
 	/// The source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
