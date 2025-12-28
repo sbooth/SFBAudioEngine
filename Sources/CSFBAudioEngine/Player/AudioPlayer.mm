@@ -1839,7 +1839,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 	// The output hardware’s channel count or sample rate changed
 	{
-		std::lock_guard lock{engineLock_};
+		std::unique_lock lock{engineLock_};
 		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 		AVAudioOutputNode *outputNode = engine_.outputNode;
@@ -1866,9 +1866,9 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		if(flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
 			if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 				os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-//				if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-//					[player_.delegate audioPlayer:player_ encounteredError:startError];
+				lock.unlock();
+				if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+					[player_.delegate audioPlayer:player_ encounteredError:startError];
 				return;
 			}
 
