@@ -256,15 +256,13 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerDelegate> delegate;
 
-// MARK: - AVAudioEngine Access
+// MARK: - AVAudioEngine Graph Modification
 
 /// Calls `block` from a context safe to perform operations on the `AVAudioEngine` processing graph
 /// - important: Graph modifications may only be made between `sourceNode` and `engine.mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
 /// - parameter block: A block performing operations on the `AVAudioEngine`
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
-/// Returns the `AVAudioSourceNode` that is the source of the audio processing graph
-@property (nonatomic, nonnull, readonly) AVAudioSourceNode *sourceNode;
 
 // MARK: - Debugging
 

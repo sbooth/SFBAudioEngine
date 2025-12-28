@@ -218,14 +218,9 @@ public:
 
 #endif /* !TARGET_OS_IPHONE */
 
-	// MARK: - AVAudioEngine Access
+	// MARK: - AVAudioEngine Graph Modification
 
 	void WithEngine(void(^block)(AVAudioEngine * _Nonnull engine, AVAudioSourceNode * _Nonnull sourceNode)) const noexcept;
-
-	AVAudioSourceNode * _Nonnull SourceNode() const noexcept
-	{
-		return sourceNode_;
-	}
 
 	// MARK: - Debugging
 

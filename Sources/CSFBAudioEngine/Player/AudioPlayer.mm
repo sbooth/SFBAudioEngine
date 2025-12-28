@@ -926,7 +926,7 @@ bool SFB::AudioPlayer::SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError
 
 #endif /* !TARGET_OS_IPHONE */
 
-// MARK: - AVAudioEngine Modification
+// MARK: - AVAudioEngine Graph Modification
 
 void SFB::AudioPlayer::WithEngine(void(^block)(AVAudioEngine *engine, AVAudioSourceNode *sourceNode)) const noexcept
 {
