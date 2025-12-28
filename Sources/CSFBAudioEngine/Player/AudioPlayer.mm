@@ -936,7 +936,6 @@ void SFB::AudioPlayer::ModifyProcessingGraph(void(^block)(AVAudioEngine *engine)
 	std::lock_guard lock{engineLock_};
 	block(engine_);
 
-	assert(sourceNode_.engine == engine_ && "Illegal AVAudioEngine configuration");
 	assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode && "Illegal AVAudioEngine configuration");
 	assert(engine_.isRunning == static_cast<bool>(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) && "AVAudioEngine may not be started or stopped outside of AudioPlayer");
 }
@@ -1958,15 +1957,16 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 		return false;
 	}
 
-	// Reconnect the player node to the next node in the processing chain
+	// Reconnect the source node to the next node in the processing chain
 	// This is the mixer node in the default configuration, but additional nodes may
-	// have been inserted between the player and mixer nodes. In this case allow the delegate
+	// have been inserted between the source and mixer nodes. In this case allow the delegate
 	// to make any necessary adjustments based on the format change if desired.
 	if(AVAudioMixerNode *mixerNode = engine_.mainMixerNode; sourceNodeOutputConnectionPoint && sourceNodeOutputConnectionPoint.node != mixerNode) {
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:withFormat:)]) {
 			AVAudioNode *node = [player_.delegate audioPlayer:player_ reconfigureProcessingGraph:engine_ withFormat:format];
 			// Ensure the delegate returned a valid node
 			assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
+			assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == mixerNode && "Illegal AVAudioEngine configuration");
 			[engine_ connect:sourceNode_ to:node format:format];
 		} else
 			[engine_ connect:sourceNode_ to:sourceNodeOutputConnectionPoint.node format:format];
