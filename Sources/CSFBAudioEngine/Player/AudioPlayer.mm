@@ -12,6 +12,7 @@
 #import <objc/runtime.h>
 
 #import <CXXCoreAudio/CAChannelLayout.hpp>
+#import <CXXCoreAudio/CAStreamDescription.hpp>
 
 #import <AVAudioFormat+SFBFormatTransformation.h>
 
@@ -20,7 +21,6 @@
 #import "HostTimeUtilities.hpp"
 #import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
-#import "StringDescribingAVAudioFormat.h"
 
 namespace {
 
@@ -76,6 +76,19 @@ NSString * _Nullable AudioDeviceName(AUAudioUnit * _Nonnull audioUnit) noexcept
 	return (__bridge_transfer NSString *)name;
 }
 #endif /* !TARGET_OS_IPHONE */
+
+NSString * StringDescribingAVAudioFormat(AVAudioFormat * _Nullable format, bool includeChannelLayout = true) noexcept
+{
+	if(!format)
+		return nil;
+
+	NSString *formatDescription = CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*format.streamDescription);
+	if(includeChannelLayout) {
+		NSString *layoutDescription = CXXCoreAudio::AudioChannelLayoutDescription(format.channelLayout.layout);
+		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [%@]>", format, formatDescription, layoutDescription ?: @"no channel layout"];
+	} else
+		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@>", format, formatDescription];
+}
 
 } /* namespace */
 
@@ -165,14 +178,14 @@ struct AudioPlayer::DecoderState final {
 		auto format = decoder_.processingFormat;
 		auto standardEquivalentFormat = format.standardEquivalent;
 		if(!standardEquivalentFormat) {
-			os_log_error(log_, "Error converting %{public}@ to standard equivalent format", SFB::StringDescribingAVAudioFormat(format));
+			os_log_error(log_, "Error converting %{public}@ to standard equivalent format", StringDescribingAVAudioFormat(format));
 			return false;
 		}
 
 		// Convert to deinterleaved native-endian float, preserving the channel count and order
 		converter_ = [[AVAudioConverter alloc] initFromFormat:format toFormat:standardEquivalentFormat];
 		if(!converter_) {
-			os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", SFB::StringDescribingAVAudioFormat(format), SFB::StringDescribingAVAudioFormat(standardEquivalentFormat));
+			os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", StringDescribingAVAudioFormat(format), StringDescribingAVAudioFormat(standardEquivalentFormat));
 			return false;
 		}
 
@@ -939,14 +952,14 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 
 	AVAudioFormat *inputFormat = nil;
 	AVAudioFormat *outputFormat = [sourceNode outputFormatForBus:0];
-	[string appendFormat:@"→ %@\n    %@\n", sourceNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+	[string appendFormat:@"→ %@\n    %@\n", sourceNode, StringDescribingAVAudioFormat(outputFormat)];
 
 	AVAudioConnectionPoint *connectionPoint = [[engine outputConnectionPointsForNode:sourceNode outputBus:0] firstObject];
 	while(connectionPoint.node != engine.mainMixerNode) {
 		inputFormat = [connectionPoint.node inputFormatForBus:connectionPoint.bus];
 		outputFormat = [connectionPoint.node outputFormatForBus:connectionPoint.bus];
 		if(![outputFormat isEqual:inputFormat])
-			[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, SFB::StringDescribingAVAudioFormat(outputFormat)];
+			[string appendFormat:@"→ %@\n    %@\n", connectionPoint.node, StringDescribingAVAudioFormat(outputFormat)];
 		else
 			[string appendFormat:@"→ %@\n", connectionPoint.node];
 
@@ -956,14 +969,14 @@ void SFB::AudioPlayer::LogProcessingGraphDescription(os_log_t log, os_log_type_t
 	inputFormat = [engine.mainMixerNode inputFormatForBus:0];
 	outputFormat = [engine.mainMixerNode outputFormatForBus:0];
 	if(![outputFormat isEqual:inputFormat])
-		[string appendFormat:@"→ %@\n    %@\n", engine.mainMixerNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+		[string appendFormat:@"→ %@\n    %@\n", engine.mainMixerNode, StringDescribingAVAudioFormat(outputFormat)];
 	else
 		[string appendFormat:@"→ %@\n", engine.mainMixerNode];
 
 	inputFormat = [engine.outputNode inputFormatForBus:0];
 	outputFormat = [engine.outputNode outputFormatForBus:0];
 	if(![outputFormat isEqual:inputFormat])
-		[string appendFormat:@"→ %@\n    %@]", engine.outputNode, SFB::StringDescribingAVAudioFormat(outputFormat)];
+		[string appendFormat:@"→ %@\n    %@]", engine.outputNode, StringDescribingAVAudioFormat(outputFormat)];
 	else
 		[string appendFormat:@"→ %@", engine.outputNode];
 
@@ -1107,7 +1120,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					if(auto format = buffer.format; format.channelCount != renderFormat.channelCount || format.sampleRate != renderFormat.sampleRate) {
 						buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat frameCapacity:ringBufferChunkSize];
 						if(!buffer) {
-							os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
+							os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
 							decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 							SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
 							continue;
@@ -1147,7 +1160,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				if(auto format = buffer.format; format.channelCount != renderFormat.channelCount || format.sampleRate != renderFormat.sampleRate) {
 					buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat frameCapacity:ringBufferChunkSize];
 					if(!buffer) {
-						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", SFB::StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
+						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
 						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
 						continue;
@@ -1837,8 +1850,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		if(outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount || outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate) {
 			os_log_debug(log_,
 						 "Mismatch between output formats for main mixer and output nodes:\n    mainMixerNode: %{public}@\n       outputNode: %{public}@",
-						 SFB::StringDescribingAVAudioFormat(mixerNodeOutputFormat),
-						 SFB::StringDescribingAVAudioFormat(outputNodeOutputFormat));
+						 StringDescribingAVAudioFormat(mixerNodeOutputFormat),
+						 StringDescribingAVAudioFormat(outputNodeOutputFormat));
 
 			[engine_ disconnectNodeInput:outputNode bus:0];
 
@@ -1926,7 +1939,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 	assert(format.isStandard);
 #endif /* DEBUG */
 
-	os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", SFB::StringDescribingAVAudioFormat(format));
+	os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", StringDescribingAVAudioFormat(format));
 
 	std::lock_guard lock{engineLock_};
 
