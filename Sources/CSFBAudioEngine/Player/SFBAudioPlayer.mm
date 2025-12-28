@@ -55,11 +55,6 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 	return self;
 }
 
-- (void)dealloc
-{
-	_player.reset();
-}
-
 // MARK: - Playlist Management
 
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error
