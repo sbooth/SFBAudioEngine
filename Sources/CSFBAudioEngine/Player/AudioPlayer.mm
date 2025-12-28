@@ -624,9 +624,10 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 
 void SFB::AudioPlayer::Reset() noexcept
 {
-	// FIXME: Should `engineLock_` be locked for `reset`?
-//	std::lock_guard lock{engineLock_};
-	[engine_ reset];
+	{
+		std::lock_guard lock{engineLock_};
+		[engine_ reset];
+	}
 	ClearDecoderQueue();
 	CancelActiveDecoders(true);
 }
