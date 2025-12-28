@@ -218,9 +218,24 @@ public:
 
 #endif /* !TARGET_OS_IPHONE */
 
-	// MARK: - AVAudioEngine Graph Modification
+	// MARK: - AVAudioEngine
 
-	void WithEngine(void(^block)(AVAudioEngine * _Nonnull engine, AVAudioSourceNode * _Nonnull sourceNode)) const noexcept;
+	void ModifyProcessingGraph(void(^ _Nonnull block)(AVAudioEngine * _Nonnull engine)) const noexcept;
+
+	AVAudioSourceNode * _Nonnull SourceNode() const noexcept
+	{
+		return sourceNode_;
+	}
+
+	AVAudioMixerNode * _Nonnull MainMixerNode() const noexcept
+	{
+		return engine_.mainMixerNode;
+	}
+
+	AVAudioOutputNode * _Nonnull OutputNode() const noexcept
+	{
+		return engine_.outputNode;
+	}
 
 	// MARK: - Debugging
 
