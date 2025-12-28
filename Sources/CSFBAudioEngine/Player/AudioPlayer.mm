@@ -925,16 +925,16 @@ bool SFB::AudioPlayer::SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError
 
 #endif /* !TARGET_OS_IPHONE */
 
-// MARK: - AVAudioEngine Graph Modification
+// MARK: - AVAudioEngine
 
-void SFB::AudioPlayer::WithEngine(void(^block)(AVAudioEngine *engine, AVAudioSourceNode *sourceNode)) const noexcept
+void SFB::AudioPlayer::ModifyProcessingGraph(void(^block)(AVAudioEngine *engine)) const noexcept
 {
 #if DEBUG
 	assert(block != nil);
 #endif /* DEBUG */
 
 	std::lock_guard lock{engineLock_};
-	block(engine_, sourceNode_);
+	block(engine_);
 
 	assert(sourceNode_.engine == engine_ && "Illegal AVAudioEngine configuration");
 	assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode && "Illegal AVAudioEngine configuration");

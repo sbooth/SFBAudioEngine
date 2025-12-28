@@ -20,10 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
-/// A block accepting an `AVAudioEngine` and `AVAudioSourceNode`
-/// @param engine The `AVAudioEngine`
-/// @param sourceNode The `AVAudioSourceNode`
-typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine, AVAudioSourceNode *sourceNode) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
+/// A block accepting a single `AVAudioEngine` parameter
+typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
 
 /// The possible playback states for `SFBAudioPlayer`
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
@@ -256,13 +254,22 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// An optional delegate
 @property (nonatomic, nullable, weak) id<SFBAudioPlayerDelegate> delegate;
 
-// MARK: - AVAudioEngine Graph Modification
+// MARK: - AVAudioEngine
 
 /// Calls `block` from a context safe to perform operations on the `AVAudioEngine` processing graph
 /// - important: Graph modifications may only be made between `sourceNode` and `engine.mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
 /// - parameter block: A block performing operations on the `AVAudioEngine`
-- (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
+- (void)modifyProcessingGraph:(SFBAudioPlayerAVAudioEngineBlock)block;
+/// Returns the audio processing graph's source node
+/// - attention: Do not make any modifications to the node's connections.
+@property (nonatomic, nonnull, readonly) AVAudioSourceNode *sourceNode;
+/// Returns the audio processing graph's main mixer node
+/// - attention: Do not make any modifications to the node's connections.
+@property (nonatomic, nonnull, readonly) AVAudioMixerNode *mainMixerNode;
+/// Returns the audio processing graph's output node
+/// - attention: Do not make any modifications to the node's connections.
+@property (nonatomic, nonnull, readonly) AVAudioOutputNode *outputNode;
 
 // MARK: - Debugging
 
