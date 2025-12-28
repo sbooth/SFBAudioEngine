@@ -1942,6 +1942,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 #if DEBUG
 	assert(format != nil);
 	assert(format.isStandard);
+	assert(![[sourceNode_ outputFormatForBus:0] isEqual:format]);
 #endif /* DEBUG */
 
 	os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", StringDescribingAVAudioFormat(format));
@@ -1958,39 +1959,31 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	// Reconfigure the processing graph
-	AVAudioOutputNode *outputNode = engine_.outputNode;
-	AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
+	AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_ outputBus:0] firstObject];
+	[engine_ disconnectNodeOutput:sourceNode_];
 
-	// This class requires that the main mixer node be connected to the output node
-	assert([engine_ inputConnectionPointForNode:outputNode inputBus:0].node == mixerNode && "Illegal AVAudioEngine configuration");
-
-	if(auto renderFormat = [sourceNode_ outputFormatForBus:0]; ![renderFormat isEqual:format]) {
-		AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_ outputBus:0] firstObject];
-		[engine_ disconnectNodeOutput:sourceNode_];
-
-		// Allocate the ring buffer for the new format
-		if(!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
-			os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %zu", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
-			return false;
-		}
-
-		// Reconnect the player node to the next node in the processing chain
-		// This is the mixer node in the default configuration, but additional nodes may
-		// have been inserted between the player and mixer nodes. In this case allow the delegate
-		// to make any necessary adjustments based on the format change if desired.
-		if(sourceNodeOutputConnectionPoint && sourceNodeOutputConnectionPoint.node != mixerNode) {
-			if([player_.delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:withFormat:)]) {
-				AVAudioNode *node = [player_.delegate audioPlayer:player_ reconfigureProcessingGraph:engine_ withFormat:format];
-				// Ensure the delegate returned a valid node
-				assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
-				[engine_ connect:sourceNode_ to:node format:format];
-			} else
-				[engine_ connect:sourceNode_ to:sourceNodeOutputConnectionPoint.node format:format];
-		} else
-			[engine_ connect:sourceNode_ to:mixerNode format:format];
+	// Allocate the ring buffer for the new format
+	if(!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
+		os_log_error(log_, "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format %{public}@ and capacity %zu", CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)), ringBufferCapacity);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil];
+		return false;
 	}
+
+	// Reconnect the player node to the next node in the processing chain
+	// This is the mixer node in the default configuration, but additional nodes may
+	// have been inserted between the player and mixer nodes. In this case allow the delegate
+	// to make any necessary adjustments based on the format change if desired.
+	if(AVAudioMixerNode *mixerNode = engine_.mainMixerNode; sourceNodeOutputConnectionPoint && sourceNodeOutputConnectionPoint.node != mixerNode) {
+		if([player_.delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:withFormat:)]) {
+			AVAudioNode *node = [player_.delegate audioPlayer:player_ reconfigureProcessingGraph:engine_ withFormat:format];
+			// Ensure the delegate returned a valid node
+			assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
+			[engine_ connect:sourceNode_ to:node format:format];
+		} else
+			[engine_ connect:sourceNode_ to:sourceNodeOutputConnectionPoint.node format:format];
+	} else
+		[engine_ connect:sourceNode_ to:mixerNode format:format];
 
 #if DEBUG
 	LogProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
