@@ -26,7 +26,7 @@ constexpr int kDSDPacketsPerPCMFrame = 8 / kSFBPCMFramesPerDSDPacket;
 constexpr int kBufferSizePackets = 16384;
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
-constexpr uint8_t sBitReverseTable256 [256] =
+constexpr unsigned char sBitReverseTable256 [256] =
 {
 #   define R2(n)     n,     n + 2*64,     n + 1*64,     n + 3*64
 #   define R4(n) R2(n), R2(n + 2*16), R2(n + 1*16), R2(n + 3*16)
@@ -470,7 +470,7 @@ private:
 		// Grab the DSD audio
 		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * kDSDPacketsPerPCMFrame;
 		if(![_decoder decodeIntoBuffer:_buffer packetCount:std::min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
-			break;
+			return NO;
 
 		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
 		if(dsdPacketsDecoded == 0)
@@ -485,7 +485,7 @@ private:
 		AVAudioChannelCount channelCount = buffer.format.channelCount;
 		bool isBigEndian = _buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian;
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-			const auto input = static_cast<const uint8_t *>(reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(_buffer.data) + channel));
+			const auto input = static_cast<const unsigned char *>(_buffer.data) + channel;
 			float *output = floatChannelData[channel];
 			_context[channel].Translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
 			// Boost signal by 6 dBFS
@@ -520,6 +520,11 @@ private:
 	_buffer.byteLength = 0;
 
 	return YES;
+}
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
 }
 
 @end

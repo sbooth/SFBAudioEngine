@@ -107,6 +107,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 	if(![super openReturningError:error])
 		return NO;
 
+	_framePosition = 0;
 	_frameLength = SFBUnknownFrameLength;
 	_serialNumber = -1;
 
@@ -350,6 +351,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 	// Ogg cleanup
 	ogg_stream_clear(&_streamState);
 	ogg_sync_clear(&_syncState);
+
+	_buffer = nil;
 
 	return [super closeReturningError:error];
 }

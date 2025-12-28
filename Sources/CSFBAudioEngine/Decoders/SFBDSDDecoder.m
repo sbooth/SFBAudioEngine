@@ -306,6 +306,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	_sourceFormat = nil;
+	_processingFormat = nil;
+	_properties = nil;
 	if(_inputSource.isOpen)
 		return [_inputSource closeReturningError:error];
 	return YES;
@@ -339,6 +342,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
+}
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];
 }
 
 @end
