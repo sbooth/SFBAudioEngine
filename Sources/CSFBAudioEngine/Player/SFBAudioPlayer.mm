@@ -310,12 +310,17 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 #endif /* !TARGET_OS_IPHONE */
 
-// MARK: - AVAudioEngine Modification
+// MARK: - AVAudioEngine Access
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
 	NSParameterAssert(block != nil);
 	_player->WithEngine(block);
+}
+
+- (AVAudioSourceNode *)sourceNode
+{
+	return _player->SourceNode();
 }
 
 // MARK: - Debugging
