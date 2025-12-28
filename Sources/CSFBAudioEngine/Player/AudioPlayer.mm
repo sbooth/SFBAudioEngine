@@ -1836,14 +1836,11 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	// AVAudioEngine stops itself when a configuration change occurs
 	// Flags::engineIsRunning indicates if the engine was running before the interruption
 	const auto flags = flags_.load(std::memory_order_acquire);
-	const auto engineWasRunning = flags & static_cast<unsigned int>(Flags::engineIsRunning);
-	const auto wasPlaying = flags & static_cast<unsigned int>(Flags::isPlaying);
-
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	// The output hardware’s channel count or sample rate changed
 	{
 		std::lock_guard lock{engineLock_};
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 		AVAudioOutputNode *outputNode = engine_.outputNode;
 		AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
@@ -1864,31 +1861,23 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 			[engine_ prepare];
 		}
-	}
 
-	// Restart AVAudioEngine if previously running
-	if(engineWasRunning) {
-		NSError *startError = nil;
-		const auto started = [&] {
-			std::lock_guard lock{engineLock_};
-			return [engine_ startAndReturnError:&startError];
-		}();
+		// Restart AVAudioEngine if previously running
+		if(flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
+			if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+				os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+//				if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+//					[player_.delegate audioPlayer:player_ encounteredError:startError];
+				return;
+			}
 
-		if(!started) {
-			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-//			if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
-//				[player_.delegate audioPlayer:player_ encounteredError:startError];
-			return;
+			if(flags & static_cast<unsigned int>(Flags::isPlaying))
+				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+			else
+				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 		}
-
-		if(wasPlaying)
-			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		else
-			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 	}
-
-	if(const auto flags = flags_.load(std::memory_order_acquire); (engineWasRunning != (flags & static_cast<unsigned int>(Flags::engineIsRunning)) || wasPlaying != (flags & static_cast<unsigned int>(Flags::isPlaying))) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-		[player_.delegate audioPlayer:player_ playbackStateChanged:PlaybackState()];
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
 		[player_.delegate audioPlayerAVAudioEngineConfigurationChange:player_];
