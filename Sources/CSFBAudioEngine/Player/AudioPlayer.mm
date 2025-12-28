@@ -606,9 +606,8 @@ void SFB::AudioPlayer::Stop() noexcept
 	{
 		std::lock_guard lock{engineLock_};
 		[engine_ stop];
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	}
-
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	ClearDecoderQueue();
 	CancelActiveDecoders(true);
