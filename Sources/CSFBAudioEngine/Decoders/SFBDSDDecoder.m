@@ -171,15 +171,16 @@ static NSMutableArray *_registeredSubclasses = nil;
 	NSString *lowercaseExtension = inputSource.url.pathExtension.lowercaseString;
 	NSString *lowercaseMIMEType = mimeTypeHint.lowercaseString;
 
-	// Instead of failing for non-seekable inputs just skip content type detection
-	if(detectContentType && !inputSource.supportsSeeking) {
-		os_log_error(gSFBDSDDecoderLog, "Unable to detect content type for non-seekable input source %{public}@", inputSource);
-		detectContentType = NO;
+	if(detectContentType) {
+		// If the input source can't be opened decoding is destined to fail; give up now
+		if(!inputSource.isOpen && ![inputSource openReturningError:error])
+			return nil;
+		// Instead of failing for non-seekable inputs just skip content type detection
+		if(!inputSource.supportsSeeking) {
+			os_log_error(gSFBDSDDecoderLog, "Unable to detect content type for non-seekable input source %{public}@", inputSource);
+			detectContentType = NO;
+		}
 	}
-
-	// If the input source can't be opened decoding is destined to fail; give up now
-	if(detectContentType && !inputSource.isOpen && ![inputSource openReturningError:error])
-		return nil;
 
 	int score = 10;
 	Class subclass = nil;
@@ -305,6 +306,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	_sourceFormat = nil;
+	_processingFormat = nil;
+	_properties = nil;
 	if(_inputSource.isOpen)
 		return [_inputSource closeReturningError:error];
 	return YES;
@@ -338,6 +342,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
+}
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];
 }
 
 @end

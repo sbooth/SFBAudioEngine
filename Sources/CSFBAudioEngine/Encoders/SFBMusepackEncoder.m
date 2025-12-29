@@ -169,6 +169,8 @@ static off_t my_mpc_tell_callback(void *context)
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
+	_framePosition = 0;
+
 	return YES;
 }
 

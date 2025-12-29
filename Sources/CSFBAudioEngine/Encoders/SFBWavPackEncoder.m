@@ -199,6 +199,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription channelLayout:_processingFormat.channelLayout];
 
+	_framePosition = 0;
+
 	return YES;
 }
 
@@ -209,7 +211,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		_wpc = NULL;
 	}
 
-	_firstBlock = NULL;
+	_firstBlock = nil;
 
 	return [super closeReturningError:error];
 }
@@ -272,9 +274,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		case 3:
 			for(AVAudioFrameCount i = 0; i < frameLength; ++i) {
 				for(AVAudioFrameCount j = 0; j < _processingFormat.channelCount; ++j) {
-					uint8_t hi = (uint8_t)((*buf >> 16) & 0xff);
-					uint8_t mid = (uint8_t)((*buf >> 8) & 0xff);
-					uint8_t lo = (uint8_t)(*buf & 0xff);
+					unsigned char hi = (unsigned char)((*buf >> 16) & 0xff);
+					unsigned char mid = (unsigned char)((*buf >> 8) & 0xff);
+					unsigned char lo = (unsigned char)(*buf & 0xff);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated"
 					CC_MD5_Update(&_md5, &lo, 1);

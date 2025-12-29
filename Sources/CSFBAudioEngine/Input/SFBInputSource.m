@@ -63,6 +63,8 @@ static void SFBCreateInputSourceLog(void)
 	else
 		return [[SFBFileInputSource alloc] initWithURL:url];
 
+	if(error)
+		*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: url }];
 	return nil;
 }
 

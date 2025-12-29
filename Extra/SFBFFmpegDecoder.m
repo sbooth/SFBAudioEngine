@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2022 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2013-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -35,7 +35,7 @@ static void SetupFFmpeg()
 
 #pragma mark Callbacks
 
-static int my_read_packet(void *opaque, uint8_t *buf, int buf_size)
+static int my_read_packet(void *opaque, unsigned char *buf, int buf_size)
 {
 	assert(opaque != NULL);
 
