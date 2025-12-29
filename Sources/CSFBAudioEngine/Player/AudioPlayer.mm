@@ -1904,21 +1904,18 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+				std::lock_guard lock{engineLock_};
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
-				NSError *startError = nil;
-				const auto started = [&] {
-					std::lock_guard lock{engineLock_};
-					return [engine_ startAndReturnError:&startError];
-				}();
-
-				if(!started) {
+				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 					return;
 				}
 
 				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
+
+			Resume();
 			break;
 
 		default:
