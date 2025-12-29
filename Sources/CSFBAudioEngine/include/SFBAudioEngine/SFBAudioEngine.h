@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -31,7 +31,6 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 #import <SFBAudioEngine/SFBPCMEncoding.h>
 #import <SFBAudioEngine/SFBAudioEncoder.h>
 
-#import <SFBAudioEngine/SFBAudioPlayerNode.h>
 #import <SFBAudioEngine/SFBAudioPlayer.h>
 
 #import <SFBAudioEngine/SFBAudioProperties.h>

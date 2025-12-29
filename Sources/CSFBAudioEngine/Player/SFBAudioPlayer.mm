@@ -6,9 +6,34 @@
 
 #import <exception>
 
-#import "SFBAudioPlayer+Internal.h"
+#import "SFBAudioPlayer.h"
+#import "AudioPlayer.h"
+
+NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPlayer";
+
+@interface SFBAudioPlayer ()
+{
+@private
+	SFB::AudioPlayer::unique_ptr _player;
+}
+@end
 
 @implementation SFBAudioPlayer
+
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBAudioPlayerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+			switch(err.code) {
+				case SFBAudioPlayerErrorCodeInternalError:
+					return NSLocalizedString(@"An internal player error occurred.", @"");
+				case SFBAudioPlayerErrorCodeFormatNotSupported:
+					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			}
+		}
+		return nil;
+	}];
+}
 
 - (instancetype)init
 {
@@ -16,8 +41,7 @@
 
 	try {
 		player = std::make_unique<SFB::AudioPlayer>();
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(SFB::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
 		return nil;
 	}
@@ -28,11 +52,6 @@
 	}
 
 	return self;
-}
-
-- (void)dealloc
-{
-	_player.reset();
 }
 
 // MARK: - Playlist Management
@@ -94,12 +113,12 @@
 
 - (void)clearQueue
 {
-	_player->ClearQueue();
+	_player->ClearDecoderQueue();
 }
 
 - (BOOL)queueIsEmpty
 {
-	return _player->QueueIsEmpty();
+	return _player->DecoderQueueIsEmpty();
 }
 
 // MARK: - Playback Control
@@ -109,14 +128,14 @@
 	return _player->Play(error);
 }
 
-- (void)pause
+- (BOOL)pause
 {
-	_player->Pause();
+	return _player->Pause();
 }
 
-- (void)resume
+- (BOOL)resume
 {
-	_player->Resume();
+	return _player->Resume();
 }
 
 - (void)stop
@@ -139,11 +158,6 @@
 - (BOOL)engineIsRunning
 {
 	return _player->EngineIsRunning();
-}
-
-- (BOOL)playerNodeIsPlaying
-{
-	return _player->PlayerNodeIsPlaying();
 }
 
 - (SFBAudioPlayerPlaybackState)playbackState
@@ -300,14 +314,25 @@
 
 // MARK: - AVAudioEngine
 
-- (AVAudioEngine *)audioEngine
+- (void)modifyProcessingGraph:(SFBAudioPlayerAVAudioEngineBlock)block
 {
-	return _player->AudioEngine();
+	NSParameterAssert(block != nil);
+	_player->ModifyProcessingGraph(block);
 }
 
-- (SFBAudioPlayerNode *)playerNode
+- (AVAudioSourceNode *)sourceNode
 {
-	return _player->PlayerNode();
+	return _player->SourceNode();
+}
+
+- (AVAudioMixerNode *)mainMixerNode
+{
+	return _player->MainMixerNode();
+}
+
+- (AVAudioOutputNode *)outputNode
+{
+	return _player->OutputNode();
 }
 
 // MARK: - Debugging
