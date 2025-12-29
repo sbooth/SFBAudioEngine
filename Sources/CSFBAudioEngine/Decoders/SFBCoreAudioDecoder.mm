@@ -284,7 +284,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 
 		try {
 			_af.Close();
-			_eaf.Close();
+			_eaf.Dispose();
 		}
 		catch(...)
 		{}
@@ -304,7 +304,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 - (BOOL)closeReturningError:(NSError **)error
 {
 	try {
-		_eaf.Close();
+		_eaf.Dispose();
 		_af.Close();
 	}
 	catch(const std::system_error& e) {
@@ -319,7 +319,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 
 - (BOOL)isOpen
 {
-	return _eaf.IsValid();
+	return static_cast<bool>(_eaf);
 }
 
 - (AVAudioFramePosition)framePosition
