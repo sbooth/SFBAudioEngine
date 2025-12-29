@@ -1885,7 +1885,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	switch(interruptionType) {
 		case AVAudioSessionInterruptionTypeBegan:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
-			Pause();
+			(void)Pause();
 			break;
 
 		case AVAudioSessionInterruptionTypeEnded:
@@ -1905,7 +1905,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
 
-			Resume();
+			(void)Resume();
 			break;
 
 		default:
