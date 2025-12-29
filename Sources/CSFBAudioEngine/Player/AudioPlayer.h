@@ -132,8 +132,8 @@ public:
 	// MARK: - Playback Control
 
 	bool Play(NSError **error) noexcept;
-	void Pause() noexcept;
-	void Resume() noexcept;
+	bool Pause() noexcept;
+	bool Resume() noexcept;
 	void Stop() noexcept;
 	bool TogglePlayPause(NSError **error) noexcept;
 
