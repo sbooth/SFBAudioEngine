@@ -67,7 +67,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 /// Returns true if @c buf appears to be an ID3v2 tag header.
 /// @warning @c buf must be at least 10 bytes in size.
-static BOOL is_id3v2_tag_header(const uint8_t *buf)
+static BOOL is_id3v2_tag_header(const unsigned char *buf)
 {
 	/*
 	 An ID3v2 tag can be detected with the following pattern:
@@ -89,24 +89,24 @@ static BOOL is_id3v2_tag_header(const uint8_t *buf)
 
 /// Returns the total size in bytes of the ID3v2 tag with @c header.
 /// @warning @c header must be at least 10 bytes in size.
-static uint32_t id3v2_tag_total_size(const uint8_t *header)
+static uint32_t id3v2_tag_total_size(const unsigned char *header)
 {
-	uint8_t flags = header[5];
+	unsigned char flags = header[5];
 	// The size is stored as a 32-bit synchsafe integer with 28 effective bits
 	uint32_t size = (header[6] << 21) | (header[7] << 14) | (header[8] << 7) | header[9];
 	return 10 + size + (flags & 0x10 ? 10 : 0);
 }
 
 /// Searches for an MP3 sync word and minimal valid frame header in @c buf.
-static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t *buf, NSInteger len)
+static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned char *buf, NSInteger len)
 {
 	NSCParameterAssert(buf != NULL);
 	NSCParameterAssert(len >= 3);
 
-	const uint8_t *loc = buf;
+	const unsigned char *loc = buf;
 	for(;;) {
 		// Search for first byte of MP3 sync word
-		loc = (const uint8_t *)memchr(loc, 0xff, len - (loc - buf) - 2);
+		loc = (const unsigned char *)memchr(loc, 0xff, len - (loc - buf) - 2);
 		if(!loc)
 			break;
 
@@ -163,7 +163,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const uint8_t 
 	if(![inputSource seekToOffset:0 error:error])
 		return NO;
 
-	uint8_t buf [512];
+	unsigned char buf [512];
 	NSInteger len;
 	if(![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error])
 		return NO;

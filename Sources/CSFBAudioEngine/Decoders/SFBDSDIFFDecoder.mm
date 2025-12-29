@@ -871,12 +871,19 @@ static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
 		// a clustered frame (one channel byte per channel)
 
-		auto buf = static_cast<uint8_t *>(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(buffer.data) + buffer.byteLength));
+		auto buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
 		NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
-			os_log_error(gSFBDSDDecoderLog, "Error reading audio: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
+		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error]) {
+			os_log_error(gSFBDSDDecoderLog, "Error reading audio data");
+			return NO;
+		}
+
+		if(bytesRead != bytesToRead) {
+			os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %ld bytes, got %ld", static_cast<long>(bytesToRead), bytesRead);
+			if(error)
+				*error = CreateInvalidDSDIFFFileError(_inputSource.url);
 			return NO;
 		}
 

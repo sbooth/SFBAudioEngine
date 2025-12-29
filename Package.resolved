@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioToolbox",
       "state" : {
-        "revision" : "5a80775ba2512ec5dfa6ff043901b601f1020757",
-        "version" : "0.1.2"
+        "revision" : "781eb0c5f89607d31fcc7450f44b6f9d81a10340",
+        "version" : "0.2.0"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXCoreAudio",
       "state" : {
-        "revision" : "463da36ac52f8c578f9e5e8f13dd438acafc73aa",
-        "version" : "0.2.0"
+        "revision" : "fb391f40a119fcbf3080b68e50e09671f8783ee8",
+        "version" : "0.4.0"
       }
     },
     {
@@ -59,17 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXRingBuffer",
       "state" : {
-        "revision" : "7f4542248dca706c5a95bfe0df13f951e3254dce",
-        "version" : "0.2.0"
-      }
-    },
-    {
-      "identity" : "cxxsharedmutex",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXSharedMutex",
-      "state" : {
-        "revision" : "9de324ca10422d6532f888a1aea28c9f51dd2327",
-        "version" : "0.1.0"
+        "revision" : "837269c0036143d43819e154880ca6e69ca4e6a3",
+        "version" : "0.4.0"
       }
     },
     {

@@ -392,7 +392,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
 			const auto frameOffset = frameLength - framesRemaining;
 			const auto byteOffset = frameOffset * format->mBytesPerFrame;
-			const auto src = static_cast<int32_t *>(reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset));
+			const auto src = static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset;
 
 			// Shift from high alignment, sign extending in the process
 			for(AVAudioFrameCount i = 0; i < frameCount * stride; ++i)

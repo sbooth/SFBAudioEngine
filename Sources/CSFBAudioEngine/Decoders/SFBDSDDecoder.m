@@ -344,6 +344,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 	__builtin_unreachable();
 }
 
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self, [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];
+}
+
 @end
 
 @implementation SFBDSDDecoderSubclassInfo
