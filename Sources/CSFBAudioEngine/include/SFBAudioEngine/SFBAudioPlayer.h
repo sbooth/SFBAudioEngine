@@ -367,7 +367,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when the configuration of the `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
-- (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
+/// - parameter userInfo: The `userInfo` object from the notification
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioEngineConfigurationChange:(nullable NSDictionary *)userInfo;
 /// Called to notify the delegate when an asynchronous error occurs
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter error: The error
