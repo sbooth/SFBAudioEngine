@@ -1847,11 +1847,17 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		AVAudioFormat *outputNodeOutputFormat = [outputNode outputFormatForBus:0];
 		AVAudioFormat *mixerNodeOutputFormat = [mixerNode outputFormatForBus:0];
 
-		if(outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount || outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate) {
-			os_log_debug(log_,
-						 "Mismatch between output formats for main mixer and output nodes:\n    mainMixerNode: %{public}@\n       outputNode: %{public}@",
-						 StringDescribingAVAudioFormat(mixerNodeOutputFormat),
-						 StringDescribingAVAudioFormat(outputNodeOutputFormat));
+		// The output node's output format tracks the hardware sample rate and channel count
+		// To avoid format conversion in both the source-mixer and mixer-output connections,
+		// set the format for the mixer-output connection to the output node's output format
+		if(outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate || outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount) {
+#if DEBUG
+			if(outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate)
+				os_log_debug(log_, "Mismatch between main mixer → output node connection sample rate (%g Hz) and hardware sample rate (%g Hz)", mixerNodeOutputFormat.sampleRate, outputNodeOutputFormat.sampleRate);
+			if(outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount)
+				os_log_debug(log_, "Mismatch between main mixer → output node connection channel count (%d) and hardware channel count (%d)", mixerNodeOutputFormat.channelCount, outputNodeOutputFormat.channelCount);
+			os_log_debug(log_, "Setting main mixer → output node connection format to %{public}@", StringDescribingAVAudioFormat(outputNodeOutputFormat));
+#endif /* DEBUG */
 
 			[engine_ disconnectNodeInput:outputNode bus:0];
 
