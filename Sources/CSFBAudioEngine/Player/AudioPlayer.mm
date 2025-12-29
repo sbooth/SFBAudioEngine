@@ -558,44 +558,40 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 	} else
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
-#if DEBUG
-	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Play()");
-#endif /* DEBUG */
-
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
 
 	return true;
 }
 
-void SFB::AudioPlayer::Pause() noexcept
+bool SFB::AudioPlayer::Pause() noexcept
 {
-	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
-		return;
+	const auto flags = flags_.load(std::memory_order_acquire);
+	if(!(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
+		return false;
 
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	if((flags & static_cast<unsigned int>(Flags::isPlaying))) {
+		flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+			[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
+	}
 
-#if DEBUG
-	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePaused && "Incorrect playback state in Pause()");
-#endif /* DEBUG */
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
+	return true;
 }
 
-void SFB::AudioPlayer::Resume() noexcept
+bool SFB::AudioPlayer::Resume() noexcept
 {
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::engineIsRunning)) && !(flags & static_cast<unsigned int>(Flags::isPlaying)))
-		return;
+	const auto flags = flags_.load(std::memory_order_acquire);
+	if(!(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
+		return false;
 
-	flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	if(!(flags & static_cast<unsigned int>(Flags::isPlaying))) {
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+			[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
+	}
 
-#if DEBUG
-	assert(PlaybackState() == SFBAudioPlayerPlaybackStatePlaying && "Incorrect playback state in Resume()");
-#endif /* DEBUG */
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
+	return true;
 }
 
 void SFB::AudioPlayer::Stop() noexcept
@@ -612,10 +608,6 @@ void SFB::AudioPlayer::Stop() noexcept
 	ClearDecoderQueue();
 	CancelActiveDecoders(true);
 
-#if DEBUG
-	assert(PlaybackState() == SFBAudioPlayerPlaybackStateStopped && "Incorrect playback state in Stop()");
-#endif /* DEBUG */
-
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 }
@@ -625,11 +617,9 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 	const auto playbackState = PlaybackState();
 	switch(playbackState) {
 		case SFBAudioPlayerPlaybackStatePlaying:
-			Pause();
-			return true;
+			return Pause();
 		case SFBAudioPlayerPlaybackStatePaused:
-			Resume();
-			return true;
+			return Resume();
 		case SFBAudioPlayerPlaybackStateStopped:
 			return Play(error);
 	}
@@ -1895,30 +1885,36 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	switch(interruptionType) {
 		case AVAudioSessionInterruptionTypeBegan:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
-			Pause();
+			(void)Pause();
 			break;
 
 		case AVAudioSessionInterruptionTypeEnded:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
+#if false
+			// TODO: Does it make sense to honor AVAudioSessionInterruptionOptionShouldResume?
+			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume)) {
+				std::lock_guard lock{engineLock_};
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+				return;
+			}
+#endif // false
+
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+				std::lock_guard lock{engineLock_};
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
-				NSError *startError = nil;
-				const auto started = [&] {
-					std::lock_guard lock{engineLock_};
-					return [engine_ startAndReturnError:&startError];
-				}();
-
-				if(!started) {
+				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 					return;
 				}
 
 				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
+
+			(void)Resume();
 			break;
 
 		default:
