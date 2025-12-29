@@ -132,11 +132,6 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	}
 }
 
-- (void)dealloc
-{
-	_input.reset();
-}
-
 - (NSURL *)url
 {
 	return (__bridge NSURL *)_input->GetURL();
