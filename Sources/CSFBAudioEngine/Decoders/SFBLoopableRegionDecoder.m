@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -236,6 +236,11 @@
 		return [self resetReturningError:error];
 
 	return YES;
+}
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
 }
 
 @end
