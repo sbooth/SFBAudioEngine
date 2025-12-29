@@ -154,7 +154,7 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 		return NO;
 	}
 
-	if(![_inputSource readUInt64LittleEndian:&chunkSize error:nil]) {
+	if(![_inputSource readUInt64LittleEndian:&chunkSize error:nil] || chunkSize != 52) {
 		os_log_error(gSFBDSDDecoderLog, "Unexpected 'fmt ' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
