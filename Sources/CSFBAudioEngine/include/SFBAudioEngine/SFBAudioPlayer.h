@@ -115,14 +115,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// Starts the `AVAudioEngine` and begins rendering audio
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: `YES` if the `AVAudioEngine` was successfully started
+/// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 /// Pauses audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
-- (void)pause;
+/// - returns: `YES` if the `AVAudioEngine` is running and the player is not rendering audio
+- (BOOL)pause;
 /// Resumes audio rendering
 /// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
-- (void)resume;
+/// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
+- (BOOL)resume;
 /// Stops the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
 /// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
