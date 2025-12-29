@@ -477,12 +477,17 @@ std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, c
 
 	// Parse the local chunks
 	auto chunkDataSizeRemaining = result->dataSize_ - 4; // adjust for propertyType_
-	while(chunkDataSizeRemaining) {
+	while(chunkDataSizeRemaining >= 12) {
 
 		uint32_t localChunkID;
 		uint64_t localChunkDataSize;
 
 		if(ReadChunkIDAndDataSize(inputSource, localChunkID, localChunkDataSize)) {
+			if(localChunkDataSize > chunkDataSizeRemaining - 12) {
+				os_log_error(gSFBDSDDecoderLog, "Invalid data size for local chunk '%{public}.4s' in 'PROP' chunk", SFBCStringForOSType(localChunkID));
+				return nullptr;
+			}
+
 			switch(localChunkID) {
 				case 'FS  ':
 					if(auto chunk = ParseSampleRateChunk(inputSource, localChunkID, localChunkDataSize); chunk)
@@ -526,8 +531,7 @@ std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, c
 
 			chunkDataSizeRemaining -= 12;
 			chunkDataSizeRemaining -= localChunkDataSize;
-		}
-		else {
+		} else {
 			os_log_error(gSFBDSDDecoderLog, "Error reading local chunk in 'PROP' chunk");
 			return nullptr;
 		}
@@ -593,12 +597,17 @@ std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, con
 
 	// Parse the local chunks
 	auto chunkDataSizeRemaining = result->dataSize_ - 4; // adjust for formType_
-	while(chunkDataSizeRemaining) {
+	while(chunkDataSizeRemaining >= 12) {
 
 		uint32_t localChunkID;
 		uint64_t localChunkDataSize;
 
 		if(ReadChunkIDAndDataSize(inputSource, localChunkID, localChunkDataSize)) {
+			if(localChunkDataSize > chunkDataSizeRemaining - 12) {
+				os_log_error(gSFBDSDDecoderLog, "Invalid data size for local chunk '%{public}.4s' in 'FRM8' chunk", SFBCStringForOSType(localChunkID));
+				return nullptr;
+			}
+
 			switch(localChunkID) {
 				case 'FVER':
 					if(auto chunk = ParseFormatVersionChunk(inputSource, localChunkID, localChunkDataSize); chunk)
