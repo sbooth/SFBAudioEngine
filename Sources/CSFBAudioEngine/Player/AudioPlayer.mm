@@ -1885,30 +1885,36 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	switch(interruptionType) {
 		case AVAudioSessionInterruptionTypeBegan:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
-			Pause();
+			(void)Pause();
 			break;
 
 		case AVAudioSessionInterruptionTypeEnded:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
+#if false
+			// TODO: Does it make sense to honor AVAudioSessionInterruptionOptionShouldResume?
+			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume)) {
+				std::lock_guard lock{engineLock_};
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+				return;
+			}
+#endif // false
+
 			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+				std::lock_guard lock{engineLock_};
 				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 
-				NSError *startError = nil;
-				const auto started = [&] {
-					std::lock_guard lock{engineLock_};
-					return [engine_ startAndReturnError:&startError];
-				}();
-
-				if(!started) {
+				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 					return;
 				}
 
 				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
+
+			(void)Resume();
 			break;
 
 		default:
