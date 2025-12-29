@@ -20,7 +20,7 @@
 #define BUFFER_SIZE_PACKETS 4096
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
-static const uint8_t sBitReverseTable256 [256] =
+static const unsigned char sBitReverseTable256 [256] =
 {
 #   define R2(n)     n,     n + 2*64,     n + 1*64,     n + 3*64
 #   define R4(n) R2(n), R2(n + 2*16), R2(n + 1*16), R2(n + 3*16)
@@ -50,7 +50,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	id <SFBDSDDecoding> _decoder;
 	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
-	uint8_t _marker;
+	unsigned char _marker;
 	BOOL _reverseBits;
 }
 @end
@@ -227,11 +227,11 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
-		uint8_t marker = _marker;
+		unsigned char marker = _marker;
 		AVAudioChannelCount channelCount = _processingFormat.channelCount;
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-			const uint8_t *input = (const void *)((uintptr_t)_buffer.data + channel);
-			uint8_t *output = (void *)((uintptr_t)buffer.audioBufferList->mBuffers[channel].mData + buffer.audioBufferList->mBuffers[channel].mDataByteSize);
+			const unsigned char *input = (const unsigned char *)_buffer.data + channel;
+			unsigned char *output = (unsigned char *)buffer.audioBufferList->mBuffers[channel].mData + buffer.audioBufferList->mBuffers[channel].mDataByteSize;
 
 			// The DoP marker should match across channels
 			marker = _marker;
@@ -245,7 +245,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 				*output++ = _reverseBits ? sBitReverseTable256[*input] : *input;
 				input += channelCount;
 
-				marker = marker == (uint8_t)0x05 ? (uint8_t)0xfa : (uint8_t)0x05;
+				marker = marker == 0x05 ? 0xfa : 0x05;
 			}
 		}
 
@@ -278,6 +278,11 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	_buffer.byteLength = 0;
 
 	return YES;
+}
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
 }
 
 @end

@@ -500,12 +500,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 		case 3: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				uint8_t *dst = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
+				unsigned char *dst = static_cast<unsigned char *>(abl->mBuffers[channel].mData);
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
 					uint32_t value = OSSwapHostToLittleInt32(buffer[channel][sample]);
-					*dst++ = static_cast<uint8_t>(value & 0xff);
-					*dst++ = static_cast<uint8_t>((value >> 8) & 0xff);
-					*dst++ = static_cast<uint8_t>((value >> 16) & 0xff);
+					*dst++ = static_cast<unsigned char>(value & 0xff);
+					*dst++ = static_cast<unsigned char>((value >> 8) & 0xff);
+					*dst++ = static_cast<unsigned char>((value >> 16) & 0xff);
 				}
 			}
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -23,7 +23,7 @@ const NSUInteger SFBID3v2FooterSize = 10;
 	 $80.
 	 */
 
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	if(bytes[0] != 0x49 || bytes[1] != 0x44 || bytes[2] != 0x33)
 		return NO;
 	if(bytes[3] >= 0xff || bytes[4] >= 0xff)
@@ -40,9 +40,9 @@ const NSUInteger SFBID3v2FooterSize = 10;
 	if(self.length < SFBID3v2HeaderSize)
 		return 0;
 
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 
-	uint8_t flags = bytes[5];
+	unsigned char flags = bytes[5];
 	uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
 
 	return SFBID3v2HeaderSize + size + (flags & 0x10 ? SFBID3v2FooterSize : 0);
@@ -75,7 +75,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBAIFFDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "FORM", 4) && (!memcmp(bytes + 8, "AIFF", 4) || !memcmp(bytes + 8, "AIFC", 4));
 }
 
@@ -97,7 +97,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBDSDIFFDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "FRM8", 4) && !memcmp(bytes + 12, "DSD ", 4);
 }
 
@@ -105,7 +105,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBDSFDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "DSD ", 4) && !memcmp(bytes + 28, "fmt ", 4);
 }
 
@@ -121,7 +121,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 	if(self.length < SFBMP3DetectionSize)
 		return NO;
 
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 
 	// Frame sync
 	if(bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0)
@@ -148,14 +148,14 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBMPEG4DetectionSize)
 		return NO;
-	return !memcmp((const uint8_t *)self.bytes + 4, "ftyp", 4);
+	return !memcmp((const unsigned char *)self.bytes + 4, "ftyp", 4);
 }
 
 - (BOOL)isMusepackHeader
 {
 	if(self.length < SFBMusepackDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "MPCK", 4) || !memcmp(bytes, "MP+", 3);
 }
 
@@ -163,7 +163,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBOggFLACDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "\x7f""FLAC", 5);
 }
 
@@ -171,7 +171,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBOggOpusDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "OpusHead", 8);
 }
 
@@ -179,7 +179,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBOggSpeexDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "Speex   ", 8);
 }
 
@@ -187,7 +187,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBOggVorbisDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "OggS\0", 5) && !memcmp(bytes + 28, "\x01vorbis", 7);
 }
 
@@ -209,7 +209,7 @@ const NSUInteger SFBWavPackDetectionSize = 4;
 {
 	if(self.length < SFBWAVEDetectionSize)
 		return NO;
-	const uint8_t *bytes = self.bytes;
+	const unsigned char *bytes = self.bytes;
 	return !memcmp(bytes, "RIFF", 4) && !memcmp(bytes + 8, "WAVE", 4);
 }
 
