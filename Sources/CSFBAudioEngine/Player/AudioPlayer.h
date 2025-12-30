@@ -77,9 +77,9 @@ private:
 	dispatch_semaphore_t					eventSemaphore_ 	{};
 
 	/// Ring buffer communicating events from the decoding thread to the event processing thread
-	CXXRingBuffer::RingBuffer				decodeEventRingBuffer_;
+	CXXRingBuffer::RingBuffer				decodingEvents_;
 	/// Ring buffer communicating events from the render block to the event processing thread
-	CXXRingBuffer::RingBuffer				renderEventRingBuffer_;
+	CXXRingBuffer::RingBuffer				renderingEvents_;
 
 	/// The `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
@@ -264,7 +264,7 @@ private:
 	/// - note: This is the thread entry point for the decoding thread
 	void ProcessDecoders(std::stop_token stoken) noexcept;
 
-	/// Writes an error event to `decodeEventRingBuffer_` and signals `eventSemaphore_`
+	/// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
 	void SubmitDecodingErrorEvent(NSError *error) noexcept;
 
 	// MARK: - Rendering
@@ -322,29 +322,29 @@ private:
 
 	// MARK: - Event Processing
 
-	/// Sequences events from from `decodeEventRingBuffer_` and `renderEventRingBuffer_` for processing in order
+	/// Sequences events from from `decodingEvents_` and `renderingEvents_` for processing in order
 	/// - note: This is the thread entry point for the event thread
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-	/// Processes an event from `decodeEventRingBuffer_`
+	/// Processes an event from `decodingEvents_`
 	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
 
-	/// Processes a decoding started event from `decodeEventRingBuffer_`
+	/// Processes a decoding started event from `decodingEvents_`
 	void ProcessDecodingStartedEvent() noexcept;
 
-	/// Processes a decoding complete event from `decodeEventRingBuffer_`
+	/// Processes a decoding complete event from `decodingEvents_`
 	void ProcessDecodingCompleteEvent() noexcept;
 
-	/// Processes a decoder canceled event from `decodeEventRingBuffer_`
+	/// Processes a decoder canceled event from `decodingEvents_`
 	void ProcessDecoderCanceledEvent() noexcept;
 
-	/// Process a decoding error event from `decodeEventRingBuffer_`
+	/// Process a decoding error event from `decodingEvents_`
 	void ProcessDecodingErrorEvent() noexcept;
 
-	/// Processes an event from `renderEventRingBuffer_`
+	/// Processes an event from `renderingEvents_`
 	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
 
-	/// Processes a frames rendered event from `renderEventRingBuffer_`
+	/// Processes a frames rendered event from `renderingEvents_`
 	void ProcessFramesRenderedEvent() noexcept;
 
 	/// Called when the first audio frame from a decoder will render.
