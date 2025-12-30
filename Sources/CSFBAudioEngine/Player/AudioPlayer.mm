@@ -6,7 +6,6 @@
 
 #import <algorithm>
 #import <atomic>
-#import <cassert>
 #import <cmath>
 
 #import <objc/runtime.h>
@@ -540,23 +539,22 @@ bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) cons
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
 	const auto flags = flags_.load(std::memory_order_acquire);
-	if((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying)))
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	if((flags & mask) == mask)
 		return true;
 
 	if(!(flags & static_cast<unsigned int>(Flags::engineIsRunning))) {
 		std::lock_guard lock{engineLock_};
-
 		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 			if(error)
 				*error = startError;
 			return false;
 		}
+	}
 
-		flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-	} else
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -1826,6 +1824,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	// AVAudioEngine stops itself when a configuration change occurs
 	// Flags::engineIsRunning indicates if the engine was running before the interruption
 	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	const auto prevState = flags & mask;
 
 	// The output hardware’s channel count or sample rate changed
 	{
@@ -1859,7 +1859,7 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 		}
 
 		// Restart AVAudioEngine if previously running
-		if(flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
+		if(prevState & static_cast<unsigned int>(Flags::engineIsRunning)) {
 			if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 				os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 				lock.unlock();
@@ -1868,10 +1868,8 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 				return;
 			}
 
-			if(flags & static_cast<unsigned int>(Flags::isPlaying))
-				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-			else
-				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+			// Restore previous playback state
+			flags_.fetch_or(prevState, std::memory_order_acq_rel);
 		}
 	}
 
@@ -1886,6 +1884,10 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	switch(interruptionType) {
 		case AVAudioSessionInterruptionTypeBegan:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
+			// If the engine is running Pause will clear Flags::isPlaying and leave Flags::engineIsRunning set
+			// This leaves the player (Flags::engineIsRunning) and AVAudioEngine (isRunning) in an inconsistent state
+			// once the AVAudioEngine stops itself after AVAudioSessionInterruptionNotification is received
+			// This is intentional and Flags::engineIsRunning is used to restore playback state once the interruption ends
 			(void)Pause();
 			break;
 
@@ -1901,21 +1903,22 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			}
 #endif // false
 
-			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				std::lock_guard lock{engineLock_};
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
-
 				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 					return;
 				}
 
+				// To avoid the possibility of a state inconsistency Flags::engineIsRunning is set
 				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+
+				// Resume will restore the playing state if the player was playing before the interruption
+				(void)Resume();
 			}
 
-			(void)Resume();
 			break;
 
 		default:
@@ -1944,6 +1947,8 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
 	// Attempt to preserve the playback state
 	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	const auto prevState = flags & mask;
 
 	[engine_ stop];
 	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
@@ -1983,7 +1988,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 	[engine_ prepare];
 
 	// Restart AVAudioEngine and playback as appropriate
-	if(flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
+	if(prevState & static_cast<unsigned int>(Flags::engineIsRunning)) {
 		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 			if(error)
@@ -1991,10 +1996,7 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 			return false;
 		}
 
-		if(flags & static_cast<unsigned int>(Flags::isPlaying))
-			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		else
-			flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+		flags_.fetch_or(prevState, std::memory_order_acq_rel);
 	}
 
 	return true;

@@ -7,6 +7,7 @@
 #pragma once
 
 #import <atomic>
+#import <cassert>
 #import <deque>
 #import <memory>
 #import <mutex>
@@ -145,30 +146,31 @@ public:
 
 	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
 	{
-		if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
-			if(flags & static_cast<unsigned int>(Flags::isPlaying))
-				return SFBAudioPlayerPlaybackStatePlaying;
-			else
-				return SFBAudioPlayerPlaybackStatePaused;
-		} else
-			return SFBAudioPlayerPlaybackStateStopped;
+		const auto flags = flags_.load(std::memory_order_acquire);
+		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+		const auto state = flags & mask;
+		assert(state != static_cast<unsigned int>(Flags::isPlaying));
+		return static_cast<SFBAudioPlayerPlaybackState>(state);
 	}
 
 	bool IsPlaying() const noexcept
 	{
 		const auto flags = flags_.load(std::memory_order_acquire);
-		return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying));
+		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+		return (flags & mask) == mask;
 	}
 
 	bool IsPaused() const noexcept
 	{
 		const auto flags = flags_.load(std::memory_order_acquire);
-		return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) && !(flags & static_cast<unsigned int>(Flags::isPlaying));
+		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+		return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
 	}
 
 	bool IsStopped() const noexcept
 	{
-		return !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning));
+		const auto flags = flags_.load(std::memory_order_acquire);
+		return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
 	}
 
 	bool IsReady() const noexcept
