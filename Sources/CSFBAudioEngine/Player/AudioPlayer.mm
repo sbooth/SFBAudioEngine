@@ -509,8 +509,6 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 		os_log_error(log_, "Error pushing %{public}@ to queuedDecoders_: %{public}s", decoder, e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-		if(forImmediatePlayback)
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 		return false;
 	}
 
