@@ -1068,9 +1068,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
 		if(!decoderState) {
 			{
+				// Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
+				// when transitioning from queued to active
 				std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
 
-				/// Remove and returns the first decoder from the decoder queue
+				// Remove the first decoder from the decoder queue
 				Decoder decoder = nil;
 				if(!queuedDecoders_.empty()) {
 					decoder = queuedDecoders_.front();
