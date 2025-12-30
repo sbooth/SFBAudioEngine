@@ -1009,7 +1009,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
 					dispatch_semaphore_signal(eventSemaphore_);
 				else
-					os_log_error(log_, "Error writing decoder canceled event");
+					os_log_fault(log_, "Error writing decoder canceled event");
 
 				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			}
@@ -1178,7 +1178,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
 							dispatch_semaphore_signal(eventSemaphore_);
 						else
-							os_log_error(log_, "Error writing decoding started event");
+							os_log_fault(log_, "Error writing decoding started event");
 					}
 				}
 
@@ -1192,7 +1192,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				// Write the decoded audio to the ring buffer for rendering
 				const auto framesWritten = audioRingBuffer_.Write(buffer.audioBufferList, buffer.frameLength);
 				if(framesWritten != buffer.frameLength)
-					os_log_error(log_, "Error writing audio to ring buffer: CXXCoreAudio::AudioRingBuffer::Write failed for %d frames", buffer.frameLength);
+					os_log_fault(log_, "Error writing audio to ring buffer: CXXCoreAudio::AudioRingBuffer::Write failed for %d frames", buffer.frameLength);
 
 				// Decoding complete
 				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
@@ -1204,7 +1204,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
 							dispatch_semaphore_signal(eventSemaphore_);
 						else
-							os_log_error(log_, "Error writing decoding complete event");
+							os_log_fault(log_, "Error writing decoding complete event");
 					}
 
 					if(!resumed)
