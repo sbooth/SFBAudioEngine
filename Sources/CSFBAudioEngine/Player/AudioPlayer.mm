@@ -304,11 +304,12 @@ struct AudioPlayer::DecoderState final {
 		flags_.fetch_or(static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
 	}
 
-	/// Performs the pending seek request, if present
-	bool PerformSeekIfRequired() noexcept
+	/// Performs the pending seek request
+	bool PerformSeek() noexcept
 	{
-		if(!IsSeekPending())
-			return true;
+#if DEBUG
+		assert(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending));
+#endif /* DEBUG */
 
 		auto seekOffset = seekOffset_.load(std::memory_order_acquire);
 		os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
@@ -1002,8 +1003,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				if(decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)) {
 					os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
 
-					ringBufferStale = true;
 					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					ringBufferStale = true;
 
 					// Submit the decoder canceled event
 					if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
@@ -1018,9 +1019,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
+			decoderState->PerformSeek();
 			ringBufferStale = true;
-
-			decoderState->PerformSeekIfRequired();
 
 			if(decoderState->IsDecodingComplete()) {
 				os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
@@ -1035,18 +1035,20 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				}
 
 				// Rewind ensuing decoder states if possible to avoid discarding frames
-				while(nextDecoderState && (nextDecoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingStarted))) {
-					os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+				while(nextDecoderState) {
+					if(nextDecoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) {
+						os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
-					// TODO: Investigate a per-state buffer to mitigate frame loss
-					if(nextDecoderState->decoder_.supportsSeeking) {
-						nextDecoderState->RequestSeekToFrame(0);
-						nextDecoderState->PerformSeekIfRequired();
-					} else
-						os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
+						// TODO: Investigate a per-state buffer to mitigate frame loss
+						if(nextDecoderState->decoder_.supportsSeeking) {
+							nextDecoderState->RequestSeekToFrame(0);
+							nextDecoderState->PerformSeek();
+						} else
+							os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
-					nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
-					nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
+						nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
+						nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
+					}
 
 					{
 						std::lock_guard lock{activeDecodersLock_};
