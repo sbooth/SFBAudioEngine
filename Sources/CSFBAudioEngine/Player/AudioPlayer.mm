@@ -1310,7 +1310,6 @@ OSStatus SFB::AudioPlayer::Render(BOOL& isSilence, const AudioTimeStamp& timesta
 	if(flags & static_cast<unsigned int>(Flags::drainRequired)) {
 		audioRingBuffer_.Drain();
 		flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
-
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
 			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
 		isSilence = YES;
@@ -1318,7 +1317,7 @@ OSStatus SFB::AudioPlayer::Render(BOOL& isSilence, const AudioTimeStamp& timesta
 	}
 
 	// Output silence if not playing or muted
-	if(!(flags & static_cast<unsigned int>(Flags::isPlaying)) || (flags & static_cast<unsigned int>(Flags::isMuted))) {
+	if(constexpr auto mask = static_cast<unsigned int>(Flags::isPlaying) | static_cast<unsigned int>(Flags::isMuted); (flags & mask) != static_cast<unsigned int>(Flags::isPlaying)) {
 		for(UInt32 i = 0; i < outputData->mNumberBuffers; ++i)
 			std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
 		isSilence = YES;
