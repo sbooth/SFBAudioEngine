@@ -54,7 +54,7 @@ private:
 	using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
 	/// Ring buffer transferring audio between the decoding thread and the render block
-	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_ 	{};
+	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_;
 
 	/// Active decoders and associated state
 	DecoderStateVector 						activeDecoders_;
@@ -62,19 +62,19 @@ private:
 	mutable CXXUnfairLock::UnfairLock 		activeDecodersLock_;
 
 	/// Decoders enqueued for playback that are not yet active
-	std::deque<Decoder>						queuedDecoders_ 	{};
+	std::deque<Decoder>						queuedDecoders_;
 	/// Lock protecting `queuedDecoders_`
 	mutable CXXUnfairLock::UnfairLock 		queuedDecodersLock_;
 
 	/// Thread used for decoding
 	std::jthread 							decodingThread_;
 	/// Dispatch semaphore used for communication with the decoding thread
-	dispatch_semaphore_t					decodingSemaphore_ 	{};
+	dispatch_semaphore_t					decodingSemaphore_ 	{nil};
 
 	/// Thread used for event processing
 	std::jthread 							eventThread_;
 	/// Dispatch semaphore used for communication with the event processing thread
-	dispatch_semaphore_t					eventSemaphore_ 	{};
+	dispatch_semaphore_t					eventSemaphore_ 	{nil};
 
 	/// Ring buffer communicating events from the decoding thread to the event processing thread
 	CXXRingBuffer::RingBuffer				decodingEvents_;
