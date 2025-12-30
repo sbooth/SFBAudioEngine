@@ -1334,7 +1334,7 @@ OSStatus SFB::AudioPlayer::Render(BOOL& isSilence, const AudioTimeStamp& timesta
 			os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead, frameCount);
 #endif /* DEBUG */
 		const RenderingEventHeader header{RenderingEventCommand::framesRendered};
-		if(!renderEventRingBuffer_.WriteValues(header, timestamp, static_cast<uint32_t>(framesRead)))
+		if(!renderEventRingBuffer_.WriteValues(header, timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead)))
 			os_log_fault(log_, "Error writing frames rendered event");
 	} else
 		isSilence = YES;
@@ -1559,11 +1559,12 @@ void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header)
 
 void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 {
-	// The timestamp of the render cycle
-	AudioTimeStamp timestamp;
+	// The host time and rate scalar from the render cycle's timestamp
+	uint64_t renderHostTime;
+	double rateScalar;
 	// The number of valid frames rendered
 	uint32_t framesRendered;
-	if(!renderEventRingBuffer_.ReadValues(timestamp, framesRendered)) {
+	if(!renderEventRingBuffer_.ReadValues(renderHostTime, rateScalar, framesRendered)) {
 		os_log_error(log_, "Missing timestamp or frames rendered for frames rendered event");
 		return;
 	}
@@ -1581,7 +1582,7 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 	DecoderState *decoderState = nullptr;
 	AVAudioFramePosition framesRemainingToDistribute = framesRendered;
 	while(framesRemainingToDistribute > 0) {
-		uint64_t hostTime = 0;
+		uint64_t eventTime = 0;
 		Decoder startedDecoder = nil;
 		Decoder completeDecoder = nil;
 
@@ -1603,14 +1604,14 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
-				hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+				eventTime = renderHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
 				const auto now = SFB::GetCurrentHostTime();
-				if(now > hostTime)
-					os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->decoder_);
+				if(now > eventTime)
+					os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventTime)) / 1e6, decoderState->decoder_);
 #if DEBUG
 				else
-					os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->decoder_);
+					os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventTime - now)) / 1e6, decoderState->decoder_);
 #endif /* DEBUG */
 
 				startedDecoder = decoderState->decoder_;
@@ -1627,14 +1628,14 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
-				hostTime = timestamp.mHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * timestamp.mRateScalar);
+				eventTime = renderHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
 				const auto now = SFB::GetCurrentHostTime();
-				if(now > hostTime)
-					os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoderState->decoder_);
+				if(now > eventTime)
+					os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventTime)) / 1e6, decoderState->decoder_);
 #if DEBUG
 				else
-					os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoderState->decoder_);
+					os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventTime - now)) / 1e6, decoderState->decoder_);
 #endif /* DEBUG */
 
 				if(!DeleteDecoderStateWithSequenceNumber(decoderState->sequenceNumber_))
@@ -1644,9 +1645,9 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 		// Call blocks after unlock
 		if(startedDecoder)
-			HandleRenderingWillStartEvent(startedDecoder, hostTime);
+			HandleRenderingWillStartEvent(startedDecoder, eventTime);
 		if(completeDecoder)
-			HandleRenderingWillCompleteEvent(completeDecoder, hostTime);
+			HandleRenderingWillCompleteEvent(completeDecoder, eventTime);
 	}
 }
 
