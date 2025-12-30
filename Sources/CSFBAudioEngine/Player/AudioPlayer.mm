@@ -1352,29 +1352,29 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 	os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
 	while(!stoken.stop_requested()) {
-		auto decodeEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
-		auto renderEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
+		auto decodingEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
+		auto renderingEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
 
 		// Process all pending decode and render events in chronological order
 		for(;;) {
 			// Nothing left to do
-			if(!decodeEventHeader && !renderEventHeader)
+			if(!decodingEventHeader && !renderingEventHeader)
 				break;
-			else if(decodeEventHeader && !renderEventHeader) {
+			else if(decodingEventHeader && !renderingEventHeader) {
 				// Process the decode event
-				ProcessDecodingEvent(*decodeEventHeader);
-				decodeEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
-			} else if(!decodeEventHeader && renderEventHeader) {
+				ProcessDecodingEvent(*decodingEventHeader);
+				decodingEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
+			} else if(!decodingEventHeader && renderingEventHeader) {
 				// Process the render event
-				ProcessRenderingEvent(*renderEventHeader);
-				renderEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
-			} else if(decodeEventHeader->mIdentificationNumber < renderEventHeader->mIdentificationNumber) {
+				ProcessRenderingEvent(*renderingEventHeader);
+				renderingEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
+			} else if(decodingEventHeader->mIdentificationNumber < renderingEventHeader->mIdentificationNumber) {
 				// Process the event with an earlier identification number
-				ProcessDecodingEvent(*decodeEventHeader);
-				decodeEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
+				ProcessDecodingEvent(*decodingEventHeader);
+				decodingEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
 			} else {
-				ProcessRenderingEvent(*renderEventHeader);
-				renderEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
+				ProcessRenderingEvent(*renderingEventHeader);
+				renderingEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
 			}
 		}
 
