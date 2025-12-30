@@ -1884,6 +1884,10 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	switch(interruptionType) {
 		case AVAudioSessionInterruptionTypeBegan:
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
+			// If the engine is running Pause will clear Flags::isPlaying and leave Flags::engineIsRunning set
+			// This leaves the player (Flags::engineIsRunning) and AVAudioEngine (isRunning) in an inconsistent state
+			// once the AVAudioEngine stops itself after AVAudioSessionInterruptionNotification is received
+			// This is intentional and Flags::engineIsRunning is used to restore playback state once the interruption ends
 			(void)Pause();
 			break;
 
@@ -1899,7 +1903,6 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			}
 #endif // false
 
-			// AVAudioEngine stops itself when AVAudioSessionInterruptionNotification is received
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				std::lock_guard lock{engineLock_};
@@ -1909,7 +1912,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 					return;
 				}
 
-				// Resume does nothing if not paused
+				// Resume will restore the playing state if the player was playing before the interruption
 				(void)Resume();
 			}
 
