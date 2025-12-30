@@ -6,7 +6,6 @@
 
 #import <algorithm>
 #import <atomic>
-#import <cassert>
 #import <cmath>
 
 #import <objc/runtime.h>
