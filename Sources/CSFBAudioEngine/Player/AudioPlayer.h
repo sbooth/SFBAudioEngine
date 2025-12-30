@@ -164,7 +164,8 @@ public:
 	{
 		const auto flags = flags_.load(std::memory_order_acquire);
 		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-		return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);	}
+		return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
+	}
 
 	bool IsStopped() const noexcept
 	{
