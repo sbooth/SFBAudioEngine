@@ -29,9 +29,9 @@ constexpr std::size_t ringBufferCapacity = 16384;
 constexpr AVAudioFrameCount ringBufferChunkSize = 2048;
 
 /// The default decoding event ring buffer capacity
-constexpr std::size_t decodingEventRingBufferCapacity = 1024;
+constexpr std::size_t decodingEventRingBufferCapacity = 2048;
 /// The default rendering event ring buffer capacity
-constexpr std::size_t renderingEventRingBufferCapacity = 1024;
+constexpr std::size_t renderingEventRingBufferCapacity = 4096;
 
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
