@@ -1072,15 +1072,12 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				// when transitioning from queued to active
 				std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
 
-				// Remove the first decoder from the decoder queue
-				Decoder decoder = nil;
 				if(!queuedDecoders_.empty()) {
-					decoder = queuedDecoders_.front();
+					// Remove the first decoder from the decoder queue
+					auto decoder = queuedDecoders_.front();
 					queuedDecoders_.pop_front();
-				}
 
-				// Create the decoder state and add it to the list of active decoders
-				if(decoder) {
+					// Create the decoder state and add it to the list of active decoders
 					try {
 						activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
 						decoderState = activeDecoders_.back().get();
