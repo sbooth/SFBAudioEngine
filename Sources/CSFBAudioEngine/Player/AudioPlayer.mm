@@ -500,12 +500,8 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	// Ensure only one decoder can be enqueued at a time
 	std::lock_guard lock{queuedDecodersLock_};
 
-	if(forImmediatePlayback) {
+	if(forImmediatePlayback)
 		queuedDecoders_.clear();
-		CancelActiveDecoders(true);
-		// Mute until the decoder becomes active
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted) | static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
-	}
 
 	try {
 		queuedDecoders_.push_back(decoder);
@@ -519,6 +515,13 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	}
 
 	os_log_info(log_, "Enqueued %{public}@", decoder);
+
+	if(forImmediatePlayback) {
+		CancelActiveDecoders(true);
+		// Mute until the decoder becomes active
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted) | static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+	}
+
 	dispatch_semaphore_signal(decodingSemaphore_);
 
 	return true;
@@ -986,7 +989,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 	// The buffer between the decoder state and the ring buffer
 	AVAudioPCMBuffer *buffer = nil;
 
-	for(;;) {
+	while(!stoken.stop_requested()) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
 		auto ringBufferStale = false;
@@ -1013,10 +1016,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			}
 		}
-
-		// Terminate the thread if requested after processing cancelations
-		if(stoken.stop_requested())
-			break;
 
 		// Process pending seeks
 		if(decoderState && decoderState->IsSeekPending()) {
@@ -1070,29 +1069,30 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
 		if(!decoderState) {
-			/// Removes and returns the first decoder from the decoder queue
-			const auto popDecoder = [&] {
+			{
+				std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+
+				/// Remove and returns the first decoder from the decoder queue
 				Decoder decoder = nil;
-				std::lock_guard lock{queuedDecodersLock_};
 				if(!queuedDecoders_.empty()) {
 					decoder = queuedDecoders_.front();
 					queuedDecoders_.pop_front();
 				}
-				return decoder;
-			};
 
-			if(auto decoder = popDecoder(); decoder) {
-				try {
-					// Create the decoder state and add it to the list of active decoders
-					std::lock_guard lock{activeDecodersLock_};
-					activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
-					decoderState = activeDecoders_.back().get();
-				} catch(const std::exception& e) {
-					os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
-					SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
-					continue;
+				// Create the decoder state and add it to the list of active decoders
+				if(decoder) {
+					try {
+						activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
+						decoderState = activeDecoders_.back().get();
+					} catch(const std::exception& e) {
+						os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
+						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
+						continue;
+					}
 				}
+			}
 
+			if(decoderState) {
 				// Allocate decoder state internals
 				if(!decoderState->Allocate(ringBufferChunkSize)) {
 					os_log_error(log_, "Error allocating decoder state data: DecoderStateData::Allocate failed with frame capacity %d", ringBufferChunkSize);
@@ -1485,7 +1485,6 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 
 	Decoder decoder = nil;
 	AVAudioFramePosition framesRendered = 0;
-	bool activeDecodersEmpty = false;
 	{
 		std::lock_guard lock{activeDecodersLock_};
 
@@ -1495,8 +1494,6 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 
 			os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
 			activeDecoders_.erase(iter);
-
-			activeDecodersEmpty = activeDecoders_.empty();
 		} else {
 			os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event", sequenceNumber);
 			return;
@@ -1509,7 +1506,12 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
 		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
 
-	if(activeDecodersEmpty)
+	const auto hasNoDecoders = [&] {
+		std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+		return queuedDecoders_.empty() && activeDecoders_.empty();
+	}();
+
+	if(hasNoDecoders)
 		SetNowPlaying(nil);
 }
 
@@ -1696,13 +1698,13 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder
 		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
 
-		const auto activeDecodersEmpty = [&] {
-			std::lock_guard lock{activeDecodersLock_};
-			return activeDecoders_.empty();
+		const auto hasNoDecoders = [&] {
+			std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+			return queuedDecoders_.empty() && activeDecoders_.empty();
 		}();
 
 		// End of audio
-		if(activeDecodersEmpty) {
+		if(hasNoDecoders) {
 #if DEBUG
 			os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
