@@ -1912,6 +1912,9 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 					return;
 				}
 
+				// To avoid the possibility of a state inconsistency Flags::engineIsRunning is set
+				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+
 				// Resume will restore the playing state if the player was playing before the interruption
 				(void)Resume();
 			}
