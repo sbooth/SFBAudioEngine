@@ -1446,7 +1446,8 @@ void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
 
-	if(const auto flags = flags_.load(std::memory_order_acquire); !((flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying))) && decoder == currentDecoder)
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & mask) && decoder == currentDecoder)
 		SetNowPlaying(decoder);
 }
 
@@ -1750,9 +1751,8 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithDe
 
 	const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
-		const bool decodingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete);
-		return !canceled && !decodingComplete;
+		constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::decodingComplete);
+		return (flags & mask) == 0;
 	});
 	if(iter == activeDecoders_.cend())
 		return nullptr;
@@ -1767,9 +1767,8 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithRe
 
 	const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
-		const bool renderingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
-		return !canceled && !renderingComplete;
+		constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
+		return (flags & mask) == 0;
 	});
 	if(iter == activeDecoders_.cend())
 		return nullptr;
@@ -1786,9 +1785,8 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateFollow
 		if(decoderState->sequenceNumber_ <= sequenceNumber)
 			return false;
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		const bool canceled = flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled);
-		const bool renderingComplete = flags & static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
-		return !canceled && !renderingComplete;
+		constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
+		return (flags & mask) == 0;
 	});
 	if(iter == activeDecoders_.cend())
 		return nullptr;
