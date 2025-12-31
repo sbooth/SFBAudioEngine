@@ -995,24 +995,21 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		{
 			std::lock_guard lock{activeDecodersLock_};
-			decoderState = FirstDecoderStateWithRenderingNotComplete();
 
-			// Process cancelations in sequence
-			while(decoderState) {
-				if(decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)) {
-					os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
+			// Process cancelations
+			for(auto& state : activeDecoders_) {
+				if(state->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)) {
+					os_log_debug(log_, "Canceling decoding for %{public}@", state->decoder_);
 
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					state->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 					ringBufferStale = true;
 
 					// Submit the decoder canceled event
-					if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+					if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, state->sequenceNumber_))
 						dispatch_semaphore_signal(eventSemaphore_);
 					else
 						os_log_fault(log_, "Error writing decoder canceled event");
 				}
-
-				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			}
 
 			// Get the earliest decoder state that has not completed rendering
