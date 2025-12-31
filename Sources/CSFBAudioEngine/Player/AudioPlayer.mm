@@ -998,20 +998,23 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			std::lock_guard lock{activeDecodersLock_};
 
 			// Process cancelations
+			auto requestedCancellations = activeDecoders_ | std::views::filter([](const auto& decoderState) {
+				const auto flags = decoderState->flags_.load(std::memory_order_acquire);
+				return flags & static_cast<unsigned int>(DecoderState::Flags::cancelRequested);
+			});
+
 			auto signal = false;
-			for(auto& decoderState : activeDecoders_) {
-				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)) {
-					os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
+			for(auto& decoderState : requestedCancellations) {
+				os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
 
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-					ringBufferStale = true;
+				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+				ringBufferStale = true;
 
-					// Submit the decoder canceled event
-					if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
-						signal = true;
-					else
-						os_log_fault(log_, "Error writing decoder canceled event");
-				}
+				// Submit the decoder canceled event
+				if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+					signal = true;
+				else
+					os_log_fault(log_, "Error writing decoder canceled event");
 			}
 
 			// Signal the event thread if any decoders were canceled
