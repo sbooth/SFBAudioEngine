@@ -1618,14 +1618,6 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
 				eventTime = renderHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
-				const auto now = SFB::GetCurrentHostTime();
-				if(now > eventTime)
-					os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventTime)) / 1e6, decoderState->decoder_);
-#if DEBUG
-				else
-					os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventTime - now)) / 1e6, decoderState->decoder_);
-#endif /* DEBUG */
-
 				startedDecoder = decoderState->decoder_;
 			}
 
@@ -1642,14 +1634,6 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
 				eventTime = renderHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
-				const auto now = SFB::GetCurrentHostTime();
-				if(now > eventTime)
-					os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - eventTime)) / 1e6, decoderState->decoder_);
-#if DEBUG
-				else
-					os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(eventTime - now)) / 1e6, decoderState->decoder_);
-#endif /* DEBUG */
-
 				if(!DeleteDecoderStateWithSequenceNumber(decoderState->sequenceNumber_))
 					os_log_error(log_, "Unable to delete decoder state with sequence number %llu in rendering complete event", decoderState->sequenceNumber_);
 			}
@@ -1665,6 +1649,14 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept
 {
+	const auto now = SFB::GetCurrentHostTime();
+	if(now > hostTime)
+		os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoder);
+#if DEBUG
+	else
+		os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
+#endif /* DEBUG */
+
 	// Schedule the rendering started notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
@@ -1692,6 +1684,14 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
 void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept
 {
+	const auto now = SFB::GetCurrentHostTime();
+	if(now > hostTime)
+		os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoder);
+#if DEBUG
+	else
+		os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
+#endif /* DEBUG */
+
 	// Schedule the rendering completed notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
