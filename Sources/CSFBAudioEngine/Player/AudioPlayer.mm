@@ -252,44 +252,6 @@ struct AudioPlayer::DecoderState final {
 		return true;
 	}
 
-	/// Returns `true` if `Flags::decodingComplete` is set
-	bool IsDecodingComplete() const noexcept
-	{
-		return flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::decodingComplete);
-	}
-
-	/// Returns `true` if `Flags::renderingStarted` is set
-	bool HasRenderingStarted() const noexcept
-	{
-		return flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::renderingStarted);
-	}
-
-	/// Returns the number of frames available to render.
-	///
-	/// This is the difference between the number of frames converted and the number of frames rendered
-	AVAudioFramePosition FramesAvailableToRender() const noexcept
-	{
-		return framesConverted_.load(std::memory_order_acquire) - framesRendered_.load(std::memory_order_acquire);
-	}
-
-	/// Returns `true` if there are no frames available to render.
-	bool AllAvailableFramesRendered() const noexcept
-	{
-		return FramesAvailableToRender() == 0;
-	}
-
-	/// Returns the number of frames rendered.
-	AVAudioFramePosition FramesRendered() const noexcept
-	{
-		return framesRendered_.load(std::memory_order_acquire);
-	}
-
-	/// Adds `count` number of frames to the total count of frames rendered.
-	void AddFramesRendered(AVAudioFramePosition count) noexcept
-	{
-		framesRendered_.fetch_add(count, std::memory_order_acq_rel);
-	}
-
 	/// Returns `true` if `Flags::seekPending` is set
 	bool IsSeekPending() const noexcept
 	{
@@ -1026,7 +988,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			decoderState->PerformSeek();
 			ringBufferStale = true;
 
-			if(decoderState->IsDecodingComplete()) {
+			if(decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
 				os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
 
 				// The decoder has not completed rendering so the ring buffer format and the decoder's format still match.
@@ -1507,7 +1469,7 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 
 		if(const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_); iter != activeDecoders_.cend()) {
 			decoder = (*iter)->decoder_;
-			framesRendered = (*iter)->FramesRendered();
+			framesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
 
 			os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
 			activeDecoders_.erase(iter);
@@ -1659,7 +1621,7 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 			const auto framesFromThisDecoder = std::min(decoderFramesRemaining, framesRemainingToDistribute);
 
-			(*iter)->AddFramesRendered(framesFromThisDecoder);
+			(*iter)->framesRendered_.fetch_add(framesFromThisDecoder, std::memory_order_acq_rel);
 			framesRemainingToDistribute -= framesFromThisDecoder;
 
 			// Rendering is complete
