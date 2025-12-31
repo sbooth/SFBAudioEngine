@@ -4,20 +4,16 @@
 // MIT license
 //
 
-#import <os/log.h>
-
 #import "SFBInputSource.h"
+#import "InputSource.hpp"
 
 NS_ASSUME_NONNULL_BEGIN
-
-extern os_log_t gSFBInputSourceLog;
 
 @interface SFBInputSource ()
 {
 @package
-	NSURL *_url;
+	SFB::InputSource::unique_ptr _input;
 }
-- (instancetype)initWithURL:(nullable NSURL *)url NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END
