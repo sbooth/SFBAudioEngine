@@ -176,7 +176,7 @@ public:
 	bool IsReady() const noexcept
 	{
 		std::lock_guard lock{activeDecodersLock_};
-		return FirstDecoderStateWithRenderingNotComplete() != nullptr;
+		return FirstActiveDecoderState() != nullptr;
 	}
 
 	Decoder _Nullable CurrentDecoder() const noexcept;
@@ -363,11 +363,11 @@ private:
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
 	DecoderState * const _Nullable FirstDecoderStateWithDecodingNotComplete() const noexcept;
 
-	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed rendering
-	DecoderState * const _Nullable FirstDecoderStateWithRenderingNotComplete() const noexcept;
+	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled
+	DecoderState * const _Nullable FirstActiveDecoderState() const noexcept;
 
-	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
-	DecoderState * const _Nullable FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
+	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled
+	DecoderState * const _Nullable FirstActiveDecoderStateFollowingSequenceNumber(const uint64_t sequenceNumber) const noexcept;
 
 public:
 	// MARK: - AVAudioEngine Notification Handling
