@@ -993,7 +993,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		DecoderState *decoderState = nullptr;
 		auto ringBufferStale = false;
 
-		// Get the earliest decoder state that has not completed rendering
 		{
 			std::lock_guard lock{activeDecodersLock_};
 			decoderState = FirstDecoderStateWithRenderingNotComplete();
@@ -1015,6 +1014,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
 			}
+
+			// Get the earliest decoder state that has not completed rendering
+			decoderState = FirstDecoderStateWithRenderingNotComplete();
 		}
 
 		// Process pending seeks
