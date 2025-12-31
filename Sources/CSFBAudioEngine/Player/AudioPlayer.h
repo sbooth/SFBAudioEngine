@@ -357,8 +357,8 @@ private:
 
 	// MARK: - Active Decoder Management
 
-	/// Cancels active decoders in sequence
-	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+	/// Cancels all active decoders in sequence
+	void CancelActiveDecoders() noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
 	DecoderState * const _Nullable FirstDecoderStateWithDecodingNotComplete() const noexcept;

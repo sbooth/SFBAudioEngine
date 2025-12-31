@@ -517,7 +517,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	os_log_info(log_, "Enqueued %{public}@", decoder);
 
 	if(forImmediatePlayback) {
-		CancelActiveDecoders(true);
+		CancelActiveDecoders();
 		// Mute until the decoder becomes active
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted) | static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 	}
@@ -607,7 +607,7 @@ void SFB::AudioPlayer::Stop() noexcept
 	}
 
 	ClearDecoderQueue();
-	CancelActiveDecoders(true);
+	CancelActiveDecoders();
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
@@ -633,7 +633,7 @@ void SFB::AudioPlayer::Reset() noexcept
 		[engine_ reset];
 	}
 	ClearDecoderQueue();
-	CancelActiveDecoders(true);
+	CancelActiveDecoders();
 }
 
 // MARK: - Player State
@@ -1014,6 +1014,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				}
 			}
 
+			// Signal the event thread if any decoders were canceled
 			if(signal)
 				dispatch_semaphore_signal(eventSemaphore_);
 
@@ -1731,7 +1732,7 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder
 
 // MARK: - Active Decoder Management
 
-void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
+void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
 
@@ -1746,6 +1747,7 @@ void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
 		}
 	}
 
+	// Signal the decoding threads if any cancelations were requested
 	if(signal)
 		dispatch_semaphore_signal(decodingSemaphore_);
 }
