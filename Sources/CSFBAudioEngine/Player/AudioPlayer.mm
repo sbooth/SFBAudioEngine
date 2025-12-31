@@ -206,7 +206,8 @@ struct AudioPlayer::DecoderState final {
 
 	AVAudioFramePosition FramePosition() const noexcept
 	{
-		return IsSeekPending() ? seekOffset_.load(std::memory_order_acquire) : framesRendered_.load(std::memory_order_acquire);
+		const bool seekPending = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending);
+		return seekPending ? seekOffset_.load(std::memory_order_acquire) : framesRendered_.load(std::memory_order_acquire);
 	}
 
 	AVAudioFramePosition FrameLength() const noexcept
@@ -250,12 +251,6 @@ struct AudioPlayer::DecoderState final {
 			flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
 
 		return true;
-	}
-
-	/// Returns `true` if `Flags::seekPending` is set
-	bool IsSeekPending() const noexcept
-	{
-		return flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending);
 	}
 
 	/// Sets the pending seek request to `frame`
@@ -984,46 +979,48 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		}
 
 		// Process pending seeks
-		if(decoderState && decoderState->IsSeekPending()) {
-			decoderState->PerformSeek();
-			ringBufferStale = true;
+		if(decoderState) {
+			if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::seekPending)) {
+				decoderState->PerformSeek();
+				ringBufferStale = true;
 
-			if(decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
-				os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
+				if(flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
+					os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
 
-				// The decoder has not completed rendering so the ring buffer format and the decoder's format still match.
-				// Clear the format mismatch flag so rendering can continue; the flag will be set again when
-				// decoding completes.
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
+					// The decoder has not completed rendering so the ring buffer format and the decoder's format still match.
+					// Clear the format mismatch flag so rendering can continue; the flag will be set again when
+					// decoding completes.
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 
-				decoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingComplete), std::memory_order_acq_rel);
-				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingResumed), std::memory_order_acq_rel);
+					decoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingComplete), std::memory_order_acq_rel);
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingResumed), std::memory_order_acq_rel);
 
-				DecoderState *nextDecoderState = nullptr;
-				{
-					std::lock_guard lock{activeDecodersLock_};
-					nextDecoderState = FirstActiveDecoderStateFollowingSequenceNumber(decoderState->sequenceNumber_);
-				}
-
-				// Rewind ensuing decoder states if possible to avoid discarding frames
-				while(nextDecoderState) {
-					if(nextDecoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) {
-						os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
-
-						// TODO: Investigate a per-state buffer to mitigate frame loss
-						if(nextDecoderState->decoder_.supportsSeeking) {
-							nextDecoderState->RequestSeekToFrame(0);
-							nextDecoderState->PerformSeek();
-						} else
-							os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
-
-						nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
-						nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
-					}
-
+					DecoderState *nextDecoderState = nullptr;
 					{
 						std::lock_guard lock{activeDecodersLock_};
-						nextDecoderState = FirstActiveDecoderStateFollowingSequenceNumber(nextDecoderState->sequenceNumber_);
+						nextDecoderState = FirstActiveDecoderStateFollowingSequenceNumber(decoderState->sequenceNumber_);
+					}
+
+					// Rewind ensuing decoder states if possible to avoid discarding frames
+					while(nextDecoderState) {
+						if(nextDecoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) {
+							os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+
+							// TODO: Investigate a per-state buffer to mitigate frame loss
+							if(nextDecoderState->decoder_.supportsSeeking) {
+								nextDecoderState->RequestSeekToFrame(0);
+								nextDecoderState->PerformSeek();
+							} else
+								os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
+
+							nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
+							nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
+						}
+
+						{
+							std::lock_guard lock{activeDecodersLock_};
+							nextDecoderState = FirstActiveDecoderStateFollowingSequenceNumber(nextDecoderState->sequenceNumber_);
+						}
 					}
 				}
 			}
