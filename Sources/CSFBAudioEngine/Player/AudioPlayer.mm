@@ -474,7 +474,7 @@ bool SFB::AudioPlayer::EnqueueDecoder(Decoder decoder, bool forImmediatePlayback
 	if(forImmediatePlayback) {
 		CancelActiveDecoders();
 		// Mute until the decoder becomes active
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted) | static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
+		flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 	}
 
 	dispatch_semaphore_signal(decodingSemaphore_);
@@ -1144,67 +1144,69 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 		}
 
-		if(decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::drainRequired))) {
-			// Decode and write chunks to the ring buffer
-			while(audioRingBuffer_.FreeSpace() >= ringBufferChunkSize) {
-				// Decoding started
-				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted))) {
-					const bool suspended = flags & static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
+		if(decoderState) {
+			if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::drainRequired))) {
+				// Decode and write chunks to the ring buffer
+				while(audioRingBuffer_.FreeSpace() >= ringBufferChunkSize) {
+					// Decoding started
+					if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted))) {
+						const bool suspended = flags & static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
 
-					if(!suspended)
-						os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
-					else
-						os_log_debug(log_, "Decoding starting after suspension for %{public}@", decoderState->decoder_);
-
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
-
-					// Submit the decoding started event for the initial start only
-					if(!suspended) {
-						const DecodingEventHeader header{DecodingEventCommand::started};
-						if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
-							dispatch_semaphore_signal(eventSemaphore_);
+						if(!suspended)
+							os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
 						else
-							os_log_fault(log_, "Error writing decoding started event");
+							os_log_debug(log_, "Decoding starting after suspension for %{public}@", decoderState->decoder_);
+
+						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
+
+						// Submit the decoding started event for the initial start only
+						if(!suspended) {
+							const DecodingEventHeader header{DecodingEventCommand::started};
+							if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+								dispatch_semaphore_signal(eventSemaphore_);
+							else
+								os_log_fault(log_, "Error writing decoding started event");
+						}
+					}
+
+					// Decode audio into the buffer, converting to the rendering format in the process
+					if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
+						os_log_error(log_, "Error decoding audio: %{public}@", error);
+						if(error)
+							SubmitDecodingErrorEvent(error);
+					}
+
+					// Write the decoded audio to the ring buffer for rendering
+					const auto framesWritten = audioRingBuffer_.Write(buffer.audioBufferList, buffer.frameLength);
+					if(framesWritten != buffer.frameLength)
+						os_log_fault(log_, "Error writing audio to ring buffer: CXXCoreAudio::AudioRingBuffer::Write failed for %d frames", buffer.frameLength);
+
+					// Decoding complete
+					if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
+						const bool resumed = flags & static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
+
+						// Submit the decoding complete event for the first completion only
+						if(!resumed) {
+							const DecodingEventHeader header{DecodingEventCommand::complete};
+							if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+								dispatch_semaphore_signal(eventSemaphore_);
+							else
+								os_log_fault(log_, "Error writing decoding complete event");
+						}
+
+						if(!resumed)
+							os_log_debug(log_, "Decoding complete for %{public}@", decoderState->decoder_);
+						else
+							os_log_debug(log_, "Decoding complete after resuming for %{public}@", decoderState->decoder_);
+
+						break;
 					}
 				}
 
-				// Decode audio into the buffer, converting to the rendering format in the process
-				if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
-					os_log_error(log_, "Error decoding audio: %{public}@", error);
-					if(error)
-						SubmitDecodingErrorEvent(error);
-				}
-
-				// Write the decoded audio to the ring buffer for rendering
-				const auto framesWritten = audioRingBuffer_.Write(buffer.audioBufferList, buffer.frameLength);
-				if(framesWritten != buffer.frameLength)
-					os_log_fault(log_, "Error writing audio to ring buffer: CXXCoreAudio::AudioRingBuffer::Write failed for %d frames", buffer.frameLength);
-
-				// Decoding complete
-				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
-					const bool resumed = flags & static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
-
-					// Submit the decoding complete event for the first completion only
-					if(!resumed) {
-						const DecodingEventHeader header{DecodingEventCommand::complete};
-						if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
-							dispatch_semaphore_signal(eventSemaphore_);
-						else
-							os_log_fault(log_, "Error writing decoding complete event");
-					}
-
-					if(!resumed)
-						os_log_debug(log_, "Decoding complete for %{public}@", decoderState->decoder_);
-					else
-						os_log_debug(log_, "Decoding complete after resuming for %{public}@", decoderState->decoder_);
-
-					break;
-				}
+				// Clear the mute flag if needed now that the ring buffer is full
+				if(flags & static_cast<unsigned int>(Flags::isMuted))
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
 			}
-
-			// Clear the mute flags if needed
-			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::unmuteAfterDequeue))
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted) & ~static_cast<unsigned int>(Flags::unmuteAfterDequeue), std::memory_order_acq_rel);
 		}
 
 		int64_t deltaNanos;

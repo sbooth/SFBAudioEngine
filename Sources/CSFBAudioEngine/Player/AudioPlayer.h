@@ -248,16 +248,14 @@ private:
 	enum class Flags : unsigned int {
 		/// Cached value of `engine_.isRunning`
 		engineIsRunning				= 1u << 0,
-		/// The render block is outputting audio
+		/// The render block should output audio
 		isPlaying 					= 1u << 1,
-		/// The render block is outputting silence
+		/// The render block should output silence
 		isMuted 					= 1u << 2,
 		/// The ring buffer needs to be drained during the next render cycle
 		drainRequired 				= 1u << 3,
-		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
-		unmuteAfterDequeue 			= 1u << 4,
 		/// Mismatch between rendering format and decoder processing format
-		formatMismatch 				= 1u << 5,
+		formatMismatch 				= 1u << 4,
 	};
 
 	// MARK: - Decoding
