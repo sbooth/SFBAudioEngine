@@ -369,9 +369,6 @@ private:
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
 	DecoderState * const _Nullable FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
 
-	/// Removes the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
-	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
-
 public:
 	// MARK: - AVAudioEngine Notification Handling
 
