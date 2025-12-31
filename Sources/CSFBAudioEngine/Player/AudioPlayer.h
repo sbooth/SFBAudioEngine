@@ -361,7 +361,7 @@ private:
 	void CancelActiveDecoders() noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
-	DecoderState * const _Nullable FirstDecoderStateWithDecodingNotComplete() const noexcept;
+	DecoderState * const _Nullable FirstActiveDecoderStateWithDecodingNotComplete() const noexcept;
 
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled
 	DecoderState * const _Nullable FirstActiveDecoderState() const noexcept;

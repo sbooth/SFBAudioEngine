@@ -1074,7 +1074,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		// Get the earliest decoder state that has not completed decoding
 		{
 			std::lock_guard lock{activeDecodersLock_};
-			decoderState = FirstDecoderStateWithDecodingNotComplete();
+			decoderState = FirstActiveDecoderStateWithDecodingNotComplete();
 		}
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
@@ -1809,7 +1809,7 @@ void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 		dispatch_semaphore_signal(decodingSemaphore_);
 }
 
-SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithDecodingNotComplete() const noexcept
+SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstActiveDecoderStateWithDecodingNotComplete() const noexcept
 {
 #if DEBUG
 	activeDecodersLock_.assert_owner();
