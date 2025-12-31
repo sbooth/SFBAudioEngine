@@ -995,31 +995,31 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					decoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingComplete), std::memory_order_acq_rel);
 					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingResumed), std::memory_order_acq_rel);
 
-					DecoderState *nextDecoderState = nullptr;
 					{
 						std::lock_guard lock{activeDecodersLock_};
-						nextDecoderState = FirstActiveDecoderStateFollowingSequenceNumber(decoderState->sequenceNumber_);
-					}
 
-					// Rewind ensuing decoder states if possible to avoid discarding frames
-					while(nextDecoderState) {
-						if(nextDecoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) {
-							os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+						// Rewind ensuing decoder states if possible to avoid discarding frames
+						for(auto& nextDecoderState : activeDecoders_) {
+							if(nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_)
+								continue;
 
-							// TODO: Investigate a per-state buffer to mitigate frame loss
-							if(nextDecoderState->decoder_.supportsSeeking) {
-								nextDecoderState->RequestSeekToFrame(0);
-								nextDecoderState->PerformSeek();
-							} else
-								os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
+							const auto flags = nextDecoderState->flags_.load(std::memory_order_acquire);
+							if(flags & (static_cast<unsigned int>(DecoderState::Flags::isCanceled)))
+								continue;
 
-							nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
-							nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
-						}
+							if(flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) {
+								os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
-						{
-							std::lock_guard lock{activeDecodersLock_};
-							nextDecoderState = FirstActiveDecoderStateFollowingSequenceNumber(nextDecoderState->sequenceNumber_);
+								// TODO: Investigate a per-state buffer to mitigate frame loss
+								if(nextDecoderState->decoder_.supportsSeeking) {
+									nextDecoderState->RequestSeekToFrame(0);
+									nextDecoderState->PerformSeek();
+								} else
+									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
+
+								nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
+								nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
+							}
 						}
 					}
 				}
@@ -1791,23 +1791,6 @@ SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstActiveDecoderState
 #endif /* DEBUG */
 
 	const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
-		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		return !(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled));
-	});
-	if(iter == activeDecoders_.cend())
-		return nullptr;
-	return iter->get();
-}
-
-SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstActiveDecoderStateFollowingSequenceNumber(const uint64_t sequenceNumber) const noexcept
-{
-#if DEBUG
-	activeDecodersLock_.assert_owner();
-#endif /* DEBUG */
-
-	const auto iter = std::ranges::find_if(activeDecoders_, [sequenceNumber](const auto& decoderState) {
-		if(decoderState->sequenceNumber_ <= sequenceNumber)
-			return false;
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 		return !(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled));
 	});

@@ -366,9 +366,6 @@ private:
 	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled
 	DecoderState * const _Nullable FirstActiveDecoderState() const noexcept;
 
-	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled
-	DecoderState * const _Nullable FirstActiveDecoderStateFollowingSequenceNumber(const uint64_t sequenceNumber) const noexcept;
-
 public:
 	// MARK: - AVAudioEngine Notification Handling
 
