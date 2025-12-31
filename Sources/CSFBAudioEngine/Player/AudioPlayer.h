@@ -246,7 +246,7 @@ public:
 private:
 	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
-		/// Cached value of `_audioEngine.isRunning`
+		/// Cached value of `engine_.isRunning`
 		engineIsRunning				= 1u << 0,
 		/// The render block should output audio
 		isPlaying 					= 1u << 1,
