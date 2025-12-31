@@ -954,7 +954,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 			// Process cancellations
 			auto signal = false;
-			for(auto& decoderState : activeDecoders_) {
+			for(const auto& decoderState : activeDecoders_) {
 				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)))
 					continue;
 
@@ -999,7 +999,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 						std::lock_guard lock{activeDecodersLock_};
 
 						// Rewind ensuing decoder states if possible to avoid discarding frames
-						for(auto& nextDecoderState : activeDecoders_) {
+						for(const auto& nextDecoderState : activeDecoders_) {
 							if(nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_)
 								continue;
 
@@ -1033,7 +1033,17 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		// Get the earliest decoder state that has not completed decoding
 		{
 			std::lock_guard lock{activeDecodersLock_};
-			decoderState = FirstActiveDecoderStateWithDecodingNotComplete();
+
+			const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
+				const auto flags = decoderState->flags_.load(std::memory_order_acquire);
+				constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::decodingComplete);
+				return !(flags & mask);
+			});
+
+			if(iter != activeDecoders_.cend())
+				decoderState = (*iter).get();
+			else
+				decoderState = nullptr;
 		}
 
 		// Dequeue the next decoder if there are no decoders that haven't completed decoding
@@ -1755,7 +1765,7 @@ void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 
 	// Cancel all active decoders
 	auto signal = false;
-	for(auto& decoderState : activeDecoders_) {
+	for(const auto& decoderState : activeDecoders_) {
 		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 		if(!(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled))) {
 			decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
@@ -1766,22 +1776,6 @@ void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 	// Signal the decoding threads if any cancelations were requested
 	if(signal)
 		dispatch_semaphore_signal(decodingSemaphore_);
-}
-
-SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstActiveDecoderStateWithDecodingNotComplete() const noexcept
-{
-#if DEBUG
-	activeDecodersLock_.assert_owner();
-#endif /* DEBUG */
-
-	const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
-		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::decodingComplete);
-		return !(flags & mask);
-	});
-	if(iter == activeDecoders_.cend())
-		return nullptr;
-	return iter->get();
 }
 
 SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstActiveDecoderState() const noexcept
