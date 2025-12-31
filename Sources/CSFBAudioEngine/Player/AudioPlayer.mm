@@ -1031,6 +1031,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			if(decoderState->IsDecodingComplete()) {
 				os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
 
+				// The decoder has not completed rendering so the ring buffer format and the decoder's format still match.
+				// Clear the format mismatch flag so rendering can continue; the flag will be set again when
+				// decoding completes.
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
+
 				decoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingComplete), std::memory_order_acq_rel);
 				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingResumed), std::memory_order_acq_rel);
 
