@@ -997,7 +997,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		{
 			std::lock_guard lock{activeDecodersLock_};
 
-			// Process cancelations
+			// Process cancellations
 			auto requestedCancellations = activeDecoders_ | std::views::filter([](const auto& decoderState) {
 				const auto flags = decoderState->flags_.load(std::memory_order_acquire);
 				return flags & static_cast<unsigned int>(DecoderState::Flags::cancelRequested);
