@@ -1134,7 +1134,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 			}
 
-			// If there a format mismatch the processing graph requires reconfiguration before decoding can begin
+			// If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
 			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
 				// Wait until all other decoders complete processing before reconfiguring the graph
 				const auto okToReconfigure = [&] {
