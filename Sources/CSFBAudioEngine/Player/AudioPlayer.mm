@@ -7,6 +7,7 @@
 #import <algorithm>
 #import <atomic>
 #import <cmath>
+#import <ranges>
 
 #import <objc/runtime.h>
 
@@ -997,20 +998,24 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			std::lock_guard lock{activeDecodersLock_};
 
 			// Process cancelations
-			for(auto& state : activeDecoders_) {
-				if(state->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)) {
-					os_log_debug(log_, "Canceling decoding for %{public}@", state->decoder_);
+			auto signal = false;
+			for(auto& decoderState : activeDecoders_) {
+				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)) {
+					os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
 
-					state->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 					ringBufferStale = true;
 
 					// Submit the decoder canceled event
-					if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, state->sequenceNumber_))
-						dispatch_semaphore_signal(eventSemaphore_);
+					if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+						signal = true;
 					else
 						os_log_fault(log_, "Error writing decoder canceled event");
 				}
 			}
+
+			if(signal)
+				dispatch_semaphore_signal(eventSemaphore_);
 
 			// Get the earliest decoder state that has not completed rendering
 			decoderState = FirstDecoderStateWithRenderingNotComplete();
@@ -1082,6 +1087,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// Create the decoder state and add it to the list of active decoders
 					try {
 						activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
+#if DEBUG
+						assert(std::ranges::is_sorted(activeDecoders_, std::ranges::less{}, &DecoderState::sequenceNumber_));
+#endif /* DEBUG */
 						decoderState = activeDecoders_.back().get();
 					} catch(const std::exception& e) {
 						os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
@@ -1727,19 +1735,19 @@ void SFB::AudioPlayer::CancelActiveDecoders(bool cancelAllActive) noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
 
-	// Cancel all active decoders in sequence
-	if(auto decoderState = FirstDecoderStateWithRenderingNotComplete(); decoderState) {
-		decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-		if(cancelAllActive) {
-			decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
-			while(decoderState) {
-				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-				decoderState = FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(decoderState->sequenceNumber_);
-			}
+	// Cancel all active decoders
+	auto signal = false;
+	for(auto& decoderState : activeDecoders_) {
+		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
+		constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::renderingComplete);
+		if((flags & mask) == 0) {
+			decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+			signal = true;
 		}
-
-		dispatch_semaphore_signal(decodingSemaphore_);
 	}
+
+	if(signal)
+		dispatch_semaphore_signal(decodingSemaphore_);
 }
 
 SFB::AudioPlayer::DecoderState * const SFB::AudioPlayer::FirstDecoderStateWithDecodingNotComplete() const noexcept
