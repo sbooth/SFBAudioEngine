@@ -1108,6 +1108,13 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					continue;
 				}
 
+				os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
+			}
+		}
+
+		if(decoderState) {
+			// Before decoding starts determine the decoder and ring buffer format compatibility
+			if(!(decoderState->flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(DecoderState::Flags::decodingStarted))) {
 				// Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel layout)
 				if(auto renderFormat = decoderState->converter_.outputFormat; [renderFormat isEqual:[sourceNode_ outputFormatForBus:0]]) {
 					// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
@@ -1125,44 +1132,42 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// decoding can't start until the processing graph is reconfigured which occurs after
 					// all active decoders complete
 					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
-
-				os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
 			}
-		}
 
-		// If there a format mismatch the processing graph requires reconfiguration before decoding can begin
-		if(decoderState && (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
-			// Wait until all other decoders complete processing before reconfiguring the graph
-			const auto okToReconfigure = [&] {
-				std::lock_guard lock{activeDecodersLock_};
-				return activeDecoders_.size() == 1;
-			}();
+			// If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
+			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
+				// Wait until all other decoders complete processing before reconfiguring the graph
+				const auto okToReconfigure = [&] {
+					std::lock_guard lock{activeDecodersLock_};
+					return activeDecoders_.size() == 1;
+				}();
 
-			if(okToReconfigure) {
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch) & ~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_release);
+				if(okToReconfigure) {
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch) & ~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_release);
 
-				os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
+					os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
-				auto renderFormat = decoderState->converter_.outputFormat;
-				if(NSError *error = nil; !ConfigureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-					SubmitDecodingErrorEvent(error);
-					continue;
-				}
-
-				// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-				if(auto format = buffer.format; format.channelCount != renderFormat.channelCount || format.sampleRate != renderFormat.sampleRate) {
-					buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat frameCapacity:ringBufferChunkSize];
-					if(!buffer) {
-						os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
+					auto renderFormat = decoderState->converter_.outputFormat;
+					if(NSError *error = nil; !ConfigureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
 						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
-						SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
+						SubmitDecodingErrorEvent(error);
 						continue;
 					}
+
+					// Allocate the buffer that is the intermediary between the decoder state and the ring buffer
+					if(auto format = buffer.format; format.channelCount != renderFormat.channelCount || format.sampleRate != renderFormat.sampleRate) {
+						buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat frameCapacity:ringBufferChunkSize];
+						if(!buffer) {
+							os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", StringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
+							decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
+							SubmitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain code:SFBAudioPlayerErrorCodeInternalError userInfo:nil]);
+							continue;
+						}
+					}
 				}
+				else
+					decoderState = nullptr;
 			}
-			else
-				decoderState = nullptr;
 		}
 
 		if(decoderState && !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::drainRequired))) {
