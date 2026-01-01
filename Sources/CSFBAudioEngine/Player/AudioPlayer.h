@@ -31,10 +31,6 @@
 
 namespace SFB {
 
-/// Returns the next event identification number
-/// - note: Event identification numbers are unique across all event types
-uint64_t NextEventIdentificationNumber() noexcept;
-
 // MARK: - AudioPlayer
 
 /// SFBAudioPlayer implementation
@@ -273,26 +269,6 @@ private:
 
 	// MARK: - Events
 
-	/// An event header consisting of an event command and event identification number
-	template <typename T> requires std::is_same_v<std::underlying_type_t<T>, uint32_t>
-	struct EventHeader {
-		/// The event command
-		T mCommand;
-		/// The event identification number
-		uint64_t mIdentificationNumber;
-
-		/// Constructs an empty event header
-		EventHeader() noexcept = default;
-
-		/// Constructs an event header with the next available identification number
-		/// - parameter command: The command for the event
-		EventHeader(T command) noexcept
-		: mCommand{command}, mIdentificationNumber{NextEventIdentificationNumber()}
-		{}
-	};
-
-	// MARK: Decoding Events
-
 	/// Decoding thread events
 	enum class DecodingEventCommand : uint32_t {
 		/// Decoding started
@@ -305,45 +281,37 @@ private:
 		error 		= 4,
 	};
 
-	/// A decoding event header
-	using DecodingEventHeader = EventHeader<DecodingEventCommand>;
-
-	// MARK: Rendering Events
-
 	/// Render block events
 	enum class RenderingEventCommand : uint32_t {
 		/// Timestamp and frames rendered
 		framesRendered 	= 1,
 	};
 
-	/// A rendering event command and identification number
-	using RenderingEventHeader = EventHeader<RenderingEventCommand>;
-
 	// MARK: - Event Processing
 
-	/// Sequences events from from `decodingEvents_` and `renderingEvents_` for processing in order
-	/// - note: This is the thread entry point for the event thread
+	/// Sequences events from `decodingEvents_` and `renderingEvents_` for processing in order
+	/// - note: This is the thread entry point for the event processing thread
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-	/// Processes an event from `decodingEvents_`
-	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
+	/// Reads and processes an event from `decodingEvents_`
+	void ProcessDecodingEvent(DecodingEventCommand command) noexcept;
 
-	/// Processes a decoding started event from `decodingEvents_`
+	/// Reads and processes a decoding started event from `decodingEvents_`
 	void ProcessDecodingStartedEvent() noexcept;
 
-	/// Processes a decoding complete event from `decodingEvents_`
+	/// Reads and processes a decoding complete event from `decodingEvents_`
 	void ProcessDecodingCompleteEvent() noexcept;
 
-	/// Processes a decoder canceled event from `decodingEvents_`
+	/// Reads and processes a decoder canceled event from `decodingEvents_`
 	void ProcessDecoderCanceledEvent() noexcept;
 
-	/// Process a decoding error event from `decodingEvents_`
+	/// Reads and processes a decoding error event from `decodingEvents_`
 	void ProcessDecodingErrorEvent() noexcept;
 
-	/// Processes an event from `renderingEvents_`
-	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
+	/// Reads and processes an event from `renderingEvents_`
+	void ProcessRenderingEvent(RenderingEventCommand command) noexcept;
 
-	/// Processes a frames rendered event from `renderingEvents_`
+	/// Reads and processes a frames rendered event from `renderingEvents_`
 	void ProcessFramesRenderedEvent() noexcept;
 
 	/// Called when the first audio frame from a decoder will render.
