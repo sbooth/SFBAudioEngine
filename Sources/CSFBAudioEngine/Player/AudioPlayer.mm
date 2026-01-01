@@ -1311,21 +1311,9 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 		uint64_t renderingEventIdentificationNumber;
 		auto gotRenderingEvent = renderingEvents_.ReadValues(renderingEventCommand, renderingEventIdentificationNumber);
 
-		// Process all pending decoding and rendering events in chronological order
-		for(;;) {
-			// Nothing left to do
-			if(!gotDecodingEvent && !gotRenderingEvent)
-				break;
-			else if(gotDecodingEvent && !gotRenderingEvent) {
-				// Process the decode event
-				ProcessDecodingEvent(decodingEventCommand);
-				gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
-			} else if(!gotDecodingEvent && gotRenderingEvent) {
-				// Process the render event
-				ProcessRenderingEvent(renderingEventCommand);
-				gotRenderingEvent = renderingEvents_.ReadValues(renderingEventCommand, renderingEventIdentificationNumber);
-			} else if(decodingEventIdentificationNumber < renderingEventIdentificationNumber) {
-				// Process the event with an earlier identification number
+		// Process all pending decoding and rendering events in sequential order
+		while(gotDecodingEvent || gotRenderingEvent) {
+			if(gotDecodingEvent && (!gotRenderingEvent || decodingEventIdentificationNumber < renderingEventIdentificationNumber)) {
 				ProcessDecodingEvent(decodingEventCommand);
 				gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
 			} else {
