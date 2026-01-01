@@ -605,7 +605,7 @@ bool SFB::AudioPlayer::EngineIsRunning() const noexcept
 SFB::AudioPlayer::Decoder SFB::AudioPlayer::CurrentDecoder() const noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
-	const auto decoderState = FirstActiveDecoderState();
+	const auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState)
 		return nil;
 	return decoderState->decoder_;
@@ -633,7 +633,7 @@ void SFB::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 SFBPlaybackPosition SFB::AudioPlayer::PlaybackPosition() const noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
-	const auto decoderState = FirstActiveDecoderState();
+	const auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState)
 		return SFBInvalidPlaybackPosition;
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
@@ -643,7 +643,7 @@ SFBPlaybackTime SFB::AudioPlayer::PlaybackTime() const noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
 
-	const auto decoderState = FirstActiveDecoderState();
+	const auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState)
 		return SFBInvalidPlaybackTime;
 
@@ -666,7 +666,7 @@ bool SFB::AudioPlayer::GetPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
 {
 	std::lock_guard lock{activeDecodersLock_};
 
-	const auto decoderState = FirstActiveDecoderState();
+	const auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState) {
 		if(playbackPosition)
 			*playbackPosition = SFBInvalidPlaybackPosition;
@@ -699,7 +699,7 @@ bool SFB::AudioPlayer::SeekInTime(NSTimeInterval secondsToSkip) noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
 
-	const auto decoderState = FirstActiveDecoderState();
+	auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -723,7 +723,7 @@ bool SFB::AudioPlayer::SeekToTime(NSTimeInterval timeInSeconds) noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
 
-	const auto decoderState = FirstActiveDecoderState();
+	auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -745,7 +745,7 @@ bool SFB::AudioPlayer::SeekToPosition(double position) noexcept
 
 	std::lock_guard lock{activeDecodersLock_};
 
-	const auto decoderState = FirstActiveDecoderState();
+	auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -762,7 +762,7 @@ bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
 
-	const auto decoderState = FirstActiveDecoderState();
+	auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState || !decoderState->decoder_.supportsSeeking)
 		return false;
 
@@ -778,7 +778,7 @@ bool SFB::AudioPlayer::SeekToFrame(AVAudioFramePosition frame) noexcept
 bool SFB::AudioPlayer::SupportsSeeking() const noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
-	const auto decoderState = FirstActiveDecoderState();
+	const auto *decoderState = FirstActiveDecoderState();
 	if(!decoderState)
 		return false;
 	return decoderState->decoder_.supportsSeeking;
@@ -1394,7 +1394,7 @@ void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 			return;
 		}
 
-		if(const auto decoderState = FirstActiveDecoderState(); decoderState)
+		if(const auto *decoderState = FirstActiveDecoderState(); decoderState)
 			currentDecoder = decoderState->decoder_;
 	}
 
