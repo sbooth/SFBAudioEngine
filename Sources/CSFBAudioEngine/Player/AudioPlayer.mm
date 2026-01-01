@@ -91,10 +91,6 @@ NSString * StringDescribingAVAudioFormat(AVAudioFormat * _Nullable format, bool 
 		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@>", format, formatDescription];
 }
 
-} /* namespace */
-
-namespace SFB {
-
 /// Returns the next event identification number
 /// - note: Event identification numbers are unique across all event types
 uint64_t NextEventIdentificationNumber() noexcept
@@ -103,6 +99,10 @@ uint64_t NextEventIdentificationNumber() noexcept
 	static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 	return nextIdentificationNumber.fetch_add(1, std::memory_order_relaxed);
 }
+
+} /* namespace */
+
+namespace SFB {
 
 const os_log_t AudioPlayer::log_ = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 
@@ -931,7 +931,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				ringBufferStale = true;
 
 				// Submit the decoder canceled event
-				if(const DecodingEventHeader header{DecodingEventCommand::canceled}; decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+				if(decodingEvents_.WriteValues(DecodingEventCommand::canceled, NextEventIdentificationNumber(), decoderState->sequenceNumber_))
 					signal = true;
 				else
 					os_log_fault(log_, "Error writing decoder canceled event");
@@ -1128,8 +1128,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 						// Submit the decoding started event for the initial start only
 						if(!suspended) {
-							const DecodingEventHeader header{DecodingEventCommand::started};
-							if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+							if(decodingEvents_.WriteValues(DecodingEventCommand::started, NextEventIdentificationNumber(), decoderState->sequenceNumber_))
 								dispatch_semaphore_signal(eventSemaphore_);
 							else
 								os_log_fault(log_, "Error writing decoding started event");
@@ -1154,8 +1153,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 						// Submit the decoding complete event for the first completion only
 						if(!resumed) {
-							const DecodingEventHeader header{DecodingEventCommand::complete};
-							if(decodingEvents_.WriteValues(header, decoderState->sequenceNumber_))
+							if(decodingEvents_.WriteValues(DecodingEventCommand::complete, NextEventIdentificationNumber(), decoderState->sequenceNumber_))
 								dispatch_semaphore_signal(eventSemaphore_);
 							else
 								os_log_fault(log_, "Error writing decoding complete event");
@@ -1222,7 +1220,7 @@ void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
 	auto [front, back] = decodingEvents_.GetWriteVector();
 
 	const auto frontSize = front.size();
-	const auto spaceNeeded = sizeof(DecodingEventHeader) + sizeof(uint32_t) + errorData.length;
+	const auto spaceNeeded = sizeof(DecodingEventCommand) + sizeof(uint64_t) + sizeof(uint32_t) + errorData.length;
 	if(frontSize + back.size() < spaceNeeded) {
 		os_log_fault(log_, "Insufficient space to write decoding error event");
 		return;
@@ -1244,10 +1242,12 @@ void SFB::AudioPlayer::SubmitDecodingErrorEvent(NSError *error) noexcept
 	};
 
 	// Event header and payload
-	const DecodingEventHeader header{DecodingEventCommand::error};
+	const auto command = DecodingEventCommand::error;
+	const auto identificationNumber = NextEventIdentificationNumber();
 	const auto dataSize = static_cast<uint32_t>(errorData.length);
 
-	write_single_arg(&header, sizeof header);
+	write_single_arg(&command, sizeof command);
+	write_single_arg(&identificationNumber, sizeof identificationNumber);
 	write_single_arg(&dataSize, sizeof dataSize);
 	write_single_arg(errorData.bytes, errorData.length);
 
@@ -1285,8 +1285,7 @@ OSStatus SFB::AudioPlayer::Render(BOOL& isSilence, const AudioTimeStamp& timesta
 		if(framesRead != frameCount)
 			os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead, frameCount);
 #endif /* DEBUG */
-		const RenderingEventHeader header{RenderingEventCommand::framesRendered};
-		if(!renderingEvents_.WriteValues(header, timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead)))
+		if(!renderingEvents_.WriteValues(RenderingEventCommand::framesRendered, NextEventIdentificationNumber(), timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead)))
 			os_log_fault(log_, "Error writing frames rendered event");
 	} else
 		isSilence = YES;
@@ -1304,29 +1303,22 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 	os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
 	while(!stoken.stop_requested()) {
-		auto decodingEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
-		auto renderingEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
+		DecodingEventCommand decodingEventCommand;
+		uint64_t decodingEventIdentificationNumber;
+		auto gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
 
-		// Process all pending decode and render events in chronological order
-		for(;;) {
-			// Nothing left to do
-			if(!decodingEventHeader && !renderingEventHeader)
-				break;
-			else if(decodingEventHeader && !renderingEventHeader) {
-				// Process the decode event
-				ProcessDecodingEvent(*decodingEventHeader);
-				decodingEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
-			} else if(!decodingEventHeader && renderingEventHeader) {
-				// Process the render event
-				ProcessRenderingEvent(*renderingEventHeader);
-				renderingEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
-			} else if(decodingEventHeader->mIdentificationNumber < renderingEventHeader->mIdentificationNumber) {
-				// Process the event with an earlier identification number
-				ProcessDecodingEvent(*decodingEventHeader);
-				decodingEventHeader = decodingEvents_.ReadValue<DecodingEventHeader>();
+		RenderingEventCommand renderingEventCommand;
+		uint64_t renderingEventIdentificationNumber;
+		auto gotRenderingEvent = renderingEvents_.ReadValues(renderingEventCommand, renderingEventIdentificationNumber);
+
+		// Process all pending decoding and rendering events in sequential order
+		while(gotDecodingEvent || gotRenderingEvent) {
+			if(gotDecodingEvent && (!gotRenderingEvent || decodingEventIdentificationNumber < renderingEventIdentificationNumber)) {
+				ProcessDecodingEvent(decodingEventCommand);
+				gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
 			} else {
-				ProcessRenderingEvent(*renderingEventHeader);
-				renderingEventHeader = renderingEvents_.ReadValue<RenderingEventHeader>();
+				ProcessRenderingEvent(renderingEventCommand);
+				gotRenderingEvent = renderingEvents_.ReadValues(renderingEventCommand, renderingEventIdentificationNumber);
 			}
 		}
 
@@ -1349,37 +1341,33 @@ void SFB::AudioPlayer::SequenceAndProcessEvents(std::stop_token stoken) noexcept
 
 // MARK: Decoding Events
 
-void SFB::AudioPlayer::ProcessDecodingEvent(const DecodingEventHeader& header) noexcept
+bool SFB::AudioPlayer::ProcessDecodingEvent(DecodingEventCommand command) noexcept
 {
-	switch(header.mCommand) {
+	switch(command) {
 		case DecodingEventCommand::started:
-			ProcessDecodingStartedEvent();
-			break;
+			return ProcessDecodingStartedEvent();
 
 		case DecodingEventCommand::complete:
-			ProcessDecodingCompleteEvent();
-			break;
+			return ProcessDecodingCompleteEvent();
 
 		case DecodingEventCommand::canceled:
-			ProcessDecoderCanceledEvent();
-			break;
+			return ProcessDecoderCanceledEvent();
 
 		case DecodingEventCommand::error:
-			ProcessDecodingErrorEvent();
-			break;
+			return ProcessDecodingErrorEvent();
 
 		default:
-			os_log_error(log_, "Unknown decode event command: %u", header.mCommand);
-			break;
+			os_log_error(log_, "Unknown decode event command: %u", command);
+			return false;
 	}
 }
 
-void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
+bool SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 {
 	uint64_t sequenceNumber;
 	if(!decodingEvents_.ReadValue(sequenceNumber)) {
 		os_log_error(log_, "Missing decoder sequence number for decoding started event");
-		return;
+		return false;
 	}
 
 	Decoder decoder = nil;
@@ -1391,7 +1379,7 @@ void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 			decoder = (*iter)->decoder_;
 		else {
 			os_log_error(log_, "Decoder state with sequence number %llu missing for decoding started event", sequenceNumber);
-			return;
+			return false;
 		}
 
 		if(const auto *decoderState = FirstActiveDecoderState(); decoderState)
@@ -1404,14 +1392,16 @@ void SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
 	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & mask) && decoder == currentDecoder)
 		SetNowPlaying(decoder);
+
+	return true;
 }
 
-void SFB::AudioPlayer::ProcessDecodingCompleteEvent() noexcept
+bool SFB::AudioPlayer::ProcessDecodingCompleteEvent() noexcept
 {
 	uint64_t sequenceNumber;
 	if(!decodingEvents_.ReadValue(sequenceNumber)) {
 		os_log_error(log_, "Missing decoder sequence number for decoding complete event");
-		return;
+		return false;
 	}
 
 	Decoder decoder = nil;
@@ -1422,20 +1412,22 @@ void SFB::AudioPlayer::ProcessDecodingCompleteEvent() noexcept
 			decoder = (*iter)->decoder_;
 		else {
 			os_log_error(log_, "Decoder state with sequence number %llu missing for decoding complete event", sequenceNumber);
-			return;
+			return false;
 		}
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
 		[player_.delegate audioPlayer:player_ decodingComplete:decoder];
+
+	return true;
 }
 
-void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
+bool SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 {
 	uint64_t sequenceNumber;
 	if(!decodingEvents_.ReadValue(sequenceNumber)) {
 		os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
-		return;
+		return false;
 	}
 
 	Decoder decoder = nil;
@@ -1451,7 +1443,7 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 			activeDecoders_.erase(iter);
 		} else {
 			os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event", sequenceNumber);
-			return;
+			return false;
 		}
 	}
 
@@ -1468,51 +1460,54 @@ void SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 
 	if(hasNoDecoders)
 		SetNowPlaying(nil);
+
+	return true;
 }
 
-void SFB::AudioPlayer::ProcessDecodingErrorEvent() noexcept
+bool SFB::AudioPlayer::ProcessDecodingErrorEvent() noexcept
 {
 	// The size in bytes of the archived NSError data
 	uint32_t dataSize;
 	if(!decodingEvents_.ReadValue(dataSize)) {
 		os_log_error(log_, "Missing data size for decoding error event");
-		return;
+		return false;
 	}
 
 	// The archived NSError data
 	NSMutableData *data = [NSMutableData dataWithLength:dataSize];
 	if(decodingEvents_.Read(data.mutableBytes, 1, dataSize, false) != dataSize) {
 		os_log_error(log_, "Missing or incomplete archived NSError for decoding error event");
-		return;
+		return false;
 	}
 
 	NSError *err = nil;
 	NSError *error = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSError class] fromData:data error:&err];
 	if(!error) {
 		os_log_error(log_, "Error unarchiving NSError for decoding error event: %{public}@", err);
-		return;
+		return false;
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 		[player_.delegate audioPlayer:player_ encounteredError:error];
+
+	return true;
 }
 
 // MARK: Rendering Events
 
-void SFB::AudioPlayer::ProcessRenderingEvent(const RenderingEventHeader& header) noexcept
+bool SFB::AudioPlayer::ProcessRenderingEvent(RenderingEventCommand command) noexcept
 {
-	switch(header.mCommand) {
+	switch(command) {
 		case RenderingEventCommand::framesRendered:
-			ProcessFramesRenderedEvent();
-			break;
+			return ProcessFramesRenderedEvent();
 
 		default:
-			os_log_error(log_, "Unknown render event command: %u", header.mCommand);
-			break;
+			os_log_error(log_, "Unknown render event command: %u", command);
+			return false;
 	}
 }
 
-void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
+bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 {
 	// The host time and rate scalar from the render cycle's timestamp
 	uint64_t renderHostTime;
@@ -1521,7 +1516,7 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 	uint32_t framesRendered;
 	if(!renderingEvents_.ReadValues(renderHostTime, rateScalar, framesRendered)) {
 		os_log_error(log_, "Missing timestamp or frames rendered for frames rendered event");
-		return;
+		return false;
 	}
 
 #if DEBUG
@@ -1634,9 +1629,11 @@ void SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 				HandleRenderingWillCompleteEvent(event.decoder_, event.time_);
 				break;
 			default:
-				assert(false && "Unknown RenderingWillEvent::Type");
+				assert(false && "Unknown RenderingEventDetails::Type");
 		}
 	}
+
+	return true;
 }
 
 void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept
