@@ -199,8 +199,7 @@ public:
 
 	// MARK: - Seeking
 
-	bool SeekForward(NSTimeInterval secondsToSkip) noexcept;
-	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept;
+	bool SeekInTime(NSTimeInterval secondsToSkip) noexcept;
 	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept;
 	bool SeekToPosition(double position) noexcept;
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept;
