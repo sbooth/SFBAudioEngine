@@ -289,11 +289,11 @@ private:
 
 	// MARK: - Event Processing
 
-	/// Sequences events from `decodingEvents_` and `renderingEvents_` for processing in order
+	/// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
 	/// - note: This is the thread entry point for the event processing thread
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-	/// Reads and processes an event from `decodingEvents_`
+	/// Reads and processes an event payload from `decodingEvents_`
 	void ProcessDecodingEvent(DecodingEventCommand command) noexcept;
 
 	/// Reads and processes a decoding started event from `decodingEvents_`
@@ -308,7 +308,7 @@ private:
 	/// Reads and processes a decoding error event from `decodingEvents_`
 	void ProcessDecodingErrorEvent() noexcept;
 
-	/// Reads and processes an event from `renderingEvents_`
+	/// Reads and processes an event payload from `renderingEvents_`
 	void ProcessRenderingEvent(RenderingEventCommand command) noexcept;
 
 	/// Reads and processes a frames rendered event from `renderingEvents_`
