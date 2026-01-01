@@ -1357,7 +1357,8 @@ bool SFB::AudioPlayer::ProcessDecodingEvent(DecodingEventCommand command) noexce
 			return ProcessDecodingErrorEvent();
 
 		default:
-			os_log_error(log_, "Unknown decode event command: %u", command);
+//			assert(false && "Unknown decoding event command");
+			os_log_error(log_, "Unknown decoding event command: %u", command);
 			return false;
 	}
 }
@@ -1502,7 +1503,8 @@ bool SFB::AudioPlayer::ProcessRenderingEvent(RenderingEventCommand command) noex
 			return ProcessFramesRenderedEvent();
 
 		default:
-			os_log_error(log_, "Unknown render event command: %u", command);
+//			assert(false && "Unknown rendering event command");
+			os_log_error(log_, "Unknown rendering event command: %u", command);
 			return false;
 	}
 }
@@ -1510,11 +1512,11 @@ bool SFB::AudioPlayer::ProcessRenderingEvent(RenderingEventCommand command) noex
 bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 {
 	// The host time and rate scalar from the render cycle's timestamp
-	uint64_t renderHostTime;
+	uint64_t hostTime;
 	double rateScalar;
 	// The number of valid frames rendered
 	uint32_t framesRendered;
-	if(!renderingEvents_.ReadValues(renderHostTime, rateScalar, framesRendered)) {
+	if(!renderingEvents_.ReadValues(hostTime, rateScalar, framesRendered)) {
 		os_log_error(log_, "Missing timestamp or frames rendered for frames rendered event");
 		return false;
 	}
@@ -1581,7 +1583,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
-				uint64_t eventTime = renderHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
+				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
 				try {
 					queuedEvents.push_back({RenderingEventDetails::Type::willStart, (*iter)->decoder_, eventTime});
@@ -1599,7 +1601,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 			if((flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) && framesFromThisDecoder == decoderFramesRemaining) {
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
-				uint64_t eventTime = renderHostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
+				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
 				try {
 					queuedEvents.push_back({RenderingEventDetails::Type::willComplete, (*iter)->decoder_, eventTime});
@@ -1739,7 +1741,7 @@ void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 		}
 	}
 
-	// Signal the decoding threads if any cancelations were requested
+	// Signal the decoding thread if any cancelations were requested
 	if(signal)
 		dispatch_semaphore_signal(decodingSemaphore_);
 }

@@ -283,7 +283,7 @@ private:
 
 	/// Render block events
 	enum class RenderingEventCommand : uint32_t {
-		/// Timestamp and frames rendered
+		/// Audio frames rendered from ring buffer
 		framesRendered 	= 1,
 	};
 
