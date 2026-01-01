@@ -294,25 +294,25 @@ private:
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
 	/// Reads and processes an event payload from `decodingEvents_`
-	void ProcessDecodingEvent(DecodingEventCommand command) noexcept;
+	bool ProcessDecodingEvent(DecodingEventCommand command) noexcept;
 
 	/// Reads and processes a decoding started event from `decodingEvents_`
-	void ProcessDecodingStartedEvent() noexcept;
+	bool ProcessDecodingStartedEvent() noexcept;
 
 	/// Reads and processes a decoding complete event from `decodingEvents_`
-	void ProcessDecodingCompleteEvent() noexcept;
+	bool ProcessDecodingCompleteEvent() noexcept;
 
 	/// Reads and processes a decoder canceled event from `decodingEvents_`
-	void ProcessDecoderCanceledEvent() noexcept;
+	bool ProcessDecoderCanceledEvent() noexcept;
 
 	/// Reads and processes a decoding error event from `decodingEvents_`
-	void ProcessDecodingErrorEvent() noexcept;
+	bool ProcessDecodingErrorEvent() noexcept;
 
 	/// Reads and processes an event payload from `renderingEvents_`
-	void ProcessRenderingEvent(RenderingEventCommand command) noexcept;
+	bool ProcessRenderingEvent(RenderingEventCommand command) noexcept;
 
 	/// Reads and processes a frames rendered event from `renderingEvents_`
-	void ProcessFramesRenderedEvent() noexcept;
+	bool ProcessFramesRenderedEvent() noexcept;
 
 	/// Called when the first audio frame from a decoder will render.
 	void HandleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
