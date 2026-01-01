@@ -236,22 +236,22 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 - (BOOL)seekForward
 {
-	return _player->SeekForward(3);
+	return _player->SeekInTime(3);
 }
 
 - (BOOL)seekBackward
 {
-	return _player->SeekBackward(3);
+	return _player->SeekInTime(-3);
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	return _player->SeekForward(secondsToSkip);
+	return _player->SeekInTime(secondsToSkip);
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	return _player->SeekBackward(secondsToSkip);
+	return _player->SeekInTime(-secondsToSkip);
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds
