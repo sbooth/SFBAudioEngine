@@ -562,7 +562,7 @@ bool SFB::AudioPlayer::Resume() noexcept
 
 void SFB::AudioPlayer::Stop() noexcept
 {
-	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
 		return;
 
 	{
@@ -1088,7 +1088,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 
 			// If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
-			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
+			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::formatMismatch)) {
 				// Wait until all other decoders complete processing before reconfiguring the graph
 				const auto okToReconfigure = [&] {
 					std::lock_guard lock{activeDecodersLock_};
@@ -1189,7 +1189,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		int64_t deltaNanos;
 		if(!decoderState) {
 			// Shorter timeout if waiting on a decoder to complete rendering for a pending format change
-			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch)))
+			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::formatMismatch))
 				deltaNanos = 25 * NSEC_PER_MSEC;
 			// Idling
 			else
@@ -1746,8 +1746,7 @@ void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 	// Cancel all active decoders
 	auto signal = false;
 	for(const auto& decoderState : activeDecoders_) {
-		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		if(!(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled))) {
+		if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled))) {
 			decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
 			signal = true;
 		}
@@ -1868,7 +1867,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 #endif // false
 
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
-			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				std::lock_guard lock{engineLock_};
 				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
