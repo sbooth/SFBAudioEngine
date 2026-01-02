@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -249,8 +249,6 @@ private:
 		isMuted 					= 1u << 2,
 		/// The ring buffer needs to be drained during the next render cycle
 		drainRequired 				= 1u << 3,
-		/// Mismatch between rendering format and decoder processing format
-		formatMismatch 				= 1u << 4,
 	};
 
 	// MARK: - Decoding

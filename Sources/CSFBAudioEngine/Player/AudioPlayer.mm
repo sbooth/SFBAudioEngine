@@ -923,6 +923,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 	// The buffer between the decoder state and the ring buffer
 	AVAudioPCMBuffer *buffer = nil;
+	// Whether there is a mismatch between the rendering format and the next decoder's processing format
+	auto formatMismatch = false;
 
 	while(!stoken.stop_requested()) {
 		// The decoder state being processed
@@ -970,7 +972,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// The decoder has not completed rendering so the ring buffer format and the decoder's format still match.
 					// Clear the format mismatch flag so rendering can continue; the flag will be set again when
 					// decoding completes.
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
+					formatMismatch = false;
 
 					fetch_update(decoderState->flags_, [](auto val) noexcept {
 						return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) | static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
@@ -1087,11 +1089,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
 					// decoding can't start until the processing graph is reconfigured which occurs after
 					// all active decoders complete
-					flags_.fetch_or(static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
+					formatMismatch = true;
 			}
 
 			// If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
-			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::formatMismatch)) {
+			if(formatMismatch) {
 				// Wait until all other decoders complete processing before reconfiguring the graph
 				const auto okToReconfigure = [&] {
 					std::lock_guard lock{activeDecodersLock_};
@@ -1099,7 +1101,8 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				}();
 
 				if(okToReconfigure) {
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch) & ~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_release);
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_release);
+					formatMismatch = false;
 
 					os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
@@ -1192,7 +1195,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		int64_t deltaNanos;
 		if(!decoderState) {
 			// Shorter timeout if waiting on a decoder to complete rendering for a pending format change
-			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::formatMismatch))
+			if(formatMismatch)
 				deltaNanos = 25 * NSEC_PER_MSEC;
 			// Idling
 			else
