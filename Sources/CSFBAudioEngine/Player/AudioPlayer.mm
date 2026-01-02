@@ -100,6 +100,16 @@ uint64_t NextEventIdentificationNumber() noexcept
 	return nextIdentificationNumber.fetch_add(1, std::memory_order_relaxed);
 }
 
+/// Performs a generic atomic read-modify-write (RMW) operation
+template <typename T, typename Func>
+void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
+{
+	T expected = atom.load(std::memory_order_relaxed);
+	while(!atom.compare_exchange_weak(expected, func(expected), order, std::memory_order_relaxed)) {
+		// `expected` is automatically updated with the current value of `atom` on failure
+	}
+}
+
 } /* namespace */
 
 namespace SFB {
@@ -552,7 +562,7 @@ bool SFB::AudioPlayer::Resume() noexcept
 
 void SFB::AudioPlayer::Stop() noexcept
 {
-	if(!(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)))
+	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
 		return;
 
 	{
@@ -959,8 +969,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// decoding completes.
 					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 
-					decoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingComplete), std::memory_order_acq_rel);
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingResumed), std::memory_order_acq_rel);
+					fetch_update(decoderState->flags_, [](auto val) noexcept {
+						return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) | static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
+					}, std::memory_order_acq_rel);
 
 					{
 						std::lock_guard lock{activeDecodersLock_};
@@ -984,8 +995,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 								} else
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
-								nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
-								nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
+								fetch_update(nextDecoderState->flags_, [](auto val) noexcept {
+									return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) | static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
+								}, std::memory_order_acq_rel);
 							}
 						}
 					}
@@ -1076,7 +1088,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 			}
 
 			// If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
-			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch))) {
+			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::formatMismatch)) {
 				// Wait until all other decoders complete processing before reconfiguring the graph
 				const auto okToReconfigure = [&] {
 					std::lock_guard lock{activeDecodersLock_};
@@ -1177,7 +1189,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		int64_t deltaNanos;
 		if(!decoderState) {
 			// Shorter timeout if waiting on a decoder to complete rendering for a pending format change
-			if((flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::formatMismatch)))
+			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::formatMismatch))
 				deltaNanos = 25 * NSEC_PER_MSEC;
 			// Idling
 			else
@@ -1734,8 +1746,7 @@ void SFB::AudioPlayer::CancelActiveDecoders() noexcept
 	// Cancel all active decoders
 	auto signal = false;
 	for(const auto& decoderState : activeDecoders_) {
-		const auto flags = decoderState->flags_.load(std::memory_order_acquire);
-		if(!(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled))) {
+		if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled))) {
 			decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
 			signal = true;
 		}
@@ -1856,7 +1867,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 #endif // false
 
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
-			if(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning)) {
+			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
 				std::lock_guard lock{engineLock_};
 				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
