@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -244,7 +244,7 @@ struct AudioPlayer::DecoderState final {
 #if false
 			// Some formats may not know the exact number of frames in advance
 			// without processing the entire file, which is a potentially slow operation
-			mFrameLength.store(mDecoder.framePosition, std::memory_order_release);
+			frameLength_.store(mDecoder.framePosition, std::memory_order_release);
 #endif /* false */
 
 			buffer.frameLength = 0;
@@ -1567,12 +1567,6 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 		while(iter != activeDecoders_.cend()) {
 			const auto flags = (*iter)->flags_.load(std::memory_order_acquire);
 
-			// Ignore decoders that are canceled or have already completed rendering
-			if(flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled)) {
-				++iter;
-				continue;
-			}
-
 			// If a frames rendered event was posted it means valid frames were rendered
 			// during that render cycle.
 			//
@@ -1580,11 +1574,14 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 			//   - A decoder may have been canceled
 			//   - A seek can occur
 			//
-			// In those cases the frames from that event are not valid and should be discarded.
+			// Bookkeeping is handled no differently for canceled decoders but rendering notifications are suppressed
+			//
+			// In the case of a seek the frames from that event are not valid and should be discarded.
 
 			const auto decoderFramesConverted = (*iter)->framesConverted_.load(std::memory_order_acquire);
 			const auto decoderFramesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
 			const auto decoderFramesRemaining = decoderFramesConverted - decoderFramesRendered;
+
 			if(decoderFramesRemaining == 0) {
 #if DEBUG
 				os_log_debug(log_, "Not accounting for %lld frames in frames rendered event", framesRemainingToDistribute);
@@ -1593,7 +1590,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 			}
 
 			// Rendering is starting
-			if(!(flags & static_cast<unsigned int>(DecoderState::Flags::renderingStarted))) {
+			if(constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::renderingStarted); !(flags & mask)) {
 				(*iter)->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::renderingStarted), std::memory_order_acq_rel);
 
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
@@ -1613,7 +1610,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 			framesRemainingToDistribute -= framesFromThisDecoder;
 
 			// Rendering is complete
-			if((flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) && framesFromThisDecoder == decoderFramesRemaining) {
+			if(constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::decodingComplete); (flags & mask) == static_cast<unsigned int>(DecoderState::Flags::decodingComplete) && framesFromThisDecoder == decoderFramesRemaining) {
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
 				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
