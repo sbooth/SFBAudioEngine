@@ -102,7 +102,7 @@ uint64_t NextEventIdentificationNumber() noexcept
 
 /// Performs a generic atomic read-modify-write (RMW) operation
 template <typename T, typename Func>
-void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_acq_rel)
+void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst)
 {
 	T expected = atom.load(std::memory_order_relaxed);
 	while(!atom.compare_exchange_weak(expected, func(expected), order, std::memory_order_relaxed)) {
@@ -971,7 +971,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 					fetch_update(decoderState->flags_, [](auto val) {
 						return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) | static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
-					});
+					}, std::memory_order_acq_rel);
 
 					{
 						std::lock_guard lock{activeDecodersLock_};
@@ -997,7 +997,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 								fetch_update(nextDecoderState->flags_, [](auto val) {
 									return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) | static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
-								});
+								}, std::memory_order_acq_rel);
 							}
 						}
 					}
