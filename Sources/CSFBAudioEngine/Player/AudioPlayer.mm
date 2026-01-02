@@ -100,6 +100,16 @@ uint64_t NextEventIdentificationNumber() noexcept
 	return nextIdentificationNumber.fetch_add(1, std::memory_order_relaxed);
 }
 
+/// Performs a generic atomic read-modify-write (RMW) operation
+template <typename T, typename Func>
+void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_acq_rel)
+{
+	T expected = atom.load(std::memory_order_relaxed);
+	while(!atom.compare_exchange_weak(expected, func(expected), order, std::memory_order_relaxed)) {
+		// `expected` is automatically updated with the current value of `atom` on failure
+	}
+}
+
 } /* namespace */
 
 namespace SFB {
@@ -959,8 +969,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// decoding completes.
 					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 
-					decoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingComplete), std::memory_order_acq_rel);
-					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingResumed), std::memory_order_acq_rel);
+					fetch_update(decoderState->flags_, [](auto val) {
+						return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) | static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
+					});
 
 					{
 						std::lock_guard lock{activeDecodersLock_};
@@ -984,8 +995,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 								} else
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
-								nextDecoderState->flags_.fetch_and(~static_cast<unsigned int>(DecoderState::Flags::decodingStarted), std::memory_order_acq_rel);
-								nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingSuspended), std::memory_order_acq_rel);
+								fetch_update(nextDecoderState->flags_, [](auto val) {
+									return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) | static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
+								});
 							}
 						}
 					}
