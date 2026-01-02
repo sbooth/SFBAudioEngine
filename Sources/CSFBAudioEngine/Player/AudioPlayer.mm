@@ -102,7 +102,7 @@ uint64_t NextEventIdentificationNumber() noexcept
 
 /// Performs a generic atomic read-modify-write (RMW) operation
 template <typename T, typename Func>
-void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst)
+void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
 {
 	T expected = atom.load(std::memory_order_relaxed);
 	while(!atom.compare_exchange_weak(expected, func(expected), order, std::memory_order_relaxed)) {
@@ -969,7 +969,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 					// decoding completes.
 					flags_.fetch_and(~static_cast<unsigned int>(Flags::formatMismatch), std::memory_order_acq_rel);
 
-					fetch_update(decoderState->flags_, [](auto val) {
+					fetch_update(decoderState->flags_, [](auto val) noexcept {
 						return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) | static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
 					}, std::memory_order_acq_rel);
 
@@ -995,7 +995,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 								} else
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
-								fetch_update(nextDecoderState->flags_, [](auto val) {
+								fetch_update(nextDecoderState->flags_, [](auto val) noexcept {
 									return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) | static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
 								}, std::memory_order_acq_rel);
 							}
