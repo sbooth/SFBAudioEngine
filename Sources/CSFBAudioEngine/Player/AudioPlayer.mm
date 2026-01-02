@@ -101,7 +101,7 @@ uint64_t NextEventIdentificationNumber() noexcept
 }
 
 /// Performs a generic atomic read-modify-write (RMW) operation
-template <typename T, typename Func>
+template <typename T, typename Func> requires std::atomic<T>::is_always_lock_free && std::is_trivially_copyable_v<T> && std::invocable<Func, T> && std::convertible_to<std::invoke_result_t<Func, T>, T>
 void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
 {
 	T expected = atom.load(std::memory_order_relaxed);
