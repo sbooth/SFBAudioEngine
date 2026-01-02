@@ -114,17 +114,8 @@ public:
 
 	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept;
 
-	void ClearDecoderQueue() noexcept
-	{
-		std::lock_guard lock{queuedDecodersLock_};
-		queuedDecoders_.clear();
-	}
-
-	bool DecoderQueueIsEmpty() const noexcept
-	{
-		std::lock_guard lock{queuedDecodersLock_};
-		return queuedDecoders_.empty();
-	}
+	void ClearDecoderQueue() noexcept;
+	bool DecoderQueueIsEmpty() const noexcept;
 
 	// MARK: - Playback Control
 
@@ -140,48 +131,16 @@ public:
 
 	bool EngineIsRunning() const noexcept;
 
-	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-		const auto state = flags & mask;
-		assert(state != static_cast<unsigned int>(Flags::isPlaying));
-		return static_cast<SFBAudioPlayerPlaybackState>(state);
-	}
+	SFBAudioPlayerPlaybackState PlaybackState() const noexcept;
 
-	bool IsPlaying() const noexcept
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-		return (flags & mask) == mask;
-	}
-
-	bool IsPaused() const noexcept
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-		return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
-	}
-
-	bool IsStopped() const noexcept
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
-	}
-
-	bool IsReady() const noexcept
-	{
-		std::lock_guard lock{activeDecodersLock_};
-		return FirstActiveDecoderState() != nullptr;
-	}
+	bool IsPlaying() const noexcept;
+	bool IsPaused() const noexcept;
+	bool IsStopped() const noexcept;
+	bool IsReady() const noexcept;
 
 	Decoder _Nullable CurrentDecoder() const noexcept;
 
-	Decoder _Nullable NowPlaying() const noexcept
-	{
-		std::lock_guard lock{nowPlayingLock_};
-		return nowPlaying_;
-	}
+	Decoder _Nullable NowPlaying() const noexcept;
 
 private:
 	void SetNowPlaying(Decoder _Nullable nowPlaying) noexcept;
@@ -219,20 +178,9 @@ public:
 
 	void ModifyProcessingGraph(void(^ _Nonnull block)(AVAudioEngine * _Nonnull engine)) const noexcept;
 
-	AVAudioSourceNode * _Nonnull SourceNode() const noexcept
-	{
-		return sourceNode_;
-	}
-
-	AVAudioMixerNode * _Nonnull MainMixerNode() const noexcept
-	{
-		return engine_.mainMixerNode;
-	}
-
-	AVAudioOutputNode * _Nonnull OutputNode() const noexcept
-	{
-		return engine_.outputNode;
-	}
+	AVAudioSourceNode * _Nonnull SourceNode() const noexcept;
+	AVAudioMixerNode * _Nonnull MainMixerNode() const noexcept;
+	AVAudioOutputNode * _Nonnull OutputNode() const noexcept;
 
 	// MARK: - Debugging
 
@@ -346,6 +294,76 @@ private:
 	/// - returns: `true` if the player was successfully configured
 	bool ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format, NSError **error) noexcept;
 };
+
+// MARK: - Implementation -
+
+inline void AudioPlayer::ClearDecoderQueue() noexcept
+{
+	std::lock_guard lock{queuedDecodersLock_};
+	queuedDecoders_.clear();
+}
+
+inline bool AudioPlayer::DecoderQueueIsEmpty() const noexcept
+{
+	std::lock_guard lock{queuedDecodersLock_};
+	return queuedDecoders_.empty();
+}
+
+inline SFBAudioPlayerPlaybackState AudioPlayer::PlaybackState() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	const auto state = flags & mask;
+	assert(state != static_cast<unsigned int>(Flags::isPlaying));
+	return static_cast<SFBAudioPlayerPlaybackState>(state);
+}
+
+inline bool AudioPlayer::IsPlaying() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	return (flags & mask) == mask;
+}
+
+inline bool AudioPlayer::IsPaused() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
+}
+
+inline bool AudioPlayer::IsStopped() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
+}
+
+inline bool AudioPlayer::IsReady() const noexcept
+{
+	std::lock_guard lock{activeDecodersLock_};
+	return FirstActiveDecoderState() != nullptr;
+}
+
+inline AudioPlayer::Decoder _Nullable AudioPlayer::NowPlaying() const noexcept
+{
+	std::lock_guard lock{nowPlayingLock_};
+	return nowPlaying_;
+}
+
+inline AVAudioSourceNode * _Nonnull AudioPlayer::SourceNode() const noexcept
+{
+	return sourceNode_;
+}
+
+inline AVAudioMixerNode * _Nonnull AudioPlayer::MainMixerNode() const noexcept
+{
+	return engine_.mainMixerNode;
+}
+
+inline AVAudioOutputNode * _Nonnull AudioPlayer::OutputNode() const noexcept
+{
+	return engine_.outputNode;
+}
 
 } /* namespace SFB */
 
