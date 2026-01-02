@@ -101,12 +101,15 @@ uint64_t NextEventIdentificationNumber() noexcept
 }
 
 /// Performs a generic atomic read-modify-write (RMW) operation
-template <typename T, typename Func>
-void fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
+/// - returns: The value before the operation
+template <typename T, typename Func> requires std::atomic<T>::is_always_lock_free && std::is_trivially_copyable_v<T> && std::invocable<Func, T> && std::convertible_to<std::invoke_result_t<Func, T>, T>
+T fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
 {
 	T expected = atom.load(std::memory_order_relaxed);
-	while(!atom.compare_exchange_weak(expected, func(expected), order, std::memory_order_relaxed)) {
-		// `expected` is automatically updated with the current value of `atom` on failure
+	while(true) {
+		const T desired = func(expected);
+		if(atom.compare_exchange_weak(expected, desired, order, std::memory_order_relaxed))
+			return expected;
 	}
 }
 
