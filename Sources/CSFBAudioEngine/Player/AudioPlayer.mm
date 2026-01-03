@@ -123,6 +123,9 @@ const os_log_t AudioPlayer::log_ = os_log_create("org.sbooth.AudioEngine", "Audi
 
 /// State for tracking/syncing decoding progress
 struct AudioPlayer::DecoderState final {
+	/// Next sequence number to use
+	static uint64_t			sequenceCounter_;
+
 	/// Monotonically increasing instance counter
 	const uint64_t			sequenceNumber_ 	{sequenceCounter_++};
 
@@ -153,9 +156,6 @@ struct AudioPlayer::DecoderState final {
 	AVAudioConverter 		*converter_ 		{nil};
 	/// Buffer used internally for buffering during conversion
 	AVAudioPCMBuffer 		*decodeBuffer_ 		{nil};
-
-	/// Next sequence number to use
-	static uint64_t			sequenceCounter_;
 
 	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
