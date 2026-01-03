@@ -1,5 +1,9 @@
 // swift-tools-version: 5.6
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+//
+// Copyright (c) 2024 Stephen F. Booth <me@sbooth.org>
+// Part of https://github.com/sbooth/SFBAudioEngine
+// MIT license
+//
 
 import PackageDescription
 
