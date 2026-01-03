@@ -123,6 +123,9 @@ const os_log_t AudioPlayer::log_ = os_log_create("org.sbooth.AudioEngine", "Audi
 
 /// State for tracking/syncing decoding progress
 struct AudioPlayer::DecoderState final {
+	/// Next sequence number to use
+	static uint64_t			sequenceCounter_;
+
 	/// Monotonically increasing instance counter
 	const uint64_t			sequenceNumber_ 	{sequenceCounter_++};
 
@@ -154,9 +157,6 @@ struct AudioPlayer::DecoderState final {
 	/// Buffer used internally for buffering during conversion
 	AVAudioPCMBuffer 		*decodeBuffer_ 		{nil};
 
-	/// Next sequence number to use
-	static uint64_t			sequenceCounter_;
-
 	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
 		/// Decoding started
@@ -177,140 +177,154 @@ struct AudioPlayer::DecoderState final {
 		isCanceled 			= 1u << 7,
 	};
 
-	DecoderState(Decoder _Nonnull decoder) noexcept
-	: decoder_{decoder}, frameLength_{decoder.frameLength}, sampleRate_{decoder.processingFormat.sampleRate}
-	{
-#if DEBUG
-		assert(decoder != nil);
-#endif /* DEBUG */
-	}
+	DecoderState(Decoder _Nonnull decoder) noexcept;
 
-	bool Allocate(AVAudioFrameCount frameCapacity) noexcept
-	{
-		auto format = decoder_.processingFormat;
-		auto standardEquivalentFormat = format.standardEquivalent;
-		if(!standardEquivalentFormat) {
-			os_log_error(log_, "Error converting %{public}@ to standard equivalent format", StringDescribingAVAudioFormat(format));
-			return false;
-		}
+	bool Allocate(AVAudioFrameCount frameCapacity) noexcept;
 
-		// Convert to deinterleaved native-endian float, preserving the channel count and order
-		converter_ = [[AVAudioConverter alloc] initFromFormat:format toFormat:standardEquivalentFormat];
-		if(!converter_) {
-			os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", StringDescribingAVAudioFormat(format), StringDescribingAVAudioFormat(standardEquivalentFormat));
-			return false;
-		}
+	AVAudioFramePosition FramePosition() const noexcept;
+	AVAudioFramePosition FrameLength() const noexcept;
 
-		// The logic in this class assumes no SRC is performed by converter_
-		assert(converter_.inputFormat.sampleRate == converter_.outputFormat.sampleRate);
-
-		decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
-		if(!decodeBuffer_)
-			return false;
-
-		if(const auto framePosition = decoder_.framePosition; framePosition != 0) {
-			framesDecoded_.store(framePosition, std::memory_order_release);
-			framesConverted_.store(framePosition, std::memory_order_release);
-			framesRendered_.store(framePosition, std::memory_order_release);
-		}
-
-		return true;
-	}
-
-	AVAudioFramePosition FramePosition() const noexcept
-	{
-		const bool seekPending = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending);
-		return seekPending ? seekOffset_.load(std::memory_order_acquire) : framesRendered_.load(std::memory_order_acquire);
-	}
-
-	AVAudioFramePosition FrameLength() const noexcept
-	{
-		return frameLength_.load(std::memory_order_acquire);
-	}
-
-	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept
-	{
-#if DEBUG
-		assert(buffer != nil);
-		assert(buffer.frameCapacity == decodeBuffer_.frameCapacity);
-#endif /* DEBUG */
-
-		if(![decoder_ decodeIntoBuffer:decodeBuffer_ frameLength:decodeBuffer_.frameCapacity error:error])
-			return false;
-
-		if(decodeBuffer_.frameLength == 0) {
-			flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
-
-#if false
-			// Some formats may not know the exact number of frames in advance
-			// without processing the entire file, which is a potentially slow operation
-			frameLength_.store(mDecoder.framePosition, std::memory_order_release);
-#endif /* false */
-
-			buffer.frameLength = 0;
-			return true;
-		}
-
-		this->framesDecoded_.fetch_add(decodeBuffer_.frameLength, std::memory_order_acq_rel);
-
-		// Only PCM to PCM conversions are performed
-		if(![converter_ convertToBuffer:buffer fromBuffer:decodeBuffer_ error:error])
-			return false;
-		framesConverted_.fetch_add(buffer.frameLength, std::memory_order_acq_rel);
-
-		// If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
-		// decoding is complete
-		if(buffer.frameLength != buffer.frameCapacity)
-			flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
-
-		return true;
-	}
+	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept;
 
 	/// Sets the pending seek request to `frame`
-	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept
-	{
-		seekOffset_.store(frame, std::memory_order_release);
-		flags_.fetch_or(static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
-	}
-
+	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept;
 	/// Performs the pending seek request
-	bool PerformSeek() noexcept
-	{
-#if DEBUG
-		assert(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending));
-#endif /* DEBUG */
-
-		auto seekOffset = seekOffset_.load(std::memory_order_acquire);
-		os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
-
-		if([decoder_ seekToFrame:seekOffset error:nil])
-			// Reset the converter to flush any buffers
-			[converter_ reset];
-		else
-			os_log_debug(log_, "Error seeking to frame %lld", seekOffset);
-
-		const auto newFrame = decoder_.framePosition;
-		if(newFrame != seekOffset) {
-			os_log_debug(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
-			seekOffset = newFrame;
-		}
-
-		// Clear the seek request
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
-
-		// Update the frame counters accordingly
-		// A seek is handled in essentially the same way as initial playback
-		if(newFrame != SFBUnknownFramePosition) {
-			framesDecoded_.store(newFrame, std::memory_order_release);
-			framesConverted_.store(seekOffset, std::memory_order_release);
-			framesRendered_.store(seekOffset, std::memory_order_release);
-		}
-
-		return newFrame != SFBUnknownFramePosition;
-	}
+	bool PerformSeek() noexcept;
 };
 
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
+
+inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept
+: decoder_{decoder}, frameLength_{decoder.frameLength}, sampleRate_{decoder.processingFormat.sampleRate}
+{
+#if DEBUG
+	assert(decoder != nil);
+#endif /* DEBUG */
+}
+
+inline bool AudioPlayer::DecoderState::Allocate(AVAudioFrameCount frameCapacity) noexcept
+{
+	auto format = decoder_.processingFormat;
+	auto standardEquivalentFormat = format.standardEquivalent;
+	if(!standardEquivalentFormat) {
+		os_log_error(log_, "Error converting %{public}@ to standard equivalent format", StringDescribingAVAudioFormat(format));
+		return false;
+	}
+
+	// Convert to deinterleaved native-endian float, preserving the channel count and order
+	converter_ = [[AVAudioConverter alloc] initFromFormat:format toFormat:standardEquivalentFormat];
+	if(!converter_) {
+		os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@", StringDescribingAVAudioFormat(format), StringDescribingAVAudioFormat(standardEquivalentFormat));
+		return false;
+	}
+
+	// The logic in this class assumes no SRC is performed by converter_
+	assert(converter_.inputFormat.sampleRate == converter_.outputFormat.sampleRate);
+
+	decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
+	if(!decodeBuffer_)
+		return false;
+
+	if(const auto framePosition = decoder_.framePosition; framePosition != 0) {
+		framesDecoded_.store(framePosition, std::memory_order_release);
+		framesConverted_.store(framePosition, std::memory_order_release);
+		framesRendered_.store(framePosition, std::memory_order_release);
+	}
+
+	return true;
+}
+
+inline AVAudioFramePosition AudioPlayer::DecoderState::FramePosition() const noexcept
+{
+	const bool seekPending = flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending);
+	return seekPending ? seekOffset_.load(std::memory_order_acquire) : framesRendered_.load(std::memory_order_acquire);
+}
+
+inline AVAudioFramePosition AudioPlayer::DecoderState::FrameLength() const noexcept
+{
+	return frameLength_.load(std::memory_order_acquire);
+}
+
+inline bool AudioPlayer::DecoderState::DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error) noexcept
+{
+#if DEBUG
+	assert(buffer != nil);
+	assert(buffer.frameCapacity == decodeBuffer_.frameCapacity);
+#endif /* DEBUG */
+
+	if(![decoder_ decodeIntoBuffer:decodeBuffer_ frameLength:decodeBuffer_.frameCapacity error:error])
+		return false;
+
+	if(decodeBuffer_.frameLength == 0) {
+		flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
+
+#if false
+		// Some formats may not know the exact number of frames in advance
+		// without processing the entire file, which is a potentially slow operation
+		frameLength_.store(mDecoder.framePosition, std::memory_order_release);
+#endif /* false */
+
+		buffer.frameLength = 0;
+		return true;
+	}
+
+	this->framesDecoded_.fetch_add(decodeBuffer_.frameLength, std::memory_order_acq_rel);
+
+	// Only PCM to PCM conversions are performed
+	if(![converter_ convertToBuffer:buffer fromBuffer:decodeBuffer_ error:error])
+		return false;
+	framesConverted_.fetch_add(buffer.frameLength, std::memory_order_acq_rel);
+
+	// If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
+	// decoding is complete
+	if(buffer.frameLength != buffer.frameCapacity)
+		flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
+
+	return true;
+}
+
+/// Sets the pending seek request to `frame`
+inline void AudioPlayer::DecoderState::RequestSeekToFrame(AVAudioFramePosition frame) noexcept
+{
+	seekOffset_.store(frame, std::memory_order_release);
+	flags_.fetch_or(static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
+}
+
+/// Performs the pending seek request
+inline bool AudioPlayer::DecoderState::PerformSeek() noexcept
+{
+#if DEBUG
+	assert(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending));
+#endif /* DEBUG */
+
+	auto seekOffset = seekOffset_.load(std::memory_order_acquire);
+	os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
+
+	if([decoder_ seekToFrame:seekOffset error:nil])
+		// Reset the converter to flush any buffers
+		[converter_ reset];
+	else
+		os_log_debug(log_, "Error seeking to frame %lld", seekOffset);
+
+	const auto newFrame = decoder_.framePosition;
+	if(newFrame != seekOffset) {
+		os_log_debug(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
+		seekOffset = newFrame;
+	}
+
+	// Clear the seek request
+	flags_.fetch_and(~static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
+
+	// Update the frame counters accordingly
+	// A seek is handled in essentially the same way as initial playback
+	if(newFrame != SFBUnknownFramePosition) {
+		framesDecoded_.store(newFrame, std::memory_order_release);
+		framesConverted_.store(seekOffset, std::memory_order_release);
+		framesRendered_.store(seekOffset, std::memory_order_release);
+	}
+
+	return newFrame != SFBUnknownFramePosition;
+}
 
 } /* namespace SFB */
 
