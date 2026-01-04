@@ -36,17 +36,17 @@ namespace {
 // MARK: Constants
 
 // Rice-Golomb code k values
-constexpr auto bitshiftCodeSize 			= 2;
-constexpr auto channelCountCodeSize 		= 0;
-constexpr auto energyCodeSize 				= 3;
-constexpr auto extraByteCodeSize 			= 7;
-constexpr auto fileTypeCodeSize				= 4;
-constexpr auto functionCodeSize 			= 2;
-constexpr auto lpcQuantCodeSize 			= 2;
-constexpr auto skipBytesCodeSize 			= 1;
-constexpr auto uint32CodeSize 				= 2;
-constexpr auto verbatimChunkSizeCodeSize 	= 5;
-constexpr auto verbatimByteCodeSize 		= 8;
+constexpr auto parameterBitshift 			= 2;
+constexpr auto parameterChannelCount 		= 0;
+constexpr auto parameterEnergy 				= 3;
+constexpr auto parameterExtraByte 			= 7;
+constexpr auto parameterFileType			= 4;
+constexpr auto parameterFunction 			= 2;
+constexpr auto parameterQLPC 				= 2;
+constexpr auto parameterSkipBytes 			= 1;
+constexpr auto parameterUInt32 				= 2;
+constexpr auto parameterVerbatimChunkSize 	= 5;
+constexpr auto parameterVerbatimByte 		= 8;
 
 // File commands
 constexpr auto functionDiff0 				= 0;
@@ -215,7 +215,7 @@ public:
 
 	bool GetUInt32(uint32_t& ui32, int version, int k) noexcept
 	{
-		if(version > 0 && !GetRiceGolombCode(k, uint32CodeSize))
+		if(version > 0 && !GetRiceGolombCode(k, parameterUInt32))
 			return false;
 
 		int32_t i32;
@@ -825,7 +825,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	// Read file type
 	uint32_t fileType;
-	if(!_input.GetUInt32(fileType, _version, fileTypeCodeSize)) {
+	if(!_input.GetUInt32(fileType, _version, parameterFileType)) {
 		if(error)
 			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
@@ -848,7 +848,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	// Read number of channels
 	uint32_t channelCount = 0;
-	if(!_input.GetUInt32(channelCount, _version, channelCountCodeSize) || channelCount == 0 || channelCount > maxChannelCount) {
+	if(!_input.GetUInt32(channelCount, _version, parameterChannelCount) || channelCount == 0 || channelCount > maxChannelCount) {
 		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", channelCount);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -882,7 +882,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		_blocksize = static_cast<int>(blocksize);
 
 		uint32_t maxLPC = 0;
-		if(!_input.GetUInt32(maxLPC, _version, lpcQuantCodeSize) || maxLPC > 1024) {
+		if(!_input.GetUInt32(maxLPC, _version, parameterQLPC) || maxLPC > 1024) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid max lpc: %u", maxLPC);
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
@@ -900,7 +900,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		_mean = static_cast<int>(mean);
 
 		uint32_t skipCount;
-		if(!_input.GetUInt32(skipCount, _version, skipBytesCodeSize) /* || nskip > bits_remaining_in_input */) {
+		if(!_input.GetUInt32(skipCount, _version, parameterSkipBytes) /* || nskip > bits_remaining_in_input */) {
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
@@ -908,7 +908,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 		for(uint32_t i = 0; i < skipCount; ++i) {
 			uint32_t dummy;
-			if(!_input.GetUInt32(dummy, _version, extraByteCodeSize)) {
+			if(!_input.GetUInt32(dummy, _version, parameterExtraByte)) {
 				if(error)
 					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 				return NO;
@@ -923,14 +923,14 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	_wrap = std::max(defaultWrap, static_cast<int>(_maxLPC));
 
 	if(_version > 1) {
-		constexpr auto v2LPCQuantOffset = (1 << lpcQuantCodeSize);
+		constexpr auto v2LPCQuantOffset = (1 << parameterQLPC);
 		_lpcQuantOffset = v2LPCQuantOffset;
 	}
 
 	// Parse the WAVE or AIFF header in the verbatim section
 
 	int32_t function;
-	if(!_input.GetRiceGolombCode(function, functionCodeSize) || function != functionVerbatim) {
+	if(!_input.GetRiceGolombCode(function, parameterFunction) || function != functionVerbatim) {
 		os_log_error(gSFBAudioDecoderLog, "Missing initial verbatim section");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -945,7 +945,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	constexpr auto canonicalHeaderSizeBytes = 44;
 
 	int32_t headerSize;
-	if(!_input.GetRiceGolombCode(headerSize, verbatimChunkSizeCodeSize) || headerSize < canonicalHeaderSizeBytes || headerSize > verbatimChunkMaxSizeBytes) {
+	if(!_input.GetRiceGolombCode(headerSize, parameterVerbatimChunkSize) || headerSize < canonicalHeaderSizeBytes || headerSize > verbatimChunkMaxSizeBytes) {
 		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", headerSize);
 		if(error)
 			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
@@ -955,7 +955,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	std::vector<unsigned char> headerBytes(headerSize);
 	for(int32_t i = 0; i < headerSize; ++i) {
 		int32_t byte;
-		if(!_input.GetRiceGolombCode(byte, verbatimByteCodeSize)) {
+		if(!_input.GetRiceGolombCode(byte, parameterVerbatimByte)) {
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
@@ -1187,7 +1187,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	int chan = 0;
 	for(;;) {
 		int32_t cmd;
-		if(!_input.GetRiceGolombCode(cmd, functionCodeSize)) {
+		if(!_input.GetRiceGolombCode(cmd, parameterFunction)) {
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
@@ -1210,7 +1210,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				int resn = 0, lpc;
 
 				if(cmd != functionZero) {
-					if(!_input.GetRiceGolombCode(resn, energyCodeSize)) {
+					if(!_input.GetRiceGolombCode(resn, parameterEnergy)) {
 						if(error)
 							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 						return NO;
@@ -1282,7 +1282,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 						}
 						break;
 					case functionQLPC:
-						if(!_input.GetRiceGolombCode(lpc, lpcQuantCodeSize) || lpc > _maxLPC) {
+						if(!_input.GetRiceGolombCode(lpc, parameterQLPC) || lpc > _maxLPC) {
 							os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported linear predictor order: %d", lpc);
 							if(error)
 								*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1295,7 +1295,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 						}
 
 						for(auto i = 0; i < lpc; ++i) {
-							if(!_input.GetInt32(_qlpc[i], lpcQuantCodeSize)) {
+							if(!_input.GetInt32(_qlpc[i], parameterQLPC)) {
 								if(error)
 									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
@@ -1314,7 +1314,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 								return NO;
 							}
-							chanBuffer[i] = var + (sum >> lpcQuantCodeSize);
+							chanBuffer[i] = var + (sum >> parameterQLPC);
 						}
 						if(chanOffset != 0) {
 							for(auto i = 0; i < _blocksize; ++i)
@@ -1411,7 +1411,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				break;
 			}
 			case functionBitshift:
-				if(!_input.GetRiceGolombCode(_bitshift, bitshiftCodeSize) || _bitshift > 32) {
+				if(!_input.GetRiceGolombCode(_bitshift, parameterBitshift) || _bitshift > 32) {
 					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bit shift: %u", _bitshift);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1426,7 +1426,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			case functionVerbatim:
 			{
 				int32_t chunk_len;
-				if(!_input.GetRiceGolombCode(chunk_len, verbatimChunkSizeCodeSize) || chunk_len < 0 || chunk_len > verbatimChunkMaxSizeBytes) {
+				if(!_input.GetRiceGolombCode(chunk_len, parameterVerbatimChunkSize) || chunk_len < 0 || chunk_len > verbatimChunkMaxSizeBytes) {
 					os_log_error(gSFBAudioDecoderLog, "Invald verbatim length: %u", chunk_len);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -1439,7 +1439,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				}
 				while(chunk_len--) {
 					int32_t dummy;
-					if(!_input.GetRiceGolombCode(dummy, verbatimByteCodeSize)) {
+					if(!_input.GetRiceGolombCode(dummy, parameterVerbatimByte)) {
 						if(error)
 							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 						return NO;
