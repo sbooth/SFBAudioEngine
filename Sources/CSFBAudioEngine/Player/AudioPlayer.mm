@@ -184,12 +184,12 @@ struct AudioPlayer::DecoderState final {
 	AVAudioFramePosition FramePosition() const noexcept;
 	AVAudioFramePosition FrameLength() const noexcept;
 
-	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept;
+	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error) noexcept;
 
 	/// Sets the pending seek request to `frame`
 	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept;
 	/// Performs the pending seek request
-	bool PerformSeek() noexcept;
+	bool PerformSeek(NSError **error) noexcept;
 };
 
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
@@ -291,7 +291,7 @@ inline void AudioPlayer::DecoderState::RequestSeekToFrame(AVAudioFramePosition f
 }
 
 /// Performs the pending seek request
-inline bool AudioPlayer::DecoderState::PerformSeek() noexcept
+inline bool AudioPlayer::DecoderState::PerformSeek(NSError **error) noexcept
 {
 #if DEBUG
 	assert(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::seekPending));
@@ -300,15 +300,19 @@ inline bool AudioPlayer::DecoderState::PerformSeek() noexcept
 	auto seekOffset = seekOffset_.load(std::memory_order_acquire);
 	os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
 
-	if([decoder_ seekToFrame:seekOffset error:nil])
-		// Reset the converter to flush any buffers
-		[converter_ reset];
-	else
-		os_log_debug(log_, "Error seeking to frame %lld", seekOffset);
+	if(NSError *seekError = nil; ![decoder_ seekToFrame:seekOffset error:&seekError]) {
+		os_log_error(log_, "Error seeking to frame %lld in %{public}@", seekOffset, decoder_);
+		if(error)
+			*error = seekError;
+		return false;
+	}
+
+	// Reset the converter to flush any buffers
+	[converter_ reset];
 
 	const auto newFrame = decoder_.framePosition;
 	if(newFrame != seekOffset) {
-		os_log_debug(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
+		os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
 		seekOffset = newFrame;
 	}
 
@@ -978,7 +982,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		// Process pending seeks
 		if(decoderState) {
 			if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::seekPending)) {
-				decoderState->PerformSeek();
+				if(NSError *seekError = nil; !decoderState->PerformSeek(&seekError)) {
+					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+					SubmitDecodingErrorEvent(seekError);
+					continue;
+				}
 				ringBufferStale = true;
 
 				if(flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
@@ -1009,7 +1017,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 								// TODO: Investigate a per-state buffer to mitigate frame loss
 								if(nextDecoderState->decoder_.supportsSeeking) {
 									nextDecoderState->RequestSeekToFrame(0);
-									nextDecoderState->PerformSeek();
+									if(NSError *seekError = nil; !nextDecoderState->PerformSeek(&seekError)) {
+										nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+										SubmitDecodingErrorEvent(seekError);
+										continue;
+									}
 								} else
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
