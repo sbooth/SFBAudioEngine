@@ -184,12 +184,12 @@ struct AudioPlayer::DecoderState final {
 	AVAudioFramePosition FramePosition() const noexcept;
 	AVAudioFramePosition FrameLength() const noexcept;
 
-	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error = nullptr) noexcept;
+	bool DecodeAudio(AVAudioPCMBuffer * _Nonnull buffer, NSError **error) noexcept;
 
 	/// Sets the pending seek request to `frame`
 	void RequestSeekToFrame(AVAudioFramePosition frame) noexcept;
 	/// Performs the pending seek request
-	bool PerformSeek(NSError **error = nullptr) noexcept;
+	bool PerformSeek(NSError **error) noexcept;
 };
 
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
@@ -1017,7 +1017,11 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 								// TODO: Investigate a per-state buffer to mitigate frame loss
 								if(nextDecoderState->decoder_.supportsSeeking) {
 									nextDecoderState->RequestSeekToFrame(0);
-									nextDecoderState->PerformSeek();
+									if(NSError *error = nil; !nextDecoderState->PerformSeek(&error)) {
+										nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+										SubmitDecodingErrorEvent(error);
+										continue;
+									}
 								} else
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
