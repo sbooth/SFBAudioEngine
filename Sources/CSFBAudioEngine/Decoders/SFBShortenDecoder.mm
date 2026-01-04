@@ -720,7 +720,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	_input.Reset();
 	if(!_input.Refill() || !_input.SetState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_, entry->bitBufferPosition_)) {
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EIO userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -883,7 +883,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 		uint32_t maxLPC = 0;
 		if(!_input.GetUInt32(maxLPC, _version, parameterQLPC) || maxLPC > 1024) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid max lpc: %u", maxLPC);
+			os_log_error(gSFBAudioDecoderLog, "Invalid maximum linear predictor order: %u", maxLPC);
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
@@ -1189,7 +1189,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		int32_t cmd;
 		if(!_input.GetRiceGolombCode(cmd, parameterFunction)) {
 			if(error)
-				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
@@ -1212,7 +1212,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				if(cmd != functionZero) {
 					if(!_input.GetRiceGolombCode(resn, parameterEnergy)) {
 						if(error)
-							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+							*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 						return NO;
 					}
 					// Versions > 0 changed the behavior
@@ -1242,7 +1242,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + chanOffset;
@@ -1253,7 +1253,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + chanBuffer[i - 1];
@@ -1264,7 +1264,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + (2 * chanBuffer[i - 1] - chanBuffer[i - 2]);
@@ -1275,7 +1275,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + 3 * (chanBuffer[i - 1] -  chanBuffer[i - 2]) + chanBuffer[i - 3];
@@ -1285,19 +1285,14 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 						if(!_input.GetRiceGolombCode(lpc, parameterQLPC) || lpc > _maxLPC) {
 							os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported linear predictor order: %d", lpc);
 							if(error)
-								*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																 code:SFBAudioDecoderErrorCodeInvalidFormat
-										descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-																  url:_inputSource.url
-														failureReason:NSLocalizedString(@"Invalid or unsupported linear predictor order", @"")
-												   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported linear predictor order.", @"")];
+								*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 							return NO;
 						}
 
 						for(auto i = 0; i < lpc; ++i) {
 							if(!_input.GetInt32(_qlpc[i], parameterQLPC)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 						}
@@ -1311,7 +1306,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + (sum >> parameterQLPC);
@@ -1399,12 +1394,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > maxBlocksize || uint <= _wrap || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Invalid or unsupported block size", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 				_blocksize = static_cast<int>(uint);
@@ -1412,14 +1402,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			}
 			case functionBitshift:
 				if(!_input.GetRiceGolombCode(_bitshift, parameterBitshift) || _bitshift > 32) {
-					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bit shift: %u", _bitshift);
+					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported bit shift: %u", _bitshift);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Invalid or unsupported bit shift", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported bit shift.", @"")];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 				break;
@@ -1427,21 +1412,16 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			{
 				int32_t chunk_len;
 				if(!_input.GetRiceGolombCode(chunk_len, parameterVerbatimChunkSize) || chunk_len < 0 || chunk_len > verbatimChunkMaxSizeBytes) {
-					os_log_error(gSFBAudioDecoderLog, "Invald verbatim length: %u", chunk_len);
+					os_log_error(gSFBAudioDecoderLog, "Invalid verbatim chunk length: %u", chunk_len);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid verbatim chunk length.", @"")];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 				while(chunk_len--) {
 					int32_t dummy;
 					if(!_input.GetRiceGolombCode(dummy, parameterVerbatimByte)) {
 						if(error)
-							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+							*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 						return NO;
 					}
 				}
@@ -1451,7 +1431,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			default:
 				os_log_error(gSFBAudioDecoderLog, "Sanity check failed for function: %d", cmd);
 				if(error)
-					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+					*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 				return NO;
 		}
 	}
