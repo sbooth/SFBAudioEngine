@@ -982,9 +982,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 		// Process pending seeks
 		if(decoderState) {
 			if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(DecoderState::Flags::seekPending)) {
-				if(NSError *error = nil; !decoderState->PerformSeek(&error)) {
+				if(NSError *seekError = nil; !decoderState->PerformSeek(&seekError)) {
 					decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-					SubmitDecodingErrorEvent(error);
+					SubmitDecodingErrorEvent(seekError);
 					continue;
 				}
 				ringBufferStale = true;
@@ -1017,9 +1017,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 								// TODO: Investigate a per-state buffer to mitigate frame loss
 								if(nextDecoderState->decoder_.supportsSeeking) {
 									nextDecoderState->RequestSeekToFrame(0);
-									if(NSError *error = nil; !nextDecoderState->PerformSeek(&error)) {
+									if(NSError *seekError = nil; !nextDecoderState->PerformSeek(&seekError)) {
 										nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
-										SubmitDecodingErrorEvent(error);
+										SubmitDecodingErrorEvent(seekError);
 										continue;
 									}
 								} else
