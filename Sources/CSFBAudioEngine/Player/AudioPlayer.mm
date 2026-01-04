@@ -301,7 +301,7 @@ inline bool AudioPlayer::DecoderState::PerformSeek(NSError **error) noexcept
 	os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
 
 	if(NSError *seekError = nil; ![decoder_ seekToFrame:seekOffset error:&seekError]) {
-		os_log_debug(log_, "Error seeking to frame %lld: %{public}@", seekOffset, seekError);
+		os_log_error(log_, "Error seeking to frame %lld in %{public}@", seekOffset, decoder_);
 		if(error)
 			*error = seekError;
 		return false;
@@ -312,7 +312,7 @@ inline bool AudioPlayer::DecoderState::PerformSeek(NSError **error) noexcept
 
 	const auto newFrame = decoder_.framePosition;
 	if(newFrame != seekOffset) {
-		os_log_debug(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
+		os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
 		seekOffset = newFrame;
 	}
 
