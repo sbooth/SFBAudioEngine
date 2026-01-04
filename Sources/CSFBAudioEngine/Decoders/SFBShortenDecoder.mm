@@ -35,16 +35,6 @@ namespace {
 
 // MARK: Constants
 
-// Format versions
-constexpr auto minSupportedVersion 			= 1;
-constexpr auto maxSupportedVersion 			= 3;
-
-// Default values
-constexpr auto defaultBlockSize 			= 256;
-constexpr auto v0DefaultMean 				= 0;
-constexpr auto v2DefaultMean 				= 4;
-constexpr auto defaultMaxLPC 				= 0;
-
 // Rice-Golomb code k values
 constexpr auto bitshiftCodeSize 			= 2;
 constexpr auto channelCountCodeSize 		= 0;
@@ -58,9 +48,6 @@ constexpr auto uint32CodeSize 				= 2;
 constexpr auto verbatimChunkSizeCodeSize 	= 5;
 constexpr auto verbatimByteCodeSize 		= 8;
 
-/// Number of extra samples in buffer
-constexpr auto wrap 						= 3;
-
 // File commands
 constexpr auto functionDiff0 				= 0;
 constexpr auto functionDiff1 				= 1;
@@ -73,7 +60,8 @@ constexpr auto functionQLPC 				= 7;
 constexpr auto functionZero 				= 8;
 constexpr auto functionVerbatim 			= 9;
 
-/// Maximum size of a verbatim chunk
+// Format limitations
+constexpr auto maxBlocksize					= 65535;
 constexpr auto verbatimChunkMaxSizeBytes	= 256;
 
 // File types
@@ -90,15 +78,6 @@ constexpr auto seekHeaderSizeBytes 			= 12;
 constexpr auto seekTrailerSizeBytes 		= 12;
 constexpr auto seekEntrySizeBytes 			= 80;
 
-constexpr auto v2LPCQuantOffset 			= (1 << lpcQuantCodeSize);
-
-// Format limitations
-constexpr auto maxChannelCount 				= 8;
-constexpr auto maxBlocksizeBytes			= 65535;
-
-constexpr auto canonicalHeaderSizeBytes 	= 44;
-
-constexpr auto waveFormatPCMTag 			= 0x0001;
 
 constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
 {
@@ -803,6 +782,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 	}
 
+	constexpr auto minSupportedVersion = 1;
+	constexpr auto maxSupportedVersion = 3;
+
 	// Read file version
 	uint8_t version;
 	if(![_inputSource readUInt8:&version error:nil] || version < minSupportedVersion || version > maxSupportedVersion) {
@@ -817,6 +799,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 	}
 	_version = version;
+
+	constexpr auto v0DefaultMean = 0;
+	constexpr auto v2DefaultMean = 4;
 
 	// Default mean
 	_mean = _version < 2 ? v0DefaultMean : v2DefaultMean;
@@ -858,6 +843,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 	_fileType = static_cast<int>(fileType);
 
+	// Maximum supported channel count
+	constexpr auto maxChannelCount = 8;
+
 	// Read number of channels
 	uint32_t channelCount = 0;
 	if(!_input.GetUInt32(channelCount, _version, channelCountCodeSize) || channelCount == 0 || channelCount > maxChannelCount) {
@@ -873,10 +861,14 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 	_channelCount = static_cast<int>(channelCount);
 
+	constexpr auto defaultBlockSize = 256;
+	/// Number of extra samples in buffer
+	constexpr auto defaultWrap = 3;
+
 	// Read blocksize if version > 0
 	if(_version > 0) {
 		uint32_t blocksize = 0;
-		if(!_input.GetUInt32(blocksize, _version, static_cast<int>(std::log2(defaultBlockSize))) || blocksize == 0 || blocksize > maxBlocksizeBytes) {
+		if(!_input.GetUInt32(blocksize, _version, static_cast<int>(std::log2(defaultBlockSize))) || blocksize == 0 || blocksize > maxBlocksize || blocksize <= defaultWrap) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -923,14 +915,17 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			}
 		}
 	} else {
+		constexpr auto defaultMaxLPC = 0;
 		_blocksize = defaultBlockSize;
 		_maxLPC = defaultMaxLPC;
 	}
 
-	_wrap = std::max(wrap, static_cast<int>(_maxLPC));
+	_wrap = std::max(defaultWrap, static_cast<int>(_maxLPC));
 
-	if(_version > 1)
+	if(_version > 1) {
+		constexpr auto v2LPCQuantOffset = (1 << lpcQuantCodeSize);
 		_lpcQuantOffset = v2LPCQuantOffset;
+	}
 
 	// Parse the WAVE or AIFF header in the verbatim section
 
@@ -946,6 +941,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							   recoverySuggestion:NSLocalizedString(@"The file is missing the initial verbatim section.", @"")];
 		return NO;
 	}
+
+	constexpr auto canonicalHeaderSizeBytes = 44;
 
 	int32_t headerSize;
 	if(!_input.GetRiceGolombCode(headerSize, verbatimChunkSizeCodeSize) || headerSize < canonicalHeaderSizeBytes || headerSize > verbatimChunkMaxSizeBytes) {
@@ -999,6 +996,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
 	NSParameterAssert(chunkData != nullptr);
 	NSParameterAssert(size >= 28);
+
+	constexpr auto waveFormatPCMTag = 0x0001;
 
 	uintptr_t offset = 0;
 
@@ -1397,7 +1396,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			case functionBlocksize:
 			{
 				uint32_t uint = 0;
-				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > maxBlocksizeBytes || static_cast<int>(uint) > _blocksize) {
+				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > maxBlocksize || uint <= _wrap || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
