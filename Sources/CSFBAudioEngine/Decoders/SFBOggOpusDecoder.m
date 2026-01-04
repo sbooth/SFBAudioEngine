@@ -286,7 +286,7 @@ static opus_int64 tell_callback(void *stream)
 {
 	NSParameterAssert(frame >= 0);
 	if(op_pcm_seek(_opusFile, frame)) {
-		os_log_error(gSFBAudioDecoderLog, "op_pcm_seek() failed");
+		os_log_error(gSFBAudioDecoderLog, "Ogg Opus seek error");
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;

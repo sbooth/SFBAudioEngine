@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -429,16 +429,23 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	NSParameterAssert(frame >= 0);
 //	NSParameterAssert(frame <= _totalFrames);
 
-	FLAC__bool result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
+	auto result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
 
 	// Attempt to re-sync the stream if necessary
-	if(FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR)
+	if(!result && FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR) {
+		os_log_debug(gSFBAudioDecoderLog, "FLAC seek error, attempting re-sync");
 		result = FLAC__stream_decoder_flush(_flac.get());
+	}
 
-	if(result)
-		_framePosition = frame;
+	if(!result) {
+		os_log_error(gSFBAudioDecoderLog, "FLAC seek error: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+		return NO;
+	}
 
-	return result != 0;
+	_framePosition = frame;
+	return YES;
 }
 
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error

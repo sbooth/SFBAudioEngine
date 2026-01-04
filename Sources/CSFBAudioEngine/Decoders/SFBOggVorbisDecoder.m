@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -299,6 +299,8 @@ static long tell_func_callback(void *datasource)
 	NSParameterAssert(frame >= 0);
 	if(ov_pcm_seek(&_vorbisFile, frame)) {
 		os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis seek error");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;
