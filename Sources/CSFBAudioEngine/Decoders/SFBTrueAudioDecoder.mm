@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -123,8 +123,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 	try {
 		_decoder = std::make_unique<tta::tta_decoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
 		_decoder->init_get_info(&streamInfo, 0);
-	}
-	catch(const tta::tta_exception& e) {
+	} catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", e.code());
 		return NO;
 	}
@@ -288,8 +287,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		_framePosition += framesRead;
 
 		return YES;
-	}
-	catch(const tta::tta_exception& e) {
+	} catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -306,8 +304,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 
 	try {
 		_decoder->set_position(seconds, &frame_start);
-	}
-	catch(const tta::tta_exception& e) {
+	} catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];

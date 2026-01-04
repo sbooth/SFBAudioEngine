@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -456,9 +456,16 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 	NSParameterAssert(frame >= 0);
+
 	off_t offset = mpg123_seek(_mpg123, frame, SEEK_SET);
-	if(offset >= 0)
-		_framePosition = offset;
+	if(offset < 0) {
+		os_log_error(gSFBAudioDecoderLog, "mpg123 seek error");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+		return NO;
+	}
+
+	_framePosition = offset;
 	return offset >= 0;
 }
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -520,8 +520,12 @@ static int can_seek_callback(void *id)
 {
 	NSParameterAssert(frame >= 0);
 
-	if(!WavpackSeekSample64(_wpc, frame))
+	if(!WavpackSeekSample64(_wpc, frame)) {
+		os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
+	}
 
 	_framePosition = frame;
 	return YES;
