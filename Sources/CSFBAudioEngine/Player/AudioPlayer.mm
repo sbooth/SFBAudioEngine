@@ -1421,8 +1421,7 @@ bool SFB::AudioPlayer::ProcessDecodingStartedEvent() noexcept
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[player_.delegate audioPlayer:player_ decodingStarted:decoder];
 
-	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & mask) && decoder == currentDecoder)
+	if(const auto flags = flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(Flags::isPlaying)) && decoder == currentDecoder)
 		SetNowPlaying(decoder);
 
 	return true;
