@@ -208,7 +208,8 @@
 	NSParameterAssert(frame >= 0);
 
 	if(frame >= self.frameLength) {
-		*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
 		return NO;
 	}
 
