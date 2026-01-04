@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -207,8 +207,11 @@
 {
 	NSParameterAssert(frame >= 0);
 
-	if(frame >= self.frameLength)
+	if(frame >= self.frameLength) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
 		return NO;
+	}
 
 	_framesDecoded = frame;
 	return [_decoder seekToFrame:(_framePosition + (frame % _frameLength)) error:error];

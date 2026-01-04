@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -386,7 +386,13 @@ private:
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 	NSParameterAssert(frame >= 0);
-	return _decompressor->Seek(frame) == ERROR_SUCCESS;
+	if(const auto result = _decompressor->Seek(frame); result != ERROR_SUCCESS) {
+		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio seek error: %d", result);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+		return NO;
+	}
+	return YES;
 }
 
 @end
