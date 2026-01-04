@@ -704,12 +704,17 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
 	NSParameterAssert(frame >= 0);
 
-	if(frame >= self.frameLength)
+	if(frame >= self.frameLength) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
 		return NO;
+	}
 
 	auto entry = std::ranges::upper_bound(_seekTableEntries, frame, {}, &SeekTableEntry::frameNumber_);
 	if(entry == std::begin(_seekTableEntries)) {
 		os_log_error(gSFBAudioDecoderLog, "No seek table entry for frame %lld", frame);
+		if(error)
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 	entry = std::prev(entry);
@@ -721,10 +726,13 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(![_inputSource seekToOffset:entry->lastBufferReadPosition_ error:error])
 		return NO;
 
-//	_eos = false;
+	_eos = false;
 	_input.Reset();
-	if(!_input.Refill() || !_input.SetState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_, entry->bitBufferPosition_))
+	if(!_input.Refill() || !_input.SetState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_, entry->bitBufferPosition_)) {
+		if(error)
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
+	}
 
 	_buffer[0][-1] = entry->chanBuf0_[0];
 	_buffer[0][-2] = entry->chanBuf0_[1];
@@ -750,6 +758,10 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	AVAudioFrameCount framesSkipped = 0;
 
 	for(;;) {
+		// All requested frames were skipped or EOS reached
+		if(framesSkipped == framesToSkip || _eos)
+			break;
+
 		// Decode the next block
 		if(![self decodeBlockReturningError:error]) {
 			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
@@ -758,10 +770,6 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 		if(const auto framesToTrim = std::min(framesToSkip - framesSkipped, _frameBuffer.frameLength); framesToTrim > 0)
 			framesSkipped += [_frameBuffer trimAtOffset:0 frameLength:framesToTrim];
-
-		// All requested frames were skipped or EOS reached
-		if(framesSkipped == framesToSkip || _eos)
-			break;
 	}
 
 	_framePosition += framesSkipped;
