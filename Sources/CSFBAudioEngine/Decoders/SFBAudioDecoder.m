@@ -9,8 +9,6 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioDecoder+Internal.h"
 
-#import "NSError+SFBURLPresentation.h"
-
 // NSError domain for SFBAudioDecoding protocol
 NSErrorDomain const SFBAudioDecodingErrorDomain = @"org.sbooth.AudioEngine.AudioDecoding";
 NSErrorUserInfoKey const SFBAudioDecodingFormatNameErrorKey = @"SFBAudioDecodingFormatName";

@@ -12,7 +12,6 @@
 
 #import "SFBDoPDecoder.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
