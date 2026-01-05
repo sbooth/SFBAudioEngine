@@ -22,7 +22,7 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 
 #pragma mark - Output
 
-/// The `SFBOutputSource` consuming data from this decoder
+/// The output source consuming data from this encoder
 @property (nonatomic, readonly) SFBOutputSource *outputSource;
 
 #pragma mark - Audio Format Information
@@ -30,7 +30,7 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 /// The source audio format
 @property (nonatomic, readonly) AVAudioFormat *sourceFormat;
 
-/// The format of audio of data consumed by `-encodeFromBuffer`:error:
+/// The format of audio of data consumed by ``-encodeFromBuffer:error:``
 @property (nonatomic, readonly) AVAudioFormat *processingFormat;
 
 /// The format of the encoded audio data
