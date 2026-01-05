@@ -15,7 +15,7 @@
 @interface SFBLoopableRegionDecoder ()
 {
 @private
-	id <SFBPCMDecoding> _decoder;
+	id<SFBPCMDecoding> _decoder;
 	AVAudioPCMBuffer *_buffer;
 	AVAudioFramePosition _framePosition;
 	AVAudioFramePosition _frameLength;
@@ -58,12 +58,12 @@
 	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength repeatCount:repeatCount error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
 	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength repeatCount:0 error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(framePosition >= 0);
