@@ -85,14 +85,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 				case SFBAudioDecoderErrorCodeInvalidFormat:
 					if(displayName && formatName)
-						return [NSString stringWithFormat: NSLocalizedString(@"The file “%@” is not a valid %@ file.", @""), displayName, formatName];
+						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a valid %@ file.", @""), displayName, formatName];
 					if(displayName)
 						return [NSString stringWithFormat: NSLocalizedString(@"The format of the file “%@” is invalid or unknown.", @""), displayName];
 					return NSLocalizedString(@"The format is invalid or unknown.", @"");
 
 				case SFBAudioDecoderErrorCodeUnsupportedFormat:
 					if(displayName && formatName)
-						return [NSString stringWithFormat: NSLocalizedString(@"The file “%@” is not a supported %@ file.", @""), displayName, formatName];
+						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a supported %@ file.", @""), displayName, formatName];
 					if(displayName)
 						return [NSString stringWithFormat: NSLocalizedString(@"The format of the file “%@” is unsupported.", @""), displayName];
 					return NSLocalizedString(@"The format is unsupported.", @"");
