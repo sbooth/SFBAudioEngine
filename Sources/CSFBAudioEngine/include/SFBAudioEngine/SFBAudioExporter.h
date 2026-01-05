@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -27,7 +27,7 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 /// - parameter targetURL: The destination URL
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
-+ (BOOL)exportFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error NS_SWIFT_NAME(AudioExporter.export(_:to:));
++ (BOOL)exportFromDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error NS_SWIFT_NAME(AudioExporter.export(_:to:));
 
 @end
 
