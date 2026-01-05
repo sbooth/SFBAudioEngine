@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -52,7 +52,7 @@ NS_SWIFT_NAME(LoopableRegionDecoder) @interface SFBLoopableRegionDecoder : NSObj
 /// - parameter frameLength: The number of frames to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified decoder, or `nil` on failure
-- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error;
+- (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error;
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given decoder or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter framePosition: The starting frame position
@@ -60,7 +60,7 @@ NS_SWIFT_NAME(LoopableRegionDecoder) @interface SFBLoopableRegionDecoder : NSObj
 /// - parameter repeatCount: The number of times to repeat
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified decoder, or `nil` on failure
-- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 @end
 

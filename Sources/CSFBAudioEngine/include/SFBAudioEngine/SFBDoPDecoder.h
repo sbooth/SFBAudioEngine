@@ -30,7 +30,7 @@ NS_SWIFT_NAME(DoPDecoder) @interface SFBDoPDecoder : NSObject <SFBPCMDecoding>
 /// - parameter decoder: The decoder
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDoPDecoder` object for the specified decoder, or `nil` on failure
-- (nullable instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 @end
 
