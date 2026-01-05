@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,10 +18,7 @@ os_log_t gSFBOutputSourceLog = NULL;
 static void SFBCreateOutputSourceLog(void) __attribute__ ((constructor));
 static void SFBCreateOutputSourceLog(void)
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBOutputSourceLog = os_log_create("org.sbooth.AudioEngine", "OutputSource");
-	});
+	gSFBOutputSourceLog = os_log_create("org.sbooth.AudioEngine", "OutputSource");
 }
 
 @implementation SFBOutputSource
