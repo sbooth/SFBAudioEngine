@@ -165,11 +165,13 @@ extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder
 /// Possible `NSError` error codes used by `SFBAudioDecoder`
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	/// Internal decoder error
-	SFBAudioDecoderErrorCodeInternalError	= 0,
+	SFBAudioDecoderErrorCodeInternalError		= 0,
 	/// Unknown decoder name
-	SFBAudioDecoderErrorCodeUnknownDecoder	= 1,
-	/// Invalid, unknown, or unsupported format
-	SFBAudioDecoderErrorCodeInvalidFormat	= 2,
+	SFBAudioDecoderErrorCodeUnknownDecoder		= 1,
+	/// Invalid format
+	SFBAudioDecoderErrorCodeInvalidFormat		= 2,
+	/// Unsupported format
+	SFBAudioDecoderErrorCodeUnsupportedFormat	= 3,
 } NS_SWIFT_NAME(AudioDecoder.ErrorCode);
 
 #pragma mark - FLAC and Ogg FLAC Decoder Properties
