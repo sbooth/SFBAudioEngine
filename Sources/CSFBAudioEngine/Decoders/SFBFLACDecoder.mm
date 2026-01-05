@@ -16,7 +16,6 @@
 #import "SFBFLACDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
 SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC = @"org.sbooth.AudioEngine.Decoder.OggFLAC";
@@ -229,12 +228,11 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(flac.get()));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"FLAC", @""),
+											  }];
 
 		return NO;
 	}
@@ -279,12 +277,13 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
 
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Bit depth not supported", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's bit depth is not supported.", @"")];
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeUnsupportedFormat
+										 userInfo:@{ NSURLErrorKey: _inputSource.url,
+													 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Bit depth not supported", @""),
+													 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth is not supported.", @""),
+													 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"FLAC", @""),
+												  }];
 
 			return NO;
 		}
@@ -455,12 +454,11 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"FLAC", @""),
+											  }];
 
 		return NO;
 	}
@@ -598,12 +596,11 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"Ogg FLAC", @""),
+											  }];
 
 		return NO;
 	}
