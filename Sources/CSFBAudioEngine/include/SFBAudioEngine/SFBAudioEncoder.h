@@ -41,7 +41,7 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 
 #pragma mark - File Format Support
 
-/// Returns a set containing the supported path extensions
+/// A set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /// Returns a set containing the supported MIME types

@@ -22,7 +22,7 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Input
 
-/// The `SFBInputSource` providing data to this decoder
+/// The input source providing data to this decoder
 @property (nonatomic, readonly) SFBInputSource *inputSource;
 
 #pragma mark - Audio Format Information
@@ -30,7 +30,7 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// The format of the encoded audio data
 @property (nonatomic, readonly) AVAudioFormat *sourceFormat;
 
-/// The format of audio data produced by `-decodeIntoBuffer:error:`
+/// The format of audio data produced by ``-decodeIntoBuffer:error:``
 @property (nonatomic, readonly) AVAudioFormat *processingFormat;
 
 /// `YES` if decoding allows the original signal to be perfectly reconstructed
@@ -52,7 +52,7 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// Returns `YES` if the decoder is open
+/// `YES` if the decoder is open
 @property (nonatomic, readonly) BOOL isOpen;
 
 #pragma mark - Decoding
@@ -65,7 +65,7 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Seeking
 
-/// Returns `YES` if the decoder is seekable
+/// `YES` if the decoder is seekable
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
 @end
