@@ -68,12 +68,14 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// Returns `YES` if the decoder is seekable
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
+@end
+
 #pragma mark - Error Information
 
-/// The `NSErrorDomain` used by `SFBAudioDecoding` and subclasses
-extern NSErrorDomain const SFBAudioDecodingErrorDomain NS_SWIFT_NAME(AudioDecoding.ErrorDomain);
+/// An error domain used by audio decoders
+extern NSErrorDomain const SFBAudioDecodingErrorDomain NS_SWIFT_NAME(AudioDecodingErrorDomain);
 
-/// Possible `NSError` error codes used by `SFBAudioDecoding`
+/// Possible error codes in the audio decoder error domain
 typedef NS_ERROR_ENUM(SFBAudioDecodingErrorDomain, SFBAudioDecodingErrorCode) {
 	/// Invalid or unknown format
 	SFBAudioDecodingErrorCodeInvalidFormat		= 0,
@@ -85,10 +87,9 @@ typedef NS_ERROR_ENUM(SFBAudioDecodingErrorDomain, SFBAudioDecodingErrorCode) {
 	SFBAudioDecodingErrorCodeDecodingError		= 3,
 	/// Seek error
 	SFBAudioDecodingErrorCodeSeekError			= 4,
-} NS_SWIFT_NAME(AudioDecoding.ErrorCode);
+} NS_SWIFT_NAME(AudioDecodingError);
 
-@end
-
-extern NSErrorUserInfoKey const SFBAudioDecodingFormatNameErrorKey; // NSString
+/// The name of the audio format
+extern NSErrorUserInfoKey const SFBAudioDecodingFormatNameErrorKey NS_SWIFT_NAME(AudioDecodingFormatNameErrorKey); // NSString
 
 NS_ASSUME_NONNULL_END
