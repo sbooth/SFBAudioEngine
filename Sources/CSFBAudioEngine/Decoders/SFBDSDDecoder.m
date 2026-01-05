@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -46,16 +46,39 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+
+		if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey]) {
+			switch(err.code) {
+				case SFBDSDDecoderErrorCodeInternalError:
+					return NSLocalizedString(@"Internal decoder error", @"");
+				case SFBDSDDecoderErrorCodeUnknownDecoder:
+					return NSLocalizedString(@"Decoder unavailable", @"");
+				case SFBDSDDecoderErrorCodeInvalidFormat:
+					return NSLocalizedString(@"Invalid format", @"");
+			}
+		}
+
 		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBDSDDecoderErrorCodeInternalError:
-					return NSLocalizedString(@"An internal decoder error occurred.", @"");
+				{
+					NSURL *url = [[err userInfo] objectForKey:NSURLErrorKey];
+					if(url) {
+						NSString *displayName = nil;
+						[url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil];
+						if(!displayName)
+							displayName = url.lastPathComponent;
+						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred while decoding the file “%@”.", @""), displayName];
+					}
+					return NSLocalizedString(@"An error occurred during decoding.", @"");
+				}
 				case SFBDSDDecoderErrorCodeUnknownDecoder:
-					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
+					return NSLocalizedString(@"The requested DSD decoder is unavailable.", @"");
 				case SFBDSDDecoderErrorCodeInvalidFormat:
 					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
 			}
 		}
+
 		return nil;
 	}];
 }

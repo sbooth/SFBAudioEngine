@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -46,16 +46,38 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey]) {
+			switch(err.code) {
+				case SFBAudioDecoderErrorCodeInternalError:
+					return NSLocalizedString(@"Internal decoder error", @"");
+				case SFBAudioDecoderErrorCodeUnknownDecoder:
+					return NSLocalizedString(@"Decoder unavailable", @"");
+				case SFBAudioDecoderErrorCodeInvalidFormat:
+					return NSLocalizedString(@"Invalid format", @"");
+			}
+		}
+
 		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
 			switch(err.code) {
 				case SFBAudioDecoderErrorCodeInternalError:
-					return NSLocalizedString(@"An internal decoder error occurred.", @"");
+				{
+					NSURL *url = [[err userInfo] objectForKey:NSURLErrorKey];
+					if(url) {
+						NSString *displayName = nil;
+						[url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil];
+						if(!displayName)
+							displayName = url.lastPathComponent;
+						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred while decoding the file “%@”.", @""), displayName];
+					}
+					return NSLocalizedString(@"An error occurred during decoding.", @"");
+				}
 				case SFBAudioDecoderErrorCodeUnknownDecoder:
-					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
+					return NSLocalizedString(@"The requested PCM decoder is unavailable.", @"");
 				case SFBAudioDecoderErrorCodeInvalidFormat:
 					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
 			}
 		}
+
 		return nil;
 	}];
 }
