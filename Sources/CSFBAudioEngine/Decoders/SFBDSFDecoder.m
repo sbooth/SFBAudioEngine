@@ -434,7 +434,7 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 	if(bytesRead != bufsize) {
 		os_log_error(gSFBDSDDecoderLog, "Missing data in audio block: requested %u bytes, got %ld", bufsize, (long)bytesRead);
 		if(error)
-			*error = CreateInvalidDSFFileError(_inputSource.url);
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
