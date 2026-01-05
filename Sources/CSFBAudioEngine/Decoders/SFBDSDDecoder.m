@@ -14,10 +14,7 @@ os_log_t gSFBDSDDecoderLog = NULL;
 static void SFBCreateDSDDecoderLog(void) __attribute__ ((constructor));
 static void SFBCreateDSDDecoderLog(void)
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBDSDDecoderLog = os_log_create("org.sbooth.AudioEngine", "DSDDecoder");
-	});
+	gSFBDSDDecoderLog = os_log_create("org.sbooth.AudioEngine", "DSDDecoder");
 }
 
 @interface SFBDSDDecoderSubclassInfo : NSObject

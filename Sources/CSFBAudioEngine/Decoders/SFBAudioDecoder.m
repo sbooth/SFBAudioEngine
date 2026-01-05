@@ -18,10 +18,7 @@ os_log_t gSFBAudioDecoderLog = NULL;
 static void SFBCreateAudioDecoderLog(void) __attribute__ ((constructor));
 static void SFBCreateAudioDecoderLog(void)
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
-	});
+	gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
 }
 
 /// Returns the URL's localized name or last path component
