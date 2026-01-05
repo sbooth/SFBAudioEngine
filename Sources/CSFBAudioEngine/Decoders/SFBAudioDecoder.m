@@ -25,13 +25,14 @@ static void SFBCreateAudioDecoderLog(void)
 }
 
 /// Returns the URL's localized name or last path component
-static NSString * DisplayNameForURL(NSURL *url)
+static NSString * LocalizedNameForURL(NSURL *url)
 {
 	if(!url)
 		return nil;
-	NSString *displayName = nil;
-	[url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil];
-	return displayName ?: url.lastPathComponent;
+	NSString *localizedName = nil;
+	if(![url getResourceValue:&localizedName forKey:NSURLLocalizedNameKey error:nil])
+		return url.lastPathComponent;
+	return localizedName ?: url.lastPathComponent;
 }
 
 @interface SFBAudioDecoderSubclassInfo : NSObject
@@ -61,9 +62,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 					return NSLocalizedString(@"Internal decoder error", @"");
 
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-					NSString *displayName = DisplayNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
-					if(displayName)
-						return [NSString stringWithFormat: NSLocalizedString(@"An internal decoder error occurred while processing “%@”.", @""), displayName];
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"An internal decoder error occurred while processing “%@”.", @""), localizedName];
 					return NSLocalizedString(@"An internal decoder error occurred.", @"");
 				}
 
@@ -79,12 +80,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 				}
 
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-					NSString *displayName = DisplayNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
 					NSString *formatName = [[err userInfo] objectForKey:SFBAudioDecodingFormatNameErrorKey];
-					if(displayName && formatName)
-						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a valid %@ file.", @""), displayName, formatName];
-					if(displayName)
-						return [NSString stringWithFormat: NSLocalizedString(@"The format of “%@” is invalid or unknown.", @""), displayName];
+					if(localizedName && formatName)
+						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a valid %@ file.", @""), localizedName, formatName];
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"The format of “%@” is invalid or unknown.", @""), localizedName];
 					return NSLocalizedString(@"The format is invalid or unknown.", @"");
 				}
 
@@ -103,12 +104,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 				}
 
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-					NSString *displayName = DisplayNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
 					NSString *formatName = [[err userInfo] objectForKey:SFBAudioDecodingFormatNameErrorKey];
-					if(displayName && formatName)
-						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a supported %@ file.", @""), displayName, formatName];
-					if(displayName)
-						return [NSString stringWithFormat: NSLocalizedString(@"The format of “%@” is unsupported.", @""), displayName];
+					if(localizedName && formatName)
+						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a supported %@ file.", @""), localizedName, formatName];
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"The format of “%@” is unsupported.", @""), localizedName];
 					return NSLocalizedString(@"The format is unsupported.", @"");
 				}
 
@@ -120,9 +121,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 					return NSLocalizedString(@"Decoding error", @"");
 
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-					NSString *displayName = DisplayNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
-					if(displayName)
-						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred while decoding “%@”.", @""), displayName];
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred while decoding “%@”.", @""), localizedName];
 					return NSLocalizedString(@"An error occurred during decoding.", @"");
 				}
 
@@ -134,9 +135,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 					return NSLocalizedString(@"Seeking error", @"");
 
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-					NSString *displayName = DisplayNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
-					if(displayName)
-						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred seeking to the requested audio frame position in “%@”.", @""), displayName];
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred seeking to the requested audio frame position in “%@”.", @""), localizedName];
 					return NSLocalizedString(@"An error occurred seeking to the requested audio frame position.", @"");
 				}
 
