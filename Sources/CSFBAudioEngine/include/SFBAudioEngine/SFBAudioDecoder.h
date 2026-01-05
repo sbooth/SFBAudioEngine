@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -156,23 +156,6 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
-extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
-
-/// Possible `NSError` error codes used by `SFBAudioDecoder`
-typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
-	/// Internal decoder error
-	SFBAudioDecoderErrorCodeInternalError		= 0,
-	/// Unknown decoder name
-	SFBAudioDecoderErrorCodeUnknownDecoder		= 1,
-	/// Invalid format
-	SFBAudioDecoderErrorCodeInvalidFormat		= 2,
-	/// Unsupported format
-	SFBAudioDecoderErrorCodeUnsupportedFormat	= 3,
-} NS_SWIFT_NAME(AudioDecoder.ErrorCode);
 
 #pragma mark - FLAC and Ogg FLAC Decoder Properties
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2013-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -20,7 +20,6 @@
 #import "SFBFFmpegDecoder.h"
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-#import "NSError+SFBURLPresentation.h"
 
 #define BUF_SIZE 4096
 #define ERRBUF_SIZE 512
@@ -199,14 +198,10 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
 	}
 
@@ -218,14 +213,10 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
 	}
 
@@ -243,13 +234,10 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
 	}
 
@@ -263,13 +251,10 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
 	}
 
@@ -290,13 +275,10 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
 	}
 

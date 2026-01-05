@@ -227,11 +227,10 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	if(!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
 		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(flac.get()));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"FLAC", @""),
-											  }];
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"FLAC", @"") }];
 		return NO;
 	}
 
@@ -274,13 +273,12 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		default: {
 			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeUnsupportedFormat
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+											 code:SFBAudioDecodingErrorCodeUnsupportedFormat
 										 userInfo:@{ NSURLErrorKey: _inputSource.url,
 													 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Bit depth not supported", @""),
 													 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth is not supported.", @""),
-													 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"FLAC", @""),
-												  }];
+													 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"FLAC", @"") }];
 			return NO;
 		}
 	}
@@ -409,12 +407,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		if(!FLAC__stream_decoder_process_single(_flac.get())) {
 			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInternalError
-										 userInfo:@{ NSURLErrorKey: _inputSource.url,
-													 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Decoding error", @""),
-													 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error decoding FLAC audio frame.", @""),
-												  }];
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 	}
@@ -440,12 +433,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	if(result) {
 		os_log_error(gSFBAudioDecoderLog, "FLAC seek error: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInternalError
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Seeking error", @""),
-												 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error seeking to requested audio frame position.", @""),
-											  }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -459,11 +447,10 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
 		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"FLAC", @""),
-											  }];
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"FLAC", @"") }];
 		return NO;
 	}
 
@@ -599,11 +586,10 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
 		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecoderFormatNameErrorKey: NSLocalizedString(@"Ogg FLAC", @""),
-											  }];
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg FLAC", @"") }];
 		return NO;
 	}
 

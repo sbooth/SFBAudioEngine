@@ -15,7 +15,6 @@
 #import "SFBMusepackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
 
@@ -168,13 +167,10 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	_demux = mpc_demux_init(&_reader);
 	if(!_demux) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Musepack file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Musepack", @"") }];
 		return NO;
 	}
 
@@ -308,7 +304,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		if(mpc_demux_decode(_demux, &frame)) {
 			os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
@@ -353,7 +349,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	if(mpc_demux_seek_sample(_demux, (mpc_uint64_t)frame)) {
 		os_log_error(gSFBAudioDecoderLog, "Musepack seek error");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 

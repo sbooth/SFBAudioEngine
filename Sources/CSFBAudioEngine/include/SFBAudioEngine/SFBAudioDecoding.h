@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -68,6 +68,27 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// Returns `YES` if the decoder is seekable
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
+#pragma mark - Error Information
+
+/// The `NSErrorDomain` used by `SFBAudioDecoding` and subclasses
+extern NSErrorDomain const SFBAudioDecodingErrorDomain NS_SWIFT_NAME(AudioDecoding.ErrorDomain);
+
+/// Possible `NSError` error codes used by `SFBAudioDecoding`
+typedef NS_ERROR_ENUM(SFBAudioDecodingErrorDomain, SFBAudioDecodingErrorCode) {
+	/// Invalid or unknown format
+	SFBAudioDecodingErrorCodeInvalidFormat		= 0,
+	/// Unsupported format
+	SFBAudioDecodingErrorCodeUnsupportedFormat	= 1,
+	/// Internal decoder error
+	SFBAudioDecodingErrorCodeInternalError		= 2,
+	/// Decoding error
+	SFBAudioDecodingErrorCodeDecodingError		= 3,
+	/// Seek error
+	SFBAudioDecodingErrorCodeSeekError			= 4,
+} NS_SWIFT_NAME(AudioDecoding.ErrorCode);
+
 @end
+
+extern NSErrorUserInfoKey const SFBAudioDecodingFormatNameErrorKey; // NSString
 
 NS_ASSUME_NONNULL_END

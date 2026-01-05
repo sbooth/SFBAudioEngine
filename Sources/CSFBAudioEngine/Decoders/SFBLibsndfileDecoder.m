@@ -12,7 +12,6 @@
 #import "SFBLibsndfileDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 #import "SFBLibsndfileUtilities.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
@@ -295,15 +294,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	_sndfile = sf_open_virtual(&virtualIO, SFM_READ, &_sfinfo, (__bridge void *)self);
 	if(!_sndfile) {
 		os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
-
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
 	}
 
@@ -451,7 +446,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		default:
 			os_log_error(gSFBAudioDecoderLog, "Unknown libsndfile read method: %d", _readMethod);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeInternalError userInfo:nil];
 			return NO;
 	}
 
@@ -461,7 +456,10 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(result) {
 		os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeDecodingError
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedRecoverySuggestionErrorKey: @(sf_error_number(result)) }];
 		return NO;
 	}
 
@@ -476,7 +474,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(result == -1) {
 		os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

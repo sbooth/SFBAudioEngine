@@ -14,7 +14,6 @@
 #import "SFBTrueAudioDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameTrueAudio = @"org.sbooth.AudioEngine.Decoder.TrueAudio";
 
@@ -28,24 +27,24 @@ namespace {
 
 struct TTACallbacks final : TTA_io_callback
 {
-	SFBAudioDecoder *mDecoder;
+	SFBAudioDecoder *decoder_;
 };
 
 TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
 {
-	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
+	auto *iocb = static_cast<TTACallbacks *>(io);
 
 	NSInteger bytesRead;
-	if(![iocb->mDecoder->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil])
+	if(![iocb->decoder_->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil])
 		return -1;
 	return static_cast<TTAint32>(bytesRead);
 }
 
 TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 {
-	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
+	auto *iocb = static_cast<TTACallbacks *>(io);
 
-	if(![iocb->mDecoder->_inputSource seekToOffset:offset error:nil])
+	if(![iocb->decoder_->_inputSource seekToOffset:offset error:nil])
 		return -1;
 	return offset;
 }
@@ -116,7 +115,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 	_callbacks->read		= read_callback;
 	_callbacks->write		= nullptr;
 	_callbacks->seek		= seek_callback;
-	_callbacks->mDecoder	= self;
+	_callbacks->decoder_	= self;
 
 	TTA_info streamInfo;
 
@@ -125,18 +124,17 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		_decoder->init_get_info(&streamInfo, 0);
 	} catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", e.code());
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
 	if(!_decoder) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid True Audio file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a True Audio file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"True Audio", @"") }];
 		return NO;
 	}
 
@@ -181,21 +179,16 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 			break;
 
 		default:
-		{
 			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %d", streamInfo.bps);
-
 			_decoder.reset();
-
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported True Audio file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Bit depth not supported", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's bit depth is not supported.", @"")];
-
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+											 code:SFBAudioDecodingErrorCodeUnsupportedFormat
+										 userInfo:@{ NSURLErrorKey: _inputSource.url,
+													 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Bit depth not supported", @""),
+													 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth is not supported.", @""),
+													 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"True Audio", @"") }];
 			return NO;
-		}
 	}
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
@@ -290,7 +283,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 	} catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 }
@@ -307,7 +300,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 	} catch(const tta::tta_exception& e) {
 		os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 

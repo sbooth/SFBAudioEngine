@@ -12,8 +12,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSErrorUserInfoKey const SFBAudioDecoderFormatNameErrorKey; // NSString
-
 extern os_log_t gSFBAudioDecoderLog;
 
 @interface SFBAudioDecoder ()

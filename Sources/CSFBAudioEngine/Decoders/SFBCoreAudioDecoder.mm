@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -16,7 +16,6 @@
 #import "SFBCoreAudioDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
@@ -227,13 +226,11 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
-											 code:result
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @""),
+												 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 		return NO;
 	}
 
@@ -243,15 +240,11 @@ SInt64 get_size_callback(void *inClientData) noexcept
 	result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-
-		if(error)
-			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
-											 code:result
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+		*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+									 code:SFBAudioDecodingErrorCodeInvalidFormat
+								 userInfo:@{ NSURLErrorKey: _inputSource.url,
+											 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @""),
+											 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 		return NO;
 	}
 
@@ -280,13 +273,11 @@ SInt64 get_size_callback(void *inClientData) noexcept
 			free(layout);
 
 			if(error)
-				*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
-												 code:result
-						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+											 code:SFBAudioDecodingErrorCodeInvalidFormat
+										 userInfo:@{ NSURLErrorKey: _inputSource.url,
+													 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @""),
+													 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 			return NO;
 		}
 
@@ -298,8 +289,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between AudioStreamBasicDescription (%u) and AVAudioChannelLayout (%u)", format.mChannelsPerFrame, channelLayout.channelCount);
 			channelLayout = nil;
 		}
-	}
-	else
+	} else
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
@@ -352,28 +342,23 @@ SInt64 get_size_callback(void *inClientData) noexcept
 	// will segfault
 	if(!_processingFormat) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @""),
+												 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 		return NO;
 	}
 
 	result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-
 		if(error)
-			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
-											 code:result
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @""),
+												 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 		return NO;
 	}
 
@@ -439,7 +424,10 @@ SInt64 get_size_callback(void *inClientData) noexcept
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		buffer.frameLength = 0;
 		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeDecodingError
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 		return NO;
 	}
 
@@ -455,7 +443,10 @@ SInt64 get_size_callback(void *inClientData) noexcept
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeSeekError
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSUnderlyingErrorKey: [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil] }];
 		return NO;
 	}
 	return YES;

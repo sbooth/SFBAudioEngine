@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -11,7 +11,6 @@
 #import "SFBDSFDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
 SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecoder.DSF";
@@ -36,12 +35,9 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 
 static NSError * CreateInvalidDSFFileError(NSURL * url)
 {
-	return [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-								   code:SFBDSDDecoderErrorCodeInvalidFormat
-		  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSF file.", @"")
-									url:url
-						  failureReason:NSLocalizedString(@"Not a DSF file", @"")
-					 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+	return [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+							   code:SFBAudioDecodingErrorCodeInvalidFormat
+						   userInfo:@{ NSURLErrorKey: url, SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSF", @"") }];
 }
 
 // For the size of matrices this class deals with the naive approach is adequate
