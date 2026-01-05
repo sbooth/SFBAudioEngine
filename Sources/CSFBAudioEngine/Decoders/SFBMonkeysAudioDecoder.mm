@@ -19,7 +19,6 @@
 #import "SFBMonkeysAudioDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
 
@@ -231,13 +230,10 @@ private:
 	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
 	if(!decompressor) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a Monkey's Audio file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Monkey's Audio", @"") }];
 		return NO;
 	}
 
@@ -374,7 +370,7 @@ private:
 	if(_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
 		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -389,7 +385,7 @@ private:
 	if(const auto result = _decompressor->Seek(frame); result != ERROR_SUCCESS) {
 		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio seek error: %d", result);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

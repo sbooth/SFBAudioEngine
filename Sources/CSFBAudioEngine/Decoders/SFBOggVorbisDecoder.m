@@ -12,7 +12,6 @@
 #import "SFBOggVorbisDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
 
@@ -138,13 +137,10 @@ static long tell_func_callback(void *datasource)
 
 	if(ov_test_callbacks((__bridge void *)self, &_vorbisFile, NULL, 0, callbacks)) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Vorbis file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not an Ogg Vorbis file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg Vorbis", @"") }];
 		return NO;
 	}
 
@@ -155,8 +151,7 @@ static long tell_func_callback(void *datasource)
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -168,8 +163,7 @@ static long tell_func_callback(void *datasource)
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -270,7 +264,7 @@ static long tell_func_callback(void *datasource)
 		if(framesRead < 0) {
 			os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis decoding error");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+				*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
@@ -300,7 +294,7 @@ static long tell_func_callback(void *datasource)
 	if(ov_pcm_seek(&_vorbisFile, frame)) {
 		os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis seek error");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

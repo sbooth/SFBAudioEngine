@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,10 +9,9 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioDecoder+Internal.h"
 
-#import "NSError+SFBURLPresentation.h"
-
-// NSError domain for AudioDecoder and subclasses
-NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
+// NSError domain for SFBAudioDecoding protocol
+NSErrorDomain const SFBAudioDecodingErrorDomain = @"org.sbooth.AudioEngine.AudioDecoding";
+NSErrorUserInfoKey const SFBAudioDecodingFormatNameErrorKey = @"SFBAudioDecodingFormatName";
 
 os_log_t gSFBAudioDecoderLog = NULL;
 
@@ -23,6 +22,17 @@ static void SFBCreateAudioDecoderLog(void)
 	dispatch_once(&onceToken, ^{
 		gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
 	});
+}
+
+/// Returns the URL's localized name or last path component
+static NSString * LocalizedNameForURL(NSURL *url)
+{
+	if(!url)
+		return nil;
+	NSString *localizedName = nil;
+	if(![url getResourceValue:&localizedName forKey:NSURLLocalizedNameKey error:nil])
+		return url.lastPathComponent;
+	return localizedName ?: url.lastPathComponent;
 }
 
 @interface SFBAudioDecoderSubclassInfo : NSObject
@@ -45,17 +55,96 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)load
 {
-	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioDecoderErrorCodeInternalError:
+	[NSError setUserInfoValueProviderForDomain:SFBAudioDecodingErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		switch(err.code) {
+			case SFBAudioDecodingErrorCodeInternalError: {
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
+					return NSLocalizedString(@"Internal decoder error", @"");
+
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"An internal decoder error occurred while processing “%@”.", @""), localizedName];
 					return NSLocalizedString(@"An internal decoder error occurred.", @"");
-				case SFBAudioDecoderErrorCodeUnknownDecoder:
-					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
-				case SFBAudioDecoderErrorCodeInvalidFormat:
-					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+				}
+
+				break;
+			}
+
+			case SFBAudioDecodingErrorCodeInvalidFormat: {
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey]) {
+					NSString *formatName = [[err userInfo] objectForKey:SFBAudioDecodingFormatNameErrorKey];
+					if(formatName)
+						return [NSString stringWithFormat: NSLocalizedString(@"Format is not %@", @""), formatName];
+					return NSLocalizedString(@"Invalid format", @"");
+				}
+
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					NSString *formatName = [[err userInfo] objectForKey:SFBAudioDecodingFormatNameErrorKey];
+					if(localizedName && formatName)
+						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a valid %@ file.", @""), localizedName, formatName];
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"The format of “%@” is invalid or unknown.", @""), localizedName];
+					return NSLocalizedString(@"The format is invalid or unknown.", @"");
+				}
+
+				if([userInfoKey isEqualToString:NSLocalizedRecoverySuggestionErrorKey])
+					return NSLocalizedString(@"The file's extension may not match the file's type.", @"");
+
+				break;
+			}
+
+			case SFBAudioDecodingErrorCodeUnsupportedFormat: {
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey]) {
+					NSString *formatName = [[err userInfo] objectForKey:SFBAudioDecodingFormatNameErrorKey];
+					if(formatName)
+						return [NSString stringWithFormat: NSLocalizedString(@"Unsupported %@ format", @""), formatName];
+					return NSLocalizedString(@"Unsupported format", @"");
+				}
+
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					NSString *formatName = [[err userInfo] objectForKey:SFBAudioDecodingFormatNameErrorKey];
+					if(localizedName && formatName)
+						return [NSString stringWithFormat: NSLocalizedString(@"“%@” is not a supported %@ file.", @""), localizedName, formatName];
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"The format of “%@” is unsupported.", @""), localizedName];
+					return NSLocalizedString(@"The format is unsupported.", @"");
+				}
+
+				break;
+			}
+
+			case SFBAudioDecodingErrorCodeDecodingError: {
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
+					return NSLocalizedString(@"Decoding error", @"");
+
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred while decoding “%@”.", @""), localizedName];
+					return NSLocalizedString(@"An error occurred during decoding.", @"");
+				}
+
+				break;
+			}
+
+			case SFBAudioDecodingErrorCodeSeekError: {
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
+					return NSLocalizedString(@"Seeking error", @"");
+
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+					NSString *localizedName = LocalizedNameForURL([[err userInfo] objectForKey:NSURLErrorKey]);
+					if(localizedName)
+						return [NSString stringWithFormat: NSLocalizedString(@"An error occurred seeking to the requested audio frame position in “%@”.", @""), localizedName];
+					return NSLocalizedString(@"An error occurred seeking to the requested audio frame position.", @"");
+				}
+
+				break;
 			}
 		}
+
 		return nil;
 	}];
 }
@@ -231,12 +320,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
-											  url:inputSource.url
-									failureReason:NSLocalizedString(@"Unknown file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return nil;
 	}
 
@@ -286,9 +373,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_error(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: \"%{public}@\"", decoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeUnknownDecoder
-									 userInfo:@{ NSURLErrorKey: inputSource.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
 		return nil;
 	}
 

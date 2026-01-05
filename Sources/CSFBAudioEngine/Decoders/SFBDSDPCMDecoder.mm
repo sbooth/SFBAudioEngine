@@ -16,7 +16,6 @@
 
 #import "SFBDSDPCMDecoder.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
@@ -383,28 +382,24 @@ private:
 
 	const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
-	if(!(asbd->mFormatID == kSFBAudioFormatDSD)) {
+	if(asbd->mFormatID != kSFBAudioFormatDSD) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD file.", @"")
-											  url:_decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Not a DSD file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _decoder.inputSource.url,
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSD", @"") }];
 		return NO;
 	}
 
 	if(asbd->mSampleRate != kSFBSampleRateDSD64) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not supported.", @"")
-											  url:_decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported DSD sample rate", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's sample rate is not supported for DSD to PCM conversion.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeUnsupportedFormat
+									 userInfo:@{ NSURLErrorKey: _decoder.inputSource.url,
+												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"DSD sample rate not supported", @""),
+												 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @""),
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSD", @"") }];
 		return NO;
 	}
 

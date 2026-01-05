@@ -14,7 +14,6 @@
 #import "SFBWavPackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
 
@@ -217,13 +216,10 @@ static int can_seek_callback(void *id)
 	if(!_wpc) {
 		os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a WavPack file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
+										 code:SFBAudioDecodingErrorCodeInvalidFormat
+									 userInfo:@{ NSURLErrorKey: _inputSource.url,
+												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"WavPack", @""), }];
 		return NO;
 	}
 
@@ -523,7 +519,7 @@ static int can_seek_callback(void *id)
 	if(!WavpackSeekSample64(_wpc, frame)) {
 		os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 

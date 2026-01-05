@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -132,20 +132,5 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBDSDDecoder` and subclasses
-extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);
-
-/// Possible `NSError` error codes used by `SFBDSDDecoder`
-typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
-	/// Internal decoder error
-	SFBDSDDecoderErrorCodeInternalError		= 0,
-	/// Unknown decoder name
-	SFBDSDDecoderErrorCodeUnknownDecoder	= 1,
-	/// Invalid, unknown, or unsupported format
-	SFBDSDDecoderErrorCodeInvalidFormat		= 2,
-} NS_SWIFT_NAME(DSDDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END
