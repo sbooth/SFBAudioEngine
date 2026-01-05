@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,10 +13,10 @@ NS_SWIFT_NAME(PCMDecoding) @protocol SFBPCMDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
 
-/// Returns the decoder's current frame position or `SFBUnknownFramePosition` if unknown
+/// The decoder's current frame position or `SFBUnknownFramePosition` if unknown
 @property (nonatomic, readonly) AVAudioFramePosition framePosition NS_SWIFT_NAME(position);
 
-/// Returns the decoder's length in frames or `SFBUnknownFrameLength` if unknown
+/// The decoder's length in frames or `SFBUnknownFrameLength` if unknown
 @property (nonatomic, readonly) AVAudioFramePosition frameLength NS_SWIFT_NAME(length);
 
 #pragma mark - Decoding

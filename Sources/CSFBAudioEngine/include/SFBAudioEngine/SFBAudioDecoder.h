@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -45,10 +45,10 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 
 #pragma mark - File Format Support
 
-/// Returns a set containing the supported path extensions
+/// A set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/// Returns a set containing the supported MIME types
+/// A set containing the supported MIME types
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported

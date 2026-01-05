@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -107,7 +107,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// Clears the decoder queue
 - (void)clearQueue;
 
-/// Returns `YES` if the decoder queue is empty
+/// `YES` if the decoder queue is empty
 @property (nonatomic, readonly) BOOL queueIsEmpty;
 
 // MARK: - Playback Control
@@ -142,42 +142,41 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Player State
 
- /// Returns `YES` if the `AVAudioEngine` is running
+ /// `YES` if the `AVAudioEngine` is running
 @property (nonatomic, readonly) BOOL engineIsRunning;
 
-/// Returns the current playback state
+/// The current playback state
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
-/// Returns `YES` if the `AVAudioEngine` is running and the player is rendering audio
+/// `YES` if the `AVAudioEngine` is running and the player is rendering audio
 @property (nonatomic, readonly) BOOL isPlaying;
-/// Returns `YES` if the `AVAudioEngine` is running and the player is not rendering audio
+/// `YES` if the `AVAudioEngine` is running and the player is not rendering audio
 @property (nonatomic, readonly) BOOL isPaused;
-/// Returns `YES` if the `AVAudioEngine` is not running
+/// `YES` if the `AVAudioEngine` is not running
 @property (nonatomic, readonly) BOOL isStopped;
 
-/// Returns `YES` if a decoder is available to supply audio for the next render cycle
+/// `YES` if a decoder is available to supply audio for the next render cycle
 @property (nonatomic, readonly) BOOL isReady;
-/// Returns the decoder supplying the earliest audio frame for the next render cycle or `nil` if none
+/// The decoder supplying the earliest audio frame for the next render cycle or `nil` if none
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id<SFBPCMDecoding> currentDecoder;
-/// Returns the decoder approximating what a user would expect to see as the "now playing" item- the decoder that is
-/// currently rendering audio.
+/// The decoder approximating what a user would expect to see as the "now playing" item
 /// - warning: Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id<SFBPCMDecoding> nowPlaying;
 
 // MARK: - Playback Properties
 
-/// Returns the frame position in the current decoder or `SFBUnknownFramePosition` if the current decoder is `nil`
+/// The frame position in the current decoder or `SFBUnknownFramePosition` if the current decoder is `nil`
 @property (nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
-/// Returns the frame length of the current decoder or `SFBUnknownFrameLength` if the current decoder is `nil`
+/// The frame length of the current decoder or `SFBUnknownFrameLength` if the current decoder is `nil`
 @property (nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// Returns the playback position in the current decoder or `SFBInvalidPlaybackPosition` if the current decoder is `nil`
+/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
-/// Returns the current time in the current decoder or `SFBUnknownTime` if the current decoder is `nil`
+/// The current time in the current decoder or `SFBUnknownTime` if the current decoder is `nil`
 @property (nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
-/// Returns the total time of the current decoder or `SFBUnknownTime` if the current decoder is `nil`
+/// The total time of the current decoder or `SFBUnknownTime` if the current decoder is `nil`
 @property (nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// Returns the playback time in the current decoder or `SFBInvalidPlaybackTime` if the current decoder is `nil`
+/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if the current decoder is `nil`
 @property (nonatomic, readonly) SFBPlaybackTime playbackTime;
 
 /// Retrieves the playback position and time
@@ -242,7 +241,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Output Device
 
-/// Returns the output device object ID for `AVAudioEngine.outputNode`
+/// The output device object ID for `AVAudioEngine.outputNode`
 @property (nonatomic, readonly) AUAudioObjectID outputDeviceID;
 /// Sets the output device for `AVAudioEngine.outputNode`
 /// - parameter outputDeviceID: The audio object ID of the desired output device
@@ -263,13 +262,13 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods instead. Directly starting or stopping the engine may cause internal state inconsistencies.
 /// - parameter block: A block performing operations on the `AVAudioEngine`
 - (void)modifyProcessingGraph:(SFBAudioPlayerAVAudioEngineBlock)block;
-/// Returns the audio processing graph's source node
+/// The audio processing graph's source node
 /// - attention: Do not make any modifications to the node's connections.
 @property (nonatomic, nonnull, readonly) AVAudioSourceNode *sourceNode;
-/// Returns the audio processing graph's main mixer node
+/// The audio processing graph's main mixer node
 /// - attention: Do not make any modifications to the node's connections.
 @property (nonatomic, nonnull, readonly) AVAudioMixerNode *mainMixerNode;
-/// Returns the audio processing graph's output node
+/// The audio processing graph's output node
 /// - attention: Do not make any modifications to the node's connections.
 @property (nonatomic, nonnull, readonly) AVAudioOutputNode *outputNode;
 
