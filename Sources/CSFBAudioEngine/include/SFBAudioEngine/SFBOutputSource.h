@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -29,10 +29,10 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns the URL corresponding to this output source or `nil` if none
+/// The URL corresponding to this output source or `nil` if none
 @property (nonatomic, nullable, readonly) NSURL * url;
 
-/// Returns the underlying data object for this output source or `nil` if none
+/// The underlying data object for this output source or `nil` if none
 @property (nonatomic, nullable, readonly) NSData * data;
 
 /// Opens the output source for writing
@@ -45,7 +45,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// Returns `YES` if the output source is open
+/// `YES` if the output source is open
 @property (nonatomic, readonly) BOOL isOpen;
 
 /// Reads bytes from the input
@@ -64,7 +64,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// - returns: `YES` if any bytes were written, `NO` otherwise
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns `YES` if the end of input has been reached
+/// `YES` if the end of input has been reached
 @property (nonatomic, readonly) BOOL atEOF;
 
 /// Returns the current offset in the output, in bytes
@@ -73,7 +73,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// Returns the length of the output, in bytes
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns `YES` if the output is seekable
+/// `YES` if the output is seekable
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
 /// Seeks to the specified byte offset
