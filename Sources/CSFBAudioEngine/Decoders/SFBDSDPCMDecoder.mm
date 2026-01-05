@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2018-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -311,7 +311,7 @@ private:
 @interface SFBDSDPCMDecoder ()
 {
 @private
-	id <SFBDSDDecoding> _decoder;
+	id<SFBDSDDecoding> _decoder;
 	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
 	std::vector<DXD> _context;
@@ -344,7 +344,7 @@ private:
 	return [self initWithDecoder:decoder error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
