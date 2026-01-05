@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -47,7 +47,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 @interface SFBDoPDecoder ()
 {
 @private
-	id <SFBDSDDecoding> _decoder;
+	id<SFBDSDDecoding> _decoder;
 	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
 	unsigned char _marker;
@@ -80,7 +80,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	return [self initWithDecoder:decoder error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
