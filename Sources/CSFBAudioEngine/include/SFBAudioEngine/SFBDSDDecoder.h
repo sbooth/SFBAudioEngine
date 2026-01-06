@@ -133,4 +133,25 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 
 @end
 
+#pragma mark - Error Information
+
+/// The `NSErrorDomain` used by `SFBDSDDecoder` and subclasses
+extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);
+
+/// Possible `NSError` error codes used by `SFBDSDDecoder`
+typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
+	/// Unknown decoder name
+	SFBDSDDecoderErrorCodeUnknownDecoder 		= 0,
+	/// Invalid or unknown format
+	SFBDSDDecoderErrorCodeInvalidFormat			= 1,
+	/// Unsupported format
+	SFBDSDDecoderErrorCodeUnsupportedFormat 	= 2,
+	/// Internal decoder error
+	SFBDSDDecoderErrorCodeInternalError			= 3,
+	/// Decoding error
+	SFBDSDDecoderErrorCodeDecodingError			= 4,
+	/// Seek error
+	SFBDSDDecoderErrorCodeSeekError				= 5,
+} NS_SWIFT_NAME(DSDDecoder.Error);
+
 NS_ASSUME_NONNULL_END
