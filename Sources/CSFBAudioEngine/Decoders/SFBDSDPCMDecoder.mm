@@ -18,6 +18,8 @@
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 namespace {
 
@@ -384,22 +386,20 @@ private:
 
 	if(asbd->mFormatID != kSFBAudioFormatDSD) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _decoder.inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSD", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid DSD file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @"") },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
 	if(asbd->mSampleRate != kSFBSampleRateDSD64) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeUnsupportedFormat
-									 userInfo:@{ NSURLErrorKey: _decoder.inputSource.url,
-												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"DSD sample rate not supported", @""),
-												 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @""),
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSD", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @"") },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
