@@ -12,6 +12,8 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecoder.DSF";
 
@@ -33,11 +35,12 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 	return YES;
 }
 
-static NSError * CreateInvalidDSFFileError(NSURL * url)
+static NSError * CreateInvalidDSFFileError(NSURL *url)
 {
-	return [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-							   code:SFBAudioDecodingErrorCodeInvalidFormat
-						   userInfo:@{ NSURLErrorKey: url, SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSF", @"") }];
+	return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
+											NSLocalizedString(@"The file “%@” is not a valid DSF file.", @""),
+											@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @"") },
+											SFBLocalizedNameForURL(url));
 }
 
 // For the size of matrices this class deals with the naive approach is adequate
@@ -387,8 +390,11 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 	NSInteger blockNumber = packet / DSF_BLOCK_SIZE_BYTES_PER_CHANNEL;
 	NSInteger blockOffset = blockNumber * DSF_BLOCK_SIZE_BYTES_PER_CHANNEL * channelCount;
 
-	if(![_inputSource seekToOffset:(_audioOffset + blockOffset) error:error]) {
-		os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + blockOffset);
+	NSError *seekError = nil;
+	if(![_inputSource seekToOffset:(_audioOffset + blockOffset) error:&seekError]) {
+		os_log_debug(gSFBDSDDecoderLog, "Error seeking to input offset %lld: %{public}@", _audioOffset + blockOffset, seekError);
+		if(error)
+			*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain code:SFBDSDDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url, NSUnderlyingErrorKey: seekError }];
 		return NO;
 	}
 
@@ -434,7 +440,7 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 	if(bytesRead != bufsize) {
 		os_log_error(gSFBDSDDecoderLog, "Missing data in audio block: requested %u bytes, got %ld", bufsize, (long)bytesRead);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain code:SFBDSDDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
