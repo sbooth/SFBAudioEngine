@@ -39,7 +39,8 @@ static NSError * CreateInvalidDSFFileError(NSURL *url)
 {
 	return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
 											NSLocalizedString(@"The file “%@” is not a valid DSF file.", @""),
-											@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @"") },
+											@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+											   NSURLErrorKey: url },
 											SFBLocalizedNameForURL(url));
 }
 

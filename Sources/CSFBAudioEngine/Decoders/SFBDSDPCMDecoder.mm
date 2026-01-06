@@ -388,7 +388,8 @@ private:
 		if(error)
 			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid DSD file.", @""),
-													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @"") },
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _decoder.inputSource.url },
 													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
@@ -398,7 +399,8 @@ private:
 		if(error)
 			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeUnsupportedFormat,
 													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
-													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @"") },
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @""),
+														 NSURLErrorKey: _decoder.inputSource.url },
 													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
