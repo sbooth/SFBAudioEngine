@@ -14,6 +14,8 @@
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 #define DSD_PACKETS_PER_DOP_FRAME (16 / kSFBPCMFramesPerDSDPacket)
 #define BUFFER_SIZE_PACKETS 4096
@@ -119,22 +121,20 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	if(asbd->mFormatID != kSFBAudioFormatDSD) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-									   code:SFBAudioDecodingErrorCodeInvalidFormat
-								   userInfo:@{ NSURLErrorKey: _decoder.inputSource.url,
-											   SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSD", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid DSD file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @"") },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
 	if(!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeUnsupportedFormat
-									 userInfo:@{ NSURLErrorKey: _decoder.inputSource.url,
-												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"DSD sample rate not supported", @""),
-												 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @""),
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSD", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not supported.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @"") },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
