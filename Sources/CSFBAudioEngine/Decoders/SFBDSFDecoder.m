@@ -392,7 +392,7 @@ static void MatrixTransposeNaive(const unsigned char * restrict A, unsigned char
 
 	NSError *seekError = nil;
 	if(![_inputSource seekToOffset:(_audioOffset + blockOffset) error:&seekError]) {
-		os_log_debug(gSFBDSDDecoderLog, "Error seeking to input offset %lld: %{public}", _audioOffset + blockOffset, seekError);
+		os_log_debug(gSFBDSDDecoderLog, "Error seeking to input offset %lld: %{public}@", _audioOffset + blockOffset, seekError);
 		if(error)
 			*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain code:SFBDSDDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url, NSUnderlyingErrorKey: seekError }];
 		return NO;
