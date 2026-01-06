@@ -49,12 +49,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 			case SFBAudioEncoderErrorCodeUnknownEncoder:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested encoder is unavailable.", @"");
-			case SFBAudioEncoderErrorCodeInternalError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal encoder error occurred.", @"");
 			case SFBAudioEncoderErrorCodeInvalidFormat:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+			case SFBAudioEncoderErrorCodeInternalError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An internal encoder error occurred.", @"");
 		}
 		return nil;
 	}];
