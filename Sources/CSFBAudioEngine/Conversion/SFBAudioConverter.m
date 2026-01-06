@@ -28,7 +28,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 			case SFBAudioConverterErrorCodeFormatNotSupported:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested audio format is not supported.", @"");
+				break;
 		}
+		
 		return nil;
 	}];
 }

@@ -29,16 +29,23 @@ static void SFBCreateInputSourceLog(void)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBInputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBInputSourceErrorCodeFileNotFound:
+		switch(err.code) {
+			case SFBInputSourceErrorCodeFileNotFound:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested file was not found.", @"");
-				case SFBInputSourceErrorCodeInputOutput:
+				break;
+
+			case SFBInputSourceErrorCodeInputOutput:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An input/output error occurred.", @"");
-				case SFBInputSourceErrorCodeNotSeekable:
+				break;
+
+			case SFBInputSourceErrorCodeNotSeekable:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The input does not support seeking.", @"");
-			}
+				break;
 		}
+
 		return nil;
 	}];
 }

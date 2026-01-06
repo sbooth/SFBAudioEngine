@@ -39,16 +39,24 @@ static NSMutableArray *_registeredSubclasses = nil;
 			case SFBAudioFileErrorCodeInternalError:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An internal error occurred.", @"");
+				break;
+
 			case SFBAudioFileErrorCodeUnknownFormatName:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested format is unavailable.", @"");
+				break;
+
 			case SFBAudioFileErrorCodeInputOutput:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An input/output error occurred.", @"");
+				break;
+
 			case SFBAudioFileErrorCodeInvalidFormat:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file's format is invalid, unknown, or unsupported.", @"");
+				break;
 		}
+
 		return nil;
 	}];
 }

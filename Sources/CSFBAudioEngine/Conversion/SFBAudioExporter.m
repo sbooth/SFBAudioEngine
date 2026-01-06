@@ -28,7 +28,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 			case SFBAudioExporterErrorCodeFileFormatNotSupported:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file's format is not supported.", @"");
+				break;
 		}
+		
 		return nil;
 	}];
 }
