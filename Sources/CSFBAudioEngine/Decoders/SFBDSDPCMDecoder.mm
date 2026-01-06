@@ -397,7 +397,7 @@ private:
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
 		if(error)
 			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeUnsupportedFormat,
-													  NSLocalizedString(@"The file “%@” is not supported.", @""),
+													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @"") },
 													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
