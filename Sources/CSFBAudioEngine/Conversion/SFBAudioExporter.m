@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,8 +10,9 @@
 
 #import "SFBAudioExporter.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for SFBAudioExporter
 NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.AudioExporter";
@@ -23,11 +24,10 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioExporterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioExporterErrorCodeFileFormatNotSupported:
+		switch(err.code) {
+			case SFBAudioExporterErrorCodeFileFormatNotSupported:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file's format is not supported.", @"");
-			}
 		}
 		return nil;
 	}];
@@ -65,12 +65,10 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:processingFormat];
 	if(!converter) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioExporterErrorDomain
-											 code:SFBAudioExporterErrorCodeFileFormatNotSupported
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
-											  url:decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported file format", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for export.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioExporterErrorDomain, SFBAudioExporterErrorCodeFileFormatNotSupported,
+													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's format is not supported for export.", @"") },
+													  SFBLocalizedNameForURL(decoder.inputSource.url));
 		return NO;
 	}
 
