@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,8 +10,9 @@
 #import "SFBScreamTracker3ModuleFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module = @"org.sbooth.AudioEngine.File.ScreamTracker3Module";
 
@@ -53,12 +54,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module = @"org.
 		TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
 		if(!stream.isOpen()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Input/output error", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+														  NSLocalizedString(@"The file “%@” could not be opened for reading.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
@@ -86,8 +86,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module = @"org.
 		self.metadata = metadata;
 
 		return YES;
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(gSFBAudioFileLog, "Error reading Scream Tracker 3 module properties and metadata: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];

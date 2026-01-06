@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,8 +10,9 @@
 #import "SFBImpulseTrackerModuleFile.h"
 
 #import "AddAudioPropertiesToDictionary.h"
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule = @"org.sbooth.AudioEngine.File.ImpulseTrackerModule";
 
@@ -53,24 +54,22 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule = @"org.
 		TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
 		if(!stream.isOpen()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Input/output error", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+														  NSLocalizedString(@"The file “%@” could not be opened for reading.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
 		TagLib::IT::File file(&stream);
 		if(!file.isValid()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Impulse Tracker module file.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Not an Impulse Tracker module file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+														  NSLocalizedString(@"The file “%@” is not a valid Impulse Tracker module file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
@@ -86,8 +85,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule = @"org.
 		self.metadata = metadata;
 
 		return YES;
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(gSFBAudioFileLog, "Error reading Impulse Tracker module properties and metadata: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
