@@ -210,7 +210,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBInputSource` and subclasses
-extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSourceErrorDomain);
+extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBInputSource`
 typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
@@ -220,6 +220,6 @@ typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
 	SFBInputSourceErrorCodeInputOutput 		= 1,
 	/// Input not seekable
 	SFBInputSourceErrorCodeNotSeekable 		= 2,
-} NS_SWIFT_NAME(InputSourceError);
+} NS_SWIFT_NAME(InputSource.Error);
 
 NS_ASSUME_NONNULL_END

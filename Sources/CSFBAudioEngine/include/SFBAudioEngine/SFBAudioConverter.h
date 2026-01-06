@@ -144,12 +144,12 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioConverter`
-extern NSErrorDomain const SFBAudioConverterErrorDomain NS_SWIFT_NAME(AudioConverterErrorDomain);
+extern NSErrorDomain const SFBAudioConverterErrorDomain NS_SWIFT_NAME(AudioConverter.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBAudioConverter`
 typedef NS_ERROR_ENUM(SFBAudioConverterErrorDomain, SFBAudioConverterErrorCode) {
 	/// Audio format not supported
 	SFBAudioConverterErrorCodeFormatNotSupported 	= 0,
-} NS_SWIFT_NAME(AudioConverterError);
+} NS_SWIFT_NAME(AudioConverter.Error);
 
 NS_ASSUME_NONNULL_END

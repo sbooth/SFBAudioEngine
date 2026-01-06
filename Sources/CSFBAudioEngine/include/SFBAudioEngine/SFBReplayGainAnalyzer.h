@@ -50,7 +50,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 @end
 
 /// The `NSErrorDomain` used by `SFBReplayGainAnalyzer`
-extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain NS_SWIFT_NAME(ReplayGainAnalyzerErrorDomain);
+extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBReplayGainAnalyzer`
 typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCode) {
@@ -58,6 +58,6 @@ typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErr
 	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,
 	/// Insufficient samples in file for analysis
 	SFBReplayGainAnalyzerErrorCodeInsufficientSamples			= 1,
-} NS_SWIFT_NAME(ReplayGainAnalyzerError);
+} NS_SWIFT_NAME(ReplayGainAnalyzer.Error);
 
 NS_ASSUME_NONNULL_END
