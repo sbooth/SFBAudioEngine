@@ -113,27 +113,27 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 // MARK: - Playback Control
 
 /// Starts the `AVAudioEngine` and begins rendering audio
-/// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
+/// - note: If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 /// Pauses audio rendering
-/// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
+/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is not rendering audio
 - (BOOL)pause;
 /// Resumes audio rendering
-/// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
+/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)resume;
 /// Stops the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
-/// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
+/// - note: If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
 /// Toggles the player between playing and paused states, starting playback if stopped
 ///
-/// If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method sends `-playReturningError:`
-/// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method sends `-pause`
-/// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePaused` this method sends `-resume`
+/// If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method sends `-playReturningError:`
+/// If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method sends `-pause`
+/// If the current playback state is `SFBAudioPlayerPlaybackStatePaused` this method sends `-resume`
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
 /// Resets the `AVAudioEngine`
@@ -283,16 +283,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Error Information
 
-/// The `NSErrorDomain` used by `SFBAudioPlayer`
-extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayer.ErrorDomain);
+/// The error domain for audio player errors
+extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayerErrorDomain);
 
-/// Possible `NSError` error codes used by `SFBAudioPlayer`
+/// Possible error codes in the audio player error domain
 typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode) {
 	/// Internal or unspecified error
 	SFBAudioPlayerErrorCodeInternalError 		= 0,
 	/// Format not supported
 	SFBAudioPlayerErrorCodeFormatNotSupported 	= 1,
-} NS_SWIFT_NAME(AudioPlayer.ErrorCode);
+} NS_SWIFT_NAME(AudioPlayerErrorCode);
 
 // MARK: - SFBAudioPlayerDelegate
 
