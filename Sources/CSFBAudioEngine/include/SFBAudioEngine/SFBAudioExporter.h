@@ -32,12 +32,12 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 @end
 
 /// The `NSErrorDomain` used by `SFBAudioExporter`
-extern NSErrorDomain const SFBAudioExporterErrorDomain NS_SWIFT_NAME(AudioExporter.ErrorDomain);
+extern NSErrorDomain const SFBAudioExporterErrorDomain NS_SWIFT_NAME(AudioExporterErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBAudioExporter`
 typedef NS_ERROR_ENUM(SFBAudioExporterErrorDomain, SFBAudioExporterErrorCode) {
 	/// File format not supported
-	SFBAudioExporterErrorCodeFileFormatNotSupported				= 0,
-} NS_SWIFT_NAME(AudioExporter.ErrorCode);
+	SFBAudioExporterErrorCodeFileFormatNotSupported 	= 0,
+} NS_SWIFT_NAME(AudioExporterError);
 
 NS_ASSUME_NONNULL_END

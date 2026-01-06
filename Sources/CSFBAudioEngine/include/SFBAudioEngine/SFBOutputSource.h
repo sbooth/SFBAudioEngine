@@ -183,14 +183,14 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBOutputSource` and subclasses
-extern NSErrorDomain const SFBOutputSourceErrorDomain NS_SWIFT_NAME(OutputSource.ErrorDomain);
+extern NSErrorDomain const SFBOutputSourceErrorDomain NS_SWIFT_NAME(OutputSourceErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBOutputSource`
 typedef NS_ERROR_ENUM(SFBOutputSourceErrorDomain, SFBOutputSourceErrorCode) {
 	/// File not found
-	SFBOutputSourceErrorCodeFileNotFound	= 0,
+	SFBOutputSourceErrorCodeFileNotFound 	= 0,
 	/// Input/output error
-	SFBOutputSourceErrorCodeInputOutput		= 1,
-} NS_SWIFT_NAME(OutputSource.ErrorCode);
+	SFBOutputSourceErrorCodeInputOutput 	= 1,
+} NS_SWIFT_NAME(OutputSourceError);
 
 NS_ASSUME_NONNULL_END

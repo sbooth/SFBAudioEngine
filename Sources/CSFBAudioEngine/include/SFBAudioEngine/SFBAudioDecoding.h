@@ -72,10 +72,10 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Error Information
 
-/// The error domain for audio decoder errors
+/// The error domain for audio decoding errors
 extern NSErrorDomain const SFBAudioDecodingErrorDomain NS_SWIFT_NAME(AudioDecodingErrorDomain);
 
-/// Possible error codes in the audio decoder error domain
+/// Possible error codes in the audio decoding error domain
 typedef NS_ERROR_ENUM(SFBAudioDecodingErrorDomain, SFBAudioDecodingErrorCode) {
 	/// Invalid or unknown format
 	SFBAudioDecodingErrorCodeInvalidFormat		= 0,

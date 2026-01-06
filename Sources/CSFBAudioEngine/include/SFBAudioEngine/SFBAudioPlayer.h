@@ -283,10 +283,10 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Error Information
 
-/// The error domain for audio player errors
+/// The `NSErrorDomain` used by `SFBAudioPlayer`
 extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayerErrorDomain);
 
-/// Possible error codes in the audio player error domain
+/// Possible `NSError` error codes used by `SFBAudioPlayer`
 typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode) {
 	/// Internal or unspecified error
 	SFBAudioPlayerErrorCodeInternalError 		= 0,
