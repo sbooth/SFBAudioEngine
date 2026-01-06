@@ -46,12 +46,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioEncoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
 		switch(err.code) {
-			case SFBAudioEncoderErrorCodeInternalError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal encoder error occurred.", @"");
 			case SFBAudioEncoderErrorCodeUnknownEncoder:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested encoder is unavailable.", @"");
+			case SFBAudioEncoderErrorCodeInternalError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An internal encoder error occurred.", @"");
 			case SFBAudioEncoderErrorCodeInvalidFormat:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
@@ -225,9 +225,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unknown encoder: \"%{public}@\"", encoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
-										 code:SFBAudioEncoderErrorCodeUnknownEncoder
-									 userInfo:@{ NSURLErrorKey: outputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeUnknownEncoder userInfo:nil];
 		return nil;
 	}
 
