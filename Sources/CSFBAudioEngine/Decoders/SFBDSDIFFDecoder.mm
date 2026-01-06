@@ -18,6 +18,8 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDecoder.DSDIFF";
 
@@ -661,9 +663,10 @@ std::unique_ptr<FormDSDChunk> ParseDSDIFF(SFBInputSource *inputSource)
 
 static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 {
-	return [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-							   code:SFBAudioDecodingErrorCodeInvalidFormat
-						   userInfo:@{ NSURLErrorKey: url, SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"DSDIFF", @"") }];
+	return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
+											NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""),
+											@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @"") },
+											SFBLocalizedNameForURL(url));
 }
 
 } /* namespace */

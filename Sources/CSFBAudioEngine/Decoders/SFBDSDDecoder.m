@@ -9,6 +9,9 @@
 #import "SFBDSDDecoder.h"
 #import "SFBDSDDecoder+Internal.h"
 
+// NSError domain for DSDDecoder and subclasses
+NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
+
 os_log_t gSFBDSDDecoderLog = NULL;
 
 static void SFBCreateDSDDecoderLog(void) __attribute__ ((constructor));
@@ -34,6 +37,45 @@ static void SFBCreateDSDDecoderLog(void)
 @dynamic packetCount;
 
 static NSMutableArray *_registeredSubclasses = nil;
+
++ (void)load
+{
+	[NSError setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+		switch(err.code) {
+			case SFBDSDDecoderErrorCodeUnknownDecoder:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
+				break;
+
+			case SFBDSDDecoderErrorCodeInvalidFormat:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"The format is invalid or unknown.", @"");
+				break;
+
+			case SFBDSDDecoderErrorCodeUnsupportedFormat:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"The format is unsupported.", @"");
+				break;
+
+			case SFBDSDDecoderErrorCodeInternalError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An internal decoder error occurred.", @"");
+				break;
+
+			case SFBDSDDecoderErrorCodeDecodingError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An error occurred while decoding.", @"");
+				break;
+
+			case SFBDSDDecoderErrorCodeSeekError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An error occurred while seeking.", @"");
+				break;
+		}
+		
+		return nil;
+	}];
+}
 
 + (NSSet *)supportedPathExtensions
 {
@@ -210,8 +252,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 
 	if(error)
-		*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-									 code:SFBAudioDecodingErrorCodeInvalidFormat
+		*error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+									 code:SFBDSDDecoderErrorCodeInvalidFormat
 								 userInfo:@{ NSURLErrorKey: _inputSource.url,
 											 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 	return nil;
