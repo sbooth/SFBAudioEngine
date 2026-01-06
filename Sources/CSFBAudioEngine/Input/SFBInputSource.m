@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -291,7 +291,7 @@ static void SFBCreateInputSourceLog(void)
 
 	if(!self.supportsSeeking) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeNotSeekable userInfo:nil];
+			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeNotSeekable userInfo:@{ NSURLErrorKey: _url }];
 		return nil;
 	}
 
@@ -320,7 +320,7 @@ static void SFBCreateInputSourceLog(void)
 
 	if(data.length < length) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: _url }];
 		return nil;
 	}
 
