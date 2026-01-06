@@ -62,33 +62,33 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 // MARK: - Playlist Management
 
 /// Cancels the current decoder, clears any queued decoders, creates and enqueues a decoder, and starts playback
-/// - note: This is equivalent to `-enqueueURL:forImmediatePlayback:error:` with `YES` for `forImmediatePlayback` followed by `-playReturningError:`
+/// - note: This is equivalent to ``-enqueueURL:forImmediatePlayback:error:`` with `YES` for `forImmediatePlayback` followed by ``-playReturningError:``
 /// - parameter url: The URL to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued and playback started successfully
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
 /// Cancels the current decoder, clears any queued decoders, enqueues a decoder, and starts playback
-/// - note: This is equivalent to `-enqueueDecoder:forImmediatePlayback:error:` with `YES` for `forImmediatePlayback` followed by `-playReturningError:`
+/// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `YES` for `forImmediatePlayback` followed by ``-playReturningError:``
 /// - parameter decoder: The decoder to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued and playback started successfully
 - (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
-/// - note: This is equivalent to `-enqueueURL:forImmediatePlayback:error:` with `NO` for `forImmediatePlayback`
+/// - note: This is equivalent to ``-enqueueURL:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
 /// - parameter url: The URL to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Creates and enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
-/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to `-enqueueDecoder:forImmediatePlayback:error:`
+/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to ``-enqueueDecoder:forImmediatePlayback:error:``
 /// - parameter url: The URL to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 /// Enqueues a decoder for subsequent playback
-/// - note: This is equivalent to `-enqueueDecoder:forImmediatePlayback:error:` with `NO` for `forImmediatePlayback`
+/// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
@@ -113,27 +113,27 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 // MARK: - Playback Control
 
 /// Starts the `AVAudioEngine` and begins rendering audio
-/// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
+/// - note: If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 /// Pauses audio rendering
-/// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
+/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is not rendering audio
 - (BOOL)pause;
 /// Resumes audio rendering
-/// - note: If the current `playbackState` is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
+/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)resume;
 /// Stops the `AVAudioEngine`
 /// - note: This method cancels the current decoder and clears any queued decoders
-/// - note: If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
+/// - note: If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
 /// Toggles the player between playing and paused states, starting playback if stopped
 ///
-/// If the current `playbackState` is `SFBAudioPlayerPlaybackStateStopped` this method sends `-playReturningError:`
-/// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePlaying` this method sends `-pause`
-/// If the current `playbackState` is `SFBAudioPlayerPlaybackStatePaused` this method sends `-resume`
+/// If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method sends ``-playReturningError:``
+/// If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method sends ``-pause``
+/// If the current playback state is `SFBAudioPlayerPlaybackStatePaused` this method sends ``-resume``
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
 /// Resets the `AVAudioEngine`
@@ -283,16 +283,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 // MARK: - Error Information
 
-/// The `NSErrorDomain` used by `SFBAudioPlayer`
-extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayer.ErrorDomain);
+/// The error domain for audio player errors
+extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayerErrorDomain);
 
-/// Possible `NSError` error codes used by `SFBAudioPlayer`
+/// Possible error codes in the audio player error domain
 typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode) {
 	/// Internal or unspecified error
 	SFBAudioPlayerErrorCodeInternalError 		= 0,
 	/// Format not supported
 	SFBAudioPlayerErrorCodeFormatNotSupported 	= 1,
-} NS_SWIFT_NAME(AudioPlayer.ErrorCode);
+} NS_SWIFT_NAME(AudioPlayerError);
 
 // MARK: - SFBAudioPlayerDelegate
 

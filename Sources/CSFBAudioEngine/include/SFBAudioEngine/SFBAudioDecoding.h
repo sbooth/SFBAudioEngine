@@ -72,7 +72,7 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Error Information
 
-/// An error domain used by audio decoders
+/// The error domain for audio decoder errors
 extern NSErrorDomain const SFBAudioDecodingErrorDomain NS_SWIFT_NAME(AudioDecodingErrorDomain);
 
 /// Possible error codes in the audio decoder error domain
