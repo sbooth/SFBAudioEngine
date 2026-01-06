@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -101,8 +101,9 @@
 
 #import "SFBReplayGainAnalyzer.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
@@ -332,13 +333,13 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBReplayGainAnalyzerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
+		switch(err.code) {
+			case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file's format is not supported.", @"");
-				case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
+			case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file does not contain sufficient audio samples for analysis.", @"");
-			}
 		}
 		return nil;
 	}];
@@ -404,12 +405,10 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	bool validSampleRate = [SFBReplayGainAnalyzer evenMultipleSampleRateIsSupported:decoderSampleRate];
 	if(!validSampleRate) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
-											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain audio at a supported sample rate.", @"")
-											  url:url
-									failureReason:NSLocalizedString(@"Unsupported sample rate", @"")
-							   recoverySuggestion:NSLocalizedString(@"Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
+													  NSLocalizedString(@"The file “%@” does not contain audio at a supported sample rate.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported.", @"") },
+													  SFBLocalizedNameForURL(url));
 		return nil;
 	}
 
@@ -417,12 +416,10 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 	if(!(inputFormat->mChannelsPerFrame == 1 || inputFormat->mChannelsPerFrame == 2)) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
-											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @"")
-											  url:url
-									failureReason:NSLocalizedString(@"Unsupported number of channels", @"")
-							   recoverySuggestion:NSLocalizedString(@"Only mono and stereo files supported.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
+													  NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Only mono and stereo files are supported.", @"") },
+													  SFBLocalizedNameForURL(url));
 		return nil;
 	}
 
@@ -434,12 +431,10 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:outputFormat];
 	if(!converter) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
-											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
-											  url:url
-									failureReason:NSLocalizedString(@"Unsupported file format", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
+													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"") },
+													  SFBLocalizedNameForURL(url));
 		return nil;
 	}
 
@@ -511,12 +506,10 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 	if(gain == SFBReplayGainAnalyzerInsufficientSamples) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
-											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @"")
-											  url:url
-									failureReason:NSLocalizedString(@"Insufficient audio samples", @"")
-							   recoverySuggestion:NSLocalizedString(@"The audio is too short for replay gain analysis.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+													  NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"") },
+													  SFBLocalizedNameForURL(url));
 		return nil;
 	}
 
@@ -536,8 +529,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 										 code:SFBReplayGainAnalyzerErrorCodeInsufficientSamples
 									 userInfo:@{
 										 NSLocalizedDescriptionKey: NSLocalizedString(@"The files do not contain sufficient audio for analysis.", @""),
-										 NSLocalizedFailureReasonErrorKey:NSLocalizedString(@"Insufficient audio samples", @""),
-										 NSLocalizedRecoverySuggestionErrorKey:NSLocalizedString(@"The audio is too short for replay gain analysis.", @"")}];
+										 NSLocalizedRecoverySuggestionErrorKey:NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"") }];
 		return nil;
 	}
 

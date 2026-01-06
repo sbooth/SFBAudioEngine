@@ -8,10 +8,11 @@
 
 #import "SFBAudioConverter.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
 #import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for SFBAudioConverter
 NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.AudioConverter";
@@ -23,11 +24,10 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioConverterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioConverterErrorCodeFormatNotSupported:
+		switch(err.code) {
+			case SFBAudioConverterErrorCodeFormatNotSupported:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested audio format is not supported.", @"");
-			}
 		}
 		return nil;
 	}];
@@ -148,12 +148,10 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		_intermediateConverter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:encoder.processingFormat];
 		if(!_intermediateConverter) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioConverterErrorDomain
-												 code:SFBAudioConverterErrorCodeFormatNotSupported
-						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
-												  url:decoder.inputSource.url
-										failureReason:NSLocalizedString(@"Unsupported file format", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for conversion.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioConverterErrorDomain, SFBAudioConverterErrorCodeFormatNotSupported,
+														  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's format is not supported for conversion.", @"") },
+														  SFBLocalizedNameForURL(decoder.inputSource.url));
 			return nil;
 		}
 	}
