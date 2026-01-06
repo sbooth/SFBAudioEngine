@@ -264,8 +264,7 @@ private:
 
 		_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
 		_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];

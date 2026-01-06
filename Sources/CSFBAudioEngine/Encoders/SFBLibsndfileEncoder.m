@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -13,7 +13,6 @@
 
 #import "SFBLibsndfileEncoder.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBLibsndfileUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile = @"org.sbooth.AudioEngine.Encoder.Libsndfile";
@@ -637,14 +636,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	_sndfile = sf_open_virtual(&virtualIO, SFM_WRITE, &_sfinfo, (__bridge void *)self);
 	if(!_sndfile) {
 		os_log_error(gSFBAudioEncoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
-
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:@{
-				NSLocalizedDescriptionKey: NSLocalizedString(@"The output format is not supported by Libsndfile.", @""),
-				NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unsupported format", @""),
-				NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The format is not supported.", @"")
-			}];
-
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+										 code:SFBAudioEncoderErrorCodeInvalidFormat
+									 userInfo:@{ NSLocalizedDescriptionKey: NSLocalizedString(@"The requested output format is not supported by Libsndfile.", @""),
+												 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The format is not supported.", @"") }];
 		return NO;
 	}
 
