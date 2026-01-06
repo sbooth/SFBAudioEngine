@@ -198,8 +198,8 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -213,8 +213,8 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -234,8 +234,8 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -251,8 +251,8 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -275,8 +275,8 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
