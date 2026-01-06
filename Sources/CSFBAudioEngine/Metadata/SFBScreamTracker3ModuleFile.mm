@@ -65,12 +65,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module = @"org.
 		TagLib::S3M::File file(&stream);
 		if(!file.isValid()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Scream Tracker 3 module.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Not a Scream Tracker 3 module", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+														  NSLocalizedString(@"The file “%@” is not a valid Scream Tracker 3 module.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
@@ -97,14 +96,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module = @"org.
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
 	os_log_error(gSFBAudioFileLog, "Writing Scream Tracker 3 module metadata is not supported");
-
 	if(error)
-		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-										 code:SFBAudioFileErrorCodeInputOutput
-				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-										  url:self.url
-								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-						   recoverySuggestion:NSLocalizedString(@"Writing Scream Tracker 3 module metadata is not supported.", @"")];
+		*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+												  NSLocalizedString(@"The file “%@” could not be saved.", @""),
+												  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Writing Scream Tracker 3 metadata is not supported.", @""),
+													 NSURLErrorKey: self.url },
+												  SFBLocalizedNameForURL(self.url));
 	return NO;
 }
 

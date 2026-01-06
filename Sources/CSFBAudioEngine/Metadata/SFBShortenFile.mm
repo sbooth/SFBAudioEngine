@@ -105,14 +105,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
 	os_log_error(gSFBAudioFileLog, "Writing Shorten metadata is not supported");
-
 	if(error)
-		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-										 code:SFBAudioFileErrorCodeInputOutput
-				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-										  url:self.url
-								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-						   recoverySuggestion:NSLocalizedString(@"Writing Shorten metadata is not supported.", @"")];
+		*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+												  NSLocalizedString(@"The file “%@” could not be saved.", @""),
+												  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Writing Shorten metadata is not supported.", @""),
+													 NSURLErrorKey: self.url },
+												  SFBLocalizedNameForURL(self.url));
 	return NO;
 }
 

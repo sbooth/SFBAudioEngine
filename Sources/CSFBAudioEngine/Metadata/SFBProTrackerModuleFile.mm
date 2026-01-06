@@ -65,12 +65,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 		TagLib::Mod::File file(&stream);
 		if(!file.isValid()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid ProTracker module file.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Not a ProTracker module file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+														  NSLocalizedString(@"The file “%@” is not a valid ProTracker module.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
@@ -97,14 +96,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
 	os_log_error(gSFBAudioFileLog, "Writing ProTracker module metadata is not supported");
-
 	if(error)
-		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-										 code:SFBAudioFileErrorCodeInputOutput
-				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-										  url:self.url
-								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-						   recoverySuggestion:NSLocalizedString(@"Writing ProTracker module metadata is not supported.", @"")];
+		*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+												  NSLocalizedString(@"The file “%@” could not be saved.", @""),
+												  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Writing ProTracker module metadata is not supported.", @""),
+													 NSURLErrorKey: self.url },
+												  SFBLocalizedNameForURL(self.url));
 	return NO;
 }
 
