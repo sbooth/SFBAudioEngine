@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,7 +10,8 @@
 
 #import "SFBModuleFile.h"
 
-#import "NSError+SFBURLPresentation.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
@@ -69,13 +70,11 @@
 	if(!duh) {
 		dumbfile_close(df);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInputOutput
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Module file.", @"")
-											  url:self.url
-									failureReason:NSLocalizedString(@"Not a Module file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Module.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: self.url },
+													  SFBLocalizedNameForURL(self.url));
 		return NO;
 	}
 
@@ -97,14 +96,12 @@
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
 	os_log_error(gSFBAudioFileLog, "Writing Module metadata is not supported");
-
 	if(error)
-		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-										 code:SFBAudioFileErrorCodeInputOutput
-				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-										  url:self.url
-								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-						   recoverySuggestion:NSLocalizedString(@"Writing Module metadata is not supported.", @"")];
+		*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+												  NSLocalizedString(@"The file “%@” could not be saved.", @""),
+												  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Writing Module metadata is not supported.", @""),
+													 NSURLErrorKey: self.url },
+												  SFBLocalizedNameForURL(self.url));
 	return NO;
 }
 
