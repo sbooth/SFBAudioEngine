@@ -139,7 +139,7 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 	SFBAudioEncoderErrorCodeUnknownEncoder	= 1,
 	/// Invalid, unknown, or unsupported format
 	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
-} NS_SWIFT_NAME(AudioEncoder.ErrorCode);
+} NS_SWIFT_NAME(AudioEncoder.Error);
 
 #pragma mark - FLAC Encoder Settings
 
