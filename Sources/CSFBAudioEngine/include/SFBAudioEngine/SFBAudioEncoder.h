@@ -133,12 +133,12 @@ extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder
 
 /// Possible `NSError` error codes used by `SFBAudioEncoder`
 typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
-	/// Internal or unspecified encoder error
-	SFBAudioEncoderErrorCodeInternalError	= 0,
 	/// Unknown encoder name
-	SFBAudioEncoderErrorCodeUnknownEncoder	= 1,
+	SFBAudioEncoderErrorCodeUnknownEncoder 	= 0,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
+	SFBAudioEncoderErrorCodeInvalidFormat	= 1,
+	/// Internal or unspecified encoder error
+	SFBAudioEncoderErrorCodeInternalError	= 2,
 } NS_SWIFT_NAME(AudioEncoder.Error);
 
 #pragma mark - FLAC Encoder Settings

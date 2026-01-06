@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,8 +17,9 @@
 
 #import "SFBCoreAudioEncoder.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
 
@@ -328,15 +329,12 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 		auto typesForExtension = AudioFileTypeIDsForExtension(_outputSource.url.pathExtension);
 		if(typesForExtension.empty()) {
 			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set and extension \"%{public}@\" has no known AudioFileTypeID", _outputSource.url.pathExtension);
-
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
-												 code:SFBAudioEncoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is an unknown type.", @"")
-												  url:_outputSource.url
-										failureReason:NSLocalizedString(@"Unknown file type", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension does not match any known file type.", @"")];
-
+				*error = SFBErrorWithLocalizedDescription(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
+														  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension does not match any known file type.", @""),
+															 NSURLErrorKey: _outputSource.url },
+														  SFBLocalizedNameForURL(_outputSource.url));
 			return NO;
 		}
 
@@ -353,15 +351,12 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 		auto availableFormatIDs = AudioFormatIDsForFileTypeID(fileType, true);
 		if(availableFormatIDs.empty()) {
 			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set and file type '%{public}.4s' has no known AudioFormatID", SFBCStringForOSType(fileType));
-
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
-												 code:SFBAudioEncoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is an unsupported audio format.", @"")
-												  url:_outputSource.url
-										failureReason:NSLocalizedString(@"Unsupported audio format", @"")
-								   recoverySuggestion:NSLocalizedString(@"There are no supported audio formats for encoding files of this type.", @"")];
-
+				*error = SFBErrorWithLocalizedDescription(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
+														  NSLocalizedString(@"The file “%@” is an unsupported audio format.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"There are no supported audio formats for encoding files of this type.", @""),
+															 NSURLErrorKey: _outputSource.url },
+														  SFBLocalizedNameForURL(_outputSource.url));
 			return NO;
 		}
 
