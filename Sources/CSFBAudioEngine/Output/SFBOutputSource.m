@@ -26,14 +26,18 @@ static void SFBCreateOutputSourceLog(void)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBOutputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBOutputSourceErrorCodeFileNotFound:
+		switch(err.code) {
+			case SFBOutputSourceErrorCodeFileNotFound:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested file was not found.", @"");
-				case SFBOutputSourceErrorCodeInputOutput:
+				break;
+
+			case SFBOutputSourceErrorCodeInputOutput:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An input/output error occurred.", @"");
-			}
+				break;
 		}
+
 		return nil;
 	}];
 }

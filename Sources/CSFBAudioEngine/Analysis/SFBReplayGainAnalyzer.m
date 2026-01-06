@@ -337,10 +337,14 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 			case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file's format is not supported.", @"");
+				break;
+				
 			case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file does not contain sufficient audio samples for analysis.", @"");
+				break;
 		}
+
 		return nil;
 	}];
 }
