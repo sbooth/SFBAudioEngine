@@ -8,6 +8,7 @@
 
 NSError * SFBErrorWithLocalizedDescription(NSErrorDomain domain, NSInteger code, NSString *format, NSDictionary *userInfo, ...)
 {
+	NSCParameterAssert(domain != nil);
 	NSCParameterAssert(format != nil);
 
 	va_list ap;
