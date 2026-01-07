@@ -73,7 +73,7 @@ More complex conversions are supported including writing to `Data` instead of fi
 
 ~~~swift
 let output = OutputSource.makeForData()
-let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
+let encoder = try PCMEncoder(outputSource: output, encoderName: .coreAudio)
 encoder.settings = [
     .coreAudioFileTypeID: kAudioFileM4AType,
     .coreAudioFormatID: kAudioFormatMPEG4AAC,

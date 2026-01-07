@@ -9,10 +9,10 @@
 #import "SFBAudioConverter.h"
 
 #import "SFBAudioDecoder.h"
-#import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
+#import "SFBPCMEncoder.h"
 
 // NSError domain for SFBAudioConverter
 NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.AudioConverter";
@@ -69,7 +69,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
 		return nil;
-	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
+	SFBPCMEncoder *encoder = [[SFBPCMEncoder alloc] initWithURL:destinationURL error:error];
 	if(!encoder)
 		return nil;
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
@@ -95,7 +95,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error
 {
-	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
+	SFBPCMEncoder *encoder = [[SFBPCMEncoder alloc] initWithURL:destinationURL error:error];
 	if(!encoder)
 		return nil;
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];

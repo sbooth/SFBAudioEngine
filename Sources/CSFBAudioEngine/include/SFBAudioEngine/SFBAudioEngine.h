@@ -29,7 +29,7 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 
 #import <SFBAudioEngine/SFBAudioEncoding.h>
 #import <SFBAudioEngine/SFBPCMEncoding.h>
-#import <SFBAudioEngine/SFBAudioEncoder.h>
+#import <SFBAudioEngine/SFBPCMEncoder.h>
 
 #import <SFBAudioEngine/SFBAudioPlayer.h>
 

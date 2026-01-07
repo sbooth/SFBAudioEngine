@@ -1,18 +1,18 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import "SFBAudioEncoder+Internal.h"
+#import "SFBPCMEncoder+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-// An SFBAudioEncoder subclass supporting FLAC
-@interface SFBFLACEncoder : SFBAudioEncoder
+// An SFBPCMEncoder subclass supporting FLAC
+@interface SFBFLACEncoder : SFBPCMEncoder
 @end
 
-// An SFBAudioEncoder subclass supporting Ogg FLAC
+// An SFBPCMEncoder subclass supporting Ogg FLAC
 @interface SFBOggFLACEncoder : SFBFLACEncoder
 @end
 

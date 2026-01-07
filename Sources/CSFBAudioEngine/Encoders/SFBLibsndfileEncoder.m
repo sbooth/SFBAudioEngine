@@ -15,7 +15,7 @@
 
 #import "SFBLibsndfileUtilities.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile = @"org.sbooth.AudioEngine.Encoder.Libsndfile";
+SFBPCMEncoderName const SFBPCMEncoderNameLibsndfile = @"org.sbooth.AudioEngine.PCMEncoder.Libsndfile";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat = @"Major Format";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSubtype = @"Subtype";
@@ -100,7 +100,7 @@ static int MajorFormatForExtension(NSString *pathExtension)
 				return formatInfo.format;
 		}
 		else
-			os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
+			os_log_debug(gSFBPCMEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 	}
 
 	return 0;
@@ -188,7 +188,7 @@ static void SndfileChannelMapWithChannelDescriptions(int * _Nonnull channel_map,
 			case kAudioChannelLabel_Ambisonic_Z: 			channel_map[i] = SF_CHANNEL_MAP_AMBISONIC_B_Z; 				break;
 
 			default:
-				os_log_error(gSFBAudioEncoderLog, "Unable to map channel label: %d", channelDescriptions[i].mChannelLabel);
+				os_log_error(gSFBPCMEncoderLog, "Unable to map channel label: %d", channelDescriptions[i].mChannelLabel);
 				channel_map[i] = SF_CHANNEL_MAP_INVALID;
 				break;
 		}
@@ -390,7 +390,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class] priority:-50];
+	[SFBPCMEncoder registerSubclass:[self class] priority:-50];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -414,7 +414,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 					[majorModeExtensions addObject:pathExtension];
 			}
 			else
-				os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
+				os_log_debug(gSFBPCMEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 		}
 
 		pathExtensions = [majorModeExtensions copy];
@@ -428,9 +428,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	return [NSSet set];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameLibsndfile;
+	return SFBPCMEncoderNameLibsndfile;
 }
 
 - (BOOL)encodingIsLossless
@@ -536,11 +536,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K)		majorFormat = SF_FORMAT_MPC2K;
 		else if(majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64)		majorFormat = SF_FORMAT_RF64;
 		else
-			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile major format: %{public}@", majorFormatSetting);
+			os_log_error(gSFBPCMEncoderLog, "Ignoring unknown libsndfile major format: %{public}@", majorFormatSetting);
 	}
 	else {
 		majorFormat = MajorFormatForExtension(_outputSource.url.pathExtension);
-		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyLibsndfileMajorFormat is not set: guessed 0x%x based on extension \"%{public}@\"", majorFormat, _outputSource.url.pathExtension);
+		os_log_info(gSFBPCMEncoderLog, "SFBAudioEncodingSettingsKeyLibsndfileMajorFormat is not set: guessed 0x%x based on extension \"%{public}@\"", majorFormat, _outputSource.url.pathExtension);
 	}
 
 	int subtype = 0;
@@ -578,11 +578,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24)		subtype = SF_FORMAT_ALAC_24;
 		else if(subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32)		subtype = SF_FORMAT_ALAC_32;
 		else
-			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile subtype: %{public}@", subtypeSetting);
+			os_log_error(gSFBPCMEncoderLog, "Ignoring unknown libsndfile subtype: %{public}@", subtypeSetting);
 	}
 	else {
 		subtype = InferSubtypeFromFormat(_processingFormat);
-		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyLibsndfileSubtype is not set: guessed 0x%x based on format %{public}@", subtype, _processingFormat);
+		os_log_info(gSFBPCMEncoderLog, "SFBAudioEncodingSettingsKeyLibsndfileSubtype is not set: guessed 0x%x based on format %{public}@", subtype, _processingFormat);
 	}
 
 	int endian = 0;
@@ -593,7 +593,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		else if(fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianBig)		endian = SF_ENDIAN_BIG;
 		else if(fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU)		endian = SF_ENDIAN_CPU;
 		else
-			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile file endian-ness: %{public}@", fileEndianSetting);
+			os_log_error(gSFBPCMEncoderLog, "Ignoring unknown libsndfile file endian-ness: %{public}@", fileEndianSetting);
 	}
 
 	_sfinfo.samplerate 	= (int)_processingFormat.sampleRate;
@@ -618,9 +618,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			_writeMethod = Double;
 			break;
 		default:
-			os_log_error(gSFBAudioEncoderLog, "Unsupported subtype: 0x%x", subtype);
+			os_log_error(gSFBPCMEncoderLog, "Unsupported subtype: 0x%x", subtype);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 	}
 
@@ -635,10 +635,10 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	// Open the output file
 	_sndfile = sf_open_virtual(&virtualIO, SFM_WRITE, &_sfinfo, (__bridge void *)self);
 	if(!_sndfile) {
-		os_log_error(gSFBAudioEncoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
+		os_log_error(gSFBPCMEncoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
-										 code:SFBAudioEncoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain
+										 code:SFBPCMEncoderErrorCodeInvalidFormat
 									 userInfo:@{ NSLocalizedDescriptionKey: NSLocalizedString(@"The requested output format is not supported by Libsndfile.", @""),
 												 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The format is not supported.", @"") }];
 		return NO;
@@ -658,10 +658,10 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			// Rather than failing just log the error and continue
 			int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
 			if(result != SF_TRUE)
-				os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
+				os_log_error(gSFBPCMEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
 		}
 		else
-			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@", processingFormatChannelLayout.layoutName, err);
+			os_log_error(gSFBPCMEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@", processingFormatChannelLayout.layoutName, err);
 	}
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
@@ -684,7 +684,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(_sndfile) {
 		int result = sf_close(_sndfile);
 		if(result)
-			os_log_error(gSFBAudioEncoderLog, "sf_close failed: %{public}s", sf_error_number(result));
+			os_log_error(gSFBPCMEncoderLog, "sf_close failed: %{public}s", sf_error_number(result));
 		_sndfile = NULL;
 	}
 
@@ -729,20 +729,20 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			framesWritten = sf_writef_double(_sndfile, (const double *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
 			break;
 		default:
-			os_log_error(gSFBAudioEncoderLog, "Unknown libsndfile write method: %d", _writeMethod);
+			os_log_error(gSFBPCMEncoderLog, "Unknown libsndfile write method: %d", _writeMethod);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 	}
 
 	if(framesWritten != frameLength)
-		os_log_info(gSFBAudioEncoderLog, "sf_writef_XXX wrote %lld/%u frames", framesWritten, frameLength);
+		os_log_info(gSFBPCMEncoderLog, "sf_writef_XXX wrote %lld/%u frames", framesWritten, frameLength);
 
 	int result = sf_error(_sndfile);
 	if(result) {
-		os_log_error(gSFBAudioEncoderLog, "sf_writef_XXX failed: %{public}s", sf_error_number(result));
+		os_log_error(gSFBPCMEncoderLog, "sf_writef_XXX failed: %{public}s", sf_error_number(result));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 

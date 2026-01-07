@@ -1,15 +1,15 @@
 //
-// Copyright (c) 2020-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import "SFBAudioEncoder+Internal.h"
+#import "SFBPCMEncoder+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-// An SFBAudioEncoder subclass supporting WavPack
-@interface SFBWavPackEncoder : SFBAudioEncoder
+// An SFBPCMEncoder subclass supporting WavPack
+@interface SFBWavPackEncoder : SFBPCMEncoder
 @end
 
 NS_ASSUME_NONNULL_END

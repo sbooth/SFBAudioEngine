@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,7 +12,7 @@
 
 #import "SFBMusepackEncoder.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine.Encoder.Musepack";
+SFBPCMEncoderName const SFBPCMEncoderNameMusepack = @"org.sbooth.AudioEngine.PCMEncoder.Musepack";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @"Quality";
 
@@ -84,7 +84,7 @@ static off_t my_mpc_tell_callback(void *context)
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBPCMEncoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -97,9 +97,9 @@ static off_t my_mpc_tell_callback(void *context)
 	return [NSSet setWithArray:@[@"audio/musepack", @"audio/x-musepack"]];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameMusepack;
+	return SFBPCMEncoderNameMusepack;
 }
 
 - (BOOL)encodingIsLossless
@@ -128,7 +128,7 @@ static off_t my_mpc_tell_callback(void *context)
 
 	_enc = mpc_stream_encoder_create();
 	if(!_enc) {
-		os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_create() failed");
+		os_log_error(gSFBPCMEncoderLog, "mpc_stream_encoder_create() failed");
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
@@ -136,9 +136,9 @@ static off_t my_mpc_tell_callback(void *context)
 
 	if(_estimatedFramesToEncode > 0) {
 		if(mpc_stream_encoder_set_estimated_total_frames(_enc, (mpc_uint64_t)_estimatedFramesToEncode) != MPC_STATUS_OK) {
-			os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_set_estimated_total_frames failed");
+			os_log_error(gSFBPCMEncoderLog, "mpc_stream_encoder_set_estimated_total_frames failed");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 	}
@@ -147,19 +147,19 @@ static off_t my_mpc_tell_callback(void *context)
 	if(quality != nil) {
 		float quality_value = quality.floatValue;
 		if(quality_value < 0 || quality_value > 10)
-			os_log_info(gSFBAudioEncoderLog, "Ignoring invalid Musepack quality: %g", quality_value);
+			os_log_info(gSFBPCMEncoderLog, "Ignoring invalid Musepack quality: %g", quality_value);
 		else if(mpc_stream_encoder_set_quality(_enc, quality_value) != MPC_STATUS_OK) {
-			os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_set_quality failed");
+			os_log_error(gSFBPCMEncoderLog, "mpc_stream_encoder_set_quality failed");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 	}
 
 	if(mpc_stream_encoder_init(_enc, (float)_processingFormat.sampleRate, (int)_processingFormat.channelCount, my_mpc_write_callback, my_mpc_seek_callback, my_mpc_tell_callback, (__bridge void *)self) != MPC_STATUS_OK) {
-		os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_init failed");
+		os_log_error(gSFBPCMEncoderLog, "mpc_stream_encoder_init failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -206,9 +206,9 @@ static off_t my_mpc_tell_callback(void *context)
 		return YES;
 
 	if(mpc_stream_encoder_encode(_enc, (const mpc_int16_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength) != MPC_STATUS_OK) {
-		os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_encode failed");
+		os_log_error(gSFBPCMEncoderLog, "mpc_stream_encoder_encode failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -220,9 +220,9 @@ static off_t my_mpc_tell_callback(void *context)
 - (BOOL)finishEncodingReturningError:(NSError **)error
 {
 	if(mpc_stream_encoder_finish(_enc) != MPC_STATUS_OK) {
-		os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_finish failed");
+		os_log_error(gSFBPCMEncoderLog, "mpc_stream_encoder_finish failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 

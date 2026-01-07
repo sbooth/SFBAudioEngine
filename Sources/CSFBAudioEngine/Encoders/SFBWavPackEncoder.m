@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -15,7 +15,7 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.Encoder.WavPack";
+SFBPCMEncoderName const SFBPCMEncoderNameWavPack = @"org.sbooth.AudioEngine.PCMEncoder.WavPack";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel = @"Compression Level";
 
@@ -51,7 +51,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBPCMEncoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -64,9 +64,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameWavPack;
+	return SFBPCMEncoderNameWavPack;
 }
 
 - (BOOL)encodingIsLossless
@@ -117,7 +117,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		}
 		// TODO: Use WavPack channel identities as a fallback?
 		else
-			os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
+			os_log_info(gSFBPCMEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 	}
 
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
@@ -130,7 +130,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 	_wpc = WavpackOpenFileOutput(wavpack_block_output, (__bridge void *)self, NULL);
 	if(!_wpc) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed");
+		os_log_error(gSFBPCMEncoderLog, "WavpackOpenFileOutput failed");
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
@@ -160,29 +160,29 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		else if(level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh)			_config.flags |= CONFIG_HIGH_FLAG;
 		else if(level == SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh)		_config.flags |= CONFIG_VERY_HIGH_FLAG;
 		else
-			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown WavPack compression level: %{public}@", level);
+			os_log_info(gSFBPCMEncoderLog, "Ignoring unknown WavPack compression level: %{public}@", level);
 	}
 
 	if(!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1, NULL)) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed: %{public}s", WavpackGetErrorMessage(_wpc));
+		os_log_error(gSFBPCMEncoderLog, "WavpackOpenFileOutput failed: %{public}s", WavpackGetErrorMessage(_wpc));
 
 		WavpackCloseFile(_wpc);
 		_wpc = NULL;
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 
 		return NO;
 	}
 
 	if(!WavpackPackInit(_wpc)) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackPackInit failed: %{public}s", WavpackGetErrorMessage(_wpc));
+		os_log_error(gSFBPCMEncoderLog, "WavpackPackInit failed: %{public}s", WavpackGetErrorMessage(_wpc));
 
 		WavpackCloseFile(_wpc);
 		_wpc = NULL;
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 
 		return NO;
 	}
@@ -238,9 +238,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		return YES;
 
 	if(!WavpackPackSamples(_wpc, (int32_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength)) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackPackSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
+		os_log_error(gSFBPCMEncoderLog, "WavpackPackSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -303,9 +303,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 - (BOOL)finishEncodingReturningError:(NSError **)error
 {
 	if(!WavpackFlushSamples(_wpc)) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackFlushSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
+		os_log_error(gSFBPCMEncoderLog, "WavpackFlushSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -315,16 +315,16 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	CC_MD5_Final(md5, &_md5);
 #pragma clang diagnostic pop
 	if(!WavpackStoreMD5Sum(_wpc, md5)) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackStoreMD5Sum failed: %{public}s", WavpackGetErrorMessage(_wpc));
+		os_log_error(gSFBPCMEncoderLog, "WavpackStoreMD5Sum failed: %{public}s", WavpackGetErrorMessage(_wpc));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
 	if(!WavpackFlushSamples(_wpc)) {
-		os_log_error(gSFBAudioEncoderLog, "WavpackFlushSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
+		os_log_error(gSFBPCMEncoderLog, "WavpackFlushSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 

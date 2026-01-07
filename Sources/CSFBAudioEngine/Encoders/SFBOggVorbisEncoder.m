@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,7 +12,7 @@
 
 #import "SFBOggVorbisEncoder.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
+SFBPCMEncoderName const SFBPCMEncoderNameOggVorbis = @"org.sbooth.AudioEngine.PCMEncoder.OggVorbis";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate = @"Encoding Target is Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisQuality = @"Quality";
@@ -36,7 +36,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBPCMEncoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -49,9 +49,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 	return [NSSet setWithObject:@"audio/ogg; codecs=vorbis"];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameOggVorbis;
+	return SFBPCMEncoderNameOggVorbis;
 }
 
 - (BOOL)encodingIsLossless
@@ -95,9 +95,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 	// Initialize the ogg stream
 	int result = ogg_stream_init(&_os, (int)arc4random());
 	if(result == -1) {
-		os_log_error(gSFBAudioEncoderLog, "ogg_stream_init failed");
+		os_log_error(gSFBPCMEncoderLog, "ogg_stream_init failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -112,11 +112,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
 		result = vorbis_encode_init(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, min_bitrate != nil ? min_bitrate.longValue * 1000 : -1, nominal_bitrate != nil ? nominal_bitrate.longValue * 1000 : 128000, max_bitrate != nil ? max_bitrate.longValue * 1000 : -1);
 		if(result != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
+			os_log_error(gSFBPCMEncoderLog, "vorbis_encode_init failed: %d", result);
 			vorbis_info_clear(&_vi);
 			ogg_stream_clear(&_os);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 	}
@@ -128,11 +128,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
 		result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, quality_value);
 		if(result != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init_vbr failed: %d", result);
+			os_log_error(gSFBPCMEncoderLog, "vorbis_encode_init_vbr failed: %d", result);
 			vorbis_info_clear(&_vi);
 			ogg_stream_clear(&_os);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 	}
@@ -150,14 +150,14 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 	// Write stream headers
 	result = vorbis_analysis_headerout(&_vd, &vc, &op, &op_comm, &op_code);
 	if(result != 0) {
-		os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
+		os_log_error(gSFBPCMEncoderLog, "vorbis_encode_init failed: %d", result);
 		vorbis_comment_clear(&vc);
 		vorbis_block_clear(&_vb);
 		vorbis_dsp_clear(&_vd);
 		vorbis_info_clear(&_vi);
 		ogg_stream_clear(&_os);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -244,9 +244,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 	}
 
 	if(vorbis_analysis_wrote(&_vd, (int)frameLength) != 0) {
-		os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_wrote failed");
+		os_log_error(gSFBPCMEncoderLog, "vorbis_analysis_wrote failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -255,23 +255,23 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 		if(result == 0)
 			break;
 		else if(result < 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
+			os_log_error(gSFBPCMEncoderLog, "vorbis_analysis_blockout failed: %d", result);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
 		if(vorbis_analysis(&_vb, NULL) != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_analysis failed");
+			os_log_error(gSFBPCMEncoderLog, "vorbis_analysis failed");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
 		if(vorbis_bitrate_addblock(&_vb) != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_addblock failed");
+			os_log_error(gSFBPCMEncoderLog, "vorbis_bitrate_addblock failed");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
@@ -281,9 +281,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 			if(result == 0)
 				break;
 			else if(result < 0) {
-				os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
+				os_log_error(gSFBPCMEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
 				if(error)
-					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+					*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 				return NO;
 			}
 
@@ -316,9 +316,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 - (BOOL)finishEncodingReturningError:(NSError **)error
 {
 	if(vorbis_analysis_wrote(&_vd, 0) != 0) {
-		os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_wrote failed");
+		os_log_error(gSFBPCMEncoderLog, "vorbis_analysis_wrote failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -327,23 +327,23 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 		if(result == 0)
 			break;
 		else if(result < 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
+			os_log_error(gSFBPCMEncoderLog, "vorbis_analysis_blockout failed: %d", result);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
 		if(vorbis_analysis(&_vb, NULL) != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_analysis failed");
+			os_log_error(gSFBPCMEncoderLog, "vorbis_analysis failed");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
 		if(vorbis_bitrate_addblock(&_vb) != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_addblock failed");
+			os_log_error(gSFBPCMEncoderLog, "vorbis_bitrate_addblock failed");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 
@@ -353,9 +353,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 			if(result == 0)
 				break;
 			else if(result < 0) {
-				os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
+				os_log_error(gSFBPCMEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
 				if(error)
-					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+					*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 				return NO;
 			}
 
