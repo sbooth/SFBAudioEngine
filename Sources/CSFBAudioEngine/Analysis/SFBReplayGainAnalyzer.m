@@ -10,9 +10,9 @@
 
 #import "SFBReplayGainAnalyzer.h"
 
-#import "SFBAudioDecoder.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
+#import "SFBPCMDecoder.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
@@ -396,7 +396,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 {
 	NSParameterAssert(url != nil);
 
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
+	SFBPCMDecoder *decoder = [[SFBPCMDecoder alloc] initWithURL:url error:error];
 	if(!decoder || ![decoder openReturningError:error])
 		return nil;
 

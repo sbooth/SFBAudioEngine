@@ -108,7 +108,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class] priority:-100];
+	[SFBPCMDecoder registerSubclass:[self class] priority:-100];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -162,7 +162,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	unsigned char *buf = (unsigned char *)av_malloc(BUF_SIZE);
 	if(!buf) {
-		os_log_error(gSFBAudioDecoderLog, "av_malloc failed");
+		os_log_error(gSFBPCMDecoderLog, "av_malloc failed");
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
@@ -170,7 +170,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	_ioContext = avio_alloc_context(buf, BUF_SIZE, 0, (__bridge void *)self, my_read_packet, NULL, my_seek);
 	if(!_ioContext) {
-		os_log_error(gSFBAudioDecoderLog, "avio_alloc_context failed");
+		os_log_error(gSFBPCMDecoderLog, "avio_alloc_context failed");
 		av_free(buf);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -179,7 +179,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	_formatContext = avformat_alloc_context();
 	if(!_formatContext) {
-		os_log_error(gSFBAudioDecoderLog, "avformat_alloc_context failed");
+		os_log_error(gSFBPCMDecoderLog, "avformat_alloc_context failed");
 		avio_context_free(&_ioContext);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -190,16 +190,16 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	if(result != 0) {
 		char errbuf [ERRBUF_SIZE];
 		if(av_strerror(result, errbuf, ERRBUF_SIZE) == 0)
-			os_log_error(gSFBAudioDecoderLog, "avformat_open_input failed: %{public}s", errbuf);
+			os_log_error(gSFBPCMDecoderLog, "avformat_open_input failed: %{public}s", errbuf);
 		else
-			os_log_error(gSFBAudioDecoderLog, "avformat_open_input failed");
+			os_log_error(gSFBPCMDecoderLog, "avformat_open_input failed");
 
 		avformat_free_context(_formatContext);
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain
+										 code:SFBPCMDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -207,14 +207,14 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	// Retrieve stream information
 	if(avformat_find_stream_info(_formatContext, NULL) < 0) {
-		os_log_error(gSFBAudioDecoderLog, "Could not find stream information");
+		os_log_error(gSFBPCMDecoderLog, "Could not find stream information");
 
 		avformat_free_context(_formatContext);
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain
+										 code:SFBPCMDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -226,16 +226,16 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	if(result == AVERROR_STREAM_NOT_FOUND || !codec) {
 		char errbuf [ERRBUF_SIZE];
 		if(av_strerror(result, errbuf, ERRBUF_SIZE) == 0)
-			os_log_error(gSFBAudioDecoderLog, "av_find_best_stream failed: %{public}s", errbuf);
+			os_log_error(gSFBPCMDecoderLog, "av_find_best_stream failed: %{public}s", errbuf);
 		else
-			os_log_error(gSFBAudioDecoderLog, "av_find_best_stream failed: %d", result);
+			os_log_error(gSFBPCMDecoderLog, "av_find_best_stream failed: %d", result);
 
 		avformat_free_context(_formatContext);
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain
+										 code:SFBPCMDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -245,14 +245,14 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	_codecContext = avcodec_alloc_context3(codec);
 	if(!_codecContext) {
-		os_log_error(gSFBAudioDecoderLog, "avcodec_alloc_context3 failed");
+		os_log_error(gSFBPCMDecoderLog, "avcodec_alloc_context3 failed");
 
 		avformat_free_context(_formatContext);
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain
+										 code:SFBPCMDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -260,23 +260,23 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	result = avcodec_parameters_to_context(_codecContext, _formatContext->streams[_streamIndex]->codecpar);
 	if(result)
-		os_log_error(gSFBAudioDecoderLog, "avcodec_parameters_to_context failed");
+		os_log_error(gSFBPCMDecoderLog, "avcodec_parameters_to_context failed");
 
 	result = avcodec_open2(_codecContext, codec, NULL);
 	if(result) {
 		char errbuf [ERRBUF_SIZE];
 		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
-			os_log_error(gSFBAudioDecoderLog, "avcodec_open2 failed: %{public}s", errbuf);
+			os_log_error(gSFBPCMDecoderLog, "avcodec_open2 failed: %{public}s", errbuf);
 		else
-			os_log_error(gSFBAudioDecoderLog, "avcodec_open2 failed: %d", result);
+			os_log_error(gSFBPCMDecoderLog, "avcodec_open2 failed: %d", result);
 
 		avcodec_free_context(&_codecContext);
 		avformat_free_context(_formatContext);
 		avio_context_free(&_ioContext);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInvalidFormat
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain
+										 code:SFBPCMDecoderErrorCodeInvalidFormat
 									 userInfo:@{ NSURLErrorKey: _inputSource.url,
 												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Format not recognized", @"") }];
 		return NO;
@@ -296,14 +296,14 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 		// Sanity check
 		if(channelLayout.channelCount != channelCount) {
-			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between channelLayout.channelCount (%u) and codec_par->ch_layout.nb_channels (%u)", channelLayout.channelCount, channelCount);
+			os_log_error(gSFBPCMDecoderLog, "Channel count mismatch between channelLayout.channelCount (%u) and codec_par->ch_layout.nb_channels (%u)", channelLayout.channelCount, channelCount);
 			channelLayout = nil;
 		}
 	}
 	else if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_CUSTOM)
-		os_log_error(gSFBAudioDecoderLog, "ffmpeg custom channel layouts not (yet) suported");
+		os_log_error(gSFBPCMDecoderLog, "ffmpeg custom channel layouts not (yet) suported");
 	else
-		os_log_error(gSFBAudioDecoderLog, "Unsupported channel layout order %u", _formatContext->streams[_streamIndex]->codecpar->ch_layout.order);
+		os_log_error(gSFBPCMDecoderLog, "Unsupported channel layout order %u", _formatContext->streams[_streamIndex]->codecpar->ch_layout.order);
 
 	// Generate PCM output
 	switch(_formatContext->streams[_streamIndex]->codecpar->format) {
@@ -399,7 +399,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 			break;
 
 		default:
-			os_log_error(gSFBAudioDecoderLog, "Unknown sample format");
+			os_log_error(gSFBPCMDecoderLog, "Unknown sample format");
 			break;
 	}
 
@@ -417,7 +417,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
 	_frame = av_frame_alloc();
 	if(!_frame) {
-		os_log_error(gSFBAudioDecoderLog, "av_frame_alloc failed");
+		os_log_error(gSFBPCMDecoderLog, "av_frame_alloc failed");
 
 		avcodec_free_context(&_codecContext);
 		avformat_free_context(_formatContext);
@@ -479,7 +479,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBPCMDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -518,7 +518,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 			else if(result == AVERROR(EAGAIN)) {
 			}
 			else if(result < 0) {
-				os_log_error(gSFBAudioDecoderLog, "ReadFrame() failed: %d", result);
+				os_log_error(gSFBPCMDecoderLog, "ReadFrame() failed: %d", result);
 				break;
 			}
 		}
@@ -538,9 +538,9 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	if(result < 0) {
 		char errbuf [ERRBUF_SIZE];
 		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
-			os_log_error(gSFBAudioDecoderLog, "av_seek_frame failed: %{public}s", errbuf);
+			os_log_error(gSFBPCMDecoderLog, "av_seek_frame failed: %{public}s", errbuf);
 		else
-			os_log_error(gSFBAudioDecoderLog, "av_seek_frame failed: %d", result);
+			os_log_error(gSFBPCMDecoderLog, "av_seek_frame failed: %d", result);
 
 		return NO;
 	}
@@ -567,9 +567,9 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	else if(result < 0) {
 		char errbuf [ERRBUF_SIZE];
 		if(av_strerror(result, errbuf, ERRBUF_SIZE) == 0)
-			os_log_error(gSFBAudioDecoderLog, "av_read_frame failed: %{public}s", errbuf);
+			os_log_error(gSFBPCMDecoderLog, "av_read_frame failed: %{public}s", errbuf);
 		else
-			os_log_error(gSFBAudioDecoderLog, "av_read_frame failed: %d", result);
+			os_log_error(gSFBPCMDecoderLog, "av_read_frame failed: %d", result);
 	}
 	// Send the packet with the compressed data to the decoder
 	else {
@@ -585,9 +585,9 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		else if(result) {
 			char errbuf [ERRBUF_SIZE];
 			if(av_strerror(result, errbuf, ERRBUF_SIZE) == 0)
-				os_log_error(gSFBAudioDecoderLog, "avcodec_send_packet failed: %{public}s", errbuf);
+				os_log_error(gSFBPCMDecoderLog, "avcodec_send_packet failed: %{public}s", errbuf);
 			else
-				os_log_error(gSFBAudioDecoderLog, "avcodec_send_packet failed: %d", result);
+				os_log_error(gSFBPCMDecoderLog, "avcodec_send_packet failed: %d", result);
 		}
 	}
 
@@ -611,9 +611,9 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 	else if(result > 0) {
 		char errbuf [ERRBUF_SIZE];
 		if(av_strerror(result, errbuf, ERRBUF_SIZE) == 0)
-			os_log_error(gSFBAudioDecoderLog, "avcodec_receive_frame failed: %{public}s", errbuf);
+			os_log_error(gSFBPCMDecoderLog, "avcodec_receive_frame failed: %{public}s", errbuf);
 		else
-			os_log_error(gSFBAudioDecoderLog, "avcodec_receive_frame failed: %d", result);
+			os_log_error(gSFBPCMDecoderLog, "avcodec_receive_frame failed: %d", result);
 
 		return result;
 	}
@@ -622,7 +622,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		UInt32 bytesPerFrame = _processingFormat.streamDescription->mBytesPerFrame;
 		size_t spaceRemaining = (_buffer.frameCapacity - _buffer.frameLength) * bytesPerFrame;
 		if(spaceRemaining < (UInt32)_frame->linesize[0]) {
-			os_log_error(gSFBAudioDecoderLog, "Insufficient space in buffer for decoded frame: %lu available, need %d", spaceRemaining, _frame->linesize[0]);
+			os_log_error(gSFBPCMDecoderLog, "Insufficient space in buffer for decoded frame: %lu available, need %d", spaceRemaining, _frame->linesize[0]);
 			return AVERROR(ENOMEM);
 		}
 
