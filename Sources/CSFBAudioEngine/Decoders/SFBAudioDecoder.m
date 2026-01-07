@@ -259,8 +259,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @""),
-														 NSURLErrorKey: _inputSource.url },
-													  SFBLocalizedNameForURL(_inputSource.url));
+														 NSURLErrorKey: inputSource.url },
+													  SFBLocalizedNameForURL(inputSource.url));
 		return nil;
 	}
 
