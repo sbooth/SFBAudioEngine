@@ -10,9 +10,9 @@
 
 #import "SFBAudioExporter.h"
 
-#import "SFBPCMDecoder.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
+#import "SFBPCMDecoder.h"
 
 // NSError domain for SFBAudioExporter
 NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.AudioExporter";

@@ -4,6 +4,25 @@
 // MIT license
 //
 
+@import os.log;
+
+@import Accelerate;
+
+#import "SFBReplayGainAnalyzer.h"
+
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
+#import "SFBPCMDecoder.h"
+
+// NSError domain for SFBReplayGainAnalyzer
+NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
+
+// Key names for the metadata dictionary
+NSString * const SFBReplayGainAnalyzerGainKey = @"Gain";
+NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
+
+#define BUFFER_SIZE_FRAMES 2048
+
 /*
  *  ReplayGainAnalysis - analyzes input samples and give the recommended dB change
  *  Copyright (C) 2001 David Robinson and Glen Sawyer
@@ -95,25 +114,6 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
-@import os.log;
-
-@import Accelerate;
-
-#import "SFBReplayGainAnalyzer.h"
-
-#import "SFBPCMDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
-#import "SFBLocalizedNameForURL.h"
-
-// NSError domain for SFBReplayGainAnalyzer
-NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
-
-// Key names for the metadata dictionary
-NSString * const SFBReplayGainAnalyzerGainKey = @"Gain";
-NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
-
-#define BUFFER_SIZE_FRAMES 2048
-
 // RG constants
 #define YULE_ORDER					10
 #define BUTTER_ORDER				2
@@ -124,7 +124,6 @@ NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
 
 #define MAX_ORDER					(BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
 #define PINK_REF					64.82		/* 298640883795 */						/* calibration value */
-
 
 static const float SFBReplayGainAnalyzerInsufficientSamples = -24601; // Preserve nod to Les Mis
 
