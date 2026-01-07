@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -23,7 +23,7 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Encoder.MonkeysAudio";
+SFBPCMEncoderName const SFBPCMEncoderNameMonkeysAudio = @"org.sbooth.AudioEngine.PCMEncoder.MonkeysAudio";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel = @"Compression Level";
 
@@ -169,7 +169,7 @@ private:
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBPCMEncoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -182,9 +182,9 @@ private:
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameMonkeysAudio;
+	return SFBPCMEncoderNameMonkeysAudio;
 }
 
 - (BOOL)encodingIsLossless
@@ -203,7 +203,7 @@ private:
 	APE::WAVEFORMATEX wve;
 	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate), static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel), static_cast<int>(sourceFormat.channelCount));
 	if(result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
+		os_log_error(gSFBPCMEncoderLog, "FillWaveFormatEx() failed: %d", result);
 		return nil;
 	}
 
@@ -241,7 +241,7 @@ private:
 			channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
 		}
 		else
-			os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
+			os_log_info(gSFBPCMEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 	}
 
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
@@ -256,7 +256,7 @@ private:
 		int result;
 		auto compressor = CreateIAPECompress(&result);
 		if(!compressor) {
-			os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
+			os_log_error(gSFBPCMEncoderLog, "CreateIAPECompress() failed: %d", result);
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 			return NO;
@@ -265,7 +265,7 @@ private:
 		_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
 		_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 	} catch(const std::exception& e) {
-		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
+		os_log_error(gSFBPCMEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
@@ -285,23 +285,23 @@ private:
 		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane)		
 			compressionLevel = APE_COMPRESSION_LEVEL_INSANE;
 		else
-			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown APE compression level: %{public}@", level);
+			os_log_info(gSFBPCMEncoderLog, "Ignoring unknown APE compression level: %{public}@", level);
 	}
 
 	APE::WAVEFORMATEX wve;
 	auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(_sourceFormat.sampleRate), static_cast<int>(_sourceFormat.streamDescription->mBitsPerChannel), static_cast<int>(_sourceFormat.channelCount));
 	if(result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
+		os_log_error(gSFBPCMEncoderLog, "FillWaveFormatEx() failed: %d", result);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInvalidFormat userInfo:nil];
 		return NO;
 	}
 
 	result = _compressor->StartEx(_ioInterface.get(), &wve, false, MAX_AUDIO_BYTES_UNKNOWN, compressionLevel);
 	if(result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioEncoderLog, "_compressor->StartEx() failed: %d", result);
+		os_log_error(gSFBPCMEncoderLog, "_compressor->StartEx() failed: %d", result);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInvalidFormat userInfo:nil];
 		return NO;
 	}
 
@@ -349,9 +349,9 @@ private:
 	auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
 	auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
 	if(result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
+		os_log_error(gSFBPCMEncoderLog, "_compressor->AddData() failed: %lld", result);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -364,9 +364,9 @@ private:
 {
 	auto result = _compressor->Finish(nullptr, 0, 0);
 	if(result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
+		os_log_error(gSFBPCMEncoderLog, "_compressor->Finish() failed: %d", result);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 	return YES;

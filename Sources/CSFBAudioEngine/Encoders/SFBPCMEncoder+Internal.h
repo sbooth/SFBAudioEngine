@@ -6,13 +6,13 @@
 
 #import <os/log.h>
 
-#import "SFBAudioEncoder.h"
+#import "SFBPCMEncoder.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern os_log_t gSFBAudioEncoderLog;
+extern os_log_t gSFBPCMEncoderLog;
 
-@interface SFBAudioEncoder ()
+@interface SFBPCMEncoder ()
 {
 @package
 	SFBOutputSource *_outputSource;
@@ -23,12 +23,12 @@ extern os_log_t gSFBAudioEncoderLog;
 	NSDictionary *_settings;
 }
 /// Returns the encoder name
-@property (class, nonatomic, readonly) SFBAudioEncoderName encoderName;
+@property (class, nonatomic, readonly) SFBPCMEncoderName encoderName;
 @end
 
 #pragma mark - Subclass Registration
 
-@interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
+@interface SFBPCMEncoder (SFBPCMEncoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)
 + (void)registerSubclass:(Class)subclass;
 /// Register a subclass with the specified priority

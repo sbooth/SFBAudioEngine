@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -14,7 +14,7 @@
 
 #import "SFBOggSpeexEncoder.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex = @"org.sbooth.AudioEngine.Encoder.OggSpeex";
+SFBPCMEncoderName const SFBPCMEncoderNameOggSpeex = @"org.sbooth.AudioEngine.PCMEncoder.OggSpeex";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode = @"Encoding Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexTargetIsBitrate = @"Encoding Target is Bitrate";
@@ -107,7 +107,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBPCMEncoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -120,9 +120,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	return [NSSet setWithObject:@"audio/ogg; codecs=speex"];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameOggSpeex;
+	return SFBPCMEncoderNameOggSpeex;
 }
 
 - (BOOL)encodingIsLossless
@@ -168,9 +168,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	// Initialize the ogg stream
 	int result = ogg_stream_init(&_os, (int)arc4random());
 	if(result == -1) {
-		os_log_error(gSFBAudioEncoderLog, "ogg_stream_init failed");
+		os_log_error(gSFBPCMEncoderLog, "ogg_stream_init failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -187,10 +187,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		else if(mode == SFBAudioEncodingSettingsValueSpeexModeWideband)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
 		else if(mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
 		else {
-			os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Speex mode: %{public}@", mode);
+			os_log_error(gSFBPCMEncoderLog, "Ignoring invalid Speex mode: %{public}@", mode);
 			ogg_stream_clear(&_os);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 	}
@@ -198,10 +198,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	// Setup the encoder
 	_st = speex_encoder_init(speex_mode);
 	if(_st == NULL) {
-		os_log_error(gSFBAudioEncoderLog, "Unrecognized Speex mode: %{public}@", mode);
+		os_log_error(gSFBPCMEncoderLog, "Unrecognized Speex mode: %{public}@", mode);
 		ogg_stream_clear(&_os);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -231,7 +231,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 			speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
 		}
 		else
-			os_log_info(gSFBAudioEncoderLog, "Speex encoding target is bitrate but no bitrate specified");
+			os_log_info(gSFBPCMEncoderLog, "Speex encoding target is bitrate but no bitrate specified");
 	}
 	else if(quality.intValue >= 0) {
 		spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate] intValue];
@@ -259,9 +259,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		speex_encoder_ctl(_st, SPEEX_SET_ABR, &abr_enabled);
 
 	if(dtx_enabled && !(vbr_enabled || abr_enabled || vad_enabled))
-		os_log_info(gSFBAudioEncoderLog, "DTX requires VAD, VBR, or ABR");
+		os_log_info(gSFBPCMEncoderLog, "DTX requires VAD, VBR, or ABR");
 	else if((vbr_enabled || abr_enabled) && (vad_enabled))
-		os_log_info(gSFBAudioEncoderLog, "VAD is implied by VBR or ABR");
+		os_log_info(gSFBPCMEncoderLog, "VAD is implied by VBR or ABR");
 
 
 	spx_int32_t highpass_enabled = ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
@@ -287,10 +287,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	if(framesPerPacket != nil) {
 		int intValue = framesPerPacket.intValue;
 		if(intValue < 1 || intValue > 10) {
-			os_log_error(gSFBAudioEncoderLog, "Invalid Speex frames per packet: %d", intValue);
+			os_log_error(gSFBPCMEncoderLog, "Invalid Speex frames per packet: %d", intValue);
 			ogg_stream_clear(&_os);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
 		_speex_frames_per_ogg_packet = intValue;

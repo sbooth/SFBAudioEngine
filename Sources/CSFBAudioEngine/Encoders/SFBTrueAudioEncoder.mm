@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,13 +12,13 @@
 
 #import "SFBTrueAudioEncoder.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameTrueAudio = @"org.sbooth.AudioEngine.Encoder.TrueAudio";
+SFBPCMEncoderName const SFBPCMEncoderNameTrueAudio = @"org.sbooth.AudioEngine.PCMEncoder.TrueAudio";
 
 namespace {
 
 struct TTACallbacks final : TTA_io_callback
 {
-	SFBAudioEncoder *mEncoder;
+	SFBPCMEncoder *mEncoder;
 };
 
 TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
@@ -55,7 +55,7 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBPCMEncoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -68,9 +68,9 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 	return [NSSet setWithObject:@"audio/x-tta"];
 }
 
-+ (SFBAudioEncoderName)encoderName
++ (SFBPCMEncoderName)encoderName
 {
-	return SFBAudioEncoderNameTrueAudio;
+	return SFBPCMEncoderNameTrueAudio;
 }
 
 - (BOOL)encodingIsLossless
@@ -117,9 +117,9 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 
 	// True Audio requires knowing the number of frames to encode in advance
 	if(_estimatedFramesToEncode <= 0) {
-		os_log_error(gSFBAudioEncoderLog, "True Audio encoding requires an accurate value for _estimatedFramesToEncode");
+		os_log_error(gSFBPCMEncoderLog, "True Audio encoding requires an accurate value for _estimatedFramesToEncode");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -142,16 +142,16 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		_encoder->init_set_info(&streamInfo, 0);
 	}
 	catch(const tta::tta_exception& e) {
-		os_log_error(gSFBAudioEncoderLog, "Error creating True Audio encoder: %d", e.code());
+		os_log_error(gSFBPCMEncoderLog, "Error creating True Audio encoder: %d", e.code());
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInvalidFormat userInfo:nil];
 		return NO;
 	}
 
 	if(!_encoder) {
 		if(error)
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInvalidFormat userInfo:nil];
 		return NO;
 	}
 
@@ -201,9 +201,9 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		_encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
 	}
 	catch(const tta::tta_exception& e) {
-		os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", e.code());
+		os_log_error(gSFBPCMEncoderLog, "_encoder->process_stream() failed: %d", e.code());
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -218,9 +218,9 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		_encoder->finalize();
 	}
 	catch(const tta::tta_exception& e) {
-		os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", e.code());
+		os_log_error(gSFBPCMEncoderLog, "_encoder->finalize() failed: %d", e.code());
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMEncoderErrorDomain code:SFBPCMEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
