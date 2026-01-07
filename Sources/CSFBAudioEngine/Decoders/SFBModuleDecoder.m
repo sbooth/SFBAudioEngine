@@ -10,6 +10,9 @@
 
 #import "SFBModuleDecoder.h"
 
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
+
 SFBAudioDecoderName const SFBAudioDecoderNameModule = @"org.sbooth.AudioEngine.Decoder.Module";
 
 #define DUMB_SAMPLE_RATE	65536
@@ -248,7 +251,7 @@ static dumb_off_t get_size_callback(void *f)
 	if(!_df) {
 		os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain code:SFBAudioDecodingErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -258,10 +261,11 @@ static dumb_off_t get_size_callback(void *f)
 		_df = NULL;
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Module", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -281,10 +285,11 @@ static dumb_off_t get_size_callback(void *f)
 		_df = NULL;
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Module", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 

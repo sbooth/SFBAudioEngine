@@ -70,26 +70,4 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 @end
 
-#pragma mark - Error Information
-
-/// The error domain for audio decoding errors
-extern NSErrorDomain const SFBAudioDecodingErrorDomain NS_SWIFT_NAME(AudioDecodingErrorDomain);
-
-/// Possible error codes in the audio decoding error domain
-typedef NS_ERROR_ENUM(SFBAudioDecodingErrorDomain, SFBAudioDecodingErrorCode) {
-	/// Invalid or unknown format
-	SFBAudioDecodingErrorCodeInvalidFormat		= 0,
-	/// Unsupported format
-	SFBAudioDecodingErrorCodeUnsupportedFormat	= 1,
-	/// Internal decoder error
-	SFBAudioDecodingErrorCodeInternalError		= 2,
-	/// Decoding error
-	SFBAudioDecodingErrorCodeDecodingError		= 3,
-	/// Seek error
-	SFBAudioDecodingErrorCodeSeekError			= 4,
-} NS_SWIFT_NAME(AudioDecodingError);
-
-/// The name of the audio format
-extern NSErrorUserInfoKey const SFBAudioDecodingFormatNameErrorKey NS_SWIFT_NAME(AudioDecodingFormatNameErrorKey); // NSString
-
 NS_ASSUME_NONNULL_END

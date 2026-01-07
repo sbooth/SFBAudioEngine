@@ -15,6 +15,8 @@
 #import "SFBOggSpeexDecoder.h"
 
 #import "NSData+SFBExtensions.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
 
@@ -129,10 +131,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -142,10 +145,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -158,10 +162,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -172,10 +177,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -190,22 +196,22 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInvalidFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg Speex", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	} else if(header->mode >= SPEEX_NB_MODES) {
 		speex_header_free(header);
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeUnsupportedFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unsupported Speex mode", @""),
-												 NSLocalizedRecoverySuggestionErrorKey: [NSString stringWithFormat:NSLocalizedString(@"Speex mode %d is not supported.", @""), header->mode],
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg Speex", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported Ogg Speex file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: [NSString stringWithFormat:NSLocalizedString(@"Speex mode %d is not supported.", @""), header->mode],
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -215,12 +221,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeUnsupportedFormat
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-												 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unsupported Spex bitstream version", @""),
-												 NSLocalizedRecoverySuggestionErrorKey: [NSString stringWithFormat:NSLocalizedString(@"Speex bitstream version %d is not supported.", @""), header->mode_bitstream_version],
-												 SFBAudioDecodingFormatNameErrorKey: NSLocalizedString(@"Ogg Speex", @"") }];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported Ogg Speex file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: [NSString stringWithFormat:NSLocalizedString(@"Speex bitstream version %d is not supported.", @""), header->mode_bitstream_version],
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -231,10 +236,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 		ogg_sync_destroy(&_syncState);
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-										 code:SFBAudioDecodingErrorCodeInternalError
-									 userInfo:@{ NSURLErrorKey: _inputSource.url,
-										 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Unable to initialize the Speex decoder.", @"") }];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeInternalError
+									 userInfo:@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Unable to initialize the Speex decoder.", @""),
+												 NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -394,10 +399,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 				if(result == -1) {
 					os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding error: Ogg loss of streaming");
 					if(error)
-						*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-													 code:SFBAudioDecodingErrorCodeDecodingError
-												 userInfo:@{ NSURLErrorKey: _inputSource.url,
-															 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Ogg loss of streaming.", @"")}];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+													 code:SFBAudioDecoderErrorCodeDecodingError
+												 userInfo:@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Ogg loss of streaming.", @""),
+															 NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 
@@ -439,20 +444,20 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 							else if(result == -2) {
 								os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding error: possible corrupted stream");
 								if(error)
-									*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-																 code:SFBAudioDecodingErrorCodeDecodingError
-															 userInfo:@{ NSURLErrorKey: _inputSource.url,
-																		 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Possible corrupted stream.", @"")}];
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+																 code:SFBAudioDecoderErrorCodeDecodingError
+															 userInfo:@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Possible corrupted stream.", @""),
+																		 NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 
 							if(speex_bits_remaining(&_bits) < 0) {
 								os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding overflow: possible corrupted stream");
 								if(error)
-									*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-																 code:SFBAudioDecodingErrorCodeDecodingError
-															 userInfo:@{ NSURLErrorKey: _inputSource.url,
-																		 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Decoding overflow; ossible corrupted stream.", @"")}];
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+																 code:SFBAudioDecoderErrorCodeDecodingError
+															 userInfo:@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Decoding overflow; ossible corrupted stream.", @""),
+																		 NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 
@@ -509,10 +514,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 				if(result) {
 					os_log_error(gSFBAudioDecoderLog, "Error reading Ogg page");
 					if(error)
-						*error = [NSError errorWithDomain:SFBAudioDecodingErrorDomain
-													 code:SFBAudioDecodingErrorCodeDecodingError
-												 userInfo:@{ NSURLErrorKey: _inputSource.url,
-															 NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error reading Ogg page.", @"")}];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+													 code:SFBAudioDecoderErrorCodeDecodingError
+												 userInfo:@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Error reading Ogg page.", @""),
+															 NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 			}

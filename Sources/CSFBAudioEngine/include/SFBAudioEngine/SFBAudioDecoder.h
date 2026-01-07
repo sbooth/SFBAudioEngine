@@ -157,6 +157,27 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 
 @end
 
+#pragma mark - Error Information
+
+/// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
+extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
+
+/// Possible `NSError` error codes used by `SFBAudioDecoder`
+typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
+	/// Unknown decoder name
+	SFBAudioDecoderErrorCodeUnknownDecoder		= 0,
+	/// Invalid or unknown format
+	SFBAudioDecoderErrorCodeInvalidFormat		= 1,
+	/// Unsupported format
+	SFBAudioDecoderErrorCodeUnsupportedFormat	= 2,
+	/// Internal decoder error
+	SFBAudioDecoderErrorCodeInternalError		= 3,
+	/// Decoding error
+	SFBAudioDecoderErrorCodeDecodingError		= 4,
+	/// Seek error
+	SFBAudioDecoderErrorCodeSeekError			= 5,
+} NS_SWIFT_NAME(AudioDecoder.Error);
+
 #pragma mark - FLAC and Ogg FLAC Decoder Properties
 
 /// FLAC minimum block size (`NSNumber`)
