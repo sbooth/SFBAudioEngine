@@ -12,15 +12,15 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for AudioDecoder and subclasses
-NSErrorDomain const SFBPCMDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
+// NSError domain for PCMDecoder and subclasses
+NSErrorDomain const SFBPCMDecoderErrorDomain = @"org.sbooth.AudioEngine.PCMDecoder";
 
 os_log_t gSFBPCMDecoderLog = NULL;
 
-static void SFBCreateAudioDecoderLog(void) __attribute__ ((constructor));
-static void SFBCreateAudioDecoderLog(void)
+static void SFBCreatePCMDecoderLog(void) __attribute__ ((constructor));
+static void SFBCreatePCMDecoderLog(void)
 {
-	gSFBPCMDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
+	gSFBPCMDecoderLog = os_log_create("org.sbooth.AudioEngine", "PCMDecoder");
 }
 
 @interface SFBPCMDecoderSubclassInfo : NSObject
