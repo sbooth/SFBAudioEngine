@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,7 +18,6 @@ extern os_log_t gSFBDSDDecoderLog;
 {
 @package
 	SFBInputSource *_inputSource;
-@protected
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 	NSDictionary *_properties;

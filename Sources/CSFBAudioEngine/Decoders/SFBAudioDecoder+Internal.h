@@ -18,7 +18,6 @@ extern os_log_t gSFBAudioDecoderLog;
 {
 @package
 	SFBInputSource *_inputSource;
-@protected
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 	NSDictionary *_properties;
