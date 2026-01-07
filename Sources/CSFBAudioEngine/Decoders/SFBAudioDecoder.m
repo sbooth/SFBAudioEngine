@@ -76,7 +76,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 			}
 
 			case SFBAudioDecoderErrorCodeSeekError:
-				return NSLocalizedString(@"An error occurred seeking to the requested PCM frame position.", @"");
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An error occurred seeking to the requested PCM frame position.", @"");
 				break;
 		}
 
