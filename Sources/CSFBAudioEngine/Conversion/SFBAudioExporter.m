@@ -10,7 +10,7 @@
 
 #import "SFBAudioExporter.h"
 
-#import "SFBAudioDecoder.h"
+#import "SFBPCMDecoder.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
@@ -40,7 +40,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	NSParameterAssert(sourceURL != nil);
 	NSParameterAssert(targetURL != nil);
 
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
+	SFBPCMDecoder *decoder = [[SFBPCMDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
 		return NO;
 	return [self exportFromDecoder:decoder toURL:targetURL error:error];

@@ -15,7 +15,7 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
+SFBPCMDecoderName const SFBPCMDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion = @"version";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount = @"channel_count";
@@ -91,7 +91,7 @@ static opus_int64 tell_callback(void *stream)
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class]];
+	[SFBPCMDecoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -104,9 +104,9 @@ static opus_int64 tell_callback(void *stream)
 	return [NSSet setWithObject:@"audio/ogg; codecs=opus"];
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
-	return SFBAudioDecoderNameOggOpus;
+	return SFBPCMDecoderNameOggOpus;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -146,7 +146,7 @@ static opus_int64 tell_callback(void *stream)
 	_opusFile = op_test_callbacks((__bridge void *)self, &callbacks, NULL, 0, NULL);
 	if(!_opusFile) {
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid Ogg Opus file.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },
@@ -155,13 +155,13 @@ static opus_int64 tell_callback(void *stream)
 	}
 
 	if(op_test_open(_opusFile)) {
-		os_log_error(gSFBAudioDecoderLog, "op_test_open failed");
+		os_log_error(gSFBPCMDecoderLog, "op_test_open failed");
 
 		op_free(_opusFile);
 		_opusFile = NULL;
 
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -263,9 +263,9 @@ static opus_int64 tell_callback(void *stream)
 		int framesRead = op_read_float(_opusFile, buffer.floatChannelData[0] + (buffer.frameLength * buffer.stride), (int)(framesRemaining * buffer.stride), NULL);
 
 		if(framesRead < 0) {
-			os_log_error(gSFBAudioDecoderLog, "Ogg Opus decoding error");
+			os_log_error(gSFBPCMDecoderLog, "Ogg Opus decoding error");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+				*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
@@ -284,9 +284,9 @@ static opus_int64 tell_callback(void *stream)
 {
 	NSParameterAssert(frame >= 0);
 	if(op_pcm_seek(_opusFile, frame)) {
-		os_log_error(gSFBAudioDecoderLog, "Ogg Opus seek error");
+		os_log_error(gSFBPCMDecoderLog, "Ogg Opus seek error");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

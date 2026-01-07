@@ -22,7 +22,7 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
+SFBPCMDecoderName const SFBPCMDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion = @"APE_INFO_FILE_VERSION";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel = @"APE_INFO_COMPRESSION_LEVEL";
@@ -183,7 +183,7 @@ private:
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class]];
+	[SFBPCMDecoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -196,9 +196,9 @@ private:
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
-	return SFBAudioDecoderNameMonkeysAudio;
+	return SFBPCMDecoderNameMonkeysAudio;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -232,7 +232,7 @@ private:
 	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
 	if(!decompressor) {
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },
@@ -371,9 +371,9 @@ private:
 
 	int64_t blocksRead = 0;
 	if(_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData), static_cast<int64_t>(frameLength), &blocksRead)) {
-		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
+		os_log_error(gSFBPCMDecoderLog, "Monkey's Audio invalid checksum");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -386,9 +386,9 @@ private:
 {
 	NSParameterAssert(frame >= 0);
 	if(const auto result = _decompressor->Seek(frame); result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio seek error: %d", result);
+		os_log_error(gSFBPCMDecoderLog, "Monkey's Audio seek error: %d", result);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

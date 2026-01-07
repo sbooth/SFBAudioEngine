@@ -10,7 +10,7 @@
 
 #import "SFBLoopableRegionDecoder.h"
 
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBPCMDecoder+Internal.h"
 
 @interface SFBLoopableRegionDecoder ()
 {
@@ -52,7 +52,7 @@
 {
 	NSParameterAssert(inputSource != nil);
 
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource error:error];
+	SFBPCMDecoder *decoder = [[SFBPCMDecoder alloc] initWithInputSource:inputSource error:error];
 	if(!decoder || !decoder.supportsSeeking)
 		return nil;
 	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength repeatCount:repeatCount error:error];

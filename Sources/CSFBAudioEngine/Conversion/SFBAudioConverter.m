@@ -8,7 +8,7 @@
 
 #import "SFBAudioConverter.h"
 
-#import "SFBAudioDecoder.h"
+#import "SFBPCMDecoder.h"
 #import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"
 #import "SFBErrorWithLocalizedDescription.h"
@@ -66,7 +66,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 - (instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error
 {
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
+	SFBPCMDecoder *decoder = [[SFBPCMDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
 		return nil;
 	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
@@ -82,7 +82,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 - (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id<SFBPCMEncoding>)encoder error:(NSError **)error
 {
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
+	SFBPCMDecoder *decoder = [[SFBPCMDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
 		return nil;
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];

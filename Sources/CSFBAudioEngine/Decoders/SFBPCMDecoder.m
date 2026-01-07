@@ -6,29 +6,29 @@
 
 @import os.log;
 
-#import "SFBAudioDecoder.h"
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBPCMDecoder.h"
+#import "SFBPCMDecoder+Internal.h"
 
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 // NSError domain for AudioDecoder and subclasses
-NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
+NSErrorDomain const SFBPCMDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
 
-os_log_t gSFBAudioDecoderLog = NULL;
+os_log_t gSFBPCMDecoderLog = NULL;
 
 static void SFBCreateAudioDecoderLog(void) __attribute__ ((constructor));
 static void SFBCreateAudioDecoderLog(void)
 {
-	gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
+	gSFBPCMDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
 }
 
-@interface SFBAudioDecoderSubclassInfo : NSObject
+@interface SFBPCMDecoderSubclassInfo : NSObject
 @property (nonatomic) Class klass;
 @property (nonatomic) int priority;
 @end
 
-@implementation SFBAudioDecoder
+@implementation SFBPCMDecoder
 
 @synthesize inputSource = _inputSource;
 @synthesize sourceFormat = _sourceFormat;
@@ -43,39 +43,39 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)load
 {
-	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+	[NSError setUserInfoValueProviderForDomain:SFBPCMDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
 		switch(err.code) {
-			case SFBAudioDecoderErrorCodeUnknownDecoder:
+			case SFBPCMDecoderErrorCodeUnknownDecoder:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested PCM decoder is unavailable.", @"");
 				break;
 
 
-			case SFBAudioDecoderErrorCodeInvalidFormat: {
+			case SFBPCMDecoderErrorCodeInvalidFormat: {
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The format is invalid or unknown.", @"");
 				break;
 			}
 
-			case SFBAudioDecoderErrorCodeUnsupportedFormat: {
+			case SFBPCMDecoderErrorCodeUnsupportedFormat: {
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The PCM audio format is unsupported.", @"");
 				break;
 			}
 
-			case SFBAudioDecoderErrorCodeInternalError: {
+			case SFBPCMDecoderErrorCodeInternalError: {
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An internal decoder error occurred.", @"");
 				break;
 			}
 
-			case SFBAudioDecoderErrorCodeDecodingError: {
+			case SFBPCMDecoderErrorCodeDecodingError: {
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An error occurred during PCM audio decoding.", @"");
 				break;
 			}
 
-			case SFBAudioDecoderErrorCodeSeekError:
+			case SFBPCMDecoderErrorCodeSeekError:
 				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An error occurred seeking to the requested PCM frame position.", @"");
 				break;
@@ -88,7 +88,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (NSSet *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBPCMDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		[result unionSet:supportedPathExtensions];
 	}
@@ -98,14 +98,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (NSSet *)supportedMIMETypes
 {
 	NSMutableSet *result = [NSMutableSet set];
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBPCMDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		[result unionSet:supportedMIMETypes];
 	}
 	return result;
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
@@ -120,7 +120,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
 {
 	NSString *lowercaseExtension = extension.lowercaseString;
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBPCMDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		if([supportedPathExtensions containsObject:lowercaseExtension])
 			return YES;
@@ -131,7 +131,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (BOOL)handlesMIMEType:(NSString *)mimeType
 {
 	NSString *lowercaseMIMEType = mimeType.lowercaseString;
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBPCMDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:lowercaseMIMEType])
 			return YES;
@@ -202,7 +202,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 			return nil;
 		// Instead of failing for non-seekable inputs just skip content type detection
 		if(!inputSource.supportsSeeking) {
-			os_log_error(gSFBAudioDecoderLog, "Unable to detect content type for non-seekable input source %{public}@", inputSource);
+			os_log_error(gSFBPCMDecoderLog, "Unable to detect content type for non-seekable input source %{public}@", inputSource);
 			detectContentType = NO;
 		}
 	}
@@ -210,7 +210,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	int score = 10;
 	Class subclass = nil;
 
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBPCMDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		int currentScore = 0;
 		Class klass = subclassInfo.klass;
 
@@ -239,12 +239,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 						currentScore += 10;
 						break;
 					default:
-						os_log_fault(gSFBAudioDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
+						os_log_fault(gSFBPCMDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
 						break;
 				}
 			}
 			else
-				os_log_error(gSFBAudioDecoderLog, "Error testing %{public}@ format support for %{public}@", klass, inputSource);
+				os_log_error(gSFBPCMDecoderLog, "Error testing %{public}@ format support for %{public}@", klass, inputSource);
 		}
 
 		if(currentScore > score) {
@@ -254,9 +254,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 
 	if(!subclass) {
-		os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
+		os_log_debug(gSFBPCMDecoderLog, "Unable to determine content type for %{public}@", inputSource);
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @""),
 														 NSURLErrorKey: inputSource.url },
@@ -267,19 +267,19 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if((self = [[subclass alloc] init])) {
 		_inputSource = inputSource;
 #if DEBUG
-		os_log_debug(gSFBAudioDecoderLog, "Created %{public}@ based on score of %i", self, score);
+		os_log_debug(gSFBPCMDecoderLog, "Created %{public}@ based on score of %i", self, score);
 #endif /* DEBUG */
 	}
 
 	return self;
 }
 
-- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBPCMDecoderName)decoderName
 {
 	return [self initWithURL:url decoderName:decoderName error:nil];
 }
 
-- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBPCMDecoderName)decoderName error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
@@ -289,18 +289,18 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return [self initWithInputSource:inputSource decoderName:decoderName error:error];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBPCMDecoderName)decoderName
 {
 	return [self initWithInputSource:inputSource decoderName:decoderName error:nil];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBPCMDecoderName)decoderName error:(NSError **)error
 {
 	NSParameterAssert(inputSource != nil);
 
 	Class subclass = nil;
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		SFBAudioDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
+	for(SFBPCMDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBPCMDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
 		if(subclassDecoderName == decoderName) {
 			subclass = subclassInfo.klass;
 			break;
@@ -308,9 +308,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 	}
 
 	if(!subclass) {
-		os_log_error(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: \"%{public}@\"", decoderName);
+		os_log_error(gSFBPCMDecoderLog, "SFBPCMDecoder unknown decoder: \"%{public}@\"", decoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeUnknownDecoder userInfo:nil];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeUnknownDecoder userInfo:nil];
 		return nil;
 	}
 
@@ -379,10 +379,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 @end
 
-@implementation SFBAudioDecoderSubclassInfo
+@implementation SFBPCMDecoderSubclassInfo
 @end
 
-@implementation SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
+@implementation SFBPCMDecoder (SFBPCMDecoderSubclassRegistration)
 
 + (void)registerSubclass:(Class)subclass
 {
@@ -391,14 +391,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)registerSubclass:(Class)subclass priority:(int)priority
 {
-//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBAudioDecoder", NSStringFromClass(subclass));
+//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBPCMDecoder", NSStringFromClass(subclass));
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		_registeredSubclasses = [NSMutableArray array];
 	});
 
-	SFBAudioDecoderSubclassInfo *subclassInfo = [[SFBAudioDecoderSubclassInfo alloc] init];
+	SFBPCMDecoderSubclassInfo *subclassInfo = [[SFBPCMDecoderSubclassInfo alloc] init];
 	subclassInfo.klass = subclass;
 	subclassInfo.priority = priority;
 
@@ -407,8 +407,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 	// N.B. `sortUsingComparator:` sorts in ascending order
 	// To sort the array in descending order the comparator is reversed
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
-		int a = ((SFBAudioDecoderSubclassInfo *)obj1).priority;
-		int b = ((SFBAudioDecoderSubclassInfo *)obj2).priority;
+		int a = ((SFBPCMDecoderSubclassInfo *)obj1).priority;
+		int b = ((SFBPCMDecoderSubclassInfo *)obj2).priority;
 		if(a > b)
 			return NSOrderedAscending;
 		else if(a < b)

@@ -16,7 +16,7 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
+SFBPCMDecoderName const SFBPCMDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
 
 static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian, BOOL isNonInterleaved)
 {
@@ -84,7 +84,7 @@ static AVAudioChannelLayout * _Nullable ChannelLayoutFromSndfileChannelMap(int *
 			case SF_CHANNEL_MAP_AMBISONIC_B_Z: 			labels[i] = kAudioChannelLabel_Ambisonic_Z; 			break;
 
 			default:
-				os_log_error(gSFBAudioDecoderLog, "Invalid libsndfile channel: %d", channel_map[i]);
+				os_log_error(gSFBPCMDecoderLog, "Invalid libsndfile channel: %d", channel_map[i]);
 				labels[i] = kAudioChannelLabel_Unused;
 				break;
 		}
@@ -184,7 +184,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class] priority:-50];
+	[SFBPCMDecoder registerSubclass:[self class] priority:-50];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -208,7 +208,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 					[majorModeExtensions addObject:pathExtension];
 			}
 			else
-				os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
+				os_log_debug(gSFBPCMDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 		}
 
 		pathExtensions = [majorModeExtensions copy];
@@ -222,9 +222,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	return [NSSet set];
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
-	return SFBAudioDecoderNameLibsndfile;
+	return SFBPCMDecoderNameLibsndfile;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -295,9 +295,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	// Open the input file
 	_sndfile = sf_open_virtual(&virtualIO, SFM_READ, &_sfinfo, (__bridge void *)self);
 	if(!_sndfile) {
-		os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
+		os_log_error(gSFBPCMDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },
@@ -394,7 +394,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(_sndfile) {
 		int result = sf_close(_sndfile);
 		if(result)
-			os_log_error(gSFBAudioDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
+			os_log_error(gSFBPCMDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
 		_sndfile = NULL;
 	}
 
@@ -447,9 +447,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			framesRead = sf_readf_double(_sndfile, (double *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
 			break;
 		default:
-			os_log_error(gSFBAudioDecoderLog, "Unknown libsndfile read method: %d", _readMethod);
+			os_log_error(gSFBPCMDecoderLog, "Unknown libsndfile read method: %d", _readMethod);
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+				*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeInternalError userInfo:nil];
 			return NO;
 	}
 
@@ -457,9 +457,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 	int result = sf_error(_sndfile);
 	if(result) {
-		os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
+		os_log_error(gSFBPCMDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -472,9 +472,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 	sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
 	if(result == -1) {
-		os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
+		os_log_error(gSFBPCMDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

@@ -12,7 +12,7 @@
 
 #import "SFBDoPDecoder.h"
 
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBPCMDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
@@ -130,7 +130,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	}
 
 	if(!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
+		os_log_error(gSFBPCMDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
 		if(error)
 			*error = SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeUnsupportedFormat,
 													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),

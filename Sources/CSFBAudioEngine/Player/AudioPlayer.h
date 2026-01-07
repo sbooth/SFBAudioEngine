@@ -23,8 +23,8 @@
 #import <CXXRingBuffer/RingBuffer.hpp>
 #import <CXXUnfairLock/UnfairLock.hpp>
 
-#import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
+#import "SFBPCMDecoder.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"

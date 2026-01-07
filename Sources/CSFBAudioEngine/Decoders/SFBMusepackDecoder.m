@@ -18,7 +18,7 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
+SFBPCMDecoderName const SFBPCMDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency = @"sample_freq";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackChannels = @"channels";
@@ -114,7 +114,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class]];
+	[SFBPCMDecoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -127,9 +127,9 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	return [NSSet setWithArray:@[@"audio/musepack", @"audio/x-musepack"]];
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
-	return SFBAudioDecoderNameMusepack;
+	return SFBPCMDecoderNameMusepack;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -169,7 +169,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	_demux = mpc_demux_init(&_reader);
 	if(!_demux) {
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },
@@ -305,9 +305,9 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		frame.buffer = buf;
 
 		if(mpc_demux_decode(_demux, &frame)) {
-			os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
+			os_log_error(gSFBPCMDecoderLog, "Musepack decoding error");
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+				*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
@@ -350,9 +350,9 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	NSParameterAssert(frame >= 0);
 
 	if(mpc_demux_seek_sample(_demux, (mpc_uint64_t)frame)) {
-		os_log_error(gSFBAudioDecoderLog, "Musepack seek error");
+		os_log_error(gSFBPCMDecoderLog, "Musepack seek error");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 

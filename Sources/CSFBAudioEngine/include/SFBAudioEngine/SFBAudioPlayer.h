@@ -81,7 +81,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Creates and enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
-/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to ``-enqueueDecoder:forImmediatePlayback:error:``
+/// - note: This is equivalent to creating an `SFBPCMDecoder` object for `url` and passing that object to ``-enqueueDecoder:forImmediatePlayback:error:``
 /// - parameter url: The URL to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information

@@ -19,8 +19,8 @@
 #import "AudioPlayer.h"
 
 #import "HostTimeUtilities.hpp"
-#import "SFBAudioDecoder.h"
 #import "SFBCStringForOSType.h"
+#import "SFBPCMDecoder.h"
 
 namespace {
 

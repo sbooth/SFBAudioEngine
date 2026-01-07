@@ -13,7 +13,7 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-SFBAudioDecoderName const SFBAudioDecoderNameModule = @"org.sbooth.AudioEngine.Decoder.Module";
+SFBPCMDecoderName const SFBPCMDecoderNameModule = @"org.sbooth.AudioEngine.Decoder.Module";
 
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
@@ -105,7 +105,7 @@ static dumb_off_t get_size_callback(void *f)
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class]];
+	[SFBPCMDecoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -119,9 +119,9 @@ static dumb_off_t get_size_callback(void *f)
 	return [NSSet setWithArray:@[@"audio/it", @"audio/xm", @"audio/s3m", @"audio/mod", @"audio/x-mod"]];
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
-	return SFBAudioDecoderNameModule;
+	return SFBPCMDecoderNameModule;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -249,9 +249,9 @@ static dumb_off_t get_size_callback(void *f)
 
 	_df = dumbfile_open_ex((__bridge void *)self, &_dfs);
 	if(!_df) {
-		os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
+		os_log_error(gSFBPCMDecoderLog, "dumbfile_open_ex failed");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -261,7 +261,7 @@ static dumb_off_t get_size_callback(void *f)
 		_df = NULL;
 
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },
@@ -276,7 +276,7 @@ static dumb_off_t get_size_callback(void *f)
 	// Generate 2-channel audio
 	_dsr = duh_start_sigrenderer(_duh, 0, DUMB_CHANNELS, 0);
 	if(!_dsr) {
-		os_log_error(gSFBAudioDecoderLog, "duh_start_sigrenderer failed");
+		os_log_error(gSFBPCMDecoderLog, "duh_start_sigrenderer failed");
 
 		unload_duh(_duh);
 		_duh = NULL;
@@ -285,7 +285,7 @@ static dumb_off_t get_size_callback(void *f)
 		_df = NULL;
 
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },

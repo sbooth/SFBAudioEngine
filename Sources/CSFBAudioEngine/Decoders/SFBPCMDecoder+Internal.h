@@ -6,15 +6,15 @@
 
 #import <os/log.h>
 
-#import "SFBAudioDecoder.h"
+#import "SFBPCMDecoder.h"
 
 #import "SFBTernaryTruthValue.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern os_log_t gSFBAudioDecoderLog;
+extern os_log_t gSFBPCMDecoderLog;
 
-@interface SFBAudioDecoder ()
+@interface SFBPCMDecoder ()
 {
 @package
 	SFBInputSource *_inputSource;
@@ -23,7 +23,7 @@ extern os_log_t gSFBAudioDecoderLog;
 	NSDictionary *_properties;
 }
 /// Returns the decoder name
-@property (class, nonatomic, readonly) SFBAudioDecoderName decoderName;
+@property (class, nonatomic, readonly) SFBPCMDecoderName decoderName;
 
 /// Tests whether a seekable input source contains data in a supported format
 /// - parameter inputSource: The input source containing the data to test
@@ -35,7 +35,7 @@ extern os_log_t gSFBAudioDecoderLog;
 
 #pragma mark - Subclass Registration
 
-@interface SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
+@interface SFBPCMDecoder (SFBPCMDecoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)
 + (void)registerSubclass:(Class)subclass;
 /// Register a subclass with the specified priority

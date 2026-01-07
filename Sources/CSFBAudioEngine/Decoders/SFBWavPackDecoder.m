@@ -17,7 +17,7 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
+SFBPCMDecoderName const SFBPCMDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode = @"WavpackGetMode";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackQualifyMode = @"WavpackGetQualifyMode";
@@ -158,7 +158,7 @@ static int can_seek_callback(void *id)
 
 + (void)load
 {
-	[SFBAudioDecoder registerSubclass:[self class]];
+	[SFBPCMDecoder registerSubclass:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -171,9 +171,9 @@ static int can_seek_callback(void *id)
 	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
 }
 
-+ (SFBAudioDecoderName)decoderName
++ (SFBPCMDecoderName)decoderName
 {
-	return SFBAudioDecoderNameWavPack;
+	return SFBPCMDecoderNameWavPack;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
@@ -216,9 +216,9 @@ static int can_seek_callback(void *id)
 	// Setup converter
 	_wpc = WavpackOpenFileInputEx64(&_streamReader, (__bridge void *)self, NULL, errorBuf, OPEN_WVC | OPEN_NORMALIZE/* | OPEN_DSD_NATIVE*/, 0);
 	if(!_wpc) {
-		os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
+		os_log_error(gSFBPCMDecoderLog, "Error opening WavPack file: %s", errorBuf);
 		if(error)
-			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+			*error = SFBErrorWithLocalizedDescription(SFBPCMDecoderErrorDomain, SFBPCMDecoderErrorCodeInvalidFormat,
 													  NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @""),
 													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
 														 NSURLErrorKey: _inputSource.url },
@@ -294,7 +294,7 @@ static int can_seek_callback(void *id)
 				case 255:	labels[i] = kAudioChannelLabel_Unknown;					break;
 
 				default:
-					os_log_error(gSFBAudioDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
+					os_log_error(gSFBPCMDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
 					labels[i] = kAudioChannelLabel_Unused;
 					break;
 			}
@@ -520,9 +520,9 @@ static int can_seek_callback(void *id)
 	NSParameterAssert(frame >= 0);
 
 	if(!WavpackSeekSample64(_wpc, frame)) {
-		os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
+		os_log_error(gSFBPCMDecoderLog, "WavPack seek error");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBPCMDecoderErrorDomain code:SFBPCMDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
