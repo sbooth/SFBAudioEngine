@@ -36,7 +36,7 @@ NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecod
 
 /// The underlying decoder
 /// - warning: Do not change any properties of the returned object
-@property (nonatomic, readonly) id<SFBDSDDecoding> decoder;
+@property (nonatomic, nonnull, readonly) id<SFBDSDDecoding> decoder;
 
 @end
 
