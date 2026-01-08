@@ -432,7 +432,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		result = FLAC__stream_decoder_flush(_flac.get());
 	}
 
-	if(result) {
+	if(!result) {
 		os_log_error(gSFBAudioDecoderLog, "FLAC seek error: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
