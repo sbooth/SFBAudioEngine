@@ -29,8 +29,8 @@ static const unsigned char sBitReverseTable256 [256] =
 	R6(0), R6(2), R6(1), R6(3)
 };
 
-// Support DSD64, DSD128, and DSD256 (64x, 128x, and 256x the CD sample rate of 44.1 KHz)
-// as well as the 48.0 KHz variants 6.144 MHz and 12.288 MHz
+// Support DSD64, DSD128, and DSD256 (64x, 128x, and 256x the CD sample rate of 44.1 kHz)
+// as well as the 48.0 kHz variants 6.144 MHz and 12.288 MHz
 static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 {
 	switch((uint32_t)sampleRate) {
