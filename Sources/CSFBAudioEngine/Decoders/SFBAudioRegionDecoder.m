@@ -9,11 +9,11 @@
 
 @import AVFAudioExtensions;
 
-#import "SFBLoopableRegionDecoder.h"
+#import "SFBAudioRegionDecoder.h"
 
 #import "SFBAudioDecoder+Internal.h"
 
-@interface SFBLoopableRegionDecoder ()
+@interface SFBAudioRegionDecoder ()
 {
 @private
 	id<SFBPCMDecoding> _decoder;
@@ -23,7 +23,7 @@
 }
 @end
 
-@implementation SFBLoopableRegionDecoder
+@implementation SFBAudioRegionDecoder
 
 - (instancetype)initWithURL:(NSURL *)url startingFrame:(AVAudioFramePosition)startingFrame error:(NSError **)error
 {
@@ -153,7 +153,7 @@
 		return NO;
 
 	if(!_decoder.supportsSeeking) {
-		os_log_error(gSFBAudioDecoderLog, "Cannot open LoopableRegionDecoder with non-seekable decoder %{public}@", _decoder);
+		os_log_error(gSFBAudioDecoderLog, "Cannot open AudioRegionDecoder with non-seekable decoder %{public}@", _decoder);
 		[_decoder closeReturningError:nil];
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
