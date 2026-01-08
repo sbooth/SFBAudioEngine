@@ -1180,7 +1180,6 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 					// Decode audio into the buffer, converting to the rendering format in the process
 					if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
-						os_log_error(log_, "Error decoding audio: %{public}@", error);
 						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
 						SubmitDecodingErrorEvent(error);
 						goto next_outer_iteration;
