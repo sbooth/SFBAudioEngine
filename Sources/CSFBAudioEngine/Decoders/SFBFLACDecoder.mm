@@ -8,6 +8,8 @@
 
 #import <os/log.h>
 
+#import <simd/simd.h>
+
 #import <FLAC/metadata.h>
 #import <FLAC/stream_decoder.h>
 
@@ -49,7 +51,9 @@ using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, fla
 	flac__stream_decoder_unique_ptr _flac;
 	FLAC__StreamMetadata_StreamInfo _streamInfo;
 	AVAudioFramePosition _framePosition;
+	FLAC__FrameHeader _previousFrameHeader;
 	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
+	NSError *_writeError;
 }
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error;
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer;
@@ -237,6 +241,17 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		return NO;
 	}
 
+	// FLAC supports from 4 to 32 bits per sample; this check is likely unnecessary
+	if(_streamInfo.bits_per_sample < 4 || _streamInfo.bits_per_sample > 32) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
+		if(error)
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth is not supported.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
+	}
+
 	_framePosition = 0;
 
 	// Set up the processing format
@@ -245,45 +260,16 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
-	processingStreamDescription.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+	processingStreamDescription.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsAlignedHigh;
 #pragma clang diagnostic pop
 
 	processingStreamDescription.mSampleRate			= _streamInfo.sample_rate;
 	processingStreamDescription.mChannelsPerFrame	= _streamInfo.channels;
 	processingStreamDescription.mBitsPerChannel		= _streamInfo.bits_per_sample;
 
-	processingStreamDescription.mBytesPerPacket		= (_streamInfo.bits_per_sample + 7) / 8;
+	processingStreamDescription.mBytesPerPacket		= 4;
 	processingStreamDescription.mFramesPerPacket	= 1;
 	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
-
-	// FLAC supports from 4 to 32 bits per sample
-	switch(processingStreamDescription.mBitsPerChannel) {
-		case 8:
-		case 16:
-		case 24:
-		case 32:
-			processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
-			break;
-
-		case 4 ... 7:
-		case 9 ... 15:
-		case 17 ... 23:
-		case 25 ... 31:
-			// Align high because Apple's AudioConverter doesn't handle low alignment
-			processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
-			break;
-
-		default: {
-			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
-			if(error)
-				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
-														  NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""),
-														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth is not supported.", @""),
-															 NSURLErrorKey: _inputSource.url },
-														  SFBLocalizedNameForURL(_inputSource.url));
-			return NO;
-		}
-	}
 
 	_flac = std::move(flac);
 
@@ -409,7 +395,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		if(!FLAC__stream_decoder_process_single(_flac.get())) {
 			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
 			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+				*error = _writeError ?: [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 	}
@@ -462,67 +448,79 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer
 {
+#if DEBUG
 	NSParameterAssert(decoder != NULL);
 	NSParameterAssert(frame != NULL);
+#endif /* DEBUG */
 
-	const AudioBufferList *abl = _frameBuffer.audioBufferList;
-	if(abl->mNumberBuffers != frame->header.channels)
-		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+	// Changes in channel count or sample rate mid-stream are not supported
+	if(const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
+		if(frame->header.channels != _previousFrameHeader.channels) {
+			os_log_debug(gSFBAudioDecoderLog, "Change in channel count from %d to %d detected", _previousFrameHeader.channels, frame->header.channels);
+
+			_writeError = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														   NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""),
+														   @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Changes in channel count are not supported.", @""),
+															  NSURLErrorKey: _inputSource.url },
+														   SFBLocalizedNameForURL(_inputSource.url));
+
+			_frameBuffer.frameLength = 0;
+			return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+		}
+
+		if(frame->header.sample_rate != _previousFrameHeader.sample_rate) {
+			os_log_debug(gSFBAudioDecoderLog, "Change in sample rate from %g kHz to %g kHz detected", static_cast<double>(_previousFrameHeader.sample_rate) / 1000.0, static_cast<double>(frame->header.sample_rate) / 1000.0);
+
+			_writeError = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														   NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""),
+														   @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Changes in sample rate are not supported.", @""),
+															  NSURLErrorKey: _inputSource.url },
+														   SFBLocalizedNameForURL(_inputSource.url));
+
+			_frameBuffer.frameLength = 0;
+			return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+		}
+
+		if(frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample)
+			os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %d to %d detected", _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
+	}
+
+	const auto *abl = _frameBuffer.audioBufferList;
+	assert(abl->mNumberBuffers == frame->header.channels);
 
 	// FLAC hands us 32-bit signed integers with the samples low-aligned
-	uint32_t bytesPerFrame = (frame->header.bits_per_sample + 7) / 8;
-	if(bytesPerFrame != _frameBuffer.format.streamDescription->mBytesPerFrame)
-		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+	if(const auto shift = 32 - frame->header.bits_per_sample; shift == 0) {
+		for(uint32_t channel = 0; channel < frame->header.channels; ++channel)
+			memcpy(abl->mBuffers[channel].mData, buffer[channel], frame->header.blocksize * sizeof(FLAC__int32));
+	} else {
+		// Shift the samples to high alignment
+		const auto channels = frame->header.channels;
+		const auto blocksize = frame->header.blocksize;
 
-	switch(bytesPerFrame) {
-		case 1: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int8_t *dst = static_cast<int8_t *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = static_cast<int8_t>(buffer[channel][sample]);
-			}
+		for(uint32_t channel = 0; channel < channels; ++channel) {
+			// simd_uint8 and simd_uint16 require 16 byte alignment
+			using simd_vector = simd_packed_uint16;
+			constexpr uint32_t simd_vector_size = 16;
 
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
+			uint32_t * __restrict dst = static_cast<uint32_t *>(abl->mBuffers[channel].mData);
+			const FLAC__int32 * __restrict src = buffer[channel];
 
-		case 2: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int16_t *dst = static_cast<int16_t *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = static_cast<int16_t>(buffer[channel][sample]);
-			}
-
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
-
-		case 3: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				unsigned char *dst = static_cast<unsigned char *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
-					uint32_t value = OSSwapHostToLittleInt32(buffer[channel][sample]);
-					*dst++ = static_cast<unsigned char>(value & 0xff);
-					*dst++ = static_cast<unsigned char>((value >> 8) & 0xff);
-					*dst++ = static_cast<unsigned char>((value >> 16) & 0xff);
+			uint32_t sample = 0;
+			if(blocksize > simd_vector_size) {
+				for(; sample <= blocksize - simd_vector_size; sample += simd_vector_size) {
+					simd_vector v = *(const simd_vector *)&src[sample];
+					v = v << shift;
+					*(simd_vector *)&dst[sample] = v;
 				}
 			}
 
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
-
-		case 4: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int32_t *dst = static_cast<int32_t *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = static_cast<int32_t>(buffer[channel][sample]);
-			}
-
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
+			for(; sample < blocksize; ++sample)
+				dst[sample] = static_cast<uint32_t>(src[sample]) << shift;
 		}
 	}
+
+	_frameBuffer.frameLength = frame->header.blocksize;
+	_previousFrameHeader = frame->header;
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
