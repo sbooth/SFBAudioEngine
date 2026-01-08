@@ -529,7 +529,7 @@ private:
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class], self, _decoder, _linearGain];
 }
 
 @end
