@@ -17,10 +17,22 @@ NS_SWIFT_NAME(LoopableRegionDecoder) @interface SFBLoopableRegionDecoder : NSObj
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter startingFrame: The starting frame position of the audio region
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified URL, or `nil` on failure
+- (nullable instancetype)initWithURL:(NSURL *)url startingFrame:(AVAudioFramePosition)startingFrame error:(NSError **)error;
+/// Returns an initialized `SFBLoopableRegionDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter startingFrame: The starting frame position of the audio region
 /// - parameter frameLength: The frame length of the audio region. A value of -1 results in playing until the end of the audio.
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error;
+/// Returns an initialized `SFBLoopableRegionDecoder` object for the given URL or `nil` on failure
+/// - parameter url: The URL
+/// - parameter repeatCount: The number of times to repeat the audio region. A value of zero results in the region playing once and a value of -1 results in a continuous loop.
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified URL, or `nil` on failure
+- (nullable instancetype)initWithURL:(NSURL *)url repeatCount:(NSInteger)repeatCount error:(NSError **)error;
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter startingFrame: The starting frame position of the audio region
@@ -33,10 +45,22 @@ NS_SWIFT_NAME(LoopableRegionDecoder) @interface SFBLoopableRegionDecoder : NSObj
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter startingFrame: The starting frame position of the audio region
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified input source, or `nil` on failure
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource startingFrame:(AVAudioFramePosition)startingFrame error:(NSError **)error;
+/// Returns an initialized `SFBLoopableRegionDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - parameter startingFrame: The starting frame position of the audio region
 /// - parameter frameLength: The frame length of the audio region. A value of -1 results in playing until the end of the audio.
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error;
+/// Returns an initialized `SFBLoopableRegionDecoder` object for the given input source or `nil` on failure
+/// - parameter inputSource: The input source
+/// - parameter repeatCount: The number of times to repeat the audio region. A value of -1 results in a continuous loop.
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified input source, or `nil` on failure
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource repeatCount:(NSInteger)repeatCount error:(NSError **)error;
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter startingFrame: The starting frame position of the audio region
@@ -49,10 +73,22 @@ NS_SWIFT_NAME(LoopableRegionDecoder) @interface SFBLoopableRegionDecoder : NSObj
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given decoder or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter startingFrame: The starting frame position of the audio region
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified decoder, or `nil` on failure
+- (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startingFrame:(AVAudioFramePosition)startingFrame error:(NSError **)error;
+/// Returns an initialized `SFBLoopableRegionDecoder` object for the given decoder or `nil` on failure
+/// - parameter decoder: The decoder
+/// - parameter startingFrame: The starting frame position of the audio region
 /// - parameter frameLength: The frame length of the audio region. A value of -1 results in playing until the end of the audio.
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified decoder, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error;
+/// Returns an initialized `SFBLoopableRegionDecoder` object for the given decoder or `nil` on failure
+/// - parameter decoder: The decoder
+/// - parameter repeatCount: The number of times to repeat the audio region. A value of -1 results in a continuous loop.
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: An initialized `SFBLoopableRegionDecoder` object for the specified decoder, or `nil` on failure
+- (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder repeatCount:(NSInteger)repeatCount error:(NSError **)error;
 /// Returns an initialized `SFBLoopableRegionDecoder` object for the given decoder or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter startingFrame: The starting frame position of the audio region
