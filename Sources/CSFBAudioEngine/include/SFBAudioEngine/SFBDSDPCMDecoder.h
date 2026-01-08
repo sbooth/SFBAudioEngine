@@ -34,6 +34,10 @@ NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecod
 /// The linear gain applied to the converted DSD samples (default is 6 dBFS)
 @property (nonatomic) float linearGain;
 
+/// The underlying decoder
+/// - warning: Do not change any properties of the returned object
+@property (nonatomic, readonly) id<SFBDSDDecoding> decoder;
+
 @end
 
 NS_ASSUME_NONNULL_END
