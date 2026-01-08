@@ -16,109 +16,111 @@
 @interface SFBAudioRegionDecoder ()
 {
 @private
-	id<SFBPCMDecoding> _decoder;
 	AVAudioPCMBuffer *_buffer;
-	AVAudioFramePosition _startFrame;
-	AVAudioFramePosition _endFrame;
 }
 @end
 
 @implementation SFBAudioRegionDecoder
 
+@synthesize actualStartFrame = _startFrame;
+@synthesize actualFrameLength = _frameLength;
+
 - (instancetype)initWithURL:(NSURL *)url initialFrames:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithURL:url startingFrame:0 frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithURL:url startFrame:0 frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithURL:(NSURL *)url finalFrames:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithURL:url startingFrame:-1 frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithURL:url startFrame:-1 frameLength:frameLength repeatCount:0 error:error];
 }
 
-- (instancetype)initWithURL:(NSURL *)url startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+- (instancetype)initWithURL:(NSURL *)url startFrame:(AVAudioFramePosition)startFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithURL:url startingFrame:startingFrame frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithURL:url startFrame:startFrame frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithURL:(NSURL *)url repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
-	return [self initWithURL:url startingFrame:0 frameLength:-1 repeatCount:repeatCount error:error];
+	return [self initWithURL:url startFrame:0 frameLength:-1 repeatCount:repeatCount error:error];
 }
 
-- (instancetype)initWithURL:(NSURL *)url startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
+- (instancetype)initWithURL:(NSURL *)url startFrame:(AVAudioFramePosition)startFrame frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
 	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
 	if(!inputSource)
 		return nil;
-	return [self initWithInputSource:inputSource startingFrame:startingFrame frameLength:frameLength repeatCount:repeatCount error:error];
+	return [self initWithInputSource:inputSource startFrame:startFrame frameLength:frameLength repeatCount:repeatCount error:error];
 }
 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource initialFrames:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithInputSource:inputSource startingFrame:0 frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithInputSource:inputSource startFrame:0 frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource finalFrames:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithInputSource:inputSource startingFrame:-1 frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithInputSource:inputSource startFrame:-1 frameLength:frameLength repeatCount:0 error:error];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource startFrame:(AVAudioFramePosition)startFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithInputSource:inputSource startingFrame:startingFrame frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithInputSource:inputSource startFrame:startFrame frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
-	return [self initWithInputSource:inputSource startingFrame:0 frameLength:-1 repeatCount:repeatCount error:error];
+	return [self initWithInputSource:inputSource startFrame:0 frameLength:-1 repeatCount:repeatCount error:error];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource startFrame:(AVAudioFramePosition)startFrame frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
 	NSParameterAssert(inputSource != nil);
 
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource error:error];
 	if(!decoder)
 		return nil;
-	return [self initWithDecoder:decoder startingFrame:startingFrame frameLength:frameLength repeatCount:repeatCount error:error];
+	return [self initWithDecoder:decoder startFrame:startFrame frameLength:frameLength repeatCount:repeatCount error:error];
 }
 
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder initialFrames:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithDecoder:decoder startingFrame:0 frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithDecoder:decoder startFrame:0 frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder finalFrames:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithDecoder:decoder startingFrame:-1 frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithDecoder:decoder startFrame:-1 frameLength:frameLength repeatCount:0 error:error];
 }
 
-- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startFrame:(AVAudioFramePosition)startFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
-	return [self initWithDecoder:decoder startingFrame:startingFrame frameLength:frameLength repeatCount:0 error:error];
+	return [self initWithDecoder:decoder startFrame:startFrame frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
-	return [self initWithDecoder:decoder startingFrame:0 frameLength:-1 repeatCount:repeatCount error:error];
+	return [self initWithDecoder:decoder startFrame:0 frameLength:-1 repeatCount:repeatCount error:error];
 }
 
-- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startFrame:(AVAudioFramePosition)startFrame frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-	NSParameterAssert(startingFrame >= -1);
+	NSParameterAssert(startFrame >= -1);
 	NSParameterAssert(frameLength > 0 || frameLength == -1);
-	NSParameterAssert(!(startingFrame == -1 && frameLength == -1));
+	NSParameterAssert(!(startFrame == -1 && frameLength == -1));
 	NSParameterAssert(repeatCount >= -1);
 
 	if((self = [super init])) {
 		_decoder = decoder;
-		_regionStartingFrame = startingFrame;
-		_regionFrameLength = frameLength;
+		_requestedStartFrame = startFrame;
+		_requestedFrameLength = frameLength;
 		_repeatCount = repeatCount;
 		_completedLoops = 0;
+		_startFrame = SFBUnknownFramePosition;
+		_frameLength = SFBUnknownFramePosition;
 	}
 	return self;
 }
@@ -161,8 +163,8 @@
 		return NO;
 	}
 
-	AVAudioFramePosition frameLength = _decoder.frameLength;
-	if(frameLength == SFBUnknownFrameLength) {
+	AVAudioFramePosition decoderFrameLength = _decoder.frameLength;
+	if(decoderFrameLength == SFBUnknownFrameLength) {
 		os_log_error(gSFBAudioDecoderLog, "Invalid frame length from %{public}@", _decoder);
 		[_decoder closeReturningError:nil];
 		if(error)
@@ -170,24 +172,24 @@
 		return NO;
 	}
 
-	if(_regionStartingFrame == -1) {
-		if(_regionFrameLength > frameLength) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid audio region frame length %lld", _regionFrameLength);
+	if(_requestedStartFrame == -1) {
+		if(_requestedFrameLength > decoderFrameLength) {
+			os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region frame length %lld", _requestedFrameLength);
 			[_decoder closeReturningError:nil];
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
-		_startFrame = frameLength - _regionFrameLength;
+		_startFrame = decoderFrameLength - _requestedFrameLength;
 	} else {
-		if(_regionStartingFrame >= frameLength) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid audio region starting frame %lld", _regionStartingFrame);
+		if(_requestedStartFrame >= decoderFrameLength) {
+			os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region start frame %lld", _requestedStartFrame);
 			[_decoder closeReturningError:nil];
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
-		_startFrame = _regionStartingFrame;
+		_startFrame = _requestedStartFrame;
 	}
 
 	if(_decoder.framePosition != _startFrame && ![_decoder seekToFrame:_startFrame error:error]) {
@@ -195,17 +197,17 @@
 		return NO;
 	}
 
-	if(_regionFrameLength == -1)
-		_endFrame = frameLength;
+	if(_requestedFrameLength == -1)
+		_frameLength = decoderFrameLength - _startFrame;
 	else {
-		if(_regionFrameLength > frameLength - _startFrame) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid audio region frame length %lld", _regionFrameLength);
+		if(_requestedFrameLength > decoderFrameLength - _startFrame) {
+			os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region frame length %lld", _requestedFrameLength);
 			[_decoder closeReturningError:nil];
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 			return NO;
 		}
-		_endFrame = _startFrame + _regionFrameLength;
+		_frameLength = _requestedFrameLength;
 	}
 
 	_buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_decoder.processingFormat frameCapacity:512];
@@ -230,19 +232,17 @@
 	AVAudioFramePosition framePosition = _decoder.framePosition;
 	if(framePosition == SFBUnknownFramePosition)
 		return SFBUnknownFramePosition;
-	AVAudioFramePosition regionFrameLength = _endFrame - _startFrame;
-	return (framePosition - _startFrame) + (regionFrameLength * _completedLoops);
+	return (framePosition - _startFrame) + (_frameLength * _completedLoops);
 }
 
 - (AVAudioFramePosition)frameLength
 {
 	if(_repeatCount == -1)
 		return INT64_MAX;
-	AVAudioFramePosition regionFrameLength = _endFrame - _startFrame;
-	return regionFrameLength + (regionFrameLength * _repeatCount);
+	return _frameLength + (_frameLength * _repeatCount);
 }
 
-- (AVAudioFramePosition)regionFrameOffset
+- (AVAudioFramePosition)frameOffset
 {
 	AVAudioFramePosition framePosition = _decoder.framePosition;
 	if(framePosition == SFBUnknownFramePosition)
@@ -273,7 +273,7 @@
 	AVAudioFrameCount framesRemaining = frameLength;
 
 	while(framesRemaining > 0) {
-		AVAudioFrameCount framesRemainingInRegion = (AVAudioFrameCount)(_endFrame - _decoder.framePosition);
+		AVAudioFrameCount framesRemainingInRegion = (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
 		AVAudioFrameCount framesToDecode = MIN(MIN(framesRemaining, framesRemainingInRegion), _buffer.frameCapacity);
 
 		// Nothing left to read
@@ -320,9 +320,8 @@
 		return NO;
 	}
 
-	AVAudioFramePosition regionFrameLength = _endFrame - _startFrame;
-	static_assert(sizeof(long long) == sizeof(AVAudioFramePosition));
-	lldiv_t qr = lldiv(frame, regionFrameLength);
+	static_assert(sizeof(long long) == sizeof _frameLength);
+	lldiv_t qr = lldiv(frame, _frameLength);
 
 	if(![_decoder seekToFrame:(_startFrame + qr.rem) error:error])
 		return NO;
@@ -333,7 +332,7 @@
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _endFrame = %lld, _repeatCount = %d>", [self class], self, _decoder, _startFrame, _endFrame, _repeatCount];
+	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %d>", [self class], self, _decoder, _startFrame, _frameLength, _repeatCount];
 }
 
 @end
