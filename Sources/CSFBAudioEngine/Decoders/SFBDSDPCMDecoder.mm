@@ -411,7 +411,15 @@ private:
 	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:kBufferSizePackets maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
-	_context.resize(asbd->mChannelsPerFrame);
+	try {
+		_context.resize(asbd->mChannelsPerFrame);
+	} catch(const std::exception& e) {
+		os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
+		_buffer = nil;
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
 
 	return YES;
 }
