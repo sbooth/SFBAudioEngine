@@ -489,11 +489,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	assert(abl->mNumberBuffers == frame->header.channels);
 
 	// FLAC hands us 32-bit signed integers with the samples low-aligned
-	if(const auto shift = 32 - frame->header.bits_per_sample; shift == 0) {
-		for(uint32_t channel = 0; channel < frame->header.channels; ++channel)
-			memcpy(abl->mBuffers[channel].mData, buffer[channel], frame->header.blocksize * sizeof(FLAC__int32));
-	} else {
+	if(frame->header.bits_per_sample != 32) [[likely]] {
 		// Shift the samples to high alignment
+		const auto shift = 32 - frame->header.bits_per_sample;
 		const auto channels = frame->header.channels;
 		const auto blocksize = frame->header.blocksize;
 
@@ -517,6 +515,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 			for(; sample < blocksize; ++sample)
 				dst[sample] = static_cast<uint32_t>(src[sample]) << shift;
 		}
+	} else {
+		for(uint32_t channel = 0; channel < frame->header.channels; ++channel)
+			memcpy(abl->mBuffers[channel].mData, buffer[channel], frame->header.blocksize * sizeof(FLAC__int32));
 	}
 
 	_frameBuffer.frameLength = frame->header.blocksize;
