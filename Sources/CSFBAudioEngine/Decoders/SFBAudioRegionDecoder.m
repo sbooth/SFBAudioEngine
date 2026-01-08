@@ -320,7 +320,7 @@
 		return NO;
 	}
 
-	static_assert(sizeof(long long) == sizeof _frameLength);
+	static_assert(sizeof(long long) == sizeof _frameLength, "AVAudioFramePosition not long long");
 	lldiv_t qr = lldiv(frame, _frameLength);
 
 	if(![_decoder seekToFrame:(_startFrame + qr.rem) error:error])
@@ -332,7 +332,7 @@
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %d>", [self class], self, _decoder, _startFrame, _frameLength, _repeatCount];
+	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %ld>", [self class], self, _decoder, _startFrame, _frameLength, (long)_repeatCount];
 }
 
 @end
