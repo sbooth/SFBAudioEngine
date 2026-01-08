@@ -272,7 +272,7 @@
 		// Reached end of region, loop back to beginning
 		if(framesToDecode == framesRemainingInRegion) {
 			_completedLoops++;
-			if(_repeatCount != -1 && _completedLoops <= _repeatCount) {
+			if(_repeatCount == -1 || _completedLoops <= _repeatCount) {
 				if(![_decoder seekToFrame:_startFrame error:error])
 					return NO;
 			}
