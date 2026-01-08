@@ -411,7 +411,15 @@ private:
 	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:kBufferSizePackets maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
-	_context.resize(asbd->mChannelsPerFrame);
+	try {
+		_context.resize(asbd->mChannelsPerFrame);
+	} catch(const std::exception& e) {
+		os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
+		_buffer = nil;
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
 
 	return YES;
 }
@@ -521,7 +529,7 @@ private:
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class], self, _decoder, _linearGain];
 }
 
 @end
