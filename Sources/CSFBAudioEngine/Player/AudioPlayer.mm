@@ -1180,9 +1180,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 					// Decode audio into the buffer, converting to the rendering format in the process
 					if(NSError *error = nil; !decoderState->DecodeAudio(buffer, &error)) {
-						os_log_error(log_, "Error decoding audio: %{public}@", error);
-						if(error)
-							SubmitDecodingErrorEvent(error);
+						decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
+						SubmitDecodingErrorEvent(error);
+						goto next_outer_iteration;
 					}
 
 					// Write the decoded audio to the ring buffer for rendering
@@ -1242,6 +1242,9 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 
 		// Wait for an event signal; ring buffer space availability is polled using the timeout
 		dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
+
+	next_outer_iteration:
+		;
 	}
 
 	os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
