@@ -206,8 +206,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 				NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
 				if(pathExtension)
 					[majorModeExtensions addObject:pathExtension];
-			}
-			else
+			} else
 				os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 		}
 

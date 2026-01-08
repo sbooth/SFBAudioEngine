@@ -542,8 +542,7 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 			return false;
 		}
 		flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-	}
-	else
+	} else
 		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
@@ -1148,8 +1147,7 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 							continue;
 						}
 					}
-				}
-				else
+				} else
 					decoderState = nullptr;
 			}
 		}
@@ -1653,8 +1651,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 				os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
 				iter = activeDecoders_.erase(iter);
-			}
-			else
+			} else
 				++iter;
 
 			// All frames processed

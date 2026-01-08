@@ -103,8 +103,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 			int trackTotal = s.substr(upos + 1).toInt(&ok);
 			if(ok)
 				self.trackTotal = @(trackTotal);
-		}
-		else if(s.length()) {
+		} else if(s.length()) {
 			int trackNum = s.toInt(&ok);
 			if(ok)
 				self.trackNumber = @(trackNum);
@@ -128,8 +127,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 			int discTotal = s.substr(upos + 1).toInt(&ok);
 			if(ok)
 				self.discTotal = @(discTotal);
-		}
-		else if(s.length()) {
+		} else if(s.length()) {
 			int discNum = s.toInt(&ok);
 			if(ok)
 				self.discNumber = @(discNum);
@@ -367,13 +365,11 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"%@/%@", metadata.trackNumber, metadata.trackTotal]));
 		tag->addFrame(frame);
-	}
-	else if(metadata.trackNumber != nil) {
+	} else if(metadata.trackNumber != nil) {
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"%@", metadata.trackNumber]));
 		tag->addFrame(frame);
-	}
-	else if(metadata.trackTotal != nil) {
+	} else if(metadata.trackTotal != nil) {
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"/%@", metadata.trackTotal]));
 		tag->addFrame(frame);
@@ -394,13 +390,11 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"%@/%@", metadata.discNumber, metadata.discTotal]));
 		tag->addFrame(frame);
-	}
-	else if(metadata.discNumber != nil) {
+	} else if(metadata.discNumber != nil) {
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"%@", metadata.discNumber]));
 		tag->addFrame(frame);
-	}
-	else if(metadata.discTotal != nil) {
+	} else if(metadata.discTotal != nil) {
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"/%@", metadata.discTotal]));
 		tag->addFrame(frame);

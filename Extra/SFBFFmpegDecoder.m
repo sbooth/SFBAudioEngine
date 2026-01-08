@@ -299,8 +299,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between channelLayout.channelCount (%u) and codec_par->ch_layout.nb_channels (%u)", channelLayout.channelCount, channelCount);
 			channelLayout = nil;
 		}
-	}
-	else if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_CUSTOM)
+	} else if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_CUSTOM)
 		os_log_error(gSFBAudioDecoderLog, "ffmpeg custom channel layouts not (yet) suported");
 	else
 		os_log_error(gSFBAudioDecoderLog, "Unsupported channel layout order %u", _formatContext->streams[_streamIndex]->codecpar->ch_layout.order);
@@ -514,10 +513,8 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 					// TODO: Flush buffer
 				}
 				break;
-			}
-			else if(result == AVERROR(EAGAIN)) {
-			}
-			else if(result < 0) {
+			} else if(result == AVERROR(EAGAIN)) {
+			} else if(result < 0) {
 				os_log_error(gSFBAudioDecoderLog, "ReadFrame() failed: %d", result);
 				break;
 			}
@@ -631,8 +628,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 		if(av_sample_fmt_is_planar(_codecContext->sample_fmt)) {
 			for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
 				memcpy((unsigned char *)bufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize, _frame->extended_data[i], (size_t)_frame->linesize[0]);
-		}
-		else
+		} else
 			memcpy((unsigned char *)bufferList->mBuffers[0].mData + bufferList->mBuffers[0].mDataByteSize, _frame->extended_data[0], (size_t)_frame->linesize[0]);
 
 		_buffer.frameLength += (AVAudioFrameCount)_frame->linesize[0] / bytesPerFrame;

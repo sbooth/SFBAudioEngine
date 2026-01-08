@@ -25,8 +25,7 @@ void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format)
 		case SF_FORMAT_PCM_S8:
 			if(majorFormat == SF_FORMAT_FLAC) {
 				asbd->mFormatID = kAudioFormatFLAC;
-			}
-			else {
+			} else {
 				asbd->mFormatID = kAudioFormatLinearPCM;
 				asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
 				asbd->mBitsPerChannel = 8;
@@ -37,8 +36,7 @@ void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format)
 			if(majorFormat == SF_FORMAT_FLAC) {
 				asbd->mFormatID = kAudioFormatFLAC;
 				asbd->mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
-			}
-			else {
+			} else {
 				asbd->mFormatID = kAudioFormatLinearPCM;
 				asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
 				asbd->mBitsPerChannel = 16;
@@ -49,8 +47,7 @@ void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format)
 			if(majorFormat == SF_FORMAT_FLAC) {
 				asbd->mFormatID = kAudioFormatFLAC;
 				asbd->mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
-			}
-			else {
+			} else {
 				asbd->mFormatID = kAudioFormatLinearPCM;
 				asbd->mFormatFlags = kAudioFormatFlagIsSignedInteger;
 				asbd->mBitsPerChannel = 24;

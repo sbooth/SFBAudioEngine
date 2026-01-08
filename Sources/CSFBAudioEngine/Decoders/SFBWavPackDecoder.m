@@ -308,10 +308,8 @@ static int can_seek_callback(void *id)
 	//	int qmode = WavpackGetQualifyMode(_wpc);
 	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
 		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:WavpackGetSampleRate(_wpc) interleaved:NO channelLayout:channelLayout];
-	}
-//	else if(qmode & QMODE_DSD_AUDIO) {
-//	}
-	else {
+//	} else if(qmode & QMODE_DSD_AUDIO) {
+	} else {
 		AudioStreamBasicDescription processingStreamDescription = {0};
 
 		processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;

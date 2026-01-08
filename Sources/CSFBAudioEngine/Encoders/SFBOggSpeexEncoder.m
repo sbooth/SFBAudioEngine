@@ -148,8 +148,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		else if(mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)	sampleRate = 32000;
 		else
 			return nil;
-	}
-	else if(sampleRate > 48000 || sampleRate < 6000)
+	} else if(sampleRate > 48000 || sampleRate < 6000)
 		return nil;
 
 	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:sampleRate channels:(AVAudioChannelCount)sourceFormat.channelCount interleaved:YES];
@@ -181,8 +180,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		if(_processingFormat.sampleRate > 25000)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
 		else if(_processingFormat.sampleRate > 12500)		speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
 		else if(_processingFormat.sampleRate >= 6000)		speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
-	}
-	else {
+	} else {
 		if(mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
 		else if(mode == SFBAudioEncodingSettingsValueSpeexModeWideband)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
 		else if(mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
@@ -229,19 +227,16 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		if(bitrate != nil) {
 			spx_int32_t bitrate_value = bitrate.intValue;
 			speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
-		}
-		else
+		} else
 			os_log_info(gSFBAudioEncoderLog, "Speex encoding target is bitrate but no bitrate specified");
-	}
-	else if(quality.intValue >= 0) {
+	} else if(quality.intValue >= 0) {
 		spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate] intValue];
 		if(vbr_enabled) {
 			if(vbr_max > 0)
 				speex_encoder_ctl(_st, SPEEX_SET_VBR_MAX_BITRATE, &vbr_max);
 			float vbr_quality = quality.floatValue;
 			speex_encoder_ctl(_st, SPEEX_SET_VBR_QUALITY, &vbr_quality);
-		}
-		else {
+		} else {
 			spx_int32_t quality_value = quality.intValue;
 			speex_encoder_ctl(_st, SPEEX_SET_QUALITY, &quality_value);
 		}

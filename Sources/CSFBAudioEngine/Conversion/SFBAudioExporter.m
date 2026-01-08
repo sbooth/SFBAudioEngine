@@ -119,8 +119,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 				*error = convertError;
 			deleteOutputFile();
 			return NO;
-		}
-		else if(status == AVAudioConverterOutputStatus_EndOfStream)
+		} else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
 		// Write converted data to the output file

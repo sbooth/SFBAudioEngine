@@ -259,40 +259,31 @@ int close_callback(void *user_data) noexcept
 		if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms) {
 			frameCapacity = 120;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_2_5_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration5ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration5ms) {
 			frameCapacity = 240;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration10ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration10ms) {
 			frameCapacity = 480;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_10_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration20ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration20ms) {
 			frameCapacity = 960;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration40ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration40ms) {
 			frameCapacity = 1920;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_40_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration60ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration60ms) {
 			frameCapacity = 2880;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_60_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration80ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration80ms) {
 			frameCapacity = 3840;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_80_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration100ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration100ms) {
 			frameCapacity = 4800;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_100_MS));
-		}
-		else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration120ms) {
+		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration120ms) {
 			frameCapacity = 5760;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_120_MS));
-		}
-		else
+		} else
 			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus frame duration: %{public}@", frameDuration);
 
 		if(result != OPE_OK) {
