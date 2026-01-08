@@ -181,8 +181,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 		if(searchStartOffset <= len - 3) {
 			memmove(buf, buf + searchStartOffset, len - searchStartOffset);
 			len -= searchStartOffset;
-		}
-		else {
+		} else {
 			if(![inputSource seekToOffset:searchStartOffset error:error])
 				return NO;
 

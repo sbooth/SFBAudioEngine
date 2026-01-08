@@ -53,16 +53,13 @@
 	if([pathExtension isEqualToString:@"it"]) {
 		duh = dumb_read_it_quick(df);
 		propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Impulse Tracker Module";
-	}
-	else if([pathExtension isEqualToString:@"xm"]) {
+	} else if([pathExtension isEqualToString:@"xm"]) {
 		duh = dumb_read_xm_quick(df);
 		propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Extended Module";
-	}
-	else if([pathExtension isEqualToString:@"s3m"]) {
+	} else if([pathExtension isEqualToString:@"s3m"]) {
 		duh = dumb_read_s3m_quick(df);
 		propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Scream Tracker 3 Module";
-	}
-	else if([pathExtension isEqualToString:@"mod"]) {
+	} else if([pathExtension isEqualToString:@"mod"]) {
 		duh = dumb_read_mod_quick(df, 0);
 		propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"ProTracker Module";
 	}

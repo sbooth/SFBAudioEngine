@@ -216,8 +216,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 						os_log_fault(gSFBAudioFileLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
 						break;
 				}
-			}
-			else
+			} else
 				os_log_error(gSFBAudioFileLog, "Error testing %{public}@ format support for %{public}@", klass, fileHandle);
 		}
 
