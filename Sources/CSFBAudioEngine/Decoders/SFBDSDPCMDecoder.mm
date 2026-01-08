@@ -417,7 +417,7 @@ private:
 		os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
 		_buffer = nil;
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
 	}
 
