@@ -172,7 +172,7 @@
 
 	if(_regionStartingFrame == -1) {
 		if(_regionFrameLength > frameLength) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid audio region frame length");
+			os_log_error(gSFBAudioDecoderLog, "Invalid audio region frame length %lld", _regionFrameLength);
 			[_decoder closeReturningError:nil];
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
@@ -181,7 +181,7 @@
 		_startFrame = frameLength - _regionFrameLength;
 	} else {
 		if(_regionStartingFrame >= frameLength) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid audio region starting frame");
+			os_log_error(gSFBAudioDecoderLog, "Invalid audio region starting frame %lld", _regionStartingFrame);
 			[_decoder closeReturningError:nil];
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
@@ -199,7 +199,7 @@
 		_endFrame = frameLength;
 	else {
 		if(_regionFrameLength > frameLength - _startFrame) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid audio region frame length");
+			os_log_error(gSFBAudioDecoderLog, "Invalid audio region frame length %lld", _regionFrameLength);
 			[_decoder closeReturningError:nil];
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
