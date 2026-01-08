@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// A wrapper around a DSD decoder supporting DSD64 to PCM conversion
+/// A decoder supporting DSD64 to PCM conversion
 NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
