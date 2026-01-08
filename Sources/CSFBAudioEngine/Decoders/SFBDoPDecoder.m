@@ -48,8 +48,6 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 @interface SFBDoPDecoder ()
 {
 @private
-	id<SFBDSDDecoding> _decoder;
-	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
 	unsigned char _marker;
 	BOOL _reverseBits;

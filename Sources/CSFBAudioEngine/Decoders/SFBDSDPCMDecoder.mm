@@ -312,11 +312,8 @@ private:
 @interface SFBDSDPCMDecoder ()
 {
 @private
-	id<SFBDSDDecoding> _decoder;
-	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
 	std::vector<DXD> _context;
-	float _linearGain;
 }
 @end
 
