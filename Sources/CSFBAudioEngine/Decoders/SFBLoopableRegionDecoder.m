@@ -30,6 +30,11 @@
 	return [self initWithURL:url startingFrame:startingFrame frameLength:-1 repeatCount:0 error:error];
 }
 
+- (instancetype)initWithURL:(NSURL *)url frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+{
+	return [self initWithURL:url startingFrame:0 frameLength:frameLength repeatCount:0 error:error];
+}
+
 - (instancetype)initWithURL:(NSURL *)url startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
 	return [self initWithURL:url startingFrame:startingFrame frameLength:frameLength repeatCount:0 error:error];
@@ -55,6 +60,11 @@
 	return [self initWithInputSource:inputSource startingFrame:startingFrame frameLength:-1 repeatCount:0 error:error];
 }
 
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+{
+	return [self initWithInputSource:inputSource startingFrame:0 frameLength:frameLength repeatCount:0 error:error];
+}
+
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
 	return [self initWithInputSource:inputSource startingFrame:startingFrame frameLength:frameLength repeatCount:0 error:error];
@@ -78,6 +88,11 @@
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startingFrame:(AVAudioFramePosition)startingFrame error:(NSError **)error
 {
 	return [self initWithDecoder:decoder startingFrame:startingFrame frameLength:-1 repeatCount:0 error:error];
+}
+
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+{
+	return [self initWithDecoder:decoder startingFrame:0 frameLength:frameLength repeatCount:0 error:error];
 }
 
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder startingFrame:(AVAudioFramePosition)startingFrame frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
