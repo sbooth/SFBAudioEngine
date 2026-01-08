@@ -333,7 +333,7 @@
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _endFrame = %lld, _repeatCount = %d>", [self class], self, _decoder, _startFrame, _endFrame, _repeatCount];
 }
 
 @end
