@@ -974,7 +974,6 @@ void SFB::AudioPlayer::ProcessDecoders() noexcept
 #else
 		  !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopDecodingThread))
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
-		  !stoken.stop_requested()
 		  ) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
