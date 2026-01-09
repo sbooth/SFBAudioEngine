@@ -14,26 +14,9 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for SFBAudioExporter
-NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.AudioExporter";
-
 #define BUFFER_SIZE_FRAMES 2048
 
 @implementation SFBAudioExporter
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBAudioExporterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBAudioExporterErrorCodeFileFormatNotSupported:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The file's format is not supported.", @"");
-				break;
-		}
-		
-		return nil;
-	}];
-}
 
 + (BOOL)exportFromURL:(NSURL *)sourceURL toURL:(NSURL *)targetURL error:(NSError **)error
 {

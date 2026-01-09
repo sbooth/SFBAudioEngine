@@ -9,8 +9,6 @@
 #import "SFBAudioPlayer.h"
 #import "AudioPlayer.h"
 
-NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPlayer";
-
 @interface SFBAudioPlayer ()
 {
 @private
@@ -19,29 +17,6 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 @end
 
 @implementation SFBAudioPlayer
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBAudioPlayerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBAudioPlayerErrorCodeInternalError:
-				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
-					return NSLocalizedString(@"Internal player error", @"");
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal audio player error occurred.", @"");
-				break;
-
-			case SFBAudioPlayerErrorCodeFormatNotSupported:
-				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
-					return NSLocalizedString(@"Unsupported format", @"");
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
-				break;
-		}
-
-		return nil;
-	}];
-}
 
 - (instancetype)init
 {

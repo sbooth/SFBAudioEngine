@@ -14,9 +14,6 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for SFBReplayGainAnalyzer
-NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
-
 // Key names for the metadata dictionary
 NSString * const SFBReplayGainAnalyzerGainKey = @"Gain";
 NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
@@ -330,24 +327,6 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 @implementation SFBReplayGainAnalyzer
 
 + (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBReplayGainAnalyzerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The file's format is not supported.", @"");
-				break;
-				
-			case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The file does not contain sufficient audio samples for analysis.", @"");
-				break;
-		}
-
-		return nil;
-	}];
-}
-
 + (float)referenceLoudness
 {
 	return 89.0;

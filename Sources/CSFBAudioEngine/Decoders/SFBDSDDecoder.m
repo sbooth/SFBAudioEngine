@@ -12,9 +12,6 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for DSDDecoder and subclasses
-NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
-
 os_log_t gSFBDSDDecoderLog = NULL;
 
 static void SFBCreateDSDDecoderLog(void) __attribute__ ((constructor));
@@ -40,45 +37,6 @@ static void SFBCreateDSDDecoderLog(void)
 @dynamic packetCount;
 
 static NSMutableArray *_registeredSubclasses = nil;
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBDSDDecoderErrorCodeUnknownDecoder:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The requested DSD decoder is unavailable.", @"");
-				break;
-
-			case SFBDSDDecoderErrorCodeInvalidFormat:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The format is invalid or unknown.", @"");
-				break;
-
-			case SFBDSDDecoderErrorCodeUnsupportedFormat:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The DSD audio format is unsupported.", @"");
-				break;
-
-			case SFBDSDDecoderErrorCodeInternalError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal decoder error occurred.", @"");
-				break;
-
-			case SFBDSDDecoderErrorCodeDecodingError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An error occurred during DSD audio decoding.", @"");
-				break;
-
-			case SFBDSDDecoderErrorCodeSeekError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An error occurred seeking to the requested DSD packet position.", @"");
-				break;
-		}
-		
-		return nil;
-	}];
-}
 
 + (NSSet *)supportedPathExtensions
 {

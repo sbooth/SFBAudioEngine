@@ -160,23 +160,15 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
-extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
+#define SFBAudioDecoderErrorDomain SFBAudioEngineErrorDomain
 
 /// Possible `NSError` error codes used by `SFBAudioDecoder`
-typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
-	/// Unknown decoder name
-	SFBAudioDecoderErrorCodeUnknownDecoder		= 0,
-	/// Invalid or unknown format
-	SFBAudioDecoderErrorCodeInvalidFormat		= 1,
-	/// Unsupported format
-	SFBAudioDecoderErrorCodeUnsupportedFormat	= 2,
-	/// Internal decoder error
-	SFBAudioDecoderErrorCodeInternalError		= 3,
-	/// Decoding error
-	SFBAudioDecoderErrorCodeDecodingError		= 4,
-	/// Seek error
-	SFBAudioDecoderErrorCodeSeekError			= 5,
-} NS_SWIFT_NAME(AudioDecoder.Error);
+#define SFBAudioDecoderErrorCodeUnknownDecoder			SFBAudioEngineErrorCodeUnknownDecoder
+#define SFBAudioDecoderErrorCodeInvalidFormat			SFBAudioEngineErrorCodeInvalidFormat
+#define SFBAudioDecoderErrorCodeUnsupportedFormat		SFBAudioEngineErrorCodeUnsupportedFormat
+#define SFBAudioDecoderErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
+#define SFBAudioDecoderErrorCodeDecodingError			SFBAudioEngineErrorCodeDecodingError
+#define SFBAudioDecoderErrorCodeSeekError				SFBAudioEngineErrorCodeSeekError
 
 #pragma mark - FLAC and Ogg FLAC Decoder Properties
 

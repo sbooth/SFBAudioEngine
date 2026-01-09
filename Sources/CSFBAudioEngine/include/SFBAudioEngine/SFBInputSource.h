@@ -210,16 +210,11 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBInputSource` and subclasses
-extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.ErrorDomain);
+#define SFBInputSourceErrorDomain SFBAudioEngineErrorDomain
 
 /// Possible `NSError` error codes used by `SFBInputSource`
-typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
-	/// File not found
-	SFBInputSourceErrorCodeFileNotFound 	= 0,
-	/// Input/output error
-	SFBInputSourceErrorCodeInputOutput 		= 1,
-	/// Input not seekable
-	SFBInputSourceErrorCodeNotSeekable 		= 2,
-} NS_SWIFT_NAME(InputSource.Error);
+#define SFBInputSourceErrorCodeFileNotFound				SFBAudioEngineErrorCodeFileNotFound
+#define SFBInputSourceErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
+#define SFBInputSourceErrorCodeNotSeekable				SFBAudioEngineErrorCodeNotSeekable
 
 NS_ASSUME_NONNULL_END

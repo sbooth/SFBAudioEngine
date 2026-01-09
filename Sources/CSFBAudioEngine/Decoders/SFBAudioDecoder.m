@@ -12,9 +12,6 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for AudioDecoder and subclasses
-NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
-
 os_log_t gSFBAudioDecoderLog = NULL;
 
 static void SFBCreateAudioDecoderLog(void) __attribute__ ((constructor));
@@ -40,50 +37,6 @@ static void SFBCreateAudioDecoderLog(void)
 @dynamic frameLength;
 
 static NSMutableArray *_registeredSubclasses = nil;
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBAudioDecoderErrorCodeUnknownDecoder:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The requested PCM decoder is unavailable.", @"");
-				break;
-
-
-			case SFBAudioDecoderErrorCodeInvalidFormat: {
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The format is invalid or unknown.", @"");
-				break;
-			}
-
-			case SFBAudioDecoderErrorCodeUnsupportedFormat: {
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The PCM audio format is unsupported.", @"");
-				break;
-			}
-
-			case SFBAudioDecoderErrorCodeInternalError: {
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal decoder error occurred.", @"");
-				break;
-			}
-
-			case SFBAudioDecoderErrorCodeDecodingError: {
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An error occurred during PCM audio decoding.", @"");
-				break;
-			}
-
-			case SFBAudioDecoderErrorCodeSeekError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An error occurred seeking to the requested PCM frame position.", @"");
-				break;
-		}
-
-		return nil;
-	}];
-}
 
 + (NSSet *)supportedPathExtensions
 {

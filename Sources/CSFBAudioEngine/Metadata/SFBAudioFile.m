@@ -12,9 +12,6 @@
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for AudioFile and subclasses
-NSErrorDomain const SFBAudioFileErrorDomain = @"org.sbooth.AudioEngine.AudioFile";
-
 os_log_t gSFBAudioFileLog = NULL;
 
 static void SFBCreateAudioFileLog(void) __attribute__ ((constructor));
@@ -31,35 +28,6 @@ static void SFBCreateAudioFileLog(void)
 @implementation SFBAudioFile
 
 static NSMutableArray *_registeredSubclasses = nil;
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBAudioFileErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBAudioFileErrorCodeInternalError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal error occurred.", @"");
-				break;
-
-			case SFBAudioFileErrorCodeUnknownFormatName:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The requested format is unavailable.", @"");
-				break;
-
-			case SFBAudioFileErrorCodeInputOutput:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An input/output error occurred.", @"");
-				break;
-
-			case SFBAudioFileErrorCodeInvalidFormat:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The file's format is invalid, unknown, or unsupported.", @"");
-				break;
-		}
-
-		return nil;
-	}];
-}
 
 + (NSSet *)supportedPathExtensions
 {

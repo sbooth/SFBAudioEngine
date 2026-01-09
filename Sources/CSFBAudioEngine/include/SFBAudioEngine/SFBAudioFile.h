@@ -155,18 +155,12 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 #pragma mark - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioFile` and subclasses
-extern NSErrorDomain const SFBAudioFileErrorDomain NS_SWIFT_NAME(AudioFile.ErrorDomain);
+#define SFBAudioFileErrorDomain SFBAudioEngineErrorDomain
 
 /// Possible `NSError` error codes used by `SFBAudioFile`
-typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
-	/// Internal or unspecified error
-	SFBAudioFileErrorCodeInternalError 		= 0,
-	/// Unknown format name
-	SFBAudioFileErrorCodeUnknownFormatName 	= 1,
-	/// Input/output error
-	SFBAudioFileErrorCodeInputOutput 		= 2,
-	/// Invalid, unknown, or unsupported format
-	SFBAudioFileErrorCodeInvalidFormat 		= 3,
-} NS_SWIFT_NAME(AudioFile.Error);
+#define SFBAudioFileErrorCodeInternalError				SFBAudioEngineErrorCodeInternalError
+#define SFBAudioFileErrorCodeUnknownFormatName			SFBAudioEngineErrorCodeUnknownFormatName
+#define SFBAudioFileErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
+#define SFBAudioFileErrorCodeInvalidFormat				SFBAudioEngineErrorCodeInvalidFormat
 
 NS_ASSUME_NONNULL_END

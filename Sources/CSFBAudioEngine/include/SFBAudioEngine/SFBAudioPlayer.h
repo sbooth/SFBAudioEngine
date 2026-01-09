@@ -284,15 +284,11 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 // MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioPlayer`
-extern NSErrorDomain const SFBAudioPlayerErrorDomain NS_SWIFT_NAME(AudioPlayer.ErrorDomain);
+#define SFBAudioPlayerErrorDomain SFBAudioEngineErrorDomain
 
 /// Possible `NSError` error codes used by `SFBAudioPlayer`
-typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode) {
-	/// Internal or unspecified error
-	SFBAudioPlayerErrorCodeInternalError 		= 0,
-	/// Format not supported
-	SFBAudioPlayerErrorCodeFormatNotSupported 	= 1,
-} NS_SWIFT_NAME(AudioPlayer.Error);
+#define SFBAudioPlayerErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
+#define SFBAudioPlayerErrorCodeFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
 
 // MARK: - SFBAudioPlayerDelegate
 
