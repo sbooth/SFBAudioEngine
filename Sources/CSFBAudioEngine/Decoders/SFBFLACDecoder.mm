@@ -507,9 +507,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 			uint32_t sample = 0;
 			if(blocksize > simd_vector_size) {
 				for(; sample <= blocksize - simd_vector_size; sample += simd_vector_size) {
-					simd_vector v = *(const simd_packed_vector *)&src[sample];
+					simd_vector v = *reinterpret_cast<const simd_packed_vector *>(&src[sample]);
 					v = v << shift;
-					*(simd_packed_vector *)&dst[sample] = v;
+					*reinterpret_cast<simd_packed_vector *>(&dst[sample]) = v;
 				}
 			}
 
