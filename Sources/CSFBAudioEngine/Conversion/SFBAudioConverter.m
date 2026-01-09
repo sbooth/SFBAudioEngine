@@ -8,32 +8,16 @@
 
 #import "SFBAudioConverter.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBAudioDecoder.h"
 #import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-// NSError domain for SFBAudioConverter
-NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.AudioConverter";
-
 #define BUFFER_SIZE_FRAMES 2048
 
 @implementation SFBAudioConverter
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBAudioConverterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBAudioConverterErrorCodeFormatNotSupported:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The requested audio format is not supported.", @"");
-				break;
-		}
-		
-		return nil;
-	}];
-}
 
 + (BOOL)convertFromURL:(NSURL *)sourceURL toURL:(NSURL *)destinationURL error:(NSError **)error
 {

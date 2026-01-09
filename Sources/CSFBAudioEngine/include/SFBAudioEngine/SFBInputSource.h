@@ -207,19 +207,4 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 - (nullable NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error;
 @end
 
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBInputSource` and subclasses
-extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.ErrorDomain);
-
-/// Possible `NSError` error codes used by `SFBInputSource`
-typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
-	/// File not found
-	SFBInputSourceErrorCodeFileNotFound 	= 0,
-	/// Input/output error
-	SFBInputSourceErrorCodeInputOutput 		= 1,
-	/// Input not seekable
-	SFBInputSourceErrorCodeNotSeekable 		= 2,
-} NS_SWIFT_NAME(InputSource.Error);
-
 NS_ASSUME_NONNULL_END

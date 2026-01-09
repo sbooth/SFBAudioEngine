@@ -12,6 +12,7 @@
 @import speex;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBOggSpeexDecoder.h"
 
 #import "NSData+SFBExtensions.h"

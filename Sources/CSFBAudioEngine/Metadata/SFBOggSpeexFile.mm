@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import <taglib/speexfile.h>
 #import <taglib/tfilestream.h>
 

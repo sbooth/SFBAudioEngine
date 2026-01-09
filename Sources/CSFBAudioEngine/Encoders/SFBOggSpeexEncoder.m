@@ -10,6 +10,7 @@
 // TODO: Figure out a way to selectively disable diagnostic warnings for module imports
 @import speex;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import <AVAudioPCMBuffer+SFBBufferUtilities.h>
 
 #import "SFBOggSpeexEncoder.h"

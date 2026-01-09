@@ -8,6 +8,7 @@
 
 @import dumb;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBModuleDecoder.h"
 
 #import "SFBErrorWithLocalizedDescription.h"

@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import <vector>
 
 #import <os/log.h>

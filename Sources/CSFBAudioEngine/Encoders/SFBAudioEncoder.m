@@ -9,11 +9,9 @@
 #import "SFBAudioEncoder.h"
 #import "SFBAudioEncoder+Internal.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
-
-// NSError domain for AudioEncoder and subclasses
-NSErrorDomain const SFBAudioEncoderErrorDomain = @"org.sbooth.AudioEngine.AudioEncoder";
 
 os_log_t gSFBAudioEncoderLog = NULL;
 
@@ -41,30 +39,6 @@ static void SFBCreateAudioEncoderLog(void)
 @dynamic framePosition;
 
 static NSMutableArray *_registeredSubclasses = nil;
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBAudioEncoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBAudioEncoderErrorCodeUnknownEncoder:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The requested encoder is unavailable.", @"");
-				break;
-
-			case SFBAudioEncoderErrorCodeInvalidFormat:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
-				break;
-
-			case SFBAudioEncoderErrorCodeInternalError:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An internal encoder error occurred.", @"");
-				break;
-		}
-
-		return nil;
-	}];
-}
 
 + (NSSet *)supportedPathExtensions
 {

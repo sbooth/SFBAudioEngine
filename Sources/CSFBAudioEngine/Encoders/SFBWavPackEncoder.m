@@ -11,6 +11,7 @@
 
 @import wavpack;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBWavPackEncoder.h"
 
 #import "SFBCStringForOSType.h"

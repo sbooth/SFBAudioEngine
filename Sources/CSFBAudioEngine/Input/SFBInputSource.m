@@ -6,15 +6,13 @@
 
 #import "SFBInputSource+Internal.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBDataInputSource.h"
 #import "SFBFileContentsInputSource.h"
 #import "SFBFileInputSource.h"
 #import "SFBMemoryMappedFileInputSource.h"
 
 #import "NSData+SFBExtensions.h"
-
-// NSError domain for InputSource and subclasses
-NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSource";
 
 os_log_t gSFBInputSourceLog = NULL;
 
@@ -25,30 +23,6 @@ static void SFBCreateInputSourceLog(void)
 }
 
 @implementation SFBInputSource
-
-+ (void)load
-{
-	[NSError setUserInfoValueProviderForDomain:SFBInputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		switch(err.code) {
-			case SFBInputSourceErrorCodeFileNotFound:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The requested file was not found.", @"");
-				break;
-
-			case SFBInputSourceErrorCodeInputOutput:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"An input/output error occurred.", @"");
-				break;
-
-			case SFBInputSourceErrorCodeNotSeekable:
-				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
-					return NSLocalizedString(@"The input does not support seeking.", @"");
-				break;
-		}
-
-		return nil;
-	}];
-}
 
 + (instancetype)inputSourceForURL:(NSURL *)url error:(NSError **)error
 {

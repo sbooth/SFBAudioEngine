@@ -9,6 +9,7 @@
 @import sndfile;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBLibsndfileDecoder.h"
 
 #import "NSData+SFBExtensions.h"

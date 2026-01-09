@@ -127,20 +127,6 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 @end
 
 #pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioEncoder` and subclasses
-extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder.ErrorDomain);
-
-/// Possible `NSError` error codes used by `SFBAudioEncoder`
-typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
-	/// Unknown encoder name
-	SFBAudioEncoderErrorCodeUnknownEncoder 	= 0,
-	/// Invalid, unknown, or unsupported format
-	SFBAudioEncoderErrorCodeInvalidFormat	= 1,
-	/// Internal or unspecified encoder error
-	SFBAudioEncoderErrorCodeInternalError	= 2,
-} NS_SWIFT_NAME(AudioEncoder.Error);
-
 #pragma mark - FLAC Encoder Settings
 
 /// FLAC compression level (`NSNumber` from 0 (lowest) to 8 (highest))

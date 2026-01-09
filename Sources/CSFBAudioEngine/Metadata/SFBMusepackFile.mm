@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import <taglib/mpcfile.h>
 #import <taglib/tfilestream.h>
 

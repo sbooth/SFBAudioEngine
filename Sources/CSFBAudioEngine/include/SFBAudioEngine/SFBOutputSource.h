@@ -180,17 +180,4 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 - (BOOL)writeUInt64LittleEndian:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBOutputSource` and subclasses
-extern NSErrorDomain const SFBOutputSourceErrorDomain NS_SWIFT_NAME(OutputSource.ErrorDomain);
-
-/// Possible `NSError` error codes used by `SFBOutputSource`
-typedef NS_ERROR_ENUM(SFBOutputSourceErrorDomain, SFBOutputSourceErrorCode) {
-	/// File not found
-	SFBOutputSourceErrorCodeFileNotFound 	= 0,
-	/// Input/output error
-	SFBOutputSourceErrorCodeInputOutput 	= 1,
-} NS_SWIFT_NAME(OutputSource.Error);
-
 NS_ASSUME_NONNULL_END

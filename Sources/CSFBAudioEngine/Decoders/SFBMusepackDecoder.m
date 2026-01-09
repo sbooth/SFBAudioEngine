@@ -12,6 +12,7 @@
 @import mpc.dec;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBMusepackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
