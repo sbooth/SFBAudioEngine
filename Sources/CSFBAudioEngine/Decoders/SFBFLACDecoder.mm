@@ -456,7 +456,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 	// Changes in channel count or sample rate mid-stream are not supported
 	if(const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
 		if(frame->header.channels != _previousFrameHeader.channels) {
-			os_log_debug(gSFBAudioDecoderLog, "Change in channel count from %d to %d detected", _previousFrameHeader.channels, frame->header.channels);
+			os_log_error(gSFBAudioDecoderLog, "Change in channel count from %d to %d detected", _previousFrameHeader.channels, frame->header.channels);
 
 			_writeError = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
 														   NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""),
@@ -469,7 +469,7 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 		}
 
 		if(frame->header.sample_rate != _previousFrameHeader.sample_rate) {
-			os_log_debug(gSFBAudioDecoderLog, "Change in sample rate from %g kHz to %g kHz detected", static_cast<double>(_previousFrameHeader.sample_rate) / 1000.0, static_cast<double>(frame->header.sample_rate) / 1000.0);
+			os_log_error(gSFBAudioDecoderLog, "Change in sample rate from %g kHz to %g kHz detected", static_cast<double>(_previousFrameHeader.sample_rate) / 1000.0, static_cast<double>(frame->header.sample_rate) / 1000.0);
 
 			_writeError = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
 														   NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""),
