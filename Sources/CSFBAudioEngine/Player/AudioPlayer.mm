@@ -968,13 +968,16 @@ void SFB::AudioPlayer::ProcessDecoders() noexcept
 	// Whether there is a mismatch between the rendering format and the next decoder's processing format
 	auto formatMismatch = false;
 
-	while(
+	// Returns true if the decoding thread should exit
+	const auto stop_requested = [&] {
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
-		  !stoken.stop_requested()
+		return stoken.stop_requested();
 #else
-		  !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopDecodingThread))
+		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopDecodingThread));
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
-		  ) {
+	};
+
+	while(!stop_requested()) {
 		// The decoder state being processed
 		DecoderState *decoderState = nullptr;
 		auto ringBufferStale = false;
@@ -1380,13 +1383,16 @@ void SFB::AudioPlayer::SequenceAndProcessEvents() noexcept
 
 	os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
-	while(
+	// Returns true if the event processing thread should exit
+	const auto stop_requested = [&] {
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
-		  !stoken.stop_requested()
+		return stoken.stop_requested();
 #else
-		  !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopEventThread))
+		return (flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::stopEventThread));
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
-		  ) {
+	};
+
+	while(!stop_requested()) {
 		DecodingEventCommand decodingEventCommand;
 		uint64_t decodingEventIdentificationNumber;
 		auto gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
