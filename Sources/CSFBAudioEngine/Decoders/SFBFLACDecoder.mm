@@ -497,7 +497,8 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 
 		for(uint32_t channel = 0; channel < channels; ++channel) {
 			// simd_uint8 and simd_uint16 require 16 byte alignment
-			using simd_vector = simd_packed_uint16;
+			using simd_vector = simd_uint16;
+			using simd_packed_vector = simd_packed_uint16;
 			constexpr uint32_t simd_vector_size = 16;
 
 			uint32_t * __restrict dst = static_cast<uint32_t *>(abl->mBuffers[channel].mData);
@@ -506,9 +507,9 @@ void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderError
 			uint32_t sample = 0;
 			if(blocksize > simd_vector_size) {
 				for(; sample <= blocksize - simd_vector_size; sample += simd_vector_size) {
-					simd_vector v = *(const simd_vector *)&src[sample];
+					simd_vector v = *(const simd_packed_vector *)&src[sample];
 					v = v << shift;
-					*(simd_vector *)&dst[sample] = v;
+					*(simd_packed_vector *)&dst[sample] = v;
 				}
 			}
 
