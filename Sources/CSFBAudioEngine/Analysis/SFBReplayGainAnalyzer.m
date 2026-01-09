@@ -326,7 +326,6 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 @implementation SFBReplayGainAnalyzer
 
-+ (void)load
 + (float)referenceLoudness
 {
 	return 89.0;
