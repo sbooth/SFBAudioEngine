@@ -27,9 +27,9 @@ NSErrorDomain const SFBAudioEngineErrorDomain = @"org.sbooth.AudioEngine";
 				case SFBAudioEngineErrorCodeInvalidFormat:
 					return NSLocalizedString(@"The format is invalid or unknown.", @"");
 				case SFBAudioEngineErrorCodeUnsupportedFormat:
-					return NSLocalizedString(@"The format is not supported.", @"");
+					return NSLocalizedString(@"The format is recognized but not supported.", @"");
 				case SFBAudioEngineErrorCodeFormatNotSupported:
-					return NSLocalizedString(@"The format is not supported.", @"");
+					return NSLocalizedString(@"The format is not supported for this operation.", @"");
 				case SFBAudioEngineErrorCodeUnknownDecoder:
 					return NSLocalizedString(@"The decoder is unknown.", @"");
 				case SFBAudioEngineErrorCodeDecodingError:

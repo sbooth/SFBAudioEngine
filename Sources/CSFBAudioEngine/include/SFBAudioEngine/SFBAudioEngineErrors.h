@@ -24,9 +24,9 @@ typedef NS_ERROR_ENUM(SFBAudioEngineErrorDomain, SFBAudioEngineErrorCode) {
 	// MARK: Format Errors
 	/// Invalid or unknown format
 	SFBAudioEngineErrorCodeInvalidFormat				= 10,
-	/// Unsupported format
+	/// Format is recognized but not supported by the decoder/encoder
 	SFBAudioEngineErrorCodeUnsupportedFormat			= 11,
-	/// Format not supported
+	/// Format is not supported for the current operation (conversion, export, analysis)
 	SFBAudioEngineErrorCodeFormatNotSupported			= 12,
 	
 	// MARK: Decoder Errors
