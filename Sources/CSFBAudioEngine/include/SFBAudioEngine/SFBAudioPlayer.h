@@ -15,7 +15,6 @@
 #endif /* !TARGET_OS_IPHONE */
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
-#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

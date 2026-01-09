@@ -8,6 +8,7 @@
 
 #import "SFBAudioConverter.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBAudioDecoder.h"
 #import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"

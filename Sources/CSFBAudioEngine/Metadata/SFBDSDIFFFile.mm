@@ -4,6 +4,7 @@
 // MIT license
 //
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import <taglib/dsdifffile.h>
 #import <taglib/tfilestream.h>
 

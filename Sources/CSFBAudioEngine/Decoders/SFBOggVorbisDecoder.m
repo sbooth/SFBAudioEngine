@@ -9,6 +9,7 @@
 @import vorbis;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBOggVorbisDecoder.h"
 
 #import "NSData+SFBExtensions.h"

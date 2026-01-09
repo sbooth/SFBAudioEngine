@@ -6,6 +6,7 @@
 
 #import "SFBInputSource+Internal.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBDataInputSource.h"
 #import "SFBFileContentsInputSource.h"
 #import "SFBFileInputSource.h"

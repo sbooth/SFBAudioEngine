@@ -8,7 +8,6 @@
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
 #import <SFBAudioEngine/SFBPCMEncoding.h>
-#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

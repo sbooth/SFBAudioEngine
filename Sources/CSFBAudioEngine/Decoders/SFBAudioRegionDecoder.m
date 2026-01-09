@@ -9,6 +9,7 @@
 
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBAudioRegionDecoder.h"
 
 #import "SFBAudioDecoder+Internal.h"

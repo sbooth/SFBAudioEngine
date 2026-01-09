@@ -11,6 +11,7 @@
 @import wavpack;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBWavPackDecoder.h"
 
 #import "NSData+SFBExtensions.h"

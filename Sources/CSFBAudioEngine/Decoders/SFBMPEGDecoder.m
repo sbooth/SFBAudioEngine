@@ -10,6 +10,7 @@
 @import mpg123;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBMPEGDecoder.h"
 
 #import "SFBErrorWithLocalizedDescription.h"

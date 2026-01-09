@@ -11,6 +11,7 @@
 @import sndfile;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBLibsndfileEncoder.h"
 
 #import "SFBLibsndfileUtilities.h"

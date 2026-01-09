@@ -5,7 +5,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

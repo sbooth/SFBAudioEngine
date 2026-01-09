@@ -9,6 +9,7 @@
 #import "SFBDSDDecoder.h"
 #import "SFBDSDDecoder+Internal.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 

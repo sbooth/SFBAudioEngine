@@ -10,6 +10,7 @@
 
 #import "SFBAudioExporter.h"
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBAudioDecoder.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"

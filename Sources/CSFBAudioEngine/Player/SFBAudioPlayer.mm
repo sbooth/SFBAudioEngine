@@ -8,6 +8,7 @@
 
 #import "SFBAudioPlayer.h"
 #import "AudioPlayer.h"
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 @interface SFBAudioPlayer ()
 {

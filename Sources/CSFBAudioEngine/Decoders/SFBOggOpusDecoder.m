@@ -9,6 +9,7 @@
 @import opus.file;
 @import AVFAudioExtensions;
 
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 #import "SFBOggOpusDecoder.h"
 
 #import "NSData+SFBExtensions.h"
