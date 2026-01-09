@@ -5,6 +5,7 @@
 //
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -156,19 +157,6 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
-#define SFBAudioDecoderErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBAudioDecoder`
-#define SFBAudioDecoderErrorCodeUnknownDecoder			SFBAudioEngineErrorCodeUnknownDecoder
-#define SFBAudioDecoderErrorCodeInvalidFormat			SFBAudioEngineErrorCodeInvalidFormat
-#define SFBAudioDecoderErrorCodeUnsupportedFormat		SFBAudioEngineErrorCodeUnsupportedFormat
-#define SFBAudioDecoderErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
-#define SFBAudioDecoderErrorCodeDecodingError			SFBAudioEngineErrorCodeDecodingError
-#define SFBAudioDecoderErrorCodeSeekError				SFBAudioEngineErrorCodeSeekError
 
 #pragma mark - FLAC and Ogg FLAC Decoder Properties
 

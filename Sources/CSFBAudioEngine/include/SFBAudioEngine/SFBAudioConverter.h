@@ -8,6 +8,7 @@
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
 #import <SFBAudioEngine/SFBPCMEncoding.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -140,13 +141,5 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 - (BOOL)convertReturningError:(NSError **)error NS_SWIFT_NAME(convert());
 
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioConverter`
-#define SFBAudioConverterErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBAudioConverter`
-#define SFBAudioConverterErrorCodeFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
 
 NS_ASSUME_NONNULL_END

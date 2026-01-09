@@ -5,6 +5,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -48,12 +49,5 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 - (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)albumGainAndPeakSampleReturningError:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
-
-/// The `NSErrorDomain` used by `SFBReplayGainAnalyzer`
-#define SFBReplayGainAnalyzerErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBReplayGainAnalyzer`
-#define SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported	SFBAudioEngineErrorCodeFormatNotSupported
-#define SFBReplayGainAnalyzerErrorCodeInsufficientSamples		SFBAudioEngineErrorCodeInsufficientSamples
 
 NS_ASSUME_NONNULL_END

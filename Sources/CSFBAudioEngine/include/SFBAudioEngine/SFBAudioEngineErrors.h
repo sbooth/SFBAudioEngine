@@ -54,4 +54,86 @@ typedef NS_ERROR_ENUM(SFBAudioEngineErrorDomain, SFBAudioEngineErrorCode) {
 	SFBAudioEngineErrorCodeInsufficientSamples			= 60,
 } NS_SWIFT_NAME(AudioEngine.ErrorCode);
 
+#pragma mark - Legacy Error Domain Compatibility
+
+/// Legacy error domain for `SFBAudioDecoder`
+#define SFBAudioDecoderErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBAudioDecoder`
+#define SFBAudioDecoderErrorCodeUnknownDecoder			SFBAudioEngineErrorCodeUnknownDecoder
+#define SFBAudioDecoderErrorCodeInvalidFormat			SFBAudioEngineErrorCodeInvalidFormat
+#define SFBAudioDecoderErrorCodeUnsupportedFormat		SFBAudioEngineErrorCodeUnsupportedFormat
+#define SFBAudioDecoderErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
+#define SFBAudioDecoderErrorCodeDecodingError			SFBAudioEngineErrorCodeDecodingError
+#define SFBAudioDecoderErrorCodeSeekError				SFBAudioEngineErrorCodeSeekError
+
+/// Legacy error domain for `SFBDSDDecoder`
+#define SFBDSDDecoderErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBDSDDecoder`
+#define SFBDSDDecoderErrorCodeUnknownDecoder			SFBAudioEngineErrorCodeUnknownDecoder
+#define SFBDSDDecoderErrorCodeInvalidFormat				SFBAudioEngineErrorCodeInvalidFormat
+#define SFBDSDDecoderErrorCodeUnsupportedFormat			SFBAudioEngineErrorCodeUnsupportedFormat
+#define SFBDSDDecoderErrorCodeInternalError				SFBAudioEngineErrorCodeInternalError
+#define SFBDSDDecoderErrorCodeDecodingError				SFBAudioEngineErrorCodeDecodingError
+#define SFBDSDDecoderErrorCodeSeekError					SFBAudioEngineErrorCodeSeekError
+
+/// Legacy error domain for `SFBAudioEncoder`
+#define SFBAudioEncoderErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBAudioEncoder`
+#define SFBAudioEncoderErrorCodeUnknownEncoder			SFBAudioEngineErrorCodeUnknownEncoder
+#define SFBAudioEncoderErrorCodeInvalidFormat			SFBAudioEngineErrorCodeInvalidFormat
+#define SFBAudioEncoderErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
+
+/// Legacy error domain for `SFBAudioFile`
+#define SFBAudioFileErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBAudioFile`
+#define SFBAudioFileErrorCodeInternalError				SFBAudioEngineErrorCodeInternalError
+#define SFBAudioFileErrorCodeUnknownFormatName			SFBAudioEngineErrorCodeUnknownFormatName
+#define SFBAudioFileErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
+#define SFBAudioFileErrorCodeInvalidFormat				SFBAudioEngineErrorCodeInvalidFormat
+
+/// Legacy error domain for `SFBAudioPlayer`
+#define SFBAudioPlayerErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBAudioPlayer`
+#define SFBAudioPlayerErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
+#define SFBAudioPlayerErrorCodeFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
+
+/// Legacy error domain for `SFBInputSource`
+#define SFBInputSourceErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBInputSource`
+#define SFBInputSourceErrorCodeFileNotFound				SFBAudioEngineErrorCodeFileNotFound
+#define SFBInputSourceErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
+#define SFBInputSourceErrorCodeNotSeekable				SFBAudioEngineErrorCodeNotSeekable
+
+/// Legacy error domain for `SFBOutputSource`
+#define SFBOutputSourceErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBOutputSource`
+#define SFBOutputSourceErrorCodeFileNotFound			SFBAudioEngineErrorCodeFileNotFound
+#define SFBOutputSourceErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
+
+/// Legacy error domain for `SFBReplayGainAnalyzer`
+#define SFBReplayGainAnalyzerErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBReplayGainAnalyzer`
+#define SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported	SFBAudioEngineErrorCodeFormatNotSupported
+#define SFBReplayGainAnalyzerErrorCodeInsufficientSamples		SFBAudioEngineErrorCodeInsufficientSamples
+
+/// Legacy error domain for `SFBAudioConverter`
+#define SFBAudioConverterErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBAudioConverter`
+#define SFBAudioConverterErrorCodeFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
+
+/// Legacy error domain for `SFBAudioExporter`
+#define SFBAudioExporterErrorDomain SFBAudioEngineErrorDomain
+
+/// Legacy error codes for `SFBAudioExporter`
+#define SFBAudioExporterErrorCodeFileFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
+
 NS_ASSUME_NONNULL_END

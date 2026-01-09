@@ -5,6 +5,7 @@
 //
 
 #import <SFBAudioEngine/SFBDSDDecoding.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -132,18 +133,5 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBDSDDecoder` and subclasses
-#define SFBDSDDecoderErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBDSDDecoder`
-#define SFBDSDDecoderErrorCodeUnknownDecoder			SFBAudioEngineErrorCodeUnknownDecoder
-#define SFBDSDDecoderErrorCodeInvalidFormat				SFBAudioEngineErrorCodeInvalidFormat
-#define SFBDSDDecoderErrorCodeUnsupportedFormat			SFBAudioEngineErrorCodeUnsupportedFormat
-#define SFBDSDDecoderErrorCodeInternalError				SFBAudioEngineErrorCodeInternalError
-#define SFBDSDDecoderErrorCodeDecodingError				SFBAudioEngineErrorCodeDecodingError
-#define SFBDSDDecoderErrorCodeSeekError					SFBAudioEngineErrorCodeSeekError
 
 NS_ASSUME_NONNULL_END

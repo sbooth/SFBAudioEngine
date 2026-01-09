@@ -5,6 +5,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -179,14 +180,5 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)writeUInt64LittleEndian:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBOutputSource` and subclasses
-#define SFBOutputSourceErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBOutputSource`
-#define SFBOutputSourceErrorCodeFileNotFound			SFBAudioEngineErrorCodeFileNotFound
-#define SFBOutputSourceErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
 
 NS_ASSUME_NONNULL_END

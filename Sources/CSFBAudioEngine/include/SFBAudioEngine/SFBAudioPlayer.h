@@ -15,6 +15,7 @@
 #endif /* !TARGET_OS_IPHONE */
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -282,14 +283,6 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @end
 
 // MARK: - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioPlayer`
-#define SFBAudioPlayerErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBAudioPlayer`
-#define SFBAudioPlayerErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
-#define SFBAudioPlayerErrorCodeFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
-
 // MARK: - SFBAudioPlayerDelegate
 
 /// Delegate methods supported by `SFBAudioPlayer`

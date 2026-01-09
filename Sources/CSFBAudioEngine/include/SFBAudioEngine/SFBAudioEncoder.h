@@ -5,6 +5,7 @@
 //
 
 #import <SFBAudioEngine/SFBPCMEncoding.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -127,15 +128,6 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 @end
 
 #pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioEncoder` and subclasses
-#define SFBAudioEncoderErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBAudioEncoder`
-#define SFBAudioEncoderErrorCodeUnknownEncoder			SFBAudioEngineErrorCodeUnknownEncoder
-#define SFBAudioEncoderErrorCodeInvalidFormat			SFBAudioEngineErrorCodeInvalidFormat
-#define SFBAudioEncoderErrorCodeInternalError			SFBAudioEngineErrorCodeInternalError
-
 #pragma mark - FLAC Encoder Settings
 
 /// FLAC compression level (`NSNumber` from 0 (lowest) to 8 (highest))

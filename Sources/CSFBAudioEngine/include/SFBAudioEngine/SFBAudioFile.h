@@ -8,6 +8,7 @@
 
 #import <SFBAudioEngine/SFBAudioProperties.h>
 #import <SFBAudioEngine/SFBAudioMetadata.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -151,16 +152,5 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 - (BOOL)writeMetadataReturningError:(NSError **)error NS_SWIFT_NAME(writeMetadata());
 
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBAudioFile` and subclasses
-#define SFBAudioFileErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBAudioFile`
-#define SFBAudioFileErrorCodeInternalError				SFBAudioEngineErrorCodeInternalError
-#define SFBAudioFileErrorCodeUnknownFormatName			SFBAudioEngineErrorCodeUnknownFormatName
-#define SFBAudioFileErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
-#define SFBAudioFileErrorCodeInvalidFormat				SFBAudioEngineErrorCodeInvalidFormat
 
 NS_ASSUME_NONNULL_END

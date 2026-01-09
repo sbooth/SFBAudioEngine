@@ -5,6 +5,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -206,15 +207,5 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - returns: An initialized `NSData` object containing `length` bytes following the optional leading ID3v2 tag, `nil` otherwise
 - (nullable NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error;
 @end
-
-#pragma mark - Error Information
-
-/// The `NSErrorDomain` used by `SFBInputSource` and subclasses
-#define SFBInputSourceErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBInputSource`
-#define SFBInputSourceErrorCodeFileNotFound				SFBAudioEngineErrorCodeFileNotFound
-#define SFBInputSourceErrorCodeInputOutput				SFBAudioEngineErrorCodeInputOutput
-#define SFBInputSourceErrorCodeNotSeekable				SFBAudioEngineErrorCodeNotSeekable
 
 NS_ASSUME_NONNULL_END

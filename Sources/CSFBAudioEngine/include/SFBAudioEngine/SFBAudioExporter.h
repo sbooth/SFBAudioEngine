@@ -5,6 +5,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 @protocol SFBPCMDecoding;
 
@@ -30,11 +31,5 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 + (BOOL)exportFromDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error NS_SWIFT_NAME(AudioExporter.export(_:to:));
 
 @end
-
-/// The `NSErrorDomain` used by `SFBAudioExporter`
-#define SFBAudioExporterErrorDomain SFBAudioEngineErrorDomain
-
-/// Possible `NSError` error codes used by `SFBAudioExporter`
-#define SFBAudioExporterErrorCodeFileFormatNotSupported		SFBAudioEngineErrorCodeFormatNotSupported
 
 NS_ASSUME_NONNULL_END
