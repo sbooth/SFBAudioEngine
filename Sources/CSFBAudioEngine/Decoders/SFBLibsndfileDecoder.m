@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,8 +12,9 @@
 #import "SFBLibsndfileDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 #import "SFBLibsndfileUtilities.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
 
@@ -205,8 +206,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 				NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
 				if(pathExtension)
 					[majorModeExtensions addObject:pathExtension];
-			}
-			else
+			} else
 				os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 		}
 
@@ -295,15 +295,12 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	_sndfile = sf_open_virtual(&virtualIO, SFM_READ, &_sfinfo, (__bridge void *)self);
 	if(!_sndfile) {
 		os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
-
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -461,7 +458,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(result) {
 		os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 
@@ -475,6 +472,8 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
 	if(result == -1) {
 		os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
 	}
 	return YES;

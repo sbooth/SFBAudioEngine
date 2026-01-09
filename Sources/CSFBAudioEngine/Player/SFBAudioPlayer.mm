@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -23,14 +23,22 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioPlayerErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioPlayerErrorCodeInternalError:
-					return NSLocalizedString(@"An internal player error occurred.", @"");
-				case SFBAudioPlayerErrorCodeFormatNotSupported:
+		switch(err.code) {
+			case SFBAudioPlayerErrorCodeInternalError:
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
+					return NSLocalizedString(@"Internal player error", @"");
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An internal audio player error occurred.", @"");
+				break;
+
+			case SFBAudioPlayerErrorCodeFormatNotSupported:
+				if([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
+					return NSLocalizedString(@"Unsupported format", @"");
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
-			}
+				break;
 		}
+
 		return nil;
 	}];
 }
@@ -67,7 +75,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 	return _player->Play(error);
 }
 
-- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
+- (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	if(!_player->EnqueueDecoder(decoder, true, error))
@@ -93,13 +101,13 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 	return _player->EnqueueDecoder(decoder, forImmediatePlayback, error);
 }
 
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
+- (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	return _player->EnqueueDecoder(decoder, false, error);
 }
 
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
+- (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	return _player->EnqueueDecoder(decoder, forImmediatePlayback, error);
@@ -236,22 +244,22 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 - (BOOL)seekForward
 {
-	return _player->SeekForward(3);
+	return _player->SeekInTime(3);
 }
 
 - (BOOL)seekBackward
 {
-	return _player->SeekBackward(3);
+	return _player->SeekInTime(-3);
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	return _player->SeekForward(secondsToSkip);
+	return _player->SeekInTime(secondsToSkip);
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	return _player->SeekBackward(secondsToSkip);
+	return _player->SeekInTime(-secondsToSkip);
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds

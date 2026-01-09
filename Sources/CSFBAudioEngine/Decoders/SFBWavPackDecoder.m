@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -14,7 +14,8 @@
 #import "SFBWavPackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
 
@@ -217,13 +218,11 @@ static int can_seek_callback(void *id)
 	if(!_wpc) {
 		os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a WavPack file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -309,10 +308,8 @@ static int can_seek_callback(void *id)
 	//	int qmode = WavpackGetQualifyMode(_wpc);
 	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
 		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:WavpackGetSampleRate(_wpc) interleaved:NO channelLayout:channelLayout];
-	}
-//	else if(qmode & QMODE_DSD_AUDIO) {
-//	}
-	else {
+//	} else if(qmode & QMODE_DSD_AUDIO) {
+	} else {
 		AudioStreamBasicDescription processingStreamDescription = {0};
 
 		processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
@@ -520,8 +517,12 @@ static int can_seek_callback(void *id)
 {
 	NSParameterAssert(frame >= 0);
 
-	if(!WavpackSeekSample64(_wpc, frame))
+	if(!WavpackSeekSample64(_wpc, frame)) {
+		os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeSeekError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
+	}
 
 	_framePosition = frame;
 	return YES;

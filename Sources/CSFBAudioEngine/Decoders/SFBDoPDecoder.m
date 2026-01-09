@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,9 +12,10 @@
 
 #import "SFBDoPDecoder.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 #define DSD_PACKETS_PER_DOP_FRAME (16 / kSFBPCMFramesPerDSDPacket)
 #define BUFFER_SIZE_PACKETS 4096
@@ -28,8 +29,8 @@ static const unsigned char sBitReverseTable256 [256] =
 	R6(0), R6(2), R6(1), R6(3)
 };
 
-// Support DSD64, DSD128, and DSD256 (64x, 128x, and 256x the CD sample rate of 44.1 KHz)
-// as well as the 48.0 KHz variants 6.144 MHz and 12.288 MHz
+// Support DSD64, DSD128, and DSD256 (64x, 128x, and 256x the CD sample rate of 44.1 kHz)
+// as well as the 48.0 kHz variants 6.144 MHz and 12.288 MHz
 static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 {
 	switch((uint32_t)sampleRate) {
@@ -47,8 +48,6 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 @interface SFBDoPDecoder ()
 {
 @private
-	id <SFBDSDDecoding> _decoder;
-	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
 	unsigned char _marker;
 	BOOL _reverseBits;
@@ -80,7 +79,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	return [self initWithDecoder:decoder error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -118,28 +117,24 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
-	if(!(asbd->mFormatID == kSFBAudioFormatDSD)) {
+	if(asbd->mFormatID != kSFBAudioFormatDSD) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD file.", @"")
-											  url:_decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Not a DSD file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"DSD over PCM requires DSD audio input.", @""),
+														 NSURLErrorKey: _decoder.inputSource.url },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
 	if(!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not supported.", @"")
-											  url:_decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported DSD sample rate", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's sample rate is not supported for DSD over PCM.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @""),
+														 NSURLErrorKey: _decoder.inputSource.url },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 

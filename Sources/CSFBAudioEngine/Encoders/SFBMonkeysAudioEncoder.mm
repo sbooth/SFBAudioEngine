@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -239,8 +239,7 @@ private:
 				.mNumberChannelDescriptions = 0
 			};
 			channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
-		}
-		else
+		} else
 			os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 	}
 
@@ -264,8 +263,7 @@ private:
 
 		_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
 		_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
