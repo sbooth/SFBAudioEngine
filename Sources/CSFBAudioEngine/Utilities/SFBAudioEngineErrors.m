@@ -4,7 +4,7 @@
 // MIT license
 //
 
-#import "SFBAudioEngineErrors.h"
+#import <SFBAudioEngine/SFBAudioEngineErrors.h>
 
 NSErrorDomain const SFBAudioEngineErrorDomain = @"org.sbooth.AudioEngine";
 
