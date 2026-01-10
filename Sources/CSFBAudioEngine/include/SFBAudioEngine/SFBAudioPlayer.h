@@ -310,13 +310,13 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingComplete:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate that the decoding process for a decoder has been aborted because a decoding error was encountered
+/// Called to notify the delegate that the decoding process for a decoder has been aborted because of an error
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
-/// - parameter decoder: The decoder for which decoding is canceled
-/// - parameter error: The error causing the cancelation
+/// - parameter decoder: The decoder for which decoding aborted
+/// - parameter error: The error causing `decoder` to abort decoding
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder dueToError:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from a decoder will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`

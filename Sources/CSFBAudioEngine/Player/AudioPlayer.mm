@@ -1508,8 +1508,8 @@ bool SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 
 	if(!error && [player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
 		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
-	else if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:decodingAborted:dueToError:framesRendered:)])
-		[player_.delegate audioPlayer:player_ decodingAborted:decoder dueToError:error framesRendered:framesRendered];
+	else if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:decodingAborted:error:framesRendered:)])
+		[player_.delegate audioPlayer:player_ decodingAborted:decoder error:error framesRendered:framesRendered];
 
 	const auto hasNoDecoders = [&] {
 		std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
