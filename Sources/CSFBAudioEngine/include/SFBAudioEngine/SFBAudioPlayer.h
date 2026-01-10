@@ -52,9 +52,10 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  8. Playback state changed
 ///  9. End of audio
 ///  10. Decoder canceled
-///  11. Processing graph format change with custom nodes present
-///  12. `AVAudioEngineConfigurationChange` notification received
-///  13. Asynchronous error encountered
+///  11. Decoder stopped due to error
+///  12. Processing graph format change with custom nodes present
+///  13. `AVAudioEngineConfigurationChange` notification received
+///  14. Asynchronous error encountered
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
@@ -309,6 +310,13 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingComplete:(id<SFBPCMDecoding>)decoder;
+/// Called to notify the delegate that the decoding process for a decoder has been aborted because a decoding error was encountered
+/// - warning: Do not change any properties of `decoder`
+/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
+/// - parameter decoder: The decoder for which decoding is canceled
+/// - parameter error: The error causing the cancelation
+/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder dueToError:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from a decoder will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
@@ -344,13 +352,12 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
-/// Called to notify the delegate that the decoding and rendering process for a decoder has been canceled
+/// Called to notify the delegate that the decoding and rendering process for a decoder has been canceled by a user-initiated request
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding and rendering is canceled
-/// - parameter error: The error causing the cancelation or `nil` if the cancelation was user-initiated
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder dueToError:(nullable NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
 /// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached

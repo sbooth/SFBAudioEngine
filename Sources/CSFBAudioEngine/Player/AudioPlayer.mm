@@ -1506,8 +1506,10 @@ bool SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 	// Mark the decoder as canceled for any scheduled render notifications
 	objc_setAssociatedObject(decoder, &decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:dueToError:framesRendered:)])
-		[player_.delegate audioPlayer:player_ decoderCanceled:decoder dueToError:error framesRendered:framesRendered];
+	if(!error && [player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)])
+		[player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
+	else if(error && [player_.delegate respondsToSelector:@selector(audioPlayer:decodingAborted:dueToError:framesRendered:)])
+		[player_.delegate audioPlayer:player_ decodingAborted:decoder dueToError:error framesRendered:framesRendered];
 
 	const auto hasNoDecoders = [&] {
 		std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
