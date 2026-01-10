@@ -52,7 +52,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  8. Playback state changed
 ///  9. End of audio
 ///  10. Decoder canceled
-///  11. Decoder stopped due to error
+///  11. Decoding aborted due to error
 ///  12. Processing graph format change with custom nodes present
 ///  13. `AVAudioEngineConfigurationChange` notification received
 ///  14. Asynchronous error encountered
