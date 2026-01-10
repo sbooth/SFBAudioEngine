@@ -157,7 +157,7 @@ struct AudioPlayer::DecoderState final {
 	/// Buffer used internally for buffering during conversion
 	AVAudioPCMBuffer 		*decodeBuffer_ 		{nil};
 
-	/// The error that caused decoder cancelation, if any
+	/// The error that caused decoding to abort, if any
 	NSError 				*error_ 			{nil};
 
 	/// Possible bits in `flags_`
