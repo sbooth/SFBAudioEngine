@@ -313,8 +313,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate that the decoding process for a decoder has been aborted because of an error
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
-/// - parameter decoder: The decoder for which decoding aborted
-/// - parameter error: The error causing `decoder` to abort decoding
+/// - parameter decoder: The decoder for which decoding is aborted
+/// - parameter error: The error causing `decoder` to abort
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from a decoder will render
@@ -352,10 +352,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
-/// Called to notify the delegate that the decoding and rendering process for a decoder has been canceled by a user-initiated request
+/// Called to notify the delegate that the decoding and rendering processes for a decoder have been canceled by a user-initiated request
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
-/// - parameter decoder: The decoder for which decoding and rendering is canceled
+/// - parameter decoder: The decoder for which decoding and rendering are canceled
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
