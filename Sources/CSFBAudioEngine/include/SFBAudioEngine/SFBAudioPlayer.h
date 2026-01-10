@@ -348,8 +348,9 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding and rendering is canceled
+/// - parameter error: The error causing the cancelation or `nil` if the cancelation was user-initiated
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder dueToError:(nullable NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
 /// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached
@@ -369,7 +370,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
-/// Called to notify the delegate when an asynchronous error occurs
+/// Called to notify the delegate when an asynchronous error occurs that is not related to a specific decoder
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter error: The error
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
