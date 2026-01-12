@@ -1689,6 +1689,13 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
 	// Schedule the rendering started notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
+		// If player_ is nil it means the owning SFBAudioPlayer instance was deallocated
+		__strong SFBAudioPlayer *player = player_;
+		if(!player) {
+			os_log_debug(log_, "Audio player deallocated between rendering will start and rendering started notifications");
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
 			return;
@@ -1704,8 +1711,8 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
 		SetNowPlaying(decoder);
 
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
-			[player_.delegate audioPlayer:player_ renderingStarted:decoder];
+		if([player.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
+			[player.delegate audioPlayer:player renderingStarted:decoder];
 	});
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
@@ -1724,6 +1731,13 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
 	// Schedule the rendering completed notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
+		// If player_ is nil it means the owning SFBAudioPlayer instance was deallocated
+		__strong SFBAudioPlayer *player = player_;
+		if(!player) {
+			os_log_debug(log_, "Audio player deallocated between rendering will complete and rendering complete notifications");
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
 			return;
@@ -1737,8 +1751,8 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 			os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
+		if([player.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+			[player.delegate audioPlayer:player renderingComplete:decoder];
 
 		const auto hasNoDecoders = [&] {
 			std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
@@ -1753,8 +1767,8 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
 			SetNowPlaying(nil);
 
-			if([player_.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
-				[player_.delegate audioPlayerEndOfAudio:player_];
+			if([player.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
+				[player.delegate audioPlayerEndOfAudio:player];
 			else
 				Stop();
 		}
