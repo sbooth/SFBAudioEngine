@@ -969,7 +969,10 @@ void SFB::AudioPlayer::ProcessDecoders(std::stop_token stoken) noexcept
 				if(const auto flags = decoderState->flags_.load(std::memory_order_acquire); !(flags & static_cast<unsigned int>(DecoderState::Flags::cancelRequested)))
 					continue;
 
-				os_log_debug(log_, "Canceling decoding for %{public}@%{public}s", decoderState->decoder_, decoderState->error_ ? " due to error" : "");
+				if(!decoderState->error_)
+					os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
+				else
+					os_log_debug(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
 
 				decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled), std::memory_order_acq_rel);
 				ringBufferStale = true;
