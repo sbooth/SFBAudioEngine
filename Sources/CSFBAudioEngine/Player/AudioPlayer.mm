@@ -606,15 +606,39 @@ void SFB::AudioPlayer::Stop() noexcept
 
 bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 {
-	const auto playbackState = PlaybackState();
-	switch(playbackState) {
-		case SFBAudioPlayerPlaybackStatePlaying:
-			return Pause();
-		case SFBAudioPlayerPlaybackStatePaused:
-			return Resume();
-		case SFBAudioPlayerPlaybackStateStopped:
-			return Play(error);
+	SFBAudioPlayerPlaybackState playbackState;
+	{
+		std::lock_guard lock{engineLock_};
+
+		// Currently stopped, transition to playing
+		if(!engine_.isRunning) {
+			if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+				os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+				if(error)
+					*error = startError;
+				return false;
+			}
+
+			const auto prev = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+			assert(!(prev & static_cast<unsigned int>(Flags::isPlaying)));
+
+			playbackState = SFBAudioPlayerPlaybackStatePlaying;
+		}
+
+		// Toggle playing/paused
+		const auto prev = flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+
+		if(prev & static_cast<unsigned int>(Flags::isPlaying))
+			playbackState = SFBAudioPlayerPlaybackStatePaused;
+		else
+			playbackState = SFBAudioPlayerPlaybackStatePlaying;
 	}
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[player_.delegate audioPlayer:player_ playbackStateChanged:playbackState];
+
+	return true;
 }
 
 void SFB::AudioPlayer::Reset() noexcept
