@@ -1949,23 +1949,25 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			}
 #endif // false
 
+
+		{
+			std::lock_guard lock{engineLock_};
+
 			// Flags::engineIsRunning indicates if the engine was running before the interruption
 			if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
-				{
-					std::lock_guard lock{engineLock_};
-					if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
-						os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-						flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-						return;
-					}
-
-					// To avoid the possibility of a state inconsistency Flags::engineIsRunning is set
-					flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
+				if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+					os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+					return;
 				}
 
-				// Resume will restore the playing state if the player was playing before the interruption
-				(void)Resume();
+				// To avoid the possibility of a state inconsistency Flags::engineIsRunning is set
+				flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning), std::memory_order_acq_rel);
 			}
+
+			// Resume will restore the playing state if the player was playing before the interruption
+			(void)Resume();
+		}
 
 			break;
 
