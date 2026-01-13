@@ -544,7 +544,7 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 		const auto prev = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 		wasPlaying = prev & static_cast<unsigned int>(Flags::isPlaying);
-		assert(!didStartEngine || (didStartEngine && !wasPlaying));
+		assert(!(didStartEngine && wasPlaying));
 	}
 
 	if((didStartEngine || !wasPlaying) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
