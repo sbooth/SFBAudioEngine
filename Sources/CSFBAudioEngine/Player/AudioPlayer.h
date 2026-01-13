@@ -221,7 +221,7 @@ private:
 		started 	= 1,
 		/// Decoding complete
 		complete 	= 2,
-		/// Decoder canceled
+		/// Decoder canceled by user or aborted due to error
 		canceled 	= 3,
 		/// Decoding error
 		error 		= 4,
