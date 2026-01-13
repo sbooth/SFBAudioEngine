@@ -51,7 +51,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Now playing changed
 ///  8. Playback state changed
 ///  9. End of audio
-///  10. Decoder canceled
+///  10. Decoder canceled by user
 ///  11. Decoding aborted due to error
 ///  12. Processing graph format change with custom nodes present
 ///  13. `AVAudioEngineConfigurationChange` notification received
@@ -137,8 +137,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// If the current playback state is `SFBAudioPlayerPlaybackStatePaused` this method sends ``-resume``
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
-/// Resets the `AVAudioEngine`
-/// - note: This method cancels the current decoder and clears any queued decoders
+/// Cancels the current decoder, clears any queued decoders, and resets the `AVAudioEngine`
 - (void)reset;
 
 // MARK: - Player State
