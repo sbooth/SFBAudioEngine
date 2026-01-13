@@ -42,8 +42,8 @@ public:
 	/// The shared log for all `AudioPlayer` instances
 	static const os_log_t log_;
 
-	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer 		*player_ 			{nil};
+	/// Weak reference to owning `SFBAudioPlayer` instance
+	__weak SFBAudioPlayer 					*player_ 			{nil};
 
 private:
 	struct DecoderState;

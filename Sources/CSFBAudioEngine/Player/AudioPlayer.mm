@@ -20,6 +20,7 @@
 
 #import "HostTimeUtilities.hpp"
 #import "SFBAudioDecoder.h"
+#import "SFBAudioPlayer+Internal.h"
 #import "SFBCStringForOSType.h"
 
 namespace {
@@ -1713,25 +1714,40 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 		os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
 #endif /* DEBUG */
 
+	// Since the rendering started notification is submitted for asynchronous execution,
+	// store a weak reference to the owning SFBAudioPlayer to prevent use-after-free
+	// in the event the player is deallocated before the closure is called
+	__weak SFBAudioPlayer *weakPlayer = player_;
+
 	// Schedule the rendering started notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
+		// If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
+		__strong SFBAudioPlayer *player = weakPlayer;
+		if(!player) {
+			os_log_debug(log_, "Audio player deallocated between rendering will start and rendering started notifications");
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
 			return;
 		}
 
+		// Not this, but that: `this` is not safe to use within this closure
+		auto& that = player->_player;
+
 #if DEBUG
 		const auto now = SFB::GetCurrentHostTime();
 		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
-		const auto tolerance = static_cast<uint64_t>(1e9 / [sourceNode_ outputFormatForBus:0].sampleRate);
+		const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
 		if(delta > tolerance)
 			os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		SetNowPlaying(decoder);
+		that->SetNowPlaying(decoder);
 
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
-			[player_.delegate audioPlayer:player_ renderingStarted:decoder];
+		if([player.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
+			[player.delegate audioPlayer:player renderingStarted:decoder];
 	});
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
@@ -1748,27 +1764,42 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 		os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
 #endif /* DEBUG */
 
-	// Schedule the rendering completed notification at the expected host time
+	// Since the rendering complete notification is submitted for asynchronous execution,
+	// store a weak reference to the owning SFBAudioPlayer to prevent use-after-free
+	// in the event the player is deallocated before the closure is called
+	__weak SFBAudioPlayer *weakPlayer = player_;
+
+	// Schedule the rendering complete notification at the expected host time
 	dispatch_after(hostTime, eventQueue_, ^{
+		// If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
+		__strong SFBAudioPlayer *player = weakPlayer;
+		if(!player) {
+			os_log_debug(log_, "Audio player deallocated between rendering will complete and rendering complete notifications");
+			return;
+		}
+
 		if(NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
 			os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
 			return;
 		}
 
+		// Not this, but that: `this` is not safe to use within this closure
+		auto& that = player->_player;
+
 #if DEBUG
 		const auto now = SFB::GetCurrentHostTime();
 		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
-		const auto tolerance = static_cast<uint64_t>(1e9 / [sourceNode_ outputFormatForBus:0].sampleRate);
+		const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
 		if(delta > tolerance)
 			os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
 #endif /* DEBUG */
 
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-			[player_.delegate audioPlayer:player_ renderingComplete:decoder];
+		if([player.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+			[player.delegate audioPlayer:player renderingComplete:decoder];
 
 		const auto hasNoDecoders = [&] {
-			std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
-			return queuedDecoders_.empty() && activeDecoders_.empty();
+			std::scoped_lock lock{that->queuedDecodersLock_, that->activeDecodersLock_};
+			return that->queuedDecoders_.empty() && that->activeDecoders_.empty();
 		}();
 
 		// End of audio
@@ -1777,19 +1808,19 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 			os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
 
-			SetNowPlaying(nil);
+			that->SetNowPlaying(nil);
 
-			if([player_.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
-				[player_.delegate audioPlayerEndOfAudio:player_];
-			else if(const auto flags = flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::engineIsRunning))) {
+			if([player.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
+				[player.delegate audioPlayerEndOfAudio:player];
+			else if(const auto flags = that->flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::engineIsRunning))) {
 				{
-					std::lock_guard lock{engineLock_};
-					[engine_ stop];
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+					std::lock_guard lock{that->engineLock_};
+					[that->engine_ stop];
+					that->flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 				}
 
-				if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-					[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+				if([player.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+					[player.delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 			}
 		}
 	});
