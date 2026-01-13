@@ -1846,16 +1846,15 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 	// AVAudioEngine posts this notification from a dedicated internal dispatch queue
 	os_log_debug(log_, "Received AVAudioEngineConfigurationChangeNotification");
 
-	// AVAudioEngine stops itself when a configuration change occurs
-	// Flags::engineIsRunning indicates if the engine was running before the interruption
-	const auto flags = flags_.load(std::memory_order_acquire);
-	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-	const auto prevState = flags & mask;
-
 	// The output hardware’s channel count or sample rate changed
 	{
 		std::unique_lock lock{engineLock_};
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+
+		// AVAudioEngine stops itself when a configuration change occurs
+		// Flags::engineIsRunning indicates if the engine was running before the interruption
+		const auto flags = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+		const auto prevState = flags & mask;
 
 		AVAudioOutputNode *outputNode = engine_.outputNode;
 		AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
