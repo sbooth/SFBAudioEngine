@@ -624,15 +624,15 @@ bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 			assert(!(prev & static_cast<unsigned int>(Flags::isPlaying)));
 
 			playbackState = SFBAudioPlayerPlaybackStatePlaying;
+		} else {
+			// Toggle playing/paused
+			const auto prev = flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+			
+			if(prev & static_cast<unsigned int>(Flags::isPlaying))
+				playbackState = SFBAudioPlayerPlaybackStatePaused;
+			else
+				playbackState = SFBAudioPlayerPlaybackStatePlaying;
 		}
-
-		// Toggle playing/paused
-		const auto prev = flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-
-		if(prev & static_cast<unsigned int>(Flags::isPlaying))
-			playbackState = SFBAudioPlayerPlaybackStatePaused;
-		else
-			playbackState = SFBAudioPlayerPlaybackStatePlaying;
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
