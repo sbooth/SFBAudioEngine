@@ -554,30 +554,34 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 bool SFB::AudioPlayer::Pause() noexcept
 {
-	const auto flags = flags_.load(std::memory_order_acquire);
-	if(!(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
-		return false;
-
-	if((flags & static_cast<unsigned int>(Flags::isPlaying))) {
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-			[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
+	auto wasPlaying = false;
+	{
+		std::lock_guard lock{engineLock_};
+		if(!engine_.isRunning)
+			return false;
+		const auto prev = flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		wasPlaying = prev & static_cast<unsigned int>(Flags::isPlaying);
 	}
+
+	if(wasPlaying && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
 
 	return true;
 }
 
 bool SFB::AudioPlayer::Resume() noexcept
 {
-	const auto flags = flags_.load(std::memory_order_acquire);
-	if(!(flags & static_cast<unsigned int>(Flags::engineIsRunning)))
-		return false;
-
-	if(!(flags & static_cast<unsigned int>(Flags::isPlaying))) {
-		flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-			[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
+	auto wasPaused = false;
+	{
+		std::lock_guard lock{engineLock_};
+		if(!engine_.isRunning)
+			return false;
+		const auto prev = flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		wasPaused = !(prev & static_cast<unsigned int>(Flags::isPlaying));
 	}
+
+	if(wasPaused && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
 
 	return true;
 }
