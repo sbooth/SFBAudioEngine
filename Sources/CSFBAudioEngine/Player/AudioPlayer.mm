@@ -1852,9 +1852,9 @@ void SFB::AudioPlayer::HandleAudioEngineConfigurationChange(AVAudioEngine *engin
 
 		// AVAudioEngine stops itself when a configuration change occurs
 		// Flags::engineIsRunning indicates if the engine was running before the interruption
-		const auto flags = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		const auto prev = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 		constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-		const auto prevState = flags & mask;
+		const auto prevState = prev & mask;
 
 		AVAudioOutputNode *outputNode = engine_.outputNode;
 		AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
@@ -1970,14 +1970,12 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
 	// Even if the engine isn't running, call -stop to force release of any render resources
 	// This is necessary when transitioning between formats with different channel counts
+	[engine_ stop];
 
 	// Attempt to preserve the playback state
-	const auto flags = flags_.load(std::memory_order_acquire);
+	const auto prev = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-	const auto prevState = flags & mask;
-
-	[engine_ stop];
-	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	const auto prevState = prev & mask;
 
 	// Reconfigure the processing graph
 	AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_ outputBus:0] firstObject];
