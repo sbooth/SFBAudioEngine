@@ -82,7 +82,7 @@ private:
 	AVAudioEngine 							*engine_ 			{nil};
 	/// Source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-	/// Lock protecting processing graph configuration changes
+	/// Lock protecting playback state and processing graph configuration changes
 	mutable CXXUnfairLock::UnfairLock 		engineLock_;
 
 	/// Decoder currently rendering audio
