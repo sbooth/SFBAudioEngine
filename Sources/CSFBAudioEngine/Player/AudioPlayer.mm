@@ -1549,16 +1549,16 @@ bool SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 	if(hasNoDecoders) {
 		SetNowPlaying(nil);
 
-		if(const auto flags = flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::engineIsRunning))) {
-			{
-				std::lock_guard lock{engineLock_};
+		auto didStopEngine = false;
+		{
+			std::lock_guard lock{engineLock_};
+			if(didStopEngine = engine_.isRunning; didStopEngine)
 				[engine_ stop];
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-			}
-
-			if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-				[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 		}
+
+		if(didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+			[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 	}
 
 	return true;
@@ -1841,15 +1841,17 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
 			if([player.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
 				[player.delegate audioPlayerEndOfAudio:player];
-			else if(const auto flags = that->flags_.load(std::memory_order_acquire); (flags & static_cast<unsigned int>(Flags::engineIsRunning))) {
+			else {
+				auto didStopEngine = false;
 				{
-					std::lock_guard lock{that->engineLock_};
-					[that->engine_ stop];
-					that->flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+					std::lock_guard lock{engineLock_};
+					if(didStopEngine = engine_.isRunning; didStopEngine)
+						[engine_ stop];
+					flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 				}
 
-				if([player.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
-					[player.delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+				if(didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
+					[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 			}
 		}
 	});
