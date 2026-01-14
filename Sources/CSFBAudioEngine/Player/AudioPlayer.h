@@ -97,6 +97,11 @@ private:
 	std::atomic_uint 						flags_ 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
+#if TARGET_OS_IPHONE
+	/// Playback state before audio session interruption
+	unsigned int 							preInterruptState_ 	{0};
+#endif /* TARGET_OS_IPHONE */
+
 public:
 	AudioPlayer();
 
