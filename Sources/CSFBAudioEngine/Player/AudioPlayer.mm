@@ -529,23 +529,19 @@ bool SFB::AudioPlayer::FormatWillBeGaplessIfEnqueued(AVAudioFormat *format) cons
 bool SFB::AudioPlayer::Play(NSError **error) noexcept
 {
 	auto didStartEngine = false;
-	auto wasPlaying = false;
-	{
-		std::lock_guard lock{engineLock_};
-		if(didStartEngine = !engine_.isRunning; didStartEngine) {
-			if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
-				os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-				if(error)
-					*error = startError;
-				return false;
-			}
+	if(didStartEngine = !engine_.isRunning; didStartEngine) {
+		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+			if(error)
+				*error = startError;
+			return false;
 		}
-
-		const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		wasPlaying = prevFlags & static_cast<unsigned int>(Flags::isPlaying);
-		assert(!(didStartEngine && wasPlaying));
 	}
+
+	const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	const auto wasPlaying = prevFlags & static_cast<unsigned int>(Flags::isPlaying);
+	assert(!(didStartEngine && wasPlaying));
 
 	if((didStartEngine || !wasPlaying) && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -555,14 +551,10 @@ bool SFB::AudioPlayer::Play(NSError **error) noexcept
 
 bool SFB::AudioPlayer::Pause() noexcept
 {
-	auto wasPlaying = false;
-	{
-		std::lock_guard lock{engineLock_};
-		if(!engine_.isRunning)
-			return false;
-		const auto prevFlags = flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		wasPlaying = prevFlags & static_cast<unsigned int>(Flags::isPlaying);
-	}
+	if(!engine_.isRunning)
+		return false;
+	const auto prevFlags = flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	const auto wasPlaying = prevFlags & static_cast<unsigned int>(Flags::isPlaying);
 
 	if(wasPlaying && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePaused];
@@ -572,14 +564,10 @@ bool SFB::AudioPlayer::Pause() noexcept
 
 bool SFB::AudioPlayer::Resume() noexcept
 {
-	auto wasPaused = false;
-	{
-		std::lock_guard lock{engineLock_};
-		if(!engine_.isRunning)
-			return false;
-		const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		wasPaused = !(prevFlags & static_cast<unsigned int>(Flags::isPlaying));
-	}
+	if(!engine_.isRunning)
+		return false;
+	const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	const auto wasPaused = !(prevFlags & static_cast<unsigned int>(Flags::isPlaying));
 
 	if(wasPaused && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 		[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
@@ -590,12 +578,9 @@ bool SFB::AudioPlayer::Resume() noexcept
 void SFB::AudioPlayer::Stop() noexcept
 {
 	auto didStopEngine = false;
-	{
-		std::lock_guard lock{engineLock_};
-		if(didStopEngine = engine_.isRunning; didStopEngine)
-			[engine_ stop];
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-	}
+	if(didStopEngine = engine_.isRunning; didStopEngine)
+		[engine_ stop];
+	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
 
 	ClearDecoderQueue();
 	CancelActiveDecoders();
@@ -607,30 +592,27 @@ void SFB::AudioPlayer::Stop() noexcept
 bool SFB::AudioPlayer::TogglePlayPause(NSError **error) noexcept
 {
 	SFBAudioPlayerPlaybackState playbackState;
-	{
-		std::lock_guard lock{engineLock_};
 
-		// Currently stopped, transition to playing
-		if(!engine_.isRunning) {
-			if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
-				os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-				flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-				if(error)
-					*error = startError;
-				return false;
-			}
-
-			const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-			assert(!(prevFlags & static_cast<unsigned int>(Flags::isPlaying)));
-
-			playbackState = SFBAudioPlayerPlaybackStatePlaying;
-		} else {
-			// Toggle playing/paused
-			if(flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel) & static_cast<unsigned int>(Flags::isPlaying))
-				playbackState = SFBAudioPlayerPlaybackStatePaused;
-			else
-				playbackState = SFBAudioPlayerPlaybackStatePlaying;
+	// Currently stopped, transition to playing
+	if(!engine_.isRunning) {
+		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+			if(error)
+				*error = startError;
+			return false;
 		}
+
+		const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+		assert(!(prevFlags & static_cast<unsigned int>(Flags::isPlaying)));
+
+		playbackState = SFBAudioPlayerPlaybackStatePlaying;
+	} else {
+		// Toggle playing/paused
+		if(const auto prevFlags = flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel); prevFlags & static_cast<unsigned int>(Flags::isPlaying))
+			playbackState = SFBAudioPlayerPlaybackStatePaused;
+		else
+			playbackState = SFBAudioPlayerPlaybackStatePlaying;
 	}
 
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
