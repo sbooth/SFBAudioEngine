@@ -1649,7 +1649,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 				(*iter)->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::renderingStarted), std::memory_order_acq_rel);
 
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
-				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
+				const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
 				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
 				try {
@@ -1667,7 +1667,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 			// Rendering is complete
 			if(constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::decodingComplete); (flags & mask) == static_cast<unsigned int>(DecoderState::Flags::decodingComplete) && framesFromThisDecoder == decoderFramesRemaining) {
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
-				const double deltaSeconds = frameOffset / audioRingBuffer_.Format().mSampleRate;
+				const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
 				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
 
 				try {
