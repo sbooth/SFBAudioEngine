@@ -309,13 +309,6 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
 /// - parameter decoder: The decoder for which decoding is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingComplete:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate that the decoding process for a decoder has been aborted because of an error
-/// - warning: Do not change any properties of `decoder`
-/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
-/// - parameter decoder: The decoder for which decoding is aborted
-/// - parameter error: The error causing `decoder` to abort
-/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the first audio frame from a decoder will render
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
@@ -357,6 +350,13 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter decoder: The decoder for which decoding and rendering are canceled
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
+/// Called to notify the delegate that the decoding process for a decoder has been aborted because of an error
+/// - warning: Do not change any properties of `decoder`
+/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
+/// - parameter decoder: The decoder for which decoding is aborted
+/// - parameter error: The error causing `decoder` to abort
+/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
 /// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached
