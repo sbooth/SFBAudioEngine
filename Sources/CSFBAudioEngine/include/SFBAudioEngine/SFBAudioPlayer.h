@@ -53,9 +53,10 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  9. End of audio
 ///  10. Decoder canceled by user
 ///  11. Decoding aborted due to error
-///  12. Processing graph format change with custom nodes present
-///  13. `AVAudioEngineConfigurationChange` notification received
-///  14. Asynchronous error encountered
+///  12. Asynchronous error encountered
+///  13. Processing graph format change with custom nodes present
+///  14. `AVAudioEngineConfigurationChange` notification received
+///  15. `AVAudioSessionInterruption` notification received
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
@@ -248,7 +249,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the output device was successfully set
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
-#endif /* !TARGET_OS_IPHONE */
+#endif
 
 // MARK: - Delegate
 
@@ -357,6 +358,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter error: The error causing `decoder` to abort
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
+/// Called to notify the delegate when an asynchronous error occurs
+/// - parameter audioPlayer: The `SFBAudioPlayer` object
+/// - parameter error: The error
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
 /// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached
@@ -377,10 +382,15 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter userInfo: The `userInfo` object from the notification
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioEngineConfigurationChange:(nullable NSDictionary *)userInfo;
-/// Called to notify the delegate when an asynchronous error occurs that is not related to a specific decoder
+#if TARGET_OS_IPHONE
+/// Called to notify the delegate of an `AVAudioSession` interruption begin or end
+///
+/// If the interruption began, this method is called after the playback state is saved and the player is stopped.
+/// If the interruption ended, this method is called before optionally attempting to activate the audio session and resume playback.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
-/// - parameter error: The error
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
+/// - parameter userInfo: The `userInfo` object from the notification
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioSessionInterruption:(nullable NSDictionary *)userInfo;
+#endif
 @end
 
 NS_ASSUME_NONNULL_END
