@@ -249,7 +249,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the output device was successfully set
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error;
-#endif /* !TARGET_OS_IPHONE */
+#endif
 
 // MARK: - Delegate
 
@@ -381,10 +381,12 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
+#if TARGET_OS_IPHONE
 /// Called to notify the delegate of an `AVAudioSession` interruption
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter userInfo: The `userInfo` object from the notification
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioSessionInterruption:(nullable NSDictionary *)userInfo;
+#endif
 @end
 
 NS_ASSUME_NONNULL_END
