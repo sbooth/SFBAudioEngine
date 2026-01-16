@@ -6,17 +6,9 @@
 
 #import <exception>
 
-#import "SFBAudioPlayer.h"
-#import "AudioPlayer.h"
+#import "SFBAudioPlayer+Internal.h"
 
 NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPlayer";
-
-@interface SFBAudioPlayer ()
-{
-@private
-	SFB::AudioPlayer::unique_ptr _player;
-}
-@end
 
 @implementation SFBAudioPlayer
 

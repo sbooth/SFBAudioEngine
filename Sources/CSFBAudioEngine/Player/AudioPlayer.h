@@ -44,8 +44,8 @@ public:
 	/// The shared log for all `AudioPlayer` instances
 	static const os_log_t log_;
 
-	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer 		*player_ 			{nil};
+	/// Weak reference to owning `SFBAudioPlayer` instance
+	__weak SFBAudioPlayer 					*player_ 			{nil};
 
 private:
 	struct DecoderState;
@@ -92,7 +92,7 @@ private:
 	AVAudioEngine 							*engine_ 			{nil};
 	/// Source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-	/// Lock protecting processing graph configuration changes
+	/// Lock protecting playback state and processing graph configuration changes
 	mutable CXXUnfairLock::UnfairLock 		engineLock_;
 
 	/// Decoder currently rendering audio
@@ -106,6 +106,11 @@ private:
 	/// Player flags
 	std::atomic_uint 						flags_ 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
+
+#if TARGET_OS_IPHONE
+	/// Playback state before audio session interruption
+	unsigned int 							preInterruptState_ 	{0};
+#endif /* TARGET_OS_IPHONE */
 
 public:
 	AudioPlayer();
@@ -237,7 +242,7 @@ private:
 		started 	= 1,
 		/// Decoding complete
 		complete 	= 2,
-		/// Decoder canceled
+		/// Decoder canceled by user or aborted due to error
 		canceled 	= 3,
 		/// Decoding error
 		error 		= 4,
@@ -303,6 +308,9 @@ public:
 
 private:
 	// MARK: - Processing Graph Management
+
+	/// Stops the AVAudioEngine if it is running and returns true if it was stopped
+	bool StopEngineIfRunning() noexcept;
 
 	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
