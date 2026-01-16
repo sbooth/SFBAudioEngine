@@ -1973,17 +1973,21 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 
 			if(NSError *sessionError = nil; ![[AVAudioSession sharedInstance] setActive:YES error:&sessionError]) {
 				os_log_error(log_, "Error activating AVAudioSession: %{public}@", sessionError);
+				if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+					[player_.delegate audioPlayer:player_ encounteredError:sessionError];
 				break;
 			}
 
 			{
-				std::lock_guard lock{engineLock_};
+				std::unique_lock lock{engineLock_};
 
 				if(preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) {
 					if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 						os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-						flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-						return;
+						lock.unlock();
+						if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+							[player_.delegate audioPlayer:player_ encounteredError:startError];
+						break;
 					}
 				}
 
@@ -2006,7 +2010,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 	if([player_.delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)])
 		[player_.delegate audioPlayer:player_ audioSessionInterruption:userInfo];
 }
-#endif /* TARGET_OS_IPHONE */
+#endif
 
 // MARK: - Processing Graph Management
 
