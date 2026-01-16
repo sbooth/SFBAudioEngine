@@ -1974,6 +1974,9 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			if([player_.delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)])
 				[player_.delegate audioPlayer:player_ audioSessionInterruption:userInfo];
 
+			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume))
+				return;
+
 			if(NSError *sessionError = nil; ![[AVAudioSession sharedInstance] setActive:YES error:&sessionError]) {
 				os_log_error(log_, "Error activating AVAudioSession: %{public}@", sessionError);
 				if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
@@ -1981,7 +1984,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 				return;
 			}
 
-			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; interruptionOption & AVAudioSessionInterruptionOptionShouldResume) {
+			{
 				std::unique_lock lock{engineLock_};
 
 				if(preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) {
