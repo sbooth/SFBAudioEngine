@@ -293,6 +293,9 @@ public:
 private:
 	// MARK: - Processing Graph Management
 
+	/// Stops the AVAudioEngine if it is running and returns true if it was stopped
+	bool StopEngineIfRunning() noexcept;
+
 	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
 	/// - parameter error: An optional pointer to an `NSError` object to receive error information

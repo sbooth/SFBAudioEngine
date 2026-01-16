@@ -599,13 +599,7 @@ bool SFB::AudioPlayer::Resume() noexcept
 
 void SFB::AudioPlayer::Stop() noexcept
 {
-	auto didStopEngine = false;
-	{
-		std::lock_guard lock{engineLock_};
-		if(didStopEngine = engine_.isRunning; didStopEngine)
-			[engine_ stop];
-		flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-	}
+	const auto didStopEngine = StopEngineIfRunning();
 
 	ClearDecoderQueue();
 	CancelActiveDecoders();
@@ -1549,14 +1543,7 @@ bool SFB::AudioPlayer::ProcessDecoderCanceledEvent() noexcept
 	if(hasNoDecoders) {
 		SetNowPlaying(nil);
 
-		auto didStopEngine = false;
-		{
-			std::lock_guard lock{engineLock_};
-			if(didStopEngine = engine_.isRunning; didStopEngine)
-				[engine_ stop];
-			flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-		}
-
+		const auto didStopEngine = StopEngineIfRunning();
 		if(didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 			[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 	}
@@ -1842,14 +1829,7 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 			if([player.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
 				[player.delegate audioPlayerEndOfAudio:player];
 			else {
-				auto didStopEngine = false;
-				{
-					std::lock_guard lock{engineLock_};
-					if(didStopEngine = engine_.isRunning; didStopEngine)
-						[engine_ stop];
-					flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-				}
-
+				const auto didStopEngine = StopEngineIfRunning();
 				if(didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 					[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 			}
@@ -2026,6 +2006,16 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 #endif /* TARGET_OS_IPHONE */
 
 // MARK: - Processing Graph Management
+
+bool SFB::AudioPlayer::StopEngineIfRunning() noexcept
+{
+	std::lock_guard lock{engineLock_};
+	if(!engine_.isRunning)
+		return false;
+	[engine_ stop];
+	flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
+	return true;
+}
 
 bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat *format, NSError **error) noexcept
 {
