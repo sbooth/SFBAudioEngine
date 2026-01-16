@@ -358,7 +358,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter error: The error causing `decoder` to abort
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
-/// Called to notify the delegate when an asynchronous error occurs that is not related to a specific decoder
+/// Called to notify the delegate when an asynchronous error occurs
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter error: The error
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
