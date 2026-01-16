@@ -62,14 +62,9 @@ static void SFBCreateInputSourceLog(void)
 
 	if(flags & SFBInputSourceFlagsMemoryMapFiles)
 		return [[SFBMemoryMappedFileInputSource alloc] initWithURL:url error:error];
-	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
+	if(flags & SFBInputSourceFlagsLoadFilesInMemory)
 		return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
-	else
-		return [[SFBFileInputSource alloc] initWithURL:url];
-
-	if(error)
-		*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: url }];
-	return nil;
+	return [[SFBFileInputSource alloc] initWithURL:url];
 }
 
 + (instancetype)inputSourceWithData:(NSData *)data
