@@ -382,7 +382,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
 #if TARGET_OS_IPHONE
-/// Called to notify the delegate of an `AVAudioSession` interruption
+/// Called to notify the delegate of an `AVAudioSession` interruption begin or end
+///
+/// If the interruption began, this method is called after the playback state is saved and the player is stopped.
+/// If the interruption ended, this method is called before attempting to activate the audio session and optionally resume playback.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter userInfo: The `userInfo` object from the notification
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioSessionInterruption:(nullable NSDictionary *)userInfo;

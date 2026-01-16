@@ -1961,6 +1961,9 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			if(preInterruptState_ && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)])
 				[player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
 
+			if([player_.delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)])
+				[player_.delegate audioPlayer:player_ audioSessionInterruption:userInfo];
+
 			break;
 		}
 
@@ -1968,17 +1971,17 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 		{
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
-			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume))
-				break;
+			if([player_.delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)])
+				[player_.delegate audioPlayer:player_ audioSessionInterruption:userInfo];
 
 			if(NSError *sessionError = nil; ![[AVAudioSession sharedInstance] setActive:YES error:&sessionError]) {
 				os_log_error(log_, "Error activating AVAudioSession: %{public}@", sessionError);
 				if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[player_.delegate audioPlayer:player_ encounteredError:sessionError];
-				break;
+				return;
 			}
 
-			{
+			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; interruptionOption & AVAudioSessionInterruptionOptionShouldResume) {
 				std::unique_lock lock{engineLock_};
 
 				if(preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) {
@@ -1987,7 +1990,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 						lock.unlock();
 						if([player_.delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 							[player_.delegate audioPlayer:player_ encounteredError:startError];
-						break;
+						return;
 					}
 				}
 
@@ -2006,9 +2009,6 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			os_log_error(log_, "Unknown value %lu for AVAudioSessionInterruptionTypeKey", static_cast<unsigned long>(interruptionType));
 			break;
 	}
-
-	if([player_.delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)])
-		[player_.delegate audioPlayer:player_ audioSessionInterruption:userInfo];
 }
 #endif
 
