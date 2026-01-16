@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -45,10 +45,10 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 
 #pragma mark - File Format Support
 
-/// Returns a set containing the supported path extensions
+/// A set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/// Returns a set containing the supported MIME types
+/// A set containing the supported MIME types
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
@@ -164,13 +164,19 @@ extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder
 
 /// Possible `NSError` error codes used by `SFBAudioDecoder`
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
-	/// Internal decoder error
-	SFBAudioDecoderErrorCodeInternalError	= 0,
 	/// Unknown decoder name
-	SFBAudioDecoderErrorCodeUnknownDecoder	= 1,
-	/// Invalid, unknown, or unsupported format
-	SFBAudioDecoderErrorCodeInvalidFormat	= 2,
-} NS_SWIFT_NAME(AudioDecoder.ErrorCode);
+	SFBAudioDecoderErrorCodeUnknownDecoder		= 0,
+	/// Invalid or unknown format
+	SFBAudioDecoderErrorCodeInvalidFormat		= 1,
+	/// Unsupported format
+	SFBAudioDecoderErrorCodeUnsupportedFormat	= 2,
+	/// Internal decoder error
+	SFBAudioDecoderErrorCodeInternalError		= 3,
+	/// Decoding error
+	SFBAudioDecoderErrorCodeDecodingError		= 4,
+	/// Seek error
+	SFBAudioDecoderErrorCodeSeekError			= 5,
+} NS_SWIFT_NAME(AudioDecoder.Error);
 
 #pragma mark - FLAC and Ogg FLAC Decoder Properties
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -11,9 +11,10 @@
 
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibTag.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioEngine.File.Shorten";
 
@@ -62,24 +63,22 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 		TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
 		if(!stream.isOpen()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Input/output error", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+														  NSLocalizedString(@"The file “%@” could not be opened for reading.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
 		TagLib::Shorten::File file(&stream);
 		if(!file.isValid()) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-												 code:SFBAudioFileErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:self.url
-										failureReason:NSLocalizedString(@"Not a Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+														  NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+															 NSURLErrorKey: self.url },
+														  SFBLocalizedNameForURL(self.url));
 			return NO;
 		}
 
@@ -95,8 +94,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 		self.metadata = metadata;
 
 		return YES;
-	}
-	catch(const std::exception& e) {
+	} catch(const std::exception& e) {
 		os_log_error(gSFBAudioFileLog, "Error reading Shorten properties and metadata: %{public}s", e.what());
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioFileErrorDomain code:SFBAudioFileErrorCodeInternalError userInfo:nil];
@@ -107,14 +105,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
 	os_log_error(gSFBAudioFileLog, "Writing Shorten metadata is not supported");
-
 	if(error)
-		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-										 code:SFBAudioFileErrorCodeInputOutput
-				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-										  url:self.url
-								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-						   recoverySuggestion:NSLocalizedString(@"Writing Shorten metadata is not supported.", @"")];
+		*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
+												  NSLocalizedString(@"The file “%@” could not be saved.", @""),
+												  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Writing Shorten metadata is not supported.", @""),
+													 NSURLErrorKey: self.url },
+												  SFBLocalizedNameForURL(self.url));
 	return NO;
 }
 

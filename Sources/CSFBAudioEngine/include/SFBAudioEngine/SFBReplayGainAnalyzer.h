@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -28,8 +28,8 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 
 /// Analyze the given album's replay gain
 ///
-/// The returned dictionary will contain the entries returned by `-albumGainAndPeakSample` and the
-/// results of `-trackGainAndPeakSample` keyed by URL
+/// The returned dictionary will contain the entries returned by ``-albumGainAndPeakSample`` and the
+/// results of ``-trackGainAndPeakSample`` keyed by URL
 /// - parameter urls: The URLs to analyze
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: A dictionary of gain and peak information, or `nil` on error
@@ -58,6 +58,6 @@ typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErr
 	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,
 	/// Insufficient samples in file for analysis
 	SFBReplayGainAnalyzerErrorCodeInsufficientSamples			= 1,
-} NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorCode);
+} NS_SWIFT_NAME(ReplayGainAnalyzer.Error);
 
 NS_ASSUME_NONNULL_END

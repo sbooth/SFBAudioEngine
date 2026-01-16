@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2018-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// A wrapper around a DSD decoder supporting DSD64 to PCM conversion
+/// A decoder supporting DSD64 to PCM conversion
 NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
@@ -29,10 +29,14 @@ NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecod
 /// - parameter decoder: The decoder
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDPCMDecoder` object for the specified decoder, or `nil` on failure
-- (nullable instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// The linear gain applied to the converted DSD samples (default is 6 dBFS)
 @property (nonatomic) float linearGain;
+
+/// The underlying decoder
+/// - warning: Do not change any properties of the returned object
+@property (nonatomic, readonly) id<SFBDSDDecoding> decoder;
 
 @end
 

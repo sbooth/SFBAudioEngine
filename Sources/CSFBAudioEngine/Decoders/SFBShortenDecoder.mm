@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -7,6 +7,7 @@
 #import <algorithm>
 #import <cmath>
 #import <cstring>
+#import <ranges>
 #import <vector>
 
 #import <libkern/OSByteOrder.h>
@@ -18,7 +19,8 @@
 #import "SFBShortenDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
@@ -34,62 +36,49 @@ namespace {
 
 // MARK: Constants
 
-constexpr auto kMinSupportedVersion 		= 1;
-constexpr auto kMaxSupportedVersion 		= 3;
+// Rice-Golomb code k values
+constexpr auto parameterBitshift 			= 2;
+constexpr auto parameterChannelCount 		= 0;
+constexpr auto parameterEnergy 				= 3;
+constexpr auto parameterExtraByte 			= 7;
+constexpr auto parameterFileType			= 4;
+constexpr auto parameterFunction 			= 2;
+constexpr auto parameterQLPC 				= 2;
+constexpr auto parameterSkipBytes 			= 1;
+constexpr auto parameterUInt32 				= 2;
+constexpr auto parameterVerbatimChunkSize 	= 5;
+constexpr auto parameterVerbatimByte 		= 8;
 
-constexpr auto kDefaultBlockSize 			= 256;
-constexpr auto kV0DefaultMean 				= 0;
-constexpr auto kV2DefaultMean 				= 4;
-constexpr auto kDefaultMaxLPC 				= 0;
+// File commands
+constexpr auto functionDiff0 				= 0;
+constexpr auto functionDiff1 				= 1;
+constexpr auto functionDiff2 				= 2;
+constexpr auto functionDiff3 				= 3;
+constexpr auto functionQuit 				= 4;
+constexpr auto functionBlocksize 			= 5;
+constexpr auto functionBitshift 			= 6;
+constexpr auto functionQLPC 				= 7;
+constexpr auto functionZero 				= 8;
+constexpr auto functionVerbatim 			= 9;
 
-constexpr auto kChannelCountCodeSize 		= 0;
-constexpr auto kEnergyCodeSize 				= 3;
-constexpr auto kBitshiftCodeSize 			= 2;
-constexpr auto kWrap 						= 3;
+// Format limitations
+constexpr auto maxBlocksize					= 65535;
+constexpr auto verbatimChunkMaxSizeBytes	= 256;
 
-constexpr auto kFunctionCodeSize 			= 2;
-constexpr auto kFunctionDiff0 				= 0;
-constexpr auto kFunctionDiff1 				= 1;
-constexpr auto kFunctionDiff2 				= 2;
-constexpr auto kFunctionDiff3 				= 3;
-constexpr auto kFunctionQuit 				= 4;
-constexpr auto kFunctionBlocksize 			= 5;
-constexpr auto kFunctionBitshfit 			= 6;
-constexpr auto kFunctionQLPC 				= 7;
-constexpr auto kFunctionZero 				= 8;
-constexpr auto kFunctionVerbatim 			= 9;
+// File types
+constexpr auto fileTypeSInt8 				= 1;
+constexpr auto fileTypeUInt8 				= 2;
+constexpr auto fileTypeSInt16BE 			= 3;
+constexpr auto fileTypeUInt16BE 			= 4;
+constexpr auto fileTypeSInt16LE 			= 5;
+constexpr auto fileTypeUInt16LE 			= 6;
 
-constexpr auto kVerbatimChunkSizeCodeSize 	= 5;
-constexpr auto kVerbatimByteCodeSize 		= 8;
-constexpr auto kVerbatimChunkMaxSizeBytes	= 256;
+// Seeking support
+constexpr auto seekTableRevision 			= 1;
+constexpr auto seekHeaderSizeBytes 			= 12;
+constexpr auto seekTrailerSizeBytes 		= 12;
+constexpr auto seekEntrySizeBytes 			= 80;
 
-constexpr auto kUInt32CodeSize 				= 2;
-constexpr auto kSkipBytesCodeSize 			= 1;
-constexpr auto kLPCQuantCodeSize 			= 2;
-constexpr auto kExtraByteCodeSize 			= 7;
-
-constexpr auto kFileTypeCodeSize			= 4;
-constexpr auto kFileTypeSInt8 				= 1;
-constexpr auto kFileTypeUInt8 				= 2;
-constexpr auto kFileTypeSInt16BE 			= 3;
-constexpr auto kFileTypeUInt16BE 			= 4;
-constexpr auto kFileTypeSInt16LE 			= 5;
-constexpr auto kFileTypeUInt16LE 			= 6;
-
-constexpr auto kSeekTableRevision 			= 1;
-
-constexpr auto kSeekHeaderSizeBytes 		= 12;
-constexpr auto kSeekTrailerSizeBytes 		= 12;
-constexpr auto kSeekEntrySizeBytes 			= 80;
-
-constexpr auto kV2LPCQuantOffset 			= (1 << kLPCQuantCodeSize);
-
-constexpr auto kMaxChannelCount 			= 8;
-constexpr auto kMaxBlocksizeBytes			= 65535;
-
-constexpr auto kCanonicalHeaderSizeBytes	= 44;
-
-constexpr auto kWAVEFormatPCMTag 			= 0x0001;
 
 constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
 {
@@ -112,7 +101,8 @@ T ** AllocateContiguous2DArray(size_t rows, size_t cols) noexcept
 /// Variable-length input using Golomb-Rice coding
 class VariableLengthInput {
 public:
-	static constexpr uint32_t sMaskTable [] = {
+	// An entry i has the lowest i bits set
+	static constexpr uint32_t maskTable_ [] = {
 		0x0,
 		0x1,		0x3,		0x7,		0xf,
 		0x1f,		0x3f,		0x7f,		0xff,
@@ -140,7 +130,7 @@ public:
 
 	~VariableLengthInput()
 	{
-		delete [] mByteBuffer;
+		delete [] byteBuffer_;
 	}
 
 	VariableLengthInput(const VariableLengthInput&) = delete;
@@ -154,47 +144,53 @@ public:
 	/// Sets the input callback
 	void SetInputCallback(InputBlock block) noexcept
 	{
-		mInputBlock = block;
+		inputBlock_ = block;
 	}
 
 	/// Allocates an internal buffer of the specified size
 	/// - warning: Sizes other than `512` will break seeking
 	bool Allocate(size_t size = 512) noexcept
 	{
-		if(mByteBuffer)
+		if(byteBuffer_)
 			return false;
 
 		auto byteBuffer = new (std::nothrow) unsigned char [size];
 		if(!byteBuffer)
 			return false;
 
-		mByteBuffer = byteBuffer;
-		mByteBufferPosition = mByteBuffer;
-		mSize = size;
+		byteBuffer_ = byteBuffer;
+		byteBufferPosition_ = byteBuffer_;
+		size_ = size;
 
 		return true;
 	}
 
 	bool GetRiceGolombCode(int32_t& i32, int k) noexcept
 	{
-		if(mBitsAvailable == 0 && !RefillBitBuffer())
+#if DEBUG
+		assert(k < 32);
+#endif /* DEBUG */
+		if(bitsAvailable_ == 0 && !RefillBitBuffer())
 			return false;
 
+		// Calculate unary quotient
 		int32_t result;
-		for(result = 0; !(mBitBuffer & (1L << --mBitsAvailable)); ++result) {
-			if(mBitsAvailable == 0 && !RefillBitBuffer())
+		for(result = 0; !(bitBuffer_ & (1L << --bitsAvailable_)); ++result) {
+			if(bitsAvailable_ == 0 && !RefillBitBuffer())
 				return false;
 		}
 
 		while(k != 0) {
-			if(mBitsAvailable >= k) {
-				result = (result << k) | static_cast<int32_t>((mBitBuffer >> (mBitsAvailable - k)) & sMaskTable[k]);
-				mBitsAvailable -= k;
+			if(bitsAvailable_ >= k) {
+				result = (result << k) | static_cast<int32_t>((bitBuffer_ >> (bitsAvailable_ - k)) & maskTable_[k]);
+				bitsAvailable_ -= k;
 				k = 0;
-			}
-			else {
-				result = (result << mBitsAvailable) | static_cast<int32_t>(mBitBuffer & sMaskTable[mBitsAvailable]);
-				k -= mBitsAvailable;
+			} else {
+#if DEBUG
+				assert(bitsAvailable_ < 32);
+#endif /* DEBUG */
+				result = (result << bitsAvailable_) | static_cast<int32_t>(bitBuffer_ & maskTable_[bitsAvailable_]);
+				k -= bitsAvailable_;
 				if(!RefillBitBuffer())
 					return false;
 			}
@@ -220,7 +216,7 @@ public:
 
 	bool GetUInt32(uint32_t& ui32, int version, int k) noexcept
 	{
-		if(version > 0 && !GetRiceGolombCode(k, kUInt32CodeSize))
+		if(version > 0 && !GetRiceGolombCode(k, parameterUInt32))
 			return false;
 
 		int32_t i32;
@@ -232,59 +228,59 @@ public:
 
 	void Reset() noexcept
 	{
-		mByteBufferPosition = mByteBuffer;
-		mBytesAvailable = 0;
-		mBitsAvailable = 0;
+		byteBufferPosition_ = byteBuffer_;
+		bytesAvailable_ = 0;
+		bitsAvailable_ = 0;
 	}
 
 	bool Refill() noexcept
 	{
 		size_t bytesRead = 0;
-		if(!mInputBlock || !mInputBlock(mByteBuffer, mSize, bytesRead) || bytesRead < 4)
+		if(!inputBlock_ || !inputBlock_(byteBuffer_, size_, bytesRead) || bytesRead < 4)
 			return false;
-		mBytesAvailable += bytesRead;
-		mByteBufferPosition = mByteBuffer;
+		bytesAvailable_ += bytesRead;
+		byteBufferPosition_ = byteBuffer_;
 		return true;
 	}
 
 	bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable) noexcept
 	{
-		if(byteBufferPosition > mBytesAvailable || bytesAvailable > mBytesAvailable - byteBufferPosition || bitsAvailable > 32)
+		if(byteBufferPosition > size_ || bytesAvailable > size_ - byteBufferPosition || bitsAvailable > 32)
 			return false;
-		mByteBufferPosition = mByteBuffer + byteBufferPosition;
-		mBytesAvailable = bytesAvailable;
-		mBitBuffer = bitBuffer;
-		mBitsAvailable = bitsAvailable;
+		byteBufferPosition_ = byteBuffer_ + byteBufferPosition;
+		bytesAvailable_ = bytesAvailable;
+		bitBuffer_ = bitBuffer;
+		bitsAvailable_ = bitsAvailable;
 		return true;
 	}
 
 private:
 	/// Input callback
-	InputBlock mInputBlock = nil;
-	/// Size of `mByteBuffer` in bytes
-	size_t mSize = 0;
+	InputBlock inputBlock_ = nil;
+	/// Size of `byteBuffer_` in bytes
+	size_t size_ = 0;
 	/// Byte buffer
-	unsigned char *mByteBuffer = nullptr;
-	/// Current position in `mByteBuffer`
-	unsigned char *mByteBufferPosition = nullptr;
-	/// Bytes available in `mByteBuffer`
-	int mBytesAvailable = 0;
+	unsigned char *byteBuffer_ = nullptr;
+	/// Current position in `byteBuffer_`
+	unsigned char *byteBufferPosition_ = nullptr;
+	/// Bytes available in `byteBuffer_`
+	int bytesAvailable_ = 0;
 	/// Bit buffer
-	uint32_t mBitBuffer = 0;
+	uint32_t bitBuffer_ = 0;
 	/// Bits available in `mBitBuffer`
-	int mBitsAvailable = 0;
+	int bitsAvailable_ = 0;
 
 	/// Reads a single `uint32_t` from the byte buffer, refilling if necessary
 	bool RefillBitBuffer() noexcept
 	{
-		if(mBytesAvailable < 4 && !Refill())
+		if(bytesAvailable_ < 4 && !Refill())
 			return false;
 
-		mBitBuffer = static_cast<uint32_t>((static_cast<int32_t>(mByteBufferPosition[0]) << 24) | (static_cast<int32_t>(mByteBufferPosition[1]) << 16) | (static_cast<int32_t>(mByteBufferPosition[2]) << 8) | static_cast<int32_t>(mByteBufferPosition[3]));
+		bitBuffer_ = static_cast<uint32_t>((static_cast<int32_t>(byteBufferPosition_[0]) << 24) | (static_cast<int32_t>(byteBufferPosition_[1]) << 16) | (static_cast<int32_t>(byteBufferPosition_[2]) << 8) | static_cast<int32_t>(byteBufferPosition_[3]));
 
-		mByteBufferPosition += 4;
-		mBytesAvailable -= 4;
-		mBitsAvailable = 32;
+		byteBufferPosition_ += 4;
+		bytesAvailable_ -= 4;
+		bitsAvailable_ = 32;
 
 		return true;
 	}
@@ -294,17 +290,17 @@ private:
 /// Shorten seek table header
 struct SeekTableHeader
 {
-	int8_t mSignature [4];
-	uint32_t mVersion;
-	uint32_t mFileSize;
+	int8_t signature_ [4];
+	uint32_t version_;
+	uint32_t fileSize_;
 };
 
 SeekTableHeader ParseSeekTableHeader(const void *buf)
 {
 	SeekTableHeader header;
-	std::memcpy(header.mSignature, buf, 4);
-	header.mVersion = OSReadLittleInt32(buf, 4);
-	header.mFileSize = OSReadLittleInt32(buf, 8);
+	std::memcpy(header.signature_, buf, 4);
+	header.version_ = OSReadLittleInt32(buf, 4);
+	header.fileSize_ = OSReadLittleInt32(buf, 8);
 
 	return header;
 }
@@ -312,15 +308,15 @@ SeekTableHeader ParseSeekTableHeader(const void *buf)
 /// Shorten seek table trailer
 struct SeekTableTrailer
 {
-	uint32_t mSeekTableSize;
-	int8_t mSignature [8];
+	uint32_t seekTableSize_;
+	int8_t signature_ [8];
 };
 
 SeekTableTrailer ParseSeekTableTrailer(const void *buf)
 {
 	SeekTableTrailer trailer;
-	trailer.mSeekTableSize = OSReadLittleInt32(buf, 0);
-	std::memcpy(trailer.mSignature, static_cast<const unsigned char *>(buf) + 4, 8);
+	trailer.seekTableSize_ = OSReadLittleInt32(buf, 0);
+	std::memcpy(trailer.signature_, static_cast<const unsigned char *>(buf) + 4, 8);
 
 	return trailer;
 }
@@ -328,61 +324,51 @@ SeekTableTrailer ParseSeekTableTrailer(const void *buf)
 /// A Shorten seek table entry
 struct SeekTableEntry
 {
-	uint32_t mFrameNumber;
-	uint32_t mByteOffsetInFile;
-	uint32_t mLastBufferReadPosition;
-	uint16_t mBytesAvailable;
-	uint16_t mByteBufferPosition;
-	uint16_t mBitBufferPosition;
-	uint32_t mBitBuffer;
-	uint16_t mBitshift;
-	int32_t mCBuf0 [3];
-	int32_t mCBuf1 [3];
-	int32_t mOffset0 [4];
-	int32_t mOffset1 [4];
+	uint32_t frameNumber_;
+	uint32_t byteOffsetInFile_;
+	uint32_t lastBufferReadPosition_;
+	uint16_t bytesAvailable_;
+	uint16_t byteBufferPosition_;
+	uint16_t bitBufferPosition_;
+	uint32_t bitBuffer_;
+	uint16_t bitshift_;
+	int32_t chanBuf0_ [3];
+	int32_t chanBuf1_ [3];
+	int32_t offset0_ [4];
+	int32_t offset1_ [4];
 };
 
 SeekTableEntry ParseSeekTableEntry(const void *buf)
 {
 	SeekTableEntry entry;
-	entry.mFrameNumber = OSReadLittleInt32(buf, 0);
-	entry.mByteOffsetInFile = OSReadLittleInt32(buf, 4);
-	entry.mLastBufferReadPosition = OSReadLittleInt32(buf, 8);
-	entry.mBytesAvailable = OSReadLittleInt16(buf, 12);
-	entry.mByteBufferPosition = OSReadLittleInt16(buf, 14);
-	entry.mBitBufferPosition = OSReadLittleInt16(buf, 16);
-	entry.mBitBuffer = OSReadLittleInt32(buf, 18);
-	entry.mBitshift = OSReadLittleInt16(buf, 22);
+	entry.frameNumber_ = OSReadLittleInt32(buf, 0);
+	entry.byteOffsetInFile_ = OSReadLittleInt32(buf, 4);
+	entry.lastBufferReadPosition_ = OSReadLittleInt32(buf, 8);
+	entry.bytesAvailable_ = OSReadLittleInt16(buf, 12);
+	entry.byteBufferPosition_ = OSReadLittleInt16(buf, 14);
+	entry.bitBufferPosition_ = OSReadLittleInt16(buf, 16);
+	entry.bitBuffer_ = OSReadLittleInt32(buf, 18);
+	entry.bitshift_ = OSReadLittleInt16(buf, 22);
 	for(auto i = 0; i < 3; ++i)
-		entry.mCBuf0[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 24 + 4 * i));
+		entry.chanBuf0_[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 24 + 4 * i));
 	for(auto i = 0; i < 3; ++i)
-		entry.mCBuf1[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 36 + 4 * i));
+		entry.chanBuf1_[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 36 + 4 * i));
 	for(auto i = 0; i < 4; ++i)
-		entry.mOffset0[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 48 + 4 * i));
+		entry.offset0_[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 48 + 4 * i));
 	for(auto i = 0; i < 4; ++i)
-		entry.mOffset1[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 64 + 4 * i));
+		entry.offset1_[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 64 + 4 * i));
 
 	return entry;
-}
-
-/// Locates the most suitable seek table entry for `frame`
-std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::const_iterator begin, std::vector<SeekTableEntry>::const_iterator end, AVAudioFramePosition frame)
-{
-	auto it = std::upper_bound(begin, end, frame, [](AVAudioFramePosition value, const SeekTableEntry& entry) {
-		return value < entry.mFrameNumber;
-	});
-	return it == begin ? end : --it;
 }
 
 /// Returns a generic error for an invalid Shorten file
 NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
-	return [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-								   code:SFBAudioDecoderErrorCodeInvalidFormat
-		  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-									url:url
-						  failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-					 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+	return SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+											NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @""),
+											@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+											   NSURLErrorKey: url },
+											SFBLocalizedNameForURL(url));
 }
 
 } /* namespace */
@@ -479,24 +465,24 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(_bitsPerSample != 8 && _bitsPerSample != 16) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _bitsPerSample);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported bit depth", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's bit depth is not supported.", @"")];
+			if(error)
+				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth is not supported.", @""),
+															 NSURLErrorKey: _inputSource.url },
+														  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
-	if((_bitsPerSample == 8 && !(_fileType == kFileTypeUInt8 || _fileType == kFileTypeSInt8)) || (_bitsPerSample == 16 && !(_fileType == kFileTypeUInt16BE || _fileType == kFileTypeUInt16LE || _fileType == kFileTypeSInt16BE || _fileType == kFileTypeSInt16LE))) {
+	if((_bitsPerSample == 8 && !(_fileType == fileTypeUInt8 || _fileType == fileTypeSInt8)) || (_bitsPerSample == 16 && !(_fileType == fileTypeUInt16BE || _fileType == fileTypeUInt16LE || _fileType == fileTypeSInt16BE || _fileType == fileTypeSInt16LE))) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _fileType);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported bit depth/audio type combination", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's bit depth and audio type is not supported.", @"")];
+			if(error)
+				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio bit depth and sample type combination is not supported.", @""),
+															 NSURLErrorKey: _inputSource.url },
+														  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -509,10 +495,10 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
 	// Apparently *16BE isn't true for 'AIFF'
-//	if(_fileType == kFileTypeUInt16BE || _fileType == kFileTypeSInt16BE)
+//	if(_fileType == fileTypeUInt16BE || _fileType == fileTypeSInt16BE)
 	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
-	if(_fileType == kFileTypeSInt8 || _fileType == kFileTypeSInt16BE || _fileType == kFileTypeSInt16LE)
+	if(_fileType == fileTypeSInt8 || _fileType == fileTypeSInt16BE || _fileType == fileTypeSInt16LE)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
 
 	processingStreamDescription.mSampleRate			= _sampleRate;
@@ -578,29 +564,36 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 	}
 
-	for(auto i = 0; i < _channelCount; ++i) {
-		for(auto j = 0; j < _wrap; ++j) {
-			_buffer[i][j] = 0;
+	if(_maxLPC > 0) {
+		_qlpc = static_cast<int *>(std::malloc(sizeof(int) * _maxLPC));
+		if(!_qlpc) {
+			std::free(_buffer);
+			std::free(_offset);
+			if(error)
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			return NO;
 		}
-		_buffer[i] += _wrap;
 	}
 
-	if(_maxLPC > 0)
-		_qlpc = new int [static_cast<size_t>(_maxLPC)];
+	for(auto i = 0; i < _channelCount; ++i) {
+		for(auto j = 0; j < _wrap; ++j)
+			_buffer[i][j] = 0;
+		_buffer[i] += _wrap;
+	}
 
 	// Initialize offset
 	int32_t mean = 0;
 	switch(_fileType) {
-		case kFileTypeSInt8:
-		case kFileTypeSInt16BE:
-		case kFileTypeSInt16LE:
+		case fileTypeSInt8:
+		case fileTypeSInt16BE:
+		case fileTypeSInt16LE:
 			mean = 0;
 			break;
-		case kFileTypeUInt8:
+		case fileTypeUInt8:
 			mean = 0x80;
 			break;
-		case kFileTypeUInt16BE:
-		case kFileTypeUInt16LE:
+		case fileTypeUInt16BE:
+		case fileTypeUInt16LE:
 			mean = 0x8000;
 			break;
 		default:
@@ -609,9 +602,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 
 	for(auto chan = 0; chan < _channelCount; ++chan) {
-		for(auto i = 0; i < std::max(1, _mean); ++i) {
+		for(auto i = 0; i < std::max(1, _mean); ++i)
 			_offset[chan][i] = mean;
-		}
 	}
 
 	return YES;
@@ -628,7 +620,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		_offset = nullptr;
 	}
 	if(_qlpc) {
-		delete [] _qlpc;
+		std::free(_qlpc);
 		_qlpc = nullptr;
 	}
 	_frameBuffer = nil;
@@ -665,27 +657,30 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(frameLength == 0)
 		return YES;
 
-	AVAudioFrameCount framesProcessed = 0;
+	AVAudioFrameCount framesDecoded = 0;
 
 	for(;;) {
-		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:framesRemaining];
-		[_frameBuffer trimAtOffset:0 frameLength:framesCopied];
-
-		framesProcessed += framesCopied;
+		if(const auto framesToCopy = std::min(frameLength - framesDecoded, _frameBuffer.frameLength); framesToCopy > 0) {
+			const auto framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:framesToCopy];
+			const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
+#if DEBUG
+			assert(framesTrimmed == framesCopied);
+#endif /* DEBUG */
+			framesDecoded += framesCopied;
+		}
 
 		// All requested frames were read or EOS reached
-		if(framesProcessed == frameLength || _eos)
+		if(framesDecoded == frameLength || _eos)
 			break;
 
-		// Decode the next _blocksize frames
+		// Decode the next block
 		if(![self decodeBlockReturningError:error]) {
 			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
 			return NO;
 		}
 	}
 
-	_framePosition += framesProcessed;
+	_framePosition += framesDecoded;
 
 	return YES;
 }
@@ -699,62 +694,75 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
 	NSParameterAssert(frame >= 0);
 
-	if(frame >= self.frameLength)
-		return NO;
-
-	auto entry = FindSeekTableEntry(_seekTableEntries.cbegin(), _seekTableEntries.cend(), frame);
-	if(entry == _seekTableEntries.end()) {
-		os_log_error(gSFBAudioDecoderLog, "No seek table entry for frame %lld", frame);
+	if(frame >= self.frameLength) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
 		return NO;
 	}
 
+	auto entry = std::ranges::upper_bound(_seekTableEntries, frame, {}, &SeekTableEntry::frameNumber_);
+	if(entry == std::begin(_seekTableEntries)) {
+		os_log_error(gSFBAudioDecoderLog, "No seek table entry for frame %lld", frame);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+										 code:SFBAudioDecoderErrorCodeSeekError
+									 userInfo:@{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"There is no suitable seek table entry for the requested audio frame.", @""),
+												 NSURLErrorKey: _inputSource.url }];
+		return NO;
+	}
+	entry = std::prev(entry);
+
 #if DEBUG
-	os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %d to seek to frame %lld", std::distance(_seekTableEntries.cbegin(), entry), entry->mFrameNumber, frame);
+	os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %d to seek to frame %lld", std::ranges::distance(_seekTableEntries.cbegin(), entry), entry->frameNumber_, frame);
 #endif
 
-	if(![_inputSource seekToOffset:entry->mLastBufferReadPosition error:error])
+	if(![_inputSource seekToOffset:entry->lastBufferReadPosition_ error:error])
 		return NO;
 
+	_eos = false;
 	_input.Reset();
-	if(!_input.Refill() || !_input.SetState(entry->mByteBufferPosition, entry->mBytesAvailable, entry->mBitBuffer, entry->mBitBufferPosition))
+	if(!_input.Refill() || !_input.SetState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_, entry->bitBufferPosition_)) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EIO userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
+	}
 
-	_buffer[0][-1] = entry->mCBuf0[0];
-	_buffer[0][-2] = entry->mCBuf0[1];
-	_buffer[0][-3] = entry->mCBuf0[2];
+	_buffer[0][-1] = entry->chanBuf0_[0];
+	_buffer[0][-2] = entry->chanBuf0_[1];
+	_buffer[0][-3] = entry->chanBuf0_[2];
 	if(_channelCount == 2) {
-		_buffer[1][-1] = entry->mCBuf1[0];
-		_buffer[1][-2] = entry->mCBuf1[1];
-		_buffer[1][-3] = entry->mCBuf1[2];
+		_buffer[1][-1] = entry->chanBuf1_[0];
+		_buffer[1][-2] = entry->chanBuf1_[1];
+		_buffer[1][-3] = entry->chanBuf1_[2];
 	}
 
 	for(auto i = 0; i < std::max(1, _mean); ++i) {
-		_offset[0][i] = entry->mOffset0[i];
+		_offset[0][i] = entry->offset0_[i];
 		if(_channelCount == 2)
-			_offset[1][i] = entry->mOffset1[i];
+			_offset[1][i] = entry->offset1_[i];
 	}
 
-	_bitshift = entry->mBitshift;
+	_bitshift = entry->bitshift_;
 
-	_framePosition = entry->mFrameNumber;
+	_framePosition = entry->frameNumber_;
 	_frameBuffer.frameLength = 0;
 
-	AVAudioFrameCount framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->mFrameNumber);
+	const auto framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->frameNumber_);
 	AVAudioFrameCount framesSkipped = 0;
 
 	for(;;) {
-		// Decode the next _blocksize frames
-		if(![self decodeBlockReturningError:error])
-			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
-
-		AVAudioFrameCount framesToTrim = std::min(framesToSkip - framesSkipped, _frameBuffer.frameLength);
-		[_frameBuffer trimAtOffset:0 frameLength:framesToTrim];
-
-		framesSkipped += framesToTrim;
-
 		// All requested frames were skipped or EOS reached
 		if(framesSkipped == framesToSkip || _eos)
 			break;
+
+		// Decode the next block
+		if(![self decodeBlockReturningError:error]) {
+			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
+			return NO;
+		}
+
+		if(const auto framesToTrim = std::min(framesToSkip - framesSkipped, _frameBuffer.frameLength); framesToTrim > 0)
+			framesSkipped += [_frameBuffer trimAtOffset:0 frameLength:framesToTrim];
 	}
 
 	_framePosition += framesSkipped;
@@ -768,32 +776,32 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	uint32_t magic;
 	if(![_inputSource readUInt32BigEndian:&magic error:nil] || magic != 'ajkg') {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
+	constexpr auto minSupportedVersion = 1;
+	constexpr auto maxSupportedVersion = 3;
+
 	// Read file version
 	uint8_t version;
-	if(![_inputSource readUInt8:&version error:nil] || version < kMinSupportedVersion || version > kMaxSupportedVersion) {
+	if(![_inputSource readUInt8:&version error:nil] || version < minSupportedVersion || version > maxSupportedVersion) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported version: %u", version);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Version not supported", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's version is not supported.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The Shorten version is not supported.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 	_version = version;
 
+	constexpr auto v0DefaultMean = 0;
+	constexpr auto v2DefaultMean = 4;
+
 	// Default mean
-	_mean = _version < 2 ? kV0DefaultMean : kV2DefaultMean;
+	_mean = _version < 2 ? v0DefaultMean : v2DefaultMean;
 
 	// Set up variable length input
 	if(!_input.Allocate()) {
@@ -804,7 +812,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 
 	__weak SFBInputSource *inputSource = self->_inputSource;
-	_input.SetInputCallback(^bool(void *buf, size_t len, size_t &read) {
+	_input.SetInputCallback(^bool(void *buf, size_t len, size_t& read) {
 		NSInteger bytesRead;
 		if(![inputSource readBytes:buf length:static_cast<NSInteger>(len) bytesRead:&bytesRead error:nil])
 			return false;
@@ -814,60 +822,68 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	// Read file type
 	uint32_t fileType;
-	if(!_input.GetUInt32(fileType, _version, kFileTypeCodeSize)) {
+	if(!_input.GetUInt32(fileType, _version, parameterFileType)) {
 		if(error)
 			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
-	if(fileType != kFileTypeUInt8 && fileType != kFileTypeSInt8 && fileType != kFileTypeUInt16BE && fileType != kFileTypeUInt16LE && fileType != kFileTypeSInt16BE && fileType != kFileTypeSInt16LE) {
+	if(fileType != fileTypeUInt8 && fileType != fileTypeSInt8 && fileType != fileTypeUInt16BE && fileType != fileTypeUInt16LE && fileType != fileTypeSInt16BE && fileType != fileTypeSInt16LE) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", fileType);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Invalid or unsupported audio type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported audio type.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio type is invalid or unsupported.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 	_fileType = static_cast<int>(fileType);
 
+	// Maximum supported channel count
+	constexpr auto maxChannelCount = 8;
+
 	// Read number of channels
 	uint32_t channelCount = 0;
-	if(!_input.GetUInt32(channelCount, _version, kChannelCountCodeSize) || channelCount == 0 || channelCount > kMaxChannelCount) {
+	if(!_input.GetUInt32(channelCount, _version, parameterChannelCount) || channelCount == 0 || channelCount > maxChannelCount) {
 		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", channelCount);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Invalid or unsupported number of channels", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported number of channels.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The number of channels is invalid or unsupported.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 	_channelCount = static_cast<int>(channelCount);
 
+	constexpr auto defaultBlockSize = 256;
+	/// Number of extra samples in buffer
+	constexpr auto defaultWrap = 3;
+
 	// Read blocksize if version > 0
 	if(_version > 0) {
 		uint32_t blocksize = 0;
-		if(!_input.GetUInt32(blocksize, _version, static_cast<int>(std::log2(kDefaultBlockSize))) || blocksize == 0 || blocksize > kMaxBlocksizeBytes) {
+		if(!_input.GetUInt32(blocksize, _version, static_cast<int>(std::log2(defaultBlockSize))) || blocksize == 0 || blocksize > maxBlocksize || blocksize <= defaultWrap) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Invalid or unsupported block size", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The block size is invalid or unsupported.", @""),
+															 NSURLErrorKey: _inputSource.url },
+														  SFBLocalizedNameForURL(_inputSource.url));
 			return NO;
 		}
 		_blocksize = static_cast<int>(blocksize);
 
 		uint32_t maxLPC = 0;
-		if(!_input.GetUInt32(maxLPC, _version, kLPCQuantCodeSize) || maxLPC > 1024) {
-			os_log_error(gSFBAudioDecoderLog, "Invalid max lpc: %u", maxLPC);
+		if(!_input.GetUInt32(maxLPC, _version, parameterQLPC) || maxLPC > 1024) {
+			os_log_error(gSFBAudioDecoderLog, "Invalid maximum linear predictor order: %u", maxLPC);
 			if(error)
-				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The maximum linear predictor order is invalid or unsupported.", @""),
+															 NSURLErrorKey: _inputSource.url },
+														  SFBLocalizedNameForURL(_inputSource.url));
 			return NO;
 		}
 		_maxLPC = static_cast<int>(maxLPC);
@@ -876,13 +892,17 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		if(!_input.GetUInt32(mean, _version, 0) || mean > 32768) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid mean: %u", mean);
 			if(error)
-				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+														  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The mean is invalid or unsupported.", @""),
+															 NSURLErrorKey: _inputSource.url },
+														  SFBLocalizedNameForURL(_inputSource.url));
 			return NO;
 		}
 		_mean = static_cast<int>(mean);
 
 		uint32_t skipCount;
-		if(!_input.GetUInt32(skipCount, _version, kSkipBytesCodeSize) /* || nskip > bits_remaining_in_input */) {
+		if(!_input.GetUInt32(skipCount, _version, parameterSkipBytes) /* || nskip > bits_remaining_in_input */) {
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
@@ -890,40 +910,43 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 		for(uint32_t i = 0; i < skipCount; ++i) {
 			uint32_t dummy;
-			if(!_input.GetUInt32(dummy, _version, kExtraByteCodeSize)) {
+			if(!_input.GetUInt32(dummy, _version, parameterExtraByte)) {
 				if(error)
 					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 				return NO;
 			}
 		}
-	}
-	else {
-		_blocksize = kDefaultBlockSize;
-		_maxLPC = kDefaultMaxLPC;
+	} else {
+		constexpr auto defaultMaxLPC = 0;
+		_blocksize = defaultBlockSize;
+		_maxLPC = defaultMaxLPC;
 	}
 
-	_wrap = std::max(kWrap, static_cast<int>(_maxLPC));
+	_wrap = std::max(defaultWrap, static_cast<int>(_maxLPC));
 
-	if(_version > 1)
-		_lpcQuantOffset = kV2LPCQuantOffset;
+	if(_version > 1) {
+		constexpr auto v2LPCQuantOffset = (1 << parameterQLPC);
+		_lpcQuantOffset = v2LPCQuantOffset;
+	}
 
 	// Parse the WAVE or AIFF header in the verbatim section
 
 	int32_t function;
-	if(!_input.GetRiceGolombCode(function, kFunctionCodeSize) || function != kFunctionVerbatim) {
+	if(!_input.GetRiceGolombCode(function, parameterFunction) || function != functionVerbatim) {
 		os_log_error(gSFBAudioDecoderLog, "Missing initial verbatim section");
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Missing initial verbatim section", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file is missing the initial verbatim section.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The initial verbatim section is missing.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
+	constexpr auto canonicalHeaderSizeBytes = 44;
+
 	int32_t headerSize;
-	if(!_input.GetRiceGolombCode(headerSize, kVerbatimChunkSizeCodeSize) || headerSize < kCanonicalHeaderSizeBytes || headerSize > kVerbatimChunkMaxSizeBytes) {
+	if(!_input.GetRiceGolombCode(headerSize, parameterVerbatimChunkSize) || headerSize < canonicalHeaderSizeBytes || headerSize > verbatimChunkMaxSizeBytes) {
 		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", headerSize);
 		if(error)
 			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
@@ -933,7 +956,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	std::vector<unsigned char> headerBytes(headerSize);
 	for(int32_t i = 0; i < headerSize; ++i) {
 		int32_t byte;
-		if(!_input.GetRiceGolombCode(byte, kVerbatimByteCodeSize)) {
+		if(!_input.GetRiceGolombCode(byte, parameterVerbatimByte)) {
 			if(error)
 				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
@@ -942,30 +965,27 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		headerBytes[i] = static_cast<unsigned char>(byte);
 	}
 
-	// headerBytes is at least kCanonicalHeaderSizeBytes (44) in size
+	// headerBytes is at least canonicalHeaderSizeBytes (44) in size
 
 	auto chunkID = OSReadBigInt32(headerBytes.data(), 0);
 //	auto chunkSize = OSReadBigInt32(headerBytes.data(), 4);
 
-	// WAVE
 	if(chunkID == 'RIFF') {
+		// WAVE
 		if(![self parseRIFFChunk:(headerBytes.data() + 8) size:(headerSize - 8) error:error])
 			return NO;
-	}
-	// AIFF
-	else if(chunkID == 'FORM') {
+	} else if(chunkID == 'FORM') {
+		// AIFF
 		if(![self parseFORMChunk:(headerBytes.data() + 8) size:(headerSize - 8) error:error])
 			return NO;
-	}
-	else {
+	} else {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported data format: %u", chunkID);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported data format", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's data format is not supported.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+													  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The audio data format is not supported.", @""),
+														 NSURLErrorKey: _inputSource.url },
+													  SFBLocalizedNameForURL(_inputSource.url));
 		return NO;
 	}
 
@@ -976,6 +996,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
 	NSParameterAssert(chunkData != nullptr);
 	NSParameterAssert(size >= 28);
+
+	constexpr auto waveFormatPCMTag = 0x0001;
 
 	uintptr_t offset = 0;
 
@@ -1011,15 +1033,14 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 				auto formatTag = OSReadLittleInt16(chunkData, offset);
 				offset += 2;
-				if(formatTag != kWAVEFormatPCMTag) {
+				if(formatTag != waveFormatPCMTag) {
 					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", formatTag);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Unsupported WAVE format tag", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file's WAVE format tag is not supported.", @"")];
+						*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+																  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""),
+																  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The WAVE format tag is not supported.", @""),
+																	 NSURLErrorKey: _inputSource.url },
+																  SFBLocalizedNameForURL(_inputSource.url));
 					return NO;
 				}
 
@@ -1165,32 +1186,32 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	int chan = 0;
 	for(;;) {
 		int32_t cmd;
-		if(!_input.GetRiceGolombCode(cmd, kFunctionCodeSize)) {
+		if(!_input.GetRiceGolombCode(cmd, parameterFunction)) {
 			if(error)
-				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
 		}
 
-		if(cmd == kFunctionQuit) {
+		if(cmd == functionQuit) {
 			_eos = true;
 			return YES;
 		}
 
 		switch(cmd) {
-			case kFunctionZero:
-			case kFunctionDiff0:
-			case kFunctionDiff1:
-			case kFunctionDiff2:
-			case kFunctionDiff3:
-			case kFunctionQLPC:
+			case functionZero:
+			case functionDiff0:
+			case functionDiff1:
+			case functionDiff2:
+			case functionDiff3:
+			case functionQLPC:
 			{
 				int32_t chanOffset, *chanBuffer = _buffer[chan];
 				int resn = 0, lpc;
 
-				if(cmd != kFunctionZero) {
-					if(!_input.GetRiceGolombCode(resn, kEnergyCodeSize)) {
+				if(cmd != functionZero) {
+					if(!_input.GetRiceGolombCode(resn, parameterEnergy)) {
 						if(error)
-							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+							*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 						return NO;
 					}
 					// Versions > 0 changed the behavior
@@ -1202,9 +1223,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					chanOffset = _offset[chan][0];
 				else {
 					int32_t sum = (_version < 2) ? 0 : _mean / 2;
-					for(auto i = 0; i < _mean; i++) {
+					for(auto i = 0; i < _mean; i++)
 						sum += _offset[chan][i];
-					}
 					if(_version < 2)
 						chanOffset = sum / _mean;
 					else
@@ -1212,90 +1232,87 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				}
 
 				switch(cmd) {
-					case kFunctionZero:
-						for(auto i = 0; i < _blocksize; ++i) {
+					case functionZero:
+						for(auto i = 0; i < _blocksize; ++i)
 							chanBuffer[i] = 0;
-						}
 						break;
-					case kFunctionDiff0:
+					case functionDiff0:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + chanOffset;
 						}
 						break;
-					case kFunctionDiff1:
+					case functionDiff1:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + chanBuffer[i - 1];
 						}
 						break;
-					case kFunctionDiff2:
+					case functionDiff2:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + (2 * chanBuffer[i - 1] - chanBuffer[i - 2]);
 						}
 						break;
-					case kFunctionDiff3:
+					case functionDiff3:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 							chanBuffer[i] = var + 3 * (chanBuffer[i - 1] -  chanBuffer[i - 2]) + chanBuffer[i - 3];
 						}
 						break;
-					case kFunctionQLPC:
-						if(!_input.GetRiceGolombCode(lpc, kLPCQuantCodeSize)) {
+					case functionQLPC:
+						if(!_input.GetRiceGolombCode(lpc, parameterQLPC) || lpc > _maxLPC) {
+							os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported linear predictor order: %d", lpc);
 							if(error)
-								*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+								*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 							return NO;
 						}
 
 						for(auto i = 0; i < lpc; ++i) {
-							if(!_input.GetInt32(_qlpc[i], kLPCQuantCodeSize)) {
+							if(!_input.GetInt32(_qlpc[i], parameterQLPC)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
 						}
-						for(auto i = 0; i < lpc; ++i) {
+						for(auto i = 0; i < lpc; ++i)
 							chanBuffer[i - lpc] -= chanOffset;
-						}
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t sum = _lpcQuantOffset;
 
-							for(auto j = 0; j < lpc; ++j) {
+							for(auto j = 0; j < lpc; ++j)
 								sum += _qlpc[j] * chanBuffer[i - j - 1];
-							}
 							int32_t var;
 							if(!_input.GetInt32(var, resn)) {
 								if(error)
-									*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
 							}
-							chanBuffer[i] = var + (sum >> kLPCQuantCodeSize);
+							chanBuffer[i] = var + (sum >> parameterQLPC);
 						}
 						if(chanOffset != 0) {
-							for(auto i = 0; i < _blocksize; ++i) {
+							for(auto i = 0; i < _blocksize; ++i)
 								chanBuffer[i] += chanOffset;
-							}
 						}
 						break;
 				}
@@ -1303,28 +1320,25 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				if(_mean > 0) {
 					int32_t sum = (_version < 2) ? 0 : _blocksize / 2;
 
-					for(auto i = 0; i < _blocksize; ++i) {
+					for(auto i = 0; i < _blocksize; ++i)
 						sum += chanBuffer[i];
-					}
 
-					for(auto i = 1; i < _mean; ++i) {
+					for(auto i = 1; i < _mean; ++i)
 						_offset[chan][i - 1] = _offset[chan][i];
-					}
 					if(_version < 2)
 						_offset[chan][_mean - 1] = sum / _blocksize;
 					else
 						_offset[chan][_mean - 1] = (sum / _blocksize) << _bitshift;
 				}
 
-				for(auto i = -_wrap; i < 0; i++) {
+				for(auto i = -_wrap; i < 0; i++)
 					chanBuffer[i] = chanBuffer[i + _blocksize];
-				}
 
 				if(chan == _channelCount - 1) {
 					auto abl = _frameBuffer.audioBufferList;
 
 					switch(_fileType) {
-						case kFileTypeUInt8:
+						case fileTypeUInt8:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
@@ -1333,7 +1347,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 								}
 							}
 							break;
-						case kFileTypeSInt8:
+						case fileTypeSInt8:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
@@ -1342,8 +1356,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 								}
 							}
 							break;
-						case kFileTypeUInt16BE:
-						case kFileTypeUInt16LE:
+						case fileTypeUInt16BE:
+						case fileTypeUInt16LE:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
@@ -1352,8 +1366,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 								}
 							}
 							break;
-						case kFileTypeSInt16BE:
-						case kFileTypeSInt16LE:
+						case fileTypeSInt16BE:
+						case fileTypeSInt16LE:
 							for(auto channel = 0; channel < _channelCount; ++channel) {
 								auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
 								for(auto sample = 0; sample < _blocksize; ++sample) {
@@ -1373,55 +1387,40 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				break;
 			}
 
-			case kFunctionBlocksize:
+			case functionBlocksize:
 			{
 				uint32_t uint = 0;
-				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > kMaxBlocksizeBytes || static_cast<int>(uint) > _blocksize) {
+				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > maxBlocksize || uint <= _wrap || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Invalid or unsupported block size", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported block size.", @"")];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 				_blocksize = static_cast<int>(uint);
 				break;
 			}
-			case kFunctionBitshfit:
-				if(!_input.GetRiceGolombCode(_bitshift, kBitshiftCodeSize) || _bitshift > 32) {
-					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bit shift: %u", _bitshift);
+			case functionBitshift:
+				if(!_input.GetRiceGolombCode(_bitshift, parameterBitshift) || _bitshift > 32) {
+					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported bit shift: %u", _bitshift);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Invalid or unsupported bit shift", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid or unsupported bit shift.", @"")];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 				break;
-			case kFunctionVerbatim:
+			case functionVerbatim:
 			{
 				int32_t chunk_len;
-				if(!_input.GetRiceGolombCode(chunk_len, kVerbatimChunkSizeCodeSize) || chunk_len < 0 || chunk_len > kVerbatimChunkMaxSizeBytes) {
-					os_log_error(gSFBAudioDecoderLog, "Invald verbatim length: %u", chunk_len);
+				if(!_input.GetRiceGolombCode(chunk_len, parameterVerbatimChunkSize) || chunk_len < 0 || chunk_len > verbatimChunkMaxSizeBytes) {
+					os_log_error(gSFBAudioDecoderLog, "Invalid verbatim chunk length: %u", chunk_len);
 					if(error)
-						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInvalidFormat
-								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-														  url:_inputSource.url
-												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-										   recoverySuggestion:NSLocalizedString(@"The file contains an invalid verbatim chunk length.", @"")];
+						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 					return NO;
 				}
 				while(chunk_len--) {
 					int32_t dummy;
-					if(!_input.GetRiceGolombCode(dummy, kVerbatimByteCodeSize)) {
+					if(!_input.GetRiceGolombCode(dummy, parameterVerbatimByte)) {
 						if(error)
-							*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+							*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 						return NO;
 					}
 				}
@@ -1429,9 +1428,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			}
 
 			default:
-				os_log_error(gSFBAudioDecoderLog, "sanity check failed for function: %d", cmd);
+				os_log_error(gSFBAudioDecoderLog, "Sanity check failed for function: %d", cmd);
 				if(error)
-					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+					*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 				return NO;
 		}
 	}
@@ -1451,16 +1450,16 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 
 	NSInteger fileLength;
-	if(![_inputSource getLength:&fileLength error:error] || ![_inputSource seekToOffset:(fileLength - kSeekTrailerSizeBytes) error:error])
+	if(![_inputSource getLength:&fileLength error:error] || ![_inputSource seekToOffset:(fileLength - seekTrailerSizeBytes) error:error])
 		return NO;
 
 	SeekTableTrailer trailer;
 	{
-		unsigned char buf [kSeekTrailerSizeBytes];
+		unsigned char buf [seekTrailerSizeBytes];
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:kSeekTrailerSizeBytes bytesRead:&bytesRead error:error])
+		if(![_inputSource readBytes:buf length:seekTrailerSizeBytes bytesRead:&bytesRead error:error])
 			return NO;
-		if(bytesRead != kSeekTrailerSizeBytes) {
+		if(bytesRead != seekTrailerSizeBytes) {
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInvalidFormat userInfo:nil];
 			return NO;
@@ -1469,7 +1468,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 
 	// No appended seek table found; not an error
-	if(memcmp("SHNAMPSK", trailer.mSignature, 8)) {
+	if(memcmp("SHNAMPSK", trailer.signature_, 8)) {
 		// Check for separate seek table
 		NSURL *externalSeekTableURL = [_inputSource.url.URLByDeletingPathExtension URLByAppendingPathExtension:@"skt"];
 		if([externalSeekTableURL checkResourceIsReachableAndReturnError:nil]) {
@@ -1482,16 +1481,16 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return YES;
 	}
 
-	if(![_inputSource seekToOffset:(fileLength - trailer.mSeekTableSize) error:error])
+	if(![_inputSource seekToOffset:(fileLength - trailer.seekTableSize_) error:error])
 		return NO;
 
 	SeekTableHeader header;
 	{
-		unsigned char buf [kSeekHeaderSizeBytes];
+		unsigned char buf [seekHeaderSizeBytes];
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:kSeekHeaderSizeBytes bytesRead:&bytesRead error:error])
+		if(![_inputSource readBytes:buf length:seekHeaderSizeBytes bytesRead:&bytesRead error:error])
 			return NO;
-		if(bytesRead != kSeekHeaderSizeBytes) {
+		if(bytesRead != seekHeaderSizeBytes) {
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInvalidFormat userInfo:nil];
 			return NO;
@@ -1500,16 +1499,16 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 
 	// A corrupt seek table is an error, however YES is returned to try and permit decoding to continue
-	if(memcmp("SEEK", header.mSignature, 4)) {
-		os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.mSignature);
+	if(memcmp("SEEK", header.signature_, 4)) {
+		os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.signature_);
 		if(![_inputSource seekToOffset:startOffset error:error])
 			return NO;
 		return YES;
 	}
 
 	// Validate seek table version
-	if(header.mVersion != kSeekTableRevision) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %d", header.mVersion);
+	if(header.version_ != seekTableRevision) {
+		os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %d", header.version_);
 		if(![_inputSource seekToOffset:startOffset error:error])
 			return NO;
 		return YES;
@@ -1517,13 +1516,13 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	std::vector<SeekTableEntry> entries;
 
-	auto count = (trailer.mSeekTableSize - kSeekTrailerSizeBytes - kSeekHeaderSizeBytes) / kSeekEntrySizeBytes;
+	auto count = (trailer.seekTableSize_ - seekTrailerSizeBytes - seekHeaderSizeBytes) / seekEntrySizeBytes;
 	for(uint32_t i = 0; i < count; ++i) {
-		unsigned char buf [kSeekEntrySizeBytes];
+		unsigned char buf [seekEntrySizeBytes];
 		NSInteger bytesRead;
-		if(![_inputSource readBytes:buf length:kSeekEntrySizeBytes bytesRead:&bytesRead error:error])
+		if(![_inputSource readBytes:buf length:seekEntrySizeBytes bytesRead:&bytesRead error:error])
 			return NO;
-		if(bytesRead != kSeekEntrySizeBytes) {
+		if(bytesRead != seekEntrySizeBytes) {
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInvalidFormat userInfo:nil];
 			return NO;
@@ -1555,16 +1554,16 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 
 	{
-		unsigned char buf [kSeekHeaderSizeBytes];
+		unsigned char buf [seekHeaderSizeBytes];
 		NSInteger bytesRead;
-		if(![inputSource readBytes:buf length:kSeekHeaderSizeBytes bytesRead:&bytesRead error:&error] || bytesRead != kSeekHeaderSizeBytes) {
+		if(![inputSource readBytes:buf length:seekHeaderSizeBytes bytesRead:&bytesRead error:&error] || bytesRead != seekHeaderSizeBytes) {
 			os_log_error(gSFBAudioDecoderLog, "Error reading external seek table header: %{public}@", error);
 			return {};
 		}
 
 		auto header = ParseSeekTableHeader(buf);
-		if(memcmp("SEEK", header.mSignature, 4)) {
-			os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.mSignature);
+		if(memcmp("SEEK", header.signature_, 4)) {
+			os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.signature_);
 			return {};
 		}
 	}
@@ -1572,9 +1571,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	std::vector<SeekTableEntry> entries;
 
 	for(;;) {
-		unsigned char buf [kSeekEntrySizeBytes];
+		unsigned char buf [seekEntrySizeBytes];
 		NSInteger bytesRead;
-		if(![inputSource readBytes:buf length:kSeekEntrySizeBytes bytesRead:&bytesRead error:&error] || bytesRead != kSeekEntrySizeBytes) {
+		if(![inputSource readBytes:buf length:seekEntrySizeBytes bytesRead:&bytesRead error:&error] || bytesRead != seekEntrySizeBytes) {
 			os_log_error(gSFBAudioDecoderLog, "Error reading external seek table entry: %{public}@", error);
 			return {};
 		}
@@ -1593,23 +1592,23 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
 	if(entries.empty())
 		return NO;
-	else if(startOffset != entries[0].mByteOffsetInFile) {
-		os_log_error(gSFBAudioDecoderLog, "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)", (long)startOffset, entries[0].mByteOffsetInFile);
+	if(startOffset != entries[0].byteOffsetInFile_) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)", (long)startOffset, entries[0].byteOffsetInFile_);
 		return NO;
 	}
-	else if(_bitshift != entries[0].mBitshift) {
-		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry", entries[0].mBitshift);
+	if(_bitshift != entries[0].bitshift_) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry", entries[0].bitshift_);
 		return NO;
 	}
-	else if(_channelCount != 1 && _channelCount != 2) {
+	if(_channelCount != 1 && _channelCount != 2) {
 		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _channelCount);
 		return NO;
 	}
-	else if(_maxLPC > 3) {
+	if(_maxLPC > 3) {
 		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxLPC);
 		return NO;
 	}
-	else if(_mean > 4) {
+	if(_mean > 4) {
 		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid mean (%d); [0, 4] required", _mean);
 		return NO;
 	}

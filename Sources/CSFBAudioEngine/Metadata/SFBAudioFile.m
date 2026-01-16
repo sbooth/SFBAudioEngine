@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,8 @@
 #import "SFBAudioFile.h"
 #import "SFBAudioFile+Internal.h"
 
-#import "NSError+SFBURLPresentation.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for AudioFile and subclasses
 NSErrorDomain const SFBAudioFileErrorDomain = @"org.sbooth.AudioEngine.AudioFile";
@@ -19,10 +20,7 @@ os_log_t gSFBAudioFileLog = NULL;
 static void SFBCreateAudioFileLog(void) __attribute__ ((constructor));
 static void SFBCreateAudioFileLog(void)
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBAudioFileLog = os_log_create("org.sbooth.AudioEngine", "AudioFile");
-	});
+	gSFBAudioFileLog = os_log_create("org.sbooth.AudioEngine", "AudioFile");
 }
 
 @interface SFBAudioFileSubclassInfo : NSObject
@@ -37,18 +35,28 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioFileErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioFileErrorCodeInternalError:
+		switch(err.code) {
+			case SFBAudioFileErrorCodeInternalError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An internal error occurred.", @"");
-				case SFBAudioFileErrorCodeUnknownFormatName:
+				break;
+
+			case SFBAudioFileErrorCodeUnknownFormatName:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested format is unavailable.", @"");
-				case SFBAudioFileErrorCodeInputOutput:
+				break;
+
+			case SFBAudioFileErrorCodeInputOutput:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An input/output error occurred.", @"");
-				case SFBAudioFileErrorCodeInvalidFormat:
+				break;
+
+			case SFBAudioFileErrorCodeInvalidFormat:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The file's format is invalid, unknown, or unsupported.", @"");
-			}
+				break;
 		}
+
 		return nil;
 	}];
 }
@@ -208,8 +216,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 						os_log_fault(gSFBAudioFileLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
 						break;
 				}
-			}
-			else
+			} else
 				os_log_error(gSFBAudioFileLog, "Error testing %{public}@ format support for %{public}@", klass, fileHandle);
 		}
 
@@ -222,13 +229,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_debug(gSFBAudioFileLog, "Unable to determine content type for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:url.path]);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
-											 code:SFBAudioFileErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
-											  url:url
-									failureReason:NSLocalizedString(@"Unknown file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @""),
+														 NSURLErrorKey: self.url },
+													  SFBLocalizedNameForURL(self.url));
 		return nil;
 	}
 

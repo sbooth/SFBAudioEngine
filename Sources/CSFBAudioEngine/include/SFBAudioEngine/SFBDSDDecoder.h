@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -140,12 +140,18 @@ extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.Err
 
 /// Possible `NSError` error codes used by `SFBDSDDecoder`
 typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
-	/// Internal decoder error
-	SFBDSDDecoderErrorCodeInternalError		= 0,
 	/// Unknown decoder name
-	SFBDSDDecoderErrorCodeUnknownDecoder	= 1,
-	/// Invalid, unknown, or unsupported format
-	SFBDSDDecoderErrorCodeInvalidFormat		= 2,
-} NS_SWIFT_NAME(DSDDecoder.ErrorCode);
+	SFBDSDDecoderErrorCodeUnknownDecoder 		= 0,
+	/// Invalid or unknown format
+	SFBDSDDecoderErrorCodeInvalidFormat			= 1,
+	/// Unsupported format
+	SFBDSDDecoderErrorCodeUnsupportedFormat 	= 2,
+	/// Internal decoder error
+	SFBDSDDecoderErrorCodeInternalError			= 3,
+	/// Decoding error
+	SFBDSDDecoderErrorCodeDecodingError			= 4,
+	/// Seek error
+	SFBDSDDecoderErrorCodeSeekError				= 5,
+} NS_SWIFT_NAME(DSDDecoder.Error);
 
 NS_ASSUME_NONNULL_END

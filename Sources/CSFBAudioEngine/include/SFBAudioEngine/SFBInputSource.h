@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -56,7 +56,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns the URL corresponding to this input source or `nil` if none
+/// The URL corresponding to this input source or `nil` if none
 @property (nonatomic, nullable, readonly) NSURL * url;
 
 /// Opens the input source for reading
@@ -69,7 +69,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// Returns `YES` if the input source is open
+/// `YES` if the input source is open
 @property (nonatomic, readonly) BOOL isOpen;
 
 /// Reads bytes from the input
@@ -80,7 +80,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - returns: `YES` if any bytes were read, `NO` otherwise
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns `YES` if the end of input has been reached
+/// `YES` if the end of input has been reached
 @property (nonatomic, readonly) BOOL atEOF;
 
 /// Returns the current offset in the input, in bytes
@@ -89,7 +89,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// Returns the length of the input, in bytes
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns `YES` if the input is seekable
+/// `YES` if the input is seekable
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
 /// Seeks to the specified byte offset
@@ -215,11 +215,11 @@ extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.E
 /// Possible `NSError` error codes used by `SFBInputSource`
 typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
 	/// File not found
-	SFBInputSourceErrorCodeFileNotFound		= 0,
+	SFBInputSourceErrorCodeFileNotFound 	= 0,
 	/// Input/output error
-	SFBInputSourceErrorCodeInputOutput		= 1,
+	SFBInputSourceErrorCodeInputOutput 		= 1,
 	/// Input not seekable
-	SFBInputSourceErrorCodeNotSeekable		= 2,
-} NS_SWIFT_NAME(InputSource.ErrorCode);
+	SFBInputSourceErrorCodeNotSeekable 		= 2,
+} NS_SWIFT_NAME(InputSource.Error);
 
 NS_ASSUME_NONNULL_END
