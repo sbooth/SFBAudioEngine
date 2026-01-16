@@ -1983,7 +1983,7 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 					if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 						os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
 						flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-						return;
+						break;
 					}
 				}
 
