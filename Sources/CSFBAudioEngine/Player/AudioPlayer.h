@@ -11,7 +11,9 @@
 #import <deque>
 #import <memory>
 #import <mutex>
+#if defined(__has_include) && __has_include(<stop_token>)
 #import <stop_token>
+#endif /* defined(__has_include) && __has_include(<stop_token>) */
 #import <thread>
 #import <vector>
 
@@ -64,12 +66,20 @@ private:
 	mutable CXXUnfairLock::UnfairLock 		queuedDecodersLock_;
 
 	/// Thread used for decoding
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	std::jthread 							decodingThread_;
+#else
+	std::thread 							decodingThread_;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 	/// Dispatch semaphore used for communication with the decoding thread
 	dispatch_semaphore_t					decodingSemaphore_ 	{nil};
 
 	/// Thread used for event processing
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	std::jthread 							eventThread_;
+#else
+	std::thread 							eventThread_;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 	/// Dispatch semaphore used for communication with the event processing thread
 	dispatch_semaphore_t					eventSemaphore_ 	{nil};
 
@@ -202,6 +212,12 @@ private:
 		isMuted 					= 1u << 2,
 		/// The ring buffer needs to be drained during the next render cycle
 		drainRequired 				= 1u << 3,
+#if !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L)
+		/// The decoding thread should exit
+		stopDecodingThread			= 1u << 4,
+		/// The event thread should exit
+		stopEventThread				= 1u << 5,
+#endif /* !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L) */
 	};
 
 	// MARK: - Decoding
