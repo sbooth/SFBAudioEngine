@@ -1969,11 +1969,11 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
 			if(const auto interruptionOption = [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue]; !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume))
-				return;
+				break;
 
 			if(NSError *sessionError = nil; ![[AVAudioSession sharedInstance] setActive:YES error:&sessionError]) {
 				os_log_error(log_, "Error activating AVAudioSession: %{public}@", sessionError);
-				return;
+				break;
 			}
 
 			{
@@ -2002,6 +2002,9 @@ void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) no
 			os_log_error(log_, "Unknown value %lu for AVAudioSessionInterruptionTypeKey", static_cast<unsigned long>(interruptionType));
 			break;
 	}
+
+	if([player_.delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)])
+		[player_.delegate audioPlayer:player_ audioSessionInterruption:userInfo];
 }
 #endif /* TARGET_OS_IPHONE */
 
