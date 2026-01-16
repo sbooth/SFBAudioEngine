@@ -2076,7 +2076,9 @@ bool SFB::AudioPlayer::ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFor
 	if(prevState & static_cast<unsigned int>(Flags::engineIsRunning)) {
 		if(NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
 			os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-			// FIXME: Should failure to start AVAE really cause a function error return?
+			// TODO: Re-evaluate whether failure to start AVAudioEngine during reconfiguration
+			//       should be treated as a fatal error or handled as a recoverable condition,
+			//       and document the chosen and tested behavior.
 			if(error)
 				*error = startError;
 			return false;
