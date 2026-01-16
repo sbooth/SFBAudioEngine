@@ -51,10 +51,11 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Now playing changed
 ///  8. Playback state changed
 ///  9. End of audio
-///  10. Decoder canceled
-///  11. Processing graph format change with custom nodes present
-///  12. `AVAudioEngineConfigurationChange` notification received
-///  13. Asynchronous error encountered
+///  10. Decoder canceled by user
+///  11. Decoding aborted due to error
+///  12. Processing graph format change with custom nodes present
+///  13. `AVAudioEngineConfigurationChange` notification received
+///  14. Asynchronous error encountered
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
@@ -136,8 +137,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// If the current playback state is `SFBAudioPlayerPlaybackStatePaused` this method sends ``-resume``
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
-/// Resets the `AVAudioEngine`
-/// - note: This method cancels the current decoder and clears any queued decoders
+/// Cancels the current decoder, clears any queued decoders, and resets the `AVAudioEngine`
 - (void)reset;
 
 // MARK: - Player State
@@ -344,12 +344,19 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
-/// Called to notify the delegate that the decoding and rendering process for a decoder has been canceled
+/// Called to notify the delegate that the decoding and rendering processes for a decoder have been canceled by a user-initiated request
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
-/// - parameter decoder: The decoder for which decoding and rendering is canceled
+/// - parameter decoder: The decoder for which decoding and rendering are canceled
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decoderCanceled:(id<SFBPCMDecoding>)decoder framesRendered:(AVAudioFramePosition)framesRendered;
+/// Called to notify the delegate that the decoding process for a decoder has been aborted because of an error
+/// - warning: Do not change any properties of `decoder`
+/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
+/// - parameter decoder: The decoder for which decoding is aborted
+/// - parameter error: The error causing `decoder` to abort
+/// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingAborted:(id<SFBPCMDecoding>)decoder error:(NSError *)error framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when additional changes to the `AVAudioEngine` processing graph may need to be made in response to a format change
 ///
 /// Before this method is called the main mixer node will be connected to the output node, and the source node will be attached
@@ -369,7 +376,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
-/// Called to notify the delegate when an asynchronous error occurs
+/// Called to notify the delegate when an asynchronous error occurs that is not related to a specific decoder
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter error: The error
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;

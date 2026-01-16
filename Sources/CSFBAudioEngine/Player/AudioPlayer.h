@@ -226,7 +226,7 @@ private:
 		started 	= 1,
 		/// Decoding complete
 		complete 	= 2,
-		/// Decoder canceled
+		/// Decoder canceled by user or aborted due to error
 		canceled 	= 3,
 		/// Decoding error
 		error 		= 4,
@@ -292,6 +292,9 @@ public:
 
 private:
 	// MARK: - Processing Graph Management
+
+	/// Stops the AVAudioEngine if it is running and returns true if it was stopped
+	bool StopEngineIfRunning() noexcept;
 
 	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
