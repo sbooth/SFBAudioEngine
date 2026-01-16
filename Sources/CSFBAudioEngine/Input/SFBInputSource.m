@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -21,10 +21,7 @@ os_log_t gSFBInputSourceLog = NULL;
 static void SFBCreateInputSourceLog(void) __attribute__ ((constructor));
 static void SFBCreateInputSourceLog(void)
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBInputSourceLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
-	});
+	gSFBInputSourceLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
 }
 
 @implementation SFBInputSource
@@ -32,16 +29,23 @@ static void SFBCreateInputSourceLog(void)
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBInputSourceErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBInputSourceErrorCodeFileNotFound:
+		switch(err.code) {
+			case SFBInputSourceErrorCodeFileNotFound:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested file was not found.", @"");
-				case SFBInputSourceErrorCodeInputOutput:
+				break;
+
+			case SFBInputSourceErrorCodeInputOutput:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"An input/output error occurred.", @"");
-				case SFBInputSourceErrorCodeNotSeekable:
+				break;
+
+			case SFBInputSourceErrorCodeNotSeekable:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The input does not support seeking.", @"");
-			}
+				break;
 		}
+
 		return nil;
 	}];
 }
@@ -58,14 +62,9 @@ static void SFBCreateInputSourceLog(void)
 
 	if(flags & SFBInputSourceFlagsMemoryMapFiles)
 		return [[SFBMemoryMappedFileInputSource alloc] initWithURL:url error:error];
-	else if(flags & SFBInputSourceFlagsLoadFilesInMemory)
+	if(flags & SFBInputSourceFlagsLoadFilesInMemory)
 		return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
-	else
-		return [[SFBFileInputSource alloc] initWithURL:url];
-
-	if(error)
-		*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: url }];
-	return nil;
+	return [[SFBFileInputSource alloc] initWithURL:url];
 }
 
 + (instancetype)inputSourceWithData:(NSData *)data
@@ -294,7 +293,7 @@ static void SFBCreateInputSourceLog(void)
 
 	if(!self.supportsSeeking) {
 		if(error)
-			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeNotSeekable userInfo:nil];
+			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeNotSeekable userInfo:@{ NSURLErrorKey: _url }];
 		return nil;
 	}
 
@@ -323,7 +322,7 @@ static void SFBCreateInputSourceLog(void)
 
 	if(data.length < length) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: _url }];
 		return nil;
 	}
 

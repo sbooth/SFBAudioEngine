@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2018-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -16,9 +16,10 @@
 
 #import "SFBDSDPCMDecoder.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 namespace {
 
@@ -311,11 +312,8 @@ private:
 @interface SFBDSDPCMDecoder ()
 {
 @private
-	id <SFBDSDDecoding> _decoder;
-	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
 	std::vector<DXD> _context;
-	float _linearGain;
 }
 @end
 
@@ -344,7 +342,7 @@ private:
 	return [self initWithDecoder:decoder error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -383,28 +381,24 @@ private:
 
 	const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
-	if(!(asbd->mFormatID == kSFBAudioFormatDSD)) {
+	if(asbd->mFormatID != kSFBAudioFormatDSD) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD file.", @"")
-											  url:_decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Not a DSD file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"DSD to PCM conversion requires DSD audio input.", @""),
+														 NSURLErrorKey: _decoder.inputSource.url },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
 	if(asbd->mSampleRate != kSFBSampleRateDSD64) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
-											 code:SFBDSDDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not supported.", @"")
-											  url:_decoder.inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported DSD sample rate", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's sample rate is not supported for DSD to PCM conversion.", @"")];
-
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @""),
+														 NSURLErrorKey: _decoder.inputSource.url },
+													  SFBLocalizedNameForURL(_decoder.inputSource.url));
 		return NO;
 	}
 
@@ -414,7 +408,15 @@ private:
 	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:kBufferSizePackets maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
-	_context.resize(asbd->mChannelsPerFrame);
+	try {
+		_context.resize(asbd->mChannelsPerFrame);
+	} catch(const std::exception& e) {
+		os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
+		_buffer = nil;
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
 
 	return YES;
 }
@@ -524,7 +526,7 @@ private:
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+	return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class], self, _decoder, _linearGain];
 }
 
 @end

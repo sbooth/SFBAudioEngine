@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -160,13 +160,13 @@ extern NSErrorDomain const SFBAudioFileErrorDomain NS_SWIFT_NAME(AudioFile.Error
 /// Possible `NSError` error codes used by `SFBAudioFile`
 typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 	/// Internal or unspecified error
-	SFBAudioFileErrorCodeInternalError		= 0,
+	SFBAudioFileErrorCodeInternalError 		= 0,
 	/// Unknown format name
-	SFBAudioFileErrorCodeUnknownFormatName	= 1,
+	SFBAudioFileErrorCodeUnknownFormatName 	= 1,
 	/// Input/output error
-	SFBAudioFileErrorCodeInputOutput		= 2,
+	SFBAudioFileErrorCodeInputOutput 		= 2,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioFileErrorCodeInvalidFormat		= 3,
-} NS_SWIFT_NAME(AudioFile.ErrorCode);
+	SFBAudioFileErrorCodeInvalidFormat 		= 3,
+} NS_SWIFT_NAME(AudioFile.Error);
 
 NS_ASSUME_NONNULL_END

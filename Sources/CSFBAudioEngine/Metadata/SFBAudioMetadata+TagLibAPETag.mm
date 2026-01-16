@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -93,8 +93,7 @@
 			// Put all unknown tags into the additional metadata
 			else
 				[additionalMetadata setObject:value forKey:key];
-		}
-		else if(TagLib::APE::Item::Binary == item.type()) {
+		} else if(TagLib::APE::Item::Binary == item.type()) {
 			NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
 
 			// From http://www.hydrogenaudio.org/forums/index.php?showtopic=40603&view=findpost&p=504669

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -30,12 +30,12 @@
 
 - (BOOL)openReturningError:(NSError **)error
 {
-	_file = fopen(self.url.fileSystemRepresentation, "w+");
+	_file = fopen(_url.fileSystemRepresentation, "w+");
 	if(!_file) {
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 
@@ -51,7 +51,7 @@
 			int err = errno;
 			os_log_error(gSFBOutputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
 			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 			return NO;
 		}
 	}
@@ -74,7 +74,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 	*bytesRead = (NSInteger)read;
@@ -92,7 +92,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "fwrite error: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 	*bytesWritten = (NSInteger)written;
@@ -112,7 +112,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 	*offset = result;
@@ -127,7 +127,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 
@@ -135,7 +135,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "fseeko(0, SEEK_END) error: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 
@@ -144,7 +144,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 
@@ -152,7 +152,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 
@@ -172,7 +172,7 @@
 		int err = errno;
 		os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err), err);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 	return YES;

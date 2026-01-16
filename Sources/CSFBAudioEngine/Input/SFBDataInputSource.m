@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -93,7 +93,7 @@
 	NSParameterAssert(offset >= 0);
 	if((NSUInteger)offset > _data.length) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: _url }];
 		return NO;
 	}
 

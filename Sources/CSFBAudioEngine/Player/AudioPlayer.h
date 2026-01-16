@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -7,6 +7,7 @@
 #pragma once
 
 #import <atomic>
+#import <cassert>
 #import <deque>
 #import <memory>
 #import <mutex>
@@ -30,10 +31,6 @@
 
 namespace SFB {
 
-/// Returns the next event identification number
-/// - note: Event identification numbers are unique across all event types
-uint64_t NextEventIdentificationNumber() noexcept;
-
 // MARK: - AudioPlayer
 
 /// SFBAudioPlayer implementation
@@ -45,8 +42,8 @@ public:
 	/// The shared log for all `AudioPlayer` instances
 	static const os_log_t log_;
 
-	/// Unsafe reference to owning `SFBAudioPlayer` instance
-	__unsafe_unretained SFBAudioPlayer 		*player_ 			{nil};
+	/// Weak reference to owning `SFBAudioPlayer` instance
+	__weak SFBAudioPlayer 					*player_ 			{nil};
 
 private:
 	struct DecoderState;
@@ -54,7 +51,7 @@ private:
 	using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
 	/// Ring buffer transferring audio between the decoding thread and the render block
-	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_ 	{};
+	CXXCoreAudio::AudioRingBuffer 			audioRingBuffer_;
 
 	/// Active decoders and associated state
 	DecoderStateVector 						activeDecoders_;
@@ -62,30 +59,30 @@ private:
 	mutable CXXUnfairLock::UnfairLock 		activeDecodersLock_;
 
 	/// Decoders enqueued for playback that are not yet active
-	std::deque<Decoder>						queuedDecoders_ 	{};
+	std::deque<Decoder>						queuedDecoders_;
 	/// Lock protecting `queuedDecoders_`
 	mutable CXXUnfairLock::UnfairLock 		queuedDecodersLock_;
 
 	/// Thread used for decoding
 	std::jthread 							decodingThread_;
 	/// Dispatch semaphore used for communication with the decoding thread
-	dispatch_semaphore_t					decodingSemaphore_ 	{};
+	dispatch_semaphore_t					decodingSemaphore_ 	{nil};
 
 	/// Thread used for event processing
 	std::jthread 							eventThread_;
 	/// Dispatch semaphore used for communication with the event processing thread
-	dispatch_semaphore_t					eventSemaphore_ 	{};
+	dispatch_semaphore_t					eventSemaphore_ 	{nil};
 
 	/// Ring buffer communicating events from the decoding thread to the event processing thread
-	CXXRingBuffer::RingBuffer				decodeEventRingBuffer_;
+	CXXRingBuffer::RingBuffer				decodingEvents_;
 	/// Ring buffer communicating events from the render block to the event processing thread
-	CXXRingBuffer::RingBuffer				renderEventRingBuffer_;
+	CXXRingBuffer::RingBuffer				renderingEvents_;
 
 	/// The `AVAudioEngine` instance
 	AVAudioEngine 							*engine_ 			{nil};
 	/// Source node driving the audio processing graph
 	AVAudioSourceNode						*sourceNode_ 		{nil};
-	/// Lock protecting processing graph configuration changes
+	/// Lock protecting playback state and processing graph configuration changes
 	mutable CXXUnfairLock::UnfairLock 		engineLock_;
 
 	/// Decoder currently rendering audio
@@ -99,6 +96,11 @@ private:
 	/// Player flags
 	std::atomic_uint 						flags_ 				{0};
 	static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
+
+#if TARGET_OS_IPHONE
+	/// Playback state before audio session interruption
+	unsigned int 							preInterruptState_ 	{0};
+#endif /* TARGET_OS_IPHONE */
 
 public:
 	AudioPlayer();
@@ -117,17 +119,8 @@ public:
 
 	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept;
 
-	void ClearDecoderQueue() noexcept
-	{
-		std::lock_guard lock{queuedDecodersLock_};
-		queuedDecoders_.clear();
-	}
-
-	bool DecoderQueueIsEmpty() const noexcept
-	{
-		std::lock_guard lock{queuedDecodersLock_};
-		return queuedDecoders_.empty();
-	}
+	void ClearDecoderQueue() noexcept;
+	bool DecoderQueueIsEmpty() const noexcept;
 
 	// MARK: - Playback Control
 
@@ -143,47 +136,16 @@ public:
 
 	bool EngineIsRunning() const noexcept;
 
-	SFBAudioPlayerPlaybackState PlaybackState() const noexcept
-	{
-		if(const auto flags = flags_.load(std::memory_order_acquire); flags & static_cast<unsigned int>(Flags::engineIsRunning)) {
-			if(flags & static_cast<unsigned int>(Flags::isPlaying))
-				return SFBAudioPlayerPlaybackStatePlaying;
-			else
-				return SFBAudioPlayerPlaybackStatePaused;
-		} else
-			return SFBAudioPlayerPlaybackStateStopped;
-	}
+	SFBAudioPlayerPlaybackState PlaybackState() const noexcept;
 
-	bool IsPlaying() const noexcept
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) && (flags & static_cast<unsigned int>(Flags::isPlaying));
-	}
-
-	bool IsPaused() const noexcept
-	{
-		const auto flags = flags_.load(std::memory_order_acquire);
-		return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) && !(flags & static_cast<unsigned int>(Flags::isPlaying));
-	}
-
-	bool IsStopped() const noexcept
-	{
-		return !(flags_.load(std::memory_order_acquire) & static_cast<unsigned int>(Flags::engineIsRunning));
-	}
-
-	bool IsReady() const noexcept
-	{
-		std::lock_guard lock{activeDecodersLock_};
-		return FirstDecoderStateWithRenderingNotComplete() != nullptr;
-	}
+	bool IsPlaying() const noexcept;
+	bool IsPaused() const noexcept;
+	bool IsStopped() const noexcept;
+	bool IsReady() const noexcept;
 
 	Decoder _Nullable CurrentDecoder() const noexcept;
 
-	Decoder _Nullable NowPlaying() const noexcept
-	{
-		std::lock_guard lock{nowPlayingLock_};
-		return nowPlaying_;
-	}
+	Decoder _Nullable NowPlaying() const noexcept;
 
 private:
 	void SetNowPlaying(Decoder _Nullable nowPlaying) noexcept;
@@ -197,8 +159,7 @@ public:
 
 	// MARK: - Seeking
 
-	bool SeekForward(NSTimeInterval secondsToSkip) noexcept;
-	bool SeekBackward(NSTimeInterval secondsToSkip) noexcept;
+	bool SeekInTime(NSTimeInterval secondsToSkip) noexcept;
 	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept;
 	bool SeekToPosition(double position) noexcept;
 	bool SeekToFrame(AVAudioFramePosition frame) noexcept;
@@ -222,20 +183,9 @@ public:
 
 	void ModifyProcessingGraph(void(^ _Nonnull block)(AVAudioEngine * _Nonnull engine)) const noexcept;
 
-	AVAudioSourceNode * _Nonnull SourceNode() const noexcept
-	{
-		return sourceNode_;
-	}
-
-	AVAudioMixerNode * _Nonnull MainMixerNode() const noexcept
-	{
-		return engine_.mainMixerNode;
-	}
-
-	AVAudioOutputNode * _Nonnull OutputNode() const noexcept
-	{
-		return engine_.outputNode;
-	}
+	AVAudioSourceNode * _Nonnull SourceNode() const noexcept;
+	AVAudioMixerNode * _Nonnull MainMixerNode() const noexcept;
+	AVAudioOutputNode * _Nonnull OutputNode() const noexcept;
 
 	// MARK: - Debugging
 
@@ -244,18 +194,14 @@ public:
 private:
 	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
-		/// Cached value of `_audioEngine.isRunning`
+		/// Cached value of `engine_.isRunning`
 		engineIsRunning				= 1u << 0,
-		/// The render block is outputting audio
+		/// The render block should output audio
 		isPlaying 					= 1u << 1,
-		/// The render block is outputting silence
+		/// The render block should output silence
 		isMuted 					= 1u << 2,
 		/// The ring buffer needs to be drained during the next render cycle
 		drainRequired 				= 1u << 3,
-		/// The decoding thread should unmute after the next decoder is dequeued and becomes active
-		unmuteAfterDequeue 			= 1u << 4,
-		/// Mismatch between rendering format and decoder processing format
-		formatMismatch 				= 1u << 5,
 	};
 
 	// MARK: - Decoding
@@ -264,7 +210,7 @@ private:
 	/// - note: This is the thread entry point for the decoding thread
 	void ProcessDecoders(std::stop_token stoken) noexcept;
 
-	/// Writes an error event to `decodeEventRingBuffer_` and signals `eventSemaphore_`
+	/// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
 	void SubmitDecodingErrorEvent(NSError *error) noexcept;
 
 	// MARK: - Rendering
@@ -274,78 +220,50 @@ private:
 
 	// MARK: - Events
 
-	/// An event header consisting of an event command and event identification number
-	template <typename T> requires std::is_same_v<std::underlying_type_t<T>, uint32_t>
-	struct EventHeader {
-		/// The event command
-		T mCommand;
-		/// The event identification number
-		uint64_t mIdentificationNumber;
-
-		/// Constructs an empty event header
-		EventHeader() noexcept = default;
-
-		/// Constructs an event header with the next available identification number
-		/// - parameter command: The command for the event
-		EventHeader(T command) noexcept
-		: mCommand{command}, mIdentificationNumber{NextEventIdentificationNumber()}
-		{}
-	};
-
-	// MARK: Decoding Events
-
 	/// Decoding thread events
 	enum class DecodingEventCommand : uint32_t {
 		/// Decoding started
 		started 	= 1,
 		/// Decoding complete
 		complete 	= 2,
-		/// Decoder canceled
+		/// Decoder canceled by user or aborted due to error
 		canceled 	= 3,
 		/// Decoding error
 		error 		= 4,
 	};
 
-	/// A decoding event header
-	using DecodingEventHeader = EventHeader<DecodingEventCommand>;
-
-	// MARK: Rendering Events
-
 	/// Render block events
 	enum class RenderingEventCommand : uint32_t {
-		/// Timestamp and frames rendered
+		/// Audio frames rendered from ring buffer
 		framesRendered 	= 1,
 	};
 
-	/// A rendering event command and identification number
-	using RenderingEventHeader = EventHeader<RenderingEventCommand>;
-
 	// MARK: - Event Processing
 
-	/// Sequences events from from `decodeEventRingBuffer_` and `renderEventRingBuffer_` for processing in order
-	/// - note: This is the thread entry point for the event thread
+	/// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
+	/// - note: This is the thread entry point for the event processing thread
 	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-	/// Processes an event from `decodeEventRingBuffer_`
-	void ProcessDecodingEvent(const DecodingEventHeader& header) noexcept;
+	/// Reads and processes an event payload from `decodingEvents_`
+	bool ProcessDecodingEvent(DecodingEventCommand command) noexcept;
 
-	/// Processes a decoding started event from `decodeEventRingBuffer_`
-	void ProcessDecodingStartedEvent() noexcept;
+	/// Reads and processes a decoding started event from `decodingEvents_`
+	bool ProcessDecodingStartedEvent() noexcept;
 
-	/// Processes a decoding complete event from `decodeEventRingBuffer_`
-	void ProcessDecodingCompleteEvent() noexcept;
+	/// Reads and processes a decoding complete event from `decodingEvents_`
+	bool ProcessDecodingCompleteEvent() noexcept;
 
-	/// Processes a decoder canceled event from `decodeEventRingBuffer_`
-	void ProcessDecoderCanceledEvent() noexcept;
+	/// Reads and processes a decoder canceled event from `decodingEvents_`
+	bool ProcessDecoderCanceledEvent() noexcept;
 
-	/// Process a decoding error event from `decodeEventRingBuffer_`
-	void ProcessDecodingErrorEvent() noexcept;
+	/// Reads and processes a decoding error event from `decodingEvents_`
+	bool ProcessDecodingErrorEvent() noexcept;
 
-	/// Processes an event from `renderEventRingBuffer_`
-	void ProcessRenderingEvent(const RenderingEventHeader& header) noexcept;
+	/// Reads and processes an event payload from `renderingEvents_`
+	bool ProcessRenderingEvent(RenderingEventCommand command) noexcept;
 
-	/// Processes a frames rendered event from `renderEventRingBuffer_`
-	void ProcessFramesRenderedEvent() noexcept;
+	/// Reads and processes a frames rendered event from `renderingEvents_`
+	bool ProcessFramesRenderedEvent() noexcept;
 
 	/// Called when the first audio frame from a decoder will render.
 	void HandleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
@@ -355,20 +273,11 @@ private:
 
 	// MARK: - Active Decoder Management
 
-	/// Cancels active decoders in sequence
-	void CancelActiveDecoders(bool cancelAllActive) noexcept;
+	/// Cancels all active decoders in sequence
+	void CancelActiveDecoders() noexcept;
 
-	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed decoding
-	DecoderState * const _Nullable FirstDecoderStateWithDecodingNotComplete() const noexcept;
-
-	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number that has not been canceled and has not completed rendering
-	DecoderState * const _Nullable FirstDecoderStateWithRenderingNotComplete() const noexcept;
-
-	/// Returns the decoder state in `activeDecoders_` with the smallest sequence number greater than `sequenceNumber` that has not been canceled and has not completed rendering
-	DecoderState * const _Nullable FirstDecoderStateFollowingSequenceNumberWithRenderingNotComplete(const uint64_t sequenceNumber) const noexcept;
-
-	/// Removes the decoder state in `activeDecoders_` with sequence number equal to `sequenceNumber`
-	bool DeleteDecoderStateWithSequenceNumber(const uint64_t sequenceNumber) noexcept;
+	/// Returns the first decoder state in `activeDecoders_` that has not been canceled
+	DecoderState * const _Nullable FirstActiveDecoderState() const noexcept;
 
 public:
 	// MARK: - AVAudioEngine Notification Handling
@@ -384,12 +293,85 @@ public:
 private:
 	// MARK: - Processing Graph Management
 
+	/// Stops the AVAudioEngine if it is running and returns true if it was stopped
+	bool StopEngineIfRunning() noexcept;
+
 	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
 	/// - parameter error: An optional pointer to an `NSError` object to receive error information
 	/// - returns: `true` if the player was successfully configured
 	bool ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format, NSError **error) noexcept;
 };
+
+// MARK: - Implementation -
+
+inline void AudioPlayer::ClearDecoderQueue() noexcept
+{
+	std::lock_guard lock{queuedDecodersLock_};
+	queuedDecoders_.clear();
+}
+
+inline bool AudioPlayer::DecoderQueueIsEmpty() const noexcept
+{
+	std::lock_guard lock{queuedDecodersLock_};
+	return queuedDecoders_.empty();
+}
+
+inline SFBAudioPlayerPlaybackState AudioPlayer::PlaybackState() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	const auto state = flags & mask;
+	assert(state != static_cast<unsigned int>(Flags::isPlaying));
+	return static_cast<SFBAudioPlayerPlaybackState>(state);
+}
+
+inline bool AudioPlayer::IsPlaying() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	return (flags & mask) == mask;
+}
+
+inline bool AudioPlayer::IsPaused() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+	return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
+}
+
+inline bool AudioPlayer::IsStopped() const noexcept
+{
+	const auto flags = flags_.load(std::memory_order_acquire);
+	return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
+}
+
+inline bool AudioPlayer::IsReady() const noexcept
+{
+	std::lock_guard lock{activeDecodersLock_};
+	return FirstActiveDecoderState() != nullptr;
+}
+
+inline AudioPlayer::Decoder _Nullable AudioPlayer::NowPlaying() const noexcept
+{
+	std::lock_guard lock{nowPlayingLock_};
+	return nowPlaying_;
+}
+
+inline AVAudioSourceNode * _Nonnull AudioPlayer::SourceNode() const noexcept
+{
+	return sourceNode_;
+}
+
+inline AVAudioMixerNode * _Nonnull AudioPlayer::MainMixerNode() const noexcept
+{
+	return engine_.mainMixerNode;
+}
+
+inline AVAudioOutputNode * _Nonnull AudioPlayer::OutputNode() const noexcept
+{
+	return engine_.outputNode;
+}
 
 } /* namespace SFB */
 

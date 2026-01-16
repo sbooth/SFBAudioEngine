@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -16,7 +16,6 @@ extern os_log_t gSFBAudioEncoderLog;
 {
 @package
 	SFBOutputSource *_outputSource;
-@protected
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 	AVAudioFormat *_outputFormat;

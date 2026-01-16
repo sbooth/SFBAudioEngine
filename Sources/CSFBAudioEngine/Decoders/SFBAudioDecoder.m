@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,8 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioDecoder+Internal.h"
 
-#import "NSError+SFBURLPresentation.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for AudioDecoder and subclasses
 NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
@@ -19,10 +20,7 @@ os_log_t gSFBAudioDecoderLog = NULL;
 static void SFBCreateAudioDecoderLog(void) __attribute__ ((constructor));
 static void SFBCreateAudioDecoderLog(void)
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
-	});
+	gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
 }
 
 @interface SFBAudioDecoderSubclassInfo : NSObject
@@ -46,16 +44,43 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioDecoderErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioDecoderErrorCodeInternalError:
-					return NSLocalizedString(@"An internal decoder error occurred.", @"");
-				case SFBAudioDecoderErrorCodeUnknownDecoder:
-					return NSLocalizedString(@"The requested decoder is unavailable.", @"");
-				case SFBAudioDecoderErrorCodeInvalidFormat:
-					return NSLocalizedString(@"The format is invalid, unknown, or unsupported.", @"");
+		switch(err.code) {
+			case SFBAudioDecoderErrorCodeUnknownDecoder:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"The requested PCM decoder is unavailable.", @"");
+				break;
+
+
+			case SFBAudioDecoderErrorCodeInvalidFormat: {
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"The format is invalid or unknown.", @"");
+				break;
 			}
+
+			case SFBAudioDecoderErrorCodeUnsupportedFormat: {
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"The PCM audio format is unsupported.", @"");
+				break;
+			}
+
+			case SFBAudioDecoderErrorCodeInternalError: {
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An internal decoder error occurred.", @"");
+				break;
+			}
+
+			case SFBAudioDecoderErrorCodeDecodingError: {
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An error occurred during PCM audio decoding.", @"");
+				break;
+			}
+
+			case SFBAudioDecoderErrorCodeSeekError:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+					return NSLocalizedString(@"An error occurred seeking to the requested PCM frame position.", @"");
+				break;
 		}
+
 		return nil;
 	}];
 }
@@ -217,8 +242,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 						os_log_fault(gSFBAudioDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
 						break;
 				}
-			}
-			else
+			} else
 				os_log_error(gSFBAudioDecoderLog, "Error testing %{public}@ format support for %{public}@", klass, inputSource);
 		}
 
@@ -231,12 +255,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
-											  url:inputSource.url
-									failureReason:NSLocalizedString(@"Unknown file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"")];
+			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+													  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""),
+													  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @""),
+														 NSURLErrorKey: inputSource.url },
+													  SFBLocalizedNameForURL(inputSource.url));
 		return nil;
 	}
 
@@ -286,9 +309,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_error(gSFBAudioDecoderLog, "SFBAudioDecoder unknown decoder: \"%{public}@\"", decoderName);
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeUnknownDecoder
-									 userInfo:@{ NSURLErrorKey: inputSource.url }];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeUnknownDecoder userInfo:nil];
 		return nil;
 	}
 

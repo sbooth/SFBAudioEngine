@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,10 +8,11 @@
 
 #import "SFBAudioConverter.h"
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
 #import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for SFBAudioConverter
 NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.AudioConverter";
@@ -23,12 +24,13 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 + (void)load
 {
 	[NSError setUserInfoValueProviderForDomain:SFBAudioConverterErrorDomain provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-		if([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-			switch(err.code) {
-				case SFBAudioConverterErrorCodeFormatNotSupported:
+		switch(err.code) {
+			case SFBAudioConverterErrorCodeFormatNotSupported:
+				if([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
 					return NSLocalizedString(@"The requested audio format is not supported.", @"");
-			}
+				break;
 		}
+		
 		return nil;
 	}];
 }
@@ -39,19 +41,19 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return [converter convertReturningError:error];
 }
 
-+ (BOOL)convertFromURL:(NSURL *)sourceURL usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
++ (BOOL)convertFromURL:(NSURL *)sourceURL usingEncoder:(id<SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL encoder:encoder error:error];
 	return [converter convertReturningError:error];
 }
 
-+ (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)destinationURL error:(NSError **)error
++ (BOOL)convertFromDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)destinationURL error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder destinationURL:destinationURL error:error];
 	return [converter convertReturningError:error];
 }
 
-+ (BOOL)convertFromDecoder:(id <SFBPCMDecoding>)decoder usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
++ (BOOL)convertFromDecoder:(id<SFBPCMDecoding>)decoder usingEncoder:(id<SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder encoder:encoder error:error];
 	return [converter convertReturningError:error];
@@ -73,12 +75,12 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
-- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder
+- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id<SFBPCMEncoding>)encoder
 {
 	return [self initWithURL:sourceURL encoder:encoder error:nil];
 }
 
-- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
+- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id<SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
 	if(!decoder)
@@ -86,12 +88,12 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL
 {
 	return [self initWithDecoder:decoder destinationURL:destinationURL error:nil];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error
 {
 	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
 	if(!encoder)
@@ -99,17 +101,17 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder encoder:(id<SFBPCMEncoding>)encoder
 {
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:nil];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder encoder:(id<SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder requestedIntermediateFormat:(AVAudioFormat *(^)(AVAudioFormat *))intermediateFormatBlock error:(NSError **)error
+- (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder encoder:(id<SFBPCMEncoding>)encoder requestedIntermediateFormat:(AVAudioFormat *(^)(AVAudioFormat *))intermediateFormatBlock error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 	NSParameterAssert(encoder != nil);
@@ -148,12 +150,10 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		_intermediateConverter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:encoder.processingFormat];
 		if(!_intermediateConverter) {
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioConverterErrorDomain
-												 code:SFBAudioConverterErrorCodeFormatNotSupported
-						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
-												  url:decoder.inputSource.url
-										failureReason:NSLocalizedString(@"Unsupported file format", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for conversion.", @"")];
+				*error = SFBErrorWithLocalizedDescription(SFBAudioConverterErrorDomain, SFBAudioConverterErrorCodeFormatNotSupported,
+														  NSLocalizedString(@"The format of the file “%@” is not supported.", @""),
+														  @{ NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"The file's format is not supported for conversion.", @"") },
+														  SFBLocalizedNameForURL(decoder.inputSource.url));
 			return nil;
 		}
 	}
@@ -212,8 +212,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 			if(error)
 				*error = convertError;
 			return NO;
-		}
-		else if(status == AVAudioConverterOutputStatus_EndOfStream)
+		} else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
 
 		// Send converted data to the encoder

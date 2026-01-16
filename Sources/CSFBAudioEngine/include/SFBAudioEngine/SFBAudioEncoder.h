@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -41,7 +41,7 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 
 #pragma mark - File Format Support
 
-/// Returns a set containing the supported path extensions
+/// A set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /// Returns a set containing the supported MIME types
@@ -133,13 +133,13 @@ extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder
 
 /// Possible `NSError` error codes used by `SFBAudioEncoder`
 typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
-	/// Internal or unspecified encoder error
-	SFBAudioEncoderErrorCodeInternalError	= 0,
 	/// Unknown encoder name
-	SFBAudioEncoderErrorCodeUnknownEncoder	= 1,
+	SFBAudioEncoderErrorCodeUnknownEncoder 	= 0,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
-} NS_SWIFT_NAME(AudioEncoder.ErrorCode);
+	SFBAudioEncoderErrorCodeInvalidFormat	= 1,
+	/// Internal or unspecified encoder error
+	SFBAudioEncoderErrorCodeInternalError	= 2,
+} NS_SWIFT_NAME(AudioEncoder.Error);
 
 #pragma mark - FLAC Encoder Settings
 
