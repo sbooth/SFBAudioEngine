@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -16,7 +16,7 @@ namespace {
 // On Apple Silicon it is 125/3.
 
 /// Returns a fraction used to convert host ticks to nanoseconds.
-auto MachTimebase() noexcept
+auto machTimebase() noexcept
 {
 	// If `mach_timebase_info()` doesn't succeed there is no way to convert to/from host times.
 	// Luckily the function seems to only return `KERN_SUCCESS`:
@@ -30,11 +30,11 @@ auto MachTimebase() noexcept
 }
 
 /// Mach timebase information.
-const auto kMachTimebase = MachTimebase();
+const auto kMachTimebase = machTimebase();
 
 } /* namespace */
 
-uint64_t SFB::ConvertHostTimeToNanoseconds(uint64_t t) noexcept
+uint64_t SFB::hostTimeToNanoseconds(uint64_t t) noexcept
 {
 	if(kMachTimebase.first != kMachTimebase.second) {
 		__uint128_t ns = t;
@@ -46,7 +46,7 @@ uint64_t SFB::ConvertHostTimeToNanoseconds(uint64_t t) noexcept
 	return t;
 }
 
-uint64_t SFB::ConvertNanosecondsToHostTime(uint64_t ns) noexcept
+uint64_t SFB::nanosecondsToHostTime(uint64_t ns) noexcept
 {
 	if(kMachTimebase.first != kMachTimebase.second) {
 		__uint128_t t = ns;

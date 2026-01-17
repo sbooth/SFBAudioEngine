@@ -1666,7 +1666,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
-				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
+				uint64_t eventTime = hostTime + SFB::secondsToHostTime(deltaSeconds * rateScalar);
 
 				try {
 					queuedEvents.push_back({RenderingEventDetails::Type::willStart, (*iter)->decoder_, eventTime});
@@ -1684,7 +1684,7 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 			if(constexpr auto mask = static_cast<unsigned int>(DecoderState::Flags::isCanceled) | static_cast<unsigned int>(DecoderState::Flags::decodingComplete); (flags & mask) == static_cast<unsigned int>(DecoderState::Flags::decodingComplete) && framesFromThisDecoder == decoderFramesRemaining) {
 				const auto frameOffset = framesRendered - framesRemainingToDistribute;
 				const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
-				uint64_t eventTime = hostTime + SFB::ConvertSecondsToHostTime(deltaSeconds * rateScalar);
+				uint64_t eventTime = hostTime + SFB::secondsToHostTime(deltaSeconds * rateScalar);
 
 				try {
 					queuedEvents.push_back({RenderingEventDetails::Type::willComplete, (*iter)->decoder_, eventTime});
@@ -1722,12 +1722,12 @@ bool SFB::AudioPlayer::ProcessFramesRenderedEvent() noexcept
 
 void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept
 {
-	const auto now = SFB::GetCurrentHostTime();
+	const auto now = SFB::currentHostTime();
 	if(now > hostTime)
-		os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoder);
+		os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@", static_cast<double>(SFB::hostTimeToNanoseconds(now - hostTime)) / 1e6, decoder);
 #if DEBUG
 	else
-		os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
+		os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@", static_cast<double>(SFB::hostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
 #endif /* DEBUG */
 
 	// Since the rendering started notification is submitted for asynchronous execution,
@@ -1753,8 +1753,8 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 		auto& that = player->_player;
 
 #if DEBUG
-		const auto now = SFB::GetCurrentHostTime();
-		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
+		const auto now = SFB::currentHostTime();
+		const auto delta = SFB::absoluteHostTimeDeltaToNanoseconds(hostTime, now);
 		const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
 		if(delta > tolerance)
 			os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
@@ -1772,12 +1772,12 @@ void SFB::AudioPlayer::HandleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
 void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime) noexcept
 {
-	const auto now = SFB::GetCurrentHostTime();
+	const auto now = SFB::currentHostTime();
 	if(now > hostTime)
-		os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(now - hostTime)) / 1e6, decoder);
+		os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@", static_cast<double>(SFB::hostTimeToNanoseconds(now - hostTime)) / 1e6, decoder);
 #if DEBUG
 	else
-		os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::ConvertHostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
+		os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@", static_cast<double>(SFB::hostTimeToNanoseconds(hostTime - now)) / 1e6, decoder);
 #endif /* DEBUG */
 
 	// Since the rendering complete notification is submitted for asynchronous execution,
@@ -1803,8 +1803,8 @@ void SFB::AudioPlayer::HandleRenderingWillCompleteEvent(Decoder decoder, uint64_
 		auto& that = player->_player;
 
 #if DEBUG
-		const auto now = SFB::GetCurrentHostTime();
-		const auto delta = SFB::ConvertAbsoluteHostTimeDeltaToNanoseconds(hostTime, now);
+		const auto now = SFB::currentHostTime();
+		const auto delta = SFB::absoluteHostTimeDeltaToNanoseconds(hostTime, now);
 		const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
 		if(delta > tolerance)
 			os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
