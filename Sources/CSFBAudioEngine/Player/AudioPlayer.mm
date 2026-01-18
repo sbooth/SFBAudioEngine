@@ -19,7 +19,7 @@
 
 #import "AudioPlayer.h"
 
-#import "HostTimeUtilities.hpp"
+#import "HostTime.hpp"
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer+Internal.h"
 #import "SFBCStringForOSType.h"

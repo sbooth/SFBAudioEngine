@@ -7,7 +7,7 @@
 #import <cassert>
 #import <utility>
 
-#import "HostTimeUtilities.hpp"
+#import "HostTime.hpp"
 
 namespace {
 
