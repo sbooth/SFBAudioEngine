@@ -342,7 +342,7 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept
 	return newFrame != SFBUnknownFramePosition;
 }
 
-} /* namespace SFB */
+} /* namespace sfb */
 
 // MARK: - AudioPlayer
 

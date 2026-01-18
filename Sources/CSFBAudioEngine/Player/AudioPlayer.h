@@ -371,6 +371,6 @@ inline AVAudioOutputNode * _Nonnull AudioPlayer::outputNode() const noexcept
 	return engine_.outputNode;
 }
 
-} /* namespace SFB */
+} /* namespace sfb */
 
 #pragma clang diagnostic pop
