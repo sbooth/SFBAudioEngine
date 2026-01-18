@@ -26,7 +26,7 @@ namespace {
 
 // ========================================
 // Callbacks
-OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount) noexcept
+OSStatus readCallback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -55,7 +55,7 @@ OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCoun
 	return noErr;
 }
 
-SInt64 get_size_callback(void *inClientData) noexcept
+SInt64 getSizeCallback(void *inClientData) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -223,7 +223,7 @@ SInt64 get_size_callback(void *inClientData) noexcept
 
 	// Open the input file
 	AudioFileID audioFile;
-	auto result = AudioFileOpenWithCallbacks((__bridge void *)self, read_callback, nullptr, get_size_callback, nullptr, 0, &audioFile);
+	auto result = AudioFileOpenWithCallbacks((__bridge void *)self, readCallback, nullptr, getSizeCallback, nullptr, 0, &audioFile);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)

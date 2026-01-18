@@ -32,7 +32,7 @@ struct TTACallbacks final : TTA_io_callback
 	SFBAudioDecoder *decoder_;
 };
 
-TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
+TTAint32 readCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
 {
 	auto *iocb = static_cast<TTACallbacks *>(io);
 
@@ -42,7 +42,7 @@ TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
 	return static_cast<TTAint32>(bytesRead);
 }
 
-TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
+TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 {
 	auto *iocb = static_cast<TTACallbacks *>(io);
 
@@ -114,9 +114,9 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 		return NO;
 
 	_callbacks				= std::make_unique<TTACallbacks>();
-	_callbacks->read		= read_callback;
+	_callbacks->read		= readCallback;
 	_callbacks->write		= nullptr;
-	_callbacks->seek		= seek_callback;
+	_callbacks->seek		= seekCallback;
 	_callbacks->decoder_	= self;
 
 	TTA_info streamInfo;
