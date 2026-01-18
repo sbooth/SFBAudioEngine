@@ -1957,7 +1957,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 }
 
 #if TARGET_OS_IPHONE
-void sfb::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) noexcept
+void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) noexcept
 {
 	const auto interruptionType = [[userInfo objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
 	switch(interruptionType) {
