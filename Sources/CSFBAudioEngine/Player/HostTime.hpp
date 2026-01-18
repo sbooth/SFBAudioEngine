@@ -13,7 +13,7 @@ namespace HostTime {
 /// Returns the current host time in ticks.
 ///
 /// This is equivalent to the macOS-only function ``AudioGetCurrentHostTime``.
-inline uint64_t current() noexcept
+[[nodiscard]] inline uint64_t current() noexcept
 {
 	// Apple recommends replacing the use of `mach_absolute_time()` with `clock_gettime_nsec_np(CLOCK_UPTIME_RAW)`
 	// (https://developer.apple.com/documentation/kernel/1462446-mach_absolute_time) because of the potential
@@ -30,11 +30,11 @@ inline uint64_t current() noexcept
 /// Converts host time `t` to nanoseconds and returns the result.
 ///
 /// This is equivalent to the macOS-only function ``AudioConvertHostTimeToNanos``.
-uint64_t toNanoseconds(uint64_t t) noexcept;
+[[nodiscard]] uint64_t toNanoseconds(uint64_t t) noexcept;
 
 /// Converts `ns` nanoseconds to host time and returns the result.
 ///
 /// This is equivalent to the macOS-only function ``AudioConvertNanosToHostTime``.
-uint64_t fromNanoseconds(uint64_t ns) noexcept;
+[[nodiscard]] uint64_t fromNanoseconds(uint64_t ns) noexcept;
 
 } /* namespace HostTime */
