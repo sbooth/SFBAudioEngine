@@ -262,8 +262,8 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
 
 #pragma mark Initialization
 
-void SetupDSD2PCM() noexcept __attribute__ ((constructor));
-void SetupDSD2PCM() noexcept
+void setupDSD2PCM() noexcept __attribute__ ((constructor));
+void setupDSD2PCM() noexcept
 {
 	dsd2pcm_precalc();
 }
@@ -273,37 +273,37 @@ void SetupDSD2PCM() noexcept
 class DXD {
 public:
 	DXD()
-	: handle(dsd2pcm_init())
+	: handle_(dsd2pcm_init())
 	{
-		if(!handle)
+		if(!handle_)
 			throw std::bad_alloc();
 	}
 
 	DXD(DXD const& x)
-	: handle(dsd2pcm_clone(x.handle))
+	: handle_(dsd2pcm_clone(x.handle_))
 	{
-		if(!handle)
+		if(!handle_)
 			throw std::bad_alloc();
 	}
 
-	~DXD()
+	~DXD() noexcept
 	{
-		dsd2pcm_destroy(handle);
+		dsd2pcm_destroy(handle_);
 	}
 
 	DXD& operator=(DXD x)
 	{
-		std::swap(handle, x.handle);
+		std::swap(handle_, x.handle_);
 		return *this;
 	}
 
-	void Translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst, ptrdiff_t dst_stride) noexcept
+	void translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst, ptrdiff_t dst_stride) noexcept
 	{
-		dsd2pcm_translate(handle, samples, src, src_stride, lsbitfirst, dst, dst_stride);
+		dsd2pcm_translate(handle_, samples, src, src_stride, lsbitfirst, dst, dst_stride);
 	}
 
 private:
-	dsd2pcm_ctx *handle;
+	dsd2pcm_ctx *handle_;
 };
 
 } /* namespace */
@@ -489,7 +489,7 @@ private:
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 			const auto input = static_cast<const unsigned char *>(_buffer.data) + channel;
 			float *output = floatChannelData[channel];
-			_context[channel].Translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
+			_context[channel].translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
 			// Boost signal by 6 dBFS
 			vDSP_vsmul(output, 1, &linearGain, output, 1, framesDecoded);
 		}

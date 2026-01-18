@@ -31,7 +31,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 
-namespace SFB {
+namespace sfb {
 
 // MARK: - AudioPlayer
 
@@ -125,81 +125,79 @@ public:
 
 	// MARK: - Playlist Management
 
-	bool EnqueueDecoder(Decoder _Nonnull decoder, bool forImmediatePlayback, NSError **error) noexcept;
+	bool enqueueDecoder(Decoder _Nonnull decoder, bool forImmediatePlayback, NSError **error) noexcept;
 
-	bool FormatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept;
+	bool formatWillBeGaplessIfEnqueued(AVAudioFormat * _Nonnull format) const noexcept;
 
-	void ClearDecoderQueue() noexcept;
-	bool DecoderQueueIsEmpty() const noexcept;
+	void clearDecoderQueue() noexcept;
+	bool decoderQueueIsEmpty() const noexcept;
 
 	// MARK: - Playback Control
 
-	bool Play(NSError **error) noexcept;
-	bool Pause() noexcept;
-	bool Resume() noexcept;
-	void Stop() noexcept;
-	bool TogglePlayPause(NSError **error) noexcept;
+	bool play(NSError **error) noexcept;
+	bool pause() noexcept;
+	bool resume() noexcept;
+	void stop() noexcept;
+	bool togglePlayPause(NSError **error) noexcept;
 
-	void Reset() noexcept;
+	void reset() noexcept;
 
 	// MARK: - Player State
 
-	bool EngineIsRunning() const noexcept;
+	bool engineIsRunning() const noexcept;
 
-	SFBAudioPlayerPlaybackState PlaybackState() const noexcept;
+	SFBAudioPlayerPlaybackState playbackState() const noexcept;
 
-	bool IsPlaying() const noexcept;
-	bool IsPaused() const noexcept;
-	bool IsStopped() const noexcept;
-	bool IsReady() const noexcept;
+	bool isPlaying() const noexcept;
+	bool isPaused() const noexcept;
+	bool isStopped() const noexcept;
+	bool isReady() const noexcept;
 
-	Decoder _Nullable CurrentDecoder() const noexcept;
+	Decoder _Nullable currentDecoder() const noexcept;
 
-	Decoder _Nullable NowPlaying() const noexcept;
+	Decoder _Nullable nowPlaying() const noexcept;
 
 private:
-	void SetNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+	void setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
 
 public:
 	// MARK: - Playback Properties
 
-	SFBPlaybackPosition PlaybackPosition() const noexcept;
-	SFBPlaybackTime PlaybackTime() const noexcept;
-	bool GetPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept;
+	SFBPlaybackPosition playbackPosition() const noexcept;
+	SFBPlaybackTime playbackTime() const noexcept;
+	bool getPlaybackPositionAndTime(SFBPlaybackPosition * _Nullable playbackPosition, SFBPlaybackTime * _Nullable playbackTime) const noexcept;
 
 	// MARK: - Seeking
 
-	bool SeekInTime(NSTimeInterval secondsToSkip) noexcept;
-	bool SeekToTime(NSTimeInterval timeInSeconds) noexcept;
-	bool SeekToPosition(double position) noexcept;
-	bool SeekToFrame(AVAudioFramePosition frame) noexcept;
-	bool SupportsSeeking() const noexcept;
+	bool seekInTime(NSTimeInterval secondsToSkip) noexcept;
+	bool seekToTime(NSTimeInterval timeInSeconds) noexcept;
+	bool seekToPosition(double position) noexcept;
+	bool seekToFrame(AVAudioFramePosition frame) noexcept;
+	bool supportsSeeking() const noexcept;
 
 #if !TARGET_OS_IPHONE
-
 	// MARK: - Volume Control
 
-	float VolumeForChannel(AudioObjectPropertyElement channel) const noexcept;
-	bool SetVolumeForChannel(float volume, AudioObjectPropertyElement channel, NSError **error) noexcept;
+	float volumeForChannel(AudioObjectPropertyElement channel) const noexcept;
+	bool setVolumeForChannel(float volume, AudioObjectPropertyElement channel, NSError **error) noexcept;
 
 	// MARK: - Output Device
 
-	AUAudioObjectID OutputDeviceID() const noexcept;
-	bool SetOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept;
-
+	AUAudioObjectID outputDeviceID() const noexcept;
+	bool setOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept;
 #endif /* !TARGET_OS_IPHONE */
 
 	// MARK: - AVAudioEngine
 
-	void ModifyProcessingGraph(void(^ _Nonnull block)(AVAudioEngine * _Nonnull engine)) const noexcept;
+	void modifyProcessingGraph(void(^ _Nonnull block)(AVAudioEngine * _Nonnull engine)) const noexcept;
 
-	AVAudioSourceNode * _Nonnull SourceNode() const noexcept;
-	AVAudioMixerNode * _Nonnull MainMixerNode() const noexcept;
-	AVAudioOutputNode * _Nonnull OutputNode() const noexcept;
+	AVAudioSourceNode * _Nonnull sourceNode() const noexcept;
+	AVAudioMixerNode * _Nonnull mainMixerNode() const noexcept;
+	AVAudioOutputNode * _Nonnull outputNode() const noexcept;
 
 	// MARK: - Debugging
 
-	void LogProcessingGraphDescription(os_log_t _Nonnull log, os_log_type_t type) const noexcept;
+	void logProcessingGraphDescription(os_log_t _Nonnull log, os_log_type_t type) const noexcept;
 
 private:
 	/// Possible bits in `flags_`
@@ -224,15 +222,19 @@ private:
 
 	/// Dequeues and processes decoders from the decoder queue
 	/// - note: This is the thread entry point for the decoding thread
-	void ProcessDecoders(std::stop_token stoken) noexcept;
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
+	void processDecoders(std::stop_token stoken) noexcept;
+#else
+	void processDecoders() noexcept;
+#endif
 
 	/// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
-	void SubmitDecodingErrorEvent(NSError *error) noexcept;
+	void submitDecodingErrorEvent(NSError *error) noexcept;
 
 	// MARK: - Rendering
 
 	/// Render block implementation
-	OSStatus Render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList * _Nonnull outputData) noexcept;
+	OSStatus render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount, AudioBufferList * _Nonnull outputData) noexcept;
 
 	// MARK: - Events
 
@@ -258,82 +260,86 @@ private:
 
 	/// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
 	/// - note: This is the thread entry point for the event processing thread
-	void SequenceAndProcessEvents(std::stop_token stoken) noexcept;
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
+	void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+#else
+	void sequenceAndProcessEvents() noexcept;
+#endif
 
 	/// Reads and processes an event payload from `decodingEvents_`
-	bool ProcessDecodingEvent(DecodingEventCommand command) noexcept;
+	bool processDecodingEvent(DecodingEventCommand command) noexcept;
 
 	/// Reads and processes a decoding started event from `decodingEvents_`
-	bool ProcessDecodingStartedEvent() noexcept;
+	bool processDecodingStartedEvent() noexcept;
 
 	/// Reads and processes a decoding complete event from `decodingEvents_`
-	bool ProcessDecodingCompleteEvent() noexcept;
+	bool processDecodingCompleteEvent() noexcept;
 
 	/// Reads and processes a decoder canceled event from `decodingEvents_`
-	bool ProcessDecoderCanceledEvent() noexcept;
+	bool processDecoderCanceledEvent() noexcept;
 
 	/// Reads and processes a decoding error event from `decodingEvents_`
-	bool ProcessDecodingErrorEvent() noexcept;
+	bool processDecodingErrorEvent() noexcept;
 
 	/// Reads and processes an event payload from `renderingEvents_`
-	bool ProcessRenderingEvent(RenderingEventCommand command) noexcept;
+	bool processRenderingEvent(RenderingEventCommand command) noexcept;
 
 	/// Reads and processes a frames rendered event from `renderingEvents_`
-	bool ProcessFramesRenderedEvent() noexcept;
+	bool processFramesRenderedEvent() noexcept;
 
 	/// Called when the first audio frame from a decoder will render.
-	void HandleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+	void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
 	/// Called when the final audio frame from a decoder will render.
-	void HandleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+	void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
 	// MARK: - Active Decoder Management
 
 	/// Cancels all active decoders in sequence
-	void CancelActiveDecoders() noexcept;
+	void cancelActiveDecoders() noexcept;
 
 	/// Returns the first decoder state in `activeDecoders_` that has not been canceled
-	DecoderState * const _Nullable FirstActiveDecoderState() const noexcept;
+	DecoderState * const _Nullable firstActiveDecoderState() const noexcept;
 
 public:
 	// MARK: - AVAudioEngine Notification Handling
 
 	/// Called to process `AVAudioEngineConfigurationChangeNotification`
-	void HandleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;
+	void handleAudioEngineConfigurationChange(AVAudioEngine * _Nonnull engine, NSDictionary * _Nullable userInfo) noexcept;
 
 #if TARGET_OS_IPHONE
 	/// Called to process `AVAudioSessionInterruptionNotification`
-	void HandleAudioSessionInterruption(NSDictionary * _Nullable userInfo) noexcept;
+	void handleAudioSessionInterruption(NSDictionary * _Nullable userInfo) noexcept;
 #endif /* TARGET_OS_IPHONE */
 
 private:
 	// MARK: - Processing Graph Management
 
 	/// Stops the AVAudioEngine if it is running and returns true if it was stopped
-	bool StopEngineIfRunning() noexcept;
+	bool stopEngineIfRunning() noexcept;
 
 	/// Configures the player to render audio with `format`
 	/// - parameter format: The desired audio format
 	/// - parameter error: An optional pointer to an `NSError` object to receive error information
 	/// - returns: `true` if the player was successfully configured
-	bool ConfigureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format, NSError **error) noexcept;
+	bool configureProcessingGraphAndRingBufferForFormat(AVAudioFormat * _Nonnull format, NSError **error) noexcept;
 };
 
 // MARK: - Implementation -
 
-inline void AudioPlayer::ClearDecoderQueue() noexcept
+inline void AudioPlayer::clearDecoderQueue() noexcept
 {
 	std::lock_guard lock{queuedDecodersLock_};
 	queuedDecoders_.clear();
 }
 
-inline bool AudioPlayer::DecoderQueueIsEmpty() const noexcept
+inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept
 {
 	std::lock_guard lock{queuedDecodersLock_};
 	return queuedDecoders_.empty();
 }
 
-inline SFBAudioPlayerPlaybackState AudioPlayer::PlaybackState() const noexcept
+inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept
 {
 	const auto flags = flags_.load(std::memory_order_acquire);
 	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
@@ -342,53 +348,53 @@ inline SFBAudioPlayerPlaybackState AudioPlayer::PlaybackState() const noexcept
 	return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
-inline bool AudioPlayer::IsPlaying() const noexcept
+inline bool AudioPlayer::isPlaying() const noexcept
 {
 	const auto flags = flags_.load(std::memory_order_acquire);
 	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
 	return (flags & mask) == mask;
 }
 
-inline bool AudioPlayer::IsPaused() const noexcept
+inline bool AudioPlayer::isPaused() const noexcept
 {
 	const auto flags = flags_.load(std::memory_order_acquire);
 	constexpr auto mask = static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
 	return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
 }
 
-inline bool AudioPlayer::IsStopped() const noexcept
+inline bool AudioPlayer::isStopped() const noexcept
 {
 	const auto flags = flags_.load(std::memory_order_acquire);
 	return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
 }
 
-inline bool AudioPlayer::IsReady() const noexcept
+inline bool AudioPlayer::isReady() const noexcept
 {
 	std::lock_guard lock{activeDecodersLock_};
-	return FirstActiveDecoderState() != nullptr;
+	return firstActiveDecoderState() != nullptr;
 }
 
-inline AudioPlayer::Decoder _Nullable AudioPlayer::NowPlaying() const noexcept
+inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept
 {
 	std::lock_guard lock{nowPlayingLock_};
 	return nowPlaying_;
 }
 
-inline AVAudioSourceNode * _Nonnull AudioPlayer::SourceNode() const noexcept
+inline AVAudioSourceNode * _Nonnull AudioPlayer::sourceNode() const noexcept
 {
 	return sourceNode_;
 }
 
-inline AVAudioMixerNode * _Nonnull AudioPlayer::MainMixerNode() const noexcept
+inline AVAudioMixerNode * _Nonnull AudioPlayer::mainMixerNode() const noexcept
 {
 	return engine_.mainMixerNode;
 }
 
-inline AVAudioOutputNode * _Nonnull AudioPlayer::OutputNode() const noexcept
+inline AVAudioOutputNode * _Nonnull AudioPlayer::outputNode() const noexcept
 {
 	return engine_.outputNode;
 }
 
-} /* namespace SFB */
+} /* namespace sfb */
 
 #pragma clang diagnostic pop

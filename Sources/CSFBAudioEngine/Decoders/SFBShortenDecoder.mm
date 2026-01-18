@@ -80,14 +80,14 @@ constexpr auto seekTrailerSizeBytes 		= 12;
 constexpr auto seekEntrySizeBytes 			= 80;
 
 
-constexpr int32_t RoundedShiftDown(int32_t x, int k) noexcept
+constexpr int32_t roundedShiftDown(int32_t x, int k) noexcept
 {
 	return (k == 0) ? x : (x >> (k - 1)) >> 1;
 }
 
 /// Returns a two-dimensional `rows` x `cols` array using one allocation from `malloc`
 template <typename T>
-T ** AllocateContiguous2DArray(size_t rows, size_t cols) noexcept
+T ** allocateContiguous2DArray(size_t rows, size_t cols) noexcept
 {
 	T **result = static_cast<T **>(std::malloc((rows * sizeof(T *)) + (rows * cols * sizeof(T))));
 	if(!result)
@@ -114,16 +114,6 @@ public:
 		0x1fffffff,	0x3fffffff,	0x7fffffff,	0xffffffff
 	};
 
-	static constexpr size_t sizeof_uvar(uint32_t val, size_t nbin) noexcept
-	{
-		return (val >> nbin) + nbin;
-	}
-
-	static constexpr size_t sizeof_var(int32_t val, size_t nbin) noexcept
-	{
-		return static_cast<size_t>(labs(val) >> nbin) + nbin + 1;
-	}
-
 	/// Creates an empty `VariableLengthInput` object
 	/// - important: `Allocate()` must be called before using
 	VariableLengthInput() noexcept = default;
@@ -142,14 +132,14 @@ public:
 	using InputBlock = bool(^)(void *buf, size_t len, size_t& read);
 
 	/// Sets the input callback
-	void SetInputCallback(InputBlock block) noexcept
+	void setInputCallback(InputBlock block) noexcept
 	{
 		inputBlock_ = block;
 	}
 
 	/// Allocates an internal buffer of the specified size
 	/// - warning: Sizes other than `512` will break seeking
-	bool Allocate(size_t size = 512) noexcept
+	bool allocate(size_t size = 512) noexcept
 	{
 		if(byteBuffer_)
 			return false;
@@ -165,18 +155,18 @@ public:
 		return true;
 	}
 
-	bool GetRiceGolombCode(int32_t& i32, int k) noexcept
+	bool getRiceGolombCode(int32_t& i32, int k) noexcept
 	{
 #if DEBUG
 		assert(k < 32);
 #endif /* DEBUG */
-		if(bitsAvailable_ == 0 && !RefillBitBuffer())
+		if(bitsAvailable_ == 0 && !refillBitBuffer())
 			return false;
 
 		// Calculate unary quotient
 		int32_t result;
 		for(result = 0; !(bitBuffer_ & (1L << --bitsAvailable_)); ++result) {
-			if(bitsAvailable_ == 0 && !RefillBitBuffer())
+			if(bitsAvailable_ == 0 && !refillBitBuffer())
 				return false;
 		}
 
@@ -191,7 +181,7 @@ public:
 #endif /* DEBUG */
 				result = (result << bitsAvailable_) | static_cast<int32_t>(bitBuffer_ & maskTable_[bitsAvailable_]);
 				k -= bitsAvailable_;
-				if(!RefillBitBuffer())
+				if(!refillBitBuffer())
 					return false;
 			}
 		}
@@ -200,10 +190,10 @@ public:
 		return true;
 	}
 
-	bool GetInt32(int32_t& i32, int k) noexcept
+	bool getInt32(int32_t& i32, int k) noexcept
 	{
 		int32_t var;
-		if(!GetRiceGolombCode(var, k + 1))
+		if(!getRiceGolombCode(var, k + 1))
 			return false;
 
 		uint32_t uvar = static_cast<uint32_t>(var);
@@ -214,26 +204,26 @@ public:
 		return true;
 	}
 
-	bool GetUInt32(uint32_t& ui32, int version, int k) noexcept
+	bool getUInt32(uint32_t& ui32, int version, int k) noexcept
 	{
-		if(version > 0 && !GetRiceGolombCode(k, parameterUInt32))
+		if(version > 0 && !getRiceGolombCode(k, parameterUInt32))
 			return false;
 
 		int32_t i32;
-		if(!GetRiceGolombCode(i32, k))
+		if(!getRiceGolombCode(i32, k))
 			return false;
 		ui32 = static_cast<uint32_t>(i32);
 		return true;
 	}
 
-	void Reset() noexcept
+	void reset() noexcept
 	{
 		byteBufferPosition_ = byteBuffer_;
 		bytesAvailable_ = 0;
 		bitsAvailable_ = 0;
 	}
 
-	bool Refill() noexcept
+	bool refill() noexcept
 	{
 		size_t bytesRead = 0;
 		if(!inputBlock_ || !inputBlock_(byteBuffer_, size_, bytesRead) || bytesRead < 4)
@@ -243,7 +233,7 @@ public:
 		return true;
 	}
 
-	bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable) noexcept
+	bool setState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable) noexcept
 	{
 		if(byteBufferPosition > size_ || bytesAvailable > size_ - byteBufferPosition || bitsAvailable > 32)
 			return false;
@@ -271,9 +261,9 @@ private:
 	int bitsAvailable_ = 0;
 
 	/// Reads a single `uint32_t` from the byte buffer, refilling if necessary
-	bool RefillBitBuffer() noexcept
+	bool refillBitBuffer() noexcept
 	{
-		if(bytesAvailable_ < 4 && !Refill())
+		if(bytesAvailable_ < 4 && !refill())
 			return false;
 
 		bitBuffer_ = static_cast<uint32_t>((static_cast<int32_t>(byteBufferPosition_[0]) << 24) | (static_cast<int32_t>(byteBufferPosition_[1]) << 16) | (static_cast<int32_t>(byteBufferPosition_[2]) << 8) | static_cast<int32_t>(byteBufferPosition_[3]));
@@ -295,7 +285,7 @@ struct SeekTableHeader
 	uint32_t fileSize_;
 };
 
-SeekTableHeader ParseSeekTableHeader(const void *buf)
+SeekTableHeader parseSeekTableHeader(const void *buf)
 {
 	SeekTableHeader header;
 	std::memcpy(header.signature_, buf, 4);
@@ -312,7 +302,7 @@ struct SeekTableTrailer
 	int8_t signature_ [8];
 };
 
-SeekTableTrailer ParseSeekTableTrailer(const void *buf)
+SeekTableTrailer parseSeekTableTrailer(const void *buf)
 {
 	SeekTableTrailer trailer;
 	trailer.seekTableSize_ = OSReadLittleInt32(buf, 0);
@@ -338,7 +328,7 @@ struct SeekTableEntry
 	int32_t offset1_ [4];
 };
 
-SeekTableEntry ParseSeekTableEntry(const void *buf)
+SeekTableEntry parseSeekTableEntry(const void *buf)
 {
 	SeekTableEntry entry;
 	entry.frameNumber_ = OSReadLittleInt32(buf, 0);
@@ -362,7 +352,7 @@ SeekTableEntry ParseSeekTableEntry(const void *buf)
 }
 
 /// Returns a generic error for an invalid Shorten file
-NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
+NSError * genericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 {
 	return SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
 											NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @""),
@@ -549,14 +539,14 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
 	// Allocate decoding buffers
-	_buffer = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(_blocksize + _wrap));
+	_buffer = allocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(_blocksize + _wrap));
 	if(!_buffer) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
 	}
 
-	_offset = AllocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(std::max(1, _mean)));
+	_offset = allocateContiguous2DArray<int32_t>(static_cast<size_t>(_channelCount), static_cast<size_t>(std::max(1, _mean)));
 	if(!_offset) {
 		std::free(_buffer);
 		if(error)
@@ -720,8 +710,8 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		return NO;
 
 	_eos = false;
-	_input.Reset();
-	if(!_input.Refill() || !_input.SetState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_, entry->bitBufferPosition_)) {
+	_input.reset();
+	if(!_input.refill() || !_input.setState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_, entry->bitBufferPosition_)) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EIO userInfo:@{ NSURLErrorKey: _inputSource.url }];
 		return NO;
@@ -776,7 +766,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	uint32_t magic;
 	if(![_inputSource readUInt32BigEndian:&magic error:nil] || magic != 'ajkg') {
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -804,7 +794,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	_mean = _version < 2 ? v0DefaultMean : v2DefaultMean;
 
 	// Set up variable length input
-	if(!_input.Allocate()) {
+	if(!_input.allocate()) {
 		os_log_error(gSFBAudioDecoderLog, "Unable to allocate variable-length input");
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -812,7 +802,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	}
 
 	__weak SFBInputSource *inputSource = self->_inputSource;
-	_input.SetInputCallback(^bool(void *buf, size_t len, size_t& read) {
+	_input.setInputCallback(^bool(void *buf, size_t len, size_t& read) {
 		NSInteger bytesRead;
 		if(![inputSource readBytes:buf length:static_cast<NSInteger>(len) bytesRead:&bytesRead error:nil])
 			return false;
@@ -822,9 +812,9 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	// Read file type
 	uint32_t fileType;
-	if(!_input.GetUInt32(fileType, _version, parameterFileType)) {
+	if(!_input.getUInt32(fileType, _version, parameterFileType)) {
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 	if(fileType != fileTypeUInt8 && fileType != fileTypeSInt8 && fileType != fileTypeUInt16BE && fileType != fileTypeUInt16LE && fileType != fileTypeSInt16BE && fileType != fileTypeSInt16LE) {
@@ -844,7 +834,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 
 	// Read number of channels
 	uint32_t channelCount = 0;
-	if(!_input.GetUInt32(channelCount, _version, parameterChannelCount) || channelCount == 0 || channelCount > maxChannelCount) {
+	if(!_input.getUInt32(channelCount, _version, parameterChannelCount) || channelCount == 0 || channelCount > maxChannelCount) {
 		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", channelCount);
 		if(error)
 			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
@@ -863,7 +853,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	// Read blocksize if version > 0
 	if(_version > 0) {
 		uint32_t blocksize = 0;
-		if(!_input.GetUInt32(blocksize, _version, static_cast<int>(std::log2(defaultBlockSize))) || blocksize == 0 || blocksize > maxBlocksize || blocksize <= defaultWrap) {
+		if(!_input.getUInt32(blocksize, _version, static_cast<int>(std::log2(defaultBlockSize))) || blocksize == 0 || blocksize > maxBlocksize || blocksize <= defaultWrap) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
 				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
@@ -876,7 +866,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		_blocksize = static_cast<int>(blocksize);
 
 		uint32_t maxLPC = 0;
-		if(!_input.GetUInt32(maxLPC, _version, parameterQLPC) || maxLPC > 1024) {
+		if(!_input.getUInt32(maxLPC, _version, parameterQLPC) || maxLPC > 1024) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid maximum linear predictor order: %u", maxLPC);
 			if(error)
 				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
@@ -889,7 +879,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		_maxLPC = static_cast<int>(maxLPC);
 
 		uint32_t mean = 0;
-		if(!_input.GetUInt32(mean, _version, 0) || mean > 32768) {
+		if(!_input.getUInt32(mean, _version, 0) || mean > 32768) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid mean: %u", mean);
 			if(error)
 				*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
@@ -902,17 +892,17 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 		_mean = static_cast<int>(mean);
 
 		uint32_t skipCount;
-		if(!_input.GetUInt32(skipCount, _version, parameterSkipBytes) /* || nskip > bits_remaining_in_input */) {
+		if(!_input.getUInt32(skipCount, _version, parameterSkipBytes) /* || nskip > bits_remaining_in_input */) {
 			if(error)
-				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+				*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
 
 		for(uint32_t i = 0; i < skipCount; ++i) {
 			uint32_t dummy;
-			if(!_input.GetUInt32(dummy, _version, parameterExtraByte)) {
+			if(!_input.getUInt32(dummy, _version, parameterExtraByte)) {
 				if(error)
-					*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+					*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 				return NO;
 			}
 		}
@@ -932,7 +922,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	// Parse the WAVE or AIFF header in the verbatim section
 
 	int32_t function;
-	if(!_input.GetRiceGolombCode(function, parameterFunction) || function != functionVerbatim) {
+	if(!_input.getRiceGolombCode(function, parameterFunction) || function != functionVerbatim) {
 		os_log_error(gSFBAudioDecoderLog, "Missing initial verbatim section");
 		if(error)
 			*error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
@@ -946,19 +936,19 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	constexpr auto canonicalHeaderSizeBytes = 44;
 
 	int32_t headerSize;
-	if(!_input.GetRiceGolombCode(headerSize, parameterVerbatimChunkSize) || headerSize < canonicalHeaderSizeBytes || headerSize > verbatimChunkMaxSizeBytes) {
+	if(!_input.getRiceGolombCode(headerSize, parameterVerbatimChunkSize) || headerSize < canonicalHeaderSizeBytes || headerSize > verbatimChunkMaxSizeBytes) {
 		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", headerSize);
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
 	std::vector<unsigned char> headerBytes(headerSize);
 	for(int32_t i = 0; i < headerSize; ++i) {
 		int32_t byte;
-		if(!_input.GetRiceGolombCode(byte, parameterVerbatimByte)) {
+		if(!_input.getRiceGolombCode(byte, parameterVerbatimByte)) {
 			if(error)
-				*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+				*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 			return NO;
 		}
 
@@ -1006,7 +996,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(chunkID != 'WAVE') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'WAVE' in 'RIFF' chunk");
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1027,7 +1017,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				if(chunkSize < 16) {
 					os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", chunkSize);
 					if(error)
-						*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+						*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 					return NO;
 				}
 
@@ -1078,7 +1068,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(!sawFormatChunk) {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'fmt ' chunk");
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1100,7 +1090,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(chunkID != 'AIFF' && chunkID != 'AIFC') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'AIFF' or 'AIFC' in 'FORM' chunk");
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1124,7 +1114,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				if(chunkSize < 18) {
 					os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", chunkSize);
 					if(error)
-						*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+						*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 					return NO;
 				}
 
@@ -1145,7 +1135,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				if(exp < -63 || exp > 63) {
 					os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
 					if(error)
-						*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+						*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 					return NO;
 				}
 
@@ -1174,7 +1164,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	if(!sawCommonChunk) {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
 		if(error)
-			*error = GenericShortenInvalidFormatErrorForURL(_inputSource.url);
+			*error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
 		return NO;
 	}
 
@@ -1186,7 +1176,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 	int chan = 0;
 	for(;;) {
 		int32_t cmd;
-		if(!_input.GetRiceGolombCode(cmd, parameterFunction)) {
+		if(!_input.getRiceGolombCode(cmd, parameterFunction)) {
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 			return NO;
@@ -1209,7 +1199,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				int resn = 0, lpc;
 
 				if(cmd != functionZero) {
-					if(!_input.GetRiceGolombCode(resn, parameterEnergy)) {
+					if(!_input.getRiceGolombCode(resn, parameterEnergy)) {
 						if(error)
 							*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 						return NO;
@@ -1228,7 +1218,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					if(_version < 2)
 						chanOffset = sum / _mean;
 					else
-						chanOffset = RoundedShiftDown(sum / _mean, _bitshift);
+						chanOffset = roundedShiftDown(sum / _mean, _bitshift);
 				}
 
 				switch(cmd) {
@@ -1239,7 +1229,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					case functionDiff0:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.GetInt32(var, resn)) {
+							if(!_input.getInt32(var, resn)) {
 								if(error)
 									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
@@ -1250,7 +1240,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					case functionDiff1:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.GetInt32(var, resn)) {
+							if(!_input.getInt32(var, resn)) {
 								if(error)
 									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
@@ -1261,7 +1251,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					case functionDiff2:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.GetInt32(var, resn)) {
+							if(!_input.getInt32(var, resn)) {
 								if(error)
 									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
@@ -1272,7 +1262,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 					case functionDiff3:
 						for(auto i = 0; i < _blocksize; ++i) {
 							int32_t var;
-							if(!_input.GetInt32(var, resn)) {
+							if(!_input.getInt32(var, resn)) {
 								if(error)
 									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
@@ -1281,7 +1271,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 						}
 						break;
 					case functionQLPC:
-						if(!_input.GetRiceGolombCode(lpc, parameterQLPC) || lpc > _maxLPC) {
+						if(!_input.getRiceGolombCode(lpc, parameterQLPC) || lpc > _maxLPC) {
 							os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported linear predictor order: %d", lpc);
 							if(error)
 								*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -1289,7 +1279,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 						}
 
 						for(auto i = 0; i < lpc; ++i) {
-							if(!_input.GetInt32(_qlpc[i], parameterQLPC)) {
+							if(!_input.getInt32(_qlpc[i], parameterQLPC)) {
 								if(error)
 									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
@@ -1303,7 +1293,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 							for(auto j = 0; j < lpc; ++j)
 								sum += _qlpc[j] * chanBuffer[i - j - 1];
 							int32_t var;
-							if(!_input.GetInt32(var, resn)) {
+							if(!_input.getInt32(var, resn)) {
 								if(error)
 									*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 								return NO;
@@ -1390,7 +1380,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			case functionBlocksize:
 			{
 				uint32_t uint = 0;
-				if(!_input.GetUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > maxBlocksize || uint <= _wrap || static_cast<int>(uint) > _blocksize) {
+				if(!_input.getUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 || uint > maxBlocksize || uint <= _wrap || static_cast<int>(uint) > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
 						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -1400,7 +1390,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				break;
 			}
 			case functionBitshift:
-				if(!_input.GetRiceGolombCode(_bitshift, parameterBitshift) || _bitshift > 32) {
+				if(!_input.getRiceGolombCode(_bitshift, parameterBitshift) || _bitshift > 32) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported bit shift: %u", _bitshift);
 					if(error)
 						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -1410,7 +1400,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			case functionVerbatim:
 			{
 				int32_t chunk_len;
-				if(!_input.GetRiceGolombCode(chunk_len, parameterVerbatimChunkSize) || chunk_len < 0 || chunk_len > verbatimChunkMaxSizeBytes) {
+				if(!_input.getRiceGolombCode(chunk_len, parameterVerbatimChunkSize) || chunk_len < 0 || chunk_len > verbatimChunkMaxSizeBytes) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid verbatim chunk length: %u", chunk_len);
 					if(error)
 						*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
@@ -1418,7 +1408,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				}
 				while(chunk_len--) {
 					int32_t dummy;
-					if(!_input.GetRiceGolombCode(dummy, parameterVerbatimByte)) {
+					if(!_input.getRiceGolombCode(dummy, parameterVerbatimByte)) {
 						if(error)
 							*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeDecodingError userInfo:@{ NSURLErrorKey: _inputSource.url }];
 						return NO;
@@ -1464,7 +1454,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInvalidFormat userInfo:nil];
 			return NO;
 		}
-		trailer = ParseSeekTableTrailer(buf);
+		trailer = parseSeekTableTrailer(buf);
 	}
 
 	// No appended seek table found; not an error
@@ -1495,7 +1485,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInvalidFormat userInfo:nil];
 			return NO;
 		}
-		header = ParseSeekTableHeader(buf);
+		header = parseSeekTableHeader(buf);
 	}
 
 	// A corrupt seek table is an error, however YES is returned to try and permit decoding to continue
@@ -1528,7 +1518,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			return NO;
 		}
 
-		auto entry = ParseSeekTableEntry(buf);
+		auto entry = parseSeekTableEntry(buf);
 		entries.push_back(entry);
 	}
 
@@ -1561,7 +1551,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			return {};
 		}
 
-		auto header = ParseSeekTableHeader(buf);
+		auto header = parseSeekTableHeader(buf);
 		if(memcmp("SEEK", header.signature_, 4)) {
 			os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.signature_);
 			return {};
@@ -1578,7 +1568,7 @@ NSError * GenericShortenInvalidFormatErrorForURL(NSURL * _Nonnull url) noexcept
 			return {};
 		}
 
-		auto entry = ParseSeekTableEntry(buf);
+		auto entry = parseSeekTableEntry(buf);
 		entries.push_back(entry);
 
 		if(inputSource.atEOF)

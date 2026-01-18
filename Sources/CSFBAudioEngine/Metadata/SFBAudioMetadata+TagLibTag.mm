@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -29,7 +29,7 @@
 
 @end
 
-void SFB::Audio::SetTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag)
+void sfb::setTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag)
 {
 	NSCParameterAssert(metadata != nil);
 	assert(nullptr != tag);

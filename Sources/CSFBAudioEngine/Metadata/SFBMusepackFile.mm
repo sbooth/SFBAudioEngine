@@ -86,7 +86,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Musepack" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			if(properties->sampleFrames())
 				propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
@@ -139,9 +139,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
 		// ID3v1 tags are only written if present, but an APE tag is always written
 
 		if(file.hasID3v1Tag())
-			SFB::Audio::SetID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+			sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
 
-		SFB::Audio::SetAPETagFromMetadata(self.metadata, file.APETag(true));
+		sfb::setAPETagFromMetadata(self.metadata, file.APETag(true));
 
 		if(!file.save()) {
 			if(error)

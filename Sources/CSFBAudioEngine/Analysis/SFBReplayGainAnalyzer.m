@@ -465,8 +465,9 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 			if(error)
 				*error = err;
 			return nil;
-		} else if(status == AVAudioConverterOutputStatus_EndOfStream)
+		} else if(status == AVAudioConverterOutputStatus_EndOfStream) {
 			break;
+		}
 
 		AVAudioFrameCount frameCount = outputBuffer.frameLength;
 
@@ -486,8 +487,9 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 		if(isStereo) {
 			vDSP_vsmul(outputBuffer.floatChannelData[1], 1, &scale, outputBuffer.floatChannelData[1], 1, (vDSP_Length)frameCount);
 			[self analyzeLeftSamples:outputBuffer.floatChannelData[0] rightSamples:outputBuffer.floatChannelData[1] sampleCount:(size_t)frameCount isStereo:YES];
-		} else
+		} else {
 			[self analyzeLeftSamples:outputBuffer.floatChannelData[0] rightSamples:NULL sampleCount:(size_t)frameCount isStereo:NO];
+		}
 	}
 
 	_albumPeak = MAX(_albumPeak, _trackPeak);

@@ -32,13 +32,13 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConve
 namespace {
 
 template <typename T>
-OSStatus SetAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue) noexcept
+OSStatus setAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue) noexcept
 {
 	NSCParameterAssert(audioConverter != nullptr);
 	return AudioConverterSetProperty(audioConverter, propertyID, sizeof(propertyValue), &propertyValue);
 }
 
-std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtension) noexcept
+std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexcept
 {
 	NSCParameterAssert(pathExtension != nil);
 	CFStringRef extension = (__bridge CFStringRef)pathExtension;
@@ -62,7 +62,7 @@ std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtensio
 	return typesForExtension;
 }
 
-std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false) noexcept
+std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false) noexcept
 {
 	UInt32 size = 0;
 	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size);
@@ -104,7 +104,7 @@ std::vector<AudioFormatID> AudioFormatIDsForFileTypeID(AudioFileTypeID fileTypeI
 	return formatIDs;
 }
 
-OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount) noexcept
+OSStatus readProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -131,7 +131,7 @@ OSStatus my_AudioFile_ReadProc(void *inClientData, SInt64 inPosition, UInt32 req
 	return noErr;
 }
 
-OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer, UInt32 *actualCount) noexcept
+OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer, UInt32 *actualCount) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -158,7 +158,7 @@ OSStatus my_AudioFile_WriteProc(void *inClientData, SInt64 inPosition, UInt32 re
 	return noErr;
 }
 
-SInt64 my_AudioFile_GetSizeProc(void *inClientData) noexcept
+SInt64 getSizeProc(void *inClientData) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -172,7 +172,7 @@ SInt64 my_AudioFile_GetSizeProc(void *inClientData) noexcept
 	return length;
 }
 
-OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
+OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept
 {
 	NSCParameterAssert(inClientData != nullptr);
 
@@ -326,7 +326,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 	if(fileTypeSetting != nil)
 		fileType = static_cast<AudioFileTypeID>(fileTypeSetting.unsignedIntValue);
 	else {
-		auto typesForExtension = AudioFileTypeIDsForExtension(_outputSource.url.pathExtension);
+		auto typesForExtension = typeIDsForExtension(_outputSource.url.pathExtension);
 		if(typesForExtension.empty()) {
 			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set and extension \"%{public}@\" has no known AudioFileTypeID", _outputSource.url.pathExtension);
 			if(error)
@@ -348,7 +348,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 	if(formatIDSetting != nil)
 		formatID = static_cast<AudioFormatID>(formatIDSetting.unsignedIntValue);
 	else {
-		auto availableFormatIDs = AudioFormatIDsForFileTypeID(fileType, true);
+		auto availableFormatIDs = formatIDsForFileTypeID(fileType, true);
 		if(availableFormatIDs.empty()) {
 			os_log_error(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set and file type '%{public}.4s' has no known AudioFormatID", SFBCStringForOSType(fileType));
 			if(error)
@@ -409,7 +409,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:_processingFormat.channelLayout];
 
 	AudioFileID audioFile;
-	auto result = AudioFileInitializeWithCallbacks((__bridge void *)self, my_AudioFile_ReadProc, my_AudioFile_WriteProc, my_AudioFile_GetSizeProc, my_AudioFile_SetSizeProc, fileType, &format, 0, &audioFile);
+	auto result = AudioFileInitializeWithCallbacks((__bridge void *)self, readProc, writeProc, getSizeProc, setSizeProc, fileType, &format, 0, &audioFile);
 	if(result != noErr) {
 		os_log_error(gSFBAudioEncoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
@@ -465,7 +465,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 				AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
 				switch(propertyID) {
 					case kAudioConverterSampleRateConverterComplexity:
-						result = SetAudioConverterProperty<OSType>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
+						result = setAudioConverterProperty<OSType>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
 						break;
 					case kAudioConverterSampleRateConverterQuality:
 					case kAudioConverterCodecQuality:
@@ -477,7 +477,7 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 					case kAudioConverterPropertyDithering:
 					case kAudioConverterPropertyDitherBitDepth:
 #endif
-						result = SetAudioConverterProperty<UInt32>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
+						result = setAudioConverterProperty<UInt32>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
 						break;
 					default:
 						os_log_info(gSFBAudioEncoderLog, "Ignoring unknown AudioConverterPropertyID: %d '%{public}.4s'", propertyID, SFBCStringForOSType(propertyID));
@@ -501,8 +501,9 @@ OSStatus my_AudioFile_SetSizeProc(void *inClientData, SInt64 inSize) noexcept
 					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 				return NO;
 			}
-		} else
+		} else {
 			os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings is set but kExtAudioFileProperty_AudioConverter is NULL");
+		}
 	}
 
 	_af = std::move(af);

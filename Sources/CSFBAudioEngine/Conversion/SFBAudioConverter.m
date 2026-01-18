@@ -212,8 +212,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 			if(error)
 				*error = convertError;
 			return NO;
-		} else if(status == AVAudioConverterOutputStatus_EndOfStream)
+		} else if(status == AVAudioConverterOutputStatus_EndOfStream) {
 			break;
+		}
 
 		// Send converted data to the encoder
 		if(![_encoder encodeFromBuffer:encodeBuffer frameLength:encodeBuffer.frameLength error:&encodeError]) {
