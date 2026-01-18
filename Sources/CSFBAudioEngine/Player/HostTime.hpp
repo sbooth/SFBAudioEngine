@@ -26,8 +26,8 @@ inline const auto timebase = [] {
 	// https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/clock.c#L407
 
 	mach_timebase_info_data_t timebase_info;
-	[[maybe_unused]] const auto result = mach_timebase_info(&timebase_info);
-	assert(result == KERN_SUCCESS);
+	[[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
+	assert(kr == KERN_SUCCESS);
 	return timebase_info;
 }();
 
