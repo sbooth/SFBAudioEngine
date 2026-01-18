@@ -48,7 +48,7 @@ void audioEngineConfigurationChangeNotificationCallback(CFNotificationCenterRef 
 #if TARGET_OS_IPHONE
 void audioSessionInterruptionNotificationCallback(CFNotificationCenterRef center, void *observer, CFNotificationName name, const void *object, CFDictionaryRef userInfo)
 {
-	auto that = static_cast<SFB::AudioPlayer *>(observer);
+	auto that = static_cast<sfb::AudioPlayer *>(observer);
 	that->handleAudioSessionInterruption((__bridge NSDictionary *)userInfo);
 }
 #endif /* TARGET_OS_IPHONE */
@@ -370,8 +370,8 @@ sfb::AudioPlayer::AudioPlayer()
 
 	// The decoding event ring buffer is written to by the decoding thread and read from by the event queue
 	if(!decodingEvents_.Allocate(decodingEventRingBufferCapacity)) {
-		os_log_error(log_, "Unable to create decoding event ring buffer: SFB::RingBuffer::Allocate failed with capacity %zu", decodingEventRingBufferCapacity);
-		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
+		os_log_error(log_, "Unable to create decoding event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu", decodingEventRingBufferCapacity);
+		throw std::runtime_error("CXXRingBuffer::RingBuffer::Allocate failed");
 	}
 
 	decodingSemaphore_ = dispatch_semaphore_create(0);
@@ -382,8 +382,8 @@ sfb::AudioPlayer::AudioPlayer()
 
 	// The rendering event ring buffer is written to by the render block and read from by the event queue
 	if(!renderingEvents_.Allocate(renderingEventRingBufferCapacity)) {
-		os_log_error(log_, "Unable to create rendering event ring buffer: SFB::RingBuffer::Allocate failed with capacity %zu", renderingEventRingBufferCapacity);
-		throw std::runtime_error("SFB::RingBuffer::Allocate failed");
+		os_log_error(log_, "Unable to create rendering event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu", renderingEventRingBufferCapacity);
+		throw std::runtime_error("CXXRingBuffer::RingBuffer::Allocate failed");
 	}
 
 	eventSemaphore_ = dispatch_semaphore_create(0);
@@ -1957,7 +1957,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 }
 
 #if TARGET_OS_IPHONE
-void SFB::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) noexcept
+void sfb::AudioPlayer::HandleAudioSessionInterruption(NSDictionary *userInfo) noexcept
 {
 	const auto interruptionType = [[userInfo objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
 	switch(interruptionType) {
