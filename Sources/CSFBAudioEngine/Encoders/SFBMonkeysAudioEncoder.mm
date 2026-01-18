@@ -40,7 +40,7 @@ class APEIOInterface final : public APE::IAPEIO
 {
 public:
 	explicit APEIOInterface(SFBOutputSource *outputSource)
-	: mOutputSource(outputSource)
+	: outputSource_(outputSource)
 	{}
 
 	int Open(const wchar_t * pName, bool bOpenReadOnly) override
@@ -59,7 +59,7 @@ public:
 	int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead) override
 	{
 		NSInteger bytesRead;
-		if(![mOutputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
+		if(![outputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
 			return ERROR_IO_READ;
 
 		*pBytesRead = static_cast<unsigned int>(bytesRead);
@@ -70,7 +70,7 @@ public:
 	int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten) override
 	{
 		NSInteger bytesWritten;
-		if(![mOutputSource writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] || bytesWritten != nBytesToWrite)
+		if(![outputSource_ writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] || bytesWritten != nBytesToWrite)
 			return ERROR_IO_WRITE;
 
 		*pBytesWritten = static_cast<unsigned int>(bytesWritten);
@@ -80,7 +80,7 @@ public:
 
 	int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override
 	{
-		if(!mOutputSource.supportsSeeking)
+		if(!outputSource_.supportsSeeking)
 			return ERROR_IO_READ;
 
 		NSInteger offset = nPosition;
@@ -90,19 +90,19 @@ public:
 				break;
 			case APE::SeekFileCurrent: {
 				NSInteger inputSourceOffset;
-				if([mOutputSource getOffset:&inputSourceOffset error:nil])
+				if([outputSource_ getOffset:&inputSourceOffset error:nil])
 					offset += inputSourceOffset;
 				break;
 			}
 			case APE::SeekFileEnd: {
 				NSInteger inputSourceLength;
-				if([mOutputSource getLength:&inputSourceLength error:nil])
+				if([outputSource_ getLength:&inputSourceLength error:nil])
 					offset += inputSourceLength;
 				break;
 			}
 		}
 
-		return ![mOutputSource seekToOffset:offset error:nil];
+		return ![outputSource_ seekToOffset:offset error:nil];
 	}
 
 	int Create(const wchar_t * pName) override
@@ -130,7 +130,7 @@ public:
 	APE::int64 GetPosition() override
 	{
 		NSInteger offset;
-		if(![mOutputSource getOffset:&offset error:nil])
+		if(![outputSource_ getOffset:&offset error:nil])
 			return -1;
 		return offset;
 	}
@@ -138,7 +138,7 @@ public:
 	APE::int64 GetSize() override
 	{
 		NSInteger length;
-		if(![mOutputSource getLength:&length error:nil])
+		if(![outputSource_ getLength:&length error:nil])
 			return -1;
 		return length;
 	}
@@ -151,7 +151,7 @@ public:
 
 private:
 
-	SFBOutputSource *mOutputSource;
+	SFBOutputSource *outputSource_;
 };
 
 } /* namespace */

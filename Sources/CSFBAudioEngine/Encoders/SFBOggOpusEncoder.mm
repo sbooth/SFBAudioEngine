@@ -56,14 +56,14 @@ struct ogg_opus_comments_deleter {
 using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
 using ogg_opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, ogg_opus_comments_deleter>;
 
-int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len) noexcept
+int writeCallback(void *user_data, const unsigned char *ptr, opus_int32 len) noexcept
 {
 	SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
 	NSInteger bytesWritten;
 	return !([encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] && bytesWritten == len);
 }
 
-int close_callback(void *user_data) noexcept
+int closeCallback(void *user_data) noexcept
 {
 	SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
 	return ![encoder->_outputSource closeReturningError:nil];
@@ -153,7 +153,7 @@ int close_callback(void *user_data) noexcept
 	if(![super openReturningError:error])
 		return NO;
 
-	OpusEncCallbacks callbacks = { write_callback, close_callback };
+	OpusEncCallbacks callbacks = { writeCallback, closeCallback };
 
 	ogg_opus_comments_unique_ptr comments{ope_comments_create()};
 	if(!comments) {
