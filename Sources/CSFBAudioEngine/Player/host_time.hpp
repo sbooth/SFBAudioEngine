@@ -11,7 +11,7 @@
 
 #import <mach/mach_time.h>
 
-namespace HostTime {
+namespace host_time {
 namespace detail {
 
 // On Intel processors mach_timebase_info is always 1/1.
@@ -80,4 +80,4 @@ inline const auto timebase = [] {
 	return ns;
 }
 
-} /* namespace HostTime */
+} /* namespace host_time */
