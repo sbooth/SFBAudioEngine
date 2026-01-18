@@ -84,7 +84,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Shorten" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties())
-			SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 
 		SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
 		if(file.tag())

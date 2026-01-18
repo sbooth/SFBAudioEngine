@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -17,16 +17,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag;
 @end
 
-namespace SFB {
-namespace Audio {
+namespace sfb {
 
 /// Sets values in `tag` using `metadata`
-void SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
+void setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
 
 /// Converts an `SFBAttachedPicture` object to a `TagLib::FLAC::Picture` object
 std::unique_ptr<TagLib::FLAC::Picture> ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture);
 
-} /* namespace Audio */
-} /* namespace SFB */
+} /* namespace sfb */
 
 NS_ASSUME_NONNULL_END

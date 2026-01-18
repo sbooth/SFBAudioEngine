@@ -13,6 +13,6 @@
 {
 @package
 	/// The underlying AudioPlayer instance
-	SFB::AudioPlayer::unique_ptr _player;
+	sfb::AudioPlayer::unique_ptr _player;
 }
 @end

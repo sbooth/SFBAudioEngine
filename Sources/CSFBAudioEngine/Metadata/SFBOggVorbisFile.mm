@@ -84,7 +84,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Ogg Vorbis" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties())
-			SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 
 		SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
 		if(file.tag())
@@ -127,7 +127,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 			return NO;
 		}
 
-		SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.tag());
+		sfb::setXiphCommentFromMetadata(self.metadata, file.tag());
 
 		if(!file.save()) {
 			if(error)
