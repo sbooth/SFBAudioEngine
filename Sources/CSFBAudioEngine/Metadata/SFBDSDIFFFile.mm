@@ -86,7 +86,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"DSD Interchange" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			if(properties->bitsPerSample())
 				propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
@@ -138,8 +138,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
 			return NO;
 		}
 
-		SFB::Audio::SetTagFromMetadata(self.metadata, file.tag());
-		SFB::Audio::SetID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
+		sfb::setTagFromMetadata(self.metadata, file.tag());
+		sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
 
 		if(!file.save()) {
 			if(error)

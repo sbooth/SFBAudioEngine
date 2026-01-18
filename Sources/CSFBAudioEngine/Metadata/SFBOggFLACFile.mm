@@ -85,7 +85,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioE
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Ogg FLAC" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			if(properties->bitsPerSample())
 				propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
@@ -132,7 +132,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioE
 			return NO;
 		}
 
-		SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.tag());
+		sfb::setXiphCommentFromMetadata(self.metadata, file.tag());
 
 		if(!file.save()) {
 			if(error)

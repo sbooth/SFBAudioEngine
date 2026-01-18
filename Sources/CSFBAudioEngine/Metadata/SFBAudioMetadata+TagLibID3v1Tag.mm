@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2021 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -21,8 +21,8 @@
 
 @end
 
-void SFB::Audio::SetID3v1TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v1::Tag *tag)
+void sfb::setID3v1TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v1::Tag *tag)
 {
 	// TagLib::ID3v1::Tag has no additonal functionality over TagLib::Tag
-	SetTagFromMetadata(metadata, tag);
+	setTagFromMetadata(metadata, tag);
 }

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -15,13 +15,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibTag:(const TagLib::Tag *)tag;
 @end
 
-namespace SFB {
-namespace Audio {
+namespace sfb {
 
 /// Sets values in `tag` using `metadata`
-void SetTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag);
+void setTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag);
 
-} /* namespace Audio */
-} /* namespace SFB */
+} /* namespace sfb */
 
 NS_ASSUME_NONNULL_END

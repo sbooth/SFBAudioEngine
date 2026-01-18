@@ -169,7 +169,7 @@ void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber 
 
 } /* namespace */
 
-void SFB::Audio::SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt)
+void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt)
 {
 	NSCParameterAssert(metadata != nil);
 	assert(nullptr != tag);

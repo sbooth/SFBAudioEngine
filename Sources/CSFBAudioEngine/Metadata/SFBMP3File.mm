@@ -90,7 +90,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"MP3" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			// TODO: Is this too much information?
 #if 0
@@ -173,12 +173,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 		// APE and ID3v1 tags are only written if present, but ID3v2 tags are always written
 
 		if(file.hasAPETag())
-			SFB::Audio::SetAPETagFromMetadata(self.metadata, file.APETag());
+			sfb::setAPETagFromMetadata(self.metadata, file.APETag());
 
 		if(file.hasID3v1Tag())
-			SFB::Audio::SetID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+			sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
 
-		SFB::Audio::SetID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(true));
+		sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(true));
 
 		if(!file.save()) {
 			if(error)

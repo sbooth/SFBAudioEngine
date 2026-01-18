@@ -88,7 +88,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"FLAC" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			if(properties->bitsPerSample())
 				propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
@@ -162,17 +162,17 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 		// Album art is only saved as FLAC picture metadata blocks, not to the ID3v2 tag or Xiph comment
 
 		if(file.hasID3v1Tag())
-			SFB::Audio::SetID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+			sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
 
 		if(file.hasID3v2Tag())
-			SFB::Audio::SetID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(), false);
+			sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(), false);
 
-		SFB::Audio::SetXiphCommentFromMetadata(self.metadata, file.xiphComment(), false);
+		sfb::setXiphCommentFromMetadata(self.metadata, file.xiphComment(), false);
 
 		file.removePictures();
 
 		for(SFBAttachedPicture *attachedPicture in self.metadata.attachedPictures) {
-			auto picture = SFB::Audio::ConvertAttachedPictureToFLACPicture(attachedPicture);
+			auto picture = sfb::ConvertAttachedPictureToFLACPicture(attachedPicture);
 			if(picture)
 				file.addPicture(picture.release());
 		}

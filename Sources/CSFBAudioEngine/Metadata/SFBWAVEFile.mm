@@ -86,7 +86,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"WAVE" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			if(properties->bitsPerSample())
 				propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
@@ -142,9 +142,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
 		
 		// TODO: Should other field names from the Info tag be handled?
 		if(file.hasInfoTag())
-			SFB::Audio::SetTagFromMetadata(self.metadata, file.InfoTag());
+			sfb::setTagFromMetadata(self.metadata, file.InfoTag());
 		
-		SFB::Audio::SetID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
+		sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
 		
 		if(!file.save()) {
 			if(error)
