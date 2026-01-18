@@ -5,7 +5,6 @@
 //
 
 #import <cassert>
-#import <utility>
 
 #import "HostTime.hpp"
 
@@ -26,7 +25,7 @@ auto timebaseInfo() noexcept
 	mach_timebase_info_data_t timebase_info;
 	const auto result = mach_timebase_info(&timebase_info);
 	assert(result == KERN_SUCCESS);
-	return std::make_pair(timebase_info.numer, timebase_info.denom);
+	return timebase_info;
 }
 
 /// Mach timebase information.
@@ -36,10 +35,10 @@ const auto timebase = timebaseInfo();
 
 uint64_t HostTime::toNanoseconds(uint64_t t) noexcept
 {
-	if(timebase.first != timebase.second) {
+	if(timebase.numer != timebase.denom) {
 		__uint128_t ns = t;
-		ns *= timebase.first;
-		ns /= timebase.second;
+		ns *= timebase.numer;
+		ns /= timebase.denom;
 		return static_cast<uint64_t>(ns);
 	}
 
@@ -48,10 +47,10 @@ uint64_t HostTime::toNanoseconds(uint64_t t) noexcept
 
 uint64_t HostTime::fromNanoseconds(uint64_t ns) noexcept
 {
-	if(timebase.first != timebase.second) {
+	if(timebase.numer != timebase.denom) {
 		__uint128_t t = ns;
-		t *= timebase.second;
-		t /= timebase.first;
+		t *= timebase.denom;
+		t /= timebase.numer;
 		return static_cast<uint64_t>(t);
 	}
 
