@@ -105,7 +105,7 @@ uint64_t nextEventIdentificationNumber() noexcept
 /// Performs a generic atomic read-modify-write (RMW) operation
 /// - returns: The value before the operation
 template <typename T, typename Func> requires std::atomic<T>::is_always_lock_free && std::is_trivially_copyable_v<T> && std::invocable<Func, T> && std::convertible_to<std::invoke_result_t<Func, T>, T>
-T fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
+T fetchUpdate(std::atomic<T>& atom, Func&& func, std::memory_order order = std::memory_order_seq_cst) noexcept(std::is_nothrow_invocable_v<Func, T> && std::is_nothrow_copy_constructible_v<T>)
 {
 	T expected = atom.load(std::memory_order_relaxed);
 	while(true) {
@@ -117,7 +117,7 @@ T fetch_update(std::atomic<T>& atom, Func&& func, std::memory_order order = std:
 
 /// Returns the absolute difference between a and b
 template <typename T> requires std::unsigned_integral<T>
-constexpr T abs_diff(T a, T b) noexcept
+constexpr T absoluteDifference(T a, T b) noexcept
 {
 	return (a >= b) ? (a - b) : (b - a);
 }
@@ -1038,7 +1038,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept
 					// decoding completes.
 					formatMismatch = false;
 
-					fetch_update(decoderState->flags_, [](auto val) noexcept {
+					fetchUpdate(decoderState->flags_, [](auto val) noexcept {
 						return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) | static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
 					}, std::memory_order_acq_rel);
 
@@ -1066,7 +1066,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept
 								} else
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
 
-								fetch_update(nextDecoderState->flags_, [](auto val) noexcept {
+								fetchUpdate(nextDecoderState->flags_, [](auto val) noexcept {
 									return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) | static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
 								}, std::memory_order_acq_rel);
 							}
@@ -1762,7 +1762,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
 #if DEBUG
 		const auto now = HostTime::current();
-		const auto delta = HostTime::toNanoseconds(abs_diff(hostTime, now));
+		const auto delta = HostTime::toNanoseconds(absoluteDifference(hostTime, now));
 		const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
 		if(delta > tolerance)
 			os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
@@ -1812,7 +1812,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
 #if DEBUG
 		const auto now = HostTime::current();
-		const auto delta = HostTime::toNanoseconds(abs_diff(hostTime, now));
+		const auto delta = HostTime::toNanoseconds(absoluteDifference(hostTime, now));
 		const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
 		if(delta > tolerance)
 			os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6, now > hostTime ? "late" : "early");
