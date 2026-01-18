@@ -226,7 +226,7 @@ private:
 	void processDecoders(std::stop_token stoken) noexcept;
 #else
 	void processDecoders() noexcept;
-#endif
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
 	/// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
 	void submitDecodingErrorEvent(NSError *error) noexcept;
@@ -264,7 +264,7 @@ private:
 	void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
 #else
 	void sequenceAndProcessEvents() noexcept;
-#endif
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
 	/// Reads and processes an event payload from `decodingEvents_`
 	bool processDecodingEvent(DecodingEventCommand command) noexcept;
