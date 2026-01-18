@@ -85,7 +85,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 		NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"MP4" forKey:SFBAudioPropertiesKeyFormatName];
 		if(file.audioProperties()) {
 			auto properties = file.audioProperties();
-			SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+			sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 			if(properties->bitsPerSample())
 				propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
@@ -142,7 +142,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 			return NO;
 		}
 
-		SFB::Audio::SetMP4TagFromMetadata(self.metadata, file.tag());
+		sfb::setMP4TagFromMetadata(self.metadata, file.tag());
 
 		if(!file.save()) {
 			if(error)

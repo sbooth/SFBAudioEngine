@@ -98,8 +98,9 @@ static int MajorFormatForExtension(NSString *pathExtension)
 		if(!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
 			if([pathExtension isEqualToString:[NSString stringWithUTF8String:formatInfo.extension]])
 				return formatInfo.format;
-		} else
+		} else {
 			os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
+		}
 	}
 
 	return 0;
@@ -409,8 +410,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 				NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
 				if(pathExtension)
 					[majorModeExtensions addObject:pathExtension];
-			} else
+			} else {
 				os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
+			}
 		}
 
 		pathExtensions = [majorModeExtensions copy];
@@ -653,8 +655,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
 			if(result != SF_TRUE)
 				os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s", sf_error_number(sf_error(_sndfile)));
-		} else
+		} else {
 			os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@", processingFormatChannelLayout.layoutName, err);
+		}
 	}
 
 	AudioStreamBasicDescription outputStreamDescription = {0};

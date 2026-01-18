@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -171,7 +171,7 @@ void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *k
 
 } /* namespace */
 
-void SFB::Audio::SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
+void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
 {
 	NSCParameterAssert(metadata != nil);
 	assert(nullptr != tag);
@@ -230,7 +230,7 @@ void SFB::Audio::SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::
 	}
 }
 
-std::unique_ptr<TagLib::FLAC::Picture> SFB::Audio::ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture)
+std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture)
 {
 	NSCParameterAssert(attachedPicture != nil);
 

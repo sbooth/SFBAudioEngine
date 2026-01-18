@@ -148,8 +148,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		else if(mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)	sampleRate = 32000;
 		else
 			return nil;
-	} else if(sampleRate > 48000 || sampleRate < 6000)
+	} else if(sampleRate > 48000 || sampleRate < 6000) {
 		return nil;
+	}
 
 	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:sampleRate channels:(AVAudioChannelCount)sourceFormat.channelCount interleaved:YES];
 }
@@ -227,8 +228,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		if(bitrate != nil) {
 			spx_int32_t bitrate_value = bitrate.intValue;
 			speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
-		} else
+		} else {
 			os_log_info(gSFBAudioEncoderLog, "Speex encoding target is bitrate but no bitrate specified");
+		}
 	} else if(quality.intValue >= 0) {
 		spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate] intValue];
 		if(vbr_enabled) {

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -18,24 +18,24 @@ namespace {
 
 struct TTACallbacks final : TTA_io_callback
 {
-	SFBAudioEncoder *mEncoder;
+	SFBAudioEncoder *encoder_;
 };
 
-TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
+TTAint32 writeCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size) noexcept
 {
 	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
 	NSInteger bytesWritten;
-	if(![iocb->mEncoder->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil])
+	if(![iocb->encoder_->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil])
 		return -1;
 	return (TTAint32)bytesWritten;
 }
 
-TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
+TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 {
 	TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
-	if(![iocb->mEncoder->_outputSource seekToOffset:offset error:nil])
+	if(![iocb->encoder_->_outputSource seekToOffset:offset error:nil])
 		return -1;
 	return offset;
 }
@@ -125,9 +125,9 @@ TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcep
 
 	_callbacks				= std::make_unique<TTACallbacks>();
 	_callbacks->read		= nullptr;
-	_callbacks->write		= write_callback;
-	_callbacks->seek		= seek_callback;
-	_callbacks->mEncoder	= self;
+	_callbacks->write		= writeCallback;
+	_callbacks->seek		= seekCallback;
+	_callbacks->encoder_	= self;
 
 	TTA_info streamInfo;
 

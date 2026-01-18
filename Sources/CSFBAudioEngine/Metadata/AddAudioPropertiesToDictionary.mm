@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -7,7 +7,7 @@
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioProperties.h"
 
-void SFB::Audio::AddAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary)
+void sfb::addAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary)
 {
 	NSCParameterAssert(properties != nil);
 	NSCParameterAssert(dictionary != nil);

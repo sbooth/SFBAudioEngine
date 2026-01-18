@@ -57,7 +57,7 @@ class APEIOInterface final : public APE::IAPEIO
 {
 public:
 	explicit APEIOInterface(SFBInputSource *inputSource)
-	: mInputSource(inputSource)
+	: inputSource_(inputSource)
 	{}
 
 	int Open(const wchar_t * pName, bool bOpenReadOnly) override
@@ -76,7 +76,7 @@ public:
 	int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead) override
 	{
 		NSInteger bytesRead;
-		if(![mInputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
+		if(![inputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
 			return ERROR_IO_READ;
 
 		*pBytesRead = static_cast<unsigned int>(bytesRead);
@@ -95,7 +95,7 @@ public:
 
 	int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override
 	{
-		if(!mInputSource.supportsSeeking)
+		if(!inputSource_.supportsSeeking)
 			return ERROR_IO_READ;
 
 		NSInteger offset = nPosition;
@@ -105,19 +105,19 @@ public:
 				break;
 			case APE::SeekFileCurrent: {
 				NSInteger inputSourceOffset;
-				if([mInputSource getOffset:&inputSourceOffset error:nil])
+				if([inputSource_ getOffset:&inputSourceOffset error:nil])
 					offset += inputSourceOffset;
 				break;
 			}
 			case APE::SeekFileEnd: {
 				NSInteger inputSourceLength;
-				if([mInputSource getLength:&inputSourceLength error:nil])
+				if([inputSource_ getLength:&inputSourceLength error:nil])
 					offset += inputSourceLength;
 				break;
 			}
 		}
 
-		return ![mInputSource seekToOffset:offset error:nil];
+		return ![inputSource_ seekToOffset:offset error:nil];
 	}
 
 	int Create(const wchar_t * pName) override
@@ -145,7 +145,7 @@ public:
 	APE::int64 GetPosition() override
 	{
 		NSInteger offset;
-		if(![mInputSource getOffset:&offset error:nil])
+		if(![inputSource_ getOffset:&offset error:nil])
 			return -1;
 		return offset;
 	}
@@ -153,7 +153,7 @@ public:
 	APE::int64 GetSize() override
 	{
 		NSInteger length;
-		if(![mInputSource getLength:&length error:nil])
+		if(![inputSource_ getLength:&length error:nil])
 			return -1;
 		return length;
 	}
@@ -166,7 +166,7 @@ public:
 
 private:
 
-	SFBInputSource *mInputSource;
+	SFBInputSource *inputSource_;
 };
 
 } /* namespace */

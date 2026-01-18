@@ -37,12 +37,12 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 - (instancetype)init
 {
-	std::unique_ptr<SFB::AudioPlayer> player;
+	std::unique_ptr<sfb::AudioPlayer> player;
 
 	try {
-		player = std::make_unique<SFB::AudioPlayer>();
+		player = std::make_unique<sfb::AudioPlayer>();
 	} catch(const std::exception& e) {
-		os_log_error(SFB::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
+		os_log_error(sfb::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
 		return nil;
 	}
 
@@ -62,17 +62,17 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-	if(!_player->EnqueueDecoder(decoder, true, error))
+	if(!_player->enqueueDecoder(decoder, true, error))
 		return NO;
-	return _player->Play(error);
+	return _player->play(error);
 }
 
 - (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-	if(!_player->EnqueueDecoder(decoder, true, error))
+	if(!_player->enqueueDecoder(decoder, true, error))
 		return NO;
-	return _player->Play(error);
+	return _player->play(error);
 }
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
@@ -81,7 +81,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-	return _player->EnqueueDecoder(decoder, false, error);
+	return _player->enqueueDecoder(decoder, false, error);
 }
 
 - (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
@@ -90,226 +90,224 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-	return _player->EnqueueDecoder(decoder, forImmediatePlayback, error);
+	return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-	return _player->EnqueueDecoder(decoder, false, error);
+	return _player->enqueueDecoder(decoder, false, error);
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-	return _player->EnqueueDecoder(decoder, forImmediatePlayback, error);
+	return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
 {
 	NSParameterAssert(format != nil);
-	return _player->FormatWillBeGaplessIfEnqueued(format);
+	return _player->formatWillBeGaplessIfEnqueued(format);
 }
 
 - (void)clearQueue
 {
-	_player->ClearDecoderQueue();
+	_player->clearDecoderQueue();
 }
 
 - (BOOL)queueIsEmpty
 {
-	return _player->DecoderQueueIsEmpty();
+	return _player->decoderQueueIsEmpty();
 }
 
 // MARK: - Playback Control
 
 - (BOOL)playReturningError:(NSError **)error
 {
-	return _player->Play(error);
+	return _player->play(error);
 }
 
 - (BOOL)pause
 {
-	return _player->Pause();
+	return _player->pause();
 }
 
 - (BOOL)resume
 {
-	return _player->Resume();
+	return _player->resume();
 }
 
 - (void)stop
 {
-	_player->Stop();
+	_player->stop();
 }
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
 {
-	return _player->TogglePlayPause(error);
+	return _player->togglePlayPause(error);
 }
 
 - (void)reset
 {
-	_player->Reset();
+	_player->reset();
 }
 
 // MARK: - Player State
 
 - (BOOL)engineIsRunning
 {
-	return _player->EngineIsRunning();
+	return _player->engineIsRunning();
 }
 
 - (SFBAudioPlayerPlaybackState)playbackState
 {
-	return _player->PlaybackState();
+	return _player->playbackState();
 }
 
 - (BOOL)isPlaying
 {
-	return _player->IsPlaying();
+	return _player->isPlaying();
 }
 
 - (BOOL)isPaused
 {
-	return _player->IsPaused();
+	return _player->isPaused();
 }
 
 - (BOOL)isStopped
 {
-	return _player->IsStopped();
+	return _player->isStopped();
 }
 
 - (BOOL)isReady
 {
-	return _player->IsReady();
+	return _player->isReady();
 }
 
 - (id<SFBPCMDecoding>)currentDecoder
 {
-	return _player->CurrentDecoder();
+	return _player->currentDecoder();
 }
 
 - (id<SFBPCMDecoding>)nowPlaying
 {
-	return _player->NowPlaying();
+	return _player->nowPlaying();
 }
 
 // MARK: - Playback Properties
 
 - (AVAudioFramePosition)framePosition
 {
-	return _player->PlaybackPosition().framePosition;
+	return _player->playbackPosition().framePosition;
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return _player->PlaybackPosition().frameLength;
+	return _player->playbackPosition().frameLength;
 }
 
 - (SFBPlaybackPosition)playbackPosition
 {
-	return _player->PlaybackPosition();
+	return _player->playbackPosition();
 }
 
 - (NSTimeInterval)currentTime
 {
-	return _player->PlaybackTime().currentTime;
+	return _player->playbackTime().currentTime;
 }
 
 - (NSTimeInterval)totalTime
 {
-	return _player->PlaybackTime().totalTime;
+	return _player->playbackTime().totalTime;
 }
 
 - (SFBPlaybackTime)playbackTime
 {
-	return _player->PlaybackTime();
+	return _player->playbackTime();
 }
 
 - (BOOL)getPlaybackPosition:(SFBPlaybackPosition *)playbackPosition andTime:(SFBPlaybackTime *)playbackTime
 {
-	return _player->GetPlaybackPositionAndTime(playbackPosition, playbackTime);
+	return _player->getPlaybackPositionAndTime(playbackPosition, playbackTime);
 }
 
 // MARK: - Seeking
 
 - (BOOL)seekForward
 {
-	return _player->SeekInTime(3);
+	return _player->seekInTime(3);
 }
 
 - (BOOL)seekBackward
 {
-	return _player->SeekInTime(-3);
+	return _player->seekInTime(-3);
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	return _player->SeekInTime(secondsToSkip);
+	return _player->seekInTime(secondsToSkip);
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	return _player->SeekInTime(-secondsToSkip);
+	return _player->seekInTime(-secondsToSkip);
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds
 {
-	return _player->SeekToTime(timeInSeconds);
+	return _player->seekToTime(timeInSeconds);
 }
 
 - (BOOL)seekToPosition:(double)position
 {
-	return _player->SeekToPosition(position);
+	return _player->seekToPosition(position);
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame
 {
-	return _player->SeekToFrame(frame);
+	return _player->seekToFrame(frame);
 }
 
 - (BOOL)supportsSeeking
 {
-	return _player->SupportsSeeking();
+	return _player->supportsSeeking();
 }
 
 #if !TARGET_OS_IPHONE
-
 // MARK: - Volume Control
 
 - (float)volume
 {
-	return _player->VolumeForChannel(0);
+	return _player->volumeForChannel(0);
 }
 
 - (BOOL)setVolume:(float)volume error:(NSError **)error
 {
-	return _player->SetVolumeForChannel(volume, 0, error);
+	return _player->setVolumeForChannel(volume, 0, error);
 }
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel
 {
-	return _player->VolumeForChannel(channel);
+	return _player->volumeForChannel(channel);
 }
 
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error
 {
-	return _player->SetVolumeForChannel(volume, channel, error);
+	return _player->setVolumeForChannel(volume, channel, error);
 }
 
 // MARK: - Output Device
 
 - (AUAudioObjectID)outputDeviceID
 {
-	return _player->OutputDeviceID();
+	return _player->outputDeviceID();
 }
 
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error
 {
-	return _player->SetOutputDeviceID(outputDeviceID, error);
+	return _player->setOutputDeviceID(outputDeviceID, error);
 }
-
 #endif /* !TARGET_OS_IPHONE */
 
 // MARK: - AVAudioEngine
@@ -317,29 +315,29 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (void)modifyProcessingGraph:(SFBAudioPlayerAVAudioEngineBlock)block
 {
 	NSParameterAssert(block != nil);
-	_player->ModifyProcessingGraph(block);
+	_player->modifyProcessingGraph(block);
 }
 
 - (AVAudioSourceNode *)sourceNode
 {
-	return _player->SourceNode();
+	return _player->sourceNode();
 }
 
 - (AVAudioMixerNode *)mainMixerNode
 {
-	return _player->MainMixerNode();
+	return _player->mainMixerNode();
 }
 
 - (AVAudioOutputNode *)outputNode
 {
-	return _player->OutputNode();
+	return _player->outputNode();
 }
 
 // MARK: - Debugging
 
 -(void)logProcessingGraphDescription:(os_log_t)log type:(os_log_type_t)type
 {
-	_player->LogProcessingGraphDescription(log, type);
+	_player->logProcessingGraphDescription(log, type);
 }
 
 @end
