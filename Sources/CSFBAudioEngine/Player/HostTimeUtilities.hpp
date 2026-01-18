@@ -8,22 +8,12 @@
 
 #import <mach/mach_time.h>
 
-namespace SFB {
+namespace HostTime {
 
-/// Converts host time `t` to nanoseconds and returns the result.
-///
-/// This is equivalent to the macOS-only function ``AudioConvertHostTimeToNanos``.
-uint64_t hostTimeToNanoseconds(uint64_t t) noexcept;
-
-/// Converts `ns` nanoseconds to host time and returns the result.
-///
-/// This is equivalent to the macOS-only function ``AudioConvertNanosToHostTime``.
-uint64_t nanosecondsToHostTime(uint64_t ns) noexcept;
-
-/// Returns the current host time.
+/// Returns the current host time in ticks.
 ///
 /// This is equivalent to the macOS-only function ``AudioGetCurrentHostTime``.
-inline uint64_t currentHostTime() noexcept
+inline uint64_t current() noexcept
 {
 	// Apple recommends replacing the use of `mach_absolute_time()` with `clock_gettime_nsec_np(CLOCK_UPTIME_RAW)`
 	// (https://developer.apple.com/documentation/kernel/1462446-mach_absolute_time) because of the potential
@@ -37,16 +27,14 @@ inline uint64_t currentHostTime() noexcept
 	return mach_absolute_time();
 }
 
-/// Converts `s` seconds to host time and returns the result.
-inline uint64_t secondsToHostTime(double s) noexcept
-{
-	return nanosecondsToHostTime(static_cast<uint64_t>(s * 1e9));
-}
+/// Converts host time `t` to nanoseconds and returns the result.
+///
+/// This is equivalent to the macOS-only function ``AudioConvertHostTimeToNanos``.
+uint64_t toNanoseconds(uint64_t t) noexcept;
 
-/// Returns the absolute value of the delta between `t1` and `t2` host time values in nanoseconds.
-inline uint64_t absoluteHostTimeDeltaToNanoseconds(uint64_t t1, uint64_t t2) noexcept
-{
-	return hostTimeToNanoseconds(t2 > t1 ? t2 - t1 : t1 - t2);
-}
+/// Converts `ns` nanoseconds to host time and returns the result.
+///
+/// This is equivalent to the macOS-only function ``AudioConvertNanosToHostTime``.
+uint64_t fromNanoseconds(uint64_t ns) noexcept;
 
-} /* namespace SFB */
+} /* namespace HostTime */
