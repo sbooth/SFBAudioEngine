@@ -89,8 +89,9 @@ NSString * stringDescribingAVAudioFormat(AVAudioFormat * _Nullable format, bool 
 	if(includeChannelLayout) {
 		NSString *layoutDescription = CXXCoreAudio::AudioChannelLayoutDescription(format.channelLayout.layout);
 		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [%@]>", format, formatDescription, layoutDescription ?: @"no channel layout"];
-	} else
+	} else {
 		return [NSString stringWithFormat:@"<AVAudioFormat %p: %@>", format, formatDescription];
+	}
 }
 
 /// Returns the next event identification number
@@ -1063,8 +1064,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept
 										nextDecoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested), std::memory_order_acq_rel);
 										continue;
 									}
-								} else
+								} else {
 									os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded_.load(std::memory_order_acquire), nextDecoderState->decoder_);
+								}
 
 								fetchUpdate(nextDecoderState->flags_, [](auto val) noexcept {
 									return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) | static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
@@ -1151,11 +1153,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept
 							continue;
 						}
 					}
-				} else
+				} else {
 					// If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
 					// decoding can't start until the processing graph is reconfigured which occurs after
 					// all active decoders complete
 					formatMismatch = true;
+				}
 			}
 
 			// If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
@@ -1189,8 +1192,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept
 							continue;
 						}
 					}
-				} else
+				} else {
 					decoderState = nullptr;
+				}
 			}
 		}
 
@@ -1373,8 +1377,9 @@ OSStatus sfb::AudioPlayer::render(BOOL& isSilence, const AudioTimeStamp& timesta
 #endif /* DEBUG */
 		if(!renderingEvents_.WriteValues(RenderingEventCommand::framesRendered, nextEventIdentificationNumber(), timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead)))
 			os_log_fault(log_, "Error writing frames rendered event");
-	} else
+	} else {
 		isSilence = YES;
+	}
 
 	return noErr;
 }
@@ -1702,8 +1707,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept
 
 				os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
 				iter = activeDecoders_.erase(iter);
-			} else
+			} else {
 				++iter;
+			}
 
 			// All frames processed
 			if(framesRemainingToDistribute == 0)
@@ -2079,10 +2085,12 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 			assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
 			assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == mixerNode && "Illegal AVAudioEngine configuration");
 			[engine_ connect:sourceNode_ to:node format:format];
-		} else
+		} else {
 			[engine_ connect:sourceNode_ to:sourceNodeOutputConnectionPoint.node format:format];
-	} else
+		}
+	} else {
 		[engine_ connect:sourceNode_ to:mixerNode format:format];
+	}
 
 #if DEBUG
 	logProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);

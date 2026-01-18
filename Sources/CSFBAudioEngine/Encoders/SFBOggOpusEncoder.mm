@@ -283,8 +283,9 @@ int closeCallback(void *user_data) noexcept
 		} else if(frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration120ms) {
 			frameCapacity = 5760;
 			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_120_MS));
-		} else
+		} else {
 			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus frame duration: %{public}@", frameDuration);
+		}
 
 		if(result != OPE_OK) {
 			os_log_error(gSFBAudioEncoderLog, "OPUS_SET_EXPERT_FRAME_DURATION failed: %{public}s", ope_strerror(result));

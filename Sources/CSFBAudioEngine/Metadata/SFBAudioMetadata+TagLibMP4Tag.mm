@@ -269,6 +269,7 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
 		}
 
 		tag->setItem("covr", list);
-	} else
+	} else {
 		tag->removeItem("covr");
+	}
 }

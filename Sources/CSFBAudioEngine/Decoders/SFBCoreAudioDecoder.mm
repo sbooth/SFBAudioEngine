@@ -294,8 +294,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept
 			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between AudioStreamBasicDescription (%u) and AVAudioChannelLayout (%u)", format.mChannelsPerFrame, channelLayout.channelCount);
 			channelLayout = nil;
 		}
-	} else
+	} else {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+	}
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
 

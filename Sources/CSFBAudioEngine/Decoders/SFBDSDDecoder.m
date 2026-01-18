@@ -237,8 +237,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 						os_log_fault(gSFBDSDDecoderLog, "Unknown SFBTernaryTruthValue %li", (long)formatSupported);
 						break;
 				}
-			} else
+			} else {
 				os_log_error(gSFBDSDDecoderLog, "Error testing %{public}@ format support for %{public}@", klass, inputSource);
+			}
 		}
 
 		if(currentScore > score) {

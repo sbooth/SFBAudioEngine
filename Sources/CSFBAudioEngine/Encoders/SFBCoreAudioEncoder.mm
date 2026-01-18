@@ -501,8 +501,9 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept
 					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 				return NO;
 			}
-		} else
+		} else {
 			os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings is set but kExtAudioFileProperty_AudioConverter is NULL");
+		}
 	}
 
 	_af = std::move(af);

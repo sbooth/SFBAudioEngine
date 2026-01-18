@@ -239,8 +239,9 @@ private:
 				.mNumberChannelDescriptions = 0
 			};
 			channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
-		} else
+		} else {
 			os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
+		}
 	}
 
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
