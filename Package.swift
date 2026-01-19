@@ -100,7 +100,6 @@ let package = Package(
                 .linkedFramework("Accelerate"),
                 .linkedFramework("AudioToolbox"),
                 .linkedFramework("AVFAudio"),
-                //                .linkedFramework("CoreAudioTypes"),
                 .linkedFramework("Foundation"),
                 .linkedFramework("ImageIO"),
                 .linkedFramework("UniformTypeIdentifiers"),
