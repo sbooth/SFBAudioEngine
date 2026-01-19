@@ -4,13 +4,13 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import ogg;
-// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
-@import speex;
+#import <ogg/ogg.h>
+#import <speex/speex.h>
+#import <speex/speexdsp_types.h>
 
-#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBOggSpeexEncoder.h"
 

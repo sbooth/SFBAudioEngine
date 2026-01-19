@@ -11,7 +11,7 @@
 
 #import <opus/opusenc.h>
 
-#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBOggOpusEncoder.h"
 

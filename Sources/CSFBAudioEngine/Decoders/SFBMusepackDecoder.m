@@ -4,13 +4,12 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import Accelerate;
+#import <Accelerate/Accelerate.h>
 
-// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
-@import mpc.dec;
-@import AVFAudioExtensions;
+#import <mpc/mpcdec.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBMusepackDecoder.h"
 

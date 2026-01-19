@@ -4,12 +4,12 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import AudioToolbox;
+#import <AudioToolbox/AudioToolbox.h>
 
-@import sndfile;
-@import AVFAudioExtensions;
+#import <sndfile/sndfile.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBLibsndfileEncoder.h"
 

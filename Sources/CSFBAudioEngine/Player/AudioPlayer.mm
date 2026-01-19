@@ -15,7 +15,7 @@
 #import <CXXCoreAudio/CAChannelLayout.hpp>
 #import <CXXCoreAudio/CAStreamDescription.hpp>
 
-#import <AVAudioFormat+SFBFormatTransformation.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "AudioPlayer.h"
 

@@ -6,9 +6,9 @@
 
 #import <stdint.h>
 
-@import os.log;
+#import <os/log.h>
 
-@import AVFAudioExtensions;
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBDoPDecoder.h"
 

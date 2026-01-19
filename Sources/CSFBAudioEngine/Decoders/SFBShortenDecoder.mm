@@ -14,7 +14,7 @@
 
 #import <os/log.h>
 
-#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBShortenDecoder.h"
 

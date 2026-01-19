@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/AVFAudioExtensions",
       "state" : {
-        "revision" : "16b850dd542bbe8001b02596595309c8171f002d",
-        "version" : "0.4.2"
+        "revision" : "541d8617956cc46af45c2c5ae3f7c23439a2f666",
+        "version" : "0.5.0"
       }
     },
     {

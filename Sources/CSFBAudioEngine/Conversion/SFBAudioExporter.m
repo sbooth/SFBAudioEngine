@@ -4,9 +4,9 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import AVFAudioExtensions;
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBAudioExporter.h"
 

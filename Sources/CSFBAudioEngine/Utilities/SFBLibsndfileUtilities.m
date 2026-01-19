@@ -4,7 +4,7 @@
 // MIT license
 //
 
-@import sndfile;
+#import <sndfile/sndfile.h>
 
 #import "SFBAudioEngineTypes.h"
 #import "SFBLibsndfileUtilities.h"

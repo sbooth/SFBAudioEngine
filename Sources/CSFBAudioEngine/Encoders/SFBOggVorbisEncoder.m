@@ -4,11 +4,10 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-// TODO: Figure out a way to selectively disable diagnostic warnings for module imports
-@import vorbis;
-@import AVFAudioExtensions;
+#import <vorbis/vorbisenc.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBOggVorbisEncoder.h"
 

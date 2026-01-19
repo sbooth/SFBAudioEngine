@@ -6,7 +6,7 @@
 
 #import <stdint.h>
 
-@import os.log;
+#import <os/log.h>
 
 #import "SFBDSFDecoder.h"
 

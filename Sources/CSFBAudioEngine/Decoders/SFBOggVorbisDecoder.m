@@ -4,10 +4,10 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import vorbis;
-@import AVFAudioExtensions;
+#import <vorbis/vorbisfile.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBOggVorbisDecoder.h"
 
