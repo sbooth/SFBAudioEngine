@@ -4,12 +4,12 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import AudioToolbox;
+#import <AudioToolbox/AudioToolbox.h>
 
-@import wavpack;
-@import AVFAudioExtensions;
+#import <wavpack/wavpack.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBWavPackDecoder.h"
 

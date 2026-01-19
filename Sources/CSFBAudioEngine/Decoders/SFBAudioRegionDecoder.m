@@ -4,10 +4,10 @@
 // MIT license
 //
 
-@import os.log;
-@import stdlib_h;
+#import <os/log.h>
+#import <stdlib.h>
 
-@import AVFAudioExtensions;
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBAudioRegionDecoder.h"
 

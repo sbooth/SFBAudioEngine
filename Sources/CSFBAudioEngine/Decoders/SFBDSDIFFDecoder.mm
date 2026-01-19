@@ -12,7 +12,7 @@
 
 #import <os/log.h>
 
-#import <AVAudioChannelLayout+SFBChannelLabels.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBDSDIFFDecoder.h"
 

@@ -13,7 +13,7 @@
 #import <FLAC/metadata.h>
 #import <FLAC/stream_decoder.h>
 
-#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBFLACDecoder.h"
 

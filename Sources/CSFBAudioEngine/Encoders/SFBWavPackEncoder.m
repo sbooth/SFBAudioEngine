@@ -4,12 +4,12 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import AudioToolbox;
-@import CommonCrypto;
+#import <AudioToolbox/AudioToolbox.h>
+#import <CommonCrypto/CommonCrypto.h>
 
-@import wavpack;
+#import <wavpack/wavpack.h>
 
 #import "SFBWavPackEncoder.h"
 

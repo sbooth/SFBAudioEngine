@@ -12,7 +12,7 @@
 
 #import <Accelerate/Accelerate.h>
 
-#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBDSDPCMDecoder.h"
 

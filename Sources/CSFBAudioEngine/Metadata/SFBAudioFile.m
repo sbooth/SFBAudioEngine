@@ -4,7 +4,7 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
 #import "SFBAudioFile.h"
 #import "SFBAudioFile+Internal.h"

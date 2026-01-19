@@ -4,10 +4,10 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import opus.file;
-@import AVFAudioExtensions;
+#import <opus/opusfile.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBOggOpusDecoder.h"
 

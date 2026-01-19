@@ -4,9 +4,9 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import Accelerate;
+#import <Accelerate/Accelerate.h>
 
 #import "SFBReplayGainAnalyzer.h"
 

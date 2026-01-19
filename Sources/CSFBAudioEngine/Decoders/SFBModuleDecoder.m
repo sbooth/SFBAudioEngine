@@ -4,9 +4,9 @@
 // MIT license
 //
 
-@import os.log;
+#import <os/log.h>
 
-@import dumb;
+#import <dumb/dumb.h>
 
 #import "SFBModuleDecoder.h"
 
