@@ -4,26 +4,25 @@
 // MIT license
 //
 
-#import <os/log.h>
-
 #import "SFBAudioEncoder.h"
+
+#import <os/log.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 extern os_log_t gSFBAudioEncoderLog;
 
-@interface SFBAudioEncoder ()
-{
-@package
-	SFBOutputSource *_outputSource;
-	AVAudioFormat *_sourceFormat;
-	AVAudioFormat *_processingFormat;
-	AVAudioFormat *_outputFormat;
-	AVAudioFramePosition _estimatedFramesToEncode;
-	NSDictionary *_settings;
+@interface SFBAudioEncoder () {
+  @package
+    SFBOutputSource *_outputSource;
+    AVAudioFormat *_sourceFormat;
+    AVAudioFormat *_processingFormat;
+    AVAudioFormat *_outputFormat;
+    AVAudioFramePosition _estimatedFramesToEncode;
+    NSDictionary *_settings;
 }
 /// Returns the encoder name
-@property (class, nonatomic, readonly) SFBAudioEncoderName encoderName;
+@property(class, nonatomic, readonly) SFBAudioEncoderName encoderName;
 @end
 
 #pragma mark - Subclass Registration

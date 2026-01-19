@@ -9,7 +9,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Constant type for decoder names
-typedef NSString * SFBDSDDecoderName NS_TYPED_ENUM NS_SWIFT_NAME(DSDDecoder.Name);
+typedef NSString *SFBDSDDecoderName NS_TYPED_ENUM NS_SWIFT_NAME(DSDDecoder.Name);
 
 /// DSDIFF
 extern SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF;
@@ -17,15 +17,16 @@ extern SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF;
 extern SFBDSDDecoderName const SFBDSDDecoderNameDSF;
 
 /// A decoder providing audio as DSD
-NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
+NS_SWIFT_NAME(DSDDecoder)
+@interface SFBDSDDecoder : NSObject<SFBDSDDecoding>
 
 #pragma mark - File Format Support
 
 /// Returns a set containing the supported path extensions
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
+@property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /// Returns a set containing the supported MIME types
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
+@property(class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
 + (BOOL)handlesPathsWithExtension:(NSString *)extension;
@@ -58,19 +59,25 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// - parameter mimeTypeHint: A MIME type hint for `url`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+- (nullable instancetype)initWithURL:(NSURL *)url
+                        mimeTypeHint:(nullable NSString *)mimeTypeHint
+                               error:(NSError **)error;
 /// Returns an initialized `SFBDSDDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter detectContentType: Whether to attempt to determine the content type of `url`
 /// - parameter mimeTypeHint: A MIME type hint for `url`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+- (nullable instancetype)initWithURL:(NSURL *)url
+                   detectContentType:(BOOL)detectContentType
+                        mimeTypeHint:(nullable NSString *)mimeTypeHint
+                               error:(NSError **)error;
 
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+      NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -82,13 +89,17 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// - parameter detectContentType: Whether to attempt to determine the content type of `inputSource`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource detectContentType:(BOOL)detectContentType error:(NSError **)error;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                           detectContentType:(BOOL)detectContentType
+                                       error:(NSError **)error;
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter mimeTypeHint: A MIME type hint for `inputSource`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                                mimeTypeHint:(nullable NSString *)mimeTypeHint
+                                       error:(NSError **)error;
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - important: If `detectContentType` is `YES` the input source must support seeking and will be opened for reading
 /// - parameter inputSource: The input source
@@ -96,13 +107,18 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// - parameter mimeTypeHint: A MIME type hint for `inputSource`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource detectContentType:(BOOL)detectContentType mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                           detectContentType:(BOOL)detectContentType
+                                mimeTypeHint:(nullable NSString *)mimeTypeHint
+                                       error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Returns an initialized `SFBDSDDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter decoderName: The name of the decoder to use
 /// - returns: An initialized `SFBDSDDecoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
+- (nullable instancetype)initWithURL:(NSURL *)url
+                         decoderName:(SFBDSDDecoderName)decoderName
+      NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
 /// Returns an initialized `SFBDSDDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter decoderName: The name of the decoder to use
@@ -114,13 +130,17 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// - parameter inputSource: The input source
 /// - parameter decoderName: The name of the decoder to use
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBDSDDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                                 decoderName:(SFBDSDDecoderName)decoderName
+      NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter decoderName: The name of the decoder to use
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBDSDDecoderName)decoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                                 decoderName:(SFBDSDDecoderName)decoderName
+                                       error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Opens the decoder
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -139,19 +159,19 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBDSDDecoder`
-typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
-	/// Unknown decoder name
-	SFBDSDDecoderErrorCodeUnknownDecoder 		= 0,
-	/// Invalid or unknown format
-	SFBDSDDecoderErrorCodeInvalidFormat			= 1,
-	/// Unsupported format
-	SFBDSDDecoderErrorCodeUnsupportedFormat 	= 2,
-	/// Internal decoder error
-	SFBDSDDecoderErrorCodeInternalError			= 3,
-	/// Decoding error
-	SFBDSDDecoderErrorCodeDecodingError			= 4,
-	/// Seek error
-	SFBDSDDecoderErrorCodeSeekError				= 5,
+typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode){
+    /// Unknown decoder name
+    SFBDSDDecoderErrorCodeUnknownDecoder = 0,
+    /// Invalid or unknown format
+    SFBDSDDecoderErrorCodeInvalidFormat = 1,
+    /// Unsupported format
+    SFBDSDDecoderErrorCodeUnsupportedFormat = 2,
+    /// Internal decoder error
+    SFBDSDDecoderErrorCodeInternalError = 3,
+    /// Decoding error
+    SFBDSDDecoderErrorCodeDecodingError = 4,
+    /// Seek error
+    SFBDSDDecoderErrorCodeSeekError = 5,
 } NS_SWIFT_NAME(DSDDecoder.Error);
 
 NS_ASSUME_NONNULL_END

@@ -4,9 +4,9 @@
 // MIT license
 //
 
-#import <taglib/apetag.h>
-
 #import "SFBAudioMetadata.h"
+
+#import <taglib/apetag.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

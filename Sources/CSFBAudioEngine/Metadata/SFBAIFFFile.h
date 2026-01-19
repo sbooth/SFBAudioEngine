@@ -4,7 +4,6 @@
 // MIT license
 //
 
-
 #import "SFBAudioFile+Internal.h"
 
 // An SFBAudioFile subclass supporting AIFF files
