@@ -67,21 +67,21 @@ class AudioPlayer final {
 
     /// Thread used for decoding
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
-	std::jthread 							decodingThread_;
+    std::jthread decodingThread_;
 #else
-	std::thread 							decodingThread_;
+    std::thread decodingThread_;
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
-	/// Dispatch semaphore used for communication with the decoding thread
-	dispatch_semaphore_t					decodingSemaphore_ 	{nil};
+    /// Dispatch semaphore used for communication with the decoding thread
+    dispatch_semaphore_t decodingSemaphore_{nil};
 
-	/// Thread used for event processing
+    /// Thread used for event processing
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
-	std::jthread 							eventThread_;
+    std::jthread eventThread_;
 #else
-	std::thread 							eventThread_;
+    std::thread eventThread_;
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
-	/// Dispatch semaphore used for communication with the event processing thread
-	dispatch_semaphore_t					eventSemaphore_ 	{nil};
+    /// Dispatch semaphore used for communication with the event processing thread
+    dispatch_semaphore_t eventSemaphore_{nil};
 
     /// Ring buffer communicating events from the decoding thread to the event processing thread
     CXXRingBuffer::RingBuffer decodingEvents_;
@@ -201,32 +201,32 @@ class AudioPlayer final {
     void logProcessingGraphDescription(os_log_t _Nonnull log, os_log_type_t type) const noexcept;
 
   private:
-	/// Possible bits in `flags_`
-	enum class Flags : unsigned int {
-		/// Cached value of `engine_.isRunning`
-		engineIsRunning				= 1u << 0,
-		/// The render block should output audio
-		isPlaying 					= 1u << 1,
-		/// The render block should output silence
-		isMuted 					= 1u << 2,
-		/// The ring buffer needs to be drained during the next render cycle
-		drainRequired 				= 1u << 3,
+    /// Possible bits in `flags_`
+    enum class Flags : unsigned int {
+        /// Cached value of `engine_.isRunning`
+        engineIsRunning = 1u << 0,
+        /// The render block should output audio
+        isPlaying = 1u << 1,
+        /// The render block should output silence
+        isMuted = 1u << 2,
+        /// The ring buffer needs to be drained during the next render cycle
+        drainRequired = 1u << 3,
 #if !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L)
-		/// The decoding thread should exit
-		stopDecodingThread			= 1u << 4,
-		/// The event thread should exit
-		stopEventThread				= 1u << 5,
+        /// The decoding thread should exit
+        stopDecodingThread = 1u << 4,
+        /// The event thread should exit
+        stopEventThread = 1u << 5,
 #endif /* !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L) */
-	};
+    };
 
     // MARK: - Decoding
 
     /// Dequeues and processes decoders from the decoder queue
-	/// - note: This is the thread entry point for the decoding thread
+    /// - note: This is the thread entry point for the decoding thread
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
-	void processDecoders(std::stop_token stoken) noexcept;
+    void processDecoders(std::stop_token stoken) noexcept;
 #else
-	void processDecoders() noexcept;
+    void processDecoders() noexcept;
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
     /// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
@@ -261,11 +261,11 @@ class AudioPlayer final {
     // MARK: - Event Processing
 
     /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
-	/// - note: This is the thread entry point for the event processing thread
+    /// - note: This is the thread entry point for the event processing thread
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
-	void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+    void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
 #else
-	void sequenceAndProcessEvents() noexcept;
+    void sequenceAndProcessEvents() noexcept;
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
     /// Reads and processes an event payload from `decodingEvents_`
