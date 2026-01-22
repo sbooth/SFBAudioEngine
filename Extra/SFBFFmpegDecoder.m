@@ -300,7 +300,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
             channelLayout = nil;
         }
     } else if(_formatContext->streams[_streamIndex]->codecpar->ch_layout.order == AV_CHANNEL_ORDER_CUSTOM) {
-        os_log_error(gSFBAudioDecoderLog, "ffmpeg custom channel layouts not (yet) suported");
+        os_log_error(gSFBAudioDecoderLog, "ffmpeg custom channel layouts not (yet) supported");
     } else {
         os_log_error(gSFBAudioDecoderLog, "Unsupported channel layout order %u", _formatContext->streams[_streamIndex]->codecpar->ch_layout.order);
     }
