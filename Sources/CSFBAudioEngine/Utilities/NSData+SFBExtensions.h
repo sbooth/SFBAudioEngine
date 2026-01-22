@@ -18,7 +18,8 @@ extern const NSUInteger SFBID3v2FooterSize NS_SWIFT_NAME(id3v2FooterSize);
 @interface NSData (SFBID3v2Methods)
 /// Returns `YES` if `self` starts with an ID3v2 tag header
 - (BOOL)isID3v2Header;
-/// If `self` is an ID3v2 tag header, returns the total size of the ID3v2 tag including the header and footer, if present
+/// If `self` is an ID3v2 tag header, returns the total size of the ID3v2 tag including the header and footer, if
+/// present
 - (NSUInteger)id3v2TagTotalSize;
 @end
 
@@ -58,7 +59,6 @@ extern const NSUInteger SFBTrueAudioDetectionSize NS_SWIFT_NAME(trueAudioDetecti
 extern const NSUInteger SFBWAVEDetectionSize NS_SWIFT_NAME(waveDetectionSize);
 /// The minimum size for WavPack detection, in bytes
 extern const NSUInteger SFBWavPackDetectionSize NS_SWIFT_NAME(wavPackDetectionSize);
-
 
 @interface NSData (SFBContentTypeMethods)
 /// Returns `YES` if `self` starts with an AIFF or AIFC header

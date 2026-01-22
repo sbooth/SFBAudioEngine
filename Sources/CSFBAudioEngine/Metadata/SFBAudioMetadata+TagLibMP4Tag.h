@@ -4,9 +4,9 @@
 // MIT license
 //
 
-#import <taglib/mp4tag.h>
-
 #import "SFBAudioMetadata.h"
+
+#import <taglib/mp4tag.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
