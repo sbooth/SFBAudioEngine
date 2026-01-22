@@ -4,11 +4,11 @@
 // MIT license
 //
 
-#import <memory>
+#import "SFBAudioMetadata.h"
 
 #import <taglib/xiphcomment.h>
 
-#import "SFBAudioMetadata.h"
+#import <memory>
 
 NS_ASSUME_NONNULL_BEGIN
 

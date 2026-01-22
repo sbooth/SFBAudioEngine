@@ -4,13 +4,14 @@
 // MIT license
 //
 
-#import <SFBAudioEngine/SFBPCMDecoding.h>
 #import <SFBAudioEngine/SFBDSDDecoding.h>
+#import <SFBAudioEngine/SFBPCMDecoding.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// A decoder supporting DSD64 to PCM conversion
-NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecoding>
+NS_SWIFT_NAME(DSDPCMDecoder)
+@interface SFBDSDPCMDecoder : NSObject<SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -32,11 +33,11 @@ NS_SWIFT_NAME(DSDPCMDecoder) @interface SFBDSDPCMDecoder : NSObject <SFBPCMDecod
 - (nullable instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// The linear gain applied to the converted DSD samples (default is 6 dBFS)
-@property (nonatomic) float linearGain;
+@property(nonatomic) float linearGain;
 
 /// The underlying decoder
 /// - warning: Do not change any properties of the returned object
-@property (nonatomic, readonly) id<SFBDSDDecoding> decoder;
+@property(nonatomic, readonly) id<SFBDSDDecoding> decoder;
 
 @end
 
