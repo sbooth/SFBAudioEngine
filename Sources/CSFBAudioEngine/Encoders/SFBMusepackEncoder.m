@@ -20,8 +20,12 @@ static size_t my_mpc_write_callback(const void *restrict ptr, size_t size, size_
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger bytesWritten;
-    if (![encoder->_outputSource writeBytes:ptr length:(NSInteger)(size * nitems) bytesWritten:&bytesWritten error:nil])
+    if (![encoder->_outputSource writeBytes:ptr
+                                     length:(NSInteger)(size * nitems)
+                               bytesWritten:&bytesWritten
+                                      error:nil]) {
         return 0;
+    }
     return (size_t)bytesWritten / size;
 }
 
@@ -35,24 +39,28 @@ static int my_mpc_seek_callback(void *context, off_t offset, int whence) {
         break;
     case SEEK_CUR: {
         NSInteger outputSourceOffset;
-        if ([encoder->_outputSource getOffset:&outputSourceOffset error:nil])
+        if ([encoder->_outputSource getOffset:&outputSourceOffset error:nil]) {
             offset += outputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger outputSourceLength;
-        if ([encoder->_outputSource getLength:&outputSourceLength error:nil])
+        if ([encoder->_outputSource getLength:&outputSourceLength error:nil]) {
             offset += outputSourceLength;
+        }
         break;
     }
     }
 
-    if (![encoder->_outputSource seekToOffset:offset error:nil])
+    if (![encoder->_outputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
 
     NSInteger outputSourceOffset;
-    if (![encoder->_outputSource getOffset:&outputSourceOffset error:nil])
+    if (![encoder->_outputSource getOffset:&outputSourceOffset error:nil]) {
         return -1;
+    }
 
     return 0;
 }
@@ -62,8 +70,9 @@ static off_t my_mpc_tell_callback(void *context) {
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger offset;
-    if (![encoder->_outputSource getOffset:&offset error:nil])
+    if (![encoder->_outputSource getOffset:&offset error:nil]) {
         return -1;
+    }
 
     return offset;
 }
@@ -101,12 +110,14 @@ static off_t my_mpc_tell_callback(void *context) {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2) {
         return nil;
+    }
 
     if (sourceFormat.sampleRate != 44100 && sourceFormat.sampleRate != 48000 && sourceFormat.sampleRate != 37800 &&
-        sourceFormat.sampleRate != 32000)
+        sourceFormat.sampleRate != 32000) {
         return nil;
+    }
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
                                             sampleRate:sourceFormat.sampleRate
@@ -115,8 +126,9 @@ static off_t my_mpc_tell_callback(void *context) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _enc = mpc_stream_encoder_create();
     if (!_enc) {
@@ -196,11 +208,13 @@ static off_t my_mpc_tell_callback(void *context) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     if (mpc_stream_encoder_encode(_enc, (const mpc_int16_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength) !=
         MPC_STATUS_OK) {

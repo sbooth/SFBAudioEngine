@@ -33,20 +33,25 @@ uint32_t bytesToID(char bytes[4]) noexcept {
     auto four = bytes[3];
 
     // Verify well-formedness
-    if (!std::isprint(one) || !std::isprint(two) || !std::isprint(three) || !std::isprint(four))
+    if (!std::isprint(one) || !std::isprint(two) || !std::isprint(three) || !std::isprint(four)) {
         return 0;
+    }
 
-    if (std::isspace(one))
+    if (std::isspace(one)) {
         return 0;
+    }
 
-    if (std::isspace(two) && std::isspace(one))
+    if (std::isspace(two) && std::isspace(one)) {
         return 0;
+    }
 
-    if (std::isspace(three) && std::isspace(two) && std::isspace(one))
+    if (std::isspace(three) && std::isspace(two) && std::isspace(one)) {
         return 0;
+    }
 
-    if (std::isspace(four) && std::isspace(three) && std::isspace(two) && std::isspace(one))
+    if (std::isspace(four) && std::isspace(three) && std::isspace(two) && std::isspace(one)) {
         return 0;
+    }
 
     return static_cast<uint32_t>((one << 24u) | (two << 16u) | (three << 8u) | four);
 }
@@ -216,8 +221,9 @@ struct DSDSoundDataChunk : public DSDIFFChunk {};
 #pragma mark DSDIFF parsing
 
 bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize) noexcept {
-    if (!readID(inputSource, chunkID))
+    if (!readID(inputSource, chunkID)) {
         return false;
+    }
 
     if (![inputSource readUInt64BigEndian:&chunkDataSize error:nil]) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read chunk data size");
@@ -486,29 +492,34 @@ std::shared_ptr<PropertyChunk> parsePropertyChunk(SFBInputSource *inputSource, c
 
             switch (localChunkID) {
             case 'FS  ':
-                if (auto chunk = parseSampleRateChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parseSampleRateChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
             case 'CHNL':
-                if (auto chunk = parseChannelsChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parseChannelsChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
             case 'CMPR':
-                if (auto chunk = parseCompressionTypeChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parseCompressionTypeChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
             case 'ABSS':
-                if (auto chunk = parseAbsoluteStartTimeChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parseAbsoluteStartTimeChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
             case 'LSCO':
                 if (auto chunk = parseLoudspeakerConfigurationChunk(inputSource, localChunkID, localChunkDataSize);
-                    chunk)
+                    chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
                 // Skip unrecognized or ignored chunks
@@ -609,18 +620,21 @@ std::unique_ptr<FormDSDChunk> parseFormDSDChunk(SFBInputSource *inputSource, con
 
             switch (localChunkID) {
             case 'FVER':
-                if (auto chunk = parseFormatVersionChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parseFormatVersionChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
             case 'PROP':
-                if (auto chunk = parsePropertyChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parsePropertyChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
             case 'DSD ':
-                if (auto chunk = parseDSDSoundDataChunk(inputSource, localChunkID, localChunkDataSize); chunk)
+                if (auto chunk = parseDSDSoundDataChunk(inputSource, localChunkID, localChunkDataSize); chunk) {
                     result->localChunks_[chunk->chunkID_] = chunk;
+                }
                 break;
 
                 // Skip unrecognized or ignored chunks
@@ -652,8 +666,9 @@ std::unique_ptr<FormDSDChunk> parseFormDSDChunk(SFBInputSource *inputSource, con
 std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
     uint32_t chunkID;
     uint64_t chunkDataSize;
-    if (!readChunkIDAndDataSize(inputSource, chunkID, chunkDataSize))
+    if (!readChunkIDAndDataSize(inputSource, chunkID, chunkDataSize)) {
         return nullptr;
+    }
 
     return parseFormDSDChunk(inputSource, chunkID, chunkDataSize);
 }
@@ -704,8 +719,9 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isDSDIFFHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -720,8 +736,9 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     auto chunks = parseDSDIFF(_inputSource);
     if (!chunks) {
@@ -805,8 +822,9 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
     _packetCount = static_cast<AVAudioFramePosition>(soundDataChunk->dataSize_ - 12) /
                    (kSFBBytesPerDSDPacketPerChannel * channelsChunk->numberChannels_);
 
-    if (![_inputSource seekToOffset:_audioOffset error:error])
+    if (![_inputSource seekToOffset:_audioOffset error:error]) {
         return NO;
+    }
 
     _isOpen = YES;
 
@@ -840,11 +858,13 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
     buffer.packetCount = 0;
     buffer.byteLength = 0;
 
-    if (packetCount > buffer.packetCapacity)
+    if (packetCount > buffer.packetCapacity) {
         packetCount = buffer.packetCapacity;
+    }
 
-    if (packetCount == 0)
+    if (packetCount == 0) {
         return YES;
+    }
 
     AVAudioPacketCount packetsRemaining = static_cast<AVAudioPacketCount>(_packetCount - _packetPosition);
     AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
@@ -874,8 +894,9 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
         }
 
         // Decoding is finished
-        if (bytesRead == 0)
+        if (bytesRead == 0) {
             break;
+        }
 
         packetsRead += (bytesRead / packetSize);
 
@@ -883,8 +904,9 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
         buffer.byteLength += static_cast<uint32_t>(bytesRead);
 
         // All requested frames were read
-        if (packetsRead == packetCount)
+        if (packetsRead == packetCount) {
             break;
+        }
 
         packetsToRead -= packetsRead;
     }

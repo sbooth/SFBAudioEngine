@@ -43,8 +43,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBOggSpeexDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggSpeexHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -90,8 +91,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Ogg Speex" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties())
+        if (file.audioProperties()) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+        }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
         if (file.tag())

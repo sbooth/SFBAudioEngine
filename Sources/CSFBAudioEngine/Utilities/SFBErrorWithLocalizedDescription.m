@@ -19,8 +19,9 @@ NSError *SFBErrorWithLocalizedDescription(NSErrorDomain domain, NSInteger code, 
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
     [dictionary setObject:description forKey:NSLocalizedDescriptionKey];
 
-    if (userInfo)
+    if (userInfo) {
         [dictionary addEntriesFromDictionary:userInfo];
+    }
 
     return [NSError errorWithDomain:domain code:code userInfo:dictionary];
 }

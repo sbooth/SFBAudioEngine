@@ -79,8 +79,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2) {
         return nil;
+    }
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                             sampleRate:sourceFormat.sampleRate
@@ -89,8 +90,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     lame_global_flags_unique_ptr gfp{lame_init()};
     if (!gfp) {
@@ -175,8 +177,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     // Average bitrate encoding
     NSNumber *abr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
     if (abr != nil) {
-        if (cbr != nil)
+        if (cbr != nil) {
             os_log_info(gSFBAudioEncoderLog, "CBR and ABR bitrates both specified; this is probably not correct");
+        }
 
         result = lame_set_VBR(gfp.get(), vbr_abr);
         if (result == -1) {
@@ -191,12 +194,15 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         // values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000
         // bps MP3
         auto intValue = abr.intValue;
-        if (intValue >= 8000)
+        if (intValue >= 8000) {
             intValue = (intValue + 500) / 1000;
-        if (intValue > 320)
+        }
+        if (intValue > 320) {
             intValue = 320;
-        if (intValue < 8)
+        }
+        if (intValue < 8) {
             intValue = 8;
+        }
 
         result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
         if (result == -1) {
@@ -328,8 +334,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         return NO;
     }
 
-    if (![self writeID3v2TagReturningError:error])
+    if (![self writeID3v2TagReturningError:error]) {
         return NO;
+    }
 
     AudioStreamBasicDescription outputStreamDescription{};
     outputStreamDescription.mFormatID = kAudioFormatMPEGLayer3;
@@ -362,11 +369,13 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
     auto buf = std::make_unique<unsigned char[]>(bufsize);
@@ -390,8 +399,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     NSInteger bytesWritten;
     if (![_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] ||
-        bytesWritten != result)
+        bytesWritten != result) {
         return NO;
+    }
 
     _framePosition += frameLength;
 
@@ -399,14 +409,17 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)finishEncodingReturningError:(NSError **)error {
-    if (![self flushEncoderReturningError:error])
+    if (![self flushEncoderReturningError:error]) {
         return NO;
+    }
 
-    if (![self writeID3v1TagReturningError:error])
+    if (![self writeID3v1TagReturningError:error]) {
         return NO;
+    }
 
-    if (![self writeXingHeaderReturningError:error])
+    if (![self writeXingHeaderReturningError:error]) {
         return NO;
+    }
 
     return YES;
 }
@@ -450,8 +463,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
-            bytesWritten != static_cast<NSInteger>(result))
+            bytesWritten != static_cast<NSInteger>(result)) {
             return NO;
+        }
     }
 
     return YES;
@@ -474,8 +488,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
-            bytesWritten != static_cast<NSInteger>(result))
+            bytesWritten != static_cast<NSInteger>(result)) {
             return NO;
+        }
     }
 
     _id3v2TagSize = static_cast<NSInteger>(bufsize);
@@ -495,16 +510,18 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
         auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
 
-        if (![_outputSource seekToOffset:_id3v2TagSize error:error])
+        if (![_outputSource seekToOffset:_id3v2TagSize error:error]) {
             return NO;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
-            bytesWritten != static_cast<NSInteger>(result))
+            bytesWritten != static_cast<NSInteger>(result)) {
             return NO;
+        }
     }
 
     return YES;

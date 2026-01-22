@@ -86,14 +86,16 @@ class APEIOInterface final : public APE::IAPEIO {
             break;
         case APE::SeekFileCurrent: {
             NSInteger inputSourceOffset;
-            if ([outputSource_ getOffset:&inputSourceOffset error:nil])
+            if ([outputSource_ getOffset:&inputSourceOffset error:nil]) {
                 offset += inputSourceOffset;
+            }
             break;
         }
         case APE::SeekFileEnd: {
             NSInteger inputSourceLength;
-            if ([outputSource_ getLength:&inputSourceLength error:nil])
+            if ([outputSource_ getLength:&inputSourceLength error:nil]) {
                 offset += inputSourceLength;
+            }
             break;
         }
         }
@@ -121,15 +123,17 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetPosition() override {
         NSInteger offset;
-        if (![outputSource_ getOffset:&offset error:nil])
+        if (![outputSource_ getOffset:&offset error:nil]) {
             return -1;
+        }
         return offset;
     }
 
     APE::int64 GetSize() override {
         NSInteger length;
-        if (![outputSource_ getLength:&length error:nil])
+        if (![outputSource_ getLength:&length error:nil]) {
             return -1;
+        }
         return length;
     }
 
@@ -179,8 +183,9 @@ class APEIOInterface final : public APE::IAPEIO {
 
     // Validate format
     if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32)
+        sourceFormat.channelCount > 32) {
         return nil;
+    }
 
     APE::WAVEFORMATEX wve;
     auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate),
@@ -235,16 +240,18 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     try {
         int result;
         auto compressor = CreateIAPECompress(&result);
         if (!compressor) {
             os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+            }
             return NO;
         }
 
@@ -252,8 +259,9 @@ class APEIOInterface final : public APE::IAPEIO {
         _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -330,11 +338,13 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
     auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);

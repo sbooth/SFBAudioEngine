@@ -71,8 +71,9 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-    if (data == nil)
+    if (data == nil) {
         return nil;
+    }
     return [[SFBDataInputSource alloc] initWithData:data];
 }
 
@@ -80,8 +81,9 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-    if (data == nil)
+    if (data == nil) {
         return nil;
+    }
     return [[SFBDataInputSource alloc] initWithData:data];
 }
 
@@ -92,8 +94,9 @@ static void SFBCreateInputSourceLog(void) {
 }
 
 - (void)dealloc {
-    if (self.isOpen)
+    if (self.isOpen) {
         [self closeReturningError:nil];
+    }
 }
 
 - (BOOL)openReturningError:(NSError **)error {
@@ -192,24 +195,27 @@ static void SFBCreateInputSourceLog(void) {
 
 - (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error {
     NSParameterAssert(ui16 != nil);
-    if (![self readUInt16:ui16 error:error])
+    if (![self readUInt16:ui16 error:error]) {
         return NO;
+    }
     *ui16 = OSSwapHostToBigInt16(*ui16);
     return YES;
 }
 
 - (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error {
     NSParameterAssert(ui32 != nil);
-    if (![self readUInt32:ui32 error:error])
+    if (![self readUInt32:ui32 error:error]) {
         return NO;
+    }
     *ui32 = OSSwapHostToBigInt32(*ui32);
     return YES;
 }
 
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error {
     NSParameterAssert(ui64 != nil);
-    if (![self readUInt64:ui64 error:error])
+    if (![self readUInt64:ui64 error:error]) {
         return NO;
+    }
     *ui64 = OSSwapHostToBigInt64(*ui64);
     return YES;
 }
@@ -220,24 +226,27 @@ static void SFBCreateInputSourceLog(void) {
 
 - (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error {
     NSParameterAssert(ui16 != nil);
-    if (![self readUInt16:ui16 error:error])
+    if (![self readUInt16:ui16 error:error]) {
         return NO;
+    }
     *ui16 = OSSwapHostToLittleInt16(*ui16);
     return YES;
 }
 
 - (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error {
     NSParameterAssert(ui32 != nil);
-    if (![self readUInt32:ui32 error:error])
+    if (![self readUInt32:ui32 error:error]) {
         return NO;
+    }
     *ui32 = OSSwapHostToLittleInt32(*ui32);
     return YES;
 }
 
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error {
     NSParameterAssert(ui64 != nil);
-    if (![self readUInt64:ui64 error:error])
+    if (![self readUInt64:ui64 error:error]) {
         return NO;
+    }
     *ui64 = OSSwapHostToLittleInt64(*ui64);
     return YES;
 }
@@ -282,11 +291,13 @@ static void SFBCreateInputSourceLog(void) {
     }
 
     NSInteger originalOffset;
-    if (![self getOffset:&originalOffset error:error])
+    if (![self getOffset:&originalOffset error:error]) {
         return nil;
+    }
 
-    if (![self seekToOffset:0 error:error])
+    if (![self seekToOffset:0 error:error]) {
         return nil;
+    }
 
     if (skipID3v2Tag) {
         NSInteger offset = 0;
@@ -296,13 +307,15 @@ static void SFBCreateInputSourceLog(void) {
         if ([data isID3v2Header])
             offset = [data id3v2TagTotalSize];
 
-        if (![self seekToOffset:offset error:error])
+        if (![self seekToOffset:offset error:error]) {
             return nil;
+        }
     }
 
     NSData *data = [self readDataOfLength:length error:error];
-    if (!data)
+    if (!data) {
         return nil;
+    }
 
     if (data.length < length) {
         if (error)
@@ -310,8 +323,9 @@ static void SFBCreateInputSourceLog(void) {
         return nil;
     }
 
-    if (![self seekToOffset:originalOffset error:error])
+    if (![self seekToOffset:originalOffset error:error]) {
         return nil;
+    }
 
     return data;
 }

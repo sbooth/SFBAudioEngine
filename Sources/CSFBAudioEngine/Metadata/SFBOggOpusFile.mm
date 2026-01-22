@@ -43,8 +43,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBOggOpusDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggOpusHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -90,8 +91,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Ogg Opus" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties())
+        if (file.audioProperties()) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+        }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
         if (file.tag())

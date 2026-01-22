@@ -111,8 +111,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             [additionalMetadata setObject:value forKey:key];
     }
 
-    if (additionalMetadata.count)
+    if (additionalMetadata.count) {
         self.additionalMetadata = additionalMetadata;
+    }
 
     // Add the pictures parsed by TagLib from the "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments
     for (auto iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
@@ -140,8 +141,9 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
     // Remove the existing comment with this name
     tag->removeFields(key);
 
-    if (value)
+    if (value) {
         tag->addField(key, TagLib::StringFromNSString(value));
+    }
 }
 
 void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value) {
@@ -236,21 +238,24 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
 
     cg_image_source_unique_ptr imageSource{
           CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
-    if (!imageSource)
+    if (!imageSource) {
         return nullptr;
+    }
 
     auto picture = std::make_unique<TagLib::FLAC::Picture>();
     picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                         static_cast<unsigned int>(attachedPicture.imageData.length)));
     picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
-    if (attachedPicture.pictureDescription)
+    if (attachedPicture.pictureDescription) {
         picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
+    }
 
     // Convert the image's UTI into a MIME type
     if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
         UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
-        if (NSString *mimeType = [type preferredMIMEType]; mimeType)
+        if (NSString *mimeType = [type preferredMIMEType]; mimeType) {
             picture->setMimeType(TagLib::StringFromNSString(mimeType));
+        }
     }
 
     // Flesh out the height, width, and depth

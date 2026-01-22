@@ -44,8 +44,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBWAVEDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isWAVEHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -159,8 +160,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
         // An Info tag is only written if present, but ID3v2 tags are always written
 
         // TODO: Should other field names from the Info tag be handled?
-        if (file.hasInfoTag())
+        if (file.hasInfoTag()) {
             sfb::setTagFromMetadata(self.metadata, file.InfoTag());
+        }
 
         sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
 

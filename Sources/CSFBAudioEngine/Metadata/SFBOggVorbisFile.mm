@@ -43,8 +43,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBOggVorbisDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggVorbisHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -90,8 +91,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.Audi
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Ogg Vorbis" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties())
+        if (file.audioProperties()) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+        }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
         if (file.tag())

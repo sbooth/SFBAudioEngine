@@ -81,8 +81,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Extended Module" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties())
+        if (file.audioProperties()) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+        }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
         if (file.tag())

@@ -45,8 +45,9 @@
 
     NSUInteger count = (NSUInteger)length;
     NSUInteger remaining = _data.length - _pos;
-    if (count > remaining)
+    if (count > remaining) {
         count = remaining;
+    }
 
     [_data getBytes:buffer range:NSMakeRange(_pos, count)];
     _pos += count;

@@ -43,8 +43,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isShortenHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -90,8 +91,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Shorten" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties())
+        if (file.audioProperties()) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+        }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
         if (file.tag())

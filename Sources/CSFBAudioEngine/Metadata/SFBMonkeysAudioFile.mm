@@ -44,8 +44,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.A
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isAPEHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -158,8 +159,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.A
 
         // ID3v1 tags are only written if present, but an APE tag is always written
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
         sfb::setAPETagFromMetadata(self.metadata, file.APETag(true));
 

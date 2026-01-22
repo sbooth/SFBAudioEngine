@@ -58,8 +58,9 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource error:error];
 }
 
@@ -67,8 +68,9 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     NSParameterAssert(inputSource != nil);
 
     SFBDSDDecoder *decoder = [[SFBDSDDecoder alloc] initWithInputSource:inputSource error:error];
-    if (!decoder)
+    if (!decoder) {
         return nil;
+    }
 
     return [self initWithDecoder:decoder error:error];
 }
@@ -100,8 +102,9 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (!_decoder.isOpen && ![_decoder openReturningError:error])
+    if (!_decoder.isOpen && ![_decoder openReturningError:error]) {
         return NO;
+    }
 
     const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
@@ -196,11 +199,13 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesRead = 0;
 
@@ -211,12 +216,14 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
         AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
         if (![_decoder decodeIntoBuffer:_buffer
                             packetCount:MIN(_buffer.packetCapacity, dsdPacketsRemaining)
-                                  error:error])
+                                  error:error]) {
             return NO;
+        }
 
         AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
-        if (dsdPacketsDecoded == 0)
+        if (dsdPacketsDecoded == 0) {
             break;
+        }
 
         // Convert to DoP
         // NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
@@ -252,8 +259,9 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
         framesRead += framesDecoded;
 
         // All requested frames were read
-        if (framesRead == frameLength)
+        if (framesRead == frameLength) {
             break;
+        }
     }
 
     return YES;
@@ -266,8 +274,9 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    if (![_decoder seekToPacket:(frame * DSD_PACKETS_PER_DOP_FRAME) error:error])
+    if (![_decoder seekToPacket:(frame * DSD_PACKETS_PER_DOP_FRAME) error:error]) {
         return NO;
+    }
 
     _buffer.packetCount = 0;
     _buffer.byteLength = 0;

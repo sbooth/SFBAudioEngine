@@ -75,8 +75,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 
     // Validate format
     if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32)
+        sourceFormat.channelCount > 32) {
         return nil;
+    }
 
     // Set up the processing format
     AudioStreamBasicDescription streamDescription = {0};
@@ -88,8 +89,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     streamDescription.mChannelsPerFrame = sourceFormat.channelCount;
     streamDescription.mBitsPerChannel = sourceFormat.streamDescription->mBitsPerChannel;
 
-    if (streamDescription.mBitsPerChannel == 32)
+    if (streamDescription.mBitsPerChannel == 32) {
         streamDescription.mFormatID |= kAudioFormatFlagIsPacked;
+    }
 
     streamDescription.mBytesPerPacket = 4 * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
@@ -122,14 +124,16 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _wpc = WavpackOpenFileOutput(wavpack_block_output, (__bridge void *)self, NULL);
     if (!_wpc) {
         os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -239,11 +243,13 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     if (!WavpackPackSamples(_wpc, (int32_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength)) {
         os_log_error(gSFBAudioEncoderLog, "WavpackPackSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
@@ -345,10 +351,12 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 
     if (_estimatedFramesToEncode != _framePosition && _firstBlock) {
         WavpackUpdateNumSamples(_wpc, _firstBlock.mutableBytes);
-        if (![_outputSource seekToOffset:0 error:error])
+        if (![_outputSource seekToOffset:0 error:error]) {
             return NO;
-        if (![_outputSource writeData:_firstBlock error:error])
+        }
+        if (![_outputSource writeData:_firstBlock error:error]) {
             return NO;
+        }
     }
 
     return YES;

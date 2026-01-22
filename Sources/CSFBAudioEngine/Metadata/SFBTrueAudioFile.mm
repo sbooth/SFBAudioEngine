@@ -44,8 +44,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isTrueAudioHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -159,8 +160,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
 
         // ID3v1 tags are only written if present, but ID3v2 tags are always written
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
         sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(true));
 

@@ -84,8 +84,9 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggSpeexDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggSpeexHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -100,8 +101,9 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _framePosition = 0;
     _frameLength = SFBUnknownFrameLength;
@@ -394,11 +396,13 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesProcessed = 0;
 
@@ -412,12 +416,14 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
         framesProcessed += framesCopied;
 
         // All requested frames were read
-        if (framesProcessed == frameLength)
+        if (framesProcessed == frameLength) {
             break;
+        }
 
         // EOS reached
-        if (_eosReached)
+        if (_eosReached) {
             break;
+        }
 
         // Attempt to process the desired number of packets
         NSInteger packetsDesired = 1;
@@ -443,16 +449,18 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                 }
 
                 // If result is 0, there is insufficient data to assemble a packet
-                if (result == 0)
+                if (result == 0) {
                     break;
+                }
 
                 // Otherwise, we got a valid packet for processing
                 if (result == 1) {
                     if (oggPacket.bytes >= 5 && !memcmp(oggPacket.packet, "Speex", 5))
                         _serialNumber = _streamState.serialno;
 
-                    if (_serialNumber == -1 || _streamState.serialno != _serialNumber)
+                    if (_serialNumber == -1 || _streamState.serialno != _serialNumber) {
                         break;
+                    }
 
                     // Ignore the following:
                     //  - Speex comments in packet #2
@@ -550,13 +558,15 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                     ogg_sync_wrote(&_syncState, bytesRead);
 
                     // No more data available from input file
-                    if (bytesRead == 0)
+                    if (bytesRead == 0) {
                         break;
+                    }
                 }
 
                 // Ensure all Ogg streams are read
-                if (ogg_page_serialno(&_page) != _streamState.serialno)
+                if (ogg_page_serialno(&_page) != _streamState.serialno) {
                     ogg_stream_reset_serialno(&_streamState, ogg_page_serialno(&_page));
+                }
 
                 // Get the resultant Ogg page
                 int result = ogg_stream_pagein(&_streamState, &_page);

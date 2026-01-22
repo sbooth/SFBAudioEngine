@@ -122,8 +122,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseExtension = extension.lowercaseString;
     for (SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-        if ([supportedPathExtensions containsObject:lowercaseExtension])
+        if ([supportedPathExtensions containsObject:lowercaseExtension]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -132,8 +133,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
     for (SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-        if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+        if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -161,8 +163,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource
                    detectContentType:detectContentType
                         mimeTypeHint:mimeTypeHint
@@ -200,8 +203,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if (detectContentType) {
         // If the input source can't be opened decoding is destined to fail; give up now
-        if (!inputSource.isOpen && ![inputSource openReturningError:error])
+        if (!inputSource.isOpen && ![inputSource openReturningError:error]) {
             return nil;
+        }
         // Instead of failing for non-seekable inputs just skip content type detection
         if (!inputSource.supportsSeeking) {
             os_log_error(gSFBAudioDecoderLog, "Unable to detect content type for non-seekable input source %{public}@",
@@ -219,14 +223,16 @@ static NSMutableArray *_registeredSubclasses = nil;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
-            if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+            if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
                 currentScore += 40;
+            }
         }
 
         if (lowercaseExtension) {
             NSSet *supportedPathExtensions = [klass supportedPathExtensions];
-            if ([supportedPathExtensions containsObject:lowercaseExtension])
+            if ([supportedPathExtensions containsObject:lowercaseExtension]) {
                 currentScore += 20;
+            }
         }
 
         if (detectContentType) {
@@ -290,8 +296,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource decoderName:decoderName error:error];
 }
 

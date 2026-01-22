@@ -40,8 +40,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
     NSParameterAssert(targetURL != nil);
 
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
-    if (!decoder)
+    if (!decoder) {
         return NO;
+    }
     return [self exportFromDecoder:decoder toURL:targetURL error:error];
 }
 
@@ -57,8 +58,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 #endif
     };
 
-    if (!decoder.isOpen && ![decoder openReturningError:error])
+    if (!decoder.isOpen && ![decoder openReturningError:error]) {
         return NO;
+    }
 
     AVAudioFormat *processingFormat = decoder.processingFormat.standardEquivalent;
 
@@ -82,8 +84,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
                                                      commonFormat:processingFormat.commonFormat
                                                       interleaved:processingFormat.interleaved
                                                             error:error];
-    if (!outputFile)
+    if (!outputFile) {
         return NO;
+    }
 
     AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat
                                                                    frameCapacity:BUFFER_SIZE_FRAMES];
@@ -121,8 +124,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
         // Verify decoding was successful
         if (!decodeResult) {
             os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
-            if (error)
+            if (error) {
                 *error = decodeError;
+            }
             deleteOutputFile();
             return NO;
         }

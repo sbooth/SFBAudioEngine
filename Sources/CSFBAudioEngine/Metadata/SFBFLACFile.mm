@@ -46,8 +46,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isFLACHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -180,11 +181,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
         // ID3v1 and ID3v2 tags are only written if present, but a Xiph comment is always written
         // Album art is only saved as FLAC picture metadata blocks, not to the ID3v2 tag or Xiph comment
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
-        if (file.hasID3v2Tag())
+        if (file.hasID3v2Tag()) {
             sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(), false);
+        }
 
         sfb::setXiphCommentFromMetadata(self.metadata, file.xiphComment(), false);
 

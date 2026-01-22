@@ -12,8 +12,9 @@
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag {
     NSParameterAssert(tag != nil);
 
-    if (tag->isEmpty())
+    if (tag->isEmpty()) {
         return;
+    }
 
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 
@@ -127,8 +128,9 @@
         }
     }
 
-    if (additionalMetadata.count)
+    if (additionalMetadata.count) {
         self.additionalMetadata = additionalMetadata;
+    }
 }
 
 @end
@@ -142,8 +144,9 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
     // Remove the existing comment with this name
     tag->removeItem(key);
 
-    if (value)
+    if (value) {
         tag->addValue(key, TagLib::StringFromNSString(value));
+    }
 }
 
 void SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {

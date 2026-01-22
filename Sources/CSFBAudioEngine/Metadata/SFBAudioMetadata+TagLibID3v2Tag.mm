@@ -63,29 +63,33 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // Extract composer if present
     frameList = tag->frameListMap()["TCOM"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.composer = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     // Extract album artist
     frameList = tag->frameListMap()["TPE2"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.albumArtist = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     // BPM
     frameList = tag->frameListMap()["TBPM"];
     if (!frameList.isEmpty()) {
         bool ok = false;
         int BPM = frameList.front()->toString().toInt(&ok);
-        if (ok)
+        if (ok) {
             self.bpm = @(BPM);
+        }
     }
 
     // Rating
     TagLib::ID3v2::PopularimeterFrame *popularimeter = nullptr;
     frameList = tag->frameListMap()["POPM"];
     if (!frameList.isEmpty() &&
-        nullptr != (popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front())))
+        nullptr != (popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front()))) {
         self.rating = @(popularimeter->rating());
+    }
 
     // Extract total tracks if present
     frameList = tag->frameListMap()["TRCK"];
@@ -98,16 +102,19 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         if (-1 != pos) {
             auto upos = static_cast<unsigned int>(pos);
             int trackNum = s.substr(0, upos).toInt(&ok);
-            if (ok)
+            if (ok) {
                 self.trackNumber = @(trackNum);
+            }
 
             int trackTotal = s.substr(upos + 1).toInt(&ok);
-            if (ok)
+            if (ok) {
                 self.trackTotal = @(trackTotal);
+            }
         } else if (s.length()) {
             int trackNum = s.toInt(&ok);
-            if (ok)
+            if (ok) {
                 self.trackNumber = @(trackNum);
+            }
         }
     }
 
@@ -122,23 +129,27 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         if (-1 != pos) {
             auto upos = static_cast<unsigned int>(pos);
             int discNum = s.substr(0, upos).toInt(&ok);
-            if (ok)
+            if (ok) {
                 self.discNumber = @(discNum);
+            }
 
             int discTotal = s.substr(upos + 1).toInt(&ok);
-            if (ok)
+            if (ok) {
                 self.discTotal = @(discTotal);
+            }
         } else if (s.length()) {
             int discNum = s.toInt(&ok);
-            if (ok)
+            if (ok) {
                 self.discNumber = @(discNum);
+            }
         }
     }
 
     // Lyrics
     frameList = tag->frameListMap()["USLT"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.lyrics = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     // Extract compilation if present (iTunes TCMP tag)
     frameList = tag->frameListMap()["TCMP"];
@@ -148,8 +159,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     frameList = tag->frameListMap()["TSRC"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.isrc = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     // MusicBrainz
     auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
@@ -168,28 +180,34 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // Sorting and grouping
     frameList = tag->frameListMap()["TSOT"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.titleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     frameList = tag->frameListMap()["TSOA"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.albumTitleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     frameList = tag->frameListMap()["TSOP"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.artistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     frameList = tag->frameListMap()["TSO2"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.albumArtistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     frameList = tag->frameListMap()["TSOC"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.composerSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     frameList = tag->frameListMap()["TIT1"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         self.grouping = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+    }
 
     // ReplayGain
     bool foundReplayGain = false;
@@ -436,8 +454,9 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     // MusicBrainz
     auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "MusicBrainz Album Id");
-    if (nullptr != musicBrainzReleaseIDFrame)
+    if (nullptr != musicBrainzReleaseIDFrame) {
         tag->removeFrame(musicBrainzReleaseIDFrame);
+    }
 
     if (metadata.musicBrainzReleaseID) {
         auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
@@ -448,8 +467,9 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
           const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
-    if (nullptr != musicBrainzRecordingIDFrame)
+    if (nullptr != musicBrainzRecordingIDFrame) {
         tag->removeFrame(musicBrainzRecordingIDFrame);
+    }
 
     if (metadata.musicBrainzRecordingID) {
         auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
@@ -509,17 +529,21 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     auto albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
     auto albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
 
-    if (nullptr != trackGainFrame)
+    if (nullptr != trackGainFrame) {
         tag->removeFrame(trackGainFrame);
+    }
 
-    if (nullptr != trackPeakFrame)
+    if (nullptr != trackPeakFrame) {
         tag->removeFrame(trackPeakFrame);
+    }
 
-    if (nullptr != albumGainFrame)
+    if (nullptr != albumGainFrame) {
         tag->removeFrame(albumGainFrame);
+    }
 
-    if (nullptr != albumPeakFrame)
+    if (nullptr != albumPeakFrame) {
         tag->removeFrame(albumPeakFrame);
+    }
 
     if (metadata.replayGainTrackGain != nil) {
         auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();

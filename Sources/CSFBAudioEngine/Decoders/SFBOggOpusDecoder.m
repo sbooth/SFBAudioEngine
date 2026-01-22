@@ -34,8 +34,9 @@ static int read_callback(void *stream, unsigned char *ptr, int nbytes) {
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:nbytes bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:nbytes bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return (int)bytesRead;
 }
 
@@ -43,8 +44,9 @@ static int seek_callback(void *stream, opus_int64 offset, int whence) {
     NSCParameterAssert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
-    if (!decoder->_inputSource.supportsSeeking)
+    if (!decoder->_inputSource.supportsSeeking) {
         return -1;
+    }
 
     switch (whence) {
     case SEEK_SET:
@@ -52,14 +54,16 @@ static int seek_callback(void *stream, opus_int64 offset, int whence) {
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([decoder->_inputSource getLength:&inputSourceLength error:nil])
+        if ([decoder->_inputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
@@ -72,8 +76,9 @@ static opus_int64 tell_callback(void *stream) {
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -108,8 +113,9 @@ static opus_int64 tell_callback(void *stream) {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggOpusDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggOpusHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -124,8 +130,9 @@ static opus_int64 tell_callback(void *stream) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     OpusFileCallbacks callbacks = {.read = read_callback, .seek = seek_callback, .tell = tell_callback, .close = NULL};
 
@@ -260,11 +267,13 @@ static opus_int64 tell_callback(void *stream) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
@@ -282,8 +291,9 @@ static opus_int64 tell_callback(void *stream) {
         }
 
         // 0 frames indicates EOS
-        if (framesRead == 0)
+        if (framesRead == 0) {
             break;
+        }
 
         buffer.frameLength += (AVAudioFrameCount)framesRead;
         framesRemaining -= (AVAudioFrameCount)framesRead;

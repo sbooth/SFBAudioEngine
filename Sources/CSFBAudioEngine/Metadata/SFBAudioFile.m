@@ -98,8 +98,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseExtension = extension.lowercaseString;
     for (SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-        if ([supportedPathExtensions containsObject:lowercaseExtension])
+        if ([supportedPathExtensions containsObject:lowercaseExtension]) {
             return YES;
+        }
     }
 
     return NO;
@@ -109,8 +110,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
     for (SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-        if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+        if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
             return YES;
+        }
     }
 
     return NO;
@@ -121,12 +123,14 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(destinationURL != nil);
 
     SFBAudioFile *sourceAudioFile = [SFBAudioFile audioFileWithURL:sourceURL error:error];
-    if (!sourceAudioFile)
+    if (!sourceAudioFile) {
         return NO;
+    }
 
     SFBAudioFile *destinationAudioFile = [SFBAudioFile audioFileWithURL:destinationURL error:error];
-    if (!destinationAudioFile)
+    if (!destinationAudioFile) {
         return NO;
+    }
 
     [destinationAudioFile.metadata copyMetadataFrom:sourceAudioFile.metadata];
     [destinationAudioFile.metadata copyAttachedPicturesFrom:sourceAudioFile.metadata];
@@ -137,8 +141,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (instancetype)audioFileWithURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioFile *audioFile = [[SFBAudioFile alloc] initWithURL:url];
-    if (![audioFile readPropertiesAndMetadataReturningError:error])
+    if (![audioFile readPropertiesAndMetadataReturningError:error]) {
         return nil;
+    }
     return audioFile;
 }
 
@@ -170,8 +175,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSFileHandle *fileHandle = nil;
     if (detectContentType) {
         fileHandle = [NSFileHandle fileHandleForReadingFromURL:url error:error];
-        if (!fileHandle)
+        if (!fileHandle) {
             return nil;
+        }
     }
 
     int score = 10;
@@ -183,14 +189,16 @@ static NSMutableArray *_registeredSubclasses = nil;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
-            if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+            if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
                 currentScore += 40;
+            }
         }
 
         if (lowercaseExtension) {
             NSSet *supportedPathExtensions = [klass supportedPathExtensions];
-            if ([supportedPathExtensions containsObject:lowercaseExtension])
+            if ([supportedPathExtensions containsObject:lowercaseExtension]) {
                 currentScore += 20;
+            }
         }
 
         if (detectContentType) {

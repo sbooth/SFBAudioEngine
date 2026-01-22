@@ -109,13 +109,15 @@ int closeCallback(void *user_data) noexcept {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 255)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 255) {
         return nil;
+    }
 
     double sampleRate = 48000;
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyOpusPreserveSampleRate] boolValue]) {
-        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000)
+        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000) {
             return nil;
+        }
         sampleRate = sourceFormat.sampleRate;
     }
 
@@ -165,8 +167,9 @@ int closeCallback(void *user_data) noexcept {
     //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
     //	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
 
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     OpusEncCallbacks callbacks = {writeCallback, closeCallback};
 
@@ -375,11 +378,13 @@ int closeCallback(void *user_data) noexcept {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     // Split buffer into Opus page-sized chunks
     AVAudioFrameCount framesProcessed = 0;
@@ -407,8 +412,9 @@ int closeCallback(void *user_data) noexcept {
         }
 
         // All complete frames were processed
-        if (framesProcessed == frameLength)
+        if (framesProcessed == frameLength) {
             break;
+        }
     }
 
     return YES;

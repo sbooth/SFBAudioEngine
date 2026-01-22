@@ -127,8 +127,9 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
     NSCParameterAssert(format != nil);
 
     const AudioStreamBasicDescription *asbd = format.streamDescription;
-    if (asbd->mFormatID != kAudioFormatLinearPCM)
+    if (asbd->mFormatID != kAudioFormatLinearPCM) {
         return 0;
+    }
 
     if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32)
@@ -268,15 +269,17 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
     OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap),
                                                  &channelBitmap, &dataSize);
     if (result != noErr) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
     AudioChannelLayout *channelLayout = malloc(dataSize);
     if (!channelLayout) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -284,8 +287,9 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
                                     &dataSize, channelLayout);
     if (result != noErr) {
         free(channelLayout);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
@@ -306,15 +310,17 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
     OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag),
                                                  &layoutTag, &dataSize);
     if (result != noErr) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
     AudioChannelLayout *channelLayout = malloc(dataSize);
     if (!channelLayout) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -322,8 +328,9 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
                                     channelLayout);
     if (result != noErr) {
         free(channelLayout);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
@@ -366,8 +373,9 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger length;
-    if (![encoder->_outputSource getLength:&length error:nil])
+    if (![encoder->_outputSource getLength:&length error:nil]) {
         return -1;
+    }
     return length;
 }
 
@@ -375,8 +383,9 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
-    if (!encoder->_outputSource.supportsSeeking)
+    if (!encoder->_outputSource.supportsSeeking) {
         return -1;
+    }
 
     switch (whence) {
     case SEEK_SET:
@@ -384,24 +393,28 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([encoder->_outputSource getOffset:&inputSourceOffset error:nil])
+        if ([encoder->_outputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([encoder->_outputSource getLength:&inputSourceLength error:nil])
+        if ([encoder->_outputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
 
-    if (![encoder->_outputSource seekToOffset:offset error:nil])
+    if (![encoder->_outputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
 
     NSInteger inputSourceOffset;
-    if (![encoder->_outputSource getOffset:&inputSourceOffset error:nil])
+    if (![encoder->_outputSource getOffset:&inputSourceOffset error:nil]) {
         return -1;
+    }
 
     return inputSourceOffset;
 }
@@ -412,8 +425,9 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
     NSInteger bytesRead;
-    if (![encoder->_outputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil])
+    if (![encoder->_outputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return bytesRead;
 }
 
@@ -423,8 +437,9 @@ static sf_count_t my_sf_vio_write(const void *ptr, sf_count_t count, void *user_
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
     NSInteger bytesWritten;
-    if (![encoder->_outputSource writeBytes:ptr length:(NSInteger)count bytesWritten:&bytesWritten error:nil])
+    if (![encoder->_outputSource writeBytes:ptr length:(NSInteger)count bytesWritten:&bytesWritten error:nil]) {
         return 0;
+    }
 
     return bytesWritten;
 }
@@ -434,8 +449,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger offset;
-    if (![encoder->_outputSource getOffset:&offset error:nil])
+    if (![encoder->_outputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -469,8 +485,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
             formatInfo.format = i;
             if (!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
                 NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
-                if (pathExtension)
+                if (pathExtension) {
                     [majorModeExtensions addObject:pathExtension];
+                }
             } else {
                 os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
             }
@@ -523,8 +540,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Validate format
     const AudioStreamBasicDescription *asbd = sourceFormat.streamDescription;
 
-    if (asbd->mFormatID != kAudioFormatLinearPCM)
+    if (asbd->mFormatID != kAudioFormatLinearPCM) {
         return nil;
+    }
 
     // Floating point
     if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
@@ -560,8 +578,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     int majorFormat = 0;
     SFBAudioEncodingSettingsValue majorFormatSetting =
@@ -820,8 +839,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 - (BOOL)closeReturningError:(NSError **)error {
     if (_sndfile) {
         int result = sf_close(_sndfile);
-        if (result)
+        if (result) {
             os_log_error(gSFBAudioEncoderLog, "sf_close failed: %{public}s", sf_error_number(result));
+        }
         _sndfile = NULL;
     }
 
@@ -842,11 +862,13 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     sf_count_t framesWritten = 0;
     switch (_writeMethod) {
@@ -874,8 +896,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         return NO;
     }
 
-    if (framesWritten != frameLength)
+    if (framesWritten != frameLength) {
         os_log_info(gSFBAudioEncoderLog, "sf_writef_XXX wrote %lld/%u frames", framesWritten, frameLength);
+    }
 
     int result = sf_error(_sndfile);
     if (result) {

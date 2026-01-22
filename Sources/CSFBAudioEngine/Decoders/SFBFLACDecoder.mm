@@ -194,8 +194,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isFLACHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -210,8 +211,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Create FLAC decoder
     flac__stream_decoder_unique_ptr flac{FLAC__stream_decoder_new()};
@@ -222,8 +224,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     }
 
     // Initialize decoder
-    if (![self initializeFLACStreamDecoder:flac.get() error:error])
+    if (![self initializeFLACStreamDecoder:flac.get() error:error]) {
         return NO;
+    }
 
     // Process metadata
     if (!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
@@ -395,11 +398,13 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesProcessed = 0;
 
@@ -414,8 +419,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
         // All requested frames were read or EOS reached
         if (framesProcessed == frameLength ||
-            FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM)
+            FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
             break;
+        }
 
         // Grab the next frame
         if (!FLAC__stream_decoder_process_single(_flac.get())) {
@@ -563,12 +569,14 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                 }
             }
 
-            for (; sample < blocksize; ++sample)
+            for (; sample < blocksize; ++sample) {
                 dst[sample] = static_cast<uint32_t>(src[sample]) << shift;
+            }
         }
     } else {
-        for (uint32_t channel = 0; channel < frame->header.channels; ++channel)
+        for (uint32_t channel = 0; channel < frame->header.channels; ++channel) {
             memcpy(abl->mBuffers[channel].mData, buffer[channel], frame->header.blocksize * sizeof(FLAC__int32));
+        }
     }
 
     _frameBuffer.frameLength = frame->header.blocksize;
@@ -580,8 +588,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 - (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata {
     NSParameterAssert(metadata != NULL);
 
-    if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO)
+    if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
+    }
 }
 
 - (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status {
@@ -615,8 +624,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggFLACHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;

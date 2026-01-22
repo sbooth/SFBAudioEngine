@@ -116,8 +116,9 @@ static id _sharedKeySet;
 }
 
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionaryRepresentation {
-    if ((self = [self init]))
+    if ((self = [self init])) {
         [self setFromDictionaryRepresentation:dictionaryRepresentation];
+    }
     return self;
 }
 
@@ -443,11 +444,13 @@ static id _sharedKeySet;
         self.genreSortOrder = metadata.genreSortOrder;
     }
 
-    if (kind & SFBAudioMetadataKindGrouping)
+    if (kind & SFBAudioMetadataKindGrouping) {
         self.grouping = metadata.grouping;
+    }
 
-    if (kind & SFBAudioMetadataKindAdditional)
+    if (kind & SFBAudioMetadataKindAdditional) {
         self.additionalMetadata = metadata.additionalMetadata;
+    }
 
     if (kind & SFBAudioMetadataKindReplayGain) {
         self.replayGainReferenceLoudness = metadata.replayGainReferenceLoudness;

@@ -46,8 +46,9 @@
         if (error)
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
 
-        if (fclose(_file))
+        if (fclose(_file)) {
             os_log_info(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(errno), errno);
+        }
         _file = NULL;
 
         return NO;

@@ -96,8 +96,9 @@ FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder
         bytesWritten != static_cast<NSInteger>(bytes))
         return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 
-    if (samples > 0)
+    if (samples > 0) {
         flacEncoder->_framePosition = current_frame;
+    }
 
     return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
@@ -172,8 +173,9 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
     // Validate format
     if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 8)
+        sourceFormat.channelCount > 8) {
         return nil;
+    }
 
     // Set up the processing format
     AudioStreamBasicDescription streamDescription{};
@@ -228,8 +230,9 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Create FLAC encoder
     flac__stream_encoder_unique_ptr flac{FLAC__stream_encoder_new()};
@@ -332,8 +335,9 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     }
 
     // Initialize the FLAC encoder
-    if (![self initializeFLACStreamEncoder:flac.get() error:error])
+    if (![self initializeFLACStreamEncoder:flac.get() error:error]) {
         return NO;
+    }
 
     AudioStreamBasicDescription outputStreamDescription{};
     outputStreamDescription.mFormatID = kAudioFormatFLAC;
@@ -387,11 +391,13 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     // The libFLAC encoder expects signed 32-bit samples in the range of the audio bit depth
     // (e.g. for 16 bit samples the interval is [-32768, 32767]).
@@ -422,8 +428,9 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
             const auto src = static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset;
 
             // Shift from high alignment, sign extending in the process
-            for (AVAudioFrameCount i = 0; i < frameCount * stride; ++i)
+            for (AVAudioFrameCount i = 0; i < frameCount * stride; ++i) {
                 dst[i] = src[i] >> shift;
+            }
 
             if (!FLAC__stream_encoder_process_interleaved(_flac.get(), dst, frameCount)) {
                 os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s",

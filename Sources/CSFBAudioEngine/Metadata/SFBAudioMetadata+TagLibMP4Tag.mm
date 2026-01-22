@@ -37,10 +37,12 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // Add the basic tags not specific to MP4
     [self addMetadataFromTagLibTag:tag];
 
-    if (tag->contains("aART"))
+    if (tag->contains("aART")) {
         self.albumArtist = [NSString stringWithUTF8String:tag->item("aART").toStringList().toString().toCString(true)];
-    if (tag->contains("\251wrt"))
+    }
+    if (tag->contains("\251wrt")) {
         self.composer = [NSString stringWithUTF8String:tag->item("\251wrt").toStringList().toString().toCString(true)];
+    }
     if (tag->contains("\251day")) {
         self.releaseDate =
               [NSString stringWithUTF8String:tag->item("\251day").toStringList().toString().toCString(true)];
@@ -48,29 +50,36 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     if (tag->contains("trkn")) {
         auto track = tag->item("trkn").toIntPair();
-        if (track.first)
+        if (track.first) {
             self.trackNumber = @(track.first);
-        if (track.second)
+        }
+        if (track.second) {
             self.trackTotal = @(track.second);
+        }
     }
     if (tag->contains("disk")) {
         auto disc = tag->item("disk").toIntPair();
-        if (disc.first)
+        if (disc.first) {
             self.discNumber = @(disc.first);
-        if (disc.second)
+        }
+        if (disc.second) {
             self.discTotal = @(disc.second);
+        }
     }
     if (tag->contains("cpil")) {
-        if (tag->item("cpil").toBool())
+        if (tag->item("cpil").toBool()) {
             self.compilation = @(YES);
+        }
     }
     if (tag->contains("tmpo")) {
         auto bpm = tag->item("tmpo").toInt();
-        if (bpm)
+        if (bpm) {
             self.bpm = @(bpm);
+        }
     }
-    if (tag->contains("\251lyr"))
+    if (tag->contains("\251lyr")) {
         self.lyrics = [NSString stringWithUTF8String:tag->item("\251lyr").toStringList().toString().toCString(true)];
+    }
 
     // Sorting
     if (tag->contains("sonm")) {
@@ -94,8 +103,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
               [NSString stringWithUTF8String:tag->item("soco").toStringList().toString().toCString(true)];
     }
 
-    if (tag->contains("\251grp"))
+    if (tag->contains("\251grp")) {
         self.lyrics = [NSString stringWithUTF8String:tag->item("\251grp").toStringList().toString().toCString(true)];
+    }
 
     // Album art
     if (tag->contains("covr")) {
@@ -127,36 +137,41 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     if (tag->contains("---:com.apple.iTunes:replaygain_reference_loudness")) {
         auto s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
         float f;
-        if (std::sscanf(s.toCString(), "%f", &f) == 1)
+        if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainReferenceLoudness = @(f);
+        }
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_track_gain")) {
         auto s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
         float f;
-        if (std::sscanf(s.toCString(), "%f", &f) == 1)
+        if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackGain = @(f);
+        }
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_track_peak")) {
         auto s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
         float f;
-        if (std::sscanf(s.toCString(), "%f", &f) == 1)
+        if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackPeak = @(f);
+        }
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_album_gain")) {
         auto s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
         float f;
-        if (std::sscanf(s.toCString(), "%f", &f) == 1)
+        if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumGain = @(f);
+        }
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_album_peak")) {
         auto s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
         float f;
-        if (std::sscanf(s.toCString(), "%f", &f) == 1)
+        if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumPeak = @(f);
+        }
     }
 }
 
@@ -171,8 +186,9 @@ void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value)
+    if (value) {
         tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
+    }
 }
 
 void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {
@@ -182,8 +198,9 @@ void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value != nil)
+    if (value != nil) {
         tag->setItem(key, TagLib::MP4::Item(value.intValue));
+    }
 }
 
 void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOne, NSNumber *valueTwo) {
@@ -193,8 +210,9 @@ void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOn
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (valueOne || valueTwo)
+    if (valueOne || valueTwo) {
         tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
+    }
 }
 
 void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {

@@ -56,8 +56,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8) {
         return nil;
+    }
 
     AVAudioChannelLayout *channelLayout = nil;
     switch (sourceFormat.channelCount) {
@@ -89,8 +90,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         break;
     }
 
-    if (channelLayout == nil)
+    if (channelLayout == nil) {
         return nil;
+    }
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                             sampleRate:sourceFormat.sampleRate
@@ -99,8 +101,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Initialize the ogg stream
     int result = ogg_stream_init(&_os, (int)arc4random());
@@ -188,8 +191,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
     for (;;) {
         ogg_page og;
-        if (ogg_stream_flush(&_os, &og) == 0)
+        if (ogg_stream_flush(&_os, &og) == 0) {
             break;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
@@ -251,11 +255,13 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     float **buf = vorbis_analysis_buffer(&_vd, (int)frameLength);
 
@@ -322,20 +328,24 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             // Write out pages (if any)
             for (;;) {
                 ogg_page og;
-                if (ogg_stream_pageout(&_os, &og) == 0)
+                if (ogg_stream_pageout(&_os, &og) == 0) {
                     break;
+                }
 
                 NSInteger bytesWritten;
                 if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.header_len)
+                    bytesWritten != og.header_len) {
                     return NO;
+                }
 
                 if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.body_len)
+                    bytesWritten != og.body_len) {
                     return NO;
+                }
 
-                if (ogg_page_eos(&og))
+                if (ogg_page_eos(&og)) {
                     break;
+                }
             }
         }
     }
@@ -405,20 +415,24 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             // Write out pages (if any)
             for (;;) {
                 ogg_page og;
-                if (ogg_stream_pageout(&_os, &og) == 0)
+                if (ogg_stream_pageout(&_os, &og) == 0) {
                     break;
+                }
 
                 NSInteger bytesWritten;
                 if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.header_len)
+                    bytesWritten != og.header_len) {
                     return NO;
+                }
 
                 if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.body_len)
+                    bytesWritten != og.body_len) {
                     return NO;
+                }
 
-                if (ogg_page_eos(&og))
+                if (ogg_page_eos(&og)) {
                     break;
+                }
             }
         }
     }

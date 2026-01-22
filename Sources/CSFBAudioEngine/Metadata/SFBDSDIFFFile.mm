@@ -44,8 +44,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isDSDIFFHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;

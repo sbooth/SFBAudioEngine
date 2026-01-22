@@ -26,8 +26,9 @@ static int skip_callback(void *f, dumb_off_t n) {
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return 1;
+    }
 
     return ![decoder->_inputSource seekToOffset:(offset + n) error:nil];
 }
@@ -38,8 +39,9 @@ static int getc_callback(void *f) {
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
     uint8_t value;
-    if (![decoder->_inputSource readUInt8:&value error:nil])
+    if (![decoder->_inputSource readUInt8:&value error:nil]) {
         return -1;
+    }
     return (int)value;
 }
 
@@ -49,8 +51,9 @@ static dumb_ssize_t getnc_callback(char *ptr, size_t n, void *f) {
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:(NSInteger)n bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:(NSInteger)n bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return bytesRead;
 }
 
@@ -63,8 +66,9 @@ static int seek_callback(void *f, dumb_off_t offset) {
 
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
-    if (![decoder->_inputSource seekToOffset:offset error:nil])
+    if (![decoder->_inputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
     return 0;
 }
 
@@ -74,8 +78,9 @@ static dumb_off_t get_size_callback(void *f) {
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
     NSInteger length;
-    if (![decoder->_inputSource getLength:&length error:nil])
+    if (![decoder->_inputSource getLength:&length error:nil]) {
         return -1;
+    }
     return length;
 }
 
@@ -131,8 +136,9 @@ static dumb_off_t get_size_callback(void *f) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Generate interleaved 2-channel 16-bit output
     // For mono and stereo the channel layout is assumed
@@ -178,11 +184,13 @@ static dumb_off_t get_size_callback(void *f) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesProcessed = 0;
 
@@ -198,8 +206,9 @@ static dumb_off_t get_size_callback(void *f) {
         framesProcessed += framesCopied;
 
         // All requested frames were read or EOS reached
-        if (framesProcessed == frameLength || framesCopied == 0)
+        if (framesProcessed == frameLength || framesCopied == 0) {
             break;
+        }
     }
 
     _framePosition += framesProcessed;
@@ -214,8 +223,9 @@ static dumb_off_t get_size_callback(void *f) {
     // DUMB cannot seek backwards, so the decoder must be reset
     if (frame < _framePosition) {
         [self closeDecoder];
-        if (![_inputSource seekToOffset:0 error:error] || ![self openDecoderReturningError:error])
+        if (![_inputSource seekToOffset:0 error:error] || ![self openDecoderReturningError:error]) {
             return NO;
+        }
         _framePosition = 0;
     }
 

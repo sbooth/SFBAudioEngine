@@ -30,8 +30,9 @@ static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *dat
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:(NSInteger)(size * nmemb) bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:(NSInteger)(size * nmemb) bytesRead:&bytesRead error:nil]) {
         return 0;
+    }
     return (size_t)bytesRead;
 }
 
@@ -46,14 +47,16 @@ static int seek_func_callback(void *datasource, ogg_int64_t offset, int whence) 
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([decoder->_inputSource getLength:&inputSourceLength error:nil])
+        if ([decoder->_inputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
@@ -66,8 +69,9 @@ static long tell_func_callback(void *datasource) {
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return (long)offset;
 }
 
@@ -102,8 +106,9 @@ static long tell_func_callback(void *datasource) {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggVorbisDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isOggVorbisHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -118,8 +123,9 @@ static long tell_func_callback(void *datasource) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     ov_callbacks callbacks = {.read_func = read_func_callback,
                               .seek_func = seek_func_callback,
@@ -143,8 +149,9 @@ static long tell_func_callback(void *datasource) {
     if (ov_test_open(&_vorbisFile)) {
         os_log_error(gSFBAudioDecoderLog, "ov_test_open failed");
 
-        if (ov_clear(&_vorbisFile))
+        if (ov_clear(&_vorbisFile)) {
             os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
+        }
 
         if (error)
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
@@ -157,8 +164,9 @@ static long tell_func_callback(void *datasource) {
     if (!ovInfo) {
         os_log_error(gSFBAudioDecoderLog, "ov_info failed");
 
-        if (ov_clear(&_vorbisFile))
+        if (ov_clear(&_vorbisFile)) {
             os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
+        }
 
         if (error)
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
@@ -232,8 +240,9 @@ static long tell_func_callback(void *datasource) {
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    if (ov_clear(&_vorbisFile))
+    if (ov_clear(&_vorbisFile)) {
         os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
+    }
 
     return [super closeReturningError:error];
 }
@@ -263,11 +272,13 @@ static long tell_func_callback(void *datasource) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesRemaining = frameLength;
     float **pcm_channels = NULL;
@@ -287,8 +298,9 @@ static long tell_func_callback(void *datasource) {
         }
 
         // 0 frames indicates EOS
-        if (framesRead == 0)
+        if (framesRead == 0) {
             break;
+        }
 
         // Copy the frames from the decoding buffer to the output buffer
         float *const *floatChannelData = buffer.floatChannelData;

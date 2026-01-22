@@ -33,24 +33,29 @@ OSStatus readCallback(void *inClientData, SInt64 inPosition, UInt32 requestCount
     SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
 
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return kAudioFileUnspecifiedError;
+    }
 
     if (inPosition != offset) {
-        if (!decoder->_inputSource.supportsSeeking)
+        if (!decoder->_inputSource.supportsSeeking) {
             return kAudioFileOperationNotSupportedError;
-        if (![decoder->_inputSource seekToOffset:inPosition error:nil])
+        }
+        if (![decoder->_inputSource seekToOffset:inPosition error:nil]) {
             return kAudioFileUnspecifiedError;
+        }
     }
 
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil]) {
         return kAudioFileUnspecifiedError;
+    }
 
     *actualCount = static_cast<UInt32>(bytesRead);
 
-    if (decoder->_inputSource.atEOF)
+    if (decoder->_inputSource.atEOF) {
         return kAudioFileEndOfFileError;
+    }
 
     return noErr;
 }
@@ -61,8 +66,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
 
     NSInteger length;
-    if (![decoder->_inputSource getLength:&length error:nil])
+    if (![decoder->_inputSource getLength:&length error:nil]) {
         return -1;
+    }
     return length;
 }
 
@@ -192,8 +198,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                                                                SFBAIFFDetectionSize, SFBWAVEDetectionSize})
                                         skipID3v2Tag:NO
                                                error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     *formatIsSupported = SFBTernaryTruthValueUnknown;
 
@@ -229,8 +236,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Open the input file
     AudioFileID audioFile;
@@ -471,8 +479,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
     if (frameLength == 0) {
         buffer.frameLength = 0;

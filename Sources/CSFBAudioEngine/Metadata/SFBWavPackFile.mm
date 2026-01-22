@@ -44,8 +44,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBWavPackDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isWavPackHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -158,8 +159,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
 
         // ID3v1 tags are only written if present, but an APE tag is always written
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
         sfb::setAPETagFromMetadata(self.metadata, file.APETag(true));
 

@@ -24,16 +24,18 @@ TTAint32 writeCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
     TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
     NSInteger bytesWritten;
-    if (![iocb->encoder_->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil])
+    if (![iocb->encoder_->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil]) {
         return -1;
+    }
     return (TTAint32)bytesWritten;
 }
 
 TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept {
     TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
-    if (![iocb->encoder_->_outputSource seekToOffset:offset error:nil])
+    if (![iocb->encoder_->_outputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -76,8 +78,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat ||
         sourceFormat.streamDescription->mBitsPerChannel < MIN_BPS ||
         sourceFormat.streamDescription->mBitsPerChannel > MAX_BPS || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > MAX_NCH)
+        sourceFormat.channelCount > MAX_NCH) {
         return nil;
+    }
 
     // Set up the processing format
     AudioStreamBasicDescription streamDescription{};
@@ -105,8 +108,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // True Audio requires knowing the number of frames to encode in advance
     if (_estimatedFramesToEncode <= 0) {
@@ -186,11 +190,13 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     try {
         auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;

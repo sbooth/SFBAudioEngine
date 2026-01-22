@@ -111,14 +111,16 @@ class APEIOInterface final : public APE::IAPEIO {
             break;
         case APE::SeekFileCurrent: {
             NSInteger inputSourceOffset;
-            if ([inputSource_ getOffset:&inputSourceOffset error:nil])
+            if ([inputSource_ getOffset:&inputSourceOffset error:nil]) {
                 offset += inputSourceOffset;
+            }
             break;
         }
         case APE::SeekFileEnd: {
             NSInteger inputSourceLength;
-            if ([inputSource_ getLength:&inputSourceLength error:nil])
+            if ([inputSource_ getLength:&inputSourceLength error:nil]) {
                 offset += inputSourceLength;
+            }
             break;
         }
         }
@@ -146,15 +148,17 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetPosition() override {
         NSInteger offset;
-        if (![inputSource_ getOffset:&offset error:nil])
+        if (![inputSource_ getOffset:&offset error:nil]) {
             return -1;
+        }
         return offset;
     }
 
     APE::int64 GetSize() override {
         NSInteger length;
-        if (![inputSource_ getLength:&length error:nil])
+        if (![inputSource_ getLength:&length error:nil]) {
             return -1;
+        }
         return length;
     }
 
@@ -201,8 +205,9 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isAPEHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
@@ -217,8 +222,9 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     auto ioInterface = std::make_unique<APEIOInterface>(_inputSource);
     auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
@@ -393,11 +399,13 @@ class APEIOInterface final : public APE::IAPEIO {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     int64_t blocksRead = 0;
     if (_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData),

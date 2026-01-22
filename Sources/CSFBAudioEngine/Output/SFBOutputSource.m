@@ -68,8 +68,9 @@ static void SFBCreateOutputSourceLog(void) {
 }
 
 - (void)dealloc {
-    if (self.isOpen)
+    if (self.isOpen) {
         [self closeReturningError:nil];
+    }
 }
 
 - (NSData *)data {

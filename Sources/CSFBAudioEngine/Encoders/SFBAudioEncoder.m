@@ -94,8 +94,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseExtension = extension.lowercaseString;
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-        if ([supportedPathExtensions containsObject:lowercaseExtension])
+        if ([supportedPathExtensions containsObject:lowercaseExtension]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -104,8 +105,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-        if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+        if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -122,8 +124,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
-    if (!outputSource)
+    if (!outputSource) {
         return nil;
+    }
     return [self initWithOutputSource:outputSource mimeType:mimeType error:error];
 }
 
@@ -152,14 +155,16 @@ static NSMutableArray *_registeredSubclasses = nil;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
-            if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+            if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
                 currentScore += 40;
+            }
         }
 
         if (lowercaseExtension) {
             NSSet *supportedPathExtensions = [klass supportedPathExtensions];
-            if ([supportedPathExtensions containsObject:lowercaseExtension])
+            if ([supportedPathExtensions containsObject:lowercaseExtension]) {
                 currentScore += 20;
+            }
         }
 
         if (currentScore > score) {
@@ -199,8 +204,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
-    if (!outputSource)
+    if (!outputSource) {
         return nil;
+    }
     return [self initWithOutputSource:outputSource encoderName:encoderName error:error];
 }
 

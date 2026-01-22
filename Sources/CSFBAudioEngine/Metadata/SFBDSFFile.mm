@@ -43,8 +43,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBDSFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     if ([header isDSFHeader])
         *formatIsSupported = SFBTernaryTruthValueTrue;
