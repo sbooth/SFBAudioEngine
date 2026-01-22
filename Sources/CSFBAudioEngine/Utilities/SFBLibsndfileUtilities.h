@@ -10,4 +10,4 @@
 
 /// Fills an `AudioStreamBasicDescription` with details from a sndfile format
 /// - note: Currently this functions fills at most `mFormatID`, `mFormatFlags`, and `mBitsPerChannel`
-void FillASBDWithSndfileFormat(AudioStreamBasicDescription * _Nonnull asbd, int format);
+void FillASBDWithSndfileFormat(AudioStreamBasicDescription *_Nonnull asbd, int format);

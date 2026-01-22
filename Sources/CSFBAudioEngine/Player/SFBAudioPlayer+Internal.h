@@ -4,15 +4,14 @@
 // MIT license
 //
 
+#import "AudioPlayer.h"
+#import "SFBAudioPlayer.h"
+
 #import <memory>
 
-#import "SFBAudioPlayer.h"
-#import "AudioPlayer.h"
-
-@interface SFBAudioPlayer ()
-{
-@package
-	/// The underlying AudioPlayer instance
-	sfb::AudioPlayer::unique_ptr _player;
+@interface SFBAudioPlayer () {
+  @package
+    /// The underlying AudioPlayer instance
+    sfb::AudioPlayer::unique_ptr _player;
 }
 @end
