@@ -8,16 +8,15 @@
 
 @implementation SFBMemoryMappedFileInputSource
 
-- (instancetype)initWithURL:(NSURL *)url error:(NSError **)error
-{
-	NSParameterAssert(url != nil);
-	NSParameterAssert(url.isFileURL);
+- (instancetype)initWithURL:(NSURL *)url error:(NSError **)error {
+    NSParameterAssert(url != nil);
+    NSParameterAssert(url.isFileURL);
 
-	NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedAlways error:error];
-	if(data == nil)
-		return nil;
+    NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedAlways error:error];
+    if (data == nil)
+        return nil;
 
-	return [super initWithData:data url:url];
+    return [super initWithData:data url:url];
 }
 
 @end

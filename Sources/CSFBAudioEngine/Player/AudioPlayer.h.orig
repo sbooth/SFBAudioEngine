@@ -65,7 +65,7 @@ class AudioPlayer final {
     /// Lock protecting `queuedDecoders_`
     mutable CXXUnfairLock::UnfairLock queuedDecodersLock_;
 
-    /// Thread used for decoding
+	/// Thread used for decoding
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	std::jthread 							decodingThread_;
 #else
@@ -200,7 +200,8 @@ class AudioPlayer final {
 
     void logProcessingGraphDescription(os_log_t _Nonnull log, os_log_type_t type) const noexcept;
 
-  private:
+<<<<<<< HEAD
+private:
 	/// Possible bits in `flags_`
 	enum class Flags : unsigned int {
 		/// Cached value of `engine_.isRunning`
@@ -218,16 +219,36 @@ class AudioPlayer final {
 		stopEventThread				= 1u << 5,
 #endif /* !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L) */
 	};
+=======
+  private:
+    /// Possible bits in `flags_`
+    enum class Flags : unsigned int {
+        /// Cached value of `engine_.isRunning`
+        engineIsRunning = 1u << 0,
+        /// The render block should output audio
+        isPlaying = 1u << 1,
+        /// The render block should output silence
+        isMuted = 1u << 2,
+        /// The ring buffer needs to be drained during the next render cycle
+        drainRequired = 1u << 3,
+    };
+>>>>>>> main
 
     // MARK: - Decoding
 
-    /// Dequeues and processes decoders from the decoder queue
+<<<<<<< HEAD
+	/// Dequeues and processes decoders from the decoder queue
 	/// - note: This is the thread entry point for the decoding thread
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	void processDecoders(std::stop_token stoken) noexcept;
 #else
 	void processDecoders() noexcept;
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
+=======
+    /// Dequeues and processes decoders from the decoder queue
+    /// - note: This is the thread entry point for the decoding thread
+    void processDecoders(std::stop_token stoken) noexcept;
+>>>>>>> main
 
     /// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
     void submitDecodingErrorEvent(NSError *error) noexcept;
@@ -260,13 +281,19 @@ class AudioPlayer final {
 
     // MARK: - Event Processing
 
-    /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
+<<<<<<< HEAD
+	/// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
 	/// - note: This is the thread entry point for the event processing thread
 #if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 	void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
 #else
 	void sequenceAndProcessEvents() noexcept;
 #endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
+=======
+    /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
+    /// - note: This is the thread entry point for the event processing thread
+    void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+>>>>>>> main
 
     /// Reads and processes an event payload from `decodingEvents_`
     bool processDecodingEvent(DecodingEventCommand command) noexcept;

@@ -1,0 +1,74 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+ContinuationIndentWidth: 6
+TabWidth: 4
+UseTab: Never
+
+ColumnLimit: 120
+
+Standard: c++20
+
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: Empty
+
+ConstructorInitializerIndentWidth: 2
+PackConstructorInitializers: NextLineOnly
+
+PointerAlignment: Right
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+BreakTemplateDeclarations: true
+
+ObjCBlockIndentWidth: 4
+
+AttributeMacros:
+  - CF_SWIFT_NAME
+  - CF_REFINED_FOR_SWIFT
+  - CF_RELEASES_ARGUMENT
+  - NS_SWIFT_NAME
+  - NS_REFINED_FOR_SWIFT
+  - NS_DESIGNATED_INITIALIZER
+  - NS_UNAVAILABLE
+  - NS_SWIFT_UNAVAILABLE
+
+TypenameMacros:
+  - NS_TYPED_ENUM
+  - NS_TYPED_EXTENSIBLE_ENUM
+
+StatementMacros:
+  - CF_ASSUME_NONNULL_BEGIN
+  - CF_ASSUME_NONNULL_END
+  - NS_ASSUME_NONNULL_BEGIN
+  - NS_ASSUME_NONNULL_END
+
+Macros:
+  - "CF_ENUM(type)=enum : type"
+  - "CF_ENUM(type,name)=enum name : type"
+  - "CF_CLOSED_ENUM(type,name)=enum name : type"
+  - "NS_ENUM(type)=enum : type"
+  - "NS_ENUM(type,name)=enum name : type"
+  - "NS_CLOSED_ENUM(type,name)=enum name : type"
+  - "NS_OPTIONS(type,name)=enum name : type"
+  - "NS_ERROR_ENUM(domain)=enum : NSInteger"
+  - "NS_ERROR_ENUM(domain,name)=enum name : NSInteger"
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^".*"$'
+    Priority: 1
+  - Regex: '^<SFBAudioEngine/'
+    Priority: 1
+  - Regex: '^<(CXXRingBuffer|CXXUnfairLock|CXXCoreAudio|AVFAudioExtensions)/'
+    Priority: 2
+  - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
+    Priority: 2
+  - Regex: '^<(CoreFoundation|CoreAudioTypes|CoreAudio|AudioToolbox|Foundation|AVFAudio|Accelerate|CommonCrypto)/'
+    Priority: 3
+  - Regex: '^<(libkern|mach|objc|os)/'
+    Priority: 5
+  - Regex: '^<[^./>]+>$'
+    Priority: 10
+  - Regex: '.*'
+    Priority: 20
