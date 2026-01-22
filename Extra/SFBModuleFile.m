@@ -13,9 +13,9 @@
 
 #import <os/log.h>
 
-#define DUMB_SAMPLE_RATE    65536
-#define DUMB_CHANNELS        2
-#define DUMB_BIT_DEPTH        16
+#define DUMB_SAMPLE_RATE  65536
+#define DUMB_CHANNELS     2
+#define DUMB_BIT_DEPTH    16
 
 @implementation SFBModuleFile
 
