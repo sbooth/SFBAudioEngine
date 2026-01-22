@@ -4,33 +4,33 @@
 // MIT license
 //
 
-#import <os/log.h>
-
 #import "SFBAudioDecoder.h"
-
 #import "SFBTernaryTruthValue.h"
+
+#import <os/log.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 extern os_log_t gSFBAudioDecoderLog;
 
-@interface SFBAudioDecoder ()
-{
-@package
-	SFBInputSource *_inputSource;
-	AVAudioFormat *_sourceFormat;
-	AVAudioFormat *_processingFormat;
-	NSDictionary *_properties;
+@interface SFBAudioDecoder () {
+  @package
+    SFBInputSource *_inputSource;
+    AVAudioFormat *_sourceFormat;
+    AVAudioFormat *_processingFormat;
+    NSDictionary *_properties;
 }
 /// Returns the decoder name
-@property (class, nonatomic, readonly) SFBAudioDecoderName decoderName;
+@property(class, nonatomic, readonly) SFBAudioDecoderName decoderName;
 
 /// Tests whether a seekable input source contains data in a supported format
 /// - parameter inputSource: The input source containing the data to test
 /// - parameter formatIsSupported: On return indicates whether the data in `inputSource` is a supported format
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the test was successfully performed, `NO` otherwise
-+ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error;
++ (BOOL)testInputSource:(SFBInputSource *)inputSource
+      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                  error:(NSError **)error;
 @end
 
 #pragma mark - Subclass Registration

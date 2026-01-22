@@ -4,9 +4,9 @@
 // MIT license
 //
 
-#import <taglib/id3v1tag.h>
-
 #import "SFBAudioMetadata.h"
+
+#import <taglib/id3v1tag.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
