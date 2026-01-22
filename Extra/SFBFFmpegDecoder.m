@@ -611,7 +611,7 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
 
         return result;
     } else {
-        // Copy received audio to mBufferList
+        // Copy received audio to _buffer
         UInt32 bytesPerFrame = _processingFormat.streamDescription->mBytesPerFrame;
         size_t spaceRemaining = (_buffer.frameCapacity - _buffer.frameLength) * bytesPerFrame;
         if(spaceRemaining < (UInt32)_frame->linesize[0]) {
