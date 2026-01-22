@@ -127,7 +127,7 @@ static long tell_func_callback(void *datasource) {
                               .close_func = NULL};
 
     if (ov_test_callbacks((__bridge void *)self, &_vorbisFile, NULL, 0, callbacks)) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Ogg Vorbis file.", @""), @{
@@ -136,6 +136,7 @@ static long tell_func_callback(void *datasource) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 

@@ -111,11 +111,12 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
             channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
         }
         // TODO: Use WavPack channel identities as a fallback?
-        else
+        else {
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
                         "'%{public}.4s'",
                         layoutTag, result, SFBCStringForOSType(result));
+        }
     }
 
     return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
@@ -141,9 +142,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     _config.bytes_per_sample = (_config.bits_per_sample + 7) / 8;
 
     AVAudioChannelLayout *layout = _processingFormat.channelLayout;
-    if (layout)
+    if (layout) {
         _config.channel_mask = (int)layout.layout->mChannelBitmap;
-    else
+    } else {
         switch (_processingFormat.channelCount) {
         case 1:
             _config.channel_mask = kAudioChannelBit_Left;
@@ -152,19 +153,21 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
             _config.channel_mask = kAudioChannelBit_Left | kAudioChannelBit_Right;
             break;
         }
+    }
 
     _config.flags = CONFIG_MD5_CHECKSUM;
 
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
     if (level != nil) {
-        if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast)
+        if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast) {
             _config.flags |= CONFIG_FAST_FLAG;
-        else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh)
+        } else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh) {
             _config.flags |= CONFIG_HIGH_FLAG;
-        else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh)
+        } else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh) {
             _config.flags |= CONFIG_VERY_HIGH_FLAG;
-        else
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring unknown WavPack compression level: %{public}@", level);
+        }
     }
 
     if (!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1,

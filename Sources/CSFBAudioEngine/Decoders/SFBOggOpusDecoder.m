@@ -131,7 +131,7 @@ static opus_int64 tell_callback(void *stream) {
 
     _opusFile = op_test_callbacks((__bridge void *)self, &callbacks, NULL, 0, NULL);
     if (!_opusFile) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Ogg Opus file.", @""), @{
@@ -140,6 +140,7 @@ static opus_int64 tell_callback(void *stream) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 

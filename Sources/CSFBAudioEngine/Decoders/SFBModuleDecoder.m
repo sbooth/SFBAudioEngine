@@ -250,7 +250,7 @@ static dumb_off_t get_size_callback(void *f) {
         dumbfile_close(_df);
         _df = NULL;
 
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Module file.", @""), @{
@@ -259,6 +259,7 @@ static dumb_off_t get_size_callback(void *f) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -277,7 +278,7 @@ static dumb_off_t get_size_callback(void *f) {
         dumbfile_close(_df);
         _df = NULL;
 
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Module file.", @""), @{
@@ -286,6 +287,7 @@ static dumb_off_t get_size_callback(void *f) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 

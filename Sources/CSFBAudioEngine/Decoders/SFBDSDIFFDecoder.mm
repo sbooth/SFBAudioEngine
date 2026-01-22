@@ -745,18 +745,18 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
     // Channel layouts are defined in the DSDIFF file format specification
     AVAudioChannelLayout *channelLayout = nil;
     if (channelsChunk->channelIDs_.size() == 2 && channelsChunk->channelIDs_[0] == 'SLFT' &&
-        channelsChunk->channelIDs_[1] == 'SRGT')
+        channelsChunk->channelIDs_[1] == 'SRGT') {
         channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
-    else if (channelsChunk->channelIDs_.size() == 5 && channelsChunk->channelIDs_[0] == 'MLFT' &&
-             channelsChunk->channelIDs_[1] == 'MRGT' && channelsChunk->channelIDs_[2] == 'C   ' &&
-             channelsChunk->channelIDs_[3] == 'LS  ' && channelsChunk->channelIDs_[4] == 'RS  ')
+    } else if (channelsChunk->channelIDs_.size() == 5 && channelsChunk->channelIDs_[0] == 'MLFT' &&
+               channelsChunk->channelIDs_[1] == 'MRGT' && channelsChunk->channelIDs_[2] == 'C   ' &&
+               channelsChunk->channelIDs_[3] == 'LS  ' && channelsChunk->channelIDs_[4] == 'RS  ') {
         channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];
-    else if (channelsChunk->channelIDs_.size() == 6 && channelsChunk->channelIDs_[0] == 'MLFT' &&
-             channelsChunk->channelIDs_[1] == 'MRGT' && channelsChunk->channelIDs_[2] == 'C   ' &&
-             channelsChunk->channelIDs_[3] == 'LFE ' && channelsChunk->channelIDs_[4] == 'LS  ' &&
-             channelsChunk->channelIDs_[5] == 'RS  ')
+    } else if (channelsChunk->channelIDs_.size() == 6 && channelsChunk->channelIDs_[0] == 'MLFT' &&
+               channelsChunk->channelIDs_[1] == 'MRGT' && channelsChunk->channelIDs_[2] == 'C   ' &&
+               channelsChunk->channelIDs_[3] == 'LFE ' && channelsChunk->channelIDs_[4] == 'LS  ' &&
+               channelsChunk->channelIDs_[5] == 'RS  ') {
         channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];
-    else if (!channelsChunk->channelIDs_.empty()) {
+    } else if (!channelsChunk->channelIDs_.empty()) {
         std::vector<AudioChannelLabel> labels;
         for (auto channelID : channelsChunk->channelIDs_)
             labels.push_back(channelIDToCoreAudioChannelLabel(channelID));

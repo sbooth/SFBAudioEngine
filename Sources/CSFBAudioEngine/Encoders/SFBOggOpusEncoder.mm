@@ -229,14 +229,15 @@ int closeCallback(void *user_data) noexcept {
 
     SFBAudioEncodingSettingsValue bitrateMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrateMode];
     if (bitrateMode != nil) {
-        if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR)
+        if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(1));
-        else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR)
+        } else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR_CONSTRAINT(1));
-        else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR)
+        } else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(0));
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus bitrate mode: %{public}@", bitrateMode);
+        }
 
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "OPUS_SET_VBR[_CONSTRAINT] failed: %{public}s", ope_strerror(result));
@@ -272,12 +273,13 @@ int closeCallback(void *user_data) noexcept {
 
     SFBAudioEncodingSettingsValue signalType = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusSignalType];
     if (signalType != nil) {
-        if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice)
+        if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
-        else if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic)
+        } else if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus signal type: %{public}@", signalType);
+        }
 
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "OPUS_SET_SIGNAL failed: %{public}s", ope_strerror(result));

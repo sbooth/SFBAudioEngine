@@ -274,9 +274,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
     for (;;) {
         int result = vorbis_analysis_blockout(&_vd, &_vb);
-        if (result == 0)
+        if (result == 0) {
             break;
-        else if (result < 0) {
+        } else if (result < 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
             if (error)
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -306,9 +306,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         ogg_packet op;
         for (;;) {
             result = vorbis_bitrate_flushpacket(&_vd, &op);
-            if (result == 0)
+            if (result == 0) {
                 break;
-            else if (result < 0) {
+            } else if (result < 0) {
                 os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
                 if (error)
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -357,9 +357,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
     for (;;) {
         int result = vorbis_analysis_blockout(&_vd, &_vb);
-        if (result == 0)
+        if (result == 0) {
             break;
-        else if (result < 0) {
+        } else if (result < 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
             if (error)
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -389,9 +389,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         ogg_packet op;
         for (;;) {
             result = vorbis_bitrate_flushpacket(&_vd, &op);
-            if (result == 0)
+            if (result == 0) {
                 break;
-            else if (result < 0) {
+            } else if (result < 0) {
                 os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
                 if (error)
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain

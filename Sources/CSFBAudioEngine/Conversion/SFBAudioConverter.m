@@ -159,7 +159,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
         _intermediateConverter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                  toFormat:encoder.processingFormat];
         if (!_intermediateConverter) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioConverterErrorDomain, SFBAudioConverterErrorCodeFormatNotSupported,
                       NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -167,6 +167,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
                                 NSLocalizedString(@"The file's format is not supported for conversion.", @"")
                       },
                       SFBLocalizedNameForURL(decoder.inputSource.url));
+            }
             return nil;
         }
     }

@@ -229,9 +229,9 @@
         return NO;
     }
 
-    if (_requestedFrameLength == -1)
+    if (_requestedFrameLength == -1) {
         _frameLength = decoderFrameLength - _startFrame;
-    else {
+    } else {
         if (_requestedFrameLength > decoderFrameLength - _startFrame) {
             os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region frame length %lld",
                          _requestedFrameLength);

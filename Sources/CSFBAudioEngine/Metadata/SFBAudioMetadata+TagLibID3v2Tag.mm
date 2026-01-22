@@ -142,9 +142,10 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // Extract compilation if present (iTunes TCMP tag)
     frameList = tag->frameListMap()["TCMP"];
-    if (!frameList.isEmpty())
+    if (!frameList.isEmpty()) {
         // It seems that the presence of this frame indicates a compilation
         self.compilation = @(YES);
+    }
 
     frameList = tag->frameListMap()["TSRC"];
     if (!frameList.isEmpty())
@@ -153,15 +154,17 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // MusicBrainz
     auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
           const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
-    if (musicBrainzReleaseIDFrame)
+    if (musicBrainzReleaseIDFrame) {
         self.musicBrainzReleaseID =
               [NSString stringWithUTF8String:musicBrainzReleaseIDFrame->fieldList().back().toCString(true)];
+    }
 
     auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
           const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
-    if (musicBrainzRecordingIDFrame)
+    if (musicBrainzRecordingIDFrame) {
         self.musicBrainzRecordingID =
               [NSString stringWithUTF8String:musicBrainzRecordingIDFrame->fieldList().back().toCString(true)];
+    }
 
     // Sorting and grouping
     frameList = tag->frameListMap()["TSOT"];

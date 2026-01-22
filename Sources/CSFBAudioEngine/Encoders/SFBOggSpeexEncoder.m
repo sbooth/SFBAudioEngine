@@ -134,14 +134,15 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
     if (mode != nil) {
         // Determine the desired sample rate
-        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)
+        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband) {
             sampleRate = 8000;
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband) {
             sampleRate = 16000;
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband) {
             sampleRate = 32000;
-        else
+        } else {
             return nil;
+        }
     } else if (sampleRate > 48000 || sampleRate < 6000) {
         return nil;
     }
@@ -176,20 +177,21 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     const SpeexMode *speex_mode = NULL;
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
     if (mode == nil) {
-        if (_processingFormat.sampleRate > 25000)
+        if (_processingFormat.sampleRate > 25000) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
-        else if (_processingFormat.sampleRate > 12500)
+        } else if (_processingFormat.sampleRate > 12500) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
-        else if (_processingFormat.sampleRate >= 6000)
+        } else if (_processingFormat.sampleRate >= 6000) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
+        }
     } else {
-        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)
+        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
-        else {
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Speex mode: %{public}@", mode);
             ogg_stream_clear(&_os);
             if (error)
@@ -253,10 +255,11 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         }
     }
 
-    if (vbr_enabled)
+    if (vbr_enabled) {
         speex_encoder_ctl(_st, SPEEX_SET_VBR, &vbr_enabled);
-    else if (vad_enabled)
+    } else if (vad_enabled) {
         speex_encoder_ctl(_st, SPEEX_SET_VAD, &vad_enabled);
+    }
 
     if (dtx_enabled)
         speex_encoder_ctl(_st, SPEEX_SET_DTX, &dtx_enabled);
@@ -264,10 +267,11 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     if (abr_enabled)
         speex_encoder_ctl(_st, SPEEX_SET_ABR, &abr_enabled);
 
-    if (dtx_enabled && !(vbr_enabled || abr_enabled || vad_enabled))
+    if (dtx_enabled && !(vbr_enabled || abr_enabled || vad_enabled)) {
         os_log_info(gSFBAudioEncoderLog, "DTX requires VAD, VBR, or ABR");
-    else if ((vbr_enabled || abr_enabled) && (vad_enabled))
+    } else if ((vbr_enabled || abr_enabled) && (vad_enabled)) {
         os_log_info(gSFBAudioEncoderLog, "VAD is implied by VBR or ABR");
+    }
 
     spx_int32_t highpass_enabled =
           ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];

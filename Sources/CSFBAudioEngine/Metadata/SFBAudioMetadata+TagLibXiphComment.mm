@@ -155,10 +155,11 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    if (value == nil)
+    if (value == nil) {
         SetXiphComment(tag, key, nil);
-    else
+    } else {
         SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
+    }
 }
 
 void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value,

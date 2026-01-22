@@ -405,10 +405,11 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                                               break;
 
                                           case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The file does not contain sufficient "
                                                                            @"audio samples for analysis.",
                                                                            @"");
+                                              }
                                               break;
                                           }
 
@@ -470,7 +471,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
     bool validSampleRate = [SFBReplayGainAnalyzer evenMultipleSampleRateIsSupported:decoderSampleRate];
     if (!validSampleRate) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The file “%@” does not contain audio at a supported sample rate.", @""), @{
@@ -480,13 +481,14 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                                               @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
     NSInteger replayGainSampleRate = [SFBReplayGainAnalyzer bestReplayGainSampleRateForSampleRate:decoderSampleRate];
 
     if (!(inputFormat->mChannelsPerFrame == 1 || inputFormat->mChannelsPerFrame == 2)) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @""), @{
@@ -494,6 +496,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                             NSLocalizedString(@"Only mono and stereo files are supported.", @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
@@ -508,7 +511,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                   toFormat:outputFormat];
     if (!converter) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -516,6 +519,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                             NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
@@ -600,7 +604,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     _trackPeak = 0;
 
     if (gain == SFBReplayGainAnalyzerInsufficientSamples) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
                   NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
@@ -608,6 +612,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                             NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 

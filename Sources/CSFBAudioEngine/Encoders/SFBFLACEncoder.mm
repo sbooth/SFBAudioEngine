@@ -244,9 +244,10 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     FLAC__stream_encoder_set_sample_rate(flac.get(), static_cast<uint32_t>(_processingFormat.sampleRate));
     FLAC__stream_encoder_set_channels(flac.get(), _processingFormat.channelCount);
     FLAC__stream_encoder_set_bits_per_sample(flac.get(), _processingFormat.streamDescription->mBitsPerChannel);
-    if (_estimatedFramesToEncode > 0)
+    if (_estimatedFramesToEncode > 0) {
         FLAC__stream_encoder_set_total_samples_estimate(flac.get(),
                                                         static_cast<FLAC__uint64>(_estimatedFramesToEncode));
+    }
 
     // Encoder compression level
     NSNumber *compressionLevel = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACCompressionLevel];

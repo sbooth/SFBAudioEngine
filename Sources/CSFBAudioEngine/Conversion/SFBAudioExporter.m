@@ -65,7 +65,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
     AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                   toFormat:processingFormat];
     if (!converter) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioExporterErrorDomain, SFBAudioExporterErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -73,6 +73,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
                             NSLocalizedString(@"The file's format is not supported for export.", @"")
                   },
                   SFBLocalizedNameForURL(decoder.inputSource.url));
+        }
         return NO;
     }
 

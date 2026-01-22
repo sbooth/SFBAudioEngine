@@ -260,18 +260,19 @@ class APEIOInterface final : public APE::IAPEIO {
     int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
     if (level != nil) {
-        if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast)
+        if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast) {
             compressionLevel = APE_COMPRESSION_LEVEL_FAST;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal) {
             compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh) {
             compressionLevel = APE_COMPRESSION_LEVEL_HIGH;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh) {
             compressionLevel = APE_COMPRESSION_LEVEL_EXTRA_HIGH;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane) {
             compressionLevel = APE_COMPRESSION_LEVEL_INSANE;
-        else
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring unknown APE compression level: %{public}@", level);
+        }
     }
 
     APE::WAVEFORMATEX wve;

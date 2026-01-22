@@ -259,7 +259,7 @@ static NSMutableArray *_registeredSubclasses = nil;
         return self;
     }
 
-    if (error)
+    if (error) {
         *error = SFBErrorWithLocalizedDescription(
               SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
               NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
@@ -268,6 +268,7 @@ static NSMutableArray *_registeredSubclasses = nil;
                   NSURLErrorKey : _inputSource.url
               },
               SFBLocalizedNameForURL(_inputSource.url));
+    }
     return nil;
 }
 

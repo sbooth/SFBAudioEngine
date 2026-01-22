@@ -49,7 +49,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -60,12 +60,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::XM::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid extended module.", @""), @{
@@ -74,6 +75,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
@@ -102,7 +104,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
 
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing extended module metadata is not supported");
-    if (error)
+    if (error) {
         *error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                                                   NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
                                                       NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
@@ -110,6 +112,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
                                                       NSURLErrorKey : self.url
                                                   },
                                                   SFBLocalizedNameForURL(self.url));
+    }
     return NO;
 }
 

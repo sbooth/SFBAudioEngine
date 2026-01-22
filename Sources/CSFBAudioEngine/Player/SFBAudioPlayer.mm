@@ -19,17 +19,19 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
                                           case SFBAudioPlayerErrorCodeInternalError:
                                               if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
                                                   return NSLocalizedString(@"Internal player error", @"");
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"An internal audio player error occurred.",
                                                                            @"");
+                                              }
                                               break;
 
                                           case SFBAudioPlayerErrorCodeFormatNotSupported:
                                               if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
                                                   return NSLocalizedString(@"Unsupported format", @"");
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(
                                                         @"The format is invalid, unknown, or unsupported.", @"");
+                                              }
                                               break;
                                           }
 

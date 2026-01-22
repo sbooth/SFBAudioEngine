@@ -239,7 +239,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -249,6 +249,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -259,7 +260,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -269,6 +270,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -302,7 +304,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
             free(layout);
 
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                       NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -314,6 +316,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                           NSURLErrorKey : _inputSource.url
                       },
                       SFBLocalizedNameForURL(_inputSource.url));
+            }
             return NO;
         }
 
@@ -339,10 +342,10 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // Tell the ExtAudioFile the format in which we'd like our data
 
     // For Linear PCM formats leave the data untouched
-    if (format.mFormatID == kAudioFormatLinearPCM)
+    if (format.mFormatID == kAudioFormatLinearPCM) {
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
-    // For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
-    else if (format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
+        // For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
+    } else if (format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
         AudioStreamBasicDescription asbd{};
 
         asbd.mFormatID = kAudioFormatLinearPCM;
@@ -354,14 +357,15 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         asbd.mSampleRate = format.mSampleRate;
         asbd.mChannelsPerFrame = format.mChannelsPerFrame;
 
-        if (format.mFormatFlags == kAppleLosslessFormatFlag_16BitSourceData)
+        if (format.mFormatFlags == kAppleLosslessFormatFlag_16BitSourceData) {
             asbd.mBitsPerChannel = 16;
-        else if (format.mFormatFlags == kAppleLosslessFormatFlag_20BitSourceData)
+        } else if (format.mFormatFlags == kAppleLosslessFormatFlag_20BitSourceData) {
             asbd.mBitsPerChannel = 20;
-        else if (format.mFormatFlags == kAppleLosslessFormatFlag_24BitSourceData)
+        } else if (format.mFormatFlags == kAppleLosslessFormatFlag_24BitSourceData) {
             asbd.mBitsPerChannel = 24;
-        else if (format.mFormatFlags == kAppleLosslessFormatFlag_32BitSourceData)
+        } else if (format.mFormatFlags == kAppleLosslessFormatFlag_32BitSourceData) {
             asbd.mBitsPerChannel = 32;
+        }
 
         asbd.mFormatFlags |= asbd.mBitsPerChannel % 8 ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
 
@@ -389,7 +393,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // return one, there is a chance that the initialization of _processingFormat failed. If that happened then
     // attempting to set kExtAudioFileProperty_ClientDataFormat will segfault
     if (!_processingFormat) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -399,6 +403,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -408,7 +413,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
                      result, SFBCStringForOSType(result));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -418,6 +423,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 

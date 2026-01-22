@@ -137,11 +137,12 @@ static void SFBCreateInputSourceLog(void) {
 }
 
 - (NSString *)description {
-    if (_url)
+    if (_url) {
         return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self,
                                           [[NSFileManager defaultManager] displayNameAtPath:_url.path]];
-    else
+    } else {
         return [NSString stringWithFormat:@"<%@ %p>", [self class], self];
+    }
 }
 
 @end

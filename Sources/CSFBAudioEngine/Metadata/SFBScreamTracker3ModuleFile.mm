@@ -50,7 +50,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -61,12 +61,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::S3M::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Scream Tracker 3 module.", @""), @{
@@ -75,6 +76,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
@@ -105,7 +107,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
 
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing Scream Tracker 3 module metadata is not supported");
-    if (error)
+    if (error) {
         *error = SFBErrorWithLocalizedDescription(
               SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
               NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -114,6 +116,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
                   NSURLErrorKey : self.url
               },
               SFBLocalizedNameForURL(self.url));
+    }
     return NO;
 }
 

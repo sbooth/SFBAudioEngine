@@ -106,7 +106,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                                                       NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
                                                           NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
@@ -114,12 +114,13 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
                                                           NSURLErrorKey : _decoder.inputSource.url
                                                       },
                                                       SFBLocalizedNameForURL(_decoder.inputSource.url));
+        }
         return NO;
     }
 
     if (!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -128,6 +129,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
                       NSURLErrorKey : _decoder.inputSource.url
                   },
                   SFBLocalizedNameForURL(_decoder.inputSource.url));
+        }
         return NO;
     }
 

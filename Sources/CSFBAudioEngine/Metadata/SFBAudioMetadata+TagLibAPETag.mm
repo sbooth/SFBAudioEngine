@@ -157,10 +157,11 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    if (value == nil)
+    if (value == nil) {
         SetAPETag(tag, key, nil);
-    else
+    } else {
         SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
+    }
 }
 
 void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber *value, NSString *format = nil) {

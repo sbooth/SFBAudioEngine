@@ -259,7 +259,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if (!subclass) {
         os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
@@ -268,6 +268,7 @@ static NSMutableArray *_registeredSubclasses = nil;
                       NSURLErrorKey : inputSource.url
                   },
                   SFBLocalizedNameForURL(inputSource.url));
+        }
         return nil;
     }
 

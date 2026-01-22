@@ -345,16 +345,16 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     AudioFileTypeID fileType = 0;
     NSNumber *fileTypeSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFileTypeID];
-    if (fileTypeSetting != nil)
+    if (fileTypeSetting != nil) {
         fileType = static_cast<AudioFileTypeID>(fileTypeSetting.unsignedIntValue);
-    else {
+    } else {
         auto typesForExtension = typeIDsForExtension(_outputSource.url.pathExtension);
         if (typesForExtension.empty()) {
             os_log_error(gSFBAudioEncoderLog,
                          "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set and extension \"%{public}@\" has "
                          "no known AudioFileTypeID",
                          _outputSource.url.pathExtension);
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
                       NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
@@ -363,6 +363,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                           NSURLErrorKey : _outputSource.url
                       },
                       SFBLocalizedNameForURL(_outputSource.url));
+            }
             return NO;
         }
 
@@ -376,16 +377,16 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     AudioFormatID formatID = 0;
     NSNumber *formatIDSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatID];
-    if (formatIDSetting != nil)
+    if (formatIDSetting != nil) {
         formatID = static_cast<AudioFormatID>(formatIDSetting.unsignedIntValue);
-    else {
+    } else {
         auto availableFormatIDs = formatIDsForFileTypeID(fileType, true);
         if (availableFormatIDs.empty()) {
             os_log_error(gSFBAudioEncoderLog,
                          "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set and file type '%{public}.4s' has no "
                          "known AudioFormatID",
                          SFBCStringForOSType(fileType));
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is an unsupported audio format.", @""), @{
@@ -394,6 +395,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                           NSURLErrorKey : _outputSource.url
                       },
                       SFBLocalizedNameForURL(_outputSource.url));
+            }
             return NO;
         }
 
@@ -411,19 +413,21 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     UInt32 formatFlags = 0;
     NSNumber *formatFlagsSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags];
-    if (formatFlagsSetting != nil)
+    if (formatFlagsSetting != nil) {
         formatFlags = static_cast<UInt32>(formatFlagsSetting.unsignedIntValue);
-    else
+    } else {
         os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatFlags is not set; mFormatFlags "
                                          "will be zero which is probably incorrect");
+    }
 
     UInt32 bitsPerChannel = 0;
     NSNumber *bitsPerChannelSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel];
-    if (bitsPerChannelSetting != nil)
+    if (bitsPerChannelSetting != nil) {
         bitsPerChannel = static_cast<UInt32>(bitsPerChannelSetting.unsignedIntValue);
-    else
+    } else {
         os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; "
                                          "mBitsPerChannel will be zero which is probably incorrect");
+    }
 
     CXXCoreAudio::CAStreamDescription format{};
 

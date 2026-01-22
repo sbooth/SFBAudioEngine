@@ -224,7 +224,7 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (!subclass) {
         os_log_debug(gSFBAudioFileLog, "Unable to determine content type for \"%{public}@\"",
                      [[NSFileManager defaultManager] displayNameAtPath:url.path]);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                   NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
@@ -233,6 +233,7 @@ static NSMutableArray *_registeredSubclasses = nil;
                       NSURLErrorKey : self.url
                   },
                   SFBLocalizedNameForURL(self.url));
+        }
         return nil;
     }
 

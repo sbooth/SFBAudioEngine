@@ -207,7 +207,7 @@ static int can_seek_callback(void *id) {
                                     OPEN_WVC | OPEN_NORMALIZE /* | OPEN_DSD_NATIVE*/, 0);
     if (!_wpc) {
         os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @""), @{
@@ -216,6 +216,7 @@ static int can_seek_callback(void *id) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 

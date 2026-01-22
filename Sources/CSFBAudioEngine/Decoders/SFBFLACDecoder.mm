@@ -229,7 +229,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     if (!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
         os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s",
                      FLAC__stream_decoder_get_resolved_state_string(flac.get()));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @""), @{
@@ -238,13 +238,14 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
     // FLAC supports from 4 to 32 bits per sample; this check is likely unnecessary
     if (_streamInfo.bits_per_sample < 4 || _streamInfo.bits_per_sample > 32) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
                   NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""), @{
@@ -253,6 +254,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
     }
 
     _framePosition = 0;
@@ -361,9 +363,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    if (_flac && !FLAC__stream_decoder_finish(_flac.get()))
+    if (_flac && !FLAC__stream_decoder_finish(_flac.get())) {
         os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s",
                     FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+    }
 
     _flac.reset();
 
@@ -465,7 +468,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     if (status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
         os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s",
                      FLAC__stream_decoder_get_resolved_state_string(decoder));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @""), @{
@@ -474,6 +477,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -525,9 +529,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
         }
 
-        if (frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample)
+        if (frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample) {
             os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %d to %d detected",
                          _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
+        }
     }
 
     const auto *abl = _frameBuffer.audioBufferList;
@@ -630,7 +635,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     if (status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
         os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s",
                      FLAC__stream_decoder_get_resolved_state_string(decoder));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @""), @{
@@ -639,6 +644,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 

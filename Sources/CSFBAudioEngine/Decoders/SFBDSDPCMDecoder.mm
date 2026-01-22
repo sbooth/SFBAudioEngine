@@ -328,7 +328,7 @@ class DXD {
     const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
@@ -337,12 +337,13 @@ class DXD {
                       NSURLErrorKey : _decoder.inputSource.url
                   },
                   SFBLocalizedNameForURL(_decoder.inputSource.url));
+        }
         return NO;
     }
 
     if (asbd->mSampleRate != kSFBSampleRateDSD64) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -351,6 +352,7 @@ class DXD {
                       NSURLErrorKey : _decoder.inputSource.url
                   },
                   SFBLocalizedNameForURL(_decoder.inputSource.url));
+        }
         return NO;
     }
 
