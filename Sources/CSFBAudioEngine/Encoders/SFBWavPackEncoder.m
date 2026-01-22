@@ -109,9 +109,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
                                       .mChannelBitmap = channelBitmap,
                                       .mNumberChannelDescriptions = 0};
             channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
-        }
-        // TODO: Use WavPack channel identities as a fallback?
-        else {
+        } else {
+            // TODO: Use WavPack channel identities as a fallback?
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
                         "'%{public}.4s'",

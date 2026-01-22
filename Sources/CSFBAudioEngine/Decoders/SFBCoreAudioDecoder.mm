@@ -341,11 +341,11 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
     // Tell the ExtAudioFile the format in which we'd like our data
 
-    // For Linear PCM formats leave the data untouched
     if (format.mFormatID == kAudioFormatLinearPCM) {
+        // For Linear PCM formats leave the data untouched
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
-        // For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
     } else if (format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
+        // For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
         AudioStreamBasicDescription asbd{};
 
         asbd.mFormatID = kAudioFormatLinearPCM;
@@ -374,9 +374,8 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         asbd.mBytesPerFrame = asbd.mBytesPerPacket / asbd.mFramesPerPacket;
 
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
-    }
-    // For all other formats convert to the canonical Core Audio format
-    else {
+    } else {
+        // For all other formats convert to the canonical Core Audio format
         if (channelLayout)
             _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                                  sampleRate:format.mSampleRate
