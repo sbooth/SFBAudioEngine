@@ -21,8 +21,8 @@
 
 #import <os/log.h>
 
-#define BUF_SIZE 4096
-#define ERRBUF_SIZE 512
+#define BUF_SIZE     4096
+#define ERRBUF_SIZE  512
 
 #pragma mark Initialization
 
