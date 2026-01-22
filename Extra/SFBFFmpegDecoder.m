@@ -598,8 +598,9 @@ static int64_t my_seek(void *opaque, int64_t offset, int whence)
     if(result == AVERROR_EOF) {
         // EOF reached?
     }
-    else if(result == AVERROR(EAGAIN)) { }
-    // Need to provide input data to the codec
+    else if(result == AVERROR(EAGAIN)) {
+        // Need to provide input data to the codec
+    }
     else if(result > 0) {
         // Other error encountered
         char errbuf [ERRBUF_SIZE];
