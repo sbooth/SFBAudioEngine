@@ -400,8 +400,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 + (void)registerSubclass:(Class)subclass priority:(int)priority {
-    //	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of
-    // SFBDSDDecoder", NSStringFromClass(subclass));
+    //    NSAssert([subclass isKindOfClass:[self class]],
+    //             @"Unable to register class '%@' because it is not a subclass of SFBDSDDecoder",
+    //             NSStringFromClass(subclass));
 
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{ _registeredSubclasses = [NSMutableArray array]; });

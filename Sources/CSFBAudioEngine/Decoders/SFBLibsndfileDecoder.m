@@ -328,8 +328,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     case SF_FORMAT_PCM_16:
     case SF_FORMAT_PCM_24:
     case SF_FORMAT_PCM_32:
-        //		case SF_FORMAT_FLOAT:
-        //		case SF_FORMAT_DOUBLE:
+        //    case SF_FORMAT_FLOAT:
+        //    case SF_FORMAT_DOUBLE:
     case SF_FORMAT_ALAC_16:
     case SF_FORMAT_ALAC_20:
     case SF_FORMAT_ALAC_24:

@@ -298,12 +298,14 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
         speex_decoder_ctl(_decoder, SPEEX_SET_HANDLER, &callback);
     }
 
-    //	AVAudioChannelLayout *channelLayout = nil;
-    //	switch(header->nb_channels) {
-    //		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
-    // break; 		case 2:		channelLayout = [AVAudioChannelLayout
-    // layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo]; break;
-    //	}
+    //    AVAudioChannelLayout *channelLayout = nil;
+    //    switch(header->nb_channels) {
+    //        case 1:
+    //            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
+    //            break;
+    //        case 2:
+    //            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo]; break;
+    //    }
 
     // For mono and stereo the channel layout is assumed
     _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
@@ -340,8 +342,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
         SFBAudioDecodingPropertiesKeyOggSpeexVBR : header->vbr ? @YES : @NO,
         SFBAudioDecodingPropertiesKeyOggSpeexFramesPerPacket : @(header->frames_per_packet),
         SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders : @(header->extra_headers),
-        //		SFBAudioDecodingPropertiesKeyOggSpeexReserved1: @(header->reserved1),
-        //		SFBAudioDecodingPropertiesKeyOggSpeexReserved2: @(header->reserved2),
+        //        SFBAudioDecodingPropertiesKeyOggSpeexReserved1: @(header->reserved1),
+        //        SFBAudioDecodingPropertiesKeyOggSpeexReserved2: @(header->reserved2),
     };
 
     speex_header_free(header);

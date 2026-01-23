@@ -23,10 +23,9 @@
 #if 0
 - (instancetype)initWithURL:(NSURL *)url
 {
-	NSParameterAssert(url != nil);
-	NSParameterAssert(url.isFileURL);
-
-	return [super initWithURL:url];
+    NSParameterAssert(url != nil);
+    NSParameterAssert(url.isFileURL);
+    return [super initWithURL:url];
 }
 #endif
 

@@ -103,29 +103,29 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 
             // TODO: Is this too much information?
 #if 0
-			switch(properties->version()) {
-				case TagLib::MPEG::Header::Version1:
-					switch(properties->layer()) {
-						case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer I";		break;
-						case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer II";		break;
-						case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer III";	break;
-					}
-					break;
-				case TagLib::MPEG::Header::Version2:
-					switch(properties->layer()) {
-						case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer I";		break;
-						case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer II";		break;
-						case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer III";	break;
-					}
-					break;
-				case TagLib::MPEG::Header::Version2_5:
-					switch(properties->layer()) {
-						case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer I";	break;
-						case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer II";	break;
-						case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer III";	break;
-					}
-					break;
-			}
+            switch(properties->version()) {
+                case TagLib::MPEG::Header::Version1:
+                    switch(properties->layer()) {
+                        case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer I";      break;
+                        case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer II";     break;
+                        case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer III";    break;
+                    }
+                    break;
+                case TagLib::MPEG::Header::Version2:
+                    switch(properties->layer()) {
+                        case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer I";      break;
+                        case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer II";     break;
+                        case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer III";    break;
+                    }
+                    break;
+                case TagLib::MPEG::Header::Version2_5:
+                    switch(properties->layer()) {
+                        case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer I";    break;
+                        case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer II";   break;
+                        case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer III";  break;
+                    }
+                    break;
+            }
 #endif
 
             if (properties->xingHeader() && properties->xingHeader()->totalFrames()) {

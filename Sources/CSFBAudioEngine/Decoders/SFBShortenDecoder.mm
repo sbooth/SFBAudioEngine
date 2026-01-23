@@ -492,7 +492,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
     processingStreamDescription.mFormatFlags = kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
     // Apparently *16BE isn't true for 'AIFF'
-    //	if(_fileType == fileTypeUInt16BE || _fileType == fileTypeSInt16BE)
+    //    if(_fileType == fileTypeUInt16BE || _fileType == fileTypeSInt16BE)
     if (_bigEndian) {
         processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsBigEndian;
     }

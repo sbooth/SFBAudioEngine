@@ -340,12 +340,12 @@ class APEIOInterface final : public APE::IAPEIO {
               @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TOTAL_BYTES)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes :
               @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APE_TOTAL_BYTES)),
-        //		SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks:
-        //@(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_BLOCKS)),
-        //		SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds:
-        //@(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_LENGTH_MS)),
-        //		SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate:
-        //@(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_AVERAGE_BITRATE)),
+        //        SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks:
+        //            @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_BLOCKS)),
+        //        SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds:
+        //            @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_LENGTH_MS)),
+        //        SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate:
+        //            @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_AVERAGE_BITRATE)),
         // APE_INFO_FRAME_BITRATE
         SFBAudioDecodingPropertiesKeyMonkeysAudioDecompressedBitrate :
               @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_DECOMPRESSED_BITRATE)),
