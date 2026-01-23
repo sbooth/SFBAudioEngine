@@ -108,8 +108,8 @@ class AudioPlayer final {
     AudioPlayer(const AudioPlayer&) = delete;
     AudioPlayer& operator=(const AudioPlayer&) = delete;
 
-    //    AudioPlayer(AudioPlayer&&) = delete;
-    //    AudioPlayer& operator=(AudioPlayer&&) = delete;
+    AudioPlayer(AudioPlayer&&) = delete;
+    AudioPlayer& operator=(AudioPlayer&&) = delete;
 
     ~AudioPlayer() noexcept;
 
