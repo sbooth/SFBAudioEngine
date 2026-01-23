@@ -718,11 +718,10 @@ sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
     return decoderState->decoder_;
 }
 
-void sfb::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
-{
+void sfb::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept {
     {
         std::lock_guard lock{nowPlayingLock_};
-        if(nowPlaying_ == nowPlaying) {
+        if (nowPlaying_ == nowPlaying) {
             return;
         }
         nowPlaying_ = nowPlaying;
@@ -730,7 +729,7 @@ void sfb::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept
 
     os_log_debug(log_, "Now playing changed to %{public}@", nowPlaying);
 
-    if([player_.delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)]) {
+    if ([player_.delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)]) {
         [player_.delegate audioPlayer:player_ nowPlayingChanged:nowPlaying];
     }
 }
