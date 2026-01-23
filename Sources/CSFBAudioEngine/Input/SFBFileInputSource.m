@@ -35,19 +35,22 @@
     if (!_file) {
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+        }
         return NO;
     }
 
     if (fstat(fileno(_file), &_filestats) == -1) {
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fstat failed: %{public}s (%d)", strerror(err), err);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+        }
 
-        if (fclose(_file))
+        if (fclose(_file)) {
             os_log_info(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(errno), errno);
+        }
         _file = NULL;
 
         return NO;
@@ -63,8 +66,9 @@
         if (result) {
             int err = errno;
             os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            }
             return NO;
         }
     }
@@ -84,8 +88,9 @@
     if (read != (size_t)length && ferror(_file)) {
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+        }
         return NO;
     }
     *bytesRead = (NSInteger)read;
@@ -102,8 +107,9 @@
     if (result == -1) {
         int err = errno;
         os_log_error(gSFBInputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+        }
         return NO;
     }
     *offset = result;
@@ -128,8 +134,9 @@
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+        }
         return NO;
     }
     return YES;

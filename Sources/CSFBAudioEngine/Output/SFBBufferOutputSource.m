@@ -49,8 +49,9 @@
 
     size_t bytesAvailable = _capacity - _pos;
     if (bytesAvailable == 0) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+        }
         return NO;
     }
 
@@ -72,8 +73,9 @@
 
     size_t remainingCapacity = _capacity - _pos;
     if (remainingCapacity == 0) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+        }
         return NO;
     }
 
@@ -109,8 +111,9 @@
     NSParameterAssert(offset >= 0);
 
     if ((NSUInteger)offset > _capacity) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+        }
         return NO;
     }
 

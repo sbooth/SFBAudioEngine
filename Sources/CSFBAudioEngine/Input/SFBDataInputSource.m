@@ -22,8 +22,9 @@
 - (instancetype)initWithData:(NSData *)data url:(NSURL *)url {
     NSParameterAssert(data != nil);
 
-    if ((self = [super initWithURL:url]))
+    if ((self = [super initWithURL:url])) {
         _data = [data copy];
+    }
     return self;
 }
 
@@ -47,8 +48,9 @@
 
     NSUInteger count = (NSUInteger)length;
     NSUInteger remaining = _data.length - _pos;
-    if (count > remaining)
+    if (count > remaining) {
         count = remaining;
+    }
 
     [_data getBytes:buffer range:NSMakeRange(_pos, count)];
     _pos += count;
@@ -80,8 +82,9 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     NSParameterAssert(offset >= 0);
     if ((NSUInteger)offset > _data.length) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : _url}];
+        }
         return NO;
     }
 
