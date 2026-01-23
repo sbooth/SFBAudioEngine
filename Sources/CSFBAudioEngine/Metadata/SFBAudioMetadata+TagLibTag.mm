@@ -17,11 +17,13 @@
     self.artist = [NSString stringWithUTF8String:tag->artist().toCString(true)];
     self.genre = [NSString stringWithUTF8String:tag->genre().toCString(true)];
 
-    if (tag->year())
+    if (tag->year()) {
         self.releaseDate = @(tag->year()).stringValue;
+    }
 
-    if (tag->track())
+    if (tag->track()) {
         self.trackNumber = @(tag->track());
+    }
 
     self.comment = [NSString stringWithUTF8String:tag->comment().toCString(true)];
 }

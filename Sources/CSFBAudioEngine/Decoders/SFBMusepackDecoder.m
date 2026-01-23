@@ -53,8 +53,9 @@ static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t si
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:size bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:size bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return (mpc_int32_t)bytesRead;
 }
 
@@ -70,8 +71,9 @@ static mpc_int32_t tell_callback(mpc_reader *p_reader) {
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return (mpc_int32_t)offset;
 }
 
@@ -81,8 +83,9 @@ static mpc_int32_t get_size_callback(mpc_reader *p_reader) {
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
 
     NSInteger length;
-    if (![decoder->_inputSource getLength:&length error:nil])
+    if (![decoder->_inputSource getLength:&length error:nil]) {
         return -1;
+    }
     return (mpc_int32_t)length;
 }
 
@@ -128,13 +131,15 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBMusepackDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isMusepackHeader])
+    if ([header isMusepackHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -144,8 +149,9 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _reader.read = read_callback;
     _reader.seek = seek_callback;
@@ -156,7 +162,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
     _demux = mpc_demux_init(&_reader);
     if (!_demux) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @""), @{
@@ -165,6 +171,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -275,11 +282,13 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesProcessed = 0;
 
@@ -293,8 +302,9 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         framesProcessed += framesCopied;
 
         // All requested frames were read
-        if (framesProcessed == frameLength)
+        if (framesProcessed == frameLength) {
             break;
+        }
 
         // Decode one frame of MPC data
         MPC_SAMPLE_FORMAT buf[MPC_DECODER_BUFFER_LENGTH];
@@ -303,16 +313,18 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
         if (mpc_demux_decode(_demux, &frame)) {
             os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                              code:SFBAudioDecoderErrorCodeDecodingError
                                          userInfo:@{NSURLErrorKey : _inputSource.url}];
+            }
             return NO;
         }
 
         // End of input
-        if (frame.bits == -1)
+        if (frame.bits == -1) {
             break;
+        }
 
 #ifdef MPC_FIXED_POINT
 #error "Fixed point not yet supported"
@@ -350,10 +362,11 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
     if (mpc_demux_seek_sample(_demux, (mpc_uint64_t)frame)) {
         os_log_error(gSFBAudioDecoderLog, "Musepack seek error");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 

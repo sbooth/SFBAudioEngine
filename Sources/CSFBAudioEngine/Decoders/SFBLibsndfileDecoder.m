@@ -164,8 +164,9 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     NSInteger length;
-    if (![decoder->_inputSource getLength:&length error:nil])
+    if (![decoder->_inputSource getLength:&length error:nil]) {
         return -1;
+    }
     return length;
 }
 
@@ -173,8 +174,9 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
-    if (!decoder->_inputSource.supportsSeeking)
+    if (!decoder->_inputSource.supportsSeeking) {
         return -1;
+    }
 
     switch (whence) {
     case SEEK_SET:
@@ -182,24 +184,28 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([decoder->_inputSource getLength:&inputSourceLength error:nil])
+        if ([decoder->_inputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
 
-    if (![decoder->_inputSource seekToOffset:offset error:nil])
+    if (![decoder->_inputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
 
     NSInteger inputSourceOffset;
-    if (![decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+    if (![decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
         return -1;
+    }
 
     return inputSourceOffset;
 }
@@ -210,8 +216,9 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
 
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return bytesRead;
 }
 
@@ -220,8 +227,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -255,8 +263,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
             formatInfo.format = i;
             if (!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
                 NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
-                if (pathExtension)
+                if (pathExtension) {
                     [majorModeExtensions addObject:pathExtension];
+                }
             } else {
                 os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
             }
@@ -285,8 +294,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     NSData *header = [inputSource readHeaderOfLength:MAX(SFBAIFFDetectionSize, SFBWAVEDetectionSize)
                                         skipID3v2Tag:NO
                                                error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
     *formatIsSupported = SFBTernaryTruthValueUnknown;
 
@@ -294,11 +304,12 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // just something quick to identify common file formats lacking a path extension or MIME type.
 
     // AIFF and AIFF-C files
-    if ([header isAIFFHeader])
+    if ([header isAIFFHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    // WAVE files
-    else if ([header isWAVEHeader])
+        // WAVE files
+    } else if ([header isWAVEHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
+    }
 
     return YES;
 }
@@ -331,8 +342,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Set up the virtual IO function pointers
     SF_VIRTUAL_IO virtualIO;
@@ -346,7 +358,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     _sndfile = sf_open_virtual(&virtualIO, SFM_READ, &_sfinfo, (__bridge void *)self);
     if (!_sndfile) {
         os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -355,6 +367,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -418,8 +431,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     int channel_map[_sfinfo.channels];
     int result = sf_command(_sndfile, SFC_GET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
-    if (result == SF_TRUE)
+    if (result == SF_TRUE) {
         channelLayout = ChannelLayoutFromSndfileChannelMap(channel_map, _sfinfo.channels);
+    }
 
     if (!channelLayout) {
         switch (_sfinfo.channels) {
@@ -459,8 +473,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 - (BOOL)closeReturningError:(NSError **)error {
     if (_sndfile) {
         int result = sf_close(_sndfile);
-        if (result)
+        if (result) {
             os_log_error(gSFBAudioDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
+        }
         _sndfile = NULL;
     }
 
@@ -488,11 +503,13 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     sf_count_t framesRead = 0;
     switch (_readMethod) {
@@ -510,10 +527,11 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         break;
     default:
         os_log_error(gSFBAudioDecoderLog, "Unknown libsndfile read method: %d", _readMethod);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -522,10 +540,11 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     int result = sf_error(_sndfile);
     if (result) {
         os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 
@@ -538,10 +557,11 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
     if (result == -1) {
         os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
     return YES;
