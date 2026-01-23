@@ -1412,8 +1412,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             const auto targetMaxFreeSpace = audioRingBuffer_.Capacity() / 4;
             const auto freeSpace = audioRingBuffer_.FreeSpace();
 
-            // Minimal timeout if the ring buffer has more free space than desired
             if (freeSpace > targetMaxFreeSpace) {
+                // Minimal timeout if the ring buffer has more free space than desired
                 deltaNanos = 2.5 * NSEC_PER_MSEC;
             } else {
                 const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.Format().mSampleRate;
