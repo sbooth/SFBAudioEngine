@@ -363,9 +363,8 @@ static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int ch
     }
     if (layoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
         return SndfileChannelMapWithChannelBitmap(channel_map, channels, channelLayout.layout->mChannelBitmap, error);
-    } else {
-        return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
     }
+    return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
 }
 
 enum WriteMethod {
