@@ -59,8 +59,8 @@ using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, f
 
 namespace {
 
-FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes,
-                                            void *client_data) noexcept {
+FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes,
+                                           void *client_data) noexcept {
 #pragma unused(encoder)
     NSCParameterAssert(client_data != NULL);
 
@@ -81,9 +81,9 @@ FLAC__StreamEncoderReadStatus read_callback(const FLAC__StreamEncoder *encoder, 
     return FLAC__STREAM_ENCODER_READ_STATUS_CONTINUE;
 }
 
-FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[],
-                                              size_t bytes, uint32_t samples, uint32_t current_frame,
-                                              void *client_data) noexcept {
+FLAC__StreamEncoderWriteStatus writeCallback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[],
+                                             size_t bytes, uint32_t samples, uint32_t current_frame,
+                                             void *client_data) noexcept {
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
@@ -106,8 +106,8 @@ FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder
     return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
 
-FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset,
-                                            void *client_data) noexcept {
+FLAC__StreamEncoderSeekStatus seekCallback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset,
+                                           void *client_data) noexcept {
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
@@ -125,8 +125,8 @@ FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, 
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
-FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset,
-                                            void *client_data) noexcept {
+FLAC__StreamEncoderTellStatus tellCallback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset,
+                                           void *client_data) noexcept {
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
@@ -143,8 +143,8 @@ FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, 
     return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
 
-void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata,
-                       void *client_data) noexcept {
+void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata,
+                      void *client_data) noexcept {
 #pragma unused(encoder)
 #pragma unused(metadata)
 #pragma unused(client_data)
@@ -494,8 +494,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 - (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error {
     NSParameterAssert(encoder != nullptr);
 
-    auto encoderStatus = FLAC__stream_encoder_init_stream(encoder, write_callback, seek_callback, tell_callback,
-                                                          metadata_callback, (__bridge void *)self);
+    auto encoderStatus = FLAC__stream_encoder_init_stream(encoder, writeCallback, seekCallback, tellCallback,
+                                                          metadataCallback, (__bridge void *)self);
     if (encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
         os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_stream failed: %{public}s",
                      FLAC__stream_encoder_get_resolved_state_string(encoder));
@@ -540,8 +540,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     // As long as the FLAC encoder is non-null and uninitialized this setter will succeed
     FLAC__stream_encoder_set_ogg_serial_number(encoder, static_cast<int>(arc4random()));
 
-    auto encoderStatus = FLAC__stream_encoder_init_ogg_stream(encoder, read_callback, write_callback, seek_callback,
-                                                              tell_callback, metadata_callback, (__bridge void *)self);
+    auto encoderStatus = FLAC__stream_encoder_init_ogg_stream(encoder, readCallback, writeCallback, seekCallback,
+                                                              tellCallback, metadataCallback, (__bridge void *)self);
     if (encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
         os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_ogg_stream failed: %{public}s",
                      FLAC__stream_encoder_get_resolved_state_string(encoder));
