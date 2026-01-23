@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2023 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -8,6 +8,7 @@
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <mpc/libmpcenc.h>
+#import <mpc/stream_encoder.h>
 
 #import <os/log.h>
 
