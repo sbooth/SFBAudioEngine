@@ -1377,11 +1377,11 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         int64_t deltaNanos;
         if (!decoderState) {
-            // Shorter timeout if waiting on a decoder to complete rendering for a pending format change
             if (formatMismatch) {
+                // Shorter timeout if waiting on a decoder to complete rendering for a pending format change
                 deltaNanos = 25 * NSEC_PER_MSEC;
-                // Idling
             } else {
+                // Idling
                 deltaNanos = NSEC_PER_SEC / 2;
             }
         } else {
@@ -1539,8 +1539,8 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
             std::lock_guard lock{activeDecodersLock_};
             if (firstActiveDecoderState()) {
                 deltaNanos = 7.5 * NSEC_PER_MSEC;
-                // Use a longer timeout when idle
             } else {
+                // Use a longer timeout when idle
                 deltaNanos = NSEC_PER_SEC / 2;
             }
         }
