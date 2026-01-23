@@ -224,7 +224,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                   SFBLocalizedNameForURL(_inputSource.url));
         }
         return NO;
-    } else if (header->mode >= SPEEX_NB_MODES) {
+    }
+    if (header->mode >= SPEEX_NB_MODES) {
         speex_header_free(header);
         ogg_sync_destroy(&_syncState);
 
@@ -494,7 +495,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                             // -1 indicates EOS
                             if (result == -1) {
                                 break;
-                            } else if (result == -2) {
+                            }
+                            if (result == -2) {
                                 os_log_error(gSFBAudioDecoderLog,
                                              "Ogg Speex decoding error: possible corrupted stream");
                                 if (error) {
@@ -532,7 +534,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                             }
 
                             // Normalize the values
-                            float maxSampleValue = 1u << 15;
+                            float maxSampleValue = 1U << 15;
                             vDSP_vsdiv(buf, 1, &maxSampleValue, buf, 1,
                                        (vDSP_Length)speexFrameSize * _processingFormat.channelCount);
 

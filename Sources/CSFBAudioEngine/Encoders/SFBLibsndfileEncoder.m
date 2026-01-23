@@ -135,7 +135,8 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
     if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32) {
             return SF_FORMAT_FLOAT;
-        } else if (asbd->mBitsPerChannel == 64) {
+        }
+        if (asbd->mBitsPerChannel == 64) {
             return SF_FORMAT_DOUBLE;
         }
     } else {
@@ -359,7 +360,8 @@ static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int ch
     if (layoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
         SndfileChannelMapWithChannelDescriptions(channel_map, channels, channelLayout.layout->mChannelDescriptions);
         return YES;
-    } else if (layoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
+    }
+    if (layoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
         return SndfileChannelMapWithChannelBitmap(channel_map, channels, channelLayout.layout->mChannelBitmap, error);
     } else {
         return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
@@ -554,7 +556,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32) {
             return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat32 interleaved:YES];
-        } else if (asbd->mBitsPerChannel == 64) {
+        }
+        if (asbd->mBitsPerChannel == 64) {
             return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat64 interleaved:YES];
         }
     }

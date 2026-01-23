@@ -303,7 +303,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     _framePosition = 0;
 
     long rate;
-    int channels, encoding;
+    int channels;
+    int encoding;
     if (mpg123_getformat(_mpg123, &rate, &channels, &encoding) != MPG123_OK || encoding != MPG123_ENC_FLOAT_32 ||
         channels <= 0) {
         mpg123_close(_mpg123);
@@ -458,7 +459,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         // EOS
         if (result == MPG123_DONE) {
             break;
-        } else if (result != MPG123_OK) {
+        }
+        if (result != MPG123_OK) {
             os_log_error(gSFBAudioDecoderLog, "mpg123_decode_frame failed: %{public}s", mpg123_strerror(_mpg123));
             if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain

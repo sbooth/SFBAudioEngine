@@ -14,9 +14,9 @@
 
 #define PLATFORM_APPLE
 
-#include <MAC/All.h>
-#include <MAC/IAPEIO.h>
-#include <MAC/MACLib.h>
+#import <MAC/All.h>
+#import <MAC/IAPEIO.h>
+#import <MAC/MACLib.h>
 
 #undef PLATFORM_APPLE
 

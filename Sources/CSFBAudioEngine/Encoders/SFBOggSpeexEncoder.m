@@ -153,7 +153,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
                                             sampleRate:sampleRate
-                                              channels:(AVAudioChannelCount)sourceFormat.channelCount
+                                              channels:sourceFormat.channelCount
                                            interleaved:YES];
 }
 

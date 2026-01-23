@@ -145,7 +145,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         float quality_value = 0.5;
         NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
         if (quality != nil) {
-            quality_value = MAX(-0.1f, MIN(1.0f, quality.floatValue));
+            quality_value = MAX(-0.1F, MIN(1.0F, quality.floatValue));
         }
 
         result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate,
@@ -288,7 +288,8 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         int result = vorbis_analysis_blockout(&_vd, &_vb);
         if (result == 0) {
             break;
-        } else if (result < 0) {
+        }
+        if (result < 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
             if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -323,7 +324,8 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             result = vorbis_bitrate_flushpacket(&_vd, &op);
             if (result == 0) {
                 break;
-            } else if (result < 0) {
+            }
+            if (result < 0) {
                 os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
                 if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -380,7 +382,8 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         int result = vorbis_analysis_blockout(&_vd, &_vb);
         if (result == 0) {
             break;
-        } else if (result < 0) {
+        }
+        if (result < 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
             if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -415,7 +418,8 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             result = vorbis_bitrate_flushpacket(&_vd, &op);
             if (result == 0) {
                 break;
-            } else if (result < 0) {
+            }
+            if (result < 0) {
                 os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
                 if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
