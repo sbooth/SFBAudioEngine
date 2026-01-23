@@ -1,18 +1,15 @@
 name: Xcode - Build and Analyze
-
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+permissions:
+  contents: read
 jobs:
   build:
     name: Build and analyze using xcodebuild for all supported architectures
-    permissions:
-      contents: read
     runs-on: macos-latest
-
     steps:
       - name: Set Xcode version
         uses: maxim-lobanov/setup-xcode@v1
