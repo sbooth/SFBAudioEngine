@@ -46,37 +46,43 @@ static NSMutableArray *_registeredSubclasses = nil;
                                    provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                        switch (err.code) {
                                        case SFBDSDDecoderErrorCodeUnknownDecoder:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"The requested DSD decoder is unavailable.",
                                                                         @"");
+                                           }
                                            break;
 
                                        case SFBDSDDecoderErrorCodeInvalidFormat:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"The format is invalid or unknown.", @"");
+                                           }
                                            break;
 
                                        case SFBDSDDecoderErrorCodeUnsupportedFormat:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"The DSD audio format is unsupported.", @"");
+                                           }
                                            break;
 
                                        case SFBDSDDecoderErrorCodeInternalError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"An internal decoder error occurred.", @"");
+                                           }
                                            break;
 
                                        case SFBDSDDecoderErrorCodeDecodingError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"An error occurred during DSD audio decoding.",
                                                                         @"");
+                                           }
                                            break;
 
                                        case SFBDSDDecoderErrorCodeSeekError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(
                                                      @"An error occurred seeking to the requested DSD packet position.",
                                                      @"");
+                                           }
                                            break;
                                        }
 
@@ -118,8 +124,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseExtension = extension.lowercaseString;
     for (SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-        if ([supportedPathExtensions containsObject:lowercaseExtension])
+        if ([supportedPathExtensions containsObject:lowercaseExtension]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -128,8 +135,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
     for (SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-        if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+        if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -157,8 +165,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource
                    detectContentType:detectContentType
                         mimeTypeHint:mimeTypeHint
@@ -196,8 +205,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if (detectContentType) {
         // If the input source can't be opened decoding is destined to fail; give up now
-        if (!inputSource.isOpen && ![inputSource openReturningError:error])
+        if (!inputSource.isOpen && ![inputSource openReturningError:error]) {
             return nil;
+        }
         // Instead of failing for non-seekable inputs just skip content type detection
         if (!inputSource.supportsSeeking) {
             os_log_error(gSFBDSDDecoderLog, "Unable to detect content type for non-seekable input source %{public}@",
@@ -215,14 +225,16 @@ static NSMutableArray *_registeredSubclasses = nil;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
-            if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+            if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
                 currentScore += 40;
+            }
         }
 
         if (lowercaseExtension) {
             NSSet *supportedPathExtensions = [klass supportedPathExtensions];
-            if ([supportedPathExtensions containsObject:lowercaseExtension])
+            if ([supportedPathExtensions containsObject:lowercaseExtension]) {
                 currentScore += 20;
+            }
         }
 
         if (detectContentType) {
@@ -259,7 +271,7 @@ static NSMutableArray *_registeredSubclasses = nil;
         return self;
     }
 
-    if (error)
+    if (error) {
         *error = SFBErrorWithLocalizedDescription(
               SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
               NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
@@ -268,6 +280,7 @@ static NSMutableArray *_registeredSubclasses = nil;
                   NSURLErrorKey : _inputSource.url
               },
               SFBLocalizedNameForURL(_inputSource.url));
+    }
     return nil;
 }
 
@@ -279,8 +292,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource decoderName:decoderName error:error];
 }
 
@@ -304,15 +318,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if (!subclass) {
         os_log_error(gSFBDSDDecoderLog, "SFBDSDDecoder unknown decoder: %{public}@", decoderName);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
                                          code:SFBDSDDecoderErrorCodeUnknownDecoder
                                      userInfo:nil];
+        }
         return nil;
     }
 
-    if ((self = [[subclass alloc] init]))
+    if ((self = [[subclass alloc] init])) {
         _inputSource = inputSource;
+    }
 
     return self;
 }
@@ -322,8 +338,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (!_inputSource.isOpen)
+    if (!_inputSource.isOpen) {
         return [_inputSource openReturningError:error];
+    }
     return YES;
 }
 
@@ -331,8 +348,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     _sourceFormat = nil;
     _processingFormat = nil;
     _properties = nil;
-    if (_inputSource.isOpen)
+    if (_inputSource.isOpen) {
         return [_inputSource closeReturningError:error];
+    }
     return YES;
 }
 
@@ -399,12 +417,13 @@ static NSMutableArray *_registeredSubclasses = nil;
     [_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
         int a = ((SFBDSDDecoderSubclassInfo *)obj1).priority;
         int b = ((SFBDSDDecoderSubclassInfo *)obj2).priority;
-        if (a > b)
+        if (a > b) {
             return NSOrderedAscending;
-        else if (a < b)
+        } else if (a < b) {
             return NSOrderedDescending;
-        else
+        } else {
             return NSOrderedSame;
+        }
     }];
 }
 

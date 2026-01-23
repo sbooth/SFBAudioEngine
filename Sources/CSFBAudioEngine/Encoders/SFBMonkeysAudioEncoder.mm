@@ -56,8 +56,9 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int Read(void *pBuffer, unsigned int nBytesToRead, unsigned int *pBytesRead) override {
         NSInteger bytesRead;
-        if (![outputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
+        if (![outputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil]) {
             return ERROR_IO_READ;
+        }
 
         *pBytesRead = static_cast<unsigned int>(bytesRead);
 
@@ -67,8 +68,9 @@ class APEIOInterface final : public APE::IAPEIO {
     int Write(const void *pBuffer, unsigned int nBytesToWrite, unsigned int *pBytesWritten) override {
         NSInteger bytesWritten;
         if (![outputSource_ writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] ||
-            bytesWritten != nBytesToWrite)
+            bytesWritten != nBytesToWrite) {
             return ERROR_IO_WRITE;
+        }
 
         *pBytesWritten = static_cast<unsigned int>(bytesWritten);
 
@@ -76,8 +78,9 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override {
-        if (!outputSource_.supportsSeeking)
+        if (!outputSource_.supportsSeeking) {
             return ERROR_IO_READ;
+        }
 
         NSInteger offset = nPosition;
         switch (nMethod) {
@@ -86,14 +89,16 @@ class APEIOInterface final : public APE::IAPEIO {
             break;
         case APE::SeekFileCurrent: {
             NSInteger inputSourceOffset;
-            if ([outputSource_ getOffset:&inputSourceOffset error:nil])
+            if ([outputSource_ getOffset:&inputSourceOffset error:nil]) {
                 offset += inputSourceOffset;
+            }
             break;
         }
         case APE::SeekFileEnd: {
             NSInteger inputSourceLength;
-            if ([outputSource_ getLength:&inputSourceLength error:nil])
+            if ([outputSource_ getLength:&inputSourceLength error:nil]) {
                 offset += inputSourceLength;
+            }
             break;
         }
         }
@@ -121,15 +126,17 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetPosition() override {
         NSInteger offset;
-        if (![outputSource_ getOffset:&offset error:nil])
+        if (![outputSource_ getOffset:&offset error:nil]) {
             return -1;
+        }
         return offset;
     }
 
     APE::int64 GetSize() override {
         NSInteger length;
-        if (![outputSource_ getLength:&length error:nil])
+        if (![outputSource_ getLength:&length error:nil]) {
             return -1;
+        }
         return length;
     }
 
@@ -179,8 +186,9 @@ class APEIOInterface final : public APE::IAPEIO {
 
     // Validate format
     if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32)
+        sourceFormat.channelCount > 32) {
         return nil;
+    }
 
     APE::WAVEFORMATEX wve;
     auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate),
@@ -235,16 +243,18 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     try {
         int result;
         auto compressor = CreateIAPECompress(&result);
         if (!compressor) {
             os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+            }
             return NO;
         }
 
@@ -252,26 +262,28 @@ class APEIOInterface final : public APE::IAPEIO {
         _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
     int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
     if (level != nil) {
-        if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast)
+        if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast) {
             compressionLevel = APE_COMPRESSION_LEVEL_FAST;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal) {
             compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh) {
             compressionLevel = APE_COMPRESSION_LEVEL_HIGH;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh) {
             compressionLevel = APE_COMPRESSION_LEVEL_EXTRA_HIGH;
-        else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane)
+        } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane) {
             compressionLevel = APE_COMPRESSION_LEVEL_INSANE;
-        else
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring unknown APE compression level: %{public}@", level);
+        }
     }
 
     APE::WAVEFORMATEX wve;
@@ -280,20 +292,22 @@ class APEIOInterface final : public APE::IAPEIO {
                                    static_cast<int>(_sourceFormat.channelCount));
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
+        }
         return NO;
     }
 
     result = _compressor->StartEx(_ioInterface.get(), &wve, false, MAX_AUDIO_BYTES_UNKNOWN, compressionLevel);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->StartEx() failed: %d", result);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -329,20 +343,23 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
     auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -355,10 +372,11 @@ class APEIOInterface final : public APE::IAPEIO {
     auto result = _compressor->Finish(nullptr, 0, 0);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
     return YES;

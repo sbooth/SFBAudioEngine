@@ -46,13 +46,15 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isFLACHeader])
+    if ([header isFLACHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -61,7 +63,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -72,12 +74,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::FLAC::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @""), @{
@@ -86,6 +89,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
@@ -95,22 +99,27 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
             auto properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample())
+            if (properties->bitsPerSample()) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
-            if (properties->sampleFrames())
+            }
+            if (properties->sampleFrames()) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
+            }
         }
 
         // Add all tags that are present
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             [metadata addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
+        }
 
-        if (file.hasID3v2Tag())
+        if (file.hasID3v2Tag()) {
             [metadata addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
+        }
 
-        if (file.hasXiphComment())
+        if (file.hasXiphComment()) {
             [metadata addMetadataFromTagLibXiphComment:file.xiphComment()];
+        }
 
         // Add album art from FLAC picture metadata blocks (https://xiph.org/flac/format.html#metadata_block_picture)
         // This is in addition to any album art read from the ID3v2 tag or Xiph comment
@@ -118,8 +127,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
             NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
             NSString *description = nil;
-            if (!iter->description().isEmpty())
+            if (!iter->description().isEmpty()) {
                 description = [NSString stringWithUTF8String:iter->description().toCString(true)];
+            }
 
             [metadata attachPicture:[[SFBAttachedPicture alloc]
                                           initWithImageData:imageData
@@ -133,10 +143,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading FLAC properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
@@ -145,7 +156,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -156,12 +167,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::FLAC::File file(&stream, false);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @""), @{
@@ -170,17 +182,20 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         // ID3v1 and ID3v2 tags are only written if present, but a Xiph comment is always written
         // Album art is only saved as FLAC picture metadata blocks, not to the ID3v2 tag or Xiph comment
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
-        if (file.hasID3v2Tag())
+        if (file.hasID3v2Tag()) {
             sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(), false);
+        }
 
         sfb::setXiphCommentFromMetadata(self.metadata, file.xiphComment(), false);
 
@@ -188,12 +203,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 
         for (SFBAttachedPicture *attachedPicture in self.metadata.attachedPictures) {
             auto picture = sfb::ConvertAttachedPictureToFLACPicture(attachedPicture);
-            if (picture)
+            if (picture) {
                 file.addPicture(picture.release());
+            }
         }
 
         if (!file.save()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -202,16 +218,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing FLAC metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }

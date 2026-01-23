@@ -35,16 +35,18 @@ TTAint32 readCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint
     auto *iocb = static_cast<TTACallbacks *>(io);
 
     NSInteger bytesRead;
-    if (![iocb->decoder_->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil])
+    if (![iocb->decoder_->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return static_cast<TTAint32>(bytesRead);
 }
 
 TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept {
     auto *iocb = static_cast<TTACallbacks *>(io);
 
-    if (![iocb->decoder_->_inputSource seekToOffset:offset error:nil])
+    if (![iocb->decoder_->_inputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -85,13 +87,15 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isTrueAudioHeader])
+    if ([header isTrueAudioHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -101,8 +105,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _callbacks = std::make_unique<TTACallbacks>();
     _callbacks->read = readCallback;
@@ -117,15 +122,16 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _decoder->init_get_info(&streamInfo, 0);
     } catch (const tta::tta_exception& e) {
         os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", e.code());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInternalError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 
     if (!_decoder) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid True Audio file.", @""), @{
@@ -134,6 +140,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -186,7 +193,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     default:
         os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %d", streamInfo.bps);
         _decoder.reset();
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
                   NSLocalizedString(@"The file “%@” is not a supported True Audio file.", @""), @{
@@ -195,6 +202,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -254,11 +262,13 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     try {
         while (_framesToSkip > 0) {
@@ -268,8 +278,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
                   static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
 
             // EOS reached finishing seek
-            if (framesSkipped == 0)
+            if (framesSkipped == 0) {
                 return YES;
+            }
 
             _framesToSkip -= static_cast<TTAuint32>(framesSkipped);
         }
@@ -279,8 +290,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
               static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
 
         // EOS
-        if (framesRead == 0)
+        if (framesRead == 0) {
             return YES;
+        }
 
         buffer.frameLength = framesRead;
         _framePosition += framesRead;
@@ -288,10 +300,11 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         return YES;
     } catch (const tta::tta_exception& e) {
         os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 }
@@ -306,10 +319,11 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _decoder->set_position(seconds, &frame_start);
     } catch (const tta::tta_exception& e) {
         os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 

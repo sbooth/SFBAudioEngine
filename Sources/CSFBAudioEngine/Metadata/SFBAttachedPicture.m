@@ -35,8 +35,9 @@ SFBAttachedPictureKey const SFBAttachedPictureKeyDescription = @"Description";
 }
 
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionaryRepresentation {
-    if (!dictionaryRepresentation[SFBAttachedPictureKeyImageData])
+    if (!dictionaryRepresentation[SFBAttachedPictureKeyImageData]) {
         return nil;
+    }
 
     return [self initWithImageData:dictionaryRepresentation[SFBAttachedPictureKeyImageData]
                               type:[dictionaryRepresentation[SFBAttachedPictureKeyType] unsignedIntegerValue]
@@ -44,8 +45,9 @@ SFBAttachedPictureKey const SFBAttachedPictureKeyDescription = @"Description";
 }
 
 - (BOOL)isEqual:(id)object {
-    if (![object isKindOfClass:[SFBAttachedPicture class]])
+    if (![object isKindOfClass:[SFBAttachedPicture class]]) {
         return NO;
+    }
 
     SFBAttachedPicture *other = (SFBAttachedPicture *)object;
     return (self.imageData == other.imageData || [self.imageData isEqual:other.imageData]) &&
@@ -62,14 +64,15 @@ SFBAttachedPictureKey const SFBAttachedPictureKeyDescription = @"Description";
 }
 
 - (NSDictionary *)dictionaryRepresentation {
-    if (self.pictureDescription)
+    if (self.pictureDescription) {
         return @{
             SFBAttachedPictureKeyImageData : self.imageData,
             SFBAttachedPictureKeyType : @(self.pictureType),
             SFBAttachedPictureKeyDescription : self.pictureDescription
         };
-    else
+    } else {
         return @{SFBAttachedPictureKeyImageData : self.imageData, SFBAttachedPictureKeyType : @(self.pictureType)};
+    }
 }
 
 @end

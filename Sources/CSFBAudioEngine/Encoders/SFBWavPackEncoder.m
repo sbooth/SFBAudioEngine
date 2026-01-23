@@ -41,8 +41,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSCParameterAssert(id != NULL);
     SFBWavPackEncoder *encoder = (__bridge SFBWavPackEncoder *)id;
 
-    if (encoder->_firstBlock == nil)
+    if (encoder->_firstBlock == nil) {
         encoder->_firstBlock = [NSMutableData dataWithBytes:data length:(NSUInteger)bcount];
+    }
 
     NSInteger bytesWritten;
     return [encoder->_outputSource writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
@@ -75,8 +76,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 
     // Validate format
     if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32)
+        sourceFormat.channelCount > 32) {
         return nil;
+    }
 
     // Set up the processing format
     AudioStreamBasicDescription streamDescription = {0};
@@ -88,8 +90,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     streamDescription.mChannelsPerFrame = sourceFormat.channelCount;
     streamDescription.mBitsPerChannel = sourceFormat.streamDescription->mBitsPerChannel;
 
-    if (streamDescription.mBitsPerChannel == 32)
+    if (streamDescription.mBitsPerChannel == 32) {
         streamDescription.mFormatID |= kAudioFormatFlagIsPacked;
+    }
 
     streamDescription.mBytesPerPacket = 4 * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
@@ -111,25 +114,28 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
             channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
         }
         // TODO: Use WavPack channel identities as a fallback?
-        else
+        else {
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
                         "'%{public}.4s'",
                         layoutTag, result, SFBCStringForOSType(result));
+        }
     }
 
     return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _wpc = WavpackOpenFileOutput(wavpack_block_output, (__bridge void *)self, NULL);
     if (!_wpc) {
         os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -141,9 +147,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     _config.bytes_per_sample = (_config.bits_per_sample + 7) / 8;
 
     AVAudioChannelLayout *layout = _processingFormat.channelLayout;
-    if (layout)
+    if (layout) {
         _config.channel_mask = (int)layout.layout->mChannelBitmap;
-    else
+    } else {
         switch (_processingFormat.channelCount) {
         case 1:
             _config.channel_mask = kAudioChannelBit_Left;
@@ -152,19 +158,21 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
             _config.channel_mask = kAudioChannelBit_Left | kAudioChannelBit_Right;
             break;
         }
+    }
 
     _config.flags = CONFIG_MD5_CHECKSUM;
 
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
     if (level != nil) {
-        if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast)
+        if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast) {
             _config.flags |= CONFIG_FAST_FLAG;
-        else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh)
+        } else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh) {
             _config.flags |= CONFIG_HIGH_FLAG;
-        else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh)
+        } else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh) {
             _config.flags |= CONFIG_VERY_HIGH_FLAG;
-        else
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring unknown WavPack compression level: %{public}@", level);
+        }
     }
 
     if (!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1,
@@ -174,10 +182,11 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
         WavpackCloseFile(_wpc);
         _wpc = NULL;
 
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
 
         return NO;
     }
@@ -188,10 +197,11 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
         WavpackCloseFile(_wpc);
         _wpc = NULL;
 
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
 
         return NO;
     }
@@ -237,18 +247,21 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     if (!WavpackPackSamples(_wpc, (int32_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength)) {
         os_log_error(gSFBAudioEncoderLog, "WavpackPackSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -311,10 +324,11 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     if (!WavpackFlushSamples(_wpc)) {
         os_log_error(gSFBAudioEncoderLog, "WavpackFlushSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -325,28 +339,32 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 #pragma clang diagnostic pop
     if (!WavpackStoreMD5Sum(_wpc, md5)) {
         os_log_error(gSFBAudioEncoderLog, "WavpackStoreMD5Sum failed: %{public}s", WavpackGetErrorMessage(_wpc));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
     if (!WavpackFlushSamples(_wpc)) {
         os_log_error(gSFBAudioEncoderLog, "WavpackFlushSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
     if (_estimatedFramesToEncode != _framePosition && _firstBlock) {
         WavpackUpdateNumSamples(_wpc, _firstBlock.mutableBytes);
-        if (![_outputSource seekToOffset:0 error:error])
+        if (![_outputSource seekToOffset:0 error:error]) {
             return NO;
-        if (![_outputSource writeData:_firstBlock error:error])
+        }
+        if (![_outputSource writeData:_firstBlock error:error]) {
             return NO;
+        }
     }
 
     return YES;

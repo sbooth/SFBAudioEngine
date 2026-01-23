@@ -26,13 +26,15 @@ static void SFBCreateOutputSourceLog(void) {
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBOutputSourceErrorCodeFileNotFound:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The requested file was not found.", @"");
+                                              }
                                               break;
 
                                           case SFBOutputSourceErrorCodeInputOutput:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"An input/output error occurred.", @"");
+                                              }
                                               break;
                                           }
 
@@ -43,11 +45,13 @@ static void SFBCreateOutputSourceLog(void) {
 + (instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
 
-    if (url.isFileURL)
+    if (url.isFileURL) {
         return [[SFBFileOutputSource alloc] initWithURL:url];
+    }
 
-    if (error)
+    if (error) {
         *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : url}];
+    }
     return nil;
 }
 
@@ -62,14 +66,16 @@ static void SFBCreateOutputSourceLog(void) {
 }
 
 - (instancetype)initWithURL:(NSURL *)url {
-    if ((self = [super init]))
+    if ((self = [super init])) {
         _url = url;
+    }
     return self;
 }
 
 - (void)dealloc {
-    if (self.isOpen)
+    if (self.isOpen) {
         [self closeReturningError:nil];
+    }
 }
 
 - (NSData *)data {

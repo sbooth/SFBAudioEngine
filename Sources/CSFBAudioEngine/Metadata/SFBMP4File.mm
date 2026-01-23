@@ -43,13 +43,15 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBMPEG4DetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isMPEG4Header])
+    if ([header isMPEG4Header]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -58,7 +60,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -69,12 +71,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::MP4::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @""), @{
@@ -83,6 +86,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
@@ -92,8 +96,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
             auto properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample())
+            if (properties->bitsPerSample()) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
+            }
             switch (properties->codec()) {
             case TagLib::MP4::Properties::Codec::AAC:
                 propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"AAC";
@@ -107,8 +112,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag())
+        if (file.tag()) {
             [metadata addMetadataFromTagLibMP4Tag:file.tag()];
+        }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
@@ -116,10 +122,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading MPEG-4 properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
@@ -128,7 +135,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -139,12 +146,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::MP4::File file(&stream, false);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid MPEG-4 file.", @""), @{
@@ -153,13 +161,14 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         sfb::setMP4TagFromMetadata(self.metadata, file.tag());
 
         if (!file.save()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -168,16 +177,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing MPEG-4 metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }

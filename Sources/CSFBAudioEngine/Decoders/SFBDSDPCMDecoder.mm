@@ -117,12 +117,14 @@ void dsd2pcm_precalc() noexcept {
     double acc;
     for (t = 0; t < CTABLES; ++t) {
         k = HTAPS - t * 8;
-        if (k > 8)
+        if (k > 8) {
             k = 8;
+        }
         for (e = 0; e < 256; ++e) {
             acc = 0.0;
-            for (m = 0; m < k; ++m)
+            for (m = 0; m < k; ++m) {
                 acc += (((e >> (7 - m)) & 1) * 2 - 1) * htaps[t * 8 + m];
+            }
             ctables[CTABLES - 1 - t][e] = static_cast<float>(acc);
         }
     }
@@ -138,8 +140,9 @@ struct dsd2pcm_ctx {
  */
 void dsd2pcm_reset(dsd2pcm_ctx *ptr) noexcept {
     int i;
-    for (i = 0; i < FIFOSIZE; ++i)
+    for (i = 0; i < FIFOSIZE; ++i) {
         ptr->fifo[i] = 0x69; /* my favorite silence pattern */
+    }
     ptr->fifopos = 0;
     /* 0x69 = 01101001
      * This pattern "on repeat" makes a low energy 352.8 kHz tone
@@ -154,8 +157,9 @@ void dsd2pcm_reset(dsd2pcm_ctx *ptr) noexcept {
  */
 dsd2pcm_ctx *dsd2pcm_init() noexcept {
     dsd2pcm_ctx *ptr = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
-    if (ptr)
+    if (ptr) {
         dsd2pcm_reset(ptr);
+    }
     return ptr;
 }
 
@@ -173,8 +177,9 @@ void dsd2pcm_destroy(dsd2pcm_ctx *ptr) noexcept {
  */
 dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
     dsd2pcm_ctx *p2 = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
-    if (p2)
+    if (p2) {
         std::memcpy(p2, ptr, sizeof(dsd2pcm_ctx));
+    }
     return p2;
 }
 
@@ -200,8 +205,9 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     lsbf = lsbf ? 1 : 0;
     while (samples-- > 0) {
         bite1 = *src & 0xFFu;
-        if (lsbf)
+        if (lsbf) {
             bite1 = sBitReverseTable256[bite1];
+        }
         ptr->fifo[ffp] = static_cast<unsigned char>(bite1);
         src += src_stride;
         p = ptr->fifo + ((ffp - CTABLES) & FIFOMASK);
@@ -234,14 +240,16 @@ class DXD {
   public:
     DXD()
       : handle_(dsd2pcm_init()) {
-        if (!handle_)
+        if (!handle_) {
             throw std::bad_alloc();
+        }
     }
 
     DXD(DXD const& x)
       : handle_(dsd2pcm_clone(x.handle_)) {
-        if (!handle_)
+        if (!handle_) {
             throw std::bad_alloc();
+        }
     }
 
     ~DXD() noexcept {
@@ -279,8 +287,9 @@ class DXD {
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource error:error];
 }
 
@@ -288,8 +297,9 @@ class DXD {
     NSParameterAssert(inputSource != nil);
 
     SFBDSDDecoder *decoder = [[SFBDSDDecoder alloc] initWithInputSource:inputSource error:error];
-    if (!decoder)
+    if (!decoder) {
         return nil;
+    }
 
     return [self initWithDecoder:decoder error:error];
 }
@@ -322,13 +332,14 @@ class DXD {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (!_decoder.isOpen && ![_decoder openReturningError:error])
+    if (!_decoder.isOpen && ![_decoder openReturningError:error]) {
         return NO;
+    }
 
     const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
@@ -337,12 +348,13 @@ class DXD {
                       NSURLErrorKey : _decoder.inputSource.url
                   },
                   SFBLocalizedNameForURL(_decoder.inputSource.url));
+        }
         return NO;
     }
 
     if (asbd->mSampleRate != kSFBSampleRateDSD64) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -351,6 +363,7 @@ class DXD {
                       NSURLErrorKey : _decoder.inputSource.url
                   },
                   SFBLocalizedNameForURL(_decoder.inputSource.url));
+        }
         return NO;
     }
 
@@ -372,8 +385,9 @@ class DXD {
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
         _buffer = nil;
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -413,11 +427,13 @@ class DXD {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesRead = 0;
     const float linearGain = _linearGain;
@@ -429,12 +445,14 @@ class DXD {
         AVAudioPacketCount dsdPacketsRemaining = framesRemaining * kDSDPacketsPerPCMFrame;
         if (![_decoder decodeIntoBuffer:_buffer
                             packetCount:std::min(_buffer.packetCapacity, dsdPacketsRemaining)
-                                  error:error])
+                                  error:error]) {
             return NO;
+        }
 
         AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
-        if (dsdPacketsDecoded == 0)
+        if (dsdPacketsDecoded == 0) {
             break;
+        }
 
         AVAudioFrameCount framesDecoded = dsdPacketsDecoded / kDSDPacketsPerPCMFrame;
 
@@ -457,8 +475,9 @@ class DXD {
         framesRead += framesDecoded;
 
         // All requested frames were read
-        if (framesRead == frameLength)
+        if (framesRead == frameLength) {
             break;
+        }
     }
 
     return YES;
@@ -471,8 +490,9 @@ class DXD {
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    if (![_decoder seekToPacket:(frame * kDSDPacketsPerPCMFrame) error:error])
+    if (![_decoder seekToPacket:(frame * kDSDPacketsPerPCMFrame) error:error]) {
         return NO;
+    }
 
     _buffer.packetCount = 0;
     _buffer.byteLength = 0;
