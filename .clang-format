@@ -7,7 +7,7 @@ UseTab: Never
 
 ColumnLimit: 120
 
-Standard: c++20
+InsertBraces: true
 
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortBlocksOnASingleLine: Empty
@@ -19,7 +19,7 @@ PointerAlignment: Right
 ReferenceAlignment: Left
 DerivePointerAlignment: false
 
-BreakTemplateDeclarations: true
+BreakTemplateDeclarations: Yes
 
 ObjCBlockIndentWidth: 4
 
