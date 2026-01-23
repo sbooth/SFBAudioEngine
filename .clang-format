@@ -9,6 +9,8 @@ ColumnLimit: 120
 
 Standard: c++20
 
+InsertBraces: true
+
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortBlocksOnASingleLine: Empty
 
