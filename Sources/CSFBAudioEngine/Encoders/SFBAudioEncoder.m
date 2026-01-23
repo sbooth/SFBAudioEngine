@@ -47,19 +47,22 @@ static NSMutableArray *_registeredSubclasses = nil;
                                    provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                        switch (err.code) {
                                        case SFBAudioEncoderErrorCodeUnknownEncoder:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"The requested encoder is unavailable.", @"");
+                                           }
                                            break;
 
                                        case SFBAudioEncoderErrorCodeInvalidFormat:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(
                                                      @"The format is invalid, unknown, or unsupported.", @"");
+                                           }
                                            break;
 
                                        case SFBAudioEncoderErrorCodeInternalError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                return NSLocalizedString(@"An internal encoder error occurred.", @"");
+                                           }
                                            break;
                                        }
 
@@ -94,8 +97,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseExtension = extension.lowercaseString;
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
-        if ([supportedPathExtensions containsObject:lowercaseExtension])
+        if ([supportedPathExtensions containsObject:lowercaseExtension]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -104,8 +108,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
-        if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+        if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
             return YES;
+        }
     }
     return NO;
 }
@@ -122,8 +127,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
-    if (!outputSource)
+    if (!outputSource) {
         return nil;
+    }
     return [self initWithOutputSource:outputSource mimeType:mimeType error:error];
 }
 
@@ -152,14 +158,16 @@ static NSMutableArray *_registeredSubclasses = nil;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
-            if ([supportedMIMETypes containsObject:lowercaseMIMEType])
+            if ([supportedMIMETypes containsObject:lowercaseMIMEType]) {
                 currentScore += 40;
+            }
         }
 
         if (lowercaseExtension) {
             NSSet *supportedPathExtensions = [klass supportedPathExtensions];
-            if ([supportedPathExtensions containsObject:lowercaseExtension])
+            if ([supportedPathExtensions containsObject:lowercaseExtension]) {
                 currentScore += 20;
+            }
         }
 
         if (currentScore > score) {
@@ -170,7 +178,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if (!subclass) {
         os_log_debug(gSFBAudioEncoderLog, "Unable to determine content type for %{public}@", outputSource);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” could not be determined.", @""), @{
@@ -179,6 +187,7 @@ static NSMutableArray *_registeredSubclasses = nil;
                       NSURLErrorKey : outputSource.url
                   },
                   SFBLocalizedNameForURL(outputSource.url));
+        }
         return nil;
     }
 
@@ -198,8 +207,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(url != nil);
 
     SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
-    if (!outputSource)
+    if (!outputSource) {
         return nil;
+    }
     return [self initWithOutputSource:outputSource encoderName:encoderName error:error];
 }
 
@@ -223,15 +233,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if (!subclass) {
         os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unknown encoder: \"%{public}@\"", encoderName);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeUnknownEncoder
                                      userInfo:nil];
+        }
         return nil;
     }
 
-    if ((self = [[subclass alloc] init]))
+    if ((self = [[subclass alloc] init])) {
         _outputSource = outputSource;
+    }
 
     return self;
 }
@@ -251,10 +263,11 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (sourceFormat.streamDescription->mFormatID != kAudioFormatLinearPCM) {
         os_log_error(gSFBAudioEncoderLog, "-setSourceFormat:error: called with non-PCM format: %{public}@",
                      sourceFormat);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -262,10 +275,11 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (processingFormat == nil) {
         os_log_error(gSFBAudioEncoderLog, "-setSourceFormat:error: called with invalid format: %{public}@",
                      sourceFormat);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -276,8 +290,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (!_outputSource.isOpen)
+    if (!_outputSource.isOpen) {
         return [_outputSource openReturningError:error];
+    }
     return YES;
 }
 
@@ -286,8 +301,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     _processingFormat = nil;
     _outputFormat = nil;
     _settings = nil;
-    if (_outputSource.isOpen)
+    if (_outputSource.isOpen) {
         return [_outputSource closeReturningError:error];
+    }
     return YES;
 }
 
@@ -343,12 +359,13 @@ static NSMutableArray *_registeredSubclasses = nil;
     [_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
         int a = ((SFBAudioEncoderSubclassInfo *)obj1).priority;
         int b = ((SFBAudioEncoderSubclassInfo *)obj2).priority;
-        if (a > b)
+        if (a > b) {
             return NSOrderedAscending;
-        else if (a < b)
+        } else if (a < b) {
             return NSOrderedDescending;
-        else
+        } else {
             return NSOrderedSame;
+        }
     }];
 }
 

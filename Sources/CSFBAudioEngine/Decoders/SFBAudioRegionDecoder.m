@@ -52,8 +52,9 @@
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource)
+    if (!inputSource) {
         return nil;
+    }
     return [self initWithInputSource:inputSource
                           startFrame:startFrame
                          frameLength:frameLength
@@ -98,8 +99,9 @@
     NSParameterAssert(inputSource != nil);
 
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource error:error];
-    if (!decoder)
+    if (!decoder) {
         return nil;
+    }
     return [self initWithDecoder:decoder
                       startFrame:startFrame
                      frameLength:frameLength
@@ -174,17 +176,19 @@
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (!_decoder.isOpen && ![_decoder openReturningError:error])
+    if (!_decoder.isOpen && ![_decoder openReturningError:error]) {
         return NO;
+    }
 
     if (!_decoder.supportsSeeking) {
         os_log_error(gSFBAudioDecoderLog, "Cannot open AudioRegionDecoder with non-seekable decoder %{public}@",
                      _decoder);
         [_decoder closeReturningError:nil];
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -192,10 +196,11 @@
     if (decoderFrameLength == SFBUnknownFrameLength) {
         os_log_error(gSFBAudioDecoderLog, "Invalid frame length from %{public}@", _decoder);
         [_decoder closeReturningError:nil];
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -204,10 +209,11 @@
             os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region frame length %lld",
                          _requestedFrameLength);
             [_decoder closeReturningError:nil];
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                              code:SFBAudioDecoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
         _startFrame = decoderFrameLength - _requestedFrameLength;
@@ -215,10 +221,11 @@
         if (_requestedStartFrame >= decoderFrameLength) {
             os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region start frame %lld", _requestedStartFrame);
             [_decoder closeReturningError:nil];
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                              code:SFBAudioDecoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
         _startFrame = _requestedStartFrame;
@@ -229,17 +236,18 @@
         return NO;
     }
 
-    if (_requestedFrameLength == -1)
+    if (_requestedFrameLength == -1) {
         _frameLength = decoderFrameLength - _startFrame;
-    else {
+    } else {
         if (_requestedFrameLength > decoderFrameLength - _startFrame) {
             os_log_error(gSFBAudioDecoderLog, "Invalid requested audio region frame length %lld",
                          _requestedFrameLength);
             [_decoder closeReturningError:nil];
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                              code:SFBAudioDecoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
         _frameLength = _requestedFrameLength;
@@ -262,21 +270,24 @@
 
 - (AVAudioFramePosition)framePosition {
     AVAudioFramePosition framePosition = _decoder.framePosition;
-    if (framePosition == SFBUnknownFramePosition)
+    if (framePosition == SFBUnknownFramePosition) {
         return SFBUnknownFramePosition;
+    }
     return (framePosition - _startFrame) + (_frameLength * _completedLoops);
 }
 
 - (AVAudioFramePosition)frameLength {
-    if (_repeatCount == -1)
+    if (_repeatCount == -1) {
         return INT64_MAX;
+    }
     return _frameLength + (_frameLength * _repeatCount);
 }
 
 - (AVAudioFramePosition)frameOffset {
     AVAudioFramePosition framePosition = _decoder.framePosition;
-    if (framePosition == SFBUnknownFramePosition)
+    if (framePosition == SFBUnknownFramePosition) {
         return SFBUnknownFramePosition;
+    }
     return framePosition - _startFrame;
 }
 
@@ -295,11 +306,13 @@
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength == 0 || (_repeatCount != -1 && _completedLoops > _repeatCount))
+    if (frameLength == 0 || (_repeatCount != -1 && _completedLoops > _repeatCount)) {
         return YES;
+    }
 
-    if (frameLength > buffer.frameCapacity)
+    if (frameLength > buffer.frameCapacity) {
         frameLength = buffer.frameCapacity;
+    }
 
     AVAudioFrameCount framesRemaining = frameLength;
 
@@ -309,15 +322,17 @@
         AVAudioFrameCount framesToDecode = MIN(MIN(framesRemaining, framesRemainingInRegion), _buffer.frameCapacity);
 
         // Nothing left to read
-        if (framesToDecode == 0)
+        if (framesToDecode == 0) {
             break;
+        }
 
         // Zero the internal buffer in preparation for decoding
         _buffer.frameLength = 0;
 
         // Decode audio into our internal buffer and append it to output
-        if (![_decoder decodeIntoBuffer:_buffer frameLength:framesToDecode error:error])
+        if (![_decoder decodeIntoBuffer:_buffer frameLength:framesToDecode error:error]) {
             return NO;
+        }
 
         [buffer appendContentsOfBuffer:_buffer];
 
@@ -325,8 +340,9 @@
         if (framesToDecode == framesRemainingInRegion) {
             _completedLoops++;
             if (_repeatCount == -1 || _completedLoops <= _repeatCount) {
-                if (![_decoder seekToFrame:_startFrame error:error])
+                if (![_decoder seekToFrame:_startFrame error:error]) {
                     return NO;
+                }
             }
         }
 
@@ -345,16 +361,18 @@
     NSParameterAssert(frame >= 0);
 
     if (frame >= self.frameLength) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+        }
         return NO;
     }
 
     static_assert(sizeof(long long) == sizeof _frameLength, "AVAudioFramePosition not long long");
     lldiv_t qr = lldiv(frame, _frameLength);
 
-    if (![_decoder seekToFrame:(_startFrame + qr.rem) error:error])
+    if (![_decoder seekToFrame:(_startFrame + qr.rem) error:error]) {
         return NO;
+    }
 
     _completedLoops = qr.quot;
     return YES;

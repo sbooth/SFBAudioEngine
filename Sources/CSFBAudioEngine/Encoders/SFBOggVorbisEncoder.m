@@ -56,8 +56,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8) {
         return nil;
+    }
 
     AVAudioChannelLayout *channelLayout = nil;
     switch (sourceFormat.channelCount) {
@@ -89,8 +90,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         break;
     }
 
-    if (channelLayout == nil)
+    if (channelLayout == nil) {
         return nil;
+    }
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                             sampleRate:sourceFormat.sampleRate
@@ -99,17 +101,19 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Initialize the ogg stream
     int result = ogg_stream_init(&_os, (int)arc4random());
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "ogg_stream_init failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -130,17 +134,19 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
             vorbis_info_clear(&_vi);
             ogg_stream_clear(&_os);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     } else {
         float quality_value = 0.5;
         NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
-        if (quality != nil)
+        if (quality != nil) {
             quality_value = MAX(-0.1f, MIN(1.0f, quality.floatValue));
+        }
 
         result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate,
                                         quality_value);
@@ -148,10 +154,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init_vbr failed: %d", result);
             vorbis_info_clear(&_vi);
             ogg_stream_clear(&_os);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -175,10 +182,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         vorbis_dsp_clear(&_vd);
         vorbis_info_clear(&_vi);
         ogg_stream_clear(&_os);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -188,8 +196,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
     for (;;) {
         ogg_page og;
-        if (ogg_stream_flush(&_os, &og) == 0)
+        if (ogg_stream_flush(&_os, &og) == 0) {
             break;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
@@ -251,11 +260,13 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     float **buf = vorbis_analysis_buffer(&_vd, (int)frameLength);
 
@@ -265,55 +276,60 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
     if (vorbis_analysis_wrote(&_vd, (int)frameLength) != 0) {
         os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_wrote failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
     for (;;) {
         int result = vorbis_analysis_blockout(&_vd, &_vb);
-        if (result == 0)
+        if (result == 0) {
             break;
-        else if (result < 0) {
+        } else if (result < 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         if (vorbis_analysis(&_vb, NULL) != 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         if (vorbis_bitrate_addblock(&_vb) != 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_addblock failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         ogg_packet op;
         for (;;) {
             result = vorbis_bitrate_flushpacket(&_vd, &op);
-            if (result == 0)
+            if (result == 0) {
                 break;
-            else if (result < 0) {
+            } else if (result < 0) {
                 os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
 
@@ -322,20 +338,24 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             // Write out pages (if any)
             for (;;) {
                 ogg_page og;
-                if (ogg_stream_pageout(&_os, &og) == 0)
+                if (ogg_stream_pageout(&_os, &og) == 0) {
                     break;
+                }
 
                 NSInteger bytesWritten;
                 if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.header_len)
+                    bytesWritten != og.header_len) {
                     return NO;
+                }
 
                 if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.body_len)
+                    bytesWritten != og.body_len) {
                     return NO;
+                }
 
-                if (ogg_page_eos(&og))
+                if (ogg_page_eos(&og)) {
                     break;
+                }
             }
         }
     }
@@ -348,55 +368,60 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     if (vorbis_analysis_wrote(&_vd, 0) != 0) {
         os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_wrote failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
     for (;;) {
         int result = vorbis_analysis_blockout(&_vd, &_vb);
-        if (result == 0)
+        if (result == 0) {
             break;
-        else if (result < 0) {
+        } else if (result < 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_blockout failed: %d", result);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         if (vorbis_analysis(&_vb, NULL) != 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_analysis failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         if (vorbis_bitrate_addblock(&_vb) != 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_addblock failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         ogg_packet op;
         for (;;) {
             result = vorbis_bitrate_flushpacket(&_vd, &op);
-            if (result == 0)
+            if (result == 0) {
                 break;
-            else if (result < 0) {
+            } else if (result < 0) {
                 os_log_error(gSFBAudioEncoderLog, "vorbis_bitrate_flushpacket failed: %d", result);
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
 
@@ -405,20 +430,24 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             // Write out pages (if any)
             for (;;) {
                 ogg_page og;
-                if (ogg_stream_pageout(&_os, &og) == 0)
+                if (ogg_stream_pageout(&_os, &og) == 0) {
                     break;
+                }
 
                 NSInteger bytesWritten;
                 if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.header_len)
+                    bytesWritten != og.header_len) {
                     return NO;
+                }
 
                 if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
-                    bytesWritten != og.body_len)
+                    bytesWritten != og.body_len) {
                     return NO;
+                }
 
-                if (ogg_page_eos(&og))
+                if (ogg_page_eos(&og)) {
                     break;
+                }
             }
         }
     }

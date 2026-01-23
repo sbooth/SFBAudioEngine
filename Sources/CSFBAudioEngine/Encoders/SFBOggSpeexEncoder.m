@@ -9,6 +9,9 @@
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <ogg/ogg.h>
 #import <speex/speex.h>
+#import <speex/speex_header.h>
+#import <speex/speex_preprocess.h>
+#import <speex/speex_stereo.h>
 #import <speex/speexdsp_types.h>
 
 #import <os/log.h>
@@ -126,22 +129,24 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2) {
         return nil;
+    }
 
     double sampleRate = sourceFormat.sampleRate;
 
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
     if (mode != nil) {
         // Determine the desired sample rate
-        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)
+        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband) {
             sampleRate = 8000;
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband) {
             sampleRate = 16000;
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband) {
             sampleRate = 32000;
-        else
+        } else {
             return nil;
+        }
     } else if (sampleRate > 48000 || sampleRate < 6000) {
         return nil;
     }
@@ -158,17 +163,19 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
     //	NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
 
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     // Initialize the ogg stream
     int result = ogg_stream_init(&_os, (int)arc4random());
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "ogg_stream_init failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -176,26 +183,28 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     const SpeexMode *speex_mode = NULL;
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
     if (mode == nil) {
-        if (_processingFormat.sampleRate > 25000)
+        if (_processingFormat.sampleRate > 25000) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
-        else if (_processingFormat.sampleRate > 12500)
+        } else if (_processingFormat.sampleRate > 12500) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
-        else if (_processingFormat.sampleRate >= 6000)
+        } else if (_processingFormat.sampleRate >= 6000) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
+        }
     } else {
-        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)
+        if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeWideband) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
-        else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)
+        } else if (mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
-        else {
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Speex mode: %{public}@", mode);
             ogg_stream_clear(&_os);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -205,10 +214,11 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     if (_st == NULL) {
         os_log_error(gSFBAudioEncoderLog, "Unrecognized Speex mode: %{public}@", mode);
         ogg_stream_clear(&_os);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -243,8 +253,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     } else if (quality.intValue >= 0) {
         spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate] intValue];
         if (vbr_enabled) {
-            if (vbr_max > 0)
+            if (vbr_max > 0) {
                 speex_encoder_ctl(_st, SPEEX_SET_VBR_MAX_BITRATE, &vbr_max);
+            }
             float vbr_quality = quality.floatValue;
             speex_encoder_ctl(_st, SPEEX_SET_VBR_QUALITY, &vbr_quality);
         } else {
@@ -253,21 +264,25 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         }
     }
 
-    if (vbr_enabled)
+    if (vbr_enabled) {
         speex_encoder_ctl(_st, SPEEX_SET_VBR, &vbr_enabled);
-    else if (vad_enabled)
+    } else if (vad_enabled) {
         speex_encoder_ctl(_st, SPEEX_SET_VAD, &vad_enabled);
+    }
 
-    if (dtx_enabled)
+    if (dtx_enabled) {
         speex_encoder_ctl(_st, SPEEX_SET_DTX, &dtx_enabled);
+    }
 
-    if (abr_enabled)
+    if (abr_enabled) {
         speex_encoder_ctl(_st, SPEEX_SET_ABR, &abr_enabled);
+    }
 
-    if (dtx_enabled && !(vbr_enabled || abr_enabled || vad_enabled))
+    if (dtx_enabled && !(vbr_enabled || abr_enabled || vad_enabled)) {
         os_log_info(gSFBAudioEncoderLog, "DTX requires VAD, VBR, or ABR");
-    else if ((vbr_enabled || abr_enabled) && (vad_enabled))
+    } else if ((vbr_enabled || abr_enabled) && (vad_enabled)) {
         os_log_info(gSFBAudioEncoderLog, "VAD is implied by VBR or ABR");
+    }
 
     spx_int32_t highpass_enabled =
           ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
@@ -295,10 +310,11 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         if (intValue < 1 || intValue > 10) {
             os_log_error(gSFBAudioEncoderLog, "Invalid Speex frames per packet: %d", intValue);
             ogg_stream_clear(&_os);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
         _speex_frames_per_ogg_packet = intValue;
@@ -324,8 +340,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
     for (;;) {
         ogg_page og;
-        if (ogg_stream_pageout(&_os, &og) == 0)
+        if (ogg_stream_pageout(&_os, &og) == 0) {
             break;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
@@ -342,8 +359,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
             return NO;
         }
 
-        if (ogg_page_eos(&og))
+        if (ogg_page_eos(&og)) {
             break;
+        }
     }
 
     const char *speex_version;
@@ -367,8 +385,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
     for (;;) {
         ogg_page og;
-        if (ogg_stream_pageout(&_os, &og) == 0)
+        if (ogg_stream_pageout(&_os, &og) == 0) {
             break;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
@@ -385,8 +404,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
             return NO;
         }
 
-        if (ogg_page_eos(&og))
+        if (ogg_page_eos(&og)) {
             break;
+        }
     }
 
     speex_bits_init(&_bits);
@@ -434,11 +454,13 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     // Split buffer into Speex frame-sized chunks
     AVAudioFrameCount framesProcessed = 0;
@@ -449,14 +471,16 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
         // Encode the next Speex frame
         if (_frameBuffer.isFull) {
-            if (![self encodeSpeexFrameReturningError:error])
+            if (![self encodeSpeexFrameReturningError:error]) {
                 return NO;
+            }
             _frameBuffer.frameLength = 0;
         }
 
         // All complete frames were processed
-        if (framesProcessed == frameLength)
+        if (framesProcessed == frameLength) {
             break;
+        }
     }
 
     return YES;
@@ -464,8 +488,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     // Encode any remaining audio
-    if (!_frameBuffer.isEmpty && ![self encodeSpeexFrameReturningError:error])
+    if (!_frameBuffer.isEmpty && ![self encodeSpeexFrameReturningError:error]) {
         return NO;
+    }
     _frameBuffer.frameLength = 0;
 
     char cbits[MAX_FRAME_BYTES];
@@ -485,8 +510,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         op.b_o_s = 0;
         op.e_o_s = 1;
         op.granulepos = ((_speex_frame_number + 1) * _speex_frame_size) - _speex_lookahead;
-        if (op.granulepos > _framePosition)
+        if (op.granulepos > _framePosition) {
             op.granulepos = _framePosition;
+        }
 
         op.packetno = 2 + (_speex_frame_number / _speex_frames_per_ogg_packet);
         ogg_stream_packetin(&_os, &op);
@@ -495,17 +521,20 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     // Flush all pages left to be written
     for (;;) {
         ogg_page og;
-        if (ogg_stream_flush(&_os, &og) == 0)
+        if (ogg_stream_flush(&_os, &og) == 0) {
             break;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
-            bytesWritten != og.header_len)
+            bytesWritten != og.header_len) {
             return NO;
+        }
 
         if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
-            bytesWritten != og.body_len)
+            bytesWritten != og.body_len) {
             return NO;
+        }
     }
 
     return YES;
@@ -513,13 +542,16 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 - (BOOL)encodeSpeexFrameReturningError:(NSError **)error {
     AVAudioFrameCount framesOfSilenceAdded = 0;
-    if (!_frameBuffer.isFull)
+    if (!_frameBuffer.isFull) {
         framesOfSilenceAdded = [_frameBuffer fillRemainderWithSilence];
+    }
 
-    if (_processingFormat.channelCount == 2)
+    if (_processingFormat.channelCount == 2) {
         speex_encode_stereo_int(_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength, &_bits);
-    if (_preprocess)
+    }
+    if (_preprocess) {
         speex_preprocess(_preprocess, _frameBuffer.audioBufferList->mBuffers[0].mData, NULL);
+    }
     speex_encode_int(_st, _frameBuffer.audioBufferList->mBuffers[0].mData, &_bits);
 
     _framePosition += _frameBuffer.frameLength - framesOfSilenceAdded;
@@ -540,8 +572,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         op.b_o_s = 0;
         op.e_o_s = (framesOfSilenceAdded > 0);
         op.granulepos = ((_speex_frame_number + 1) * _speex_frame_size) - _speex_lookahead;
-        if (op.granulepos > _framePosition)
+        if (op.granulepos > _framePosition) {
             op.granulepos = _framePosition;
+        }
 
         op.packetno = 2 + (_speex_frame_number / _speex_frames_per_ogg_packet);
 
@@ -549,8 +582,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
         for (;;) {
             ogg_page og;
-            if (ogg_stream_pageout(&_os, &og) == 0)
+            if (ogg_stream_pageout(&_os, &og) == 0) {
                 break;
+            }
 
             NSInteger bytesWritten;
             if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
@@ -563,8 +597,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
                 return NO;
             }
 
-            if (ogg_page_eos(&og))
+            if (ogg_page_eos(&og)) {
                 break;
+            }
         }
     }
 

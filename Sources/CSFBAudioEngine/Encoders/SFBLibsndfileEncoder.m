@@ -112,8 +112,9 @@ static int MajorFormatForExtension(NSString *pathExtension) {
         SF_FORMAT_INFO formatInfo;
         formatInfo.format = i;
         if (!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
-            if ([pathExtension isEqualToString:[NSString stringWithUTF8String:formatInfo.extension]])
+            if ([pathExtension isEqualToString:[NSString stringWithUTF8String:formatInfo.extension]]) {
                 return formatInfo.format;
+            }
         } else {
             os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
         }
@@ -127,32 +128,38 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
     NSCParameterAssert(format != nil);
 
     const AudioStreamBasicDescription *asbd = format.streamDescription;
-    if (asbd->mFormatID != kAudioFormatLinearPCM)
+    if (asbd->mFormatID != kAudioFormatLinearPCM) {
         return 0;
+    }
 
     if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
-        if (asbd->mBitsPerChannel == 32)
+        if (asbd->mBitsPerChannel == 32) {
             return SF_FORMAT_FLOAT;
-        else if (asbd->mBitsPerChannel == 64)
+        } else if (asbd->mBitsPerChannel == 64) {
             return SF_FORMAT_DOUBLE;
+        }
     } else {
         switch (asbd->mBitsPerChannel) {
         case 8:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger)
+            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
                 return SF_FORMAT_PCM_S8;
-            else
+            } else {
                 return SF_FORMAT_PCM_U8;
+            }
         case 16:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger)
+            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
                 return SF_FORMAT_PCM_16;
+            }
             break;
         case 24:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger)
+            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
                 return SF_FORMAT_PCM_24;
+            }
             break;
         case 32:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger)
+            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
                 return SF_FORMAT_PCM_32;
+            }
             break;
         }
     }
@@ -268,15 +275,17 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
     OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap),
                                                  &channelBitmap, &dataSize);
     if (result != noErr) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
     AudioChannelLayout *channelLayout = malloc(dataSize);
     if (!channelLayout) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -284,8 +293,9 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
                                     &dataSize, channelLayout);
     if (result != noErr) {
         free(channelLayout);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
@@ -306,15 +316,17 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
     OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag),
                                                  &layoutTag, &dataSize);
     if (result != noErr) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
     AudioChannelLayout *channelLayout = malloc(dataSize);
     if (!channelLayout) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -322,8 +334,9 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
                                     channelLayout);
     if (result != noErr) {
         free(channelLayout);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+        }
         return NO;
     }
 
@@ -346,10 +359,11 @@ static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int ch
     if (layoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
         SndfileChannelMapWithChannelDescriptions(channel_map, channels, channelLayout.layout->mChannelDescriptions);
         return YES;
-    } else if (layoutTag == kAudioChannelLayoutTag_UseChannelBitmap)
+    } else if (layoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
         return SndfileChannelMapWithChannelBitmap(channel_map, channels, channelLayout.layout->mChannelBitmap, error);
-    else
+    } else {
         return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
+    }
 }
 
 enum WriteMethod {
@@ -365,8 +379,9 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger length;
-    if (![encoder->_outputSource getLength:&length error:nil])
+    if (![encoder->_outputSource getLength:&length error:nil]) {
         return -1;
+    }
     return length;
 }
 
@@ -374,8 +389,9 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
-    if (!encoder->_outputSource.supportsSeeking)
+    if (!encoder->_outputSource.supportsSeeking) {
         return -1;
+    }
 
     switch (whence) {
     case SEEK_SET:
@@ -383,24 +399,28 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([encoder->_outputSource getOffset:&inputSourceOffset error:nil])
+        if ([encoder->_outputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([encoder->_outputSource getLength:&inputSourceLength error:nil])
+        if ([encoder->_outputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
 
-    if (![encoder->_outputSource seekToOffset:offset error:nil])
+    if (![encoder->_outputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
 
     NSInteger inputSourceOffset;
-    if (![encoder->_outputSource getOffset:&inputSourceOffset error:nil])
+    if (![encoder->_outputSource getOffset:&inputSourceOffset error:nil]) {
         return -1;
+    }
 
     return inputSourceOffset;
 }
@@ -411,8 +431,9 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
     NSInteger bytesRead;
-    if (![encoder->_outputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil])
+    if (![encoder->_outputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return bytesRead;
 }
 
@@ -422,8 +443,9 @@ static sf_count_t my_sf_vio_write(const void *ptr, sf_count_t count, void *user_
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
     NSInteger bytesWritten;
-    if (![encoder->_outputSource writeBytes:ptr length:(NSInteger)count bytesWritten:&bytesWritten error:nil])
+    if (![encoder->_outputSource writeBytes:ptr length:(NSInteger)count bytesWritten:&bytesWritten error:nil]) {
         return 0;
+    }
 
     return bytesWritten;
 }
@@ -433,8 +455,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger offset;
-    if (![encoder->_outputSource getOffset:&offset error:nil])
+    if (![encoder->_outputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -468,8 +491,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
             formatInfo.format = i;
             if (!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
                 NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
-                if (pathExtension)
+                if (pathExtension) {
                     [majorModeExtensions addObject:pathExtension];
+                }
             } else {
                 os_log_debug(gSFBAudioEncoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
             }
@@ -522,15 +546,17 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Validate format
     const AudioStreamBasicDescription *asbd = sourceFormat.streamDescription;
 
-    if (asbd->mFormatID != kAudioFormatLinearPCM)
+    if (asbd->mFormatID != kAudioFormatLinearPCM) {
         return nil;
+    }
 
     // Floating point
     if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
-        if (asbd->mBitsPerChannel == 32)
+        if (asbd->mBitsPerChannel == 32) {
             return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat32 interleaved:YES];
-        else if (asbd->mBitsPerChannel == 64)
+        } else if (asbd->mBitsPerChannel == 64) {
             return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat64 interleaved:YES];
+        }
     }
     // Integer
     else {
@@ -559,68 +585,70 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     int majorFormat = 0;
     SFBAudioEncodingSettingsValue majorFormatSetting =
           [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileMajorFormat];
     if (majorFormatSetting != nil) {
-        if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV)
+        if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV) {
             majorFormat = SF_FORMAT_WAV;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF) {
             majorFormat = SF_FORMAT_AIFF;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU) {
             majorFormat = SF_FORMAT_AU;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw) {
             majorFormat = SF_FORMAT_RAW;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF) {
             majorFormat = SF_FORMAT_PAF;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX) {
             majorFormat = SF_FORMAT_SVX;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST) {
             majorFormat = SF_FORMAT_NIST;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC) {
             majorFormat = SF_FORMAT_VOC;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM) {
             majorFormat = SF_FORMAT_IRCAM;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64) {
             majorFormat = SF_FORMAT_W64;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4) {
             majorFormat = SF_FORMAT_MAT4;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5) {
             majorFormat = SF_FORMAT_MAT5;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF) {
             majorFormat = SF_FORMAT_PVF;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI) {
             majorFormat = SF_FORMAT_XI;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK) {
             majorFormat = SF_FORMAT_HTK;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS) {
             majorFormat = SF_FORMAT_SDS;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR) {
             majorFormat = SF_FORMAT_AVR;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX) {
             majorFormat = SF_FORMAT_WAVEX;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2) {
             majorFormat = SF_FORMAT_SD2;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC) {
             majorFormat = SF_FORMAT_FLAC;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF) {
             majorFormat = SF_FORMAT_CAF;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE) {
             majorFormat = SF_FORMAT_WVE;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg) {
             majorFormat = SF_FORMAT_OGG;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus) {
             majorFormat = SF_FORMAT_OPUS;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K) {
             majorFormat = SF_FORMAT_MPC2K;
-        else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64)
+        } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64) {
             majorFormat = SF_FORMAT_RF64;
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile major format: %{public}@",
                          majorFormatSetting);
+        }
     } else {
         majorFormat = MajorFormatForExtension(_outputSource.url.pathExtension);
         os_log_info(gSFBAudioEncoderLog,
@@ -633,70 +661,71 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     SFBAudioEncodingSettingsValue subtypeSetting =
           [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileSubtype];
     if (subtypeSetting != nil) {
-        if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8)
+        if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8) {
             subtype = SF_FORMAT_PCM_S8;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16) {
             subtype = SF_FORMAT_PCM_16;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24) {
             subtype = SF_FORMAT_PCM_24;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32) {
             subtype = SF_FORMAT_PCM_32;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8) {
             subtype = SF_FORMAT_PCM_U8;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat) {
             subtype = SF_FORMAT_FLOAT;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble) {
             subtype = SF_FORMAT_DOUBLE;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW) {
             subtype = SF_FORMAT_ULAW;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW) {
             subtype = SF_FORMAT_ALAW;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM) {
             subtype = SF_FORMAT_IMA_ADPCM;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM) {
             subtype = SF_FORMAT_MS_ADPCM;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610) {
             subtype = SF_FORMAT_GSM610;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM) {
             subtype = SF_FORMAT_VOX_ADPCM;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16) {
             subtype = SF_FORMAT_NMS_ADPCM_16;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24) {
             subtype = SF_FORMAT_NMS_ADPCM_24;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32) {
             subtype = SF_FORMAT_NMS_ADPCM_32;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32) {
             subtype = SF_FORMAT_G721_32;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24) {
             subtype = SF_FORMAT_G723_24;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40) {
             subtype = SF_FORMAT_G723_40;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12) {
             subtype = SF_FORMAT_DWVW_12;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16) {
             subtype = SF_FORMAT_DWVW_16;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24) {
             subtype = SF_FORMAT_DWVW_24;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N) {
             subtype = SF_FORMAT_DWVW_N;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8) {
             subtype = SF_FORMAT_DPCM_8;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16) {
             subtype = SF_FORMAT_DPCM_16;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis) {
             subtype = SF_FORMAT_VORBIS;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus) {
             subtype = SF_FORMAT_OPUS;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16) {
             subtype = SF_FORMAT_ALAC_16;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20) {
             subtype = SF_FORMAT_ALAC_20;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24) {
             subtype = SF_FORMAT_ALAC_24;
-        else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32)
+        } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32) {
             subtype = SF_FORMAT_ALAC_32;
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile subtype: %{public}@", subtypeSetting);
+        }
     } else {
         subtype = InferSubtypeFromFormat(_processingFormat);
         os_log_info(gSFBAudioEncoderLog,
@@ -707,17 +736,18 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     int endian = 0;
     NSNumber *fileEndianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
     if (fileEndianSetting != nil) {
-        if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault)
+        if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault) {
             endian = SF_ENDIAN_FILE;
-        else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle)
+        } else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle) {
             endian = SF_ENDIAN_LITTLE;
-        else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianBig)
+        } else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianBig) {
             endian = SF_ENDIAN_BIG;
-        else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU)
+        } else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU) {
             endian = SF_ENDIAN_CPU;
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown libsndfile file endian-ness: %{public}@",
                          fileEndianSetting);
+        }
     }
 
     _sfinfo.samplerate = (int)_processingFormat.sampleRate;
@@ -743,10 +773,11 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         break;
     default:
         os_log_error(gSFBAudioEncoderLog, "Unsupported subtype: 0x%x", subtype);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -762,7 +793,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     _sndfile = sf_open_virtual(&virtualIO, SFM_WRITE, &_sfinfo, (__bridge void *)self);
     if (!_sndfile) {
         os_log_error(gSFBAudioEncoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:@{
@@ -771,6 +802,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                                          NSLocalizedRecoverySuggestionErrorKey :
                                                NSLocalizedString(@"The format is not supported.", @"")
                                      }];
+        }
         return NO;
     }
 
@@ -787,9 +819,10 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
             // in both cases sf_command returns 0 and the underlying error is not set
             // Rather than failing just log the error and continue
             int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
-            if (result != SF_TRUE)
+            if (result != SF_TRUE) {
                 os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s",
                              sf_error_number(sf_error(_sndfile)));
+            }
         } else {
             os_log_error(gSFBAudioEncoderLog, "Unable to determine libsndfile channel map for %{public}@: %{public}@",
                          processingFormatChannelLayout.layoutName, err);
@@ -815,8 +848,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 - (BOOL)closeReturningError:(NSError **)error {
     if (_sndfile) {
         int result = sf_close(_sndfile);
-        if (result)
+        if (result) {
             os_log_error(gSFBAudioEncoderLog, "sf_close failed: %{public}s", sf_error_number(result));
+        }
         _sndfile = NULL;
     }
 
@@ -837,11 +871,13 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
+    if (frameLength > buffer.frameLength) {
         frameLength = buffer.frameLength;
+    }
 
-    if (frameLength == 0)
+    if (frameLength == 0) {
         return YES;
+    }
 
     sf_count_t framesWritten = 0;
     switch (_writeMethod) {
@@ -862,23 +898,26 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         break;
     default:
         os_log_error(gSFBAudioEncoderLog, "Unknown libsndfile write method: %d", _writeMethod);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
-    if (framesWritten != frameLength)
+    if (framesWritten != frameLength) {
         os_log_info(gSFBAudioEncoderLog, "sf_writef_XXX wrote %lld/%u frames", framesWritten, frameLength);
+    }
 
     int result = sf_error(_sndfile);
     if (result) {
         os_log_error(gSFBAudioEncoderLog, "sf_writef_XXX failed: %{public}s", sf_error_number(result));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
