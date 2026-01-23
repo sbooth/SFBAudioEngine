@@ -326,29 +326,32 @@ static void Filter(const float *input, float *output, size_t nSamples, const flo
         for (size_t k = 1; k <= order; k++) {
             input_tail -= downsample;
             --output_tail;
-            y += *input_tail * b[k] - *output_tail * a[k];
+            y += (*input_tail * b[k]) - (*output_tail * a[k]);
         }
 
         output[i] = (float)y;
     }
 }
 
-static float AnalyzeResult(uint32_t *array, size_t len) {
+static float AnalyzeResult(const uint32_t *array, size_t len) {
     uint32_t elems = 0;
-    for (size_t i = 0; i < len; ++i)
+    for (size_t i = 0; i < len; ++i) {
         elems += array[i];
+    }
 
-    if (elems == 0)
+    if (elems == 0) {
         return SFBReplayGainAnalyzerInsufficientSamples;
+    }
 
     int32_t upper = (int32_t)ceil(elems * (1. - RMS_PERCENTILE));
     size_t i = len;
     while (i-- > 0) {
-        if ((upper -= array[i]) <= 0)
+        if ((upper -= array[i]) <= 0) {
             break;
+        }
     }
 
-    return (float)(PINK_REF - i / STEPS_per_dB);
+    return (float)(PINK_REF - (i / STEPS_per_dB));
 }
 
 @interface SFBReplayGainAnalyzer () {
@@ -400,15 +403,17 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The file's format is not supported.", @"");
+                                              }
                                               break;
 
                                           case SFBReplayGainAnalyzerErrorCodeInsufficientSamples:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The file does not contain sufficient "
                                                                            @"audio samples for analysis.",
                                                                            @"");
+                                              }
                                               break;
                                           }
 
@@ -426,14 +431,16 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
     for (NSURL *url in urls) {
         NSDictionary *replayGain = [analyzer analyzeTrack:url error:error];
-        if (!replayGain)
+        if (!replayGain) {
             return nil;
+        }
         result[url] = replayGain;
     }
 
     NSDictionary *albumGainAndPeakSample = [analyzer albumGainAndPeakSampleReturningError:error];
-    if (!albumGainAndPeakSample)
+    if (!albumGainAndPeakSample) {
         return nil;
+    }
 
     [result addEntriesFromDictionary:albumGainAndPeakSample];
     return [result copy];
@@ -460,8 +467,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     NSParameterAssert(url != nil);
 
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder || ![decoder openReturningError:error])
+    if (!decoder || ![decoder openReturningError:error]) {
         return nil;
+    }
 
     const AudioStreamBasicDescription *inputFormat = decoder.processingFormat.streamDescription;
 
@@ -470,7 +478,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
     bool validSampleRate = [SFBReplayGainAnalyzer evenMultipleSampleRateIsSupported:decoderSampleRate];
     if (!validSampleRate) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The file “%@” does not contain audio at a supported sample rate.", @""), @{
@@ -480,13 +488,14 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                                               @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
     NSInteger replayGainSampleRate = [SFBReplayGainAnalyzer bestReplayGainSampleRateForSampleRate:decoderSampleRate];
 
     if (!(inputFormat->mChannelsPerFrame == 1 || inputFormat->mChannelsPerFrame == 2)) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @""), @{
@@ -494,6 +503,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                             NSLocalizedString(@"Only mono and stereo files are supported.", @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
@@ -508,7 +518,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                   toFormat:outputFormat];
     if (!converter) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -516,6 +526,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                             NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
@@ -534,22 +545,26 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
               withInputFromBlock:^AVAudioBuffer *_Nullable(AVAudioPacketCount inNumberOfPackets,
                                                            AVAudioConverterInputStatus *_Nonnull outStatus) {
                   BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
-                  if (!result)
+                  if (!result) {
                       os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
+                  }
 
-                  if (result && decodeBuffer.frameLength == 0)
+                  if (result && decodeBuffer.frameLength == 0) {
                       *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                  else
+                  } else {
                       *outStatus = AVAudioConverterInputStatus_HaveData;
+                  }
 
                   return decodeBuffer;
               }];
 
         if (status == AVAudioConverterOutputStatus_Error) {
-            if (error)
+            if (error) {
                 *error = err;
+            }
             return nil;
-        } else if (status == AVAudioConverterOutputStatus_EndOfStream) {
+        }
+        if (status == AVAudioConverterOutputStatus_EndOfStream) {
             break;
         }
 
@@ -566,7 +581,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
         }
 
         // The replay gain analyzer expects 16-bit sample size passed as floats
-        const float scale = 1u << 15;
+        const float scale = 1U << 15;
         vDSP_vsmul(outputBuffer.floatChannelData[0], 1, &scale, outputBuffer.floatChannelData[0], 1,
                    (vDSP_Length)frameCount);
         if (isStereo) {
@@ -600,7 +615,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     _trackPeak = 0;
 
     if (gain == SFBReplayGainAnalyzerInsufficientSamples) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
                   NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
@@ -608,6 +623,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                             NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
                   },
                   SFBLocalizedNameForURL(url));
+        }
         return nil;
     }
 
@@ -621,7 +637,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     _albumPeak = 0;
 
     if (gain == SFBReplayGainAnalyzerInsufficientSamples) {
-        if (error)
+        if (error) {
             *error = [NSError
                   errorWithDomain:SFBReplayGainAnalyzerErrorDomain
                              code:SFBReplayGainAnalyzerErrorCodeInsufficientSamples
@@ -631,6 +647,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                              NSLocalizedRecoverySuggestionErrorKey :
                                    NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
                          }];
+        }
         return nil;
     }
 
@@ -643,8 +660,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     static NSInteger sampleRate = 0;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i)
+        for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
             sampleRate = MAX(sampleRate, sReplayGainFilters[i].rate);
+        }
     });
 
     return sampleRate;
@@ -654,8 +672,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     static NSInteger sampleRate = 0;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i)
+        for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
             sampleRate = MIN(sampleRate, sReplayGainFilters[i].rate);
+        }
     });
 
     return sampleRate;
@@ -663,8 +682,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
 + (BOOL)sampleRateIsSupported:(NSInteger)sampleRate {
     for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
-        if (sReplayGainFilters[i].rate == sampleRate)
+        if (sReplayGainFilters[i].rate == sampleRate) {
             return YES;
+        }
     }
 
     return NO;
@@ -673,14 +693,16 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 + (BOOL)evenMultipleSampleRateIsSupported:(NSInteger)sampleRate {
     const NSInteger minSampleRate = self.minimumSupportedSampleRate;
     for (NSInteger newSampleRate = sampleRate; newSampleRate > minSampleRate; newSampleRate /= 2) {
-        if ([self sampleRateIsSupported:newSampleRate])
+        if ([self sampleRateIsSupported:newSampleRate]) {
             return YES;
+        }
     }
 
     const NSInteger maxSampleRate = self.maximumSupportedSampleRate;
     for (NSInteger newSampleRate = sampleRate; newSampleRate < maxSampleRate; newSampleRate *= 2) {
-        if ([self sampleRateIsSupported:newSampleRate])
+        if ([self sampleRateIsSupported:newSampleRate]) {
             return YES;
+        }
     }
 
     return NO;
@@ -688,31 +710,36 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
 + (NSInteger)bestReplayGainSampleRateForSampleRate:(NSInteger)sampleRate {
     // Avoid resampling if possible
-    if ([self sampleRateIsSupported:sampleRate])
+    if ([self sampleRateIsSupported:sampleRate]) {
         return sampleRate;
+    }
 
     // Next attempt to use even multiples
     const NSInteger minSampleRate = self.minimumSupportedSampleRate;
     for (NSInteger newSampleRate = sampleRate; newSampleRate > minSampleRate; newSampleRate /= 2) {
-        if ([self sampleRateIsSupported:newSampleRate])
+        if ([self sampleRateIsSupported:newSampleRate]) {
             return newSampleRate;
+        }
     }
 
     const NSInteger maxSampleRate = self.maximumSupportedSampleRate;
     for (NSInteger newSampleRate = sampleRate; newSampleRate < maxSampleRate; newSampleRate *= 2) {
-        if ([self sampleRateIsSupported:newSampleRate])
+        if ([self sampleRateIsSupported:newSampleRate]) {
             return newSampleRate;
+        }
     }
 
     // If not an even multiple of a supported rate just resample to the next lower supported rate
     NSInteger nextLowerSampleRate = 0;
     for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
-        if (sReplayGainFilters[i].rate < sampleRate)
+        if (sReplayGainFilters[i].rate < sampleRate) {
             nextLowerSampleRate = MAX(nextLowerSampleRate, sReplayGainFilters[i].rate);
+        }
     }
 
-    if (nextLowerSampleRate)
+    if (nextLowerSampleRate) {
         return nextLowerSampleRate;
+    }
 
     // Just use the redbook sample rate if all else fails
     return 44100;
@@ -720,8 +747,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
 - (void)resetState {
     /* zero out initial values */
-    for (int i = 0; i < MAX_ORDER; ++i)
+    for (int i = 0; i < MAX_ORDER; ++i) {
         _linprebuf[i] = _lstepbuf[i] = _loutbuf[i] = _rinprebuf[i] = _rstepbuf[i] = _routbuf[i] = 0;
+    }
 
     _lsum = _rsum = 0;
     _totsamp = 0;
@@ -765,8 +793,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     uint32_t downsample = _filter.downsample;
     num_samples /= downsample;
 
-    if (num_samples == 0)
+    if (num_samples == 0) {
         return YES;
+    }
 
     const float *curleft;
     const float *curright;
@@ -775,11 +804,13 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
     long batchsamples = (long)num_samples;
     long cursamplepos = 0;
 
-    if (!stereo)
+    if (!stereo) {
         right_samples = left_samples;
+    }
 
-    if ((size_t)prebufsamples > num_samples)
+    if ((size_t)prebufsamples > num_samples) {
         prebufsamples = (long)num_samples;
+    }
 
     for (long i = 0; i < prebufsamples; ++i) {
         _linprebuf[i + MAX_ORDER] = left_samples[i * downsample];
@@ -792,8 +823,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
             downsample = 1;
             curleft = _linpre + cursamplepos;
             curright = _rinpre + cursamplepos;
-            if (cursamples > MAX_ORDER - cursamplepos)
+            if (cursamples > MAX_ORDER - cursamplepos) {
                 cursamples = MAX_ORDER - cursamplepos;
+            }
         } else {
             downsample = _filter.downsample;
             curleft = left_samples + cursamplepos;
@@ -822,12 +854,14 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
         /* Get the Root Mean Square (RMS) for this set of samples */
         if (_totsamp == _sampleWindow) {
-            double val = STEPS_per_dB * 10. * log10((_lsum + _rsum) / _totsamp * 0.5 + 1.e-37);
+            double val = STEPS_per_dB * 10. * log10(((_lsum + _rsum) / _totsamp * 0.5) + 1.e-37);
             int ival = (int)val;
-            if (ival < 0)
+            if (ival < 0) {
                 ival = 0;
-            if (ival >= (int)(sizeof(_A) / sizeof(*_A)))
+            }
+            if (ival >= (int)(sizeof(_A) / sizeof(*_A))) {
                 ival = (int)(sizeof(_A) / sizeof(*_A)) - 1;
+            }
 
             _A[ival]++;
             _lsum = _rsum = 0.;
@@ -841,8 +875,9 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
         }
 
         /* somehow I really screwed up: Error in programming! Contact author about totsamp > sampleWindow */
-        if (_totsamp > _sampleWindow)
+        if (_totsamp > _sampleWindow) {
             return NO;
+        }
     }
 
     if (num_samples < MAX_ORDER) {

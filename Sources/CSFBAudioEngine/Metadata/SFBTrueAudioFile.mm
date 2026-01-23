@@ -44,13 +44,15 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isTrueAudioHeader])
+    if ([header isTrueAudioHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -59,7 +61,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -70,12 +72,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::TrueAudio::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid True Audio file.", @""), @{
@@ -84,28 +87,33 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"True Audio" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties()) {
-            auto properties = file.audioProperties();
+            auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample())
+            if (properties->bitsPerSample()) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
-            if (properties->sampleFrames())
+            }
+            if (properties->sampleFrames()) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
+            }
         }
 
         // Add all tags that are present
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             [metadata addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
+        }
 
-        if (file.hasID3v2Tag())
+        if (file.hasID3v2Tag()) {
             [metadata addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
+        }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
@@ -113,10 +121,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading True Audio properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
@@ -125,7 +134,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -136,12 +145,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::TrueAudio::File file(&stream, false);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid True Audio file.", @""), @{
@@ -150,18 +160,20 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         // ID3v1 tags are only written if present, but ID3v2 tags are always written
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
         sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(true));
 
         if (!file.save()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -170,16 +182,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing True Audio metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }

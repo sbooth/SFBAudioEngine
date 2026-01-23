@@ -16,8 +16,9 @@
 @implementation SFBMutableDataOutputSource
 
 - (instancetype)init {
-    if ((self = [super initWithURL:nil]))
+    if ((self = [super initWithURL:nil])) {
         _data = [NSMutableData data];
+    }
     return self;
 }
 
@@ -45,8 +46,9 @@
 
     NSUInteger count = (NSUInteger)length;
     NSUInteger remaining = _data.length - _pos;
-    if (count > remaining)
+    if (count > remaining) {
         count = remaining;
+    }
 
     [_data getBytes:buffer range:NSMakeRange(_pos, count)];
     _pos += count;
@@ -92,8 +94,9 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     NSParameterAssert(offset >= 0);
 
-    if ((NSUInteger)offset > _data.length)
+    if ((NSUInteger)offset > _data.length) {
         [_data increaseLengthBy:((NSUInteger)offset - _data.length + 1)];
+    }
 
     _pos = (NSUInteger)offset;
     return YES;

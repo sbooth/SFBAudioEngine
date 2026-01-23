@@ -63,8 +63,8 @@ using ogg_opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, ogg_opus_c
 int writeCallback(void *user_data, const unsigned char *ptr, opus_int32 len) noexcept {
     SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
     NSInteger bytesWritten;
-    return !([encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] &&
-             bytesWritten == len);
+    return ![encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] ||
+           bytesWritten != len;
 }
 
 int closeCallback(void *user_data) noexcept {
@@ -109,13 +109,15 @@ int closeCallback(void *user_data) noexcept {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 255)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 255) {
         return nil;
+    }
 
     double sampleRate = 48000;
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyOpusPreserveSampleRate] boolValue]) {
-        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000)
+        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000) {
             return nil;
+        }
         sampleRate = sourceFormat.sampleRate;
     }
 
@@ -165,16 +167,18 @@ int closeCallback(void *user_data) noexcept {
     //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
     //	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
 
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     OpusEncCallbacks callbacks = {writeCallback, closeCallback};
 
     ogg_opus_comments_unique_ptr comments{ope_comments_create()};
     if (!comments) {
         os_log_error(gSFBAudioEncoderLog, "ope_comments_create failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -183,10 +187,11 @@ int closeCallback(void *user_data) noexcept {
     int result = ope_comments_add(comments.get(), "ENCODER", version);
     if (result != OPE_OK) {
         os_log_error(gSFBAudioEncoderLog, "ope_comments_add(ENCODER) failed: %{public}s", ope_strerror(result));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -196,10 +201,11 @@ int closeCallback(void *user_data) noexcept {
           _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
     if (!enc) {
         os_log_error(gSFBAudioEncoderLog, "ope_encoder_create_callbacks failed: %{public}s", ope_strerror(result));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -214,10 +220,11 @@ int closeCallback(void *user_data) noexcept {
                                    1000));
             if (result != OPE_OK) {
                 os_log_error(gSFBAudioEncoderLog, "OPUS_SET_BITRATE failed: %{public}s", ope_strerror(result));
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
             break;
@@ -229,21 +236,23 @@ int closeCallback(void *user_data) noexcept {
 
     SFBAudioEncodingSettingsValue bitrateMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrateMode];
     if (bitrateMode != nil) {
-        if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR)
+        if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(1));
-        else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR)
+        } else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR_CONSTRAINT(1));
-        else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR)
+        } else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(0));
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus bitrate mode: %{public}@", bitrateMode);
+        }
 
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "OPUS_SET_VBR[_CONSTRAINT] failed: %{public}s", ope_strerror(result));
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -256,10 +265,11 @@ int closeCallback(void *user_data) noexcept {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_COMPLEXITY(intValue));
             if (result != OPE_OK) {
                 os_log_error(gSFBAudioEncoderLog, "OPUS_SET_COMPLEXITY failed: %{public}s", ope_strerror(result));
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
             break;
@@ -272,19 +282,21 @@ int closeCallback(void *user_data) noexcept {
 
     SFBAudioEncodingSettingsValue signalType = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusSignalType];
     if (signalType != nil) {
-        if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice)
+        if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
-        else if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic)
+        } else if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
-        else
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus signal type: %{public}@", signalType);
+        }
 
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "OPUS_SET_SIGNAL failed: %{public}s", ope_strerror(result));
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -328,10 +340,11 @@ int closeCallback(void *user_data) noexcept {
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "OPUS_SET_EXPERT_FRAME_DURATION failed: %{public}s",
                          ope_strerror(result));
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -373,11 +386,10 @@ int closeCallback(void *user_data) noexcept {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
-        frameLength = buffer.frameLength;
-
-    if (frameLength == 0)
+    frameLength = std::min(frameLength, buffer.frameLength);
+    if (frameLength == 0) {
         return YES;
+    }
 
     // Split buffer into Opus page-sized chunks
     AVAudioFrameCount framesProcessed = 0;
@@ -393,10 +405,11 @@ int closeCallback(void *user_data) noexcept {
                                                  static_cast<int>(_frameBuffer.frameLength));
             if (result != OPE_OK) {
                 os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
 
@@ -405,8 +418,9 @@ int closeCallback(void *user_data) noexcept {
         }
 
         // All complete frames were processed
-        if (framesProcessed == frameLength)
+        if (framesProcessed == frameLength) {
             break;
+        }
     }
 
     return YES;
@@ -420,10 +434,11 @@ int closeCallback(void *user_data) noexcept {
                                       static_cast<int>(_frameBuffer.frameLength));
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
@@ -434,10 +449,11 @@ int closeCallback(void *user_data) noexcept {
     int result = ope_encoder_drain(_enc.get());
     if (result != OPE_OK) {
         os_log_error(gSFBAudioEncoderLog, "ope_encoder_drain failed: %{public}s", ope_strerror(result));
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 

@@ -8,6 +8,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <memory>
 
 #import <lame/lame.h>
@@ -79,24 +80,27 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2)
+    if (sourceFormat.channelCount < 1 || sourceFormat.channelCount > 2) {
         return nil;
+    }
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                             sampleRate:sourceFormat.sampleRate
-                                              channels:(AVAudioChannelCount)sourceFormat.channelCount
+                                              channels:sourceFormat.channelCount
                                            interleaved:YES];
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     lame_global_flags_unique_ptr gfp{lame_init()};
     if (!gfp) {
         os_log_error(gSFBAudioEncoderLog, "lame_init failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -107,20 +111,22 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     auto result = lame_set_num_channels(gfp.get(), static_cast<int>(_processingFormat.channelCount));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_num_channels(%d) failed", _processingFormat.channelCount);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
     result = lame_set_in_samplerate(gfp.get(), static_cast<int>(_processingFormat.sampleRate));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_in_samplerate(%g) failed", _processingFormat.sampleRate);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -135,10 +141,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_quality(gfp.get(), quality_value);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_quality(%d) failed", quality_value);
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
             break;
@@ -154,20 +161,22 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         result = lame_set_VBR(gfp.get(), vbr_off);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         result = lame_set_brate(gfp.get(), cbr.intValue);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", cbr.intValue);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -175,36 +184,37 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     // Average bitrate encoding
     NSNumber *abr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
     if (abr != nil) {
-        if (cbr != nil)
+        if (cbr != nil) {
             os_log_info(gSFBAudioEncoderLog, "CBR and ABR bitrates both specified; this is probably not correct");
+        }
 
         result = lame_set_VBR(gfp.get(), vbr_abr);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_abr) failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
         // values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000
         // bps MP3
         auto intValue = abr.intValue;
-        if (intValue >= 8000)
+        if (intValue >= 8000) {
             intValue = (intValue + 500) / 1000;
-        if (intValue > 320)
-            intValue = 320;
-        if (intValue < 8)
-            intValue = 8;
+        }
+        intValue = std::clamp(intValue, 8, 320);
 
         result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_mean_bitrate_kbps(%d) failed", intValue);
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -212,20 +222,23 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     // Variable bitrate encoding
     NSNumber *vbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseVariableBitrate];
     if (vbr.boolValue) {
-        if (cbr != nil)
+        if (cbr != nil) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and CBR bitrate both specified; this is probably not correct");
-        if (abr != nil)
+        }
+        if (abr != nil) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and ABR bitrate both specified; this is probably not correct");
+        }
 
         result = lame_set_VBR(gfp.get(), vbr_default);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
 
@@ -234,10 +247,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_VBR_quality(gfp.get(), vbrQuality.floatValue);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%g) failed", vbrQuality.floatValue);
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
         }
@@ -247,10 +261,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_brate(gfp.get(), vbrMin.intValue);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", vbrMin.intValue);
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
 
@@ -258,10 +273,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed",
                              lame_get_brate(gfp.get()));
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
         }
@@ -272,10 +288,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_max_bitrate_kbps(%d) failed", bitrate);
-                if (error)
+                if (error) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
+                }
                 return NO;
             }
         }
@@ -283,21 +300,23 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     SFBAudioEncodingSettingsValue stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
     if (stereoMode != nil) {
-        if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono)
+        if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono) {
             result = lame_set_mode(gfp.get(), MONO);
-        else if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo)
+        } else if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo) {
             result = lame_set_mode(gfp.get(), STEREO);
-        else if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeJointStereo)
+        } else if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeJointStereo) {
             result = lame_set_mode(gfp.get(), JOINT_STEREO);
-        else
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring unknown LAME stereo mode: %{public}@", stereoMode);
+        }
 
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_mode failed");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
+            }
             return NO;
         }
     }
@@ -306,10 +325,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -318,15 +338,17 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     result = lame_init_params(gfp.get());
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_init_params failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
-    if (![self writeID3v2TagReturningError:error])
+    if (![self writeID3v2TagReturningError:error]) {
         return NO;
+    }
 
     AudioStreamBasicDescription outputStreamDescription{};
     outputStreamDescription.mFormatID = kAudioFormatMPEGLayer3;
@@ -359,17 +381,17 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength)
-        frameLength = buffer.frameLength;
-
-    if (frameLength == 0)
+    frameLength = std::min(frameLength, buffer.frameLength);
+    if (frameLength == 0) {
         return YES;
+    }
 
     const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
     auto buf = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
@@ -378,17 +400,19 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
           static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_buffer_interleaved_ieee_float failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
     NSInteger bytesWritten;
     if (![_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] ||
-        bytesWritten != result)
+        bytesWritten != result) {
         return NO;
+    }
 
     _framePosition += frameLength;
 
@@ -396,14 +420,17 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)finishEncodingReturningError:(NSError **)error {
-    if (![self flushEncoderReturningError:error])
+    if (![self flushEncoderReturningError:error]) {
         return NO;
+    }
 
-    if (![self writeID3v1TagReturningError:error])
+    if (![self writeID3v1TagReturningError:error]) {
         return NO;
+    }
 
-    if (![self writeXingHeaderReturningError:error])
+    if (![self writeXingHeaderReturningError:error]) {
         return NO;
+    }
 
     return YES;
 }
@@ -412,18 +439,20 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     const size_t bufsize = 7200;
     auto buf = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return NO;
     }
 
     auto result = lame_encode_flush(_gfp.get(), buf.get(), bufsize);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_flush failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 
@@ -435,8 +464,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+            }
             return NO;
         }
 
@@ -447,8 +477,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
-            bytesWritten != static_cast<NSInteger>(result))
+            bytesWritten != static_cast<NSInteger>(result)) {
             return NO;
+        }
     }
 
     return YES;
@@ -459,8 +490,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+            }
             return NO;
         }
 
@@ -471,8 +503,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
-            bytesWritten != static_cast<NSInteger>(result))
+            bytesWritten != static_cast<NSInteger>(result)) {
             return NO;
+        }
     }
 
     _id3v2TagSize = static_cast<NSInteger>(bufsize);
@@ -485,23 +518,26 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+            }
             return NO;
         }
 
         auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
 
-        if (![_outputSource seekToOffset:_id3v2TagSize error:error])
+        if (![_outputSource seekToOffset:_id3v2TagSize error:error]) {
             return NO;
+        }
 
         NSInteger bytesWritten;
         if (![_outputSource writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
-            bytesWritten != static_cast<NSInteger>(result))
+            bytesWritten != static_cast<NSInteger>(result)) {
             return NO;
+        }
     }
 
     return YES;

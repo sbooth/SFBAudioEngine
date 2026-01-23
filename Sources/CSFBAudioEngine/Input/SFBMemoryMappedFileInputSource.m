@@ -13,8 +13,9 @@
     NSParameterAssert(url.isFileURL);
 
     NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedAlways error:error];
-    if (data == nil)
+    if (data == nil) {
         return nil;
+    }
 
     return [super initWithData:data url:url];
 }

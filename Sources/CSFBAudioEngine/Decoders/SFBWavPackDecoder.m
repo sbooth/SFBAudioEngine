@@ -45,8 +45,9 @@ static int32_t read_bytes_callback(void *id, void *data, int32_t bcount) {
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:data length:bcount bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:data length:bcount bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return (int32_t)bytesRead;
 }
 
@@ -56,8 +57,9 @@ static int64_t get_pos_callback(void *id) {
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return 0;
+    }
     return offset;
 }
 
@@ -73,8 +75,9 @@ static int set_pos_rel_callback(void *id, int64_t delta, int mode) {
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
-    if (!decoder->_inputSource.supportsSeeking)
+    if (!decoder->_inputSource.supportsSeeking) {
         return -1;
+    }
 
     // Adjust offset as required
     NSInteger offset = delta;
@@ -84,14 +87,16 @@ static int set_pos_rel_callback(void *id, int64_t delta, int mode) {
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([decoder->_inputSource getLength:&inputSourceLength error:nil])
+        if ([decoder->_inputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
@@ -107,15 +112,18 @@ static int push_back_byte_callback(void *id, int c) {
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
-    if (!decoder->_inputSource.supportsSeeking)
+    if (!decoder->_inputSource.supportsSeeking) {
         return EOF;
+    }
 
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil] || offset < 1)
+    if (![decoder->_inputSource getOffset:&offset error:nil] || offset < 1) {
         return EOF;
+    }
 
-    if (![decoder->_inputSource seekToOffset:(offset - 1) error:nil])
+    if (![decoder->_inputSource seekToOffset:(offset - 1) error:nil]) {
         return EOF;
+    }
 
     return c;
 }
@@ -126,8 +134,9 @@ static int64_t get_length_callback(void *id) {
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
     NSInteger length;
-    if (![decoder->_inputSource getLength:&length error:nil])
+    if (![decoder->_inputSource getLength:&length error:nil]) {
         return -1;
+    }
     return length;
 }
 
@@ -173,13 +182,15 @@ static int can_seek_callback(void *id) {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBWavPackDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isWavPackHeader])
+    if ([header isWavPackHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -189,8 +200,9 @@ static int can_seek_callback(void *id) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _streamReader.read_bytes = read_bytes_callback;
     _streamReader.get_pos = get_pos_callback;
@@ -207,7 +219,7 @@ static int can_seek_callback(void *id) {
                                     OPEN_WVC | OPEN_NORMALIZE /* | OPEN_DSD_NATIVE*/, 0);
     if (!_wpc) {
         os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @""), @{
@@ -216,6 +228,7 @@ static int can_seek_callback(void *id) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -234,10 +247,11 @@ static int can_seek_callback(void *id) {
         UInt32 propertySize = sizeof(tag);
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof(layout), &layout,
                                                  &propertySize, &tag);
-        if (result == noErr)
+        if (result == noErr) {
             channelLayout = [[AVAudioChannelLayout alloc] initWithLayoutTag:tag];
-        else
+        } else {
             channelLayout = [AVAudioChannelLayout layoutWithLayout:&layout];
+        }
     }
 
     // Fall back on the WavPack channel identities
@@ -342,8 +356,9 @@ static int can_seek_callback(void *id) {
               kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
         // Align high because Apple's AudioConverter doesn't handle low alignment
-        if (WavpackGetBitsPerSample(_wpc) != 32)
+        if (WavpackGetBitsPerSample(_wpc) != 32) {
             processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+        }
 
         processingStreamDescription.mSampleRate = WavpackGetSampleRate(_wpc);
         processingStreamDescription.mChannelsPerFrame = (UInt32)WavpackGetNumChannels(_wpc);
@@ -398,8 +413,9 @@ static int can_seek_callback(void *id) {
         WavpackCloseFile(_wpc);
         _wpc = NULL;
 
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
 
         return NO;
     }
@@ -439,11 +455,10 @@ static int can_seek_callback(void *id) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
-        frameLength = buffer.frameCapacity;
-
-    if (frameLength == 0)
+    frameLength = MIN(frameLength, buffer.frameCapacity);
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
@@ -452,8 +467,9 @@ static int can_seek_callback(void *id) {
         // Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
         uint32_t samplesRead = WavpackUnpackSamples(_wpc, _buffer, framesToRead);
 
-        if (samplesRead == 0)
+        if (samplesRead == 0) {
             break;
+        }
 
         // FIXME: What is the best way to detect a decoding error here?
         // The documentation states:
@@ -543,10 +559,11 @@ static int can_seek_callback(void *id) {
 
     if (!WavpackSeekSample64(_wpc, frame)) {
         os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 

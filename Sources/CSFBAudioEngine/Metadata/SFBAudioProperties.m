@@ -24,8 +24,9 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate = @"Bitrate";
 @implementation SFBAudioProperties
 
 - (instancetype)init {
-    if ((self = [super init]))
+    if ((self = [super init])) {
         _properties = [NSDictionary dictionary];
+    }
     return self;
 }
 

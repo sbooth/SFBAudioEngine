@@ -26,8 +26,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBAudioExporterErrorCodeFileFormatNotSupported:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The file's format is not supported.", @"");
+                                              }
                                               break;
                                           }
 
@@ -40,8 +41,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
     NSParameterAssert(targetURL != nil);
 
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
-    if (!decoder)
+    if (!decoder) {
         return NO;
+    }
     return [self exportFromDecoder:decoder toURL:targetURL error:error];
 }
 
@@ -57,15 +59,16 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 #endif
     };
 
-    if (!decoder.isOpen && ![decoder openReturningError:error])
+    if (!decoder.isOpen && ![decoder openReturningError:error]) {
         return NO;
+    }
 
     AVAudioFormat *processingFormat = decoder.processingFormat.standardEquivalent;
 
     AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                   toFormat:processingFormat];
     if (!converter) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioExporterErrorDomain, SFBAudioExporterErrorCodeFileFormatNotSupported,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -73,6 +76,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
                             NSLocalizedString(@"The file's format is not supported for export.", @"")
                   },
                   SFBLocalizedNameForURL(decoder.inputSource.url));
+        }
         return NO;
     }
 
@@ -81,8 +85,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
                                                      commonFormat:processingFormat.commonFormat
                                                       interleaved:processingFormat.interleaved
                                                             error:error];
-    if (!outputFile)
+    if (!outputFile) {
         return NO;
+    }
 
     AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat
                                                                    frameCapacity:BUFFER_SIZE_FRAMES];
@@ -120,8 +125,9 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
         // Verify decoding was successful
         if (!decodeResult) {
             os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
-            if (error)
+            if (error) {
                 *error = decodeError;
+            }
             deleteOutputFile();
             return NO;
         }
@@ -129,19 +135,22 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
         // Check conversion status
         if (status == AVAudioConverterOutputStatus_Error) {
             os_log_error(OS_LOG_DEFAULT, "Error converting PCM audio: %{public}@", convertError);
-            if (error)
+            if (error) {
                 *error = convertError;
+            }
             deleteOutputFile();
             return NO;
-        } else if (status == AVAudioConverterOutputStatus_EndOfStream) {
+        }
+        if (status == AVAudioConverterOutputStatus_EndOfStream) {
             break;
         }
 
         // Write converted data to the output file
         if (![outputFile writeFromBuffer:outputBuffer error:&writeError]) {
             os_log_error(OS_LOG_DEFAULT, "Error writing audio: %{public}@", writeError);
-            if (error)
+            if (error) {
                 *error = writeError;
+            }
             deleteOutputFile();
             return NO;
         }

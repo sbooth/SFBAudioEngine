@@ -28,18 +28,21 @@ static void SFBCreateInputSourceLog(void) {
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBInputSourceErrorCodeFileNotFound:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The requested file was not found.", @"");
+                                              }
                                               break;
 
                                           case SFBInputSourceErrorCodeInputOutput:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"An input/output error occurred.", @"");
+                                              }
                                               break;
 
                                           case SFBInputSourceErrorCodeNotSeekable:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The input does not support seeking.", @"");
+                                              }
                                               break;
                                           }
 
@@ -55,10 +58,12 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(url != nil);
     NSParameterAssert(url.isFileURL);
 
-    if (flags & SFBInputSourceFlagsMemoryMapFiles)
+    if (flags & SFBInputSourceFlagsMemoryMapFiles) {
         return [[SFBMemoryMappedFileInputSource alloc] initWithURL:url error:error];
-    if (flags & SFBInputSourceFlagsLoadFilesInMemory)
+    }
+    if (flags & SFBInputSourceFlagsLoadFilesInMemory) {
         return [[SFBFileContentsInputSource alloc] initWithContentsOfURL:url error:error];
+    }
     return [[SFBFileInputSource alloc] initWithURL:url];
 }
 
@@ -71,8 +76,9 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-    if (data == nil)
+    if (data == nil) {
         return nil;
+    }
     return [[SFBDataInputSource alloc] initWithData:data];
 }
 
@@ -80,20 +86,23 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-    if (data == nil)
+    if (data == nil) {
         return nil;
+    }
     return [[SFBDataInputSource alloc] initWithData:data];
 }
 
 - (instancetype)initWithURL:(NSURL *)url {
-    if ((self = [super init]))
+    if ((self = [super init])) {
         _url = url;
+    }
     return self;
 }
 
 - (void)dealloc {
-    if (self.isOpen)
+    if (self.isOpen) {
         [self closeReturningError:nil];
+    }
 }
 
 - (BOOL)openReturningError:(NSError **)error {
@@ -137,11 +146,11 @@ static void SFBCreateInputSourceLog(void) {
 }
 
 - (NSString *)description {
-    if (_url)
+    if (_url) {
         return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self,
                                           [[NSFileManager defaultManager] displayNameAtPath:_url.path]];
-    else
-        return [NSString stringWithFormat:@"<%@ %p>", [self class], self];
+    }
+    return [NSString stringWithFormat:@"<%@ %p>", [self class], self];
 }
 
 @end
@@ -191,24 +200,27 @@ static void SFBCreateInputSourceLog(void) {
 
 - (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error {
     NSParameterAssert(ui16 != nil);
-    if (![self readUInt16:ui16 error:error])
+    if (![self readUInt16:ui16 error:error]) {
         return NO;
+    }
     *ui16 = OSSwapHostToBigInt16(*ui16);
     return YES;
 }
 
 - (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error {
     NSParameterAssert(ui32 != nil);
-    if (![self readUInt32:ui32 error:error])
+    if (![self readUInt32:ui32 error:error]) {
         return NO;
+    }
     *ui32 = OSSwapHostToBigInt32(*ui32);
     return YES;
 }
 
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error {
     NSParameterAssert(ui64 != nil);
-    if (![self readUInt64:ui64 error:error])
+    if (![self readUInt64:ui64 error:error]) {
         return NO;
+    }
     *ui64 = OSSwapHostToBigInt64(*ui64);
     return YES;
 }
@@ -219,24 +231,27 @@ static void SFBCreateInputSourceLog(void) {
 
 - (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error {
     NSParameterAssert(ui16 != nil);
-    if (![self readUInt16:ui16 error:error])
+    if (![self readUInt16:ui16 error:error]) {
         return NO;
+    }
     *ui16 = OSSwapHostToLittleInt16(*ui16);
     return YES;
 }
 
 - (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error {
     NSParameterAssert(ui32 != nil);
-    if (![self readUInt32:ui32 error:error])
+    if (![self readUInt32:ui32 error:error]) {
         return NO;
+    }
     *ui32 = OSSwapHostToLittleInt32(*ui32);
     return YES;
 }
 
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error {
     NSParameterAssert(ui64 != nil);
-    if (![self readUInt64:ui64 error:error])
+    if (![self readUInt64:ui64 error:error]) {
         return NO;
+    }
     *ui64 = OSSwapHostToLittleInt64(*ui64);
     return YES;
 }
@@ -246,13 +261,15 @@ static void SFBCreateInputSourceLog(void) {
 @implementation SFBInputSource (SFBDataReading)
 
 - (NSData *)readDataOfLength:(NSUInteger)length error:(NSError **)error {
-    if (length == 0)
+    if (length == 0) {
         return [NSData data];
+    }
 
     void *buf = malloc(length);
     if (!buf) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
         return nil;
     }
 
@@ -273,44 +290,52 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(length > 0);
 
     if (!self.supportsSeeking) {
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBInputSourceErrorDomain
                                          code:SFBInputSourceErrorCodeNotSeekable
                                      userInfo:@{NSURLErrorKey : _url}];
+        }
         return nil;
     }
 
     NSInteger originalOffset;
-    if (![self getOffset:&originalOffset error:error])
+    if (![self getOffset:&originalOffset error:error]) {
         return nil;
+    }
 
-    if (![self seekToOffset:0 error:error])
+    if (![self seekToOffset:0 error:error]) {
         return nil;
+    }
 
     if (skipID3v2Tag) {
         NSInteger offset = 0;
 
         // Attempt to detect and minimally parse an ID3v2 tag header
         NSData *data = [self readDataOfLength:SFBID3v2HeaderSize error:error];
-        if ([data isID3v2Header])
+        if ([data isID3v2Header]) {
             offset = [data id3v2TagTotalSize];
+        }
 
-        if (![self seekToOffset:offset error:error])
+        if (![self seekToOffset:offset error:error]) {
             return nil;
+        }
     }
 
     NSData *data = [self readDataOfLength:length error:error];
-    if (!data)
-        return nil;
-
-    if (data.length < length) {
-        if (error)
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : _url}];
+    if (!data) {
         return nil;
     }
 
-    if (![self seekToOffset:originalOffset error:error])
+    if (data.length < length) {
+        if (error) {
+            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : _url}];
+        }
         return nil;
+    }
+
+    if (![self seekToOffset:originalOffset error:error]) {
+        return nil;
+    }
 
     return data;
 }

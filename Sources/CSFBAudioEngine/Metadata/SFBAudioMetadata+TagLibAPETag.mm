@@ -12,86 +12,89 @@
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag {
     NSParameterAssert(tag != nil);
 
-    if (tag->isEmpty())
+    if (tag->isEmpty()) {
         return;
+    }
 
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 
     for (auto iterator : tag->itemListMap()) {
         auto item = iterator.second;
 
-        if (item.isEmpty())
+        if (item.isEmpty()) {
             continue;
+        }
 
         if (TagLib::APE::Item::Text == item.type()) {
             NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
             NSString *value = [NSString stringWithUTF8String:item.toString().toCString(true)];
 
-            if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame)
+            if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame) {
                 self.albumTitle = value;
-            else if ([key caseInsensitiveCompare:@"ARTIST"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"ARTIST"] == NSOrderedSame) {
                 self.artist = value;
-            else if ([key caseInsensitiveCompare:@"ALBUMARTIST"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"ALBUMARTIST"] == NSOrderedSame) {
                 self.albumArtist = value;
-            else if ([key caseInsensitiveCompare:@"COMPOSER"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"COMPOSER"] == NSOrderedSame) {
                 self.composer = value;
-            else if ([key caseInsensitiveCompare:@"GENRE"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"GENRE"] == NSOrderedSame) {
                 self.genre = value;
-            else if ([key caseInsensitiveCompare:@"DATE"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"DATE"] == NSOrderedSame) {
                 self.releaseDate = value;
-            else if ([key caseInsensitiveCompare:@"DESCRIPTION"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"DESCRIPTION"] == NSOrderedSame) {
                 self.comment = value;
-            else if ([key caseInsensitiveCompare:@"TITLE"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"TITLE"] == NSOrderedSame) {
                 self.title = value;
-            else if ([key caseInsensitiveCompare:@"TRACKNUMBER"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"TRACKNUMBER"] == NSOrderedSame) {
                 self.trackNumber = @(value.integerValue);
-            else if ([key caseInsensitiveCompare:@"TRACKTOTAL"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"TRACKTOTAL"] == NSOrderedSame) {
                 self.trackTotal = @(value.integerValue);
-            else if ([key caseInsensitiveCompare:@"COMPILATION"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"COMPILATION"] == NSOrderedSame) {
                 self.compilation = @(value.boolValue);
-            else if ([key caseInsensitiveCompare:@"DISCNUMBER"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"DISCNUMBER"] == NSOrderedSame) {
                 self.discNumber = @(value.integerValue);
-            else if ([key caseInsensitiveCompare:@"DISCTOTAL"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"DISCTOTAL"] == NSOrderedSame) {
                 self.discTotal = @(value.integerValue);
-            else if ([key caseInsensitiveCompare:@"LYRICS"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"LYRICS"] == NSOrderedSame) {
                 self.lyrics = value;
-            else if ([key caseInsensitiveCompare:@"BPM"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"BPM"] == NSOrderedSame) {
                 self.bpm = @(value.integerValue);
-            else if ([key caseInsensitiveCompare:@"RATING"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"RATING"] == NSOrderedSame) {
                 self.rating = @(value.integerValue);
-            else if ([key caseInsensitiveCompare:@"ISRC"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"ISRC"] == NSOrderedSame) {
                 self.isrc = value;
-            else if ([key caseInsensitiveCompare:@"MCN"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"MCN"] == NSOrderedSame) {
                 self.mcn = value;
-            else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_ALBUMID"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_ALBUMID"] == NSOrderedSame) {
                 self.musicBrainzReleaseID = value;
-            else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_TRACKID"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_TRACKID"] == NSOrderedSame) {
                 self.musicBrainzRecordingID = value;
-            else if ([key caseInsensitiveCompare:@"TITLESORT"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"TITLESORT"] == NSOrderedSame) {
                 self.titleSortOrder = value;
-            else if ([key caseInsensitiveCompare:@"ALBUMTITLESORT"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"ALBUMTITLESORT"] == NSOrderedSame) {
                 self.albumTitleSortOrder = value;
-            else if ([key caseInsensitiveCompare:@"ARTISTSORT"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"ARTISTSORT"] == NSOrderedSame) {
                 self.artistSortOrder = value;
-            else if ([key caseInsensitiveCompare:@"ALBUMARTISTSORT"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"ALBUMARTISTSORT"] == NSOrderedSame) {
                 self.albumArtistSortOrder = value;
-            else if ([key caseInsensitiveCompare:@"COMPOSERSORT"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"COMPOSERSORT"] == NSOrderedSame) {
                 self.composerSortOrder = value;
-            else if ([key caseInsensitiveCompare:@"GROUPING"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"GROUPING"] == NSOrderedSame) {
                 self.grouping = value;
-            else if ([key caseInsensitiveCompare:@"REPLAYGAIN_REFERENCE_LOUDNESS"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_REFERENCE_LOUDNESS"] == NSOrderedSame) {
                 self.replayGainReferenceLoudness = @(value.doubleValue);
-            else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_GAIN"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_GAIN"] == NSOrderedSame) {
                 self.replayGainTrackGain = @(value.doubleValue);
-            else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_PEAK"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_PEAK"] == NSOrderedSame) {
                 self.replayGainTrackPeak = @(value.doubleValue);
-            else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_GAIN"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_GAIN"] == NSOrderedSame) {
                 self.replayGainAlbumGain = @(value.doubleValue);
-            else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame)
+            } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
                 self.replayGainAlbumPeak = @(value.doubleValue);
-            // Put all unknown tags into the additional metadata
-            else
+            } else {
+                // Put all unknown tags into the additional metadata
                 [additionalMetadata setObject:value forKey:key];
+            }
         } else if (TagLib::APE::Item::Binary == item.type()) {
             NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
 
@@ -127,8 +130,9 @@
         }
     }
 
-    if (additionalMetadata.count)
+    if (additionalMetadata.count) {
         self.additionalMetadata = additionalMetadata;
+    }
 }
 
 @end
@@ -142,8 +146,9 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
     // Remove the existing comment with this name
     tag->removeItem(key);
 
-    if (value)
+    if (value) {
         tag->addValue(key, TagLib::StringFromNSString(value));
+    }
 }
 
 void SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
@@ -157,10 +162,11 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    if (value == nil)
+    if (value == nil) {
         SetAPETag(tag, key, nil);
-    else
+    } else {
         SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
+    }
 }
 
 void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber *value, NSString *format = nil) {
@@ -207,8 +213,9 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
     if (additionalMetadata) {
-        for (NSString *key in additionalMetadata)
+        for (NSString *key in additionalMetadata) {
             SetAPETag(tag, key.UTF8String, additionalMetadata[key]);
+        }
     }
 
     // ReplayGain info
@@ -229,17 +236,19 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
                 SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {
                 TagLib::ByteVector data;
 
-                if (attachedPicture.pictureDescription)
+                if (attachedPicture.pictureDescription) {
                     data.append(
                           TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
+                }
                 data.append('\0');
                 data.append(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                                static_cast<unsigned int>(attachedPicture.imageData.length)));
 
-                if (SFBAttachedPictureTypeFrontCover == attachedPicture.pictureType)
+                if (SFBAttachedPictureTypeFrontCover == attachedPicture.pictureType) {
                     tag->setData("Cover Art (Front)", data);
-                else if (SFBAttachedPictureTypeBackCover == attachedPicture.pictureType)
+                } else if (SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {
                     tag->setData("Cover Art (Back)", data);
+                }
             }
         }
     }
