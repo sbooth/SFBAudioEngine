@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/AVFAudioExtensions",
       "state" : {
-        "revision" : "16b850dd542bbe8001b02596595309c8171f002d",
-        "version" : "0.4.2"
+        "revision" : "541d8617956cc46af45c2c5ae3f7c23439a2f666",
+        "version" : "0.5.0"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXCoreAudio",
       "state" : {
-        "revision" : "e5795a1600e5d1fd09b7b931247b4e961181d980",
-        "version" : "0.5.0"
+        "revision" : "1af4736ed771f9a6f37be42600e1bfe5208eb330",
+        "version" : "0.5.1"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXRingBuffer",
       "state" : {
-        "revision" : "1577c5e2afc15c76c329eeb4210447d077c75e07",
-        "version" : "0.5.1"
+        "revision" : "89fb60fcba8b96367bdbb9265e50ea08ed5ba194",
+        "version" : "0.5.2"
       }
     },
     {
@@ -77,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXUnfairLock",
       "state" : {
-        "revision" : "2d4662d15f63178229948f8624171a9ac9df865f",
-        "version" : "0.1.0"
+        "revision" : "ba2c8cb1df213260807d15620e67785ca7e5f924",
+        "version" : "0.2.0"
       }
     },
     {

@@ -6,21 +6,22 @@
 
 #import "SFBErrorWithLocalizedDescription.h"
 
-NSError * SFBErrorWithLocalizedDescription(NSErrorDomain domain, NSInteger code, NSString *format, NSDictionary *userInfo, ...)
-{
-	NSCParameterAssert(domain != nil);
-	NSCParameterAssert(format != nil);
+NSError *SFBErrorWithLocalizedDescription(NSErrorDomain domain, NSInteger code, NSString *format,
+                                          NSDictionary *userInfo, ...) {
+    NSCParameterAssert(domain != nil);
+    NSCParameterAssert(format != nil);
 
-	va_list ap;
-	va_start(ap, userInfo);
-	NSString *description = [[NSString alloc] initWithFormat:format locale:[NSLocale currentLocale] arguments:ap];
-	va_end(ap);
+    va_list ap;
+    va_start(ap, userInfo);
+    NSString *description = [[NSString alloc] initWithFormat:format locale:[NSLocale currentLocale] arguments:ap];
+    va_end(ap);
 
-	NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
-	[dictionary setObject:description forKey:NSLocalizedDescriptionKey];
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+    [dictionary setObject:description forKey:NSLocalizedDescriptionKey];
 
-	if(userInfo)
-		[dictionary addEntriesFromDictionary:userInfo];
+    if (userInfo) {
+        [dictionary addEntriesFromDictionary:userInfo];
+    }
 
-	return [NSError errorWithDomain:domain code:code userInfo:dictionary];
+    return [NSError errorWithDomain:domain code:code userInfo:dictionary];
 }

@@ -6,12 +6,13 @@
 
 #import "SFBLocalizedNameForURL.h"
 
-NSString * SFBLocalizedNameForURL(NSURL *url)
-{
-	if(!url)
-		return nil;
-	NSString *localizedName = nil;
-	if(![url getResourceValue:&localizedName forKey:NSURLLocalizedNameKey error:nil])
-		return url.lastPathComponent;
-	return localizedName ?: url.lastPathComponent;
+NSString *SFBLocalizedNameForURL(NSURL *url) {
+    if (!url) {
+        return nil;
+    }
+    NSString *localizedName = nil;
+    if (![url getResourceValue:&localizedName forKey:NSURLLocalizedNameKey error:nil]) {
+        return url.lastPathComponent;
+    }
+    return localizedName ?: url.lastPathComponent;
 }
