@@ -275,9 +275,9 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
         flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
 
 #if false
-		// Some formats may not know the exact number of frames in advance
-		// without processing the entire file, which is a potentially slow operation
-		frameLength_.store(mDecoder.framePosition, std::memory_order_release);
+        // Some formats may not know the exact number of frames in advance
+        // without processing the entire file, which is a potentially slow operation
+        frameLength_.store(mDecoder.framePosition, std::memory_order_release);
 #endif /* false */
 
         buffer.frameLength = 0;
@@ -1592,7 +1592,7 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
         return processDecodingErrorEvent();
 
     default:
-        //			assert(false && "Unknown decoding event command");
+        //        assert(false && "Unknown decoding event command");
         os_log_error(log_, "Unknown decoding event command: %u", command);
         return false;
     }
@@ -1756,7 +1756,7 @@ bool sfb::AudioPlayer::processRenderingEvent(RenderingEventCommand command) noex
         return processFramesRenderedEvent();
 
     default:
-        //			assert(false && "Unknown rendering event command");
+        //        assert(false && "Unknown rendering event command");
         os_log_error(log_, "Unknown rendering event command: %u", command);
         return false;
     }

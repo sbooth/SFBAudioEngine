@@ -139,7 +139,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
         return NO;
     }
 
-    //	WavpackSetFileInformation(_wpc, NULL, WP_FORMAT_WAV);
+    //    WavpackSetFileInformation(_wpc, NULL, WP_FORMAT_WAV);
 
     _config.sample_rate = (int)_processingFormat.sampleRate;
     _config.num_channels = (int)_processingFormat.channelCount;

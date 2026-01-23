@@ -171,53 +171,53 @@ struct DSDSoundDataChunk : public DSDIFFChunk {};
 
 // 'DST ', 'DSTI', 'COMT', 'DIIN', 'MANF' are not handled
 
-//	// 'DST ' in 'FRM8'
-//	class DSTSoundDataChunk : public DSDIFFChunk
-//	{};
+//// 'DST ' in 'FRM8'
+// class DSTSoundDataChunk : public DSDIFFChunk
+//{};
 //
-//	// 'FRTE' in 'DST '
-//	class DSTFrameInformationChunk : public DSDIFFChunk
-//	{};
+//// 'FRTE' in 'DST '
+// class DSTFrameInformationChunk : public DSDIFFChunk
+//{};
 //
-//	// 'FRTE' in 'DST '
-//	class DSTFrameDataChunk : public DSDIFFChunk
-//	{};
+//// 'FRTE' in 'DST '
+// class DSTFrameDataChunk : public DSDIFFChunk
+//{};
 //
-//	// 'FRTE' in 'DST '
-//	class DSTFrameCRCChunk : public DSDIFFChunk
-//	{};
+//// 'FRTE' in 'DST '
+// class DSTFrameCRCChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DSTI' in 'FRM8'
-//	class DSTSoundIndexChunk : public DSDIFFChunk
-//	{};
+//// 'DSTI' in 'FRM8'
+// class DSTSoundIndexChunk : public DSDIFFChunk
+//{};
 //
-//	// 'COMT' in 'FRM8'
-//	class CommentsChunk : public DSDIFFChunk
-//	{};
+//// 'COMT' in 'FRM8'
+// class CommentsChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DIIN' in 'FRM8'
-//	class EditedMasterInformationChunk : public DSDIFFChunk
-//	{};
+//// 'DIIN' in 'FRM8'
+// class EditedMasterInformationChunk : public DSDIFFChunk
+//{};
 //
-//	// 'EMID' in 'DIIN'
-//	class EditedMasterIDChunk : public DSDIFFChunk
-//	{};
+//// 'EMID' in 'DIIN'
+// class EditedMasterIDChunk : public DSDIFFChunk
+//{};
 //
-//	// 'MARK' in 'DIIN'
-//	class MarkerChunk : public DSDIFFChunk
-//	{};
+//// 'MARK' in 'DIIN'
+// class MarkerChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DIAR' in 'DIIN'
-//	class ArtistChunk : public DSDIFFChunk
-//	{};
+//// 'DIAR' in 'DIIN'
+// class ArtistChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DITI' in 'DIIN'
-//	class TitleChunk : public DSDIFFChunk
-//	{};
+//// 'DITI' in 'DIIN'
+// class TitleChunk : public DSDIFFChunk
+//{};
 //
-//	// 'MANF' in 'FRM8'
-//	class ManufacturerSpecificChunk : public DSDIFFChunk
-//	{};
+//// 'MANF' in 'FRM8'
+// class ManufacturerSpecificChunk : public DSDIFFChunk
+//{};
 
 #pragma mark DSDIFF parsing
 

@@ -450,7 +450,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
-    //	NSParameterAssert(frame <= _totalFrames);
+    //    NSParameterAssert(frame <= _totalFrames);
 
     auto result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
 

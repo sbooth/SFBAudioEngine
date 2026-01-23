@@ -341,13 +341,13 @@ static int can_seek_callback(void *id) {
 
     // Floating-point and lossy files will be handed off in the canonical Core Audio format
     int mode = WavpackGetMode(_wpc);
-    //	int qmode = WavpackGetQualifyMode(_wpc);
+    //    int qmode = WavpackGetQualifyMode(_wpc);
     if (MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
         _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                              sampleRate:WavpackGetSampleRate(_wpc)
                                                             interleaved:NO
                                                           channelLayout:channelLayout];
-        //	} else if(qmode & QMODE_DSD_AUDIO) {
+        //    } else if(qmode & QMODE_DSD_AUDIO) {
     } else {
         AudioStreamBasicDescription processingStreamDescription = {0};
 
@@ -478,7 +478,7 @@ static int can_seek_callback(void *id) {
 
         // The samples returned are handled differently based on the file's mode
         int mode = WavpackGetMode(_wpc);
-        //		int qmode = WavpackGetQualifyMode(_wpc);
+        //        int qmode = WavpackGetQualifyMode(_wpc);
 
         // Floating point files require no special handling other than deinterleaving
         if (mode & MODE_FLOAT) {

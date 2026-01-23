@@ -60,28 +60,28 @@ static void vorbis_comment_init(char **comments, size_t *length, const char *ven
 #if 0
 static void vorbis_comment_add(char **comments, size_t *length, const char *tag, const char *val)
 {
-	char *p = *comments;
+    char *p = *comments;
 
-	size_t vendor_length = OSReadLittleInt32(p, 0);
-	size_t user_comment_list_length = OSReadLittleInt32(p, 4 + vendor_length);
+    size_t vendor_length = OSReadLittleInt32(p, 0);
+    size_t user_comment_list_length = OSReadLittleInt32(p, 4 + vendor_length);
 
-	size_t tag_len = (tag ? strlen(tag) : 0);
-	size_t val_len = strlen(val);
-	size_t len = (*length) + 4 + tag_len + val_len;
-	p = (char *)reallocf(p, len);
-	if(p == NULL) {
-		*comments = NULL;
-		*length = 0;
-		return;
-	}
+    size_t tag_len = (tag ? strlen(tag) : 0);
+    size_t val_len = strlen(val);
+    size_t len = (*length) + 4 + tag_len + val_len;
+    p = (char *)reallocf(p, len);
+    if(p == NULL) {
+        *comments = NULL;
+        *length = 0;
+        return;
+    }
 
-	OSWriteLittleInt32(p, *length, tag_len + val_len);  /* length of comment */
-	if(tag) memcpy(p + *length + 4, tag, tag_len);  /* comment */
-	memcpy(p + *length + 4 + tag_len, val, val_len);  /* comment */
-	OSWriteLittleInt32(p, 4 + vendor_length, user_comment_list_length + 1);
+    OSWriteLittleInt32(p, *length, tag_len + val_len);  /* length of comment */
+    if(tag) memcpy(p + *length + 4, tag, tag_len);  /* comment */
+    memcpy(p + *length + 4 + tag_len, val, val_len);  /* comment */
+    OSWriteLittleInt32(p, 4 + vendor_length, user_comment_list_length + 1);
 
-	*comments = p;
-	*length = len;
+    *comments = p;
+    *length = len;
 }
 #endif
 
@@ -158,10 +158,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    //	NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
-    //	NSAssert(_processingFormat.sampleRate >= 6000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
-    //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
-    //	NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
+    //    NSAssert(_processingFormat.sampleRate >= 6000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
+    //    NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
 
     if (![super openReturningError:error]) {
         return NO;

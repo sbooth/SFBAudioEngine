@@ -195,10 +195,15 @@ static void SndfileChannelMapWithChannelDescriptions(int *_Nonnull channel_map, 
             break;
 
             // WAVEFORMATEXTENSIBLE standard channels (in dwChannelMask order)
-            //			case kAudioChannelLabel_Left: 					channel_map[i] = SF_CHANNEL_MAP_FRONT_LEFT;
-            // break; 			case kAudioChannelLabel_Right: 					channel_map[i] =
-            // SF_CHANNEL_MAP_FRONT_RIGHT; break; 			case kAudioChannelLabel_Center: channel_map[i] =
-            // SF_CHANNEL_MAP_FRONT_CENTER; break;
+            //            case kAudioChannelLabel_Left:
+            //                channel_map[i] = SF_CHANNEL_MAP_FRONT_LEFT;
+            //                break;
+            //            case kAudioChannelLabel_Right:
+            //                channel_map[i] = SF_CHANNEL_MAP_FRONT_RIGHT;
+            //                break;
+            //            case kAudioChannelLabel_Center:
+            //                channel_map[i] = SF_CHANNEL_MAP_FRONT_CENTER;
+            //                break;
         case kAudioChannelLabel_LFEScreen:
             channel_map[i] = SF_CHANNEL_MAP_LFE;
             break;
@@ -529,8 +534,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     case SF_FORMAT_PCM_16:
     case SF_FORMAT_PCM_24:
     case SF_FORMAT_PCM_32:
-        //		case SF_FORMAT_FLOAT:
-        //		case SF_FORMAT_DOUBLE:
+        //    case SF_FORMAT_FLOAT:
+        //    case SF_FORMAT_DOUBLE:
     case SF_FORMAT_ALAC_16:
     case SF_FORMAT_ALAC_20:
     case SF_FORMAT_ALAC_24:
