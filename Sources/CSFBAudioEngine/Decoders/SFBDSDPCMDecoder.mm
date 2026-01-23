@@ -110,20 +110,21 @@ constexpr double htaps[HTAPS] = {
       1.249721855219005e-06,  2.166655190537392e-06,  1.930520892991082e-06,  1.319400334374195e-06,
       7.410039764949091e-07,  3.423230509967409e-07,  1.244182214744588e-07,  3.130441005359396e-08};
 
-static float ctables[CTABLES][256];
+float ctables[CTABLES][256];
 
 void dsd2pcm_precalc() noexcept {
-    int t, e, m, k;
+    int t;
+    int e;
+    int m;
+    int k;
     double acc;
     for (t = 0; t < CTABLES; ++t) {
-        k = HTAPS - t * 8;
-        if (k > 8) {
-            k = 8;
-        }
+        k = HTAPS - (t * 8);
+        k = std::min(k, 8);
         for (e = 0; e < 256; ++e) {
             acc = 0.0;
             for (m = 0; m < k; ++m) {
-                acc += (((e >> (7 - m)) & 1) * 2 - 1) * htaps[t * 8 + m];
+                acc += (((e >> (7 - m)) & 1) * 2 - 1) * htaps[(t * 8) + m];
             }
             ctables[CTABLES - 1 - t][e] = static_cast<float>(acc);
         }
@@ -198,13 +199,14 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
                        float *dst, ptrdiff_t dst_stride) noexcept {
     unsigned ffp;
     unsigned i;
-    unsigned bite1, bite2;
+    unsigned bite1;
+    unsigned bite2;
     unsigned char *p;
     double acc;
     ffp = ptr->fifopos;
     lsbf = lsbf ? 1 : 0;
     while (samples-- > 0) {
-        bite1 = *src & 0xFFu;
+        bite1 = *src & 0xFFU;
         if (lsbf) {
             bite1 = sBitReverseTable256[bite1];
         }
@@ -427,10 +429,7 @@ class DXD {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = std::min(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }
@@ -463,7 +462,7 @@ class DXD {
         AVAudioChannelCount channelCount = buffer.format.channelCount;
         bool isBigEndian = _buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-            const auto input = static_cast<const unsigned char *>(_buffer.data) + channel;
+            const auto *const input = static_cast<const unsigned char *>(_buffer.data) + channel;
             float *output = floatChannelData[channel];
             _context[channel].translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
             // Boost signal by 6 dBFS

@@ -247,10 +247,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength) {
-        frameLength = buffer.frameLength;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameLength);
     if (frameLength == 0) {
         return YES;
     }

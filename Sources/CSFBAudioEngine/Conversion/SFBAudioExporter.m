@@ -140,7 +140,8 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
             }
             deleteOutputFile();
             return NO;
-        } else if (status == AVAudioConverterOutputStatus_EndOfStream) {
+        }
+        if (status == AVAudioConverterOutputStatus_EndOfStream) {
             break;
         }
 

@@ -15,6 +15,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <vector>
 
 #import <CXXAudioToolbox/AudioFileWrapper.hpp>
@@ -105,7 +106,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
+        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
@@ -155,7 +156,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
+        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
@@ -209,17 +210,17 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // Core Audio supports a multitude of formats. This is not meant to be an exhaustive check but
     // just something quick to identify common file formats lacking a path extension or MIME type.
 
-    // M4A files
     if ([header isMPEG4Header]) {
+        // M4A files
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    // CAF files
     } else if ([header isCAFHeader]) {
+        // CAF files
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    // AIFF and AIFF-C files
     } else if ([header isAIFFHeader]) {
+        // AIFF and AIFF-C files
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    // WAVE files
     } else if ([header isWAVEHeader]) {
+        // WAVE files
         *formatIsSupported = SFBTernaryTruthValueTrue;
     }
 
@@ -353,11 +354,11 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
     // Tell the ExtAudioFile the format in which we'd like our data
 
-    // For Linear PCM formats leave the data untouched
     if (format.mFormatID == kAudioFormatLinearPCM) {
+        // For Linear PCM formats leave the data untouched
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
-    // For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
     } else if (format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
+        // For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
         AudioStreamBasicDescription asbd{};
 
         asbd.mFormatID = kAudioFormatLinearPCM;
@@ -485,10 +486,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = std::min(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         buffer.frameLength = 0;
         return YES;

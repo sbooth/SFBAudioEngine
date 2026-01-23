@@ -15,6 +15,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <cstdint>
 #import <map>
 #import <memory>
@@ -26,7 +27,7 @@ SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDe
 namespace {
 
 // Convert a four byte chunk ID to a uint32_t
-uint32_t bytesToID(char bytes[4]) noexcept {
+uint32_t bytesToID(const char bytes[4]) noexcept {
     auto one = bytes[0];
     auto two = bytes[1];
     auto three = bytes[2];
@@ -53,7 +54,7 @@ uint32_t bytesToID(char bytes[4]) noexcept {
         return 0;
     }
 
-    return static_cast<uint32_t>((one << 24u) | (two << 16u) | (three << 8u) | four);
+    return static_cast<uint32_t>((one << 24U) | (two << 16U) | (three << 8U) | four);
 }
 
 // Read an ID as a uint32_t, performing validation
@@ -673,7 +674,7 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
     return parseFormDSDChunk(inputSource, chunkID, chunkDataSize);
 }
 
-static NSError *createInvalidDSDIFFFileError(NSURL *url) {
+NSError *createInvalidDSDIFFFileError(NSURL *url) {
     return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
                                             NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""), @{
                                                 NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
@@ -781,7 +782,7 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
         for (auto channelID : channelsChunk->channelIDs_) {
             labels.push_back(channelIDToCoreAudioChannelLabel(channelID));
         }
-        channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:&labels[0]
+        channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels.data()
                                                                 count:(AVAudioChannelCount)labels.size()];
     }
 
@@ -863,10 +864,7 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
     buffer.packetCount = 0;
     buffer.byteLength = 0;
 
-    if (packetCount > buffer.packetCapacity) {
-        packetCount = buffer.packetCapacity;
-    }
-
+    packetCount = std::min(packetCount, buffer.packetCapacity);
     if (packetCount == 0) {
         return YES;
     }
@@ -881,7 +879,7 @@ static NSError *createInvalidDSDIFFFileError(NSURL *url) {
         // Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
         // a clustered frame (one channel byte per channel)
 
-        auto buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
+        auto *buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
         NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
         NSInteger bytesRead;

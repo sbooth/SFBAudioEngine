@@ -8,6 +8,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <memory>
 
 #import <tta-cpp/libtta.h>
@@ -195,10 +196,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength) {
-        frameLength = buffer.frameLength;
-    }
-
+    frameLength = std::min(frameLength, buffer.frameLength);
     if (frameLength == 0) {
         return YES;
     }

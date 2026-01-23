@@ -8,14 +8,15 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <exception>
 #import <memory>
 
 #define PLATFORM_APPLE
 
-#include <MAC/All.h>
-#include <MAC/IAPEIO.h>
-#include <MAC/MACLib.h>
+#import <MAC/All.h>
+#import <MAC/IAPEIO.h>
+#import <MAC/MACLib.h>
 
 #undef PLATFORM_APPLE
 
@@ -249,7 +250,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     try {
         int result;
-        auto compressor = CreateIAPECompress(&result);
+        auto *compressor = CreateIAPECompress(&result);
         if (!compressor) {
             os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
             if (error) {
@@ -343,10 +344,7 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength) {
-        frameLength = buffer.frameLength;
-    }
-
+    frameLength = std::min(frameLength, buffer.frameLength);
     if (frameLength == 0) {
         return YES;
     }

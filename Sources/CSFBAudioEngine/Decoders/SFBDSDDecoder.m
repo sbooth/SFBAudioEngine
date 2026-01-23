@@ -419,7 +419,8 @@ static NSMutableArray *_registeredSubclasses = nil;
         int b = ((SFBDSDDecoderSubclassInfo *)obj2).priority;
         if (a > b) {
             return NSOrderedAscending;
-        } else if (a < b) {
+        }
+        if (a < b) {
             return NSOrderedDescending;
         } else {
             return NSOrderedSame;

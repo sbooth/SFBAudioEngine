@@ -96,7 +96,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"FLAC" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties()) {
-            auto properties = file.audioProperties();
+            auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
             if (properties->bitsPerSample()) {
@@ -123,7 +123,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 
         // Add album art from FLAC picture metadata blocks (https://xiph.org/flac/format.html#metadata_block_picture)
         // This is in addition to any album art read from the ID3v2 tag or Xiph comment
-        for (auto iter : file.pictureList()) {
+        for (auto *iter : file.pictureList()) {
             NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
             NSString *description = nil;

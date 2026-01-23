@@ -129,23 +129,26 @@ const NSUInteger SFBWavPackDetectionSize = 4;
     // Frame sync
     if (bytes[0] != 0xff || (bytes[1] & 0xe0) != 0xe0) {
         return NO;
+    }
     // MPEG audio version ID
-    } else if ((bytes[1] & 0x18) == 0x08) {
+    if ((bytes[1] & 0x18) == 0x08) {
         return NO;
+    }
     // Layer description
-    } else if ((bytes[1] & 0x06) == 0) {
+    if ((bytes[1] & 0x06) == 0) {
         return NO;
+    }
     // Protection bit
     // Bitrate index
-    } else if ((bytes[2] & 0xf0) == 0xf0) {
+    if ((bytes[2] & 0xf0) == 0xf0) {
         return NO;
-    // Sampling rate frequency index
-    } else if ((bytes[2] & 0x0c) == 0x0c) {
-        return NO;
-    // Remainder of header bits ignored
-    } else {
-        return YES;
     }
+    // Sampling rate frequency index
+    if ((bytes[2] & 0x0c) == 0x0c) {
+        return NO;
+    }
+    // Remainder of header bits ignored
+    return YES;
 }
 
 - (BOOL)isMPEG4Header {

@@ -271,10 +271,7 @@ static opus_int64 tell_callback(void *stream) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }

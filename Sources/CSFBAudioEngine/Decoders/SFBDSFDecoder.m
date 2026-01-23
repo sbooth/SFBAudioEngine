@@ -31,7 +31,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     }
 
     *chunkID =
-          (uint32_t)((chunkIDBytes[0] << 24u) | (chunkIDBytes[1] << 16u) | (chunkIDBytes[2] << 8u) | chunkIDBytes[3]);
+          (uint32_t)((chunkIDBytes[0] << 24U) | (chunkIDBytes[1] << 16U) | (chunkIDBytes[2] << 8U) | chunkIDBytes[3]);
     return YES;
 }
 
@@ -50,7 +50,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
                                  NSInteger columns) {
     for (NSInteger i = 0; i < rows; ++i) {
         for (NSInteger j = 0; j < columns; ++j) {
-            B[j * rows + i] = A[i * columns + j];
+            B[(j * rows) + i] = A[(i * columns) + j];
         }
     }
 }
@@ -122,7 +122,9 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
         return NO;
     }
 
-    uint64_t chunkSize, fileSize, metadataOffset;
+    uint64_t chunkSize;
+    uint64_t fileSize;
+    uint64_t metadataOffset;
     // Unlike normal IFF, the chunkSize includes the size of the chunk ID and size
     if (![_inputSource readUInt64LittleEndian:&chunkSize error:nil] || chunkSize != 28) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected 'DSD ' chunk size: %llu", chunkSize);
@@ -165,9 +167,15 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
         return NO;
     }
 
-    uint32_t formatVersion, formatID, channelType, channelNum, samplingFrequency, bitsPerSample;
+    uint32_t formatVersion;
+    uint32_t formatID;
+    uint32_t channelType;
+    uint32_t channelNum;
+    uint32_t samplingFrequency;
+    uint32_t bitsPerSample;
     uint64_t sampleCount;
-    uint32_t blockSizePerChannel, reserved;
+    uint32_t blockSizePerChannel;
+    uint32_t reserved;
 
     if (![_inputSource readUInt32LittleEndian:&formatVersion error:nil] || formatVersion != 1) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected format version in 'fmt ': %u", formatVersion);
@@ -361,10 +369,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     buffer.packetCount = 0;
     buffer.byteLength = 0;
 
-    if (packetCount > buffer.packetCapacity) {
-        packetCount = buffer.packetCapacity;
-    }
-
+    packetCount = MIN(packetCount, buffer.packetCapacity);
     if (packetCount == 0) {
         return YES;
     }

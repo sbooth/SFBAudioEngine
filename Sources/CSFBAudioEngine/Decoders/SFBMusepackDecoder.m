@@ -282,10 +282,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }
@@ -330,8 +327,8 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 #error "Fixed point not yet supported"
 #else
         // Clip the samples to [-1, 1)
-        float minValue = -1.f;
-        float maxValue = 8388607.f / 8388608.f;
+        float minValue = -1.F;
+        float maxValue = 8388607.F / 8388608.F;
 
         AVAudioChannelCount channelCount = _buffer.format.channelCount;
         vDSP_vclip((float *)frame.buffer, 1, &minValue, &maxValue, (float *)frame.buffer, 1,

@@ -91,7 +91,7 @@ T **allocateContiguous2DArray(size_t rows, size_t cols) noexcept {
     }
     T *tmp = reinterpret_cast<T *>(result + rows);
     for (size_t i = 0; i < rows; ++i) {
-        result[i] = tmp + i * cols;
+        result[i] = tmp + (i * cols);
     }
     return result;
 }
@@ -134,7 +134,7 @@ class VariableLengthInput {
             return false;
         }
 
-        auto byteBuffer = new (std::nothrow) unsigned char[size];
+        auto *byteBuffer = new (std::nothrow) unsigned char[size];
         if (!byteBuffer) {
             return false;
         }
@@ -462,9 +462,9 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         return NO;
     }
 
-    if ((_bitsPerSample == 8 && !(_fileType == fileTypeUInt8 || _fileType == fileTypeSInt8)) ||
-        (_bitsPerSample == 16 && !(_fileType == fileTypeUInt16BE || _fileType == fileTypeUInt16LE ||
-                                   _fileType == fileTypeSInt16BE || _fileType == fileTypeSInt16LE))) {
+    if ((_bitsPerSample == 8 && _fileType != fileTypeUInt8 && _fileType != fileTypeSInt8) ||
+        (_bitsPerSample == 16 && _fileType != fileTypeUInt16BE && _fileType != fileTypeUInt16LE &&
+         _fileType != fileTypeSInt16BE && _fileType != fileTypeSInt16LE)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample,
                      _fileType);
         if (error) {
@@ -660,10 +660,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = std::min(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }
@@ -982,7 +979,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         _maxLPC = defaultMaxLPC;
     }
 
-    _wrap = std::max(defaultWrap, static_cast<int>(_maxLPC));
+    _wrap = std::max(defaultWrap, _maxLPC);
 
     if (_version > 1) {
         constexpr auto v2LPCQuantOffset = (1 << parameterQLPC);
@@ -1295,8 +1292,10 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         case functionDiff2:
         case functionDiff3:
         case functionQLPC: {
-            int32_t chanOffset, *chanBuffer = _buffer[chan];
-            int resn = 0, lpc;
+            int32_t chanOffset;
+            int32_t *chanBuffer = _buffer[chan];
+            int resn = 0;
+            int lpc;
 
             if (cmd != functionZero) {
                 if (!_input.getRiceGolombCode(resn, parameterEnergy)) {
@@ -1386,7 +1385,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                         }
                         return NO;
                     }
-                    chanBuffer[i] = var + 3 * (chanBuffer[i - 1] - chanBuffer[i - 2]) + chanBuffer[i - 3];
+                    chanBuffer[i] = var + (3 * (chanBuffer[i - 1] - chanBuffer[i - 2])) + chanBuffer[i - 3];
                 }
                 break;
             case functionQLPC:
@@ -1460,12 +1459,12 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
             }
 
             if (chan == _channelCount - 1) {
-                auto abl = _frameBuffer.audioBufferList;
+                const auto *abl = _frameBuffer.audioBufferList;
 
                 switch (_fileType) {
                 case fileTypeUInt8:
                     for (auto channel = 0; channel < _channelCount; ++channel) {
-                        auto channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
+                        auto *channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
                             const auto value = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<uint8_t>(std::clamp(value, 0, UINT8_MAX));
@@ -1474,7 +1473,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                     break;
                 case fileTypeSInt8:
                     for (auto channel = 0; channel < _channelCount; ++channel) {
-                        auto channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
+                        auto *channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
                             const auto value = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<int8_t>(std::clamp(value, INT8_MIN, INT8_MAX));
@@ -1484,7 +1483,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 case fileTypeUInt16BE:
                 case fileTypeUInt16LE:
                     for (auto channel = 0; channel < _channelCount; ++channel) {
-                        auto channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
+                        auto *channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
                             const auto value = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<uint16_t>(std::clamp(value, 0, UINT16_MAX));
@@ -1494,7 +1493,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 case fileTypeSInt16BE:
                 case fileTypeSInt16LE:
                     for (auto channel = 0; channel < _channelCount; ++channel) {
-                        auto channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
+                        auto *channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
                             const auto value = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<int16_t>(std::clamp(value, INT16_MIN, INT16_MAX));

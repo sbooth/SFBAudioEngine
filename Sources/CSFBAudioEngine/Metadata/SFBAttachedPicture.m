@@ -70,9 +70,8 @@ SFBAttachedPictureKey const SFBAttachedPictureKeyDescription = @"Description";
             SFBAttachedPictureKeyType : @(self.pictureType),
             SFBAttachedPictureKeyDescription : self.pictureDescription
         };
-    } else {
-        return @{SFBAttachedPictureKeyImageData : self.imageData, SFBAttachedPictureKeyType : @(self.pictureType)};
     }
+    return @{SFBAttachedPictureKeyImageData : self.imageData, SFBAttachedPictureKeyType : @(self.pictureType)};
 }
 
 @end

@@ -93,7 +93,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"DSD Stream" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties()) {
-            auto properties = file.audioProperties();
+            auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
             if (properties->bitsPerSample()) {

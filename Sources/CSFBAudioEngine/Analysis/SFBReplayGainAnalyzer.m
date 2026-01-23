@@ -326,14 +326,14 @@ static void Filter(const float *input, float *output, size_t nSamples, const flo
         for (size_t k = 1; k <= order; k++) {
             input_tail -= downsample;
             --output_tail;
-            y += *input_tail * b[k] - *output_tail * a[k];
+            y += (*input_tail * b[k]) - (*output_tail * a[k]);
         }
 
         output[i] = (float)y;
     }
 }
 
-static float AnalyzeResult(uint32_t *array, size_t len) {
+static float AnalyzeResult(const uint32_t *array, size_t len) {
     uint32_t elems = 0;
     for (size_t i = 0; i < len; ++i) {
         elems += array[i];
@@ -351,7 +351,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
         }
     }
 
-    return (float)(PINK_REF - i / STEPS_per_dB);
+    return (float)(PINK_REF - (i / STEPS_per_dB));
 }
 
 @interface SFBReplayGainAnalyzer () {
@@ -563,7 +563,8 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
                 *error = err;
             }
             return nil;
-        } else if (status == AVAudioConverterOutputStatus_EndOfStream) {
+        }
+        if (status == AVAudioConverterOutputStatus_EndOfStream) {
             break;
         }
 
@@ -580,7 +581,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
         }
 
         // The replay gain analyzer expects 16-bit sample size passed as floats
-        const float scale = 1u << 15;
+        const float scale = 1U << 15;
         vDSP_vsmul(outputBuffer.floatChannelData[0], 1, &scale, outputBuffer.floatChannelData[0], 1,
                    (vDSP_Length)frameCount);
         if (isStereo) {
@@ -853,7 +854,7 @@ static float AnalyzeResult(uint32_t *array, size_t len) {
 
         /* Get the Root Mean Square (RMS) for this set of samples */
         if (_totsamp == _sampleWindow) {
-            double val = STEPS_per_dB * 10. * log10((_lsum + _rsum) / _totsamp * 0.5 + 1.e-37);
+            double val = STEPS_per_dB * 10. * log10(((_lsum + _rsum) / _totsamp * 0.5) + 1.e-37);
             int ival = (int)val;
             if (ival < 0) {
                 ival = 0;

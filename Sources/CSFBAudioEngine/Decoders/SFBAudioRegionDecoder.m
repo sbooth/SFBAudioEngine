@@ -310,12 +310,12 @@
         return YES;
     }
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
+    frameLength = MIN(frameLength, buffer.frameCapacity);
+    if (frameLength == 0) {
+        return YES;
     }
 
     AVAudioFrameCount framesRemaining = frameLength;
-
     while (framesRemaining > 0) {
         AVAudioFrameCount framesRemainingInRegion =
               (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
