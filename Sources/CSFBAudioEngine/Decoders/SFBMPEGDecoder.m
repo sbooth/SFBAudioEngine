@@ -24,8 +24,9 @@ static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
 
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:(NSInteger)size bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:(NSInteger)size bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     *read = bytesRead;
     return 0;
 }
@@ -35,8 +36,9 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence) {
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
 
-    if (!decoder->_inputSource.supportsSeeking)
+    if (!decoder->_inputSource.supportsSeeking) {
         return -1;
+    }
 
     // Adjust offset as required
     switch (whence) {
@@ -45,20 +47,23 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence) {
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([decoder->_inputSource getLength:&inputSourceLength error:nil])
+        if ([decoder->_inputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
 
-    if (![decoder->_inputSource seekToOffset:offset error:nil])
+    if (![decoder->_inputSource seekToOffset:offset error:nil]) {
         return -1;
+    }
 
     return offset;
 }
@@ -73,14 +78,18 @@ static BOOL is_id3v2_tag_header(const unsigned char *buf) {
      $80.
      */
 
-    if (buf[0] != 0x49 || buf[1] != 0x44 || buf[2] != 0x33)
+    if (buf[0] != 0x49 || buf[1] != 0x44 || buf[2] != 0x33) {
         return NO;
-    if (buf[3] >= 0xff || buf[4] >= 0xff)
+    }
+    if (buf[3] >= 0xff || buf[4] >= 0xff) {
         return NO;
-    if (buf[5] & 0xf)
+    }
+    if (buf[5] & 0xf) {
         return NO;
-    if (buf[6] >= 0x80 || buf[7] >= 0x80 || buf[8] >= 0x80 || buf[9] >= 0x80)
+    }
+    if (buf[6] >= 0x80 || buf[7] >= 0x80 || buf[8] >= 0x80 || buf[9] >= 0x80) {
         return NO;
+    }
     return YES;
 }
 
@@ -102,13 +111,15 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     for (;;) {
         // Search for first byte of MP3 sync word
         loc = (const unsigned char *)memchr(loc, 0xff, len - (loc - buf) - 2);
-        if (!loc)
+        if (!loc) {
             break;
+        }
 
         // Check whether a complete MP3 sync word was found and perform a minimal check for a valid MP3 frame header
         if ((*(loc + 1) & 0xe0) == 0xe0 && (*(loc + 1) & 0x18) != 0x08 && (*(loc + 1) & 0x06) != 0 &&
-            (*(loc + 2) & 0xf0) != 0xf0 && (*(loc + 2) & 0x0c) != 0x0c)
+            (*(loc + 2) & 0xf0) != 0xf0 && (*(loc + 2) & 0x0c) != 0x0c) {
             return YES;
+        }
 
         loc++;
     }
@@ -149,16 +160,19 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     NSParameterAssert(formatIsSupported != NULL);
 
     NSInteger originalOffset;
-    if (![inputSource getOffset:&originalOffset error:error])
+    if (![inputSource getOffset:&originalOffset error:error]) {
         return NO;
+    }
 
-    if (![inputSource seekToOffset:0 error:error])
+    if (![inputSource seekToOffset:0 error:error]) {
         return NO;
+    }
 
     unsigned char buf[512];
     NSInteger len;
-    if (![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error])
+    if (![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error]) {
         return NO;
+    }
 
     NSInteger searchStartOffset = 0;
 
@@ -173,12 +187,14 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
             memmove(buf, buf + searchStartOffset, len - searchStartOffset);
             len -= searchStartOffset;
         } else {
-            if (![inputSource seekToOffset:searchStartOffset error:error])
+            if (![inputSource seekToOffset:searchStartOffset error:error]) {
                 return NO;
+            }
 
             // Read next chunk
-            if (![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error])
+            if (![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error]) {
                 return NO;
+            }
         }
     }
 
@@ -197,14 +213,16 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         // The penultimate or final byte in buf could be an undetected frame start,
         // so copy them to the beginning to ensure a continuous search
         memmove(buf, buf + len - 2, 2);
-        if (![inputSource readBytes:buf + 2 length:sizeof buf - 2 bytesRead:&len error:error])
+        if (![inputSource readBytes:buf + 2 length:sizeof buf - 2 bytesRead:&len error:error]) {
             return NO;
+        }
         len += 2;
 
         // Limit searches to 2 KB
         NSInteger currentOffset;
-        if (![inputSource getOffset:&currentOffset error:error])
+        if (![inputSource getOffset:&currentOffset error:error]) {
             return NO;
+        }
 
         if (currentOffset > searchStartOffset + 2048) {
             *formatIsSupported = SFBTernaryTruthValueUnknown;
@@ -212,8 +230,9 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         }
     }
 
-    if (![inputSource seekToOffset:originalOffset error:error])
+    if (![inputSource seekToOffset:originalOffset error:error]) {
         return NO;
+    }
 
     return YES;
 }
@@ -223,13 +242,14 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     _mpg123 = mpg123_new(NULL, NULL);
 
     if (!_mpg123) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
@@ -238,6 +258,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -249,7 +270,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
 
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
@@ -258,6 +279,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -265,7 +287,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
 
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
@@ -274,20 +296,22 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
     _framePosition = 0;
 
     long rate;
-    int channels, encoding;
+    int channels;
+    int encoding;
     if (mpg123_getformat(_mpg123, &rate, &channels, &encoding) != MPG123_OK || encoding != MPG123_ENC_FLOAT_32 ||
         channels <= 0) {
         mpg123_close(_mpg123);
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
 
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
@@ -296,6 +320,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -353,7 +378,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
 
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
@@ -362,6 +387,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -401,11 +427,10 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
-        frameLength = buffer.frameCapacity;
-
-    if (frameLength == 0)
+    frameLength = MIN(frameLength, buffer.frameCapacity);
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesProcessed = 0;
 
@@ -419,8 +444,9 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         framesProcessed += framesCopied;
 
         // All requested frames were read
-        if (framesProcessed == frameLength)
+        if (framesProcessed == frameLength) {
             break;
+        }
 
         // Read and decode an MPEG frame
         off_t frameNumber;
@@ -428,14 +454,16 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         size_t bytesDecoded = 0;
         int result = mpg123_decode_frame(_mpg123, &frameNumber, &audioData, &bytesDecoded);
         // EOS
-        if (result == MPG123_DONE)
+        if (result == MPG123_DONE) {
             break;
-        else if (result != MPG123_OK) {
+        }
+        if (result != MPG123_OK) {
             os_log_error(gSFBAudioDecoderLog, "mpg123_decode_frame failed: %{public}s", mpg123_strerror(_mpg123));
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                              code:SFBAudioDecoderErrorCodeDecodingError
                                          userInfo:@{NSURLErrorKey : _inputSource.url}];
+            }
             return NO;
         }
 
@@ -468,10 +496,11 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     off_t offset = mpg123_seek(_mpg123, frame, SEEK_SET);
     if (offset < 0) {
         os_log_error(gSFBAudioDecoderLog, "mpg123 seek error");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 

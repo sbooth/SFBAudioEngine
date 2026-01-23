@@ -34,8 +34,9 @@ static int read_callback(void *stream, unsigned char *ptr, int nbytes) {
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:ptr length:nbytes bytesRead:&bytesRead error:nil])
+    if (![decoder->_inputSource readBytes:ptr length:nbytes bytesRead:&bytesRead error:nil]) {
         return -1;
+    }
     return (int)bytesRead;
 }
 
@@ -43,8 +44,9 @@ static int seek_callback(void *stream, opus_int64 offset, int whence) {
     NSCParameterAssert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
-    if (!decoder->_inputSource.supportsSeeking)
+    if (!decoder->_inputSource.supportsSeeking) {
         return -1;
+    }
 
     switch (whence) {
     case SEEK_SET:
@@ -52,14 +54,16 @@ static int seek_callback(void *stream, opus_int64 offset, int whence) {
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil])
+        if ([decoder->_inputSource getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
+        }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([decoder->_inputSource getLength:&inputSourceLength error:nil])
+        if ([decoder->_inputSource getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
+        }
         break;
     }
     }
@@ -72,8 +76,9 @@ static opus_int64 tell_callback(void *stream) {
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil])
+    if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
+    }
     return offset;
 }
 
@@ -108,13 +113,15 @@ static opus_int64 tell_callback(void *stream) {
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggOpusDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isOggOpusHeader])
+    if ([header isOggOpusHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -124,14 +131,15 @@ static opus_int64 tell_callback(void *stream) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error])
+    if (![super openReturningError:error]) {
         return NO;
+    }
 
     OpusFileCallbacks callbacks = {.read = read_callback, .seek = seek_callback, .tell = tell_callback, .close = NULL};
 
     _opusFile = op_test_callbacks((__bridge void *)self, &callbacks, NULL, 0, NULL);
     if (!_opusFile) {
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Ogg Opus file.", @""), @{
@@ -140,6 +148,7 @@ static opus_int64 tell_callback(void *stream) {
                       NSURLErrorKey : _inputSource.url
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
+        }
         return NO;
     }
 
@@ -149,10 +158,11 @@ static opus_int64 tell_callback(void *stream) {
         op_free(_opusFile);
         _opusFile = NULL;
 
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInternalError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
 
@@ -240,15 +250,17 @@ static opus_int64 tell_callback(void *stream) {
 
 - (AVAudioFramePosition)framePosition {
     ogg_int64_t framePosition = op_pcm_tell(_opusFile);
-    if (framePosition == OP_EINVAL)
+    if (framePosition == OP_EINVAL) {
         return SFBUnknownFramePosition;
+    }
     return framePosition;
 }
 
 - (AVAudioFramePosition)frameLength {
     ogg_int64_t frameLength = op_pcm_total(_opusFile, -1);
-    if (frameLength == OP_EINVAL)
+    if (frameLength == OP_EINVAL) {
         return SFBUnknownFrameLength;
+    }
     return frameLength;
 }
 
@@ -259,11 +271,10 @@ static opus_int64 tell_callback(void *stream) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity)
-        frameLength = buffer.frameCapacity;
-
-    if (frameLength == 0)
+    frameLength = MIN(frameLength, buffer.frameCapacity);
+    if (frameLength == 0) {
         return YES;
+    }
 
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
@@ -273,16 +284,18 @@ static opus_int64 tell_callback(void *stream) {
 
         if (framesRead < 0) {
             os_log_error(gSFBAudioDecoderLog, "Ogg Opus decoding error");
-            if (error)
+            if (error) {
                 *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                              code:SFBAudioDecoderErrorCodeDecodingError
                                          userInfo:@{NSURLErrorKey : _inputSource.url}];
+            }
             return NO;
         }
 
         // 0 frames indicates EOS
-        if (framesRead == 0)
+        if (framesRead == 0) {
             break;
+        }
 
         buffer.frameLength += (AVAudioFrameCount)framesRead;
         framesRemaining -= (AVAudioFrameCount)framesRead;
@@ -295,10 +308,11 @@ static opus_int64 tell_callback(void *stream) {
     NSParameterAssert(frame >= 0);
     if (op_pcm_seek(_opusFile, frame)) {
         os_log_error(gSFBAudioDecoderLog, "Ogg Opus seek error");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
         return NO;
     }
     return YES;

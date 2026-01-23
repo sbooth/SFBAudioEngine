@@ -204,18 +204,18 @@ class AudioPlayer final {
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
         /// Cached value of `engine_.isRunning`
-        engineIsRunning = 1u << 0,
+        engineIsRunning = 1U << 0,
         /// The render block should output audio
-        isPlaying = 1u << 1,
+        isPlaying = 1U << 1,
         /// The render block should output silence
-        isMuted = 1u << 2,
+        isMuted = 1U << 2,
         /// The ring buffer needs to be drained during the next render cycle
-        drainRequired = 1u << 3,
+        drainRequired = 1U << 3,
 #if !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L)
         /// The decoding thread should exit
-        stopDecodingThread = 1u << 4,
+        stopDecodingThread = 1U << 4,
         /// The event thread should exit
-        stopEventThread = 1u << 5,
+        stopEventThread = 1U << 5,
 #endif /* !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L) */
     };
 

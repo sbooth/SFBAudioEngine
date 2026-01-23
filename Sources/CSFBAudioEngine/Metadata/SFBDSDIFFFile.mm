@@ -44,13 +44,15 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isDSDIFFHeader])
+    if ([header isDSDIFFHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -59,7 +61,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -70,12 +72,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::DSDIFF::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid DSD Interchange file.", @""), @{
@@ -84,27 +87,32 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"DSD Interchange" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties()) {
-            auto properties = file.audioProperties();
+            auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample())
+            if (properties->bitsPerSample()) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
-            if (properties->sampleCount())
+            }
+            if (properties->sampleCount()) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleCount());
+            }
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.hasDIINTag())
+        if (file.hasDIINTag()) {
             [metadata addMetadataFromTagLibTag:file.DIINTag()];
+        }
 
-        if (file.hasID3v2Tag())
+        if (file.hasID3v2Tag()) {
             [metadata addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
+        }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
@@ -112,10 +120,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading DSD Interchange properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
@@ -124,7 +133,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -135,12 +144,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::DSDIFF::File file(&stream, false);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid DSD Interchange file.", @""), @{
@@ -149,6 +159,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
@@ -156,7 +167,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
         sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag());
 
         if (!file.save()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -165,16 +176,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSDIFF = @"org.sbooth.AudioEn
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing DSD Interchange metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }

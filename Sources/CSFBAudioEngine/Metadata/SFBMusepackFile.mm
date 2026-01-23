@@ -44,13 +44,15 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBMusepackDetectionSize skipID3v2Tag:YES error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isMusepackHeader])
+    if ([header isMusepackHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -59,7 +61,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -70,12 +72,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::MPC::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @""), @{
@@ -84,25 +87,29 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Musepack" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties()) {
-            auto properties = file.audioProperties();
+            auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->sampleFrames())
+            if (properties->sampleFrames()) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
+            }
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             [metadata addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
+        }
 
-        if (file.hasAPETag())
+        if (file.hasAPETag()) {
             [metadata addMetadataFromTagLibAPETag:file.APETag()];
+        }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
@@ -110,10 +117,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading Musepack properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
@@ -122,7 +130,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -133,12 +141,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::MPC::File file(&stream, false);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @""), @{
@@ -147,18 +156,20 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         // ID3v1 tags are only written if present, but an APE tag is always written
 
-        if (file.hasID3v1Tag())
+        if (file.hasID3v1Tag()) {
             sfb::setID3v1TagFromMetadata(self.metadata, file.ID3v1Tag());
+        }
 
         sfb::setAPETagFromMetadata(self.metadata, file.APETag(true));
 
         if (!file.save()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -167,16 +178,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing Musepack metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }

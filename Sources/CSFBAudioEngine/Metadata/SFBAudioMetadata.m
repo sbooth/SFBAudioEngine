@@ -116,8 +116,9 @@ static id _sharedKeySet;
 }
 
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionaryRepresentation {
-    if ((self = [self init]))
+    if ((self = [self init])) {
         [self setFromDictionaryRepresentation:dictionaryRepresentation];
+    }
     return self;
 }
 
@@ -443,11 +444,13 @@ static id _sharedKeySet;
         self.genreSortOrder = metadata.genreSortOrder;
     }
 
-    if (kind & SFBAudioMetadataKindGrouping)
+    if (kind & SFBAudioMetadataKindGrouping) {
         self.grouping = metadata.grouping;
+    }
 
-    if (kind & SFBAudioMetadataKindAdditional)
+    if (kind & SFBAudioMetadataKindAdditional) {
         self.additionalMetadata = metadata.additionalMetadata;
+    }
 
     if (kind & SFBAudioMetadataKindReplayGain) {
         self.replayGainReferenceLoudness = metadata.replayGainReferenceLoudness;
@@ -497,11 +500,13 @@ static id _sharedKeySet;
         self.genreSortOrder = nil;
     }
 
-    if (kind & SFBAudioMetadataKindGrouping)
+    if (kind & SFBAudioMetadataKindGrouping) {
         self.grouping = nil;
+    }
 
-    if (kind & SFBAudioMetadataKindAdditional)
+    if (kind & SFBAudioMetadataKindAdditional) {
         self.additionalMetadata = nil;
+    }
 
     if (kind & SFBAudioMetadataKindReplayGain) {
         self.replayGainReferenceLoudness = nil;
@@ -525,15 +530,17 @@ static id _sharedKeySet;
 #pragma mark Attached Picture Utilities
 
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata {
-    for (SFBAttachedPicture *picture in metadata.attachedPictures)
+    for (SFBAttachedPicture *picture in metadata.attachedPictures) {
         [_pictures addObject:picture];
+    }
 }
 
 - (NSArray *)attachedPicturesOfType:(SFBAttachedPictureType)type {
     NSMutableArray *pictures = [NSMutableArray array];
     for (SFBAttachedPicture *picture in _pictures) {
-        if (picture.pictureType == type)
+        if (picture.pictureType == type) {
             [pictures addObject:picture];
+        }
     }
     return pictures;
 }
@@ -563,8 +570,9 @@ static id _sharedKeySet;
 - (NSDictionary *)dictionaryRepresentation {
     NSMutableDictionary *dictionary = [_metadata mutableCopy];
     NSMutableArray *pictures = [NSMutableArray arrayWithCapacity:_pictures.count];
-    for (SFBAttachedPicture *picture in _pictures)
+    for (SFBAttachedPicture *picture in _pictures) {
         [pictures addObject:picture.dictionaryRepresentation];
+    }
     dictionary[SFBAudioMetadataKeyAttachedPictures] = pictures;
     return dictionary;
 }
@@ -609,8 +617,9 @@ static id _sharedKeySet;
     self.replayGainAlbumPeak = dictionary[SFBAudioMetadataKeyReplayGainAlbumPeak];
 
     NSArray *pictures = dictionary[SFBAudioMetadataKeyAttachedPictures];
-    for (NSDictionary *picture in pictures)
+    for (NSDictionary *picture in pictures) {
         [self attachPicture:[[SFBAttachedPicture alloc] initWithDictionaryRepresentation:picture]];
+    }
 }
 
 #pragma mark - Dictionary-Like Interface

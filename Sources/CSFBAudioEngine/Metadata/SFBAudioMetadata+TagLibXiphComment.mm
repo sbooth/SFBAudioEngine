@@ -40,87 +40,89 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         // Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
         NSString *value = [NSString stringWithUTF8String:it.second.front().toCString(true)];
 
-        if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame)
+        if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame) {
             self.albumTitle = value;
-        else if ([key caseInsensitiveCompare:@"ARTIST"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"ARTIST"] == NSOrderedSame) {
             self.artist = value;
-        else if ([key caseInsensitiveCompare:@"ALBUMARTIST"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"ALBUMARTIST"] == NSOrderedSame) {
             self.albumArtist = value;
-        else if ([key caseInsensitiveCompare:@"COMPOSER"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"COMPOSER"] == NSOrderedSame) {
             self.composer = value;
-        else if ([key caseInsensitiveCompare:@"GENRE"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"GENRE"] == NSOrderedSame) {
             self.genre = value;
-        else if ([key caseInsensitiveCompare:@"DATE"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"DATE"] == NSOrderedSame) {
             self.releaseDate = value;
-        else if ([key caseInsensitiveCompare:@"DESCRIPTION"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"DESCRIPTION"] == NSOrderedSame) {
             self.comment = value;
-        else if ([key caseInsensitiveCompare:@"TITLE"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"TITLE"] == NSOrderedSame) {
             self.title = value;
-        else if ([key caseInsensitiveCompare:@"TRACKNUMBER"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"TRACKNUMBER"] == NSOrderedSame) {
             self.trackNumber = @(value.integerValue);
-        else if ([key caseInsensitiveCompare:@"TRACKTOTAL"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"TRACKTOTAL"] == NSOrderedSame) {
             self.trackTotal = @(value.integerValue);
-        else if ([key caseInsensitiveCompare:@"COMPILATION"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"COMPILATION"] == NSOrderedSame) {
             self.compilation = @(value.boolValue);
-        else if ([key caseInsensitiveCompare:@"DISCNUMBER"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"DISCNUMBER"] == NSOrderedSame) {
             self.discNumber = @(value.integerValue);
-        else if ([key caseInsensitiveCompare:@"DISCTOTAL"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"DISCTOTAL"] == NSOrderedSame) {
             self.discTotal = @(value.integerValue);
-        else if ([key caseInsensitiveCompare:@"LYRICS"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"LYRICS"] == NSOrderedSame) {
             self.lyrics = value;
-        else if ([key caseInsensitiveCompare:@"BPM"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"BPM"] == NSOrderedSame) {
             self.bpm = @(value.integerValue);
-        else if ([key caseInsensitiveCompare:@"RATING"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"RATING"] == NSOrderedSame) {
             self.rating = @(value.integerValue);
-        else if ([key caseInsensitiveCompare:@"ISRC"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"ISRC"] == NSOrderedSame) {
             self.isrc = value;
-        else if ([key caseInsensitiveCompare:@"MCN"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"MCN"] == NSOrderedSame) {
             self.mcn = value;
-        else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_ALBUMID"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_ALBUMID"] == NSOrderedSame) {
             self.musicBrainzReleaseID = value;
-        else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_TRACKID"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"MUSICBRAINZ_TRACKID"] == NSOrderedSame) {
             self.musicBrainzRecordingID = value;
-        else if ([key caseInsensitiveCompare:@"TITLESORT"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"TITLESORT"] == NSOrderedSame) {
             self.titleSortOrder = value;
-        else if ([key caseInsensitiveCompare:@"ALBUMTITLESORT"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"ALBUMTITLESORT"] == NSOrderedSame) {
             self.albumTitleSortOrder = value;
-        else if ([key caseInsensitiveCompare:@"ARTISTSORT"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"ARTISTSORT"] == NSOrderedSame) {
             self.artistSortOrder = value;
-        else if ([key caseInsensitiveCompare:@"ALBUMARTISTSORT"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"ALBUMARTISTSORT"] == NSOrderedSame) {
             self.albumArtistSortOrder = value;
-        else if ([key caseInsensitiveCompare:@"COMPOSERSORT"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"COMPOSERSORT"] == NSOrderedSame) {
             self.composerSortOrder = value;
-        else if ([key caseInsensitiveCompare:@"GROUPING"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"GROUPING"] == NSOrderedSame) {
             self.grouping = value;
-        else if ([key caseInsensitiveCompare:@"REPLAYGAIN_REFERENCE_LOUDNESS"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_REFERENCE_LOUDNESS"] == NSOrderedSame) {
             self.replayGainReferenceLoudness = @(value.doubleValue);
-        else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_GAIN"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_GAIN"] == NSOrderedSame) {
             self.replayGainTrackGain = @(value.doubleValue);
-        else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_PEAK"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_PEAK"] == NSOrderedSame) {
             self.replayGainTrackPeak = @(value.doubleValue);
-        else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_GAIN"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_GAIN"] == NSOrderedSame) {
             self.replayGainAlbumGain = @(value.doubleValue);
-        else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame)
+        } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
             self.replayGainAlbumPeak = @(value.doubleValue);
-        // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
-        else if ([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame ||
-                 [key caseInsensitiveCompare:@"COVERART"] == NSOrderedSame)
-            ;
-        // Put all unknown tags into the additional metadata
-        else
+        } else if ([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame ||
+                   [key caseInsensitiveCompare:@"COVERART"] == NSOrderedSame) {
+            // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
+        } else {
+            // Put all unknown tags into the additional metadata
             [additionalMetadata setObject:value forKey:key];
+        }
     }
 
-    if (additionalMetadata.count)
+    if (additionalMetadata.count) {
         self.additionalMetadata = additionalMetadata;
+    }
 
     // Add the pictures parsed by TagLib from the "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments
-    for (auto iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
+    for (auto *iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
         NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
         NSString *description = nil;
-        if (!iter->description().isEmpty())
+        if (!iter->description().isEmpty()) {
             description = [NSString stringWithUTF8String:iter->description().toCString(true)];
+        }
 
         [self attachPicture:[[SFBAttachedPicture alloc]
                                   initWithImageData:imageData
@@ -140,8 +142,9 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
     // Remove the existing comment with this name
     tag->removeFields(key);
 
-    if (value)
+    if (value) {
         tag->addField(key, TagLib::StringFromNSString(value));
+    }
 }
 
 void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value) {
@@ -155,10 +158,11 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    if (value == nil)
+    if (value == nil) {
         SetXiphComment(tag, key, nil);
-    else
+    } else {
         SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
+    }
 }
 
 void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value,
@@ -206,8 +210,9 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
     if (additionalMetadata) {
-        for (NSString *key in additionalMetadata)
+        for (NSString *key in additionalMetadata) {
             SetXiphComment(tag, key.UTF8String, additionalMetadata[key]);
+        }
     }
 
     // ReplayGain info
@@ -224,8 +229,9 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
     if (setAlbumArt) {
         for (SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
             auto picture = ConvertAttachedPictureToFLACPicture(attachedPicture);
-            if (picture)
+            if (picture) {
                 tag->addPicture(picture.release());
+            }
         }
     }
 }
@@ -235,21 +241,24 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
 
     cg_image_source_unique_ptr imageSource{
           CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
-    if (!imageSource)
+    if (!imageSource) {
         return nullptr;
+    }
 
     auto picture = std::make_unique<TagLib::FLAC::Picture>();
     picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                         static_cast<unsigned int>(attachedPicture.imageData.length)));
     picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
-    if (attachedPicture.pictureDescription)
+    if (attachedPicture.pictureDescription) {
         picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
+    }
 
     // Convert the image's UTI into a MIME type
     if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
         UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
-        if (NSString *mimeType = [type preferredMIMEType]; mimeType)
+        if (NSString *mimeType = [type preferredMIMEType]; mimeType) {
             picture->setMimeType(TagLib::StringFromNSString(mimeType));
+        }
     }
 
     // Flesh out the height, width, and depth

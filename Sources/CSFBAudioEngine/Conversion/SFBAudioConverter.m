@@ -26,9 +26,10 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBAudioConverterErrorCodeFormatNotSupported:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(
                                                         @"The requested audio format is not supported.", @"");
+                                              }
                                               break;
                                           }
 
@@ -68,11 +69,13 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 - (instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error {
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
-    if (!decoder)
+    if (!decoder) {
         return nil;
+    }
     SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
-    if (!encoder)
+    if (!encoder) {
         return nil;
+    }
     return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
@@ -82,8 +85,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
 - (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id<SFBPCMEncoding>)encoder error:(NSError **)error {
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
-    if (!decoder)
+    if (!decoder) {
         return nil;
+    }
     return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
@@ -95,8 +99,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
                  destinationURL:(NSURL *)destinationURL
                           error:(NSError **)error {
     SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
-    if (!encoder)
+    if (!encoder) {
         return nil;
+    }
     return [self initWithDecoder:decoder encoder:encoder requestedIntermediateFormat:nil error:error];
 }
 
@@ -118,8 +123,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
     NSParameterAssert(encoder != nil);
 
     if ((self = [super init])) {
-        if (!decoder.isOpen && ![decoder openReturningError:error])
+        if (!decoder.isOpen && ![decoder openReturningError:error]) {
             return nil;
+        }
         _decoder = decoder;
 
         if (!encoder.isOpen) {
@@ -128,30 +134,34 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
             // Encode lossy sources as 16-bit PCM
             if (!decoder.decodingIsLossless) {
                 AVAudioChannelLayout *decoderChannelLayout = decoder.processingFormat.channelLayout;
-                if (decoderChannelLayout)
+                if (decoderChannelLayout) {
                     desiredIntermediateFormat =
                           [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
                                                            sampleRate:decoder.processingFormat.sampleRate
                                                           interleaved:YES
                                                         channelLayout:decoderChannelLayout];
-                else
+                } else {
                     desiredIntermediateFormat =
                           [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
                                                            sampleRate:decoder.processingFormat.sampleRate
                                                              channels:decoder.processingFormat.channelCount
                                                           interleaved:YES];
+                }
             }
 
-            if (intermediateFormatBlock)
+            if (intermediateFormatBlock) {
                 desiredIntermediateFormat = intermediateFormatBlock(desiredIntermediateFormat);
+            }
 
-            if (![encoder setSourceFormat:desiredIntermediateFormat error:error])
+            if (![encoder setSourceFormat:desiredIntermediateFormat error:error]) {
                 return nil;
+            }
 
             encoder.estimatedFramesToEncode = decoder.frameLength;
 
-            if (![encoder openReturningError:error])
+            if (![encoder openReturningError:error]) {
                 return nil;
+            }
         }
 
         _encoder = encoder;
@@ -159,7 +169,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
         _intermediateConverter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                  toFormat:encoder.processingFormat];
         if (!_intermediateConverter) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioConverterErrorDomain, SFBAudioConverterErrorCodeFormatNotSupported,
                       NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -167,6 +177,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
                                 NSLocalizedString(@"The file's format is not supported for conversion.", @"")
                       },
                       SFBLocalizedNameForURL(decoder.inputSource.url));
+            }
             return nil;
         }
     }
@@ -219,26 +230,30 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
         // Verify decoding was successful
         if (!decodeResult) {
             os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", decodeError);
-            if (error)
+            if (error) {
                 *error = decodeError;
+            }
             return NO;
         }
 
         // Check conversion status
         if (status == AVAudioConverterOutputStatus_Error) {
             os_log_error(OS_LOG_DEFAULT, "Error converting PCM audio: %{public}@", convertError);
-            if (error)
+            if (error) {
                 *error = convertError;
+            }
             return NO;
-        } else if (status == AVAudioConverterOutputStatus_EndOfStream) {
+        }
+        if (status == AVAudioConverterOutputStatus_EndOfStream) {
             break;
         }
 
         // Send converted data to the encoder
         if (![_encoder encodeFromBuffer:encodeBuffer frameLength:encodeBuffer.frameLength error:&encodeError]) {
             os_log_error(OS_LOG_DEFAULT, "Error encoding audio: %{public}@", encodeError);
-            if (error)
+            if (error) {
                 *error = encodeError;
+            }
             return NO;
         }
     }
