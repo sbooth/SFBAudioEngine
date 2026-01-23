@@ -718,7 +718,7 @@ sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
     return decoderState->decoder_;
 }
 
-void sfb::AudioPlayer::SetNowPlaying(Decoder nowPlaying) noexcept {
+void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
     {
         std::lock_guard lock{nowPlayingLock_};
         if (nowPlaying_ == nowPlaying) {
