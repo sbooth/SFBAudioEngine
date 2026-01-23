@@ -91,8 +91,8 @@
                 self.replayGainAlbumGain = @(value.doubleValue);
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
                 self.replayGainAlbumPeak = @(value.doubleValue);
-            // Put all unknown tags into the additional metadata
             } else {
+                // Put all unknown tags into the additional metadata
                 [additionalMetadata setObject:value forKey:key];
             }
         } else if (TagLib::APE::Item::Binary == item.type()) {
@@ -213,8 +213,9 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
     if (additionalMetadata) {
-        for (NSString *key in additionalMetadata)
+        for (NSString *key in additionalMetadata) {
             SetAPETag(tag, key.UTF8String, additionalMetadata[key]);
+        }
     }
 
     // ReplayGain info

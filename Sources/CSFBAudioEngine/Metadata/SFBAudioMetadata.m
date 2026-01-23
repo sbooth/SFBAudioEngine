@@ -530,8 +530,9 @@ static id _sharedKeySet;
 #pragma mark Attached Picture Utilities
 
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata {
-    for (SFBAttachedPicture *picture in metadata.attachedPictures)
+    for (SFBAttachedPicture *picture in metadata.attachedPictures) {
         [_pictures addObject:picture];
+    }
 }
 
 - (NSArray *)attachedPicturesOfType:(SFBAttachedPictureType)type {
@@ -569,8 +570,9 @@ static id _sharedKeySet;
 - (NSDictionary *)dictionaryRepresentation {
     NSMutableDictionary *dictionary = [_metadata mutableCopy];
     NSMutableArray *pictures = [NSMutableArray arrayWithCapacity:_pictures.count];
-    for (SFBAttachedPicture *picture in _pictures)
+    for (SFBAttachedPicture *picture in _pictures) {
         [pictures addObject:picture.dictionaryRepresentation];
+    }
     dictionary[SFBAudioMetadataKeyAttachedPictures] = pictures;
     return dictionary;
 }
@@ -615,8 +617,9 @@ static id _sharedKeySet;
     self.replayGainAlbumPeak = dictionary[SFBAudioMetadataKeyReplayGainAlbumPeak];
 
     NSArray *pictures = dictionary[SFBAudioMetadataKeyAttachedPictures];
-    for (NSDictionary *picture in pictures)
+    for (NSDictionary *picture in pictures) {
         [self attachPicture:[[SFBAttachedPicture alloc] initWithDictionaryRepresentation:picture]];
+    }
 }
 
 #pragma mark - Dictionary-Like Interface

@@ -291,8 +291,8 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
                     self.replayGainTrackGain = @(volumeAdjustment);
                 } else if (TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
                     self.replayGainAlbumGain = @(volumeAdjustment);
-                // Fall back to track gain if identification is not specified
                 } else {
+                    // Fall back to track gain if identification is not specified
                     self.replayGainTrackGain = @(volumeAdjustment);
                 }
             }

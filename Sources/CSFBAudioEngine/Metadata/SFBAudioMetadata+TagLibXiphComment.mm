@@ -102,12 +102,11 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             self.replayGainAlbumGain = @(value.doubleValue);
         } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
             self.replayGainAlbumPeak = @(value.doubleValue);
-        // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
         } else if ([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame ||
                    [key caseInsensitiveCompare:@"COVERART"] == NSOrderedSame) {
-            ;
-        // Put all unknown tags into the additional metadata
+            // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
         } else {
+            // Put all unknown tags into the additional metadata
             [additionalMetadata setObject:value forKey:key];
         }
     }
@@ -211,8 +210,9 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
     if (additionalMetadata) {
-        for (NSString *key in additionalMetadata)
+        for (NSString *key in additionalMetadata) {
             SetXiphComment(tag, key.UTF8String, additionalMetadata[key]);
+        }
     }
 
     // ReplayGain info
