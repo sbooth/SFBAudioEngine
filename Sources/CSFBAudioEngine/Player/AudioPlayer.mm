@@ -2148,8 +2148,9 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         }
     }
 
-    if ([player_.delegate respondsToSelector:@selector(audioPlayer:audioEngineConfigurationChange:)])
+    if ([player_.delegate respondsToSelector:@selector(audioPlayer:audioEngineConfigurationChange:)]) {
         [player_.delegate audioPlayer:player_ audioEngineConfigurationChange:userInfo];
+    }
 }
 
 #if TARGET_OS_IPHONE
