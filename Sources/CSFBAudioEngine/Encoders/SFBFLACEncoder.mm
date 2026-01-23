@@ -438,7 +438,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
             const auto frameOffset = frameLength - framesRemaining;
             const auto byteOffset = frameOffset * format->mBytesPerFrame;
-            auto *const src = static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset;
+            auto *const src = reinterpret_cast<int32_t *>(
+                  static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset);
 
             // Shift from high alignment, sign extending in the process
             for (AVAudioFrameCount i = 0; i < frameCount * stride; ++i) {
@@ -458,9 +459,8 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
             framesRemaining -= frameCount;
         }
-    }
-    // Pass 32-bit samples straight through
-    else {
+    } else {
+        // Pass 32-bit samples straight through
         if (!FLAC__stream_encoder_process_interleaved(
                   _flac.get(), static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData), frameLength)) {
             os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s",
