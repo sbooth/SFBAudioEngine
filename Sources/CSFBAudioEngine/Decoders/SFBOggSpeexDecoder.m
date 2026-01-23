@@ -13,6 +13,9 @@
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <ogg/ogg.h>
 #import <speex/speex.h>
+#import <speex/speex_callbacks.h>
+#import <speex/speex_header.h>
+#import <speex/speex_stereo.h>
 
 #import <Accelerate/Accelerate.h>
 
