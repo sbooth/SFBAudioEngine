@@ -16,6 +16,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <memory>
 
 #import <simd/simd.h>
@@ -406,9 +407,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
+    frameLength = std::min(frameLength, buffer.frameCapacity);
 
     if (frameLength == 0) {
         return YES;

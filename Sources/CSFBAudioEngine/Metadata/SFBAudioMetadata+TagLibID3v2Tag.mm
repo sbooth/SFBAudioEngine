@@ -164,14 +164,14 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // MusicBrainz
-    auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
+    auto *musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
           const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
     if (musicBrainzReleaseIDFrame) {
         self.musicBrainzReleaseID =
               [NSString stringWithUTF8String:musicBrainzReleaseIDFrame->fieldList().back().toCString(true)];
     }
 
-    auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
+    auto *musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
           const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
     if (musicBrainzRecordingIDFrame) {
         self.musicBrainzRecordingID =
@@ -213,14 +213,14 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     bool foundReplayGain = false;
 
     // Preference is TXXX frames, RVA2 frame, then LAME header
-    auto trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                           "REPLAYGAIN_TRACK_GAIN");
-    auto trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                           "REPLAYGAIN_TRACK_PEAK");
-    auto albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                           "REPLAYGAIN_ALBUM_GAIN");
-    auto albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                           "REPLAYGAIN_ALBUM_PEAK");
+    auto *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                            "REPLAYGAIN_TRACK_GAIN");
+    auto *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                            "REPLAYGAIN_TRACK_PEAK");
+    auto *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                            "REPLAYGAIN_ALBUM_GAIN");
+    auto *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                            "REPLAYGAIN_ALBUM_PEAK");
 
     if (!trackGainFrame) {
         trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
@@ -268,7 +268,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     if (!foundReplayGain) {
         frameList = tag->frameListMap()["RVA2"];
 
-        for (auto frameIterator : tag->frameListMap()["RVA2"]) {
+        for (auto *frameIterator : tag->frameListMap()["RVA2"]) {
             TagLib::ID3v2::RelativeVolumeFrame *relativeVolume =
                   dynamic_cast<TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
             if (!relativeVolume) {
@@ -286,7 +286,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
             float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 
-            if (volumeAdjustment != 0.f) {
+            if (volumeAdjustment != 0.F) {
                 if (TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
                     self.replayGainTrackGain = @(volumeAdjustment);
                 } else if (TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
@@ -300,7 +300,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract album art if present
-    for (auto it : tag->frameListMap()["APIC"]) {
+    for (auto *it : tag->frameListMap()["APIC"]) {
         TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
         if (frame) {
             NSData *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
@@ -336,7 +336,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Composer
     tag->removeFrames("TCOM");
     if (metadata.composer) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TCOM", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TCOM", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(metadata.composer));
         tag->addFrame(frame);
     }
@@ -366,7 +366,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         if (date) {
             tag->setYear((unsigned int)[gregorianCalendar component:NSCalendarUnitYear fromDate:date]);
 
-            auto frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
+            auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
             frame->setText(TagLib::StringFromNSString(metadata.releaseDate));
             tag->addFrame(frame);
         }
@@ -378,7 +378,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Album artist
     tag->removeFrames("TPE2");
     if (metadata.albumArtist) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPE2", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TPE2", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(metadata.albumArtist));
         tag->addFrame(frame);
     }
@@ -389,7 +389,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // BPM
     tag->removeFrames("TBPM");
     if (metadata.bpm != nil) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(metadata.bpm.stringValue));
         tag->addFrame(frame);
     }
@@ -405,16 +405,16 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Track number and total tracks
     tag->removeFrames("TRCK");
     if (metadata.trackNumber && metadata.trackTotal) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(
               [NSString stringWithFormat:@"%@/%@", metadata.trackNumber, metadata.trackTotal]));
         tag->addFrame(frame);
     } else if (metadata.trackNumber != nil) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"%@", metadata.trackNumber]));
         tag->addFrame(frame);
     } else if (metadata.trackTotal != nil) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"/%@", metadata.trackTotal]));
         tag->addFrame(frame);
     }
@@ -423,7 +423,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // iTunes uses the TCMP frame for this, which isn't in the standard, but we'll use it for compatibility
     tag->removeFrames("TCMP");
     if (metadata.compilation != nil) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TCMP", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TCMP", TagLib::String::Latin1);
         frame->setText(metadata.compilation.boolValue ? "1" : "0");
         tag->addFrame(frame);
     }
@@ -431,16 +431,16 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Disc number and total discs
     tag->removeFrames("TPOS");
     if (metadata.discNumber && metadata.discTotal) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(
               [NSString stringWithFormat:@"%@/%@", metadata.discNumber, metadata.discTotal]));
         tag->addFrame(frame);
     } else if (metadata.discNumber != nil) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"%@", metadata.discNumber]));
         tag->addFrame(frame);
     } else if (metadata.discTotal != nil) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString([NSString stringWithFormat:@"/%@", metadata.discTotal]));
         tag->addFrame(frame);
     }
@@ -448,39 +448,38 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Lyrics
     tag->removeFrames("USLT");
     if (metadata.lyrics) {
-        auto frame = new TagLib::ID3v2::UnsynchronizedLyricsFrame(TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::UnsynchronizedLyricsFrame(TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.lyrics));
         tag->addFrame(frame);
     }
 
     tag->removeFrames("TSRC");
     if (metadata.isrc) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSRC", TagLib::String::Latin1);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TSRC", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(metadata.isrc));
         tag->addFrame(frame);
     }
 
     // MusicBrainz
-    auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "MusicBrainz Album Id");
+    auto *musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "MusicBrainz Album Id");
     if (nullptr != musicBrainzReleaseIDFrame) {
         tag->removeFrame(musicBrainzReleaseIDFrame);
     }
 
     if (metadata.musicBrainzReleaseID) {
-        auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+        auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("MusicBrainz Album Id");
         frame->setText(TagLib::StringFromNSString(metadata.musicBrainzReleaseID));
         tag->addFrame(frame);
     }
 
-    auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
-          const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
+    auto *musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "MusicBrainz Track Id");
     if (nullptr != musicBrainzRecordingIDFrame) {
         tag->removeFrame(musicBrainzRecordingIDFrame);
     }
 
     if (metadata.musicBrainzRecordingID) {
-        auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+        auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("MusicBrainz Track Id");
         frame->setText(TagLib::StringFromNSString(metadata.musicBrainzRecordingID));
         tag->addFrame(frame);
@@ -489,42 +488,42 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Sorting and grouping
     tag->removeFrames("TSOT");
     if (metadata.titleSortOrder) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOT", TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TSOT", TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.titleSortOrder));
         tag->addFrame(frame);
     }
 
     tag->removeFrames("TSOA");
     if (metadata.albumTitleSortOrder) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOA", TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TSOA", TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.albumTitleSortOrder));
         tag->addFrame(frame);
     }
 
     tag->removeFrames("TSOP");
     if (metadata.artistSortOrder) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOP", TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TSOP", TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.artistSortOrder));
         tag->addFrame(frame);
     }
 
     tag->removeFrames("TSO2");
     if (metadata.albumArtistSortOrder) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSO2", TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TSO2", TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.albumArtistSortOrder));
         tag->addFrame(frame);
     }
 
     tag->removeFrames("TSOC");
     if (metadata.composerSortOrder) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOC", TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TSOC", TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.composerSortOrder));
         tag->addFrame(frame);
     }
 
     tag->removeFrames("TIT1");
     if (metadata.grouping) {
-        auto frame = new TagLib::ID3v2::TextIdentificationFrame("TIT1", TagLib::String::UTF8);
+        auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TIT1", TagLib::String::UTF8);
         frame->setText(TagLib::StringFromNSString(metadata.grouping));
         tag->addFrame(frame);
     }
@@ -532,10 +531,10 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // ReplayGain
 
     // Write TXXX frames
-    auto trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_gain");
-    auto trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_peak");
-    auto albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
-    auto albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
+    auto *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_gain");
+    auto *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_peak");
+    auto *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
+    auto *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
 
     if (nullptr != trackGainFrame) {
         tag->removeFrame(trackGainFrame);
@@ -554,7 +553,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     }
 
     if (metadata.replayGainTrackGain != nil) {
-        auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+        auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_track_gain");
         frame->setText(TagLib::StringFromNSString(
               [NSString stringWithFormat:@"%+2.2f dB", metadata.replayGainTrackGain.doubleValue]));
@@ -562,7 +561,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     }
 
     if (metadata.replayGainTrackPeak != nil) {
-        auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+        auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_track_peak");
         frame->setText(TagLib::StringFromNSString(
               [NSString stringWithFormat:@"%1.8f dB", metadata.replayGainTrackPeak.doubleValue]));
@@ -570,7 +569,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     }
 
     if (metadata.replayGainAlbumGain != nil) {
-        auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+        auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_album_gain");
         frame->setText(TagLib::StringFromNSString(
               [NSString stringWithFormat:@"%+2.2f dB", metadata.replayGainAlbumGain.doubleValue]));
@@ -578,7 +577,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     }
 
     if (metadata.replayGainAlbumPeak != nil) {
-        auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+        auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_album_peak");
         frame->setText(TagLib::StringFromNSString(
               [NSString stringWithFormat:@"%1.8f dB", metadata.replayGainAlbumPeak.doubleValue]));
@@ -588,7 +587,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // Also write the RVA2 frames
     tag->removeFrames("RVA2");
     if (metadata.replayGainTrackGain != nil) {
-        auto relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
+        auto *relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
         relativeVolume->setIdentification(TagLib::String("track", TagLib::String::Latin1));
         relativeVolume->setVolumeAdjustment(metadata.replayGainTrackGain.floatValue,
                                             TagLib::ID3v2::RelativeVolumeFrame::MasterVolume);
@@ -596,7 +595,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     }
 
     if (metadata.replayGainAlbumGain != nil) {
-        auto relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
+        auto *relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
         relativeVolume->setIdentification(TagLib::String("album", TagLib::String::Latin1));
         relativeVolume->setVolumeAdjustment(metadata.replayGainAlbumGain.floatValue,
                                             TagLib::ID3v2::RelativeVolumeFrame::MasterVolume);

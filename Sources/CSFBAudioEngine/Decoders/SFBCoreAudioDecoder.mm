@@ -15,6 +15,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <vector>
 
 #import <CXXAudioToolbox/AudioFileWrapper.hpp>
@@ -105,7 +106,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
+        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
@@ -155,7 +156,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
+        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
@@ -485,9 +486,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
+    frameLength = std::min(frameLength, buffer.frameCapacity);
 
     if (frameLength == 0) {
         buffer.frameLength = 0;

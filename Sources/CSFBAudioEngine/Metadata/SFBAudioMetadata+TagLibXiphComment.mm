@@ -117,7 +117,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Add the pictures parsed by TagLib from the "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments
-    for (auto iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
+    for (auto *iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
         NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
         NSString *description = nil;

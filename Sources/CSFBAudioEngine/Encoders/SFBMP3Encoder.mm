@@ -8,6 +8,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <memory>
 
 #import <lame/lame.h>
@@ -85,7 +86,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                             sampleRate:sourceFormat.sampleRate
-                                              channels:(AVAudioChannelCount)sourceFormat.channelCount
+                                              channels:sourceFormat.channelCount
                                            interleaved:YES];
 }
 
@@ -204,12 +205,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         if (intValue >= 8000) {
             intValue = (intValue + 500) / 1000;
         }
-        if (intValue > 320) {
-            intValue = 320;
-        }
-        if (intValue < 8) {
-            intValue = 8;
-        }
+        intValue = std::clamp(intValue, 8, 320);
 
         result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
         if (result == -1) {
@@ -385,9 +381,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength) {
-        frameLength = buffer.frameLength;
-    }
+    frameLength = std::min(frameLength, buffer.frameLength);
 
     if (frameLength == 0) {
         return YES;

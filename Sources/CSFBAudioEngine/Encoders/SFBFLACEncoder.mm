@@ -407,9 +407,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength) {
-        frameLength = buffer.frameLength;
-    }
+    frameLength = std::min(frameLength, buffer.frameLength);
 
     if (frameLength == 0) {
         return YES;
@@ -427,7 +425,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     // Ensure implementation-defined right shift for negative numbers is arithmetic
     static_assert(~0 >> 1 == ~0, "signed right shift is not arithmetic");
 
-    const auto format = _processingFormat.streamDescription;
+    const auto *const format = _processingFormat.streamDescription;
     if (const auto bits = format->mBitsPerChannel; bits != 32) {
         int32_t dst[512];
         const AVAudioFrameCount frameCapacity = sizeof(dst) / format->mBytesPerFrame;
@@ -441,7 +439,7 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
 
             const auto frameOffset = frameLength - framesRemaining;
             const auto byteOffset = frameOffset * format->mBytesPerFrame;
-            const auto src = static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset;
+            auto *const src = static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset;
 
             // Shift from high alignment, sign extending in the process
             for (AVAudioFrameCount i = 0; i < frameCount * stride; ++i) {

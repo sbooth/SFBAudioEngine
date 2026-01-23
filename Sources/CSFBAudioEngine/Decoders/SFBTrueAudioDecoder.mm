@@ -262,9 +262,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
+    frameLength = std::min(frameLength, buffer.frameCapacity);
 
     if (frameLength == 0) {
         return YES;
@@ -330,7 +328,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     _framePosition = frame;
 
     // We need to skip some samples from start of the frame if required
-    _framesToSkip = static_cast<UInt32>((seconds - frame_start) * _processingFormat.sampleRate + 0.5);
+    _framesToSkip = static_cast<UInt32>(((seconds - frame_start) * _processingFormat.sampleRate) + 0.5);
 
     return YES;
 }

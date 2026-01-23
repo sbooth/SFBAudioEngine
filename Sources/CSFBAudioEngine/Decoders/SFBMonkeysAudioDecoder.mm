@@ -6,6 +6,7 @@
 
 #import <os/log.h>
 
+#import <algorithm>
 #import <memory>
 
 #define PLATFORM_APPLE
@@ -402,9 +403,7 @@ class APEIOInterface final : public APE::IAPEIO {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
+    frameLength = std::min(frameLength, buffer.frameCapacity);
 
     if (frameLength == 0) {
         return YES;
