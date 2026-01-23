@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -9,7 +9,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Constant type for encoder names
-typedef NSString * SFBAudioEncoderName NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncoder.Name);
+typedef NSString *SFBAudioEncoderName NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncoder.Name);
 
 /// FLAC
 extern SFBAudioEncoderName const SFBAudioEncoderNameFLAC;
@@ -37,15 +37,16 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio;
 extern SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile;
 
 /// An encoder consuming PCM audio
-NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncoding>
+NS_SWIFT_NAME(AudioEncoder)
+@interface SFBAudioEncoder : NSObject<SFBPCMEncoding>
 
 #pragma mark - File Format Support
 
-/// Returns a set containing the supported path extensions
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
+/// A set containing the supported path extensions
+@property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /// Returns a set containing the supported MIME types
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
+@property(class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
 + (BOOL)handlesPathsWithExtension:(NSString *)extension;
@@ -68,7 +69,8 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
-/// - important: If there is a conflict between the URL's path extension and the MIME type, the MIME type takes precedence
+/// - important: If there is a conflict between the URL's path extension and the MIME type, the MIME type takes
+/// precedence
 /// - parameter url: The URL
 /// - parameter mimeType: The MIME type of `url` or `nil`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -78,7 +80,8 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
 /// - parameter outputSource: The output source
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
-- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:error: instead");
+- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource
+      NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:error: instead");
 /// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
 /// - parameter outputSource: The output source
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -89,13 +92,17 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// - parameter mimeType: The MIME type of `outputSource` or `nil`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
-- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource
+                                     mimeType:(nullable NSString *)mimeType
+                                        error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter encoderName: The name of the encoder to use
 /// - returns: An initialized `SFBAudioEncoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoderName:error: instead");
+- (nullable instancetype)initWithURL:(NSURL *)url
+                         encoderName:(SFBAudioEncoderName)encoderName
+      NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoderName:error: instead");
 /// Returns an initialized `SFBAudioEncoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter encoderName: The name of the encoder to use
@@ -107,13 +114,17 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// - parameter outputSource: The output source
 /// - parameter encoderName: The name of the encoder to use
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
-- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:encoderName:error: instead");
+- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource
+                                  encoderName:(SFBAudioEncoderName)encoderName
+      NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:encoderName:error: instead");
 /// Returns an initialized `SFBAudioEncoder` object for the given output source or `nil` on failure
 /// - parameter outputSource: The output source
 /// - parameter encoderName: The name of the encoder to use
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioEncoder` object for the specified output source, or `nil` on failure
-- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource
+                                  encoderName:(SFBAudioEncoderName)encoderName
+                                        error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Opens the encoder
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -132,14 +143,14 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBAudioEncoder`
-typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
-	/// Internal or unspecified encoder error
-	SFBAudioEncoderErrorCodeInternalError	= 0,
-	/// Unknown encoder name
-	SFBAudioEncoderErrorCodeUnknownEncoder	= 1,
-	/// Invalid, unknown, or unsupported format
-	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
-} NS_SWIFT_NAME(AudioEncoder.ErrorCode);
+typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode){
+    /// Unknown encoder name
+    SFBAudioEncoderErrorCodeUnknownEncoder = 0,
+    /// Invalid, unknown, or unsupported format
+    SFBAudioEncoderErrorCodeInvalidFormat = 1,
+    /// Internal or unspecified encoder error
+    SFBAudioEncoderErrorCodeInternalError = 2,
+} NS_SWIFT_NAME(AudioEncoder.Error);
 
 #pragma mark - FLAC Encoder Settings
 
@@ -154,7 +165,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEn
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
 
 /// Constant type for APE compression levels
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueAPECompressionLevel NS_TYPED_ENUM NS_SWIFT_NAME(APECompressionLevel);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueAPECompressionLevel NS_TYPED_ENUM
+      NS_SWIFT_NAME(APECompressionLevel);
 
 /// Fast compression
 extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelFast;
@@ -191,7 +203,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMod
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain;
 
 /// Constant type for MP3 stereo modes
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueMP3StereoMode NS_TYPED_ENUM NS_SWIFT_NAME(MP3StereoMode);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueMP3StereoMode NS_TYPED_ENUM
+      NS_SWIFT_NAME(MP3StereoMode);
 
 /// Mono mode
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono;
@@ -221,7 +234,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusSignalTy
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration;
 
 /// Constant type for Opus bitrate modes
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusBitrateMode NS_TYPED_ENUM NS_SWIFT_NAME(OpusBitrateMode);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusBitrateMode NS_TYPED_ENUM
+      NS_SWIFT_NAME(OpusBitrateMode);
 
 /// VBR
 extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeVBR;
@@ -231,7 +245,8 @@ extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettin
 extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR;
 
 /// Constant type for Opus signal type
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusSignalType NS_TYPED_ENUM NS_SWIFT_NAME(OpusSignalType);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusSignalType NS_TYPED_ENUM
+      NS_SWIFT_NAME(OpusSignalType);
 
 /// Voice
 extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeVoice;
@@ -239,7 +254,8 @@ extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSetting
 extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeMusic;
 
 /// Constant type for Opus frame duration
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusFrameDuration NS_TYPED_ENUM NS_SWIFT_NAME(OpusFrameDuration);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusFrameDuration NS_TYPED_ENUM
+      NS_SWIFT_NAME(OpusFrameDuration);
 
 /// 2.5 msec
 extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms;
@@ -297,7 +313,7 @@ typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueSpeexMode NS_
 /// Narrowband
 extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeNarrowband;
 /// Wideband
-extern SFBAudioEncodingSettingsValueSpeexMode  const SFBAudioEncodingSettingsValueSpeexModeWideband;
+extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeWideband;
 /// Ultra-wideband
 extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband;
 
@@ -320,14 +336,18 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBit
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
 
 /// Constant type for WavPack  compression levels
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueWavPackCompressionLevel NS_TYPED_ENUM NS_SWIFT_NAME(WavPackCompressionLevel);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueWavPackCompressionLevel NS_TYPED_ENUM
+      NS_SWIFT_NAME(WavPackCompressionLevel);
 
 /// Fast compression
-extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelFast;
+extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const
+      SFBAudioEncodingSettingsValueWavPackCompressionLevelFast;
 /// High compression
-extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh;
+extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const
+      SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh;
 /// Very high ompression
-extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh;
+extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const
+      SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh;
 
 #pragma mark - Core Audio Encoder Settings
 
@@ -339,7 +359,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFor
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags;
 /// Core Audio bits per channel (`NSNumber` representing `AudioStreamBasicDescription`.mBitsPerChannel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel;
-/// Core Audio audio converter configuration (`NSDictionary` keyed by `NSNumber` representing `AudioConverterPropertyID` with corresponding appropriately-wrapped value, typically `NSNumber`)
+/// Core Audio audio converter configuration (`NSDictionary` keyed by `NSNumber` representing `AudioConverterPropertyID`
+/// with corresponding appropriately-wrapped value, typically `NSNumber`)
 ///
 /// Currently supports:
 /// `kAudioConverterSampleRateConverterComplexity`
@@ -363,7 +384,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSu
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian;
 
 /// Constant type for Libsndfile major formats
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileMajorFormat NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileMajorFormat);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileMajorFormat NS_TYPED_ENUM
+      NS_SWIFT_NAME(LibsndfileMajorFormat);
 
 /// Microsoft WAV format
 extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV;
@@ -417,7 +439,8 @@ extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncoding
 extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64;
 
 /// Constant type for Libsndfile subtypes
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileSubtype NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileSubtype);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileSubtype NS_TYPED_ENUM
+      NS_SWIFT_NAME(LibsndfileSubtype);
 
 /// Signed 8 bit data
 extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8;
@@ -483,7 +506,8 @@ extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSett
 extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32;
 
 /// Constant type for Libsndfile file endian-ness
-typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileFileEndian NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileFileEndian);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileFileEndian NS_TYPED_ENUM
+      NS_SWIFT_NAME(LibsndfileFileEndian);
 
 /// Default file endian-ness
 extern SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault;
