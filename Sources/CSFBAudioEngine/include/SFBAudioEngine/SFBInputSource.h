@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -10,14 +10,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Bitmask values used in `+inputSourceForURL:flags:error:`
 typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
-	/// Files should be mapped in memory using `mmap()`
-	SFBInputSourceFlagsMemoryMapFiles			= 1 << 0,
-	/// Files should be fully loaded in memory
-	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1,
+    /// Files should be mapped in memory using `mmap()`
+    SFBInputSourceFlagsMemoryMapFiles = 1 << 0,
+    /// Files should be fully loaded in memory
+    SFBInputSourceFlagsLoadFilesInMemory = 1 << 1,
 } NS_SWIFT_NAME(InputSource.Flags);
 
 /// An input source
-NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
+NS_SWIFT_NAME(InputSource)
+@interface SFBInputSource : NSObject
 
 /// Returns an initialized `SFBInputSource` object for the given URL or `nil` on failure
 /// - important: Only file URLs are supported
@@ -51,13 +52,15 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - parameter length: The number of bytes in `bytes`
 /// - parameter freeWhenDone: If `YES` the returned object takes ownership of `bytes` and frees it on deallocation
 /// - returns: An initialized `SFBInputSource` object or `nil` on faliure
-+ (nullable instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone;
++ (nullable instancetype)inputSourceWithBytesNoCopy:(void *)bytes
+                                             length:(NSInteger)length
+                                       freeWhenDone:(BOOL)freeWhenDone;
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// Returns the URL corresponding to this input source or `nil` if none
-@property (nonatomic, nullable, readonly) NSURL * url;
+/// The URL corresponding to this input source or `nil` if none
+@property(nonatomic, nullable, readonly) NSURL *url;
 
 /// Opens the input source for reading
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -69,8 +72,8 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// Returns `YES` if the input source is open
-@property (nonatomic, readonly) BOOL isOpen;
+/// `YES` if the input source is open
+@property(nonatomic, readonly) BOOL isOpen;
 
 /// Reads bytes from the input
 /// - parameter buffer: A buffer to receive data
@@ -78,10 +81,13 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - parameter bytesRead: The number of bytes actually read
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if any bytes were read, `NO` otherwise
-- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readBytes:(void *)buffer
+           length:(NSInteger)length
+        bytesRead:(NSInteger *)bytesRead
+            error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns `YES` if the end of input has been reached
-@property (nonatomic, readonly) BOOL atEOF;
+/// `YES` if the end of input has been reached
+@property(nonatomic, readonly) BOOL atEOF;
 
 /// Returns the current offset in the input, in bytes
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error NS_REFINED_FOR_SWIFT;
@@ -89,8 +95,8 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// Returns the length of the input, in bytes
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Returns `YES` if the input is seekable
-@property (nonatomic, readonly) BOOL supportsSeeking;
+/// `YES` if the input is seekable
+@property(nonatomic, readonly) BOOL supportsSeeking;
 
 /// Seeks to the specified byte offset
 /// - parameter offset: The desired offset, in bytes
@@ -203,7 +209,8 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// - parameter length: The number of bytes to read
 /// - parameter skipID3v2Tag: Whether to skip a leading ID3v2 tag if present
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: An initialized `NSData` object containing `length` bytes following the optional leading ID3v2 tag, `nil` otherwise
+/// - returns: An initialized `NSData` object containing `length` bytes following the optional leading ID3v2 tag, `nil`
+/// otherwise
 - (nullable NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error;
 @end
 
@@ -213,13 +220,13 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBInputSource`
-typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
-	/// File not found
-	SFBInputSourceErrorCodeFileNotFound		= 0,
-	/// Input/output error
-	SFBInputSourceErrorCodeInputOutput		= 1,
-	/// Input not seekable
-	SFBInputSourceErrorCodeNotSeekable		= 2,
-} NS_SWIFT_NAME(InputSource.ErrorCode);
+typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode){
+    /// File not found
+    SFBInputSourceErrorCodeFileNotFound = 0,
+    /// Input/output error
+    SFBInputSourceErrorCodeInputOutput = 1,
+    /// Input not seekable
+    SFBInputSourceErrorCodeNotSeekable = 2,
+} NS_SWIFT_NAME(InputSource.Error);
 
 NS_ASSUME_NONNULL_END

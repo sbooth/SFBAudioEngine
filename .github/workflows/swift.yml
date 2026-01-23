@@ -1,18 +1,14 @@
 name: Swift
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
+permissions:
+  contents: read
 jobs:
   build:
-
-    permissions:
-      contents: read
     runs-on: macos-latest
-
     steps:
     - name: Set Xcode version
       uses: maxim-lobanov/setup-xcode@v1

@@ -4,28 +4,28 @@
 // MIT license
 //
 
-#import <Foundation/Foundation.h>
-
 #import <SFBAudioEngine/SFBAttachedPicture.h>
+
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// Metadata kind bitmask values used in `copyMetadataOfKind:from:` and `removeMetadataOfKind:`
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
-	/// Basic metadata
-	SFBAudioMetadataKindBasic			= 1 << 0,
-	/// Sorting metadata
-	SFBAudioMetadataKindSorting			= 1 << 1,
-	/// Grouping metadata
-	SFBAudioMetadataKindGrouping		= 1 << 2,
-	/// Additional metadata
-	SFBAudioMetadataKindAdditional		= 1 << 3,
-	/// Replay gain metadata
-	SFBAudioMetadataKindReplayGain		= 1 << 4,
+    /// Basic metadata
+    SFBAudioMetadataKindBasic = 1 << 0,
+    /// Sorting metadata
+    SFBAudioMetadataKindSorting = 1 << 1,
+    /// Grouping metadata
+    SFBAudioMetadataKindGrouping = 1 << 2,
+    /// Additional metadata
+    SFBAudioMetadataKindAdditional = 1 << 3,
+    /// Replay gain metadata
+    SFBAudioMetadataKindReplayGain = 1 << 4,
 } NS_SWIFT_NAME(AudioMetadata.Kind);
 
 /// A key in an audio metadata dictionary
-typedef NSString * SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata.Key);
+typedef NSString *SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata.Key);
 
 // Basic metadata dictionary keys
 /// Title (`NSString`)
@@ -108,7 +108,8 @@ extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumPeak;
 extern SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures;
 
 /// Class supporting commonly-used audio metadata and attached pictures
-NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
+NS_SWIFT_NAME(AudioMetadata)
+@interface SFBAudioMetadata : NSObject<NSCopying>
 
 /// Returns an initialized empty `SFBAudioMetadata` object
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
@@ -125,111 +126,111 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 #pragma mark - Basic Metadata
 
 /// The title
-@property (nonatomic, nullable) NSString *title;
+@property(nonatomic, nullable) NSString *title;
 
 /// The artist
-@property (nonatomic, nullable) NSString *artist;
+@property(nonatomic, nullable) NSString *artist;
 
 /// The album title
-@property (nonatomic, nullable) NSString *albumTitle;
+@property(nonatomic, nullable) NSString *albumTitle;
 
 /// The album artist
-@property (nonatomic, nullable) NSString *albumArtist;
+@property(nonatomic, nullable) NSString *albumArtist;
 
 /// The composer
-@property (nonatomic, nullable) NSString *composer;
+@property(nonatomic, nullable) NSString *composer;
 
 /// The genre
-@property (nonatomic, nullable) NSString *genre;
+@property(nonatomic, nullable) NSString *genre;
 
 /// The release date
-@property (nonatomic, nullable) NSString *releaseDate;
+@property(nonatomic, nullable) NSString *releaseDate;
 
 /// The compilation flag
-@property (nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
 
 /// The track number
-@property (nonatomic, nullable) NSNumber *trackNumber NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *trackNumber NS_REFINED_FOR_SWIFT;
 
 /// The track total
-@property (nonatomic, nullable) NSNumber *trackTotal NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *trackTotal NS_REFINED_FOR_SWIFT;
 
 /// The disc number
-@property (nonatomic, nullable) NSNumber *discNumber NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *discNumber NS_REFINED_FOR_SWIFT;
 
 /// The disc total
-@property (nonatomic, nullable) NSNumber *discTotal NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *discTotal NS_REFINED_FOR_SWIFT;
 
 /// The lyrics
-@property (nonatomic, nullable) NSString *lyrics;
+@property(nonatomic, nullable) NSString *lyrics;
 
 /// The Beats per minute (BPM)
-@property (nonatomic, nullable) NSNumber *bpm NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *bpm NS_REFINED_FOR_SWIFT;
 
 /// The rating
-@property (nonatomic, nullable) NSNumber *rating NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *rating NS_REFINED_FOR_SWIFT;
 
 /// The comment
-@property (nonatomic, nullable) NSString *comment;
+@property(nonatomic, nullable) NSString *comment;
 
 /// The Media Catalog Number (MCN)
-@property (nonatomic, nullable) NSString *mcn;
+@property(nonatomic, nullable) NSString *mcn;
 
 /// The International Standard Recording Code (ISRC)
-@property (nonatomic, nullable) NSString *isrc;
+@property(nonatomic, nullable) NSString *isrc;
 
 /// The MusicBrainz release ID
-@property (nonatomic, nullable) NSString *musicBrainzReleaseID;
+@property(nonatomic, nullable) NSString *musicBrainzReleaseID;
 
 /// The MusicBrainz recording ID
-@property (nonatomic, nullable) NSString *musicBrainzRecordingID;
+@property(nonatomic, nullable) NSString *musicBrainzRecordingID;
 
 #pragma mark - Sorting Metadata
 
 /// The title sort order
-@property (nonatomic, nullable) NSString *titleSortOrder;
+@property(nonatomic, nullable) NSString *titleSortOrder;
 
 /// The artist sort order
-@property (nonatomic, nullable) NSString *artistSortOrder;
+@property(nonatomic, nullable) NSString *artistSortOrder;
 
 /// The album title sort order
-@property (nonatomic, nullable) NSString *albumTitleSortOrder;
+@property(nonatomic, nullable) NSString *albumTitleSortOrder;
 
 /// The album artist sort order
-@property (nonatomic, nullable) NSString *albumArtistSortOrder;
+@property(nonatomic, nullable) NSString *albumArtistSortOrder;
 
 /// The composer sort order
-@property (nonatomic, nullable) NSString *composerSortOrder;
+@property(nonatomic, nullable) NSString *composerSortOrder;
 
 /// The genre sort order
-@property (nonatomic, nullable) NSString *genreSortOrder;
+@property(nonatomic, nullable) NSString *genreSortOrder;
 
 #pragma mark - Grouping Metadata
 
 /// The grouping
-@property (nonatomic, nullable) NSString *grouping;
+@property(nonatomic, nullable) NSString *grouping;
 
 #pragma mark - Additional Metadata
 
 /// The additional metadata
-@property (nonatomic, nullable) NSDictionary *additionalMetadata;
+@property(nonatomic, nullable) NSDictionary *additionalMetadata;
 
 #pragma mark - ReplayGain Metadata
 
 /// The replay gain reference loudness
-@property (nonatomic, nullable) NSNumber *replayGainReferenceLoudness NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *replayGainReferenceLoudness NS_REFINED_FOR_SWIFT;
 
 /// The replay gain track gain
-@property (nonatomic, nullable) NSNumber *replayGainTrackGain NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *replayGainTrackGain NS_REFINED_FOR_SWIFT;
 
 /// The replay gain track peak
-@property (nonatomic, nullable) NSNumber *replayGainTrackPeak NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *replayGainTrackPeak NS_REFINED_FOR_SWIFT;
 
 /// The replay gain album gain
-@property (nonatomic, nullable) NSNumber *replayGainAlbumGain NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *replayGainAlbumGain NS_REFINED_FOR_SWIFT;
 
 /// The replay gain album peak
-@property (nonatomic, nullable) NSNumber *replayGainAlbumPeak NS_REFINED_FOR_SWIFT;
+@property(nonatomic, nullable) NSNumber *replayGainAlbumPeak NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Metadata Utilities
 
@@ -246,7 +247,8 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// - parameter kind: A bitmask specifying the kinds of metadata to copy
 /// - seealso: `-copyMetadataFrom:`
 /// - seealso: `-copyAttachedPictures`
-- (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(ofKind:from:));
+- (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind
+                      from:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(ofKind:from:));
 
 /// Sets the values contained in the specified metadata kinds to `nil`
 /// - parameter kind: A bitmask specifying the kinds of metadata to remove
@@ -263,7 +265,7 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 #pragma mark - Attached Pictures
 
 /// Get all attached pictures
-@property (nonatomic, readonly) NSSet<SFBAttachedPicture *> *attachedPictures;
+@property(nonatomic, readonly) NSSet<SFBAttachedPicture *> *attachedPictures;
 
 #pragma mark - Attached Picture Utilities
 
@@ -275,7 +277,8 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyAttachedPicturesFrom(_:));
 
 /// Get all attached pictures of the specified type
-- (NSArray<SFBAttachedPicture *> *)attachedPicturesOfType:(SFBAttachedPictureType)type NS_SWIFT_NAME(attachedPictures(ofType:));
+- (NSArray<SFBAttachedPicture *> *)attachedPicturesOfType:(SFBAttachedPictureType)type
+      NS_SWIFT_NAME(attachedPictures(ofType:));
 
 /// Attach a picture
 - (void)attachPicture:(SFBAttachedPicture *)picture NS_SWIFT_NAME(attachPicture(_:));
@@ -293,7 +296,7 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 
 /// Copy the values contained in this object to a dictionary
 /// - returns: A dictionary containing this object's metadata and attached pictures
-@property (nonatomic, readonly) NSDictionary<SFBAudioMetadataKey, id> *dictionaryRepresentation;
+@property(nonatomic, readonly) NSDictionary<SFBAudioMetadataKey, id> *dictionaryRepresentation;
 
 /// Sets the metadata and attached pictures contained in this object from a dictionary
 /// - parameter dictionary: A dictionary containing the desired values

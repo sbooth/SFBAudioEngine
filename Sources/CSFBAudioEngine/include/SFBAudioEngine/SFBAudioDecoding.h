@@ -1,44 +1,45 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <Foundation/Foundation.h>
-#import <AVFAudio/AVFAudio.h>
-
 #import <SFBAudioEngine/SFBAudioEngineTypes.h>
 #import <SFBAudioEngine/SFBInputSource.h>
+
+#import <AVFAudio/AVFAudio.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// A key in an audio decoder's properties dictionary
-typedef NSString * SFBAudioDecodingPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecodingPropertiesKey);
+typedef NSString *SFBAudioDecodingPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecodingPropertiesKey);
 /// A value in an audio decoder's properties dictionary
 typedef id SFBAudioDecodingPropertiesValue NS_SWIFT_NAME(AudioDecodingPropertiesValue);
 
 /// Protocol defining the interface for audio decoders
-NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
+NS_SWIFT_NAME(AudioDecoding)
+@protocol SFBAudioDecoding
 
 #pragma mark - Input
 
-/// The `SFBInputSource` providing data to this decoder
-@property (nonatomic, readonly) SFBInputSource *inputSource;
+/// The input source providing data to this decoder
+@property(nonatomic, readonly) SFBInputSource *inputSource;
 
 #pragma mark - Audio Format Information
 
 /// The format of the encoded audio data
-@property (nonatomic, readonly) AVAudioFormat *sourceFormat;
+@property(nonatomic, readonly) AVAudioFormat *sourceFormat;
 
-/// The format of audio data produced by `-decodeIntoBuffer:error:`
-@property (nonatomic, readonly) AVAudioFormat *processingFormat;
+/// The format of audio data produced by ``-decodeIntoBuffer:error:``
+@property(nonatomic, readonly) AVAudioFormat *processingFormat;
 
 /// `YES` if decoding allows the original signal to be perfectly reconstructed
-@property (nonatomic, readonly) BOOL decodingIsLossless;
+@property(nonatomic, readonly) BOOL decodingIsLossless;
 
 /// Returns a dictionary containing decoder-specific properties
 /// - note: Properties are read when the decoder is opened
-@property (nonatomic, readonly) NSDictionary<SFBAudioDecodingPropertiesKey, SFBAudioDecodingPropertiesValue> *properties;
+@property(nonatomic, readonly) NSDictionary<SFBAudioDecodingPropertiesKey, SFBAudioDecodingPropertiesValue> *properties;
 
 #pragma mark - Setup and Teardown
 
@@ -52,8 +53,8 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// Returns `YES` if the decoder is open
-@property (nonatomic, readonly) BOOL isOpen;
+/// `YES` if the decoder is open
+@property(nonatomic, readonly) BOOL isOpen;
 
 #pragma mark - Decoding
 
@@ -65,8 +66,8 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Seeking
 
-/// Returns `YES` if the decoder is seekable
-@property (nonatomic, readonly) BOOL supportsSeeking;
+/// `YES` if the decoder is seekable
+@property(nonatomic, readonly) BOOL supportsSeeking;
 
 @end
 

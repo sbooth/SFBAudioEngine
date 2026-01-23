@@ -1,22 +1,25 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <memory>
-
-#import <os/log.h>
-
-#import <FLAC/metadata.h>
-#import <FLAC/stream_decoder.h>
-
-#import <AVAudioPCMBuffer+SFBBufferUtilities.h>
-
 #import "SFBFLACDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "NSError+SFBURLPresentation.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+#import <FLAC/metadata.h>
+#import <FLAC/stream_decoder.h>
+
+#import <os/log.h>
+
+#import <algorithm>
+#import <memory>
+
+#import <simd/simd.h>
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
 SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC = @"org.sbooth.AudioEngine.Decoder.OggFLAC";
@@ -35,23 +38,28 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamDecoder` objects
 struct flac__stream_decoder_deleter {
-	void operator()(FLAC__StreamDecoder *decoder) { FLAC__stream_decoder_delete(decoder); }
+    void operator()(FLAC__StreamDecoder *decoder) {
+        FLAC__stream_decoder_delete(decoder);
+    }
 };
 
 using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
 
 } /* namespace */
 
-@interface SFBFLACDecoder ()
-{
-@private
-	flac__stream_decoder_unique_ptr _flac;
-	FLAC__StreamMetadata_StreamInfo _streamInfo;
-	AVAudioFramePosition _framePosition;
-	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
+@interface SFBFLACDecoder () {
+  @private
+    flac__stream_decoder_unique_ptr _flac;
+    FLAC__StreamMetadata_StreamInfo _streamInfo;
+    AVAudioFramePosition _framePosition;
+    FLAC__FrameHeader _previousFrameHeader;
+    AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
+    NSError *_writeError;
 }
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error;
-- (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer;
+- (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder
+                                            frame:(const FLAC__Frame *)frame
+                                           buffer:(const FLAC__int32 *const[])buffer;
 - (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata;
 - (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status;
 @end
@@ -60,548 +68,606 @@ using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, fla
 
 namespace {
 
-FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data) noexcept
-{
+FLAC__StreamDecoderReadStatus readCallback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes,
+                                           void *client_data) noexcept {
 #pragma unused(decoder)
-	NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	SFBInputSource *inputSource = flacDecoder->_inputSource;
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    SFBInputSource *inputSource = flacDecoder->_inputSource;
 
-	NSInteger bytesRead;
-	if(![inputSource readBytes:buffer length:static_cast<NSInteger>(*bytes) bytesRead:&bytesRead error:nil])
-		return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
+    NSInteger bytesRead;
+    if (![inputSource readBytes:buffer length:static_cast<NSInteger>(*bytes) bytesRead:&bytesRead error:nil]) {
+        return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
+    }
 
-	*bytes = static_cast<size_t>(bytesRead);
+    *bytes = static_cast<size_t>(bytesRead);
 
-	if(bytesRead == 0 && inputSource.atEOF)
-		return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
+    if (bytesRead == 0 && inputSource.atEOF) {
+        return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
+    }
 
-	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+    return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 }
 
-FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data) noexcept
-{
+FLAC__StreamDecoderSeekStatus seekCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset,
+                                           void *client_data) noexcept {
 #pragma unused(decoder)
-	NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	SFBInputSource *inputSource = flacDecoder->_inputSource;
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    SFBInputSource *inputSource = flacDecoder->_inputSource;
 
-	if(!inputSource.supportsSeeking)
-		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
+    if (!inputSource.supportsSeeking) {
+        return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
+    }
 
-	if(![inputSource seekToOffset:static_cast<NSInteger>(absolute_byte_offset) error:nil])
-		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
+    if (![inputSource seekToOffset:static_cast<NSInteger>(absolute_byte_offset) error:nil]) {
+        return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
+    }
 
-	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
+    return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data) noexcept
-{
+FLAC__StreamDecoderTellStatus tellCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset,
+                                           void *client_data) noexcept {
 #pragma unused(decoder)
-	NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
-	NSInteger offset;
-	if(![flacDecoder->_inputSource getOffset:&offset error:nil])
-		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
+    NSInteger offset;
+    if (![flacDecoder->_inputSource getOffset:&offset error:nil]) {
+        return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
+    }
 
-	*absolute_byte_offset = static_cast<FLAC__uint64>(offset);
-	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
+    *absolute_byte_offset = static_cast<FLAC__uint64>(offset);
+    return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
-FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data) noexcept
-{
+FLAC__StreamDecoderLengthStatus lengthCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length,
+                                               void *client_data) noexcept {
 #pragma unused(decoder)
-	NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
-	NSInteger length;
-	if(![flacDecoder->_inputSource getLength:&length error:nil])
-		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
+    NSInteger length;
+    if (![flacDecoder->_inputSource getLength:&length error:nil]) {
+        return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
+    }
 
-	*stream_length = static_cast<FLAC__uint64>(length);
-	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
+    *stream_length = static_cast<FLAC__uint64>(length);
+    return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data) noexcept
-{
+FLAC__bool eofCallback(const FLAC__StreamDecoder *decoder, void *client_data) noexcept {
 #pragma unused(decoder)
-	NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	return flacDecoder->_inputSource.atEOF;
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    return flacDecoder->_inputSource.atEOF;
 }
 
-FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data) noexcept
-{
+FLAC__StreamDecoderWriteStatus writeCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame,
+                                             const FLAC__int32 *const buffer[], void *client_data) noexcept {
 #pragma unused(decoder)
-	NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
 }
 
-void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data) noexcept
-{
-	NSCParameterAssert(client_data != NULL);
+void metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata,
+                      void *client_data) noexcept {
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	[flacDecoder handleFLACMetadata:decoder metadata:metadata];
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    [flacDecoder handleFLACMetadata:decoder metadata:metadata];
 }
 
-void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data) noexcept
-{
-	NSCParameterAssert(client_data != NULL);
+void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status,
+                   void *client_data) noexcept {
+    NSCParameterAssert(client_data != NULL);
 
-	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	[flacDecoder handleFLACError:decoder status:status];
+    SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
+    [flacDecoder handleFLACError:decoder status:status];
 }
 
 } /* namespace */
 
 @implementation SFBFLACDecoder
 
-+ (void)load
-{
-	[SFBAudioDecoder registerSubclass:[self class]];
++ (void)load {
+    [SFBAudioDecoder registerSubclass:[self class]];
 }
 
-+ (NSSet *)supportedPathExtensions
-{
-	return [NSSet setWithObject:@"flac"];
++ (NSSet *)supportedPathExtensions {
+    return [NSSet setWithObject:@"flac"];
 }
 
-+ (NSSet *)supportedMIMETypes
-{
-	return [NSSet setWithObject:@"audio/flac"];
++ (NSSet *)supportedMIMETypes {
+    return [NSSet setWithObject:@"audio/flac"];
 }
 
-+ (SFBAudioDecoderName)decoderName
-{
-	return SFBAudioDecoderNameFLAC;
++ (SFBAudioDecoderName)decoderName {
+    return SFBAudioDecoderNameFLAC;
 }
 
-+ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
-{
-	NSParameterAssert(inputSource != nil);
-	NSParameterAssert(formatIsSupported != NULL);
++ (BOOL)testInputSource:(SFBInputSource *)inputSource
+      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                  error:(NSError **)error {
+    NSParameterAssert(inputSource != nil);
+    NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
-	if(!header)
-		return NO;
+    NSData *header = [inputSource readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
+    if (!header) {
+        return NO;
+    }
 
-	if([header isFLACHeader])
-		*formatIsSupported = SFBTernaryTruthValueTrue;
-	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
+    if ([header isFLACHeader]) {
+        *formatIsSupported = SFBTernaryTruthValueTrue;
+    } else {
+        *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
-	return YES;
+    return YES;
 }
 
-- (BOOL)decodingIsLossless
-{
-	return YES;
+- (BOOL)decodingIsLossless {
+    return YES;
 }
 
-- (BOOL)openReturningError:(NSError **)error
-{
-	if(![super openReturningError:error])
-		return NO;
+- (BOOL)openReturningError:(NSError **)error {
+    if (![super openReturningError:error]) {
+        return NO;
+    }
 
-	// Create FLAC decoder
-	flac__stream_decoder_unique_ptr flac{FLAC__stream_decoder_new()};
-	if(!flac) {
-		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-		return NO;
-	}
+    // Create FLAC decoder
+    flac__stream_decoder_unique_ptr flac{FLAC__stream_decoder_new()};
+    if (!flac) {
+        if (error) {
+            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        }
+        return NO;
+    }
 
-	// Initialize decoder
-	if(![self initializeFLACStreamDecoder:flac.get() error:error])
-		return NO;
+    // Initialize decoder
+    if (![self initializeFLACStreamDecoder:flac.get() error:error]) {
+        return NO;
+    }
 
-	// Process metadata
-	if(!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
-		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(flac.get()));
+    // Process metadata
+    if (!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
+        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s",
+                     FLAC__stream_decoder_get_resolved_state_string(flac.get()));
+        if (error) {
+            *error = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+                  NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
+        }
+        return NO;
+    }
 
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+    // FLAC supports from 4 to 32 bits per sample; this check is likely unnecessary
+    if (_streamInfo.bits_per_sample < 4 || _streamInfo.bits_per_sample > 32) {
+        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
+        if (error) {
+            *error = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+                  NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"The audio bit depth is not supported.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
+        }
+    }
 
-		return NO;
-	}
+    _framePosition = 0;
 
-	_framePosition = 0;
+    // Set up the processing format
+    AudioStreamBasicDescription processingStreamDescription{};
 
-	// Set up the processing format
-	AudioStreamBasicDescription processingStreamDescription{};
-
-	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
+    processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
-	processingStreamDescription.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+    processingStreamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger |
+                                               kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsAlignedHigh;
 #pragma clang diagnostic pop
 
-	processingStreamDescription.mSampleRate			= _streamInfo.sample_rate;
-	processingStreamDescription.mChannelsPerFrame	= _streamInfo.channels;
-	processingStreamDescription.mBitsPerChannel		= _streamInfo.bits_per_sample;
+    processingStreamDescription.mSampleRate = _streamInfo.sample_rate;
+    processingStreamDescription.mChannelsPerFrame = _streamInfo.channels;
+    processingStreamDescription.mBitsPerChannel = _streamInfo.bits_per_sample;
 
-	processingStreamDescription.mBytesPerPacket		= (_streamInfo.bits_per_sample + 7) / 8;
-	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+    processingStreamDescription.mBytesPerPacket = 4;
+    processingStreamDescription.mFramesPerPacket = 1;
+    processingStreamDescription.mBytesPerFrame =
+          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
-	// FLAC supports from 4 to 32 bits per sample
-	switch(processingStreamDescription.mBitsPerChannel) {
-		case 8:
-		case 16:
-		case 24:
-		case 32:
-			processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
-			break;
+    _flac = std::move(flac);
 
-		case 4 ... 7:
-		case 9 ... 15:
-		case 17 ... 23:
-		case 25 ... 31:
-			// Align high because Apple's AudioConverter doesn't handle low alignment
-			processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
-			break;
+    AVAudioChannelLayout *channelLayout = nil;
+    switch (_streamInfo.channels) {
+    case 1:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
+        break;
+    case 2:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
+        break;
+    case 3:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_3_0_A];
+        break;
+    case 4:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_4_0_B];
+        break;
+    case 5:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_0_B];
+        break;
+    case 6:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_1_B];
+        break;
+    case 7:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_6_1];
+        break;
+    case 8:
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_7_1];
+        break;
+    }
 
-		default: {
-			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
+    _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
+                                                           channelLayout:channelLayout];
 
-			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInvalidFormat
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Bit depth not supported", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's bit depth is not supported.", @"")];
+    // Set up the source format
+    AudioStreamBasicDescription sourceStreamDescription{};
 
-			return NO;
-		}
-	}
+    sourceStreamDescription.mFormatID = kAudioFormatFLAC;
 
-	_flac = std::move(flac);
+    sourceStreamDescription.mSampleRate = _streamInfo.sample_rate;
+    sourceStreamDescription.mChannelsPerFrame = _streamInfo.channels;
+    // Apple uses kAppleLosslessFormatFlag_XXBitSourceData to indicate FLAC bit depth in the Core Audio FLAC decoder
+    // Since the number of flags is limited the source bit depth is also stored in mBitsPerChannel
+    sourceStreamDescription.mBitsPerChannel = _streamInfo.bits_per_sample;
+    switch (_streamInfo.bits_per_sample) {
+    case 16:
+        sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+        break;
+    case 20:
+        sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;
+        break;
+    case 24:
+        sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+        break;
+    case 32:
+        sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_32BitSourceData;
+        break;
+    }
 
-	AVAudioChannelLayout *channelLayout = nil;
-	switch(_streamInfo.channels) {
-		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
-		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
-		case 3:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_3_0_A];		break;
-		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_4_0_B];		break;
-		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_0_B];		break;
-		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_1_B];		break;
-		case 7:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_6_1];			break;
-		case 8:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_7_1];			break;
-	}
+    sourceStreamDescription.mFramesPerPacket = _streamInfo.max_blocksize;
 
-	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
+    _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
+                                                       channelLayout:channelLayout];
 
-	// Set up the source format
-	AudioStreamBasicDescription sourceStreamDescription{};
+    // Populate codec properties
+    _properties = @{
+        SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize : @(_streamInfo.min_blocksize),
+        SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize : @(_streamInfo.max_blocksize),
+        SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize : @(_streamInfo.min_framesize),
+        SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize : @(_streamInfo.max_framesize),
+        SFBAudioDecodingPropertiesKeyFLACSampleRate : @(_streamInfo.sample_rate),
+        SFBAudioDecodingPropertiesKeyFLACChannels : @(_streamInfo.channels),
+        SFBAudioDecodingPropertiesKeyFLACBitsPerSample : @(_streamInfo.bits_per_sample),
+        SFBAudioDecodingPropertiesKeyFLACTotalSamples : @(_streamInfo.total_samples),
+        SFBAudioDecodingPropertiesKeyFLACMD5Sum : [[NSData alloc] initWithBytes:_streamInfo.md5sum length:16],
+    };
 
-	sourceStreamDescription.mFormatID			= kAudioFormatFLAC;
+    // Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
+    _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
+                                                 frameCapacity:_streamInfo.max_blocksize];
+    _frameBuffer.frameLength = 0;
 
-	sourceStreamDescription.mSampleRate			= _streamInfo.sample_rate;
-	sourceStreamDescription.mChannelsPerFrame	= _streamInfo.channels;
-	// Apple uses kAppleLosslessFormatFlag_XXBitSourceData to indicate FLAC bit depth in the Core Audio FLAC decoder
-	// Since the number of flags is limited the source bit depth is also stored in mBitsPerChannel
-	sourceStreamDescription.mBitsPerChannel		= _streamInfo.bits_per_sample;
-	switch(_streamInfo.bits_per_sample) {
-		case 16:
-			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
-			break;
-		case 20:
-			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;
-			break;
-		case 24:
-			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
-			break;
-		case 32:
-			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_32BitSourceData;
-			break;
-	}
-
-	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
-
-	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription channelLayout:channelLayout];
-
-	// Populate codec properties
-	_properties = @{
-		SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize: @(_streamInfo.min_blocksize),
-		SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize: @(_streamInfo.max_blocksize),
-		SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize: @(_streamInfo.min_framesize),
-		SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize: @(_streamInfo.max_framesize),
-		SFBAudioDecodingPropertiesKeyFLACSampleRate: @(_streamInfo.sample_rate),
-		SFBAudioDecodingPropertiesKeyFLACChannels: @(_streamInfo.channels),
-		SFBAudioDecodingPropertiesKeyFLACBitsPerSample: @(_streamInfo.bits_per_sample),
-		SFBAudioDecodingPropertiesKeyFLACTotalSamples: @(_streamInfo.total_samples),
-		SFBAudioDecodingPropertiesKeyFLACMD5Sum: [[NSData alloc] initWithBytes:_streamInfo.md5sum length:16],
-	};
-
-	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];
-	_frameBuffer.frameLength = 0;
-
-	return YES;
+    return YES;
 }
 
-- (BOOL)closeReturningError:(NSError **)error
-{
-	if(_flac && !FLAC__stream_decoder_finish(_flac.get()))
-		os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+- (BOOL)closeReturningError:(NSError **)error {
+    if (_flac && !FLAC__stream_decoder_finish(_flac.get())) {
+        os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s",
+                    FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+    }
 
-	_flac.reset();
+    _flac.reset();
 
-	_frameBuffer = nil;
-	memset(&_streamInfo, 0, sizeof(_streamInfo));
+    _frameBuffer = nil;
+    memset(&_streamInfo, 0, sizeof(_streamInfo));
 
-	return [super closeReturningError:error];
+    return [super closeReturningError:error];
 }
 
-- (BOOL)isOpen
-{
-	return _flac != NULL;
+- (BOOL)isOpen {
+    return _flac != NULL;
 }
 
-- (AVAudioFramePosition)framePosition
-{
-	return _framePosition;
+- (AVAudioFramePosition)framePosition {
+    return _framePosition;
 }
 
-- (AVAudioFramePosition)frameLength
-{
-	return static_cast<AVAudioFramePosition>(_streamInfo.total_samples);
+- (AVAudioFramePosition)frameLength {
+    return static_cast<AVAudioFramePosition>(_streamInfo.total_samples);
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
-{
-	NSParameterAssert(buffer != nil);
-	NSParameterAssert([buffer.format isEqual:_processingFormat]);
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error {
+    NSParameterAssert(buffer != nil);
+    NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-	// Reset output buffer data size
-	buffer.frameLength = 0;
+    // Reset output buffer data size
+    buffer.frameLength = 0;
 
-	if(frameLength > buffer.frameCapacity)
-		frameLength = buffer.frameCapacity;
+    frameLength = std::min(frameLength, buffer.frameCapacity);
+    if (frameLength == 0) {
+        return YES;
+    }
 
-	if(frameLength == 0)
-		return YES;
+    AVAudioFrameCount framesProcessed = 0;
 
-	AVAudioFrameCount framesProcessed = 0;
+    for (;;) {
+        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer
+                                                readingFromOffset:0
+                                                      frameLength:framesRemaining];
+        [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
-	for(;;) {
-		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:framesRemaining];
-		[_frameBuffer trimAtOffset:0 frameLength:framesCopied];
+        framesProcessed += framesCopied;
 
-		framesProcessed += framesCopied;
+        // All requested frames were read or EOS reached
+        if (framesProcessed == frameLength ||
+            FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
+            break;
+        }
 
-		// All requested frames were read or EOS reached
-		if(framesProcessed == frameLength || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM)
-			break;
+        // Grab the next frame
+        if (!FLAC__stream_decoder_process_single(_flac.get())) {
+            os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s",
+                         FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+            if (error) {
+                *error = _writeError
+                               ?: [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                                      code:SFBAudioDecoderErrorCodeDecodingError
+                                                  userInfo:@{NSURLErrorKey : _inputSource.url}];
+            }
+            return NO;
+        }
+    }
 
-		// Grab the next frame
-		if(!FLAC__stream_decoder_process_single(_flac.get())) {
-			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:@{ NSURLErrorKey: _inputSource.url }];
-			return NO;
-		}
-	}
+    _framePosition += framesProcessed;
 
-	_framePosition += framesProcessed;
-
-	return YES;
+    return YES;
 }
 
-- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
-{
-	NSParameterAssert(frame >= 0);
-//	NSParameterAssert(frame <= _totalFrames);
+- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
+    NSParameterAssert(frame >= 0);
+    //	NSParameterAssert(frame <= _totalFrames);
 
-	FLAC__bool result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
+    auto result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
 
-	// Attempt to re-sync the stream if necessary
-	if(FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR)
-		result = FLAC__stream_decoder_flush(_flac.get());
+    // Attempt to re-sync the stream if necessary
+    if (!result && FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR) {
+        os_log_debug(gSFBAudioDecoderLog, "FLAC seek error, attempting re-sync");
+        result = FLAC__stream_decoder_flush(_flac.get());
+    }
 
-	if(result)
-		_framePosition = frame;
+    if (!result) {
+        os_log_error(gSFBAudioDecoderLog, "FLAC seek error: %{public}s",
+                     FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
+        if (error) {
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeSeekError
+                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+        }
+        return NO;
+    }
 
-	return result != 0;
+    _framePosition = frame;
+    return YES;
 }
 
-- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error
-{
-	auto status = FLAC__stream_decoder_init_stream(decoder, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
-	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
-		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
+- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error {
+    auto status = FLAC__stream_decoder_init_stream(decoder, readCallback, seekCallback, tellCallback, lengthCallback,
+                                                   eofCallback, writeCallback, metadataCallback, errorCallback,
+                                                   (__bridge void *)self);
+    if (status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
+        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s",
+                     FLAC__stream_decoder_get_resolved_state_string(decoder));
+        if (error) {
+            *error = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+                  NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
+        }
+        return NO;
+    }
 
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
-		return NO;
-	}
-
-	return YES;
+    return YES;
 }
 
-- (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer
-{
-	NSParameterAssert(decoder != NULL);
-	NSParameterAssert(frame != NULL);
+- (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder
+                                            frame:(const FLAC__Frame *)frame
+                                           buffer:(const FLAC__int32 *const[])buffer {
+#if DEBUG
+    NSParameterAssert(decoder != NULL);
+    NSParameterAssert(frame != NULL);
+#endif /* DEBUG */
 
-	const AudioBufferList *abl = _frameBuffer.audioBufferList;
-	if(abl->mNumberBuffers != frame->header.channels)
-		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+    // Changes in channel count or sample rate mid-stream are not supported
+    if (const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
+        if (frame->header.channels != _previousFrameHeader.channels) {
+            os_log_error(gSFBAudioDecoderLog, "Change in channel count from %d to %d detected",
+                         _previousFrameHeader.channels, frame->header.channels);
 
-	// FLAC hands us 32-bit signed integers with the samples low-aligned
-	uint32_t bytesPerFrame = (frame->header.bits_per_sample + 7) / 8;
-	if(bytesPerFrame != _frameBuffer.format.streamDescription->mBytesPerFrame)
-		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+            _writeError = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+                  NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"Changes in channel count are not supported.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
 
-	switch(bytesPerFrame) {
-		case 1: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int8_t *dst = static_cast<int8_t *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = static_cast<int8_t>(buffer[channel][sample]);
-			}
+            _frameBuffer.frameLength = 0;
+            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+        }
 
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
+        if (frame->header.sample_rate != _previousFrameHeader.sample_rate) {
+            os_log_error(gSFBAudioDecoderLog, "Change in sample rate from %g kHz to %g kHz detected",
+                         static_cast<double>(_previousFrameHeader.sample_rate) / 1000.0,
+                         static_cast<double>(frame->header.sample_rate) / 1000.0);
 
-		case 2: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int16_t *dst = static_cast<int16_t *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = static_cast<int16_t>(buffer[channel][sample]);
-			}
+            _writeError = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+                  NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"Changes in sample rate are not supported.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
 
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
+            _frameBuffer.frameLength = 0;
+            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+        }
 
-		case 3: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				unsigned char *dst = static_cast<unsigned char *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
-					uint32_t value = OSSwapHostToLittleInt32(buffer[channel][sample]);
-					*dst++ = static_cast<unsigned char>(value & 0xff);
-					*dst++ = static_cast<unsigned char>((value >> 8) & 0xff);
-					*dst++ = static_cast<unsigned char>((value >> 16) & 0xff);
-				}
-			}
+        if (frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample) {
+            os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %d to %d detected",
+                         _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
+        }
+    }
 
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
+    const auto *abl = _frameBuffer.audioBufferList;
+    assert(abl->mNumberBuffers == frame->header.channels);
 
-		case 4: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int32_t *dst = static_cast<int32_t *>(abl->mBuffers[channel].mData);
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = static_cast<int32_t>(buffer[channel][sample]);
-			}
+    // FLAC hands us 32-bit signed integers with the samples low-aligned
+    if (frame->header.bits_per_sample != 32) [[likely]] {
+        // Shift the samples to high alignment
+        const auto shift = 32 - frame->header.bits_per_sample;
+        const auto channels = frame->header.channels;
+        const auto blocksize = frame->header.blocksize;
 
-			_frameBuffer.frameLength = frame->header.blocksize;
-			break;
-		}
-	}
+        for (uint32_t channel = 0; channel < channels; ++channel) {
+            // simd_uint8 and simd_uint16 require 16 byte alignment
+            using simd_vector = simd_uint16;
+            using simd_packed_vector = simd_packed_uint16;
+            constexpr uint32_t simd_vector_size = 16;
 
-	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+            uint32_t *__restrict dst = static_cast<uint32_t *>(abl->mBuffers[channel].mData);
+            const FLAC__int32 *__restrict src = buffer[channel];
+
+            uint32_t sample = 0;
+            if (blocksize > simd_vector_size) {
+                for (; sample <= blocksize - simd_vector_size; sample += simd_vector_size) {
+                    simd_vector v = *reinterpret_cast<const simd_packed_vector *>(&src[sample]);
+                    v <<= shift;
+                    *reinterpret_cast<simd_packed_vector *>(&dst[sample]) = v;
+                }
+            }
+
+            for (; sample < blocksize; ++sample) {
+                dst[sample] = static_cast<uint32_t>(src[sample]) << shift;
+            }
+        }
+    } else {
+        for (uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+            memcpy(abl->mBuffers[channel].mData, buffer[channel], frame->header.blocksize * sizeof(FLAC__int32));
+        }
+    }
+
+    _frameBuffer.frameLength = frame->header.blocksize;
+    _previousFrameHeader = frame->header;
+
+    return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
-- (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata
-{
-	NSParameterAssert(metadata != NULL);
+- (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata {
+    NSParameterAssert(metadata != NULL);
 
-	if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO)
-		memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
+    if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
+        memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
+    }
 }
 
-- (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status
-{
-	os_log_error(gSFBAudioDecoderLog, "FLAC error: %{public}s", FLAC__StreamDecoderErrorStatusString[status]);
+- (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status {
+    os_log_error(gSFBAudioDecoderLog, "FLAC error: %{public}s", FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 @end
 
 @implementation SFBOggFLACDecoder
 
-+ (void)load
-{
-	[SFBAudioDecoder registerSubclass:[self class]];
++ (void)load {
+    [SFBAudioDecoder registerSubclass:[self class]];
 }
 
-+ (NSSet *)supportedPathExtensions
-{
-	return [NSSet setWithObject:@"oga"];
++ (NSSet *)supportedPathExtensions {
+    return [NSSet setWithObject:@"oga"];
 }
 
-+ (NSSet *)supportedMIMETypes
-{
-	return [NSSet setWithObject:@"audio/ogg; codecs=flac"];
++ (NSSet *)supportedMIMETypes {
+    return [NSSet setWithObject:@"audio/ogg; codecs=flac"];
 }
 
-+ (SFBAudioDecoderName)decoderName
-{
-	return SFBAudioDecoderNameOggFLAC;
++ (SFBAudioDecoderName)decoderName {
+    return SFBAudioDecoderNameOggFLAC;
 }
 
-+ (BOOL)testInputSource:(SFBInputSource *)inputSource formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported error:(NSError **)error
-{
-	NSParameterAssert(inputSource != nil);
-	NSParameterAssert(formatIsSupported != NULL);
++ (BOOL)testInputSource:(SFBInputSource *)inputSource
+      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                  error:(NSError **)error {
+    NSParameterAssert(inputSource != nil);
+    NSParameterAssert(formatIsSupported != NULL);
 
-	NSData *header = [inputSource readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
-	if(!header)
-		return NO;
+    NSData *header = [inputSource readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
+    if (!header) {
+        return NO;
+    }
 
-	if([header isOggFLACHeader])
-		*formatIsSupported = SFBTernaryTruthValueTrue;
-	else
-		*formatIsSupported = SFBTernaryTruthValueFalse;
+    if ([header isOggFLACHeader]) {
+        *formatIsSupported = SFBTernaryTruthValueTrue;
+    } else {
+        *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
-	return YES;
+    return YES;
 }
 
-- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error
-{
+- (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error {
 
-	auto status = FLAC__stream_decoder_init_ogg_stream(decoder, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
+    auto status = FLAC__stream_decoder_init_ogg_stream(decoder, readCallback, seekCallback, tellCallback,
+                                                       lengthCallback, eofCallback, writeCallback, metadataCallback,
+                                                       errorCallback, (__bridge void *)self);
 
-	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
-		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
+    if (status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
+        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s",
+                     FLAC__stream_decoder_get_resolved_state_string(decoder));
+        if (error) {
+            *error = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
+                  NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
+        }
+        return NO;
+    }
 
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
-		return NO;
-	}
-
-	return YES;
+    return YES;
 }
 
 @end

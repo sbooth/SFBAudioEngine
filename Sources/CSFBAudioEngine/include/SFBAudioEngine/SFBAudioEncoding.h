@@ -1,43 +1,44 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
 
-#import <Foundation/Foundation.h>
-#import <AVFAudio/AVFAudio.h>
-
 #import <SFBAudioEngine/SFBAudioEngineTypes.h>
 #import <SFBAudioEngine/SFBOutputSource.h>
+
+#import <AVFAudio/AVFAudio.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// A key in an audio encoder's settings dictionary
-typedef NSString * SFBAudioEncodingSettingsKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncodingSettingsKey);
+typedef NSString *SFBAudioEncodingSettingsKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncodingSettingsKey);
 /// A value in an audio encoder's settings dictionary
 typedef id SFBAudioEncodingSettingsValue NS_SWIFT_NAME(AudioEncodingSettingsValue);
 
 /// Protocol defining the interface for audio encoders
-NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
+NS_SWIFT_NAME(AudioEncoding)
+@protocol SFBAudioEncoding
 
 #pragma mark - Output
 
-/// The `SFBOutputSource` consuming data from this decoder
-@property (nonatomic, readonly) SFBOutputSource *outputSource;
+/// The output source consuming data from this encoder
+@property(nonatomic, readonly) SFBOutputSource *outputSource;
 
 #pragma mark - Audio Format Information
 
 /// The source audio format
-@property (nonatomic, readonly) AVAudioFormat *sourceFormat;
+@property(nonatomic, readonly) AVAudioFormat *sourceFormat;
 
-/// The format of audio of data consumed by `-encodeFromBuffer`:error:
-@property (nonatomic, readonly) AVAudioFormat *processingFormat;
+/// The format of audio of data consumed by ``-encodeFromBuffer:error:``
+@property(nonatomic, readonly) AVAudioFormat *processingFormat;
 
 /// The format of the encoded audio data
-@property (nonatomic, readonly) AVAudioFormat *outputFormat;
+@property(nonatomic, readonly) AVAudioFormat *outputFormat;
 
 /// `YES` if encoding allows the original signal to be perfectly reconstructed
-@property (nonatomic, readonly) BOOL encodingIsLossless;
+@property(nonatomic, readonly) BOOL encodingIsLossless;
 
 /// Returns the processing format used for the given source format
 /// - parameter sourceFormat: The source audio format
@@ -64,12 +65,12 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
 /// Returns `YES` if the encoder is open
-@property (nonatomic, readonly) BOOL isOpen;
+@property(nonatomic, readonly) BOOL isOpen;
 
 #pragma mark - Encoding
 
 /// Encoder settings
-@property (nonatomic, copy, nullable) NSDictionary<SFBAudioEncodingSettingsKey, SFBAudioEncodingSettingsValue> *settings;
+@property(nonatomic, copy, nullable) NSDictionary<SFBAudioEncodingSettingsKey, SFBAudioEncodingSettingsValue> *settings;
 
 /// Encodes audio
 /// - parameter buffer: A buffer to receive the decoded audio
