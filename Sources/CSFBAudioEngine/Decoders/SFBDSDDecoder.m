@@ -423,9 +423,8 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
         if (a < b) {
             return NSOrderedDescending;
-        } else {
-            return NSOrderedSame;
         }
+        return NSOrderedSame;
     }];
 }
 
