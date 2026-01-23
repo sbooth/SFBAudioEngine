@@ -49,7 +49,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -60,12 +60,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::XM::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid extended module.", @""), @{
@@ -74,17 +75,20 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Extended Module" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties())
+        if (file.audioProperties()) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
+        }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag())
+        if (file.tag()) {
             [metadata addMetadataFromTagLibTag:file.tag()];
+        }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
@@ -92,17 +96,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading extended module properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
 
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing extended module metadata is not supported");
-    if (error)
+    if (error) {
         *error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                                                   NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
                                                       NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
@@ -110,6 +115,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
                                                       NSURLErrorKey : self.url
                                                   },
                                                   SFBLocalizedNameForURL(self.url));
+    }
     return NO;
 }
 

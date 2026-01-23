@@ -43,13 +43,15 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
     NSParameterAssert(formatIsSupported != NULL);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBDSFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header)
+    if (!header) {
         return NO;
+    }
 
-    if ([header isDSFHeader])
+    if ([header isDSFHeader]) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    else
+    } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
+    }
 
     return YES;
 }
@@ -58,7 +60,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -69,12 +71,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::DSF::File file(&stream);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid DSD Stream file.", @""), @{
@@ -83,6 +86,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
@@ -92,15 +96,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
             auto properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample())
+            if (properties->bitsPerSample()) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
-            if (properties->sampleCount())
+            }
+            if (properties->sampleCount()) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleCount());
+            }
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag())
+        if (file.tag()) {
             [metadata addMetadataFromTagLibID3v2Tag:file.tag()];
+        }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
@@ -108,10 +115,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading DSD Stream properties and metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
@@ -120,7 +128,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -131,12 +139,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         TagLib::DSF::File file(&stream, false);
         if (!file.isValid()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid DSD Stream file.", @""), @{
@@ -145,13 +154,14 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         sfb::setID3v2TagFromMetadata(self.metadata, file.tag());
 
         if (!file.save()) {
-            if (error)
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -160,16 +170,18 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
                           NSURLErrorKey : self.url
                       },
                       SFBLocalizedNameForURL(self.url));
+            }
             return NO;
         }
 
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing DSD Stream metadata: %{public}s", e.what());
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
+        }
         return NO;
     }
 }
