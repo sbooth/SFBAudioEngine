@@ -382,7 +382,6 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
     frameLength = std::min(frameLength, buffer.frameLength);
-
     if (frameLength == 0) {
         return YES;
     }

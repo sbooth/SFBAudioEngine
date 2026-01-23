@@ -427,10 +427,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }

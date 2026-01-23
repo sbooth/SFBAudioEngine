@@ -661,7 +661,6 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     buffer.frameLength = 0;
 
     frameLength = std::min(frameLength, buffer.frameCapacity);
-
     if (frameLength == 0) {
         return YES;
     }

@@ -282,10 +282,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }

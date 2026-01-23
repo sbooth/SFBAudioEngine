@@ -865,7 +865,6 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     buffer.byteLength = 0;
 
     packetCount = std::min(packetCount, buffer.packetCapacity);
-
     if (packetCount == 0) {
         return YES;
     }

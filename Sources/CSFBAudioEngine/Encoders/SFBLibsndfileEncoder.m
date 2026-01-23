@@ -874,10 +874,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     NSParameterAssert(buffer != nil);
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
-    if (frameLength > buffer.frameLength) {
-        frameLength = buffer.frameLength;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameLength);
     if (frameLength == 0) {
         return YES;
     }

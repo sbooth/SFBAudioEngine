@@ -387,7 +387,6 @@ int closeCallback(void *user_data) noexcept {
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
     frameLength = std::min(frameLength, buffer.frameLength);
-
     if (frameLength == 0) {
         return YES;
     }

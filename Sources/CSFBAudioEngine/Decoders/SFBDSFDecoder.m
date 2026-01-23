@@ -369,10 +369,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     buffer.packetCount = 0;
     buffer.byteLength = 0;
 
-    if (packetCount > buffer.packetCapacity) {
-        packetCount = buffer.packetCapacity;
-    }
-
+    packetCount = MIN(packetCount, buffer.packetCapacity);
     if (packetCount == 0) {
         return YES;
     }

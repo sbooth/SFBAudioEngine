@@ -184,10 +184,7 @@ static dumb_off_t get_size_callback(void *f) {
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    if (frameLength > buffer.frameCapacity) {
-        frameLength = buffer.frameCapacity;
-    }
-
+    frameLength = MIN(frameLength, buffer.frameCapacity);
     if (frameLength == 0) {
         return YES;
     }

@@ -263,7 +263,6 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     buffer.frameLength = 0;
 
     frameLength = std::min(frameLength, buffer.frameCapacity);
-
     if (frameLength == 0) {
         return YES;
     }

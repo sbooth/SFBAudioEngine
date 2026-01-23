@@ -345,7 +345,6 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
     frameLength = std::min(frameLength, buffer.frameLength);
-
     if (frameLength == 0) {
         return YES;
     }

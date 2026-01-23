@@ -408,7 +408,6 @@ void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMet
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
     frameLength = std::min(frameLength, buffer.frameLength);
-
     if (frameLength == 0) {
         return YES;
     }

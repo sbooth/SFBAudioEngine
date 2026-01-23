@@ -487,7 +487,6 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
     frameLength = std::min(frameLength, buffer.frameCapacity);
-
     if (frameLength == 0) {
         buffer.frameLength = 0;
         return YES;

@@ -645,7 +645,6 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
     frameLength = std::min(frameLength, buffer.frameLength);
-
     if (frameLength == 0) {
         return YES;
     }
