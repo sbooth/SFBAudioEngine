@@ -15,10 +15,10 @@
 #import <taglib/textidentificationframe.h>
 #import <taglib/unsynchronizedlyricsframe.h>
 
-#import <memory>
-
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
+#import <memory>
 
 namespace {
 

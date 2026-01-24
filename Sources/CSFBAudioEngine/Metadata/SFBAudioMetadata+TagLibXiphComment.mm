@@ -7,10 +7,10 @@
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "TagLibStringUtilities.h"
 
-#import <memory>
-
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
+#import <memory>
 
 namespace {
 
