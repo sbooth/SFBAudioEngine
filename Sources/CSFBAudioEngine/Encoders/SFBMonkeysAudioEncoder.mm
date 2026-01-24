@@ -88,23 +88,23 @@ class APEIOInterface final : public APE::IAPEIO {
         case APE::SeekFileBegin:
             // offset remains unchanged
             break;
-        case APE::SeekFileCurrent: {
-            NSInteger inputSourceOffset;
-            if ([outputSource_ getOffset:&inputSourceOffset error:nil]) {
+        case APE::SeekFileCurrent:
+            if (NSInteger inputSourceOffset; [outputSource_ getOffset:&inputSourceOffset error:nil]) {
                 offset += inputSourceOffset;
             }
             break;
-        }
-        case APE::SeekFileEnd: {
-            NSInteger inputSourceLength;
-            if ([outputSource_ getLength:&inputSourceLength error:nil]) {
+        case APE::SeekFileEnd:
+            if (NSInteger inputSourceLength; [outputSource_ getLength:&inputSourceLength error:nil]) {
                 offset += inputSourceLength;
             }
             break;
         }
+
+        if (![outputSource_ seekToOffset:offset error:nil]) {
+            return ERROR_IO_READ;
         }
 
-        return ![outputSource_ seekToOffset:offset error:nil];
+        return ERROR_SUCCESS;
     }
 
     int Create(const wchar_t *pName) override {
@@ -186,8 +186,8 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32) {
+    if ((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat ||
+        sourceFormat.channelCount < 1 || sourceFormat.channelCount > 32) {
         return nil;
     }
 

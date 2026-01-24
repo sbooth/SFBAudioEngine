@@ -581,7 +581,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
         }
 
         // The replay gain analyzer expects 16-bit sample size passed as floats
-        const float scale = 1U << 15;
+        const float scale = 1u << 15;
         vDSP_vsmul(outputBuffer.floatChannelData[0], 1, &scale, outputBuffer.floatChannelData[0], 1,
                    (vDSP_Length)frameCount);
         if (isStereo) {

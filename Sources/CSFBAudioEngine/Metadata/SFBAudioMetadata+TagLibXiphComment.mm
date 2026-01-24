@@ -111,7 +111,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
     }
 
-    if (additionalMetadata.count) {
+    if (additionalMetadata.count > 0) {
         self.additionalMetadata = additionalMetadata;
     }
 
@@ -136,8 +136,8 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 namespace {
 
 void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     // Remove the existing comment with this name
     tag->removeFields(key);
@@ -148,17 +148,17 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
 }
 
 void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     SetXiphComment(tag, key, value.stringValue);
 }
 
 void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    if (value == nil) {
+    if (!value) {
         SetXiphComment(tag, key, nil);
     } else {
         SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
@@ -167,17 +167,25 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
 
 void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value,
                                     NSString *format = nil) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    SetXiphComment(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (!value) {
+        SetXiphComment(tag, key, nil);
+    } else {
+        if (!format) {
+            SetXiphComment(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetXiphComment(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
 
 void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt) {
-    NSCParameterAssert(metadata != nil);
-    assert(nullptr != tag);
+    assert(metadata != nil);
+    assert(tag != nullptr);
 
     // Standard tags
     SetXiphComment(tag, "ALBUM", metadata.albumTitle);
@@ -237,7 +245,7 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
 }
 
 std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture) {
-    NSCParameterAssert(attachedPicture != nil);
+    assert(attachedPicture != nil);
 
     cg_image_source_unique_ptr imageSource{
           CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};

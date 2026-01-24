@@ -112,23 +112,23 @@ class APEIOInterface final : public APE::IAPEIO {
         case APE::SeekFileBegin:
             // offset remains unchanged
             break;
-        case APE::SeekFileCurrent: {
-            NSInteger inputSourceOffset;
-            if ([inputSource_ getOffset:&inputSourceOffset error:nil]) {
+        case APE::SeekFileCurrent:
+            if (NSInteger inputSourceOffset; [inputSource_ getOffset:&inputSourceOffset error:nil]) {
                 offset += inputSourceOffset;
             }
             break;
-        }
-        case APE::SeekFileEnd: {
-            NSInteger inputSourceLength;
-            if ([inputSource_ getLength:&inputSourceLength error:nil]) {
+        case APE::SeekFileEnd:
+            if (NSInteger inputSourceLength; [inputSource_ getLength:&inputSourceLength error:nil]) {
                 offset += inputSourceLength;
             }
             break;
         }
+
+        if (![inputSource_ seekToOffset:offset error:nil]) {
+            return ERROR_IO_READ;
         }
 
-        return ![inputSource_ seekToOffset:offset error:nil];
+        return ERROR_SUCCESS;
     }
 
     int Create(const wchar_t *pName) override {
@@ -410,7 +410,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int64_t blocksRead = 0;
     if (_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData),
-                               static_cast<int64_t>(frameLength), &blocksRead)) {
+                               static_cast<int64_t>(frameLength), &blocksRead) != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
         if (error) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain

@@ -434,10 +434,13 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s",
                          FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
             if (error) {
-                *error = _writeError
-                               ?: [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                                      code:SFBAudioDecoderErrorCodeDecodingError
-                                                  userInfo:@{NSURLErrorKey : _inputSource.url}];
+                if (_writeError) {
+                    *error = _writeError;
+                } else {
+                    *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                                 code:SFBAudioDecoderErrorCodeDecodingError
+                                             userInfo:@{NSURLErrorKey : _inputSource.url}];
+                }
             }
             return NO;
         }

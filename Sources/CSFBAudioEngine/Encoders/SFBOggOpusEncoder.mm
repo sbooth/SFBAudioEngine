@@ -209,8 +209,7 @@ int closeCallback(void *user_data) noexcept {
         return NO;
     }
 
-    NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrate];
-    if (bitrate != nil) {
+    if (NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrate]; bitrate) {
         opus_int32 intValue = bitrate.intValue;
         switch (intValue) {
         case 6 ... 256:
@@ -234,8 +233,8 @@ int closeCallback(void *user_data) noexcept {
         }
     }
 
-    SFBAudioEncodingSettingsValue bitrateMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrateMode];
-    if (bitrateMode != nil) {
+    if (SFBAudioEncodingSettingsValue bitrateMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrateMode];
+        bitrateMode) {
         if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(1));
         } else if (bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR) {
@@ -257,8 +256,7 @@ int closeCallback(void *user_data) noexcept {
         }
     }
 
-    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusComplexity];
-    if (complexity != nil) {
+    if (NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusComplexity]; complexity) {
         int intValue = complexity.intValue;
         switch (intValue) {
         case 0 ... 10:
@@ -280,8 +278,8 @@ int closeCallback(void *user_data) noexcept {
         }
     }
 
-    SFBAudioEncodingSettingsValue signalType = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusSignalType];
-    if (signalType != nil) {
+    if (SFBAudioEncodingSettingsValue signalType = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusSignalType];
+        signalType) {
         if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
         } else if (signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic) {
@@ -304,8 +302,9 @@ int closeCallback(void *user_data) noexcept {
     // Default in opusenc.c
     AVAudioFrameCount frameCapacity = 960;
 
-    SFBAudioEncodingSettingsValue frameDuration = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusFrameDuration];
-    if (frameDuration != nil) {
+    if (SFBAudioEncodingSettingsValue frameDuration =
+              [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusFrameDuration];
+        frameDuration) {
         if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms) {
             frameCapacity = 120;
             result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_2_5_MS));

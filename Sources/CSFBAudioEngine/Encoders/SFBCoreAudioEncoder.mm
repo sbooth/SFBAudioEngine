@@ -358,8 +358,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     }
 
     AudioFileTypeID fileType = 0;
-    NSNumber *fileTypeSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFileTypeID];
-    if (fileTypeSetting != nil) {
+    if (NSNumber *fileTypeSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFileTypeID];
+        fileTypeSetting) {
         fileType = static_cast<AudioFileTypeID>(fileTypeSetting.unsignedIntValue);
     } else {
         auto typesForExtension = typeIDsForExtension(_outputSource.url.pathExtension);
@@ -390,8 +390,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     }
 
     AudioFormatID formatID = 0;
-    NSNumber *formatIDSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatID];
-    if (formatIDSetting != nil) {
+    if (NSNumber *formatIDSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatID];
+        formatIDSetting) {
         formatID = static_cast<AudioFormatID>(formatIDSetting.unsignedIntValue);
     } else {
         auto availableFormatIDs = formatIDsForFileTypeID(fileType, true);
@@ -427,8 +427,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     }
 
     UInt32 formatFlags = 0;
-    NSNumber *formatFlagsSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags];
-    if (formatFlagsSetting != nil) {
+    if (NSNumber *formatFlagsSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags];
+        formatFlagsSetting) {
         formatFlags = static_cast<UInt32>(formatFlagsSetting.unsignedIntValue);
     } else {
         os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatFlags is not set; mFormatFlags "
@@ -436,8 +436,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     }
 
     UInt32 bitsPerChannel = 0;
-    NSNumber *bitsPerChannelSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel];
-    if (bitsPerChannelSetting != nil) {
+    if (NSNumber *bitsPerChannelSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel];
+        bitsPerChannelSetting) {
         bitsPerChannel = static_cast<UInt32>(bitsPerChannelSetting.unsignedIntValue);
     } else {
         os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; "
@@ -536,9 +536,9 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         }
     }
 
-    NSDictionary *audioConverterPropertySettings =
-          [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
-    if (audioConverterPropertySettings != nil) {
+    if (NSDictionary *audioConverterPropertySettings =
+              [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
+        audioConverterPropertySettings) {
         AudioConverterRef audioConverter = nullptr;
         UInt32 size = sizeof(audioConverter);
         result = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);

@@ -112,7 +112,7 @@
                 [key caseInsensitiveCompare:@"Cover Art (Back)"] == NSOrderedSame) {
                 auto binaryData = item.binaryData();
                 auto pos = binaryData.find('\0');
-                if (-1 != pos && 3 < binaryData.size()) {
+                if (pos != -1 && binaryData.size() > 3) {
                     auto upos = static_cast<unsigned int>(pos);
                     NSData *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
                                                        length:(binaryData.size() - upos - 1)];
@@ -130,7 +130,7 @@
         }
     }
 
-    if (additionalMetadata.count) {
+    if (additionalMetadata.count > 0) {
         self.additionalMetadata = additionalMetadata;
     }
 }
@@ -140,8 +140,8 @@
 namespace {
 
 void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     // Remove the existing comment with this name
     tag->removeItem(key);
@@ -152,17 +152,17 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
 }
 
 void SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     SetAPETag(tag, key, value.stringValue);
 }
 
 void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    if (value == nil) {
+    if (!value) {
         SetAPETag(tag, key, nil);
     } else {
         SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
@@ -170,17 +170,25 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
 }
 
 void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber *value, NSString *format = nil) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    SetAPETag(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (!value) {
+        SetAPETag(tag, key, nil);
+    } else {
+        if (!format) {
+            SetAPETag(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetAPETag(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
 
 void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt) {
-    NSCParameterAssert(metadata != nil);
-    assert(nullptr != tag);
+    assert(metadata != nil);
+    assert(tag != nullptr);
 
     // Standard tags
     SetAPETag(tag, "ALBUM", metadata.albumTitle);
