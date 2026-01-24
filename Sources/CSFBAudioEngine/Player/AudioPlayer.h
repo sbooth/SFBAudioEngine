@@ -341,7 +341,7 @@ inline bool AudioPlayer::isPaused() const noexcept {
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
-    return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) == 0U;
+    return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) == 0;
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
