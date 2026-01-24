@@ -39,7 +39,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     *formatIsSupported = SFBTernaryTruthValueUnknown;
 

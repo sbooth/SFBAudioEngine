@@ -353,7 +353,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 
@@ -608,7 +608,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
             }
         } else {
             os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings is "
-                                             "set but kExtAudioFileProperty_AudioConverter is NULL");
+                                             "set but kExtAudioFileProperty_AudioConverter is null");
         }
     }
 

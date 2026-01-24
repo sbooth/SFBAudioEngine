@@ -71,7 +71,7 @@ namespace {
 FLAC__StreamDecoderReadStatus readCallback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes,
                                            void *client_data) noexcept {
 #pragma unused(decoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     SFBInputSource *inputSource = flacDecoder->_inputSource;
@@ -93,7 +93,7 @@ FLAC__StreamDecoderReadStatus readCallback(const FLAC__StreamDecoder *decoder, F
 FLAC__StreamDecoderSeekStatus seekCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset,
                                            void *client_data) noexcept {
 #pragma unused(decoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     SFBInputSource *inputSource = flacDecoder->_inputSource;
@@ -112,7 +112,7 @@ FLAC__StreamDecoderSeekStatus seekCallback(const FLAC__StreamDecoder *decoder, F
 FLAC__StreamDecoderTellStatus tellCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset,
                                            void *client_data) noexcept {
 #pragma unused(decoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
@@ -128,7 +128,7 @@ FLAC__StreamDecoderTellStatus tellCallback(const FLAC__StreamDecoder *decoder, F
 FLAC__StreamDecoderLengthStatus lengthCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length,
                                                void *client_data) noexcept {
 #pragma unused(decoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
@@ -143,7 +143,7 @@ FLAC__StreamDecoderLengthStatus lengthCallback(const FLAC__StreamDecoder *decode
 
 FLAC__bool eofCallback(const FLAC__StreamDecoder *decoder, void *client_data) noexcept {
 #pragma unused(decoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     return flacDecoder->_inputSource.atEOF;
@@ -152,7 +152,7 @@ FLAC__bool eofCallback(const FLAC__StreamDecoder *decoder, void *client_data) no
 FLAC__StreamDecoderWriteStatus writeCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame,
                                              const FLAC__int32 *const buffer[], void *client_data) noexcept {
 #pragma unused(decoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
@@ -160,7 +160,7 @@ FLAC__StreamDecoderWriteStatus writeCallback(const FLAC__StreamDecoder *decoder,
 
 void metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata,
                       void *client_data) noexcept {
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     [flacDecoder handleFLACMetadata:decoder metadata:metadata];
@@ -168,7 +168,7 @@ void metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMeta
 
 void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status,
                    void *client_data) noexcept {
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     [flacDecoder handleFLACError:decoder status:status];
@@ -198,7 +198,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
     if (!header) {
@@ -219,7 +219,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 
@@ -389,7 +389,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)isOpen {
-    return _flac != NULL;
+    return _flac != nullptr;
 }
 
 - (AVAudioFramePosition)framePosition {
@@ -502,8 +502,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                                             frame:(const FLAC__Frame *)frame
                                            buffer:(const FLAC__int32 *const[])buffer {
 #if DEBUG
-    NSParameterAssert(decoder != NULL);
-    NSParameterAssert(frame != NULL);
+    NSParameterAssert(decoder != nullptr);
+    NSParameterAssert(frame != nullptr);
 #endif /* DEBUG */
 
     // Changes in channel count or sample rate mid-stream are not supported
@@ -594,7 +594,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata {
-    NSParameterAssert(metadata != NULL);
+    NSParameterAssert(metadata != nullptr);
 
     if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
@@ -629,7 +629,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {

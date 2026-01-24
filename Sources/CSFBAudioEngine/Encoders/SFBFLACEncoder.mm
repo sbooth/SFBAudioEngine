@@ -62,7 +62,7 @@ namespace {
 FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes,
                                            void *client_data) noexcept {
 #pragma unused(encoder)
-    NSCParameterAssert(client_data != NULL);
+    NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
@@ -237,7 +237,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 
