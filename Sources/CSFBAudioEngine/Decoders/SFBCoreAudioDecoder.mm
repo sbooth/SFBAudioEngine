@@ -16,6 +16,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cstdlib>
 #import <vector>
 
 #import <CXXAudioToolbox/AudioFileWrapper.hpp>
@@ -308,14 +309,14 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     AVAudioChannelLayout *channelLayout = nil;
     result = ExtAudioFileGetPropertyInfo(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
     if (result == noErr) {
-        AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(malloc(dataSize));
+        AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(std::malloc(dataSize));
         result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'",
                          result, SFBCStringForOSType(result));
 
-            free(layout);
+            std::free(layout);
 
             if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
@@ -334,7 +335,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         }
 
         channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:layout];
-        free(layout);
+        std::free(layout);
 
         // ExtAudioFile occasionally returns empty channel layouts; ignore them
         if (channelLayout.channelCount != format.mChannelsPerFrame) {
