@@ -70,7 +70,7 @@ int writeCallback(void *user_data, const unsigned char *ptr, opus_int32 len) noe
 
 int closeCallback(void *user_data) noexcept {
     SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
-    return static_cast<int>([encoder->_outputSource closeReturningError:nil]) == NO;
+    return static_cast<int>([encoder->_outputSource closeReturningError:nil] == NO);
 }
 
 } /* namespace */
