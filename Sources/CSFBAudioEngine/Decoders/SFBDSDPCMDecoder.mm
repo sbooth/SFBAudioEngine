@@ -191,11 +191,11 @@ dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
  * @param samples -- number of octets/samples to "translate"
  * @param src -- pointer to first octet (input)
  * @param src_stride -- src pointer increment
- * @param lsbf -- bitorder, 0=msb first, 1=lsbfirst
+ * @param lsbf -- bitorder, false=msb first, true=lsbfirst
  * @param dst -- pointer to first float (output)
  * @param dst_stride -- dst pointer increment
  */
-void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, int lsbf,
+void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbf,
                        float *dst, ptrdiff_t dst_stride) noexcept {
     unsigned ffp;
     unsigned i;
@@ -204,10 +204,9 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     unsigned char *p;
     double acc;
     ffp = ptr->fifopos;
-    lsbf = (lsbf != 0) ? 1 : 0;
     while (samples-- > 0) {
         bite1 = *src & 0xFFU;
-        if (lsbf != 0) {
+        if (lsbf) {
             bite1 = sBitReverseTable256[bite1];
         }
         ptr->fifo[ffp] = static_cast<unsigned char>(bite1);
@@ -265,7 +264,7 @@ class DXD {
 
     void translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst,
                    ptrdiff_t dst_stride) noexcept {
-        dsd2pcm_translate(handle_, samples, src, src_stride, static_cast<int>(lsbitfirst), dst, dst_stride);
+        dsd2pcm_translate(handle_, samples, src, src_stride, lsbitfirst, dst, dst_stride);
     }
 
   private:
@@ -289,7 +288,7 @@ class DXD {
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (inputSource == nullptr) {
+    if (inputSource == nil) {
         return nil;
     }
     return [self initWithInputSource:inputSource error:error];
@@ -299,7 +298,7 @@ class DXD {
     NSParameterAssert(inputSource != nil);
 
     SFBDSDDecoder *decoder = [[SFBDSDDecoder alloc] initWithInputSource:inputSource error:error];
-    if (decoder == nullptr) {
+    if (decoder == nil) {
         return nil;
     }
 
@@ -309,7 +308,8 @@ class DXD {
 - (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error {
     NSParameterAssert(decoder != nil);
 
-    if ((self = [super init]) != nullptr) {
+    self = [super init];
+    if (self != nil) {
         _decoder = decoder;
         // 6 dBFS gain -> powf(10.f, 6.f / 20.f) -> 0x1.fec984p+0 (approximately 1.99526231496888)
         _linearGain = 0x1.fec984p+0;

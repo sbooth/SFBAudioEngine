@@ -520,7 +520,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return NO;
     }
 
-    if (_processingFormat.channelLayout != nullptr) {
+    if (_processingFormat.channelLayout != nil) {
         result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientChannelLayout,
                                          sizeof(_processingFormat.channelLayout.layout),
                                          _processingFormat.channelLayout.layout);

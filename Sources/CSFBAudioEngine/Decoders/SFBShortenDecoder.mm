@@ -1708,7 +1708,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 
     NSError *error;
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:&error];
-    if ((inputSource == nullptr) || ([inputSource openReturningError:&error] == NO)) {
+    if ((inputSource == nil) || ([inputSource openReturningError:&error] == NO)) {
         os_log_error(gSFBAudioDecoderLog, "Error opening external seek table: %{public}@", error);
         return {};
     }

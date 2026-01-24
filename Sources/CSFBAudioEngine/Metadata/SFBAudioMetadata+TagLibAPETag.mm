@@ -146,7 +146,7 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
     // Remove the existing comment with this name
     tag->removeItem(key);
 
-    if (value != nullptr) {
+    if (value != nil) {
         tag->addValue(key, TagLib::StringFromNSString(value));
     }
 }
@@ -220,7 +220,7 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
 
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
-    if (additionalMetadata != nullptr) {
+    if (additionalMetadata != nil) {
         for (NSString *key in additionalMetadata) {
             SetAPETag(tag, key.UTF8String, additionalMetadata[key]);
         }
@@ -244,7 +244,7 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
                 SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {
                 TagLib::ByteVector data;
 
-                if (attachedPicture.pictureDescription != nullptr) {
+                if (attachedPicture.pictureDescription != nil) {
                     data.append(
                           TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
                 }

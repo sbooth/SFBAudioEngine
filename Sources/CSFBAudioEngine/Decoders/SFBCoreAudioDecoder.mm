@@ -391,7 +391,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     }
     // For all other formats convert to the canonical Core Audio format
     else {
-        if (channelLayout != nullptr) {
+        if (channelLayout != nil) {
             _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                                  sampleRate:format.mSampleRate
                                                                 interleaved:NO
@@ -407,7 +407,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // For audio with more than 2 channels AVAudioFormat requires a channel map. Since ExtAudioFile doesn't always
     // return one, there is a chance that the initialization of _processingFormat failed. If that happened then
     // attempting to set kExtAudioFileProperty_ClientDataFormat will segfault
-    if (_processingFormat == nullptr) {
+    if (_processingFormat == nil) {
         if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,

@@ -186,7 +186,7 @@ void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value != nullptr) {
+    if (value != nil) {
         tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
     }
 }
@@ -210,7 +210,7 @@ void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOn
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if ((valueOne != nullptr) || (valueTwo != nullptr)) {
+    if ((valueOne != nil) || (valueTwo != nil)) {
         tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
     }
 }

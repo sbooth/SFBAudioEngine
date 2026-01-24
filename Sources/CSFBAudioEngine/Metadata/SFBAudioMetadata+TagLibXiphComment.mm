@@ -142,7 +142,7 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
     // Remove the existing comment with this name
     tag->removeFields(key);
 
-    if (value != nullptr) {
+    if (value != nil) {
         tag->addField(key, TagLib::StringFromNSString(value));
     }
 }
@@ -217,7 +217,7 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
 
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
-    if (additionalMetadata != nullptr) {
+    if (additionalMetadata != nil) {
         for (NSString *key in additionalMetadata) {
             SetXiphComment(tag, key.UTF8String, additionalMetadata[key]);
         }
@@ -257,7 +257,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                         static_cast<unsigned int>(attachedPicture.imageData.length)));
     picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
-    if (attachedPicture.pictureDescription != nullptr) {
+    if (attachedPicture.pictureDescription != nil) {
         picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
     }
 
@@ -272,7 +272,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     // Flesh out the height, width, and depth
     NSDictionary *imagePropertiesDictionary =
           (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
-    if (imagePropertiesDictionary != nullptr) {
+    if (imagePropertiesDictionary != nil) {
         NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
         NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
         NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];

@@ -82,7 +82,7 @@ NSString *_Nullable audioDeviceName(AUAudioUnit *_Nonnull audioUnit) noexcept {
 
 /// Returns a string describing `format`
 NSString *stringDescribingAVAudioFormat(AVAudioFormat *_Nullable format, bool includeChannelLayout = true) noexcept {
-    if (format == nullptr) {
+    if (format == nil) {
         return nil;
     }
 
@@ -223,7 +223,7 @@ inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcep
 inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity) noexcept {
     auto format = decoder_.processingFormat;
     auto standardEquivalentFormat = format.standardEquivalent;
-    if (standardEquivalentFormat == nullptr) {
+    if (standardEquivalentFormat == nil) {
         os_log_error(log_, "Error converting %{public}@ to standard equivalent format",
                      stringDescribingAVAudioFormat(format));
         return false;
@@ -231,7 +231,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
     // Convert to deinterleaved native-endian float, preserving the channel count and order
     converter_ = [[AVAudioConverter alloc] initFromFormat:format toFormat:standardEquivalentFormat];
-    if (converter_ == nullptr) {
+    if (converter_ == nil) {
         os_log_error(log_, "Error creating AVAudioConverter converting from %{public}@ to %{public}@",
                      stringDescribingAVAudioFormat(format), stringDescribingAVAudioFormat(standardEquivalentFormat));
         return false;
@@ -241,7 +241,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
     assert(converter_.inputFormat.sampleRate == converter_.outputFormat.sampleRate);
 
     decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
-    if (decodeBuffer_ == nullptr) {
+    if (decodeBuffer_ == nil) {
         return false;
     }
 
@@ -360,7 +360,7 @@ sfb::AudioPlayer::AudioPlayer() {
 
     // Start out with 44.1 kHz stereo
     AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
-    if (format == nullptr) {
+    if (format == nil) {
         os_log_error(log_, "Unable to create AVAudioFormat for 44.1 kHz stereo");
         throw std::runtime_error("Unable to create AVAudioFormat");
     }
@@ -432,7 +432,7 @@ sfb::AudioPlayer::AudioPlayer() {
     // Audio Processing Graph Setup
 
     engine_ = [[AVAudioEngine alloc] init];
-    if (engine_ == nullptr) {
+    if (engine_ == nil) {
         os_log_error(log_, "Unable to create AVAudioEngine instance");
         throw std::runtime_error("Unable to create AVAudioEngine");
     }
@@ -442,7 +442,7 @@ sfb::AudioPlayer::AudioPlayer() {
                                         AudioBufferList *outputData) {
               return render(*isSilence, *timestamp, frameCount, outputData);
           }];
-    if (sourceNode_ == nullptr) {
+    if (sourceNode_ == nil) {
         throw std::runtime_error("Unable to create AVAudioSourceNode instance");
     }
 
@@ -717,7 +717,7 @@ bool sfb::AudioPlayer::engineIsRunning() const noexcept {
 sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
     std::lock_guard lock{activeDecodersLock_};
     const auto *decoderState = firstActiveDecoderState();
-    if (decoderState == nullptr) {
+    if (decoderState == nil) {
         return nil;
     }
     return decoderState->decoder_;
@@ -746,7 +746,7 @@ void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
 SFBPlaybackPosition sfb::AudioPlayer::playbackPosition() const noexcept {
     std::lock_guard lock{activeDecodersLock_};
     const auto *decoderState = firstActiveDecoderState();
-    if (decoderState == nullptr) {
+    if (decoderState == nil) {
         return SFBInvalidPlaybackPosition;
     }
     return {.framePosition = decoderState->framePosition(), .frameLength = decoderState->frameLength()};
@@ -756,7 +756,7 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
     std::lock_guard lock{activeDecodersLock_};
 
     const auto *decoderState = firstActiveDecoderState();
-    if (decoderState == nullptr) {
+    if (decoderState == nil) {
         return SFBInvalidPlaybackTime;
     }
 
@@ -782,7 +782,7 @@ bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
     std::lock_guard lock{activeDecodersLock_};
 
     const auto *decoderState = firstActiveDecoderState();
-    if (decoderState == nullptr) {
+    if (decoderState == nil) {
         if (playbackPosition != nullptr) {
             *playbackPosition = SFBInvalidPlaybackPosition;
         }
@@ -820,7 +820,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
     std::lock_guard lock{activeDecodersLock_};
 
     auto *decoderState = firstActiveDecoderState();
-    if ((decoderState == nullptr) || (decoderState->decoder_.supportsSeeking == NO)) {
+    if ((decoderState == nil) || (decoderState->decoder_.supportsSeeking == NO)) {
         return false;
     }
 
@@ -845,7 +845,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
     std::lock_guard lock{activeDecodersLock_};
 
     auto *decoderState = firstActiveDecoderState();
-    if ((decoderState == nullptr) || (decoderState->decoder_.supportsSeeking == NO)) {
+    if ((decoderState == nil) || (decoderState->decoder_.supportsSeeking == NO)) {
         return false;
     }
 
@@ -867,7 +867,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     std::lock_guard lock{activeDecodersLock_};
 
     auto *decoderState = firstActiveDecoderState();
-    if ((decoderState == nullptr) || (decoderState->decoder_.supportsSeeking == NO)) {
+    if ((decoderState == nil) || (decoderState->decoder_.supportsSeeking == NO)) {
         return false;
     }
 
@@ -884,7 +884,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
     std::lock_guard lock{activeDecodersLock_};
 
     auto *decoderState = firstActiveDecoderState();
-    if ((decoderState == nullptr) || (decoderState->decoder_.supportsSeeking == NO)) {
+    if ((decoderState == nil) || (decoderState->decoder_.supportsSeeking == NO)) {
         return false;
     }
 
@@ -900,7 +900,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
     std::lock_guard lock{activeDecodersLock_};
     const auto *decoderState = firstActiveDecoderState();
-    if (decoderState == nullptr) {
+    if (decoderState == nil) {
         return false;
     }
     return decoderState->decoder_.supportsSeeking != NO;
@@ -1061,7 +1061,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     continue;
                 }
 
-                if (decoderState->error_ == nullptr) {
+                if (decoderState->error_ == nil) {
                     os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
                 } else {
                     os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
@@ -1192,7 +1192,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         // Dequeue the next decoder if there are no decoders that haven't completed decoding
-        if (decoderState == nullptr) {
+        if (decoderState == nil) {
             {
                 // Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
                 // when transitioning from queued to active
@@ -1254,7 +1254,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                      format.sampleRate != renderFormat.sampleRate) {
                         buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat
                                                                frameCapacity:ringBufferChunkSize];
-                        if (buffer == nullptr) {
+                        if (buffer == nil) {
                             os_log_error(log_,
                                          "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d",
                                          stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
@@ -1302,7 +1302,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                      format.sampleRate != renderFormat.sampleRate) {
                         buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat
                                                                frameCapacity:ringBufferChunkSize];
-                        if (buffer == nullptr) {
+                        if (buffer == nil) {
                             os_log_error(log_,
                                          "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d",
                                          stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
@@ -1409,7 +1409,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         int64_t deltaNanos;
-        if (decoderState == nullptr) {
+        if (decoderState == nil) {
             if (formatMismatch) {
                 // Shorter timeout if waiting on a decoder to complete rendering for a pending format change
                 deltaNanos = 25 * NSEC_PER_MSEC;
@@ -1448,7 +1448,7 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
 
     NSError *err = nil;
     NSData *errorData = [NSKeyedArchiver archivedDataWithRootObject:error requiringSecureCoding:YES error:&err];
-    if (errorData == nullptr) {
+    if (errorData == nil) {
         os_log_error(log_, "Error archiving NSError for decoding error event: %{public}@", err);
         return;
     }
@@ -1706,8 +1706,8 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     // Mark the decoder as canceled for any scheduled render notifications
     objc_setAssociatedObject(decoder, &decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
-    if ((error == nullptr) && ([player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                          decoderCanceled:framesRendered:)] != NO)) {
+    if ((error == nil) && ([player_.delegate respondsToSelector:@selector(audioPlayer:
+                                                                      decoderCanceled:framesRendered:)] != NO)) {
         [player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
     } else if ((error != nullptr) && ([player_.delegate respondsToSelector:@selector
                                                         (audioPlayer:decodingAborted:error:framesRendered:)] != NO)) {
@@ -1749,7 +1749,7 @@ bool sfb::AudioPlayer::processDecodingErrorEvent() noexcept {
 
     NSError *err = nil;
     NSError *error = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSError class] fromData:data error:&err];
-    if (error == nullptr) {
+    if (error == nil) {
         os_log_error(log_, "Error unarchiving NSError for decoding error event: %{public}@", err);
         return false;
     }
@@ -1933,7 +1933,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
-        if (player == nullptr) {
+        if (player == nil) {
             os_log_debug(log_,
                          "Audio player deallocated between rendering will start and rendering started notifications");
             return;
@@ -1989,7 +1989,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
-        if (player == nullptr) {
+        if (player == nil) {
             os_log_debug(
                   log_,
                   "Audio player deallocated between rendering will complete and rendering complete notifications");

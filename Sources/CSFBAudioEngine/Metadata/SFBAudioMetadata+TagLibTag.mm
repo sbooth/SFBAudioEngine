@@ -39,6 +39,6 @@ void sfb::setTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag) {
     tag->setAlbum(TagLib::StringFromNSString(metadata.albumTitle));
     tag->setComment(TagLib::StringFromNSString(metadata.comment));
     tag->setGenre(TagLib::StringFromNSString(metadata.genre));
-    tag->setYear((metadata.releaseDate != nullptr) ? (unsigned int)metadata.releaseDate.intValue : 0);
+    tag->setYear((metadata.releaseDate != nil) ? (unsigned int)metadata.releaseDate.intValue : 0);
     tag->setTrack(metadata.trackNumber.unsignedIntValue);
 }
