@@ -22,9 +22,9 @@ static void SFBCreateDSDDecoderLog(void) {
     gSFBDSDDecoderLog = os_log_create("org.sbooth.AudioEngine", "DSDDecoder");
 }
 
-@interface SFBDSDDecoderSubclassInfo : NSObject
+@interface                 SFBDSDDecoderSubclassInfo : NSObject
 @property(nonatomic) Class klass;
-@property(nonatomic) int priority;
+@property(nonatomic) int   priority;
 @end
 
 @implementation SFBDSDDecoder
@@ -216,11 +216,11 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    int score = 10;
+    int   score = 10;
     Class subclass = nil;
 
     for (SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-        int currentScore = 0;
+        int   currentScore = 0;
         Class klass = subclassInfo.klass;
 
         if (lowercaseMIMEType) {

@@ -154,9 +154,9 @@ class AudioPlayer final {
     // MARK: - Playback Properties
 
     SFBPlaybackPosition playbackPosition() const noexcept;
-    SFBPlaybackTime playbackTime() const noexcept;
-    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable playbackPosition,
-                                    SFBPlaybackTime *_Nullable playbackTime) const noexcept;
+    SFBPlaybackTime     playbackTime() const noexcept;
+    bool                getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable playbackPosition,
+                                                   SFBPlaybackTime *_Nullable playbackTime) const noexcept;
 
     // MARK: - Seeking
 
@@ -170,12 +170,12 @@ class AudioPlayer final {
     // MARK: - Volume Control
 
     float volumeForChannel(AudioObjectPropertyElement channel) const noexcept;
-    bool setVolumeForChannel(float volume, AudioObjectPropertyElement channel, NSError **error) noexcept;
+    bool  setVolumeForChannel(float volume, AudioObjectPropertyElement channel, NSError **error) noexcept;
 
     // MARK: - Output Device
 
     AUAudioObjectID outputDeviceID() const noexcept;
-    bool setOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept;
+    bool            setOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept;
 #endif /* !TARGET_OS_IPHONE */
 
     // MARK: - AVAudioEngine
@@ -317,7 +317,7 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 }
 
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
+    const auto     flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
           static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     const auto state = flags & mask;
@@ -326,14 +326,14 @@ inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
 }
 
 inline bool AudioPlayer::isPlaying() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
+    const auto     flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
           static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     return (flags & mask) == mask;
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
+    const auto     flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
           static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);

@@ -52,7 +52,7 @@ static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t si
     NSCParameterAssert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
-    NSInteger bytesRead;
+    NSInteger           bytesRead;
     if (![decoder->_inputSource readBytes:ptr length:size bytesRead:&bytesRead error:nil]) {
         return -1;
     }
@@ -70,7 +70,7 @@ static mpc_int32_t tell_callback(mpc_reader *p_reader) {
     NSCParameterAssert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
-    NSInteger offset;
+    NSInteger           offset;
     if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
     }
@@ -98,11 +98,11 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
 @interface SFBMusepackDecoder () {
   @private
-    mpc_reader _reader;
-    mpc_demux *_demux;
+    mpc_reader           _reader;
+    mpc_demux           *_demux;
     AVAudioFramePosition _framePosition;
     AVAudioFramePosition _frameLength;
-    AVAudioPCMBuffer *_buffer;
+    AVAudioPCMBuffer    *_buffer;
 }
 @end
 
@@ -305,7 +305,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
         // Decode one frame of MPC data
         MPC_SAMPLE_FORMAT buf[MPC_DECODER_BUFFER_LENGTH];
-        mpc_frame_info frame;
+        mpc_frame_info    frame;
         frame.buffer = buf;
 
         if (mpc_demux_decode(_demux, &frame)) {
@@ -338,7 +338,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         float *const *floatChannelData = _buffer.floatChannelData;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const float *input = (float *)frame.buffer + channel;
-            float *output = floatChannelData[channel] + _buffer.frameLength;
+            float       *output = floatChannelData[channel] + _buffer.frameLength;
             for (uint32_t sample = 0; sample < frame.samples; ++sample) {
                 *output++ = *input;
                 input += channelCount;

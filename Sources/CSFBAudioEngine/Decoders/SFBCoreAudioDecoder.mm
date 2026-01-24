@@ -78,7 +78,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
 @interface SFBCoreAudioDecoder () {
   @private
-    CXXAudioToolbox::AudioFileWrapper _af;
+    CXXAudioToolbox::AudioFileWrapper    _af;
     CXXAudioToolbox::ExtAudioFileWrapper _eaf;
 }
 @end
@@ -95,7 +95,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+        auto   result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
@@ -104,7 +104,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
             return;
         }
 
-        auto readableTypesCount = size / sizeof(UInt32);
+        auto                readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
@@ -145,7 +145,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+        auto   result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
@@ -154,7 +154,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
             return;
         }
 
-        auto readableTypesCount = size / sizeof(UInt32);
+        auto                readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
@@ -291,7 +291,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
     // Query file format
     AudioStreamBasicDescription format{};
-    UInt32 dataSize = sizeof(format);
+    UInt32                      dataSize = sizeof(format);
     result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
@@ -461,7 +461,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    auto result = ExtAudioFileTell(_eaf, &currentFrame);
+    auto   result = ExtAudioFileTell(_eaf, &currentFrame);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -473,7 +473,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 - (AVAudioFramePosition)frameLength {
     SInt64 frameLength;
     UInt32 dataSize = sizeof(frameLength);
-    auto result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
+    auto   result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d '%{public}.4s'",

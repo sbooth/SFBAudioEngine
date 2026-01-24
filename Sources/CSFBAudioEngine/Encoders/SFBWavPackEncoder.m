@@ -30,9 +30,9 @@ SFBAudioEncodingSettingsValueWavPackCompressionLevel const
   @package
     NSMutableData *_firstBlock;
   @private
-    WavpackContext *_wpc;
-    WavpackConfig _config;
-    CC_MD5_CTX _md5;
+    WavpackContext      *_wpc;
+    WavpackConfig        _config;
+    CC_MD5_CTX           _md5;
     AVAudioFramePosition _framePosition;
 }
 @end
@@ -102,8 +102,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     AVAudioChannelLayout *channelLayout = nil;
 
     if (sourceFormat.channelLayout) {
-        AudioChannelBitmap channelBitmap = 0;
-        UInt32 propertySize = sizeof(channelBitmap);
+        AudioChannelBitmap    channelBitmap = 0;
+        UInt32                propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
                                                  &propertySize, &channelBitmap);

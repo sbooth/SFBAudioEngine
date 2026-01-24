@@ -40,7 +40,7 @@ SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexM
 static void vorbis_comment_init(char **comments, size_t *length, const char *vendor_string) {
     size_t vendor_length = strlen(vendor_string);
     size_t len = 4 + vendor_length + 4;
-    char *p = (char *)malloc(len);
+    char  *p = (char *)malloc(len);
     if (p == NULL) {
         *comments = NULL;
         *length = 0;
@@ -89,16 +89,16 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 @interface SFBOggSpeexEncoder () {
   @private
-    ogg_stream_state _os;
-    void *_st;
+    ogg_stream_state      _os;
+    void                 *_st;
     SpeexPreprocessState *_preprocess;
-    SpeexBits _bits;
-    AVAudioPCMBuffer *_frameBuffer;
-    AVAudioFramePosition _framePosition;
-    spx_int32_t _speex_frame_size;
-    spx_int32_t _speex_lookahead;
-    spx_int32_t _speex_frames_per_ogg_packet;
-    ogg_int64_t _speex_frame_number;
+    SpeexBits             _bits;
+    AVAudioPCMBuffer     *_frameBuffer;
+    AVAudioFramePosition  _framePosition;
+    spx_int32_t           _speex_frame_size;
+    spx_int32_t           _speex_lookahead;
+    spx_int32_t           _speex_frames_per_ogg_packet;
+    ogg_int64_t           _speex_frame_number;
 }
 - (BOOL)encodeSpeexFrameReturningError:(NSError **)error;
 @end
@@ -180,7 +180,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     // Setup the encoder
-    const SpeexMode *speex_mode = NULL;
+    const SpeexMode              *speex_mode = NULL;
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
     if (!mode) {
         if (_processingFormat.sampleRate > 25000) {
@@ -227,7 +227,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                                  frameCapacity:(AVAudioFrameCount)_speex_frame_size];
 
-    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
+    NSNumber   *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
     spx_int32_t complexity_value = complexity.intValue;
     speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity_value);
 
@@ -324,7 +324,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     header.vbr = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableVBR] boolValue];
     header.nb_channels = (spx_int32_t)_processingFormat.channelCount;
 
-    int packet_size;
+    int            packet_size;
     unsigned char *packet_data = (unsigned char *)speex_header_to_packet(&header, &packet_size);
 
     ogg_packet op;
@@ -365,11 +365,11 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     const char *speex_version;
-    char vendor_string[64];
+    char        vendor_string[64];
     speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING, (void *)&speex_version);
     snprintf(vendor_string, sizeof(vendor_string), "Encoded with Speex %s", speex_version);
 
-    char *comments;
+    char  *comments;
     size_t comments_length;
     vorbis_comment_init(&comments, &comments_length, vendor_string);
 

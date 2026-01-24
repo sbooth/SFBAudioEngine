@@ -154,9 +154,9 @@ class APEIOInterface final : public APE::IAPEIO {
 
 @interface SFBMonkeysAudioEncoder () {
   @private
-    std::unique_ptr<APEIOInterface> _ioInterface;
+    std::unique_ptr<APEIOInterface>    _ioInterface;
     std::unique_ptr<APE::IAPECompress> _compressor;
-    AVAudioFramePosition _framePosition;
+    AVAudioFramePosition               _framePosition;
 }
 @end
 
@@ -192,9 +192,9 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     APE::WAVEFORMATEX wve;
-    auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate),
-                                   static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel),
-                                   static_cast<int>(sourceFormat.channelCount));
+    auto              result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate),
+                                                static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel),
+                                                static_cast<int>(sourceFormat.channelCount));
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
         return nil;
@@ -222,8 +222,8 @@ class APEIOInterface final : public APE::IAPEIO {
     AVAudioChannelLayout *channelLayout = nil;
 
     if (sourceFormat.channelLayout != nil) {
-        AudioChannelBitmap channelBitmap = 0;
-        UInt32 propertySize = sizeof(channelBitmap);
+        AudioChannelBitmap    channelBitmap = 0;
+        UInt32                propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
                                                  &propertySize, &channelBitmap);
@@ -249,7 +249,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     try {
-        int result;
+        int   result;
         auto *compressor = CreateIAPECompress(&result);
         if (!compressor) {
             os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
@@ -269,7 +269,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return NO;
     }
 
-    int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
+    int                           compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
     if (level != nil) {
         if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast) {
@@ -288,9 +288,9 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     APE::WAVEFORMATEX wve;
-    auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(_sourceFormat.sampleRate),
-                                   static_cast<int>(_sourceFormat.streamDescription->mBitsPerChannel),
-                                   static_cast<int>(_sourceFormat.channelCount));
+    auto              result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(_sourceFormat.sampleRate),
+                                                static_cast<int>(_sourceFormat.streamDescription->mBitsPerChannel),
+                                                static_cast<int>(_sourceFormat.channelCount));
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
         if (error) {

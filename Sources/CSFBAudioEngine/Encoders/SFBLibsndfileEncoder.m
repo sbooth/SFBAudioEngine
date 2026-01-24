@@ -279,7 +279,7 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
     NSCParameterAssert(channel_map != NULL);
     NSCParameterAssert(channels > 0);
 
-    UInt32 dataSize;
+    UInt32   dataSize;
     OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap),
                                                  &channelBitmap, &dataSize);
     if (result != noErr) {
@@ -320,7 +320,7 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
     NSCParameterAssert(channel_map != NULL);
     NSCParameterAssert(channels > 0);
 
-    UInt32 dataSize;
+    UInt32   dataSize;
     OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag),
                                                  &layoutTag, &dataSize);
     if (result != noErr) {
@@ -356,7 +356,7 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
 }
 
 /// Fills a sndfile channel map with the corresponding channels from `channelLayout`
-static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int channels,
+static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int                          channels,
                                                AVAudioChannelLayout *_Nonnull channelLayout, NSError **error) {
     NSCParameterAssert(channel_map != NULL);
     NSCParameterAssert(channels > 0);
@@ -386,7 +386,7 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
-    NSInteger length;
+    NSInteger             length;
     if (![encoder->_outputSource getLength:&length error:nil]) {
         return -1;
     }
@@ -462,7 +462,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
-    NSInteger offset;
+    NSInteger             offset;
     if (![encoder->_outputSource getOffset:&offset error:nil]) {
         return -1;
     }
@@ -471,8 +471,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
 @interface SFBLibsndfileEncoder () {
   @private
-    SNDFILE *_sndfile;
-    SF_INFO _sfinfo;
+    SNDFILE         *_sndfile;
+    SF_INFO          _sfinfo;
     enum WriteMethod _writeMethod;
 }
 @end
@@ -598,7 +598,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         return NO;
     }
 
-    int majorFormat = 0;
+    int                           majorFormat = 0;
     SFBAudioEncodingSettingsValue majorFormatSetting =
           [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileMajorFormat];
     if (majorFormatSetting) {
@@ -666,7 +666,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                     majorFormat, _outputSource.url.pathExtension);
     }
 
-    int subtype = 0;
+    int                           subtype = 0;
     SFBAudioEncodingSettingsValue subtypeSetting =
           [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileSubtype];
     if (subtypeSetting) {
@@ -742,7 +742,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                     subtype, _processingFormat);
     }
 
-    int endian = 0;
+    int       endian = 0;
     NSNumber *fileEndianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
     if (fileEndianSetting) {
         if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault) {

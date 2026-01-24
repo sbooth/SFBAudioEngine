@@ -86,11 +86,11 @@ static dumb_off_t get_size_callback(void *f) {
 
 @interface SFBModuleDecoder () {
   @private
-    DUMBFILE_SYSTEM _dfs;
-    DUMBFILE *_df;
-    DUH *_duh;
-    DUH_SIGRENDERER *_dsr;
-    sample_t **_samples;
+    DUMBFILE_SYSTEM      _dfs;
+    DUMBFILE            *_df;
+    DUH                 *_duh;
+    DUH_SIGRENDERER     *_dsr;
+    sample_t           **_samples;
     AVAudioFramePosition _framePosition;
     AVAudioFramePosition _frameLength;
 }

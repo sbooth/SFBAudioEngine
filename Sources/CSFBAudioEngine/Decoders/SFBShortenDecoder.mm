@@ -277,7 +277,7 @@ class VariableLengthInput {
 
 /// Shorten seek table header
 struct SeekTableHeader {
-    int8_t signature_[4];
+    int8_t   signature_[4];
     uint32_t version_;
     uint32_t fileSize_;
 };
@@ -294,7 +294,7 @@ SeekTableHeader parseSeekTableHeader(const void *buf) {
 /// Shorten seek table trailer
 struct SeekTableTrailer {
     uint32_t seekTableSize_;
-    int8_t signature_[8];
+    int8_t   signature_[8];
 };
 
 SeekTableTrailer parseSeekTableTrailer(const void *buf) {
@@ -315,10 +315,10 @@ struct SeekTableEntry {
     uint16_t bitBufferPosition_;
     uint32_t bitBuffer_;
     uint16_t bitshift_;
-    int32_t chanBuf0_[3];
-    int32_t chanBuf1_[3];
-    int32_t offset0_[4];
-    int32_t offset1_[4];
+    int32_t  chanBuf0_[3];
+    int32_t  chanBuf1_[3];
+    int32_t  offset0_[4];
+    int32_t  offset1_[4];
 };
 
 SeekTableEntry parseSeekTableEntry(const void *buf) {
@@ -363,31 +363,31 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 @interface SFBShortenDecoder () {
   @private
     VariableLengthInput _input;
-    int _version;
-    int32_t _lpcQuantOffset;
-    int _fileType;
-    int _channelCount;
-    int _mean;
-    int _blocksize;
-    int _maxLPC;
-    int _wrap;
+    int                 _version;
+    int32_t             _lpcQuantOffset;
+    int                 _fileType;
+    int                 _channelCount;
+    int                 _mean;
+    int                 _blocksize;
+    int                 _maxLPC;
+    int                 _wrap;
 
     uint32_t _sampleRate;
     uint32_t _bitsPerSample;
-    bool _bigEndian;
+    bool     _bigEndian;
 
     int32_t **_buffer;
     int32_t **_offset;
-    int *_qlpc;
-    int _bitshift;
+    int      *_qlpc;
+    int       _bitshift;
 
-    bool _eos;
+    bool                        _eos;
     std::vector<SeekTableEntry> _seekTableEntries;
 
-    AVAudioPCMBuffer *_frameBuffer;
+    AVAudioPCMBuffer    *_frameBuffer;
     AVAudioFramePosition _framePosition;
     AVAudioFramePosition _frameLength;
-    uint64_t _blocksDecoded;
+    uint64_t             _blocksDecoded;
 }
 - (bool)parseShortenHeaderReturningError:(NSError **)error;
 - (bool)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error;
@@ -769,7 +769,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     _framePosition = entry->frameNumber_;
     _frameBuffer.frameLength = 0;
 
-    const auto framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->frameNumber_);
+    const auto        framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->frameNumber_);
     AVAudioFrameCount framesSkipped = 0;
 
     for (;;) {
@@ -1081,7 +1081,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         return false;
     }
 
-    auto sawFormatChunk = false;
+    auto     sawFormatChunk = false;
     uint32_t dataChunkSize = 0;
     uint16_t blockAlign = 0;
 
@@ -1293,10 +1293,10 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         case functionDiff2:
         case functionDiff3:
         case functionQLPC: {
-            int32_t chanOffset;
+            int32_t  chanOffset;
             int32_t *chanBuffer = _buffer[chan];
-            int resn = 0;
-            int lpc;
+            int      resn = 0;
+            int      lpc;
 
             if (cmd != functionZero) {
                 if (!_input.getRiceGolombCode(resn, parameterEnergy)) {
@@ -1600,7 +1600,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     SeekTableTrailer trailer;
     {
         unsigned char buf[seekTrailerSizeBytes];
-        NSInteger bytesRead;
+        NSInteger     bytesRead;
         if (![_inputSource readBytes:buf length:seekTrailerSizeBytes bytesRead:&bytesRead error:error]) {
             return false;
         }
@@ -1638,7 +1638,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     SeekTableHeader header;
     {
         unsigned char buf[seekHeaderSizeBytes];
-        NSInteger bytesRead;
+        NSInteger     bytesRead;
         if (![_inputSource readBytes:buf length:seekHeaderSizeBytes bytesRead:&bytesRead error:error]) {
             return false;
         }
@@ -1676,7 +1676,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     auto count = (trailer.seekTableSize_ - seekTrailerSizeBytes - seekHeaderSizeBytes) / seekEntrySizeBytes;
     for (uint32_t i = 0; i < count; ++i) {
         unsigned char buf[seekEntrySizeBytes];
-        NSInteger bytesRead;
+        NSInteger     bytesRead;
         if (![_inputSource readBytes:buf length:seekEntrySizeBytes bytesRead:&bytesRead error:error]) {
             return false;
         }
@@ -1708,7 +1708,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url {
     NSParameterAssert(url != nil);
 
-    NSError *error;
+    NSError        *error;
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:&error];
     if (!inputSource || ![inputSource openReturningError:&error]) {
         os_log_error(gSFBAudioDecoderLog, "Error opening external seek table: %{public}@", error);
@@ -1717,7 +1717,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 
     {
         unsigned char buf[seekHeaderSizeBytes];
-        NSInteger bytesRead;
+        NSInteger     bytesRead;
         if (![inputSource readBytes:buf length:seekHeaderSizeBytes bytesRead:&bytesRead error:&error] ||
             bytesRead != seekHeaderSizeBytes) {
             os_log_error(gSFBAudioDecoderLog, "Error reading external seek table header: %{public}@", error);
@@ -1736,7 +1736,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 
     for (;;) {
         unsigned char buf[seekEntrySizeBytes];
-        NSInteger bytesRead;
+        NSInteger     bytesRead;
         if (![inputSource readBytes:buf length:seekEntrySizeBytes bytesRead:&bytesRead error:&error] ||
             bytesRead != seekEntrySizeBytes) {
             os_log_error(gSFBAudioDecoderLog, "Error reading external seek table entry: %{public}@", error);

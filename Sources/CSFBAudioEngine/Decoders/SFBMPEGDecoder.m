@@ -129,9 +129,9 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 
 @interface SFBMPEGDecoder () {
   @private
-    mpg123_handle *_mpg123;
+    mpg123_handle       *_mpg123;
     AVAudioFramePosition _framePosition;
-    AVAudioPCMBuffer *_buffer;
+    AVAudioPCMBuffer    *_buffer;
 }
 @end
 
@@ -169,7 +169,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     }
 
     unsigned char buf[512];
-    NSInteger len;
+    NSInteger     len;
     if (![inputSource readBytes:buf length:sizeof buf bytesRead:&len error:error]) {
         return NO;
     }
@@ -303,8 +303,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     _framePosition = 0;
 
     long rate;
-    int channels;
-    int encoding;
+    int  channels;
+    int  encoding;
     if (mpg123_getformat(_mpg123, &rate, &channels, &encoding) != MPG123_OK || encoding != MPG123_ENC_FLOAT_32 ||
         channels <= 0) {
         mpg123_close(_mpg123);
@@ -449,10 +449,10 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         }
 
         // Read and decode an MPEG frame
-        off_t frameNumber;
+        off_t          frameNumber;
         unsigned char *audioData = NULL;
-        size_t bytesDecoded = 0;
-        int result = mpg123_decode_frame(_mpg123, &frameNumber, &audioData, &bytesDecoded);
+        size_t         bytesDecoded = 0;
+        int            result = mpg123_decode_frame(_mpg123, &frameNumber, &audioData, &bytesDecoded);
         // EOS
         if (result == MPG123_DONE) {
             break;
@@ -471,11 +471,11 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         AVAudioFrameCount framesDecoded =
               (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
 
-        float *const *floatChannelData = _buffer.floatChannelData;
+        float *const       *floatChannelData = _buffer.floatChannelData;
         AVAudioChannelCount channelCount = _buffer.format.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const float *input = (float *)audioData + channel;
-            float *output = floatChannelData[channel];
+            float       *output = floatChannelData[channel];
             for (AVAudioFrameCount frame = 0; frame < framesDecoded; ++frame) {
                 *output++ = *input;
                 input += channelCount;

@@ -45,7 +45,7 @@ std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexce
     CFStringRef extension = (__bridge CFStringRef)pathExtension;
 
     UInt32 size = 0;
-    auto result =
+    auto   result =
           AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog,
@@ -54,7 +54,7 @@ std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexce
         return {};
     }
 
-    auto typesForExtensionCount = size / sizeof(AudioFileTypeID);
+    auto                         typesForExtensionCount = size / sizeof(AudioFileTypeID);
     std::vector<AudioFileTypeID> typesForExtension(typesForExtensionCount);
 
     result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size,
@@ -71,7 +71,7 @@ std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexce
 
 std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false) noexcept {
     UInt32 size = 0;
-    auto result =
+    auto   result =
           AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog,
@@ -80,7 +80,7 @@ std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bo
         return {};
     }
 
-    auto availableFormatIDCount = size / sizeof(AudioFormatID);
+    auto                       availableFormatIDCount = size / sizeof(AudioFormatID);
     std::vector<AudioFormatID> availableFormatIDs(availableFormatIDCount);
 
     result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size,
@@ -104,7 +104,7 @@ std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bo
         return {};
     }
 
-    auto encodeFormatIDCount = size / sizeof(AudioFormatID);
+    auto                       encodeFormatIDCount = size / sizeof(AudioFormatID);
     std::vector<AudioFormatID> encodeFormatIDs(encodeFormatIDCount);
 
     result = AudioFormatGetProperty(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size, encodeFormatIDs.data());
@@ -127,7 +127,7 @@ OSStatus readProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, vo
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputSource     *outputSource = encoder->_outputSource;
 
     NSInteger offset;
     if (![outputSource getOffset:&offset error:nil]) {
@@ -158,7 +158,7 @@ OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, c
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputSource     *outputSource = encoder->_outputSource;
 
     NSInteger offset;
     if (![outputSource getOffset:&offset error:nil]) {
@@ -188,7 +188,7 @@ SInt64 getSizeProc(void *inClientData) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputSource     *outputSource = encoder->_outputSource;
 
     NSInteger length;
     if (![outputSource getLength:&length error:nil]) {
@@ -202,7 +202,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputSource     *outputSource = encoder->_outputSource;
 
     // FIXME: Actually do something here
     (void)outputSource;
@@ -215,7 +215,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 @interface SFBCoreAudioEncoder () {
   @private
-    CXXAudioToolbox::AudioFileWrapper _af;
+    CXXAudioToolbox::AudioFileWrapper    _af;
     CXXAudioToolbox::ExtAudioFileWrapper _eaf;
 }
 @end
@@ -232,7 +232,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
+        auto   result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
         if (result != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'",
@@ -241,7 +241,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
             return;
         }
 
-        auto writableTypesCount = size / sizeof(UInt32);
+        auto                writableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> writableTypes(writableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
@@ -282,7 +282,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
+        auto   result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
         if (result != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'",
@@ -291,7 +291,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
             return;
         }
 
-        auto writableTypesCount = size / sizeof(UInt32);
+        auto                writableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> writableTypes(writableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
@@ -540,7 +540,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
               [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
         audioConverterPropertySettings) {
         AudioConverterRef audioConverter = nullptr;
-        UInt32 size = sizeof(audioConverter);
+        UInt32            size = sizeof(audioConverter);
         result = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);
         if (result != noErr) {
             os_log_error(gSFBAudioEncoderLog,
@@ -630,7 +630,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 }
 
 - (AVAudioFramePosition)framePosition {
-    SInt64 currentFrame;
+    SInt64   currentFrame;
     OSStatus result = ExtAudioFileTell(_eaf, &currentFrame);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,

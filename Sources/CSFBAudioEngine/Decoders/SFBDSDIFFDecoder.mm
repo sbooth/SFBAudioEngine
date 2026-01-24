@@ -120,19 +120,19 @@ struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk> {
 
 // 'FRM8'
 struct FormDSDChunk : public DSDIFFChunk {
-    uint32_t formType_;
+    uint32_t  formType_;
     chunk_map localChunks_;
 };
 
 // 'FVER' in 'FRM8'
 struct FormatVersionChunk : public DSDIFFChunk {
     static constexpr uint32_t kSupportedFormatVersion = 0x01050000;
-    uint32_t formatVersion_;
+    uint32_t                  formatVersion_;
 };
 
 // 'PROP' in 'FRM8'
 struct PropertyChunk : public DSDIFFChunk {
-    uint32_t propertyType_;
+    uint32_t  propertyType_;
     chunk_map localChunks_;
 };
 
@@ -143,21 +143,21 @@ struct SampleRateChunk : public DSDIFFChunk {
 
 // 'CHNL' in 'PROP'
 struct ChannelsChunk : public DSDIFFChunk {
-    uint16_t numberChannels_;
+    uint16_t              numberChannels_;
     std::vector<uint32_t> channelIDs_;
 };
 
 // 'CMPR' in 'PROP'
 struct CompressionTypeChunk : public DSDIFFChunk {
-    uint32_t compressionType_;
+    uint32_t    compressionType_;
     std::string compressionName_;
 };
 
 // 'ABSS' in 'PROP'
 struct AbsoluteStartTimeChunk : public DSDIFFChunk {
     uint16_t hours_;
-    uint8_t minutes_;
-    uint8_t seconds_;
+    uint8_t  minutes_;
+    uint8_t  seconds_;
     uint32_t samples_;
 };
 
@@ -356,7 +356,7 @@ std::shared_ptr<CompressionTypeChunk> parseCompressionTypeChunk(SFBInputSource *
     }
 
     std::vector<char> compressionName(count);
-    NSInteger bytesRead;
+    NSInteger         bytesRead;
     if (![inputSource readBytes:compressionName.data() length:count bytesRead:&bytesRead error:nil] ||
         bytesRead != count) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read compressionName in 'CMPR' chunk");
@@ -688,10 +688,10 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 
 @interface SFBDSDIFFDecoder () {
   @private
-    BOOL _isOpen;
+    BOOL                 _isOpen;
     AVAudioFramePosition _packetPosition;
     AVAudioFramePosition _packetCount;
-    int64_t _audioOffset;
+    int64_t              _audioOffset;
 }
 @end
 
@@ -879,7 +879,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         // Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
         // a clustered frame (one channel byte per channel)
 
-        auto *buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
+        auto     *buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
         NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
         NSInteger bytesRead;

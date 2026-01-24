@@ -9,7 +9,7 @@
 @interface SFBMutableDataOutputSource () {
   @private
     NSMutableData *_data;
-    NSUInteger _pos;
+    NSUInteger     _pos;
 }
 @end
 

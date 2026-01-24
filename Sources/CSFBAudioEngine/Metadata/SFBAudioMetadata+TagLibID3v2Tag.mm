@@ -73,7 +73,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // BPM
     if (auto frameList = tag->frameListMap()["TBPM"]; !frameList.isEmpty()) {
         bool ok = false;
-        int BPM = frameList.front()->toString().toInt(&ok);
+        int  BPM = frameList.front()->toString().toInt(&ok);
         if (ok) {
             self.bpm = @(BPM);
         }
@@ -96,7 +96,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         auto pos = s.find("/", 0);
         if (pos != -1) {
             auto upos = static_cast<unsigned int>(pos);
-            int trackNum = s.substr(0, upos).toInt(&ok);
+            int  trackNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
             }
@@ -122,7 +122,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         auto pos = s.find("/", 0);
         if (pos != -1) {
             auto upos = static_cast<unsigned int>(pos);
-            int discNum = s.substr(0, upos).toInt(&ok);
+            int  discNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.discNumber = @(discNum);
             }
@@ -286,7 +286,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     for (auto *it : tag->frameListMap()["APIC"]) {
         TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
         if (frame) {
-            NSData *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
+            NSData   *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
             NSString *description = nil;
             if (!frame->description().isEmpty()) {
                 description = [NSString stringWithUTF8String:frame->description().toCString(true)];
@@ -345,7 +345,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
          */
         NSISO8601DateFormatter *formatter = [[NSISO8601DateFormatter alloc] init];
         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-        NSDate *date = [formatter dateFromString:metadata.releaseDate];
+        NSDate     *date = [formatter dateFromString:metadata.releaseDate];
         if (date) {
             tag->setYear((unsigned int)[gregorianCalendar component:NSCalendarUnitYear fromDate:date]);
 

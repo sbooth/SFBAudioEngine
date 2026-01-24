@@ -80,7 +80,7 @@ static off_t my_mpc_tell_callback(void *context) {
 
 @interface SFBMusepackEncoder () {
   @private
-    mpc_stream_encoder *_enc;
+    mpc_stream_encoder  *_enc;
     AVAudioFramePosition _framePosition;
 }
 @end

@@ -50,7 +50,7 @@ SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures = @"Attached Pictu
 @interface SFBAudioMetadata () {
   @private
     NSMutableDictionary *_metadata;
-    NSMutableSet *_pictures;
+    NSMutableSet        *_pictures;
 }
 + (id)sharedKeySet;
 @end
@@ -569,7 +569,7 @@ static id _sharedKeySet;
 
 - (NSDictionary *)dictionaryRepresentation {
     NSMutableDictionary *dictionary = [_metadata mutableCopy];
-    NSMutableArray *pictures = [NSMutableArray arrayWithCapacity:_pictures.count];
+    NSMutableArray      *pictures = [NSMutableArray arrayWithCapacity:_pictures.count];
     for (SFBAttachedPicture *picture in _pictures) {
         [pictures addObject:picture.dictionaryRepresentation];
     }

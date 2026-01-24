@@ -134,7 +134,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // ReplayGain
     if (tag->contains("---:com.apple.iTunes:replaygain_reference_loudness")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
+        auto  s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainReferenceLoudness = @(f);
@@ -142,7 +142,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_track_gain")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
+        auto  s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackGain = @(f);
@@ -150,7 +150,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_track_peak")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
+        auto  s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackPeak = @(f);
@@ -158,7 +158,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_album_gain")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
+        auto  s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumGain = @(f);
@@ -166,7 +166,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("---:com.apple.iTunes:replaygain_album_peak")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
+        auto  s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumPeak = @(f);

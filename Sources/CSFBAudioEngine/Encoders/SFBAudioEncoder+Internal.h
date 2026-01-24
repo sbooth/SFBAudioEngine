@@ -14,12 +14,12 @@ extern os_log_t gSFBAudioEncoderLog;
 
 @interface SFBAudioEncoder () {
   @package
-    SFBOutputSource *_outputSource;
-    AVAudioFormat *_sourceFormat;
-    AVAudioFormat *_processingFormat;
-    AVAudioFormat *_outputFormat;
+    SFBOutputSource     *_outputSource;
+    AVAudioFormat       *_sourceFormat;
+    AVAudioFormat       *_processingFormat;
+    AVAudioFormat       *_outputFormat;
     AVAudioFramePosition _estimatedFramesToEncode;
-    NSDictionary *_settings;
+    NSDictionary        *_settings;
 }
 /// Returns the encoder name
 @property(class, nonatomic, readonly) SFBAudioEncoderName encoderName;

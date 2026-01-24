@@ -8,7 +8,7 @@
 
 @interface SFBDataInputSource () {
   @private
-    NSData *_data;
+    NSData    *_data;
     NSUInteger _pos;
 }
 @end

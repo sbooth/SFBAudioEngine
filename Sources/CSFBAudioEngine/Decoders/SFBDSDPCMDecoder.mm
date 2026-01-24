@@ -113,10 +113,10 @@ constexpr double htaps[HTAPS] = {
 float ctables[CTABLES][256];
 
 void dsd2pcm_precalc() noexcept {
-    int t;
-    int e;
-    int m;
-    int k;
+    int    t;
+    int    e;
+    int    m;
+    int    k;
     double acc;
     for (t = 0; t < CTABLES; ++t) {
         k = HTAPS - (t * 8);
@@ -133,7 +133,7 @@ void dsd2pcm_precalc() noexcept {
 
 struct dsd2pcm_ctx {
     unsigned char fifo[FIFOSIZE];
-    unsigned fifopos;
+    unsigned      fifopos;
 };
 
 /**
@@ -197,12 +197,12 @@ dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
  */
 void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, int lsbf,
                        float *dst, ptrdiff_t dst_stride) noexcept {
-    unsigned ffp;
-    unsigned i;
-    unsigned bite1;
-    unsigned bite2;
+    unsigned       ffp;
+    unsigned       i;
+    unsigned       bite1;
+    unsigned       bite2;
     unsigned char *p;
-    double acc;
+    double         acc;
     ffp = ptr->fifopos;
     lsbf = lsbf ? 1 : 0;
     while (samples-- > 0) {
@@ -277,7 +277,7 @@ class DXD {
 @interface SFBDSDPCMDecoder () {
   @private
     AVAudioCompressedBuffer *_buffer;
-    std::vector<DXD> _context;
+    std::vector<DXD>         _context;
 }
 @end
 
@@ -435,7 +435,7 @@ class DXD {
     }
 
     AVAudioFrameCount framesRead = 0;
-    const float linearGain = _linearGain;
+    const float       linearGain = _linearGain;
 
     for (;;) {
         AVAudioFrameCount framesRemaining = frameLength - framesRead;
@@ -458,13 +458,13 @@ class DXD {
         // Convert to PCM
         // NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
 
-        float *const *floatChannelData = buffer.floatChannelData;
+        float *const       *floatChannelData = buffer.floatChannelData;
         AVAudioChannelCount channelCount = buffer.format.channelCount;
         const bool isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) ==
                                  kAudioFormatFlagIsBigEndian;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const auto *const input = static_cast<const unsigned char *>(_buffer.data) + channel;
-            float *output = floatChannelData[channel];
+            float            *output = floatChannelData[channel];
             _context[channel].translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
             // Boost signal by 6 dBFS
             vDSP_vsmul(output, 1, &linearGain, output, 1, framesDecoded);

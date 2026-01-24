@@ -22,9 +22,9 @@ static void SFBCreateAudioDecoderLog(void) {
     gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
 }
 
-@interface SFBAudioDecoderSubclassInfo : NSObject
+@interface                 SFBAudioDecoderSubclassInfo : NSObject
 @property(nonatomic) Class klass;
-@property(nonatomic) int priority;
+@property(nonatomic) int   priority;
 @end
 
 @implementation SFBAudioDecoder
@@ -220,11 +220,11 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    int score = 10;
+    int   score = 10;
     Class subclass = nil;
 
     for (SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-        int currentScore = 0;
+        int   currentScore = 0;
         Class klass = subclassInfo.klass;
 
         if (lowercaseMIMEType) {

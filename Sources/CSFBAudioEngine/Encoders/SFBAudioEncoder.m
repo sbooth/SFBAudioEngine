@@ -22,9 +22,9 @@ static void SFBCreateAudioEncoderLog(void) {
     gSFBAudioEncoderLog = os_log_create("org.sbooth.AudioEngine", "AudioEncoder");
 }
 
-@interface SFBAudioEncoderSubclassInfo : NSObject
+@interface                 SFBAudioEncoderSubclassInfo : NSObject
 @property(nonatomic) Class klass;
-@property(nonatomic) int priority;
+@property(nonatomic) int   priority;
 @end
 
 @implementation SFBAudioEncoder
@@ -149,11 +149,11 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSString *lowercaseExtension = outputSource.url.pathExtension.lowercaseString;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
 
-    int score = 10;
+    int   score = 10;
     Class subclass = nil;
 
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-        int currentScore = 0;
+        int   currentScore = 0;
         Class klass = subclassInfo.klass;
 
         if (lowercaseMIMEType) {

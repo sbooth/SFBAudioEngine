@@ -42,23 +42,23 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
 @interface SFBOggSpeexDecoder () {
   @private
-    AVAudioPCMBuffer *_buffer;
+    AVAudioPCMBuffer    *_buffer;
     AVAudioFramePosition _framePosition;
     AVAudioFramePosition _frameLength;
 
-    ogg_sync_state _syncState;
-    ogg_page _page;
+    ogg_sync_state   _syncState;
+    ogg_page         _page;
     ogg_stream_state _streamState;
 
-    void *_decoder;
-    SpeexBits _bits;
+    void             *_decoder;
+    SpeexBits         _bits;
     SpeexStereoState *_stereoState;
 
-    long _serialNumber;
-    BOOL _eosReached;
+    long        _serialNumber;
+    BOOL        _eosReached;
     spx_int32_t _framesPerOggPacket;
-    NSInteger _oggPacketCount;
-    NSInteger _extraSpeexHeaderCount;
+    NSInteger   _oggPacketCount;
+    NSInteger   _extraSpeexHeaderCount;
 }
 @end
 
@@ -440,7 +440,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
                 // Grab a packet from the streaming layer
                 ogg_packet oggPacket;
-                int result = ogg_stream_packetout(&_streamState, &oggPacket);
+                int        result = ogg_stream_packetout(&_streamState, &oggPacket);
                 if (result == -1) {
                     os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding error: Ogg loss of streaming");
                     if (error) {

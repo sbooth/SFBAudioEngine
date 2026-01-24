@@ -178,7 +178,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
 @interface SFBMonkeysAudioDecoder () {
   @private
-    std::unique_ptr<APEIOInterface> _ioInterface;
+    std::unique_ptr<APEIOInterface>      _ioInterface;
     std::unique_ptr<APE::IAPEDecompress> _decompressor;
 }
 @end

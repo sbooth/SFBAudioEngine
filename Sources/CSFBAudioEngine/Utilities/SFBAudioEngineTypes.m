@@ -6,7 +6,7 @@
 
 #import "SFBAudioEngineTypes.h"
 
-const NSTimeInterval SFBUnknownTime = -1;
+const NSTimeInterval      SFBUnknownTime = -1;
 const SFBPlaybackPosition SFBInvalidPlaybackPosition = {.framePosition = SFBUnknownFramePosition,
                                                         .frameLength = SFBUnknownFrameLength};
-const SFBPlaybackTime SFBInvalidPlaybackTime = {.currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime};
+const SFBPlaybackTime     SFBInvalidPlaybackTime = {.currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime};

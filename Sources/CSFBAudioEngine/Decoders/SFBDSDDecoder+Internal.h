@@ -16,9 +16,9 @@ extern os_log_t gSFBDSDDecoderLog;
 @interface SFBDSDDecoder () {
   @package
     SFBInputSource *_inputSource;
-    AVAudioFormat *_sourceFormat;
-    AVAudioFormat *_processingFormat;
-    NSDictionary *_properties;
+    AVAudioFormat  *_sourceFormat;
+    AVAudioFormat  *_processingFormat;
+    NSDictionary   *_properties;
 }
 /// Returns the decoder name
 @property(class, nonatomic, readonly) SFBDSDDecoderName decoderName;

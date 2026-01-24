@@ -55,10 +55,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 @interface SFBTrueAudioDecoder () {
   @private
     std::unique_ptr<tta::tta_decoder> _decoder;
-    std::unique_ptr<TTACallbacks> _callbacks;
-    AVAudioFramePosition _framePosition;
-    AVAudioFramePosition _frameLength;
-    TTAuint32 _framesToSkip;
+    std::unique_ptr<TTACallbacks>     _callbacks;
+    AVAudioFramePosition              _framePosition;
+    AVAudioFramePosition              _frameLength;
+    TTAuint32                         _framesToSkip;
 }
 @end
 

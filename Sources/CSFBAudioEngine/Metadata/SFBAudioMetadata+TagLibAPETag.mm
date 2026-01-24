@@ -113,13 +113,13 @@
                 auto binaryData = item.binaryData();
                 auto pos = binaryData.find('\0');
                 if (pos != -1 && binaryData.size() > 3) {
-                    auto upos = static_cast<unsigned int>(pos);
-                    NSData *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
+                    auto                   upos = static_cast<unsigned int>(pos);
+                    NSData                *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
                                                        length:(binaryData.size() - upos - 1)];
                     SFBAttachedPictureType type = [key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame
                                                         ? SFBAttachedPictureTypeFrontCover
                                                         : SFBAttachedPictureTypeBackCover;
-                    NSString *description =
+                    NSString              *description =
                           [NSString stringWithUTF8String:TagLib::String(binaryData.mid(0, upos), TagLib::String::UTF8)
                                                                .toCString(true)];
                     [self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData

@@ -150,10 +150,10 @@ static int can_seek_callback(void *id) {
 @interface SFBWavPackDecoder () {
   @private
     WavpackStreamReader64 _streamReader;
-    WavpackContext *_wpc;
-    int32_t *_buffer;
-    AVAudioFramePosition _framePosition;
-    AVAudioFramePosition _frameLength;
+    WavpackContext       *_wpc;
+    int32_t              *_buffer;
+    AVAudioFramePosition  _framePosition;
+    AVAudioFramePosition  _frameLength;
 }
 @end
 
@@ -244,7 +244,7 @@ static int can_seek_callback(void *id) {
         };
 
         AudioChannelLayoutTag tag = 0;
-        UInt32 propertySize = sizeof(tag);
+        UInt32                propertySize = sizeof(tag);
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof(layout), &layout,
                                                  &propertySize, &tag);
         if (result == noErr) {
@@ -256,7 +256,7 @@ static int can_seek_callback(void *id) {
 
     // Fall back on the WavPack channel identities
     if (!channelLayout) {
-        int channelCount = WavpackGetNumChannels(_wpc);
+        int           channelCount = WavpackGetNumChannels(_wpc);
         unsigned char identities[channelCount + 1];
         WavpackGetChannelIdentities(_wpc, identities);
 
@@ -482,11 +482,11 @@ static int can_seek_callback(void *id) {
 
         // Floating point files require no special handling other than deinterleaving
         if (mode & MODE_FLOAT) {
-            float *const *floatChannelData = buffer.floatChannelData;
+            float *const       *floatChannelData = buffer.floatChannelData;
             AVAudioChannelCount channelCount = buffer.format.channelCount;
             for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                 const float *input = (float *)_buffer + channel;
-                float *output = floatChannelData[channel] + buffer.frameLength;
+                float       *output = floatChannelData[channel] + buffer.frameLength;
                 for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                     *output++ = *input;
                     input += channelCount;
@@ -500,14 +500,14 @@ static int can_seek_callback(void *id) {
             // WavPack hands us 32-bit signed integers with the samples low-aligned
             int shift = 8 * (4 - WavpackGetBytesPerSample(_wpc));
 
-            int32_t *const *int32ChannelData = buffer.int32ChannelData;
+            int32_t *const     *int32ChannelData = buffer.int32ChannelData;
             AVAudioChannelCount channelCount = buffer.format.channelCount;
 
             // Deinterleave the 32-bit samples, shifting to high alignment
             if (shift) {
                 for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                     const int32_t *input = _buffer + channel;
-                    int32_t *output = int32ChannelData[channel] + buffer.frameLength;
+                    int32_t       *output = int32ChannelData[channel] + buffer.frameLength;
                     for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                         *output++ = (int32_t)((uint32_t)*input << shift);
                         input += channelCount;
@@ -518,7 +518,7 @@ static int can_seek_callback(void *id) {
             else {
                 for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                     const int32_t *input = _buffer + channel;
-                    int32_t *output = int32ChannelData[channel] + buffer.frameLength;
+                    int32_t       *output = int32ChannelData[channel] + buffer.frameLength;
                     for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                         *output++ = *input;
                         input += channelCount;
@@ -533,11 +533,11 @@ static int can_seek_callback(void *id) {
             float scaleFactor = ((uint32_t)1 << ((WavpackGetBytesPerSample(_wpc) * 8) - 1));
 
             // Deinterleave the 32-bit samples and convert to float
-            float *const *floatChannelData = buffer.floatChannelData;
+            float *const       *floatChannelData = buffer.floatChannelData;
             AVAudioChannelCount channelCount = buffer.format.channelCount;
             for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                 const int32_t *input = _buffer + channel;
-                float *output = floatChannelData[channel] + buffer.frameLength;
+                float         *output = floatChannelData[channel] + buffer.frameLength;
                 for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                     *output++ = *input / scaleFactor;
                     input += channelCount;

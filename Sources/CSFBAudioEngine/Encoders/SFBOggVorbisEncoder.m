@@ -21,11 +21,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 
 @interface SFBOggVorbisEncoder () {
   @private
-    vorbis_info _vi;
-    vorbis_dsp_state _vd;
-    vorbis_block _vb;
-    ogg_stream_state _os;
-    BOOL _isOpen;
+    vorbis_info          _vi;
+    vorbis_dsp_state     _vd;
+    vorbis_block         _vb;
+    ogg_stream_state     _os;
+    BOOL                 _isOpen;
     AVAudioFramePosition _framePosition;
 }
 @end
@@ -142,7 +142,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             return NO;
         }
     } else {
-        float quality_value = 0.5;
+        float     quality_value = 0.5;
         NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
         if (quality) {
             quality_value = MAX(-0.1F, MIN(1.0F, quality.floatValue));

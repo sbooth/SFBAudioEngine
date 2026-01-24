@@ -29,7 +29,7 @@ static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *dat
     NSCParameterAssert(datasource != NULL);
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
-    NSInteger bytesRead;
+    NSInteger            bytesRead;
     if (![decoder->_inputSource readBytes:ptr length:(NSInteger)(size * nmemb) bytesRead:&bytesRead error:nil]) {
         return 0;
     }
@@ -68,7 +68,7 @@ static long tell_func_callback(void *datasource) {
     NSCParameterAssert(datasource != NULL);
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
-    NSInteger offset;
+    NSInteger            offset;
     if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
     }
@@ -283,8 +283,8 @@ static long tell_func_callback(void *datasource) {
     }
 
     AVAudioFrameCount framesRemaining = frameLength;
-    float **pcm_channels = NULL;
-    int bitstream = 0;
+    float           **pcm_channels = NULL;
+    int               bitstream = 0;
 
     while (framesRemaining > 0) {
         // Decode a chunk of samples from the file
@@ -306,11 +306,11 @@ static long tell_func_callback(void *datasource) {
         }
 
         // Copy the frames from the decoding buffer to the output buffer
-        float *const *floatChannelData = buffer.floatChannelData;
+        float *const       *floatChannelData = buffer.floatChannelData;
         AVAudioChannelCount channelCount = buffer.format.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const float *input = pcm_channels[channel];
-            float *output = floatChannelData[channel] + buffer.frameLength;
+            float       *output = floatChannelData[channel] + buffer.frameLength;
             memcpy(output, input, (size_t)framesRead * sizeof(float));
         }
 

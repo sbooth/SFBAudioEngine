@@ -128,12 +128,12 @@ NSString *const SFBReplayGainAnalyzerPeakKey = @"Peak";
 static const float SFBReplayGainAnalyzerInsufficientSamples = -24601; // Preserve nod to Les Mis
 
 struct ReplayGainFilter {
-    long rate;
+    long     rate;
     uint32_t downsample;
-    float BYule[YULE_ORDER + 1];
-    float AYule[YULE_ORDER + 1];
-    float BButter[BUTTER_ORDER + 1];
-    float AButter[BUTTER_ORDER + 1];
+    float    BYule[YULE_ORDER + 1];
+    float    AYule[YULE_ORDER + 1];
+    float    BButter[BUTTER_ORDER + 1];
+    float    AButter[BUTTER_ORDER + 1];
 };
 
 static const struct ReplayGainFilter sReplayGainFilters[] = {
@@ -315,11 +315,11 @@ static const struct ReplayGainFilter sReplayGainFilters[] = {
 static void Filter(const float *input, float *output, size_t nSamples, const float *a, const float *b, size_t order,
                    uint32_t downsample) {
     const float *input_head = input;
-    float *output_head = output;
+    float       *output_head = output;
 
     for (size_t i = 0; i < nSamples; i++, input_head += downsample, ++output_head) {
         const float *input_tail = input_head;
-        float *output_tail = output_head;
+        float       *output_tail = output_head;
 
         double y = *input_head * b[0];
 
@@ -344,7 +344,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     }
 
     int32_t upper = (int32_t)ceil(elems * (1. - RMS_PERCENTILE));
-    size_t i = len;
+    size_t  i = len;
     while (i-- > 0) {
         if ((upper -= array[i]) <= 0) {
             break;
@@ -356,22 +356,22 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
 
 @interface SFBReplayGainAnalyzer () {
   @private
-    float _linprebuf[MAX_ORDER * 2];
-    float *_linpre; /* left input samples, with pre-buffer */
-    float *_lstepbuf;
-    float *_lstep; /* left "first step" (i.e. post first filter) samples */
-    float *_loutbuf;
-    float *_lout; /* left "out" (i.e. post second filter) samples */
-    float _rinprebuf[MAX_ORDER * 2];
-    float *_rinpre; /* right input samples ... */
-    float *_rstepbuf;
-    float *_rstep;
-    float *_routbuf;
-    float *_rout;
+    float    _linprebuf[MAX_ORDER * 2];
+    float   *_linpre; /* left input samples, with pre-buffer */
+    float   *_lstepbuf;
+    float   *_lstep; /* left "first step" (i.e. post first filter) samples */
+    float   *_loutbuf;
+    float   *_lout; /* left "out" (i.e. post second filter) samples */
+    float    _rinprebuf[MAX_ORDER * 2];
+    float   *_rinpre; /* right input samples ... */
+    float   *_rstepbuf;
+    float   *_rstep;
+    float   *_routbuf;
+    float   *_rout;
     uint32_t _sampleWindow; /* number of samples required to reach number of milliseconds required for RMS window */
     uint64_t _totsamp;
-    double _lsum;
-    double _rsum;
+    double   _lsum;
+    double   _rsum;
     uint32_t _A[(size_t)STEPS_per_dB * (size_t)MAX_dB];
     uint32_t _B[(size_t)STEPS_per_dB * (size_t)MAX_dB];
 
@@ -538,7 +538,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     bool isStereo = (outputFormat.channelCount == 2);
 
     for (;;) {
-        __block NSError *err = nil;
+        __block NSError             *err = nil;
         AVAudioConverterOutputStatus status = [converter
                  convertToBuffer:outputBuffer
                            error:error
@@ -657,7 +657,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
 #pragma mark Internal
 
 + (NSInteger)maximumSupportedSampleRate {
-    static NSInteger sampleRate = 0;
+    static NSInteger       sampleRate = 0;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
@@ -669,7 +669,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
 }
 
 + (NSInteger)minimumSupportedSampleRate {
-    static NSInteger sampleRate = 0;
+    static NSInteger       sampleRate = 0;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
@@ -855,7 +855,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
         /* Get the Root Mean Square (RMS) for this set of samples */
         if (_totsamp == _sampleWindow) {
             double val = STEPS_per_dB * 10. * log10(((_lsum + _rsum) / _totsamp * 0.5) + 1.e-37);
-            int ival = (int)val;
+            int    ival = (int)val;
             if (ival < 0) {
                 ival = 0;
             }

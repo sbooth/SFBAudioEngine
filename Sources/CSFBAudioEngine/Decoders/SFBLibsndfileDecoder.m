@@ -163,7 +163,7 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
-    NSInteger length;
+    NSInteger             length;
     if (![decoder->_inputSource getLength:&length error:nil]) {
         return -1;
     }
@@ -226,7 +226,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
-    NSInteger offset;
+    NSInteger             offset;
     if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
     }
@@ -235,8 +235,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
 @interface SFBLibsndfileDecoder () {
   @private
-    SNDFILE *_sndfile;
-    SF_INFO _sfinfo;
+    SNDFILE        *_sndfile;
+    SF_INFO         _sfinfo;
     enum ReadMethod _readMethod;
 }
 @end

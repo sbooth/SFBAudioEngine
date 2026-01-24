@@ -94,16 +94,16 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
     AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat
                                                                    frameCapacity:BUFFER_SIZE_FRAMES];
 
-    __block BOOL decodeResult;
+    __block BOOL     decodeResult;
     __block NSError *decodeError = nil;
-    NSError *convertError = nil;
-    NSError *writeError = nil;
+    NSError         *convertError = nil;
+    NSError         *writeError = nil;
 
     for (;;) {
         AVAudioConverterOutputStatus status =
               [converter convertToBuffer:outputBuffer
                                    error:&convertError
-                      withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets,
+                      withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount           inNumberOfPackets,
                                                           AVAudioConverterInputStatus *outStatus) {
                           decodeResult = [decoder decodeIntoBuffer:decodeBuffer
                                                        frameLength:inNumberOfPackets

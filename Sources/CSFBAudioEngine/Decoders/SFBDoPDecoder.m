@@ -45,8 +45,8 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 @interface SFBDoPDecoder () {
   @private
     AVAudioCompressedBuffer *_buffer;
-    unsigned char _marker;
-    BOOL _reverseBits;
+    unsigned char            _marker;
+    BOOL                     _reverseBits;
 }
 @end
 
@@ -227,11 +227,11 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 
         AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
-        unsigned char marker = _marker;
+        unsigned char       marker = _marker;
         AVAudioChannelCount channelCount = _processingFormat.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const unsigned char *input = (const unsigned char *)_buffer.data + channel;
-            unsigned char *output = (unsigned char *)buffer.audioBufferList->mBuffers[channel].mData +
+            unsigned char       *output = (unsigned char *)buffer.audioBufferList->mBuffers[channel].mData +
                                     buffer.audioBufferList->mBuffers[channel].mDataByteSize;
 
             // The DoP marker should match across channels

@@ -45,10 +45,10 @@ using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, f
 
 @interface SFBFLACEncoder () {
   @private
-    flac__stream_encoder_unique_ptr _flac;
+    flac__stream_encoder_unique_ptr  _flac;
     flac__stream_metadata_unique_ptr _seektable;
     flac__stream_metadata_unique_ptr _padding;
-    FLAC__StreamMetadata *_metadata[2];
+    FLAC__StreamMetadata            *_metadata[2];
   @package
     AVAudioFramePosition _framePosition;
 }
@@ -64,7 +64,7 @@ FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, F
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder  *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     NSInteger bytesRead;
@@ -87,7 +87,7 @@ FLAC__StreamEncoderWriteStatus writeCallback(const FLAC__StreamEncoder *encoder,
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder  *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     NSInteger bytesWritten;
@@ -111,7 +111,7 @@ FLAC__StreamEncoderSeekStatus seekCallback(const FLAC__StreamEncoder *encoder, F
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder  *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     if (!outputSource.supportsSeeking) {
@@ -130,7 +130,7 @@ FLAC__StreamEncoderTellStatus tellCallback(const FLAC__StreamEncoder *encoder, F
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder  *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     NSInteger offset;
@@ -426,7 +426,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
 
     const auto *const format = _processingFormat.streamDescription;
     if (const auto bits = format->mBitsPerChannel; bits != 32) {
-        int32_t dst[512];
+        int32_t                 dst[512];
         const AVAudioFrameCount frameCapacity = sizeof(dst) / format->mBytesPerFrame;
 
         const auto shift = 32 - bits;
@@ -436,8 +436,8 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
         while (framesRemaining > 0) {
             const auto frameCount = std::min(frameCapacity, framesRemaining);
 
-            const auto frameOffset = frameLength - framesRemaining;
-            const auto byteOffset = frameOffset * format->mBytesPerFrame;
+            const auto  frameOffset = frameLength - framesRemaining;
+            const auto  byteOffset = frameOffset * format->mBytesPerFrame;
             auto *const src = reinterpret_cast<int32_t *>(
                   static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset);
 

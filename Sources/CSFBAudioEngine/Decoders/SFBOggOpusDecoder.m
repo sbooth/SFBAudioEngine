@@ -33,7 +33,7 @@ static int read_callback(void *stream, unsigned char *ptr, int nbytes) {
     NSCParameterAssert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
-    NSInteger bytesRead;
+    NSInteger          bytesRead;
     if (![decoder->_inputSource readBytes:ptr length:nbytes bytesRead:&bytesRead error:nil]) {
         return -1;
     }
@@ -75,7 +75,7 @@ static opus_int64 tell_callback(void *stream) {
     NSCParameterAssert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
-    NSInteger offset;
+    NSInteger          offset;
     if (![decoder->_inputSource getOffset:&offset error:nil]) {
         return -1;
     }

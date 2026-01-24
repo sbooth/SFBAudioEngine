@@ -22,9 +22,9 @@ static void SFBCreateAudioFileLog(void) {
     gSFBAudioFileLog = os_log_create("org.sbooth.AudioEngine", "AudioFile");
 }
 
-@interface SFBAudioFileSubclassInfo : NSObject
+@interface                 SFBAudioFileSubclassInfo : NSObject
 @property(nonatomic) Class klass;
-@property(nonatomic) int priority;
+@property(nonatomic) int   priority;
 @end
 
 @implementation SFBAudioFile
@@ -184,11 +184,11 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    int score = 10;
+    int   score = 10;
     Class subclass = nil;
 
     for (SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
-        int currentScore = 0;
+        int   currentScore = 0;
         Class klass = subclassInfo.klass;
 
         if (lowercaseMIMEType) {

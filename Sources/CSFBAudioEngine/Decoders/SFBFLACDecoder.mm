@@ -51,10 +51,10 @@ using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, fla
   @private
     flac__stream_decoder_unique_ptr _flac;
     FLAC__StreamMetadata_StreamInfo _streamInfo;
-    AVAudioFramePosition _framePosition;
-    FLAC__FrameHeader _previousFrameHeader;
-    AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
-    NSError *_writeError;
+    AVAudioFramePosition            _framePosition;
+    FLAC__FrameHeader               _previousFrameHeader;
+    AVAudioPCMBuffer               *_frameBuffer; // For converting push to pull
+    NSError                        *_writeError;
 }
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error;
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder

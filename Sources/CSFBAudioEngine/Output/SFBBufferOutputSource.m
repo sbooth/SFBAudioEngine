@@ -10,7 +10,7 @@
 
 @interface SFBBufferOutputSource () {
   @private
-    void *_buffer;
+    void  *_buffer;
     size_t _capacity;
     size_t _pos;
 }

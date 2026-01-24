@@ -24,7 +24,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     NSCParameterAssert(chunkID != NULL);
 
     unsigned char chunkIDBytes[4];
-    NSInteger bytesRead;
+    NSInteger     bytesRead;
     if (![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
         return NO;
@@ -57,9 +57,9 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
 
 @interface SFBDSFDecoder () {
   @private
-    AVAudioFramePosition _packetPosition;
-    AVAudioFramePosition _packetCount;
-    int64_t _audioOffset;
+    AVAudioFramePosition     _packetPosition;
+    AVAudioFramePosition     _packetCount;
+    int64_t                  _audioOffset;
     AVAudioCompressedBuffer *_buffer;
 }
 - (BOOL)readAndInterleaveDSFBlockReturningError:(NSError **)error;
@@ -453,7 +453,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     AVAudioPacketCount packetsToMove = packetsInBuffer - packetsToSkip;
 
     // Move data
-    uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+    uint32_t             packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
     const unsigned char *src = (unsigned char *)_buffer.data + (packetsToSkip * packetSize);
     memmove(_buffer.data, src, packetsToMove * packetSize);
 
@@ -474,7 +474,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
 // Interleaving is accomplished by matrix transposition.
 - (BOOL)readAndInterleaveDSFBlockReturningError:(NSError **)error {
     unsigned char *buf = (unsigned char *)_buffer.data;
-    uint32_t bufsize = _buffer.byteCapacity;
+    uint32_t       bufsize = _buffer.byteCapacity;
 
     NSInteger bytesRead;
     if (![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error]) {

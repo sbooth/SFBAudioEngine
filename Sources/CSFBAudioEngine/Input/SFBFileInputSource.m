@@ -14,7 +14,7 @@
 @interface SFBFileInputSource () {
   @private
     struct stat _filestats;
-    FILE *_file;
+    FILE       *_file;
 }
 @end
 

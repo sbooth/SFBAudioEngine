@@ -13,7 +13,7 @@
 
 #import <lame/lame.h>
 
-SFBAudioEncoderName const SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
+SFBAudioEncoderName const         SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality = @"Quality";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3ConstantBitrate = @"Constant Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3AverageBitrate = @"Average Bitrate";
@@ -45,8 +45,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 @interface SFBMP3Encoder () {
   @private
     lame_global_flags_unique_ptr _gfp;
-    AVAudioFramePosition _framePosition;
-    NSInteger _id3v2TagSize;
+    AVAudioFramePosition         _framePosition;
+    NSInteger                    _id3v2TagSize;
 }
 - (BOOL)flushEncoderReturningError:(NSError **)error;
 - (BOOL)writeID3v1TagReturningError:(NSError **)error;
@@ -383,7 +383,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
-    auto buf = std::make_unique<unsigned char[]>(bufsize);
+    auto         buf = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
         if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -433,7 +433,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
 - (BOOL)flushEncoderReturningError:(NSError **)error {
     const size_t bufsize = 7200;
-    auto buf = std::make_unique<unsigned char[]>(bufsize);
+    auto         buf = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
         if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
