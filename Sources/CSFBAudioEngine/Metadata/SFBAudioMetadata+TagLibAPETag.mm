@@ -130,7 +130,7 @@
         }
     }
 
-    if (additionalMetadata.count) {
+    if (additionalMetadata.count != 0U) {
         self.additionalMetadata = additionalMetadata;
     }
 }
@@ -146,7 +146,7 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
     // Remove the existing comment with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nullptr) {
         tag->addValue(key, TagLib::StringFromNSString(value));
     }
 }
@@ -165,7 +165,7 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
     if (value == nil) {
         SetAPETag(tag, key, nil);
     } else {
-        SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
+        SetAPETag(tag, key, (value.boolValue != 0) ? @"1" : @"0");
     }
 }
 
@@ -173,7 +173,15 @@ void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber 
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    SetAPETag(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (value == nil) {
+        SetAPETag(tag, key, nil);
+    } else {
+        if (format == nil) {
+            SetAPETag(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetAPETag(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
@@ -212,7 +220,7 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
 
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
-    if (additionalMetadata) {
+    if (additionalMetadata != nullptr) {
         for (NSString *key in additionalMetadata) {
             SetAPETag(tag, key.UTF8String, additionalMetadata[key]);
         }
@@ -236,7 +244,7 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
                 SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {
                 TagLib::ByteVector data;
 
-                if (attachedPicture.pictureDescription) {
+                if (attachedPicture.pictureDescription != nullptr) {
                     data.append(
                           TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
                 }

@@ -43,11 +43,11 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBOggOpusDetectionSize skipID3v2Tag:NO error:error];
-    if (!header) {
+    if (header == nullptr) {
         return NO;
     }
 
-    if ([header isOggOpusHeader]) {
+    if ([header isOggOpusHeader] != NO) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
     } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
@@ -60,7 +60,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 
         TagLib::Ogg::Opus::File file(&stream);
         if (!file.isValid()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Ogg Opus file.", @""), @{
@@ -92,12 +92,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Ogg Opus" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties()) {
+        if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag()) {
+        if (file.tag() != nullptr) {
             [metadata addMetadataFromTagLibXiphComment:file.tag()];
         }
 
@@ -107,7 +107,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading Ogg Opus properties and metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
@@ -120,7 +120,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -137,7 +137,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
 
         TagLib::Ogg::Opus::File file(&stream, false);
         if (!file.isValid()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Ogg Opus file.", @""), @{
@@ -153,7 +153,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
         sfb::setXiphCommentFromMetadata(self.metadata, file.tag());
 
         if (!file.save()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -169,7 +169,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioE
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing Ogg Opus metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];

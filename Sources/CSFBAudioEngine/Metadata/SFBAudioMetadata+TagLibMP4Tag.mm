@@ -50,19 +50,19 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     if (tag->contains("trkn")) {
         auto track = tag->item("trkn").toIntPair();
-        if (track.first) {
+        if (track.first != 0) {
             self.trackNumber = @(track.first);
         }
-        if (track.second) {
+        if (track.second != 0) {
             self.trackTotal = @(track.second);
         }
     }
     if (tag->contains("disk")) {
         auto disc = tag->item("disk").toIntPair();
-        if (disc.first) {
+        if (disc.first != 0) {
             self.discNumber = @(disc.first);
         }
-        if (disc.second) {
+        if (disc.second != 0) {
             self.discTotal = @(disc.second);
         }
     }
@@ -73,7 +73,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
     if (tag->contains("tmpo")) {
         auto bpm = tag->item("tmpo").toInt();
-        if (bpm) {
+        if (bpm != 0) {
             self.bpm = @(bpm);
         }
     }
@@ -186,7 +186,7 @@ void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nullptr) {
         tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
     }
 }
@@ -210,7 +210,7 @@ void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOn
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (valueOne || valueTwo) {
+    if ((valueOne != nullptr) || (valueTwo != nullptr)) {
         tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
     }
 }
@@ -222,7 +222,7 @@ void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) 
     if (value == nil) {
         tag->removeItem(key);
     } else {
-        tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
+        tag->setItem(key, TagLib::MP4::Item((value.boolValue != 0) ? 1 : 0));
     }
 }
 
@@ -230,7 +230,15 @@ void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    SetMP4Item(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (value == nil) {
+        SetMP4Item(tag, key, nil);
+    } else {
+        if (format == nil) {
+            SetMP4Item(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetMP4Item(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
@@ -296,13 +304,13 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
             // Determine the image type
             if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
                 UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
-                if ([utType conformsToType:UTTypeBMP]) {
+                if ([utType conformsToType:UTTypeBMP] != NO) {
                     type = TagLib::MP4::CoverArt::CoverArt::BMP;
-                } else if ([utType conformsToType:UTTypePNG]) {
+                } else if ([utType conformsToType:UTTypePNG] != NO) {
                     type = TagLib::MP4::CoverArt::CoverArt::PNG;
-                } else if ([utType conformsToType:UTTypeGIF]) {
+                } else if ([utType conformsToType:UTTypeGIF] != NO) {
                     type = TagLib::MP4::CoverArt::CoverArt::GIF;
-                } else if ([utType conformsToType:UTTypeJPEG]) {
+                } else if ([utType conformsToType:UTTypeJPEG] != NO) {
                     type = TagLib::MP4::CoverArt::CoverArt::JPEG;
                 }
             }

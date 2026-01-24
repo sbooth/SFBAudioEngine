@@ -17,20 +17,20 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBAudioPlayerErrorCodeInternalError:
-                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey]) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey] != 0) {
                                                   return NSLocalizedString(@"Internal player error", @"");
                                               }
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey] != 0) {
                                                   return NSLocalizedString(@"An internal audio player error occurred.",
                                                                            @"");
                                               }
                                               break;
 
                                           case SFBAudioPlayerErrorCodeFormatNotSupported:
-                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey]) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey] != 0) {
                                                   return NSLocalizedString(@"Unsupported format", @"");
                                               }
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey] != 0) {
                                                   return NSLocalizedString(
                                                         @"The format is invalid, unknown, or unsupported.", @"");
                                               }
@@ -51,7 +51,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
         return nil;
     }
 
-    if ((self = [super init])) {
+    if ((self = [super init]) != nullptr) {
         _player = std::move(player);
         _player->player_ = self;
     }
@@ -64,13 +64,13 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nullptr) {
         return NO;
     }
     if (!_player->enqueueDecoder(decoder, true, error)) {
         return NO;
     }
-    return _player->play(error);
+    return static_cast<BOOL>(_player->play(error));
 }
 
 - (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error {
@@ -78,42 +78,42 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     if (!_player->enqueueDecoder(decoder, true, error)) {
         return NO;
     }
-    return _player->play(error);
+    return static_cast<BOOL>(_player->play(error));
 }
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nullptr) {
         return NO;
     }
-    return _player->enqueueDecoder(decoder, false, error);
+    return static_cast<BOOL>(_player->enqueueDecoder(decoder, false, error));
 }
 
 - (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nullptr) {
         return NO;
     }
-    return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
+    return static_cast<BOOL>(_player->enqueueDecoder(decoder, forImmediatePlayback != 0, error));
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error {
     NSParameterAssert(decoder != nil);
-    return _player->enqueueDecoder(decoder, false, error);
+    return static_cast<BOOL>(_player->enqueueDecoder(decoder, false, error));
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder
       forImmediatePlayback:(BOOL)forImmediatePlayback
                      error:(NSError **)error {
     NSParameterAssert(decoder != nil);
-    return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
+    return static_cast<BOOL>(_player->enqueueDecoder(decoder, forImmediatePlayback != 0, error));
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format {
     NSParameterAssert(format != nil);
-    return _player->formatWillBeGaplessIfEnqueued(format);
+    return static_cast<BOOL>(_player->formatWillBeGaplessIfEnqueued(format));
 }
 
 - (void)clearQueue {
@@ -121,21 +121,21 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)queueIsEmpty {
-    return _player->decoderQueueIsEmpty();
+    return static_cast<BOOL>(_player->decoderQueueIsEmpty());
 }
 
 // MARK: - Playback Control
 
 - (BOOL)playReturningError:(NSError **)error {
-    return _player->play(error);
+    return static_cast<BOOL>(_player->play(error));
 }
 
 - (BOOL)pause {
-    return _player->pause();
+    return static_cast<BOOL>(_player->pause());
 }
 
 - (BOOL)resume {
-    return _player->resume();
+    return static_cast<BOOL>(_player->resume());
 }
 
 - (void)stop {
@@ -143,7 +143,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error {
-    return _player->togglePlayPause(error);
+    return static_cast<BOOL>(_player->togglePlayPause(error));
 }
 
 - (void)reset {
@@ -153,7 +153,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 // MARK: - Player State
 
 - (BOOL)engineIsRunning {
-    return _player->engineIsRunning();
+    return static_cast<BOOL>(_player->engineIsRunning());
 }
 
 - (SFBAudioPlayerPlaybackState)playbackState {
@@ -161,19 +161,19 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)isPlaying {
-    return _player->isPlaying();
+    return static_cast<BOOL>(_player->isPlaying());
 }
 
 - (BOOL)isPaused {
-    return _player->isPaused();
+    return static_cast<BOOL>(_player->isPaused());
 }
 
 - (BOOL)isStopped {
-    return _player->isStopped();
+    return static_cast<BOOL>(_player->isStopped());
 }
 
 - (BOOL)isReady {
-    return _player->isReady();
+    return static_cast<BOOL>(_player->isReady());
 }
 
 - (id<SFBPCMDecoding>)currentDecoder {
@@ -211,41 +211,41 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)getPlaybackPosition:(SFBPlaybackPosition *)playbackPosition andTime:(SFBPlaybackTime *)playbackTime {
-    return _player->getPlaybackPositionAndTime(playbackPosition, playbackTime);
+    return static_cast<BOOL>(_player->getPlaybackPositionAndTime(playbackPosition, playbackTime));
 }
 
 // MARK: - Seeking
 
 - (BOOL)seekForward {
-    return _player->seekInTime(3);
+    return static_cast<BOOL>(_player->seekInTime(3));
 }
 
 - (BOOL)seekBackward {
-    return _player->seekInTime(-3);
+    return static_cast<BOOL>(_player->seekInTime(-3));
 }
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip {
-    return _player->seekInTime(secondsToSkip);
+    return static_cast<BOOL>(_player->seekInTime(secondsToSkip));
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip {
-    return _player->seekInTime(-secondsToSkip);
+    return static_cast<BOOL>(_player->seekInTime(-secondsToSkip));
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds {
-    return _player->seekToTime(timeInSeconds);
+    return static_cast<BOOL>(_player->seekToTime(timeInSeconds));
 }
 
 - (BOOL)seekToPosition:(double)position {
-    return _player->seekToPosition(position);
+    return static_cast<BOOL>(_player->seekToPosition(position));
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame {
-    return _player->seekToFrame(frame);
+    return static_cast<BOOL>(_player->seekToFrame(frame));
 }
 
 - (BOOL)supportsSeeking {
-    return _player->supportsSeeking();
+    return static_cast<BOOL>(_player->supportsSeeking());
 }
 
 #if !TARGET_OS_IPHONE
@@ -256,7 +256,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)setVolume:(float)volume error:(NSError **)error {
-    return _player->setVolumeForChannel(volume, 0, error);
+    return static_cast<BOOL>(_player->setVolumeForChannel(volume, 0, error));
 }
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel {
@@ -264,7 +264,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error {
-    return _player->setVolumeForChannel(volume, channel, error);
+    return static_cast<BOOL>(_player->setVolumeForChannel(volume, channel, error));
 }
 
 // MARK: - Output Device
@@ -274,7 +274,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)setOutputDeviceID:(AUAudioObjectID)outputDeviceID error:(NSError **)error {
-    return _player->setOutputDeviceID(outputDeviceID, error);
+    return static_cast<BOOL>(_player->setOutputDeviceID(outputDeviceID, error));
 }
 #endif /* !TARGET_OS_IPHONE */
 

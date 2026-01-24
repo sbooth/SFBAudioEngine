@@ -34,27 +34,27 @@ OSStatus readCallback(void *inClientData, SInt64 inPosition, UInt32 requestCount
     SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
 
     NSInteger offset;
-    if (![decoder->_inputSource getOffset:&offset error:nil]) {
+    if ([decoder->_inputSource getOffset:&offset error:nil] == NO) {
         return kAudioFileUnspecifiedError;
     }
 
     if (inPosition != offset) {
-        if (!decoder->_inputSource.supportsSeeking) {
+        if (decoder->_inputSource.supportsSeeking == NO) {
             return kAudioFileOperationNotSupportedError;
         }
-        if (![decoder->_inputSource seekToOffset:inPosition error:nil]) {
+        if ([decoder->_inputSource seekToOffset:inPosition error:nil] == NO) {
             return kAudioFileUnspecifiedError;
         }
     }
 
     NSInteger bytesRead;
-    if (![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil]) {
+    if ([decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil] == NO) {
         return kAudioFileUnspecifiedError;
     }
 
     *actualCount = static_cast<UInt32>(bytesRead);
 
-    if (decoder->_inputSource.atEOF) {
+    if (decoder->_inputSource.atEOF != NO) {
         return kAudioFileEndOfFileError;
     }
 
@@ -67,7 +67,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
 
     NSInteger length;
-    if (![decoder->_inputSource getLength:&length error:nil]) {
+    if ([decoder->_inputSource getLength:&length error:nil] == NO) {
         return -1;
     }
     return length;
@@ -201,7 +201,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                                                                SFBAIFFDetectionSize, SFBWAVEDetectionSize})
                                         skipID3v2Tag:NO
                                                error:error];
-    if (!header) {
+    if (header == nullptr) {
         return NO;
     }
 
@@ -210,16 +210,16 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // Core Audio supports a multitude of formats. This is not meant to be an exhaustive check but
     // just something quick to identify common file formats lacking a path extension or MIME type.
 
-    if ([header isMPEG4Header]) {
+    if ([header isMPEG4Header] != NO) {
         // M4A files
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    } else if ([header isCAFHeader]) {
+    } else if ([header isCAFHeader] != NO) {
         // CAF files
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    } else if ([header isAIFFHeader]) {
+    } else if ([header isAIFFHeader] != NO) {
         // AIFF and AIFF-C files
         *formatIsSupported = SFBTernaryTruthValueTrue;
-    } else if ([header isWAVEHeader]) {
+    } else if ([header isWAVEHeader] != NO) {
         // WAVE files
         *formatIsSupported = SFBTernaryTruthValueTrue;
     }
@@ -251,7 +251,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -268,11 +268,11 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     auto af = CXXAudioToolbox::AudioFileWrapper(audioFile);
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
+    result = ExtAudioFileWrapAudioFileID(af, 0U, &extAudioFile);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -296,7 +296,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain
                                          code:result
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
@@ -317,7 +317,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
             free(layout);
 
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                       NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -380,7 +380,8 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
             asbd.mBitsPerChannel = 32;
         }
 
-        asbd.mFormatFlags |= asbd.mBitsPerChannel % 8 ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
+        asbd.mFormatFlags |=
+              ((asbd.mBitsPerChannel % 8) != 0U) ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
 
         asbd.mBytesPerPacket = ((asbd.mBitsPerChannel + 7) / 8) * asbd.mChannelsPerFrame;
         asbd.mFramesPerPacket = 1;
@@ -390,7 +391,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     }
     // For all other formats convert to the canonical Core Audio format
     else {
-        if (channelLayout) {
+        if (channelLayout != nullptr) {
             _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                                  sampleRate:format.mSampleRate
                                                                 interleaved:NO
@@ -406,8 +407,8 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // For audio with more than 2 channels AVAudioFormat requires a channel map. Since ExtAudioFile doesn't always
     // return one, there is a chance that the initialization of _processingFormat failed. If that happened then
     // attempting to set kExtAudioFileProperty_ClientDataFormat will segfault
-    if (!_processingFormat) {
-        if (error) {
+    if (_processingFormat == nullptr) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -427,7 +428,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
                      result, SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
@@ -455,7 +456,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 }
 
 - (BOOL)isOpen {
-    return _eaf != nullptr;
+    return static_cast<BOOL>(_eaf != nullptr);
 }
 
 - (AVAudioFramePosition)framePosition {
@@ -499,7 +500,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         buffer.frameLength = 0;
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
                                      userInfo:@{
@@ -523,7 +524,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{

@@ -34,23 +34,25 @@ uint32_t bytesToID(const char bytes[4]) noexcept {
     auto four = bytes[3];
 
     // Verify well-formedness
-    if (!std::isprint(one) || !std::isprint(two) || !std::isprint(three) || !std::isprint(four)) {
+    if ((std::isprint(one) == 0) || (std::isprint(two) == 0) || (std::isprint(three) == 0) ||
+        (std::isprint(four) == 0)) {
         return 0;
     }
 
-    if (std::isspace(one)) {
+    if (std::isspace(one) != 0) {
         return 0;
     }
 
-    if (std::isspace(two) && std::isspace(one)) {
+    if ((std::isspace(two) != 0) && (std::isspace(one) != 0)) {
         return 0;
     }
 
-    if (std::isspace(three) && std::isspace(two) && std::isspace(one)) {
+    if ((std::isspace(three) != 0) && (std::isspace(two) != 0) && (std::isspace(one) != 0)) {
         return 0;
     }
 
-    if (std::isspace(four) && std::isspace(three) && std::isspace(two) && std::isspace(one)) {
+    if ((std::isspace(four) != 0) && (std::isspace(three) != 0) && (std::isspace(two) != 0) &&
+        (std::isspace(one) != 0)) {
         return 0;
     }
 
@@ -63,7 +65,7 @@ bool readID(SFBInputSource *inputSource, uint32_t& chunkID) noexcept {
 
     char chunkIDBytes[4];
     if (NSInteger bytesRead;
-        ![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
+        ([inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] == NO) || bytesRead != 4) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
         return false;
     }
@@ -226,7 +228,7 @@ bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint
         return false;
     }
 
-    if (![inputSource readUInt64BigEndian:&chunkDataSize error:nil]) {
+    if ([inputSource readUInt64BigEndian:&chunkDataSize error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read chunk data size");
         return false;
     }
@@ -246,13 +248,13 @@ std::shared_ptr<FormatVersionChunk> parseFormatVersionChunk(SFBInputSource *inpu
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
     result->dataOffset_ = offset;
 
-    if (![inputSource readUInt32BigEndian:&result->formatVersion_ error:nil]) {
+    if ([inputSource readUInt32BigEndian:&result->formatVersion_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read format version in 'FVER' chunk");
         return nullptr;
     }
@@ -277,13 +279,13 @@ std::shared_ptr<SampleRateChunk> parseSampleRateChunk(SFBInputSource *inputSourc
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
     result->dataOffset_ = offset;
 
-    if (![inputSource readUInt32BigEndian:&result->sampleRate_ error:nil]) {
+    if ([inputSource readUInt32BigEndian:&result->sampleRate_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read sample rate in 'FS  ' chunk");
         return nullptr;
     }
@@ -303,13 +305,13 @@ std::shared_ptr<ChannelsChunk> parseChannelsChunk(SFBInputSource *inputSource, c
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
     result->dataOffset_ = offset;
 
-    if (![inputSource readUInt16BigEndian:&result->numberChannels_ error:nil]) {
+    if ([inputSource readUInt16BigEndian:&result->numberChannels_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read number channels in 'CHNL' chunk");
         return nullptr;
     }
@@ -338,7 +340,7 @@ std::shared_ptr<CompressionTypeChunk> parseCompressionTypeChunk(SFBInputSource *
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
@@ -350,14 +352,14 @@ std::shared_ptr<CompressionTypeChunk> parseCompressionTypeChunk(SFBInputSource *
     }
 
     uint8_t count;
-    if (![inputSource readUInt8:&count error:nil]) {
+    if ([inputSource readUInt8:&count error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read count in 'CMPR' chunk");
         return nullptr;
     }
 
     std::vector<char> compressionName(count);
     NSInteger bytesRead;
-    if (![inputSource readBytes:compressionName.data() length:count bytesRead:&bytesRead error:nil] ||
+    if (([inputSource readBytes:compressionName.data() length:count bytesRead:&bytesRead error:nil] == NO) ||
         bytesRead != count) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read compressionName in 'CMPR' chunk");
         return nullptr;
@@ -366,14 +368,14 @@ std::shared_ptr<CompressionTypeChunk> parseCompressionTypeChunk(SFBInputSource *
     result->compressionName_ = std::string(compressionName.begin(), compressionName.end());
 
     // Chunks always have an even length
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
 
-    if (offset % 2) {
+    if ((offset % 2) != 0) {
         uint8_t unused;
-        if (![inputSource readUInt8:&unused error:nil]) {
+        if ([inputSource readUInt8:&unused error:nil] == NO) {
             os_log_error(gSFBDSDDecoderLog, "Unable to read dummy byte in 'CMPR' chunk");
             return nullptr;
         }
@@ -394,28 +396,28 @@ std::shared_ptr<AbsoluteStartTimeChunk> parseAbsoluteStartTimeChunk(SFBInputSour
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
     result->dataOffset_ = offset;
 
-    if (![inputSource readUInt16BigEndian:&result->hours_ error:nil]) {
+    if ([inputSource readUInt16BigEndian:&result->hours_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read hours in 'ABSS' chunk");
         return nullptr;
     }
 
-    if (![inputSource readUInt8:&result->minutes_ error:nil]) {
+    if ([inputSource readUInt8:&result->minutes_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read minutes in 'ABSS' chunk");
         return nullptr;
     }
 
-    if (![inputSource readUInt8:&result->seconds_ error:nil]) {
+    if ([inputSource readUInt8:&result->seconds_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read seconds in 'ABSS' chunk");
         return nullptr;
     }
 
-    if (![inputSource readUInt32BigEndian:&result->samples_ error:nil]) {
+    if ([inputSource readUInt32BigEndian:&result->samples_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read samples in 'ABSS' chunk");
         return nullptr;
     }
@@ -435,13 +437,13 @@ parseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t c
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
     result->dataOffset_ = offset;
 
-    if (![inputSource readUInt16BigEndian:&result->loudspeakerConfiguration_ error:nil]) {
+    if ([inputSource readUInt16BigEndian:&result->loudspeakerConfiguration_ error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read loudspeaker configuration in 'LSCO' chunk");
         return nullptr;
     }
@@ -461,7 +463,7 @@ std::shared_ptr<PropertyChunk> parsePropertyChunk(SFBInputSource *inputSource, c
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
@@ -525,12 +527,12 @@ std::shared_ptr<PropertyChunk> parsePropertyChunk(SFBInputSource *inputSource, c
 
                 // Skip unrecognized or ignored chunks
             default:
-                if (![inputSource getOffset:&offset error:nil]) {
+                if ([inputSource getOffset:&offset error:nil] == NO) {
                     os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
                     return nullptr;
                 }
 
-                if (![inputSource seekToOffset:(offset + static_cast<NSInteger>(localChunkDataSize)) error:nil]) {
+                if ([inputSource seekToOffset:(offset + static_cast<NSInteger>(localChunkDataSize)) error:nil] == NO) {
                     os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
                     return nullptr;
                 }
@@ -561,14 +563,14 @@ std::shared_ptr<DSDSoundDataChunk> parseDSDSoundDataChunk(SFBInputSource *inputS
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
     result->dataOffset_ = offset;
 
     // Skip the data
-    if (![inputSource seekToOffset:(offset + static_cast<NSInteger>(chunkDataSize)) error:nil]) {
+    if ([inputSource seekToOffset:(offset + static_cast<NSInteger>(chunkDataSize)) error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
         return nullptr;
     }
@@ -588,7 +590,7 @@ std::unique_ptr<FormDSDChunk> parseFormDSDChunk(SFBInputSource *inputSource, con
     result->chunkID_ = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
-    if (![inputSource getOffset:&offset error:nil]) {
+    if ([inputSource getOffset:&offset error:nil] == NO) {
         os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
         return nullptr;
     }
@@ -640,12 +642,12 @@ std::unique_ptr<FormDSDChunk> parseFormDSDChunk(SFBInputSource *inputSource, con
 
                 // Skip unrecognized or ignored chunks
             default:
-                if (![inputSource getOffset:&offset error:nil]) {
+                if ([inputSource getOffset:&offset error:nil] == NO) {
                     os_log_error(gSFBDSDDecoderLog, "Error getting chunk data offset");
                     return nullptr;
                 }
 
-                if (![inputSource seekToOffset:(offset + static_cast<NSInteger>(localChunkDataSize)) error:nil]) {
+                if ([inputSource seekToOffset:(offset + static_cast<NSInteger>(localChunkDataSize)) error:nil] == NO) {
                     os_log_error(gSFBDSDDecoderLog, "Error skipping chunk data");
                     return nullptr;
                 }
@@ -720,11 +722,11 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header) {
+    if (header == nullptr) {
         return NO;
     }
 
-    if ([header isDSDIFFHeader]) {
+    if ([header isDSDIFFHeader] != NO) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
     } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
@@ -745,7 +747,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     auto chunks = parseDSDIFF(_inputSource);
     if (!chunks) {
         os_log_error(gSFBDSDDecoderLog, "Error parsing file");
-        if (error) {
+        if (error != nullptr) {
             *error = createInvalidDSDIFFFileError(_inputSource.url);
         }
         return NO;
@@ -757,7 +759,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 
     if (!propertyChunk || !sampleRateChunk || !channelsChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
-        if (error) {
+        if (error != nullptr) {
             *error = createInvalidDSDIFFFileError(_inputSource.url);
         }
         return NO;
@@ -817,7 +819,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->localChunks_['DSD ']);
     if (!soundDataChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
-        if (error) {
+        if (error != nullptr) {
             *error = createInvalidDSDIFFFileError(_inputSource.url);
         }
         return NO;
@@ -828,7 +830,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     _packetCount = static_cast<AVAudioFramePosition>(soundDataChunk->dataSize_ - 12) /
                    (kSFBBytesPerDSDPacketPerChannel * channelsChunk->numberChannels_);
 
-    if (![_inputSource seekToOffset:_audioOffset error:error]) {
+    if ([_inputSource seekToOffset:_audioOffset error:error] == NO) {
         return NO;
     }
 
@@ -883,7 +885,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
         NSInteger bytesRead;
-        if (![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error]) {
+        if ([_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] == NO) {
             os_log_error(gSFBDSDDecoderLog, "Error reading audio data");
             return NO;
         }
@@ -891,7 +893,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         if (bytesRead != bytesToRead) {
             os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %ld bytes, got %ld",
                          static_cast<long>(bytesToRead), bytesRead);
-            if (error) {
+            if (error != nullptr) {
                 *error = createInvalidDSDIFFFileError(_inputSource.url);
             }
             return NO;
@@ -924,7 +926,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     NSParameterAssert(packet >= 0);
 
     NSInteger packetOffset = packet * kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
-    if (![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
+    if ([_inputSource seekToOffset:(_audioOffset + packetOffset) error:error] == NO) {
         os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld",
                      _audioOffset + packetOffset);
         return NO;

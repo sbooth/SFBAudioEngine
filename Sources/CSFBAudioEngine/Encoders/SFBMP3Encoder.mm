@@ -48,10 +48,10 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     AVAudioFramePosition _framePosition;
     NSInteger _id3v2TagSize;
 }
-- (BOOL)flushEncoderReturningError:(NSError **)error;
-- (BOOL)writeID3v1TagReturningError:(NSError **)error;
-- (BOOL)writeID3v2TagReturningError:(NSError **)error;
-- (BOOL)writeXingHeaderReturningError:(NSError **)error;
+- (bool)flushEncoderReturningError:(NSError **)error;
+- (bool)writeID3v1TagReturningError:(NSError **)error;
+- (bool)writeID3v2TagReturningError:(NSError **)error;
+- (bool)writeXingHeaderReturningError:(NSError **)error;
 @end
 
 @implementation SFBMP3Encoder
@@ -98,7 +98,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     lame_global_flags_unique_ptr gfp{lame_init()};
     if (!gfp) {
         os_log_error(gSFBAudioEncoderLog, "lame_init failed");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return NO;
@@ -111,7 +111,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     auto result = lame_set_num_channels(gfp.get(), static_cast<int>(_processingFormat.channelCount));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_num_channels(%d) failed", _processingFormat.channelCount);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -122,7 +122,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     result = lame_set_in_samplerate(gfp.get(), static_cast<int>(_processingFormat.sampleRate));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_in_samplerate(%g) failed", _processingFormat.sampleRate);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -141,7 +141,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_quality(gfp.get(), quality_value);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_quality(%d) failed", quality_value);
-                if (error) {
+                if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
@@ -161,7 +161,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         result = lame_set_VBR(gfp.get(), vbr_off);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
@@ -172,7 +172,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         result = lame_set_brate(gfp.get(), cbr.intValue);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", cbr.intValue);
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
@@ -191,7 +191,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         result = lame_set_VBR(gfp.get(), vbr_abr);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_abr) failed");
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
@@ -210,7 +210,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_mean_bitrate_kbps(%d) failed", intValue);
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
@@ -221,7 +221,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     // Variable bitrate encoding
     NSNumber *vbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseVariableBitrate];
-    if (vbr.boolValue) {
+    if (vbr.boolValue != 0) {
         if (cbr != nil) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and CBR bitrate both specified; this is probably not correct");
@@ -234,7 +234,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         result = lame_set_VBR(gfp.get(), vbr_default);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
@@ -247,7 +247,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_VBR_quality(gfp.get(), vbrQuality.floatValue);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%g) failed", vbrQuality.floatValue);
-                if (error) {
+                if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
@@ -261,7 +261,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_brate(gfp.get(), vbrMin.intValue);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", vbrMin.intValue);
-                if (error) {
+                if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
@@ -273,7 +273,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed",
                              lame_get_brate(gfp.get()));
-                if (error) {
+                if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
@@ -288,7 +288,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_max_bitrate_kbps(%d) failed", bitrate);
-                if (error) {
+                if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
                                              userInfo:nil];
@@ -312,7 +312,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_mode failed");
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
                                          userInfo:nil];
@@ -325,7 +325,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -333,12 +333,12 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         return NO;
     }
 
-    lame_set_write_id3tag_automatic(gfp.get(), false);
+    lame_set_write_id3tag_automatic(gfp.get(), 0);
 
     result = lame_init_params(gfp.get());
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_init_params failed");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -370,7 +370,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)isOpen {
-    return _gfp != nullptr;
+    return static_cast<BOOL>(_gfp != nullptr);
 }
 
 - (AVAudioFramePosition)framePosition {
@@ -389,7 +389,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
     auto buf = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return NO;
@@ -400,7 +400,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
           static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_buffer_interleaved_ieee_float failed");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -409,7 +409,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     NSInteger bytesWritten;
-    if (![_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] ||
+    if (([_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] == NO) ||
         bytesWritten != result) {
         return NO;
     }
@@ -435,112 +435,112 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     return YES;
 }
 
-- (BOOL)flushEncoderReturningError:(NSError **)error {
+- (bool)flushEncoderReturningError:(NSError **)error {
     const size_t bufsize = 7200;
     auto buf = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
-        return NO;
+        return false;
     }
 
     auto result = lame_encode_flush(_gfp.get(), buf.get(), bufsize);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_flush failed");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
         }
-        return NO;
+        return false;
     }
 
-    return YES;
+    return true;
 }
 
-- (BOOL)writeID3v1TagReturningError:(NSError **)error {
+- (bool)writeID3v1TagReturningError:(NSError **)error {
     auto bufsize = lame_get_id3v1_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
             }
-            return NO;
+            return false;
         }
 
         auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:buf.get()
+        if (([_outputSource writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
-                                 error:error] ||
+                                 error:error] == NO) ||
             bytesWritten != static_cast<NSInteger>(result)) {
-            return NO;
+            return false;
         }
     }
 
-    return YES;
+    return true;
 }
 
-- (BOOL)writeID3v2TagReturningError:(NSError **)error {
+- (bool)writeID3v2TagReturningError:(NSError **)error {
     auto bufsize = lame_get_id3v2_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
             }
-            return NO;
+            return false;
         }
 
         auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:buf.get()
+        if (([_outputSource writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
-                                 error:error] ||
+                                 error:error] == NO) ||
             bytesWritten != static_cast<NSInteger>(result)) {
-            return NO;
+            return false;
         }
     }
 
     _id3v2TagSize = static_cast<NSInteger>(bufsize);
 
-    return YES;
+    return true;
 }
 
-- (BOOL)writeXingHeaderReturningError:(NSError **)error {
+- (bool)writeXingHeaderReturningError:(NSError **)error {
     auto bufsize = lame_get_lametag_frame(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
             }
-            return NO;
+            return false;
         }
 
         auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
 
-        if (![_outputSource seekToOffset:_id3v2TagSize error:error]) {
-            return NO;
+        if ([_outputSource seekToOffset:_id3v2TagSize error:error] == NO) {
+            return false;
         }
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:buf.get()
+        if (([_outputSource writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
-                                 error:error] ||
+                                 error:error] == NO) ||
             bytesWritten != static_cast<NSInteger>(result)) {
-            return NO;
+            return false;
         }
     }
 
-    return YES;
+    return true;
 }
 
 @end

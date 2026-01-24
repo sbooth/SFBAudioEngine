@@ -57,7 +57,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int Read(void *pBuffer, unsigned int nBytesToRead, unsigned int *pBytesRead) override {
         NSInteger bytesRead;
-        if (![outputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil]) {
+        if ([outputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil] == NO) {
             return ERROR_IO_READ;
         }
 
@@ -68,7 +68,8 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int Write(const void *pBuffer, unsigned int nBytesToWrite, unsigned int *pBytesWritten) override {
         NSInteger bytesWritten;
-        if (![outputSource_ writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] ||
+        if (([outputSource_ writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten
+                                 error:nil] == NO) ||
             bytesWritten != nBytesToWrite) {
             return ERROR_IO_WRITE;
         }
@@ -79,7 +80,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override {
-        if (!outputSource_.supportsSeeking) {
+        if (outputSource_.supportsSeeking == NO) {
             return ERROR_IO_READ;
         }
 
@@ -90,21 +91,25 @@ class APEIOInterface final : public APE::IAPEIO {
             break;
         case APE::SeekFileCurrent: {
             NSInteger inputSourceOffset;
-            if ([outputSource_ getOffset:&inputSourceOffset error:nil]) {
+            if ([outputSource_ getOffset:&inputSourceOffset error:nil] != NO) {
                 offset += inputSourceOffset;
             }
             break;
         }
         case APE::SeekFileEnd: {
             NSInteger inputSourceLength;
-            if ([outputSource_ getLength:&inputSourceLength error:nil]) {
+            if ([outputSource_ getLength:&inputSourceLength error:nil] != NO) {
                 offset += inputSourceLength;
             }
             break;
         }
         }
 
-        return ![outputSource_ seekToOffset:offset error:nil];
+        if ([outputSource_ seekToOffset:offset error:nil] == NO) {
+            return ERROR_IO_READ;
+        }
+
+        return ERROR_SUCCESS;
     }
 
     int Create(const wchar_t *pName) override {
@@ -127,7 +132,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetPosition() override {
         NSInteger offset;
-        if (![outputSource_ getOffset:&offset error:nil]) {
+        if ([outputSource_ getOffset:&offset error:nil] == NO) {
             return -1;
         }
         return offset;
@@ -135,7 +140,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetSize() override {
         NSInteger length;
-        if (![outputSource_ getLength:&length error:nil]) {
+        if ([outputSource_ getLength:&length error:nil] == NO) {
             return -1;
         }
         return length;
@@ -186,8 +191,8 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32) {
+    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) != 0U) ||
+        sourceFormat.channelCount < 1 || sourceFormat.channelCount > 32) {
         return nil;
     }
 
@@ -251,9 +256,9 @@ class APEIOInterface final : public APE::IAPEIO {
     try {
         int result;
         auto *compressor = CreateIAPECompress(&result);
-        if (!compressor) {
+        if (compressor == nullptr) {
             os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
             }
             return NO;
@@ -263,7 +268,7 @@ class APEIOInterface final : public APE::IAPEIO {
         _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return NO;
@@ -293,7 +298,7 @@ class APEIOInterface final : public APE::IAPEIO {
                                    static_cast<int>(_sourceFormat.channelCount));
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
@@ -304,7 +309,7 @@ class APEIOInterface final : public APE::IAPEIO {
     result = _compressor->StartEx(_ioInterface.get(), &wve, false, MAX_AUDIO_BYTES_UNKNOWN, compressionLevel);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->StartEx() failed: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
@@ -333,7 +338,7 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)isOpen {
-    return _compressor != nullptr;
+    return static_cast<BOOL>(_compressor != nullptr);
 }
 
 - (AVAudioFramePosition)framePosition {
@@ -353,7 +358,7 @@ class APEIOInterface final : public APE::IAPEIO {
     auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -370,7 +375,7 @@ class APEIOInterface final : public APE::IAPEIO {
     auto result = _compressor->Finish(nullptr, 0, 0);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];

@@ -85,7 +85,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int Read(void *pBuffer, unsigned int nBytesToRead, unsigned int *pBytesRead) override {
         NSInteger bytesRead;
-        if (![inputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil]) {
+        if ([inputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil] == NO) {
             return ERROR_IO_READ;
         }
 
@@ -103,7 +103,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override {
-        if (!inputSource_.supportsSeeking) {
+        if (inputSource_.supportsSeeking == NO) {
             return ERROR_IO_READ;
         }
 
@@ -114,21 +114,25 @@ class APEIOInterface final : public APE::IAPEIO {
             break;
         case APE::SeekFileCurrent: {
             NSInteger inputSourceOffset;
-            if ([inputSource_ getOffset:&inputSourceOffset error:nil]) {
+            if ([inputSource_ getOffset:&inputSourceOffset error:nil] != NO) {
                 offset += inputSourceOffset;
             }
             break;
         }
         case APE::SeekFileEnd: {
             NSInteger inputSourceLength;
-            if ([inputSource_ getLength:&inputSourceLength error:nil]) {
+            if ([inputSource_ getLength:&inputSourceLength error:nil] != NO) {
                 offset += inputSourceLength;
             }
             break;
         }
         }
 
-        return ![inputSource_ seekToOffset:offset error:nil];
+        if ([inputSource_ seekToOffset:offset error:nil] == NO) {
+            return ERROR_IO_READ;
+        }
+
+        return ERROR_SUCCESS;
     }
 
     int Create(const wchar_t *pName) override {
@@ -151,7 +155,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetPosition() override {
         NSInteger offset;
-        if (![inputSource_ getOffset:&offset error:nil]) {
+        if ([inputSource_ getOffset:&offset error:nil] == NO) {
             return -1;
         }
         return offset;
@@ -159,7 +163,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetSize() override {
         NSInteger length;
-        if (![inputSource_ getLength:&length error:nil]) {
+        if ([inputSource_ getLength:&length error:nil] == NO) {
             return -1;
         }
         return length;
@@ -208,11 +212,11 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
-    if (!header) {
+    if (header == nullptr) {
         return NO;
     }
 
-    if ([header isAPEHeader]) {
+    if ([header isAPEHeader] != NO) {
         *formatIsSupported = SFBTernaryTruthValueTrue;
     } else {
         *formatIsSupported = SFBTernaryTruthValueFalse;
@@ -233,7 +237,7 @@ class APEIOInterface final : public APE::IAPEIO {
     auto ioInterface = std::make_unique<APEIOInterface>(_inputSource);
     auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
     if (!decompressor) {
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @""), @{
@@ -359,8 +363,8 @@ class APEIOInterface final : public APE::IAPEIO {
         // APE_INFO_FRAME_BYTES
         // APE_INFO_FRAME_BLOCKS
         // APE_INFO_TAG
-        SFBAudioDecodingPropertiesKeyMonkeysAudioAPL : _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APL) ? @YES
-                                                                                                                 : @NO,
+        SFBAudioDecodingPropertiesKeyMonkeysAudioAPL :
+                    (_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APL) != 0) ? @YES : @NO,
 
         // APE_DECOMPRESS_CURRENT_BLOCK
         // APE_DECOMPRESS_CURRENT_MS
@@ -385,7 +389,7 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)isOpen {
-    return _decompressor != nullptr;
+    return static_cast<BOOL>(_decompressor != nullptr);
 }
 
 - (AVAudioFramePosition)framePosition {
@@ -410,9 +414,9 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int64_t blocksRead = 0;
     if (_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData),
-                               static_cast<int64_t>(frameLength), &blocksRead)) {
+                               static_cast<int64_t>(frameLength), &blocksRead) != 0) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
@@ -429,7 +433,7 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(frame >= 0);
     if (const auto result = _decompressor->Seek(frame); result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio seek error: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];

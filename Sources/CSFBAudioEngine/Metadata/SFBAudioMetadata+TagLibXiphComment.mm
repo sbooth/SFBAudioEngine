@@ -111,7 +111,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
     }
 
-    if (additionalMetadata.count) {
+    if (additionalMetadata.count != 0U) {
         self.additionalMetadata = additionalMetadata;
     }
 
@@ -142,7 +142,7 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
     // Remove the existing comment with this name
     tag->removeFields(key);
 
-    if (value) {
+    if (value != nullptr) {
         tag->addField(key, TagLib::StringFromNSString(value));
     }
 }
@@ -161,7 +161,7 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
     if (value == nil) {
         SetXiphComment(tag, key, nil);
     } else {
-        SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
+        SetXiphComment(tag, key, (value.boolValue != 0) ? @"1" : @"0");
     }
 }
 
@@ -170,7 +170,15 @@ void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *k
     assert(nullptr != tag);
     assert(nullptr != key);
 
-    SetXiphComment(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (value == nil) {
+        SetXiphComment(tag, key, nil);
+    } else {
+        if (format == nil) {
+            SetXiphComment(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetXiphComment(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
@@ -209,7 +217,7 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
 
     // Additional metadata
     NSDictionary *additionalMetadata = metadata.additionalMetadata;
-    if (additionalMetadata) {
+    if (additionalMetadata != nullptr) {
         for (NSString *key in additionalMetadata) {
             SetXiphComment(tag, key.UTF8String, additionalMetadata[key]);
         }
@@ -249,7 +257,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                         static_cast<unsigned int>(attachedPicture.imageData.length)));
     picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
-    if (attachedPicture.pictureDescription) {
+    if (attachedPicture.pictureDescription != nullptr) {
         picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
     }
 
@@ -264,7 +272,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     // Flesh out the height, width, and depth
     NSDictionary *imagePropertiesDictionary =
           (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
-    if (imagePropertiesDictionary) {
+    if (imagePropertiesDictionary != nullptr) {
         NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
         NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
         NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];

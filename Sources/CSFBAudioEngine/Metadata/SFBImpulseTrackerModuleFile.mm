@@ -50,7 +50,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -67,7 +67,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
 
         TagLib::IT::File file(&stream);
         if (!file.isValid()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Impulse Tracker module file.", @""), @{
@@ -83,12 +83,12 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Impulse Tracker Module"
                                                  forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties()) {
+        if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag()) {
+        if (file.tag() != nullptr) {
             [metadata addMetadataFromTagLibTag:file.tag()];
         }
 
@@ -99,7 +99,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading Impulse Tracker module properties and metadata: %{public}s",
                      e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
@@ -110,7 +110,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
 
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing Impulse Tracker module metadata is not supported");
-    if (error) {
+    if (error != nullptr) {
         *error = SFBErrorWithLocalizedDescription(
               SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
               NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
