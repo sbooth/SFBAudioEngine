@@ -41,6 +41,8 @@ constexpr char decoderIsCanceledKey = '\0';
 void audioEngineConfigurationChangeNotificationCallback(CFNotificationCenterRef center, void *observer,
                                                         CFNotificationName name, const void *object,
                                                         CFDictionaryRef userInfo) {
+#pragma unused(center)
+#pragma unused(name)
     auto *that = static_cast<sfb::AudioPlayer *>(observer);
     that->handleAudioEngineConfigurationChange((__bridge AVAudioEngine *)object, (__bridge NSDictionary *)userInfo);
 }
@@ -212,7 +214,7 @@ struct AudioPlayer::DecoderState final {
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
 
 inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept
-  : decoder_{decoder}, frameLength_{decoder.frameLength}, sampleRate_{decoder.processingFormat.sampleRate} {
+  : decoder_{decoder}, sampleRate_{decoder.processingFormat.sampleRate}, frameLength_{decoder.frameLength} {
 #if DEBUG
     assert(decoder != nil);
 #endif /* DEBUG */
@@ -2056,7 +2058,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
     }
 }
 
-sfb::AudioPlayer::DecoderState *const sfb::AudioPlayer::firstActiveDecoderState() const noexcept {
+sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() const noexcept {
 #if DEBUG
     activeDecodersLock_.assert_owner();
 #endif /* DEBUG */
@@ -2074,6 +2076,7 @@ sfb::AudioPlayer::DecoderState *const sfb::AudioPlayer::firstActiveDecoderState(
 // MARK: - AVAudioEngine Notification Handling
 
 void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engine, NSDictionary *userInfo) noexcept {
+#pragma unused(userInfo)
     if (engine != engine_) {
         os_log_error(log_,
                      "AVAudioEngineConfigurationChangeNotification received for incorrect AVAudioEngine instance");
