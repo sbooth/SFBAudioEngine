@@ -237,7 +237,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO) {
+    if (![super openReturningError:error]) {
         return NO;
     }
 

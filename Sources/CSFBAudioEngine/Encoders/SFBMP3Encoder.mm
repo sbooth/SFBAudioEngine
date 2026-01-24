@@ -91,7 +91,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO) {
+    if (![super openReturningError:error]) {
         return NO;
     }
 

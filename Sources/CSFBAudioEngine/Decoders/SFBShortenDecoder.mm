@@ -441,7 +441,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO || ![self parseShortenHeaderReturningError:error]) {
+    if (![super openReturningError:error] || ![self parseShortenHeaderReturningError:error]) {
         return NO;
     }
 

@@ -219,7 +219,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO) {
+    if (![super openReturningError:error]) {
         return NO;
     }
 

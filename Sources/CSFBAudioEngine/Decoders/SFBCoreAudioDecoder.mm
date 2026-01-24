@@ -241,7 +241,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO) {
+    if (![super openReturningError:error]) {
         return NO;
     }
 

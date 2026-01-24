@@ -738,7 +738,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO) {
+    if (![super openReturningError:error]) {
         return NO;
     }
 
