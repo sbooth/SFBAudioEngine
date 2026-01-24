@@ -23,6 +23,13 @@ BreakTemplateDeclarations: Yes
 
 ObjCBlockIndentWidth: 4
 
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound: false
+  PadOperators: true
+
 AttributeMacros:
   - CF_SWIFT_NAME
   - CF_REFINED_FOR_SWIFT
