@@ -17,6 +17,7 @@
 
 #import <algorithm>
 #import <cmath>
+#import <cstdlib>
 #import <cstring>
 #import <ranges>
 #import <vector>
