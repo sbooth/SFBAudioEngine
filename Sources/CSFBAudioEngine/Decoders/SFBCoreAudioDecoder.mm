@@ -269,7 +269,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     auto af = CXXAudioToolbox::AudioFileWrapper(audioFile);
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af, 0u, &extAudioFile);
+    result = ExtAudioFileWrapAudioFileID(af, 0, &extAudioFile);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -382,7 +382,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         }
 
         asbd.mFormatFlags |=
-              ((asbd.mBitsPerChannel % 8) != 0u) ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
+              ((asbd.mBitsPerChannel % 8) != 0) ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
 
         asbd.mBytesPerPacket = ((asbd.mBitsPerChannel + 7) / 8) * asbd.mChannelsPerFrame;
         asbd.mFramesPerPacket = 1;

@@ -17,11 +17,11 @@
     self.artist = [NSString stringWithUTF8String:tag->artist().toCString(true)];
     self.genre = [NSString stringWithUTF8String:tag->genre().toCString(true)];
 
-    if (tag->year() != 0u) {
+    if (tag->year() != 0) {
         self.releaseDate = @(tag->year()).stringValue;
     }
 
-    if (tag->track() != 0u) {
+    if (tag->track() != 0) {
         self.trackNumber = @(tag->track());
     }
 

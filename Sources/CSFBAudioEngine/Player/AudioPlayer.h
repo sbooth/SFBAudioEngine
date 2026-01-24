@@ -277,7 +277,7 @@ class AudioPlayer final {
     void cancelActiveDecoders() noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
-    DecoderState *const _Nullable firstActiveDecoderState() const noexcept;
+    DecoderState *_Nullable firstActiveDecoderState() const noexcept;
 
   public:
     // MARK: - AVAudioEngine Notification Handling

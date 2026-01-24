@@ -110,7 +110,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             if (ok) {
                 self.trackTotal = @(trackTotal);
             }
-        } else if (s.length() != 0u) {
+        } else if (s.length() != 0) {
             int trackNum = s.toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
@@ -137,7 +137,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             if (ok) {
                 self.discTotal = @(discTotal);
             }
-        } else if (s.length() != 0u) {
+        } else if (s.length() != 0) {
             int discNum = s.toInt(&ok);
             if (ok) {
                 self.discNumber = @(discNum);
@@ -286,7 +286,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
             float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 
-            if (volumeAdjustment != 0.F) {
+            if (volumeAdjustment != 0.f) {
                 if (TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
                     self.replayGainTrackGain = @(volumeAdjustment);
                 } else if (TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {

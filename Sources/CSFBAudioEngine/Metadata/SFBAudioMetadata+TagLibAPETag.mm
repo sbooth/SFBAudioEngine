@@ -130,7 +130,7 @@
         }
     }
 
-    if (additionalMetadata.count != 0u) {
+    if (additionalMetadata.count != 0) {
         self.additionalMetadata = additionalMetadata;
     }
 }

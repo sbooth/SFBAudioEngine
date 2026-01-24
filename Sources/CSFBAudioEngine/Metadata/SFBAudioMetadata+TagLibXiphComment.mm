@@ -111,7 +111,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
     }
 
-    if (additionalMetadata.count != 0u) {
+    if (additionalMetadata.count != 0) {
         self.additionalMetadata = additionalMetadata;
     }
 

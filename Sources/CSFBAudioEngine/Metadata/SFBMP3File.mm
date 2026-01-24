@@ -128,7 +128,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
             }
 #endif
 
-            if ((properties->xingHeader() != nullptr) && (properties->xingHeader()->totalFrames() != 0u)) {
+            if ((properties->xingHeader() != nullptr) && (properties->xingHeader()->totalFrames() != 0)) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->xingHeader()->totalFrames());
             }
         }

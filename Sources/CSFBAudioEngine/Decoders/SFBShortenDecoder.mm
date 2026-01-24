@@ -191,7 +191,7 @@ class VariableLengthInput {
         }
 
         uint32_t uvar = static_cast<uint32_t>(var);
-        if ((uvar & 1) != 0u) {
+        if ((uvar & 1) != 0) {
             i32 = ~(uvar >> 1);
         } else {
             i32 = (uvar >> 1);
@@ -1159,7 +1159,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         return false;
     }
 
-    if ((dataChunkSize != 0u) && (blockAlign != 0u)) {
+    if ((dataChunkSize != 0) && (blockAlign != 0)) {
         _frameLength = dataChunkSize / blockAlign;
     }
 
@@ -1513,7 +1513,8 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         case functionBlocksize: {
             uint32_t uint = 0;
             if (!_input.getUInt32(uint, _version, static_cast<int>(std::log2(_blocksize))) || uint == 0 ||
-                uint > maxBlocksize || uint <= _wrap || static_cast<int>(uint) > _blocksize) {
+                uint > maxBlocksize || uint <= static_cast<uint32_t>(_wrap) ||
+                uint > static_cast<uint32_t>(_blocksize)) {
                 os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
                 if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain

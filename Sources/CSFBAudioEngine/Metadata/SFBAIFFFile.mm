@@ -99,7 +99,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameAIFF = @"org.sbooth.AudioEngi
             if (properties->bitsPerSample() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
             }
-            if (properties->sampleFrames() != 0u) {
+            if (properties->sampleFrames() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
             }
         }
