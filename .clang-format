@@ -64,7 +64,7 @@ IncludeCategories:
     Priority: 2
   - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
     Priority: 2
-  - Regex: '^<(CoreFoundation|CoreAudioTypes|CoreAudio|AudioToolbox|Foundation|AVFAudio|Accelerate|CommonCrypto)/'
+  - Regex: '^<(CoreFoundation|CoreAudioTypes|CoreAudio|AudioToolbox|Foundation|AVFAudio|Accelerate|CommonCrypto|ImageIO|UniformTypeIdentifiers)/'
     Priority: 3
   - Regex: '^<(libkern|mach|objc|os)/'
     Priority: 5
