@@ -17,20 +17,22 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
                                           case SFBAudioPlayerErrorCodeInternalError:
-                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey] != 0) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey] !=
+                                                  NO) {
                                                   return NSLocalizedString(@"Internal player error", @"");
                                               }
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey] != 0) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey] != NO) {
                                                   return NSLocalizedString(@"An internal audio player error occurred.",
                                                                            @"");
                                               }
                                               break;
 
                                           case SFBAudioPlayerErrorCodeFormatNotSupported:
-                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey] != 0) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey] !=
+                                                  NO) {
                                                   return NSLocalizedString(@"Unsupported format", @"");
                                               }
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey] != 0) {
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey] != NO) {
                                                   return NSLocalizedString(
                                                         @"The format is invalid, unknown, or unsupported.", @"");
                                               }
@@ -97,7 +99,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     if (decoder == nil) {
         return NO;
     }
-    return static_cast<BOOL>(_player->enqueueDecoder(decoder, forImmediatePlayback != 0, error));
+    return static_cast<BOOL>(_player->enqueueDecoder(decoder, forImmediatePlayback != NO, error));
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error {
@@ -109,7 +111,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
       forImmediatePlayback:(BOOL)forImmediatePlayback
                      error:(NSError **)error {
     NSParameterAssert(decoder != nil);
-    return static_cast<BOOL>(_player->enqueueDecoder(decoder, forImmediatePlayback != 0, error));
+    return static_cast<BOOL>(_player->enqueueDecoder(decoder, forImmediatePlayback != NO, error));
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format {
