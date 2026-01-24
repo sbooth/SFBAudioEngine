@@ -1577,7 +1577,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     return true;
 }
 
-// A return value of YES indicates that decoding may continue, not that no errors exist with the seek table itself
+// A return value of true indicates that decoding may continue, not that no errors exist with the seek table itself
 - (bool)scanForSeekTableReturningError:(NSError **)error {
     // Non-seekable input source; not an error
     if (!_inputSource.supportsSeeking) {
