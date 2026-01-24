@@ -212,7 +212,7 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
-    if (header == nullptr) {
+    if (header == nil) {
         return NO;
     }
 

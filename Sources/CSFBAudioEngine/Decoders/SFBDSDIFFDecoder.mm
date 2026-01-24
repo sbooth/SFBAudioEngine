@@ -722,7 +722,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (header == nullptr) {
+    if (header == nil) {
         return NO;
     }
 

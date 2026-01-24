@@ -44,7 +44,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBMusepackDetectionSize skipID3v2Tag:YES error:error];
-    if (header == nullptr) {
+    if (header == nil) {
         return NO;
     }
 

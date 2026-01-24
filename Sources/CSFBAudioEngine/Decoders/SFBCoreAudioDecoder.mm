@@ -201,7 +201,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                                                                SFBAIFFDetectionSize, SFBWAVEDetectionSize})
                                         skipID3v2Tag:NO
                                                error:error];
-    if (header == nullptr) {
+    if (header == nil) {
         return NO;
     }
 
