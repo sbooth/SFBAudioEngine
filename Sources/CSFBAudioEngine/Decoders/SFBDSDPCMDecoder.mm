@@ -460,8 +460,8 @@ class DXD {
 
         float *const *floatChannelData = buffer.floatChannelData;
         AVAudioChannelCount channelCount = buffer.format.channelCount;
-        bool isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) ==
-                           kAudioFormatFlagIsBigEndian;
+        const bool isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) ==
+                                 kAudioFormatFlagIsBigEndian;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const auto *const input = static_cast<const unsigned char *>(_buffer.data) + channel;
             float *output = floatChannelData[channel];

@@ -222,7 +222,7 @@ void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) 
     if (value == nil) {
         tag->removeItem(key);
     } else {
-        tag->setItem(key, TagLib::MP4::Item((value.boolValue != 0) ? 1 : 0));
+        tag->setItem(key, TagLib::MP4::Item((value.boolValue != NO) ? 1 : 0));
     }
 }
 

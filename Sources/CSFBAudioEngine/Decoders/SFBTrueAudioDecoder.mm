@@ -35,7 +35,7 @@ TTAint32 readCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint
     auto *iocb = static_cast<TTACallbacks *>(io);
 
     NSInteger bytesRead;
-    if ([iocb->decoder_->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil] == 0) {
+    if ([iocb->decoder_->_inputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil] == NO) {
         return -1;
     }
     return static_cast<TTAint32>(bytesRead);
@@ -44,7 +44,7 @@ TTAint32 readCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint
 TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept {
     auto *iocb = static_cast<TTACallbacks *>(io);
 
-    if ([iocb->decoder_->_inputSource seekToOffset:offset error:nil] == 0) {
+    if ([iocb->decoder_->_inputSource seekToOffset:offset error:nil] == NO) {
         return -1;
     }
     return offset;

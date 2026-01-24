@@ -115,7 +115,7 @@ int closeCallback(void *user_data) noexcept {
     }
 
     double sampleRate = 48000;
-    if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyOpusPreserveSampleRate] boolValue] != 0) {
+    if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyOpusPreserveSampleRate] boolValue] != NO) {
         if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000) {
             return nil;
         }
@@ -400,7 +400,7 @@ int closeCallback(void *user_data) noexcept {
         framesProcessed += framesCopied;
 
         // Encode the next Opus frame
-        if (_frameBuffer.isFull != 0) {
+        if (_frameBuffer.isFull != NO) {
             int result = ope_encoder_write_float(_enc.get(),
                                                  static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
                                                  static_cast<int>(_frameBuffer.frameLength));

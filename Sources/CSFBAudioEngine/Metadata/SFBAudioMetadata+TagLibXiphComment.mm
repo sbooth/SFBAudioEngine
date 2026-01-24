@@ -111,7 +111,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
     }
 
-    if (additionalMetadata.count != 0U) {
+    if (additionalMetadata.count != 0u) {
         self.additionalMetadata = additionalMetadata;
     }
 
@@ -161,7 +161,7 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
     if (value == nil) {
         SetXiphComment(tag, key, nil);
     } else {
-        SetXiphComment(tag, key, (value.boolValue != 0) ? @"1" : @"0");
+        SetXiphComment(tag, key, (value.boolValue != NO) ? @"1" : @"0");
     }
 }
 

@@ -191,7 +191,7 @@ class VariableLengthInput {
         }
 
         uint32_t uvar = static_cast<uint32_t>(var);
-        if ((uvar & 1) != 0U) {
+        if ((uvar & 1) != 0u) {
             i32 = ~(uvar >> 1);
         } else {
             i32 = (uvar >> 1);
@@ -449,16 +449,14 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     if (_bitsPerSample != 8 && _bitsPerSample != 16) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _bitsPerSample);
         if (error != nullptr) {
-            if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
-                      NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The audio bit depth is not supported.", @""),
-                          NSURLErrorKey : _inputSource.url
-                      },
-                      SFBLocalizedNameForURL(_inputSource.url));
-            }
+            *error = SFBErrorWithLocalizedDescription(
+                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
+                  NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @""), @{
+                      NSLocalizedRecoverySuggestionErrorKey :
+                            NSLocalizedString(@"The audio bit depth is not supported.", @""),
+                      NSURLErrorKey : _inputSource.url
+                  },
+                  SFBLocalizedNameForURL(_inputSource.url));
         }
         return NO;
     }
@@ -1161,7 +1159,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         return false;
     }
 
-    if ((dataChunkSize != 0U) && (blockAlign != 0U)) {
+    if ((dataChunkSize != 0u) && (blockAlign != 0u)) {
         _frameLength = dataChunkSize / blockAlign;
     }
 

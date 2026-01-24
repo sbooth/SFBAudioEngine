@@ -102,7 +102,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
             if (properties->bitsPerSample() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
             }
-            if (properties->sampleFrames() != 0U) {
+            if (properties->sampleFrames() != 0u) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
             }
         }

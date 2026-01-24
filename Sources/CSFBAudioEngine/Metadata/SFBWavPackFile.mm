@@ -100,7 +100,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
             if (properties->bitsPerSample() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
             }
-            if (properties->sampleFrames() != 0U) {
+            if (properties->sampleFrames() != 0u) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
             }
         }

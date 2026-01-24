@@ -110,7 +110,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             if (ok) {
                 self.trackTotal = @(trackTotal);
             }
-        } else if (s.length() != 0U) {
+        } else if (s.length() != 0u) {
             int trackNum = s.toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
@@ -137,7 +137,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             if (ok) {
                 self.discTotal = @(discTotal);
             }
-        } else if (s.length() != 0U) {
+        } else if (s.length() != 0u) {
             int discNum = s.toInt(&ok);
             if (ok) {
                 self.discNumber = @(discNum);
@@ -424,7 +424,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     tag->removeFrames("TCMP");
     if (metadata.compilation != nil) {
         auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TCMP", TagLib::String::Latin1);
-        frame->setText((metadata.compilation.boolValue != 0) ? "1" : "0");
+        frame->setText((metadata.compilation.boolValue != NO) ? "1" : "0");
         tag->addFrame(frame);
     }
 

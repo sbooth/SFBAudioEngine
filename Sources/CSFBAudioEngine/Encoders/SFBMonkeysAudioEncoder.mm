@@ -191,7 +191,7 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) != 0U) ||
+    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) ||
         sourceFormat.channelCount < 1 || sourceFormat.channelCount > 32) {
         return nil;
     }

@@ -97,7 +97,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.Audio
             auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->sampleFrames() != 0U) {
+            if (properties->sampleFrames() != 0u) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
             }
         }

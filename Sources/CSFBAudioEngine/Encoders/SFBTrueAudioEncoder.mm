@@ -25,7 +25,7 @@ TTAint32 writeCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
     TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
     NSInteger bytesWritten;
-    if ([iocb->encoder_->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil] == 0) {
+    if ([iocb->encoder_->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil] == NO) {
         return -1;
     }
     return (TTAint32)bytesWritten;
@@ -34,7 +34,7 @@ TTAint32 writeCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
 TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept {
     TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
-    if ([iocb->encoder_->_outputSource seekToOffset:offset error:nil] == 0) {
+    if ([iocb->encoder_->_outputSource seekToOffset:offset error:nil] == NO) {
         return -1;
     }
     return offset;
@@ -76,7 +76,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) != 0U) ||
+    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) ||
         sourceFormat.streamDescription->mBitsPerChannel < MIN_BPS ||
         sourceFormat.streamDescription->mBitsPerChannel > MAX_BPS || sourceFormat.channelCount < 1 ||
         sourceFormat.channelCount > MAX_NCH) {

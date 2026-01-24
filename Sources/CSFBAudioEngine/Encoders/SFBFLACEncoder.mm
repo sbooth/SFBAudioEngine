@@ -178,7 +178,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) != 0U) ||
+    if (((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) ||
         sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8) {
         return nil;
     }
@@ -285,7 +285,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
 
     if (NSNumber *verifyEncoding = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACVerifyEncoding];
         verifyEncoding != nil) {
-        FLAC__stream_encoder_set_verify(flac.get(), static_cast<FLAC__bool>(verifyEncoding.boolValue != 0));
+        FLAC__stream_encoder_set_verify(flac.get(), verifyEncoding.boolValue);
     }
 
     // Create the padding metadata block

@@ -130,7 +130,7 @@
         }
     }
 
-    if (additionalMetadata.count != 0U) {
+    if (additionalMetadata.count != 0u) {
         self.additionalMetadata = additionalMetadata;
     }
 }
@@ -165,7 +165,7 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
     if (value == nil) {
         SetAPETag(tag, key, nil);
     } else {
-        SetAPETag(tag, key, (value.boolValue != 0) ? @"1" : @"0");
+        SetAPETag(tag, key, (value.boolValue != NO) ? @"1" : @"0");
     }
 }
 

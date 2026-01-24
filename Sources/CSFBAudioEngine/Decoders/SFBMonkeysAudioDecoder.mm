@@ -414,7 +414,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int64_t blocksRead = 0;
     if (_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData),
-                               static_cast<int64_t>(frameLength), &blocksRead) != 0) {
+                               static_cast<int64_t>(frameLength), &blocksRead) != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
