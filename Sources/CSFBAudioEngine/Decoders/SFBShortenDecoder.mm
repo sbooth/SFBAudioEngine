@@ -388,13 +388,13 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     AVAudioFramePosition _frameLength;
     uint64_t _blocksDecoded;
 }
-- (BOOL)parseShortenHeaderReturningError:(NSError **)error;
-- (BOOL)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error;
-- (BOOL)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error;
-- (BOOL)decodeBlockReturningError:(NSError **)error;
-- (BOOL)scanForSeekTableReturningError:(NSError **)error;
+- (bool)parseShortenHeaderReturningError:(NSError **)error;
+- (bool)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error;
+- (bool)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error;
+- (bool)decodeBlockReturningError:(NSError **)error;
+- (bool)scanForSeekTableReturningError:(NSError **)error;
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url;
-- (BOOL)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset;
+- (bool)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset;
 @end
 
 @implementation SFBShortenDecoder
@@ -794,14 +794,14 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     return YES;
 }
 
-- (BOOL)parseShortenHeaderReturningError:(NSError **)error {
+- (bool)parseShortenHeaderReturningError:(NSError **)error {
     // Read magic number
     uint32_t magic;
     if (![_inputSource readUInt32BigEndian:&magic error:nil] || magic != 'ajkg') {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
 
     constexpr auto minSupportedVersion = 1;
@@ -822,7 +822,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
         }
-        return NO;
+        return false;
     }
     _version = version;
 
@@ -838,7 +838,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
-        return NO;
+        return false;
     }
 
     __weak SFBInputSource *inputSource = self->_inputSource;
@@ -857,7 +857,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
     if (fileType != fileTypeUInt8 && fileType != fileTypeSInt8 && fileType != fileTypeUInt16BE &&
         fileType != fileTypeUInt16LE && fileType != fileTypeSInt16BE && fileType != fileTypeSInt16LE) {
@@ -872,7 +872,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
         }
-        return NO;
+        return false;
     }
     _fileType = static_cast<int>(fileType);
 
@@ -894,7 +894,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
         }
-        return NO;
+        return false;
     }
     _channelCount = static_cast<int>(channelCount);
 
@@ -918,7 +918,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                       },
                       SFBLocalizedNameForURL(_inputSource.url));
             }
-            return NO;
+            return false;
         }
         _blocksize = static_cast<int>(blocksize);
 
@@ -935,7 +935,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                       },
                       SFBLocalizedNameForURL(_inputSource.url));
             }
-            return NO;
+            return false;
         }
         _maxLPC = static_cast<int>(maxLPC);
 
@@ -952,7 +952,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                       },
                       SFBLocalizedNameForURL(_inputSource.url));
             }
-            return NO;
+            return false;
         }
         _mean = static_cast<int>(mean);
 
@@ -961,7 +961,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
             if (error) {
                 *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
             }
-            return NO;
+            return false;
         }
 
         for (uint32_t i = 0; i < skipCount; ++i) {
@@ -970,7 +970,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 if (error) {
                     *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
                 }
-                return NO;
+                return false;
             }
         }
     } else {
@@ -1001,7 +1001,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
         }
-        return NO;
+        return false;
     }
 
     constexpr auto canonicalHeaderSizeBytes = 44;
@@ -1013,7 +1013,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
 
     std::vector<unsigned char> headerBytes(headerSize);
@@ -1023,7 +1023,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
             if (error) {
                 *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
             }
-            return NO;
+            return false;
         }
 
         headerBytes[i] = static_cast<unsigned char>(byte);
@@ -1037,12 +1037,12 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     if (chunkID == 'RIFF') {
         // WAVE
         if (![self parseRIFFChunk:(headerBytes.data() + 8) size:(headerSize - 8) error:error]) {
-            return NO;
+            return false;
         }
     } else if (chunkID == 'FORM') {
         // AIFF
         if (![self parseFORMChunk:(headerBytes.data() + 8) size:(headerSize - 8) error:error]) {
-            return NO;
+            return false;
         }
     } else {
         os_log_error(gSFBAudioDecoderLog, "Unsupported data format: %u", chunkID);
@@ -1056,13 +1056,13 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                   },
                   SFBLocalizedNameForURL(_inputSource.url));
         }
-        return NO;
+        return false;
     }
 
-    return YES;
+    return true;
 }
 
-- (BOOL)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
+- (bool)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
     NSParameterAssert(chunkData != nullptr);
     NSParameterAssert(size >= 28);
 
@@ -1077,7 +1077,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
 
     auto sawFormatChunk = false;
@@ -1098,7 +1098,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 if (error) {
                     *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
                 }
-                return NO;
+                return false;
             }
 
             auto formatTag = OSReadLittleInt16(chunkData, offset);
@@ -1115,7 +1115,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                           },
                           SFBLocalizedNameForURL(_inputSource.url));
                 }
-                return NO;
+                return false;
             }
 
             auto channels = OSReadLittleInt16(chunkData, offset);
@@ -1157,17 +1157,17 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
 
     if (dataChunkSize && blockAlign) {
         _frameLength = dataChunkSize / blockAlign;
     }
 
-    return YES;
+    return true;
 }
 
-- (BOOL)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
+- (bool)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
     NSParameterAssert(chunkData != nullptr);
     NSParameterAssert(size >= 30);
 
@@ -1180,7 +1180,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
 
     if (chunkID == 'AIFC') {
@@ -1205,7 +1205,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 if (error) {
                     *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
                 }
-                return NO;
+                return false;
             }
 
             auto channels = OSReadBigInt16(chunkData, offset);
@@ -1229,7 +1229,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 if (error) {
                     *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
                 }
-                return NO;
+                return false;
             }
 
             auto frac = OSReadBigInt64(chunkData, offset);
@@ -1261,13 +1261,13 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         if (error) {
             *error = genericShortenInvalidFormatErrorForURL(_inputSource.url);
         }
-        return NO;
+        return false;
     }
 
-    return YES;
+    return true;
 }
 
-- (BOOL)decodeBlockReturningError:(NSError **)error {
+- (bool)decodeBlockReturningError:(NSError **)error {
     int chan = 0;
     for (;;) {
         int32_t cmd;
@@ -1277,12 +1277,12 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                              code:SFBAudioDecoderErrorCodeDecodingError
                                          userInfo:@{NSURLErrorKey : _inputSource.url}];
             }
-            return NO;
+            return false;
         }
 
         if (cmd == functionQuit) {
             _eos = true;
-            return YES;
+            return true;
         }
 
         switch (cmd) {
@@ -1304,7 +1304,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                      code:SFBAudioDecoderErrorCodeDecodingError
                                                  userInfo:@{NSURLErrorKey : _inputSource.url}];
                     }
-                    return NO;
+                    return false;
                 }
                 // Versions > 0 changed the behavior
                 if (_version == 0) {
@@ -1341,7 +1341,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                          code:SFBAudioDecoderErrorCodeDecodingError
                                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
                         }
-                        return NO;
+                        return false;
                     }
                     chanBuffer[i] = var + chanOffset;
                 }
@@ -1355,7 +1355,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                          code:SFBAudioDecoderErrorCodeDecodingError
                                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
                         }
-                        return NO;
+                        return false;
                     }
                     chanBuffer[i] = var + chanBuffer[i - 1];
                 }
@@ -1369,7 +1369,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                          code:SFBAudioDecoderErrorCodeDecodingError
                                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
                         }
-                        return NO;
+                        return false;
                     }
                     chanBuffer[i] = var + (2 * chanBuffer[i - 1] - chanBuffer[i - 2]);
                 }
@@ -1383,7 +1383,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                          code:SFBAudioDecoderErrorCodeDecodingError
                                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
                         }
-                        return NO;
+                        return false;
                     }
                     chanBuffer[i] = var + (3 * (chanBuffer[i - 1] - chanBuffer[i - 2])) + chanBuffer[i - 3];
                 }
@@ -1396,7 +1396,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                      code:SFBAudioDecoderErrorCodeDecodingError
                                                  userInfo:@{NSURLErrorKey : _inputSource.url}];
                     }
-                    return NO;
+                    return false;
                 }
 
                 for (auto i = 0; i < lpc; ++i) {
@@ -1406,7 +1406,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                          code:SFBAudioDecoderErrorCodeDecodingError
                                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
                         }
-                        return NO;
+                        return false;
                     }
                 }
                 for (auto i = 0; i < lpc; ++i) {
@@ -1425,7 +1425,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                          code:SFBAudioDecoderErrorCodeDecodingError
                                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
                         }
-                        return NO;
+                        return false;
                     }
                     chanBuffer[i] = var + (sum >> parameterQLPC);
                 }
@@ -1505,7 +1505,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                 _frameBuffer.frameLength = static_cast<AVAudioFrameCount>(_blocksize);
 
                 ++_blocksDecoded;
-                return YES;
+                return true;
             }
             chan = (chan + 1) % _channelCount;
             break;
@@ -1521,7 +1521,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                  code:SFBAudioDecoderErrorCodeDecodingError
                                              userInfo:@{NSURLErrorKey : _inputSource.url}];
                 }
-                return NO;
+                return false;
             }
             _blocksize = static_cast<int>(uint);
             break;
@@ -1534,7 +1534,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                  code:SFBAudioDecoderErrorCodeDecodingError
                                              userInfo:@{NSURLErrorKey : _inputSource.url}];
                 }
-                return NO;
+                return false;
             }
             break;
         case functionVerbatim: {
@@ -1547,7 +1547,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                  code:SFBAudioDecoderErrorCodeDecodingError
                                              userInfo:@{NSURLErrorKey : _inputSource.url}];
                 }
-                return NO;
+                return false;
             }
             while (chunk_len--) {
                 int32_t dummy;
@@ -1557,7 +1557,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                                      code:SFBAudioDecoderErrorCodeDecodingError
                                                  userInfo:@{NSURLErrorKey : _inputSource.url}];
                     }
-                    return NO;
+                    return false;
                 }
             }
             break;
@@ -1570,29 +1570,29 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                              code:SFBAudioDecoderErrorCodeDecodingError
                                          userInfo:@{NSURLErrorKey : _inputSource.url}];
             }
-            return NO;
+            return false;
         }
     }
 
-    return YES;
+    return true;
 }
 
-// A return value of YES indicates that decoding may continue, not that no errors exist with the seek table itself
-- (BOOL)scanForSeekTableReturningError:(NSError **)error {
+// A return value of true indicates that decoding may continue, not that no errors exist with the seek table itself
+- (bool)scanForSeekTableReturningError:(NSError **)error {
     // Non-seekable input source; not an error
     if (!_inputSource.supportsSeeking) {
-        return YES;
+        return true;
     }
 
     NSInteger startOffset;
     if (![_inputSource getOffset:&startOffset error:error]) {
-        return NO;
+        return false;
     }
 
     NSInteger fileLength;
     if (![_inputSource getLength:&fileLength error:error] ||
         ![_inputSource seekToOffset:(fileLength - seekTrailerSizeBytes) error:error]) {
-        return NO;
+        return false;
     }
 
     SeekTableTrailer trailer;
@@ -1600,7 +1600,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         unsigned char buf[seekTrailerSizeBytes];
         NSInteger bytesRead;
         if (![_inputSource readBytes:buf length:seekTrailerSizeBytes bytesRead:&bytesRead error:error]) {
-            return NO;
+            return false;
         }
         if (bytesRead != seekTrailerSizeBytes) {
             if (error) {
@@ -1608,7 +1608,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                              code:SFBAudioDecoderErrorCodeInvalidFormat
                                          userInfo:nil];
             }
-            return NO;
+            return false;
         }
         trailer = parseSeekTableTrailer(buf);
     }
@@ -1624,13 +1624,13 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
             }
         }
         if (![_inputSource seekToOffset:startOffset error:error]) {
-            return NO;
+            return false;
         }
-        return YES;
+        return true;
     }
 
     if (![_inputSource seekToOffset:(fileLength - trailer.seekTableSize_) error:error]) {
-        return NO;
+        return false;
     }
 
     SeekTableHeader header;
@@ -1638,7 +1638,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         unsigned char buf[seekHeaderSizeBytes];
         NSInteger bytesRead;
         if (![_inputSource readBytes:buf length:seekHeaderSizeBytes bytesRead:&bytesRead error:error]) {
-            return NO;
+            return false;
         }
         if (bytesRead != seekHeaderSizeBytes) {
             if (error) {
@@ -1646,7 +1646,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                              code:SFBAudioDecoderErrorCodeInvalidFormat
                                          userInfo:nil];
             }
-            return NO;
+            return false;
         }
         header = parseSeekTableHeader(buf);
     }
@@ -1655,18 +1655,18 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     if (memcmp("SEEK", header.signature_, 4)) {
         os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.signature_);
         if (![_inputSource seekToOffset:startOffset error:error]) {
-            return NO;
+            return false;
         }
-        return YES;
+        return true;
     }
 
     // Validate seek table version
     if (header.version_ != seekTableRevision) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %d", header.version_);
         if (![_inputSource seekToOffset:startOffset error:error]) {
-            return NO;
+            return false;
         }
-        return YES;
+        return true;
     }
 
     std::vector<SeekTableEntry> entries;
@@ -1676,7 +1676,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         unsigned char buf[seekEntrySizeBytes];
         NSInteger bytesRead;
         if (![_inputSource readBytes:buf length:seekEntrySizeBytes bytesRead:&bytesRead error:error]) {
-            return NO;
+            return false;
         }
         if (bytesRead != seekEntrySizeBytes) {
             if (error) {
@@ -1684,7 +1684,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                                              code:SFBAudioDecoderErrorCodeInvalidFormat
                                          userInfo:nil];
             }
-            return NO;
+            return false;
         }
 
         auto entry = parseSeekTableEntry(buf);
@@ -1693,14 +1693,14 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 
     // Reset file marker
     if (![_inputSource seekToOffset:startOffset error:error]) {
-        return NO;
+        return false;
     }
 
     if (!entries.empty() && [self seekTableIsValid:entries startOffset:startOffset]) {
         _seekTableEntries = entries;
     }
 
-    return YES;
+    return true;
 }
 
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url {
@@ -1752,37 +1752,37 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     return entries;
 }
 
-- (BOOL)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset {
+- (bool)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset {
     if (entries.empty()) {
-        return NO;
+        return false;
     }
     if (startOffset != entries[0].byteOffsetInFile_) {
         os_log_error(
               gSFBAudioDecoderLog,
               "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)",
               (long)startOffset, entries[0].byteOffsetInFile_);
-        return NO;
+        return false;
     }
     if (_bitshift != entries[0].bitshift_) {
         os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry",
                      entries[0].bitshift_);
-        return NO;
+        return false;
     }
     if (_channelCount != 1 && _channelCount != 2) {
         os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required",
                      _channelCount);
-        return NO;
+        return false;
     }
     if (_maxLPC > 3) {
         os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxLPC);
-        return NO;
+        return false;
     }
     if (_mean > 4) {
         os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid mean (%d); [0, 4] required", _mean);
-        return NO;
+        return false;
     }
 
-    return YES;
+    return true;
 }
 
 @end
