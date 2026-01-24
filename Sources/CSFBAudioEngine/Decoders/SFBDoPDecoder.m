@@ -136,7 +136,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
         return NO;
     }
 
-    _reverseBits = !(asbd->mFormatFlags & kAudioFormatFlagIsBigEndian);
+    _reverseBits = (asbd->mFormatFlags & kAudioFormatFlagIsBigEndian) == 0;
 
     // Generate non-interleaved 24-bit big endian output
     AudioStreamBasicDescription processingStreamDescription = {0};

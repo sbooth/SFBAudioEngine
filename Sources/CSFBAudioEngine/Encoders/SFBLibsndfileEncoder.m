@@ -132,7 +132,7 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
         return 0;
     }
 
-    if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
+    if ((asbd->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32) {
             return SF_FORMAT_FLOAT;
         }
@@ -140,25 +140,27 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
             return SF_FORMAT_DOUBLE;
         }
     } else {
+        BOOL isSignedInteger =
+              (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) == kAudioFormatFlagIsSignedInteger;
         switch (asbd->mBitsPerChannel) {
         case 8:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_S8;
             } else {
                 return SF_FORMAT_PCM_U8;
             }
         case 16:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_16;
             }
             break;
         case 24:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_24;
             }
             break;
         case 32:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_32;
             }
             break;
@@ -557,7 +559,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     }
 
     // Floating point
-    if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
+    if ((asbd->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32) {
             return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat32 interleaved:YES];
         }
@@ -599,7 +601,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     int majorFormat = 0;
     SFBAudioEncodingSettingsValue majorFormatSetting =
           [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileMajorFormat];
-    if (majorFormatSetting != nil) {
+    if (majorFormatSetting) {
         if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV) {
             majorFormat = SF_FORMAT_WAV;
         } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF) {
@@ -667,7 +669,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     int subtype = 0;
     SFBAudioEncodingSettingsValue subtypeSetting =
           [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileSubtype];
-    if (subtypeSetting != nil) {
+    if (subtypeSetting) {
         if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8) {
             subtype = SF_FORMAT_PCM_S8;
         } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16) {
@@ -742,7 +744,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     int endian = 0;
     NSNumber *fileEndianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
-    if (fileEndianSetting != nil) {
+    if (fileEndianSetting) {
         if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault) {
             endian = SF_ENDIAN_FILE;
         } else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle) {

@@ -194,13 +194,13 @@ class AudioPlayer final {
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
         /// Cached value of `engine_.isRunning`
-        engineIsRunning = 1U << 0,
+        engineIsRunning = 1u << 0,
         /// The render block should output audio
-        isPlaying = 1U << 1,
+        isPlaying = 1u << 1,
         /// The render block should output silence
-        isMuted = 1U << 2,
+        isMuted = 1u << 2,
         /// The ring buffer needs to be drained during the next render cycle
-        drainRequired = 1U << 3,
+        drainRequired = 1u << 3,
     };
 
     // MARK: - Decoding
@@ -341,7 +341,7 @@ inline bool AudioPlayer::isPaused() const noexcept {
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
-    return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
+    return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) == 0;
 }
 
 inline bool AudioPlayer::isReady() const noexcept {

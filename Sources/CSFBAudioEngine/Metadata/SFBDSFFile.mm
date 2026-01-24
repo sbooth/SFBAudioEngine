@@ -96,10 +96,10 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameDSF = @"org.sbooth.AudioEngin
             auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample()) {
+            if (properties->bitsPerSample() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
             }
-            if (properties->sampleCount()) {
+            if (properties->sampleCount() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleCount());
             }
         }

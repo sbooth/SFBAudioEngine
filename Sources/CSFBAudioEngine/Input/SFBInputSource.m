@@ -76,7 +76,7 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-    if (data == nil) {
+    if (!data) {
         return nil;
     }
     return [[SFBDataInputSource alloc] initWithData:data];
@@ -86,7 +86,7 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-    if (data == nil) {
+    if (!data) {
         return nil;
     }
     return [[SFBDataInputSource alloc] initWithData:data];

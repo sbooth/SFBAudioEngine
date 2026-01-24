@@ -136,7 +136,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     double sampleRate = sourceFormat.sampleRate;
 
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
-    if (mode != nil) {
+    if (mode) {
         // Determine the desired sample rate
         if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband) {
             sampleRate = 8000;
@@ -182,7 +182,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     // Setup the encoder
     const SpeexMode *speex_mode = NULL;
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
-    if (mode == nil) {
+    if (!mode) {
         if (_processingFormat.sampleRate > 25000) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
         } else if (_processingFormat.sampleRate > 12500) {
@@ -244,7 +244,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     // Encoder mode
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexTargetIsBitrate] boolValue]) {
         NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexBitrate];
-        if (bitrate != nil) {
+        if (bitrate) {
             spx_int32_t bitrate_value = bitrate.intValue;
             speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
         } else {
@@ -305,7 +305,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
     _speex_frames_per_ogg_packet = 1; // 1-10 default 1
     NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket] ?: @1;
-    if (framesPerPacket != nil) {
+    if (framesPerPacket) {
         int intValue = framesPerPacket.intValue;
         if (intValue < 1 || intValue > 10) {
             os_log_error(gSFBAudioEncoderLog, "Invalid Speex frames per packet: %d", intValue);

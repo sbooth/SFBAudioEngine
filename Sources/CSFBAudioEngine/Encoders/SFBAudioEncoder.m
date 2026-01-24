@@ -272,7 +272,7 @@ static NSMutableArray *_registeredSubclasses = nil;
     }
 
     AVAudioFormat *processingFormat = [self processingFormatForSourceFormat:sourceFormat];
-    if (processingFormat == nil) {
+    if (!processingFormat) {
         os_log_error(gSFBAudioEncoderLog, "-setSourceFormat:error: called with invalid format: %{public}@",
                      sourceFormat);
         if (error) {

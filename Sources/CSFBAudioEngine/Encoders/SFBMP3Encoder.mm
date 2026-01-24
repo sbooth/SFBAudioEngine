@@ -133,8 +133,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     // Adjust encoder settings
 
     // Noise shaping and psychoacoustics
-    NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Quality];
-    if (quality != nil) {
+    if (NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Quality]; quality) {
         auto quality_value = quality.intValue;
         switch (quality_value) {
         case 0 ... 9:
@@ -157,7 +156,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     // Constant bitrate encoding
     NSNumber *cbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3ConstantBitrate];
-    if (cbr != nil) {
+    if (cbr) {
         result = lame_set_VBR(gfp.get(), vbr_off);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
@@ -183,8 +182,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     // Average bitrate encoding
     NSNumber *abr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
-    if (abr != nil) {
-        if (cbr != nil) {
+    if (abr) {
+        if (cbr) {
             os_log_info(gSFBAudioEncoderLog, "CBR and ABR bitrates both specified; this is probably not correct");
         }
 
@@ -222,11 +221,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     // Variable bitrate encoding
     NSNumber *vbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseVariableBitrate];
     if (vbr.boolValue) {
-        if (cbr != nil) {
+        if (cbr) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and CBR bitrate both specified; this is probably not correct");
         }
-        if (abr != nil) {
+        if (abr) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and ABR bitrate both specified; this is probably not correct");
         }
@@ -242,8 +241,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             return NO;
         }
 
-        NSNumber *vbrQuality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality];
-        if (vbrQuality != nil) {
+        if (NSNumber *vbrQuality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality]; vbrQuality) {
             result = lame_set_VBR_quality(gfp.get(), vbrQuality.floatValue);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%g) failed", vbrQuality.floatValue);
@@ -256,8 +254,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             }
         }
 
-        NSNumber *vbrMin = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate];
-        if (vbrMin != nil) {
+        if (NSNumber *vbrMin = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate]; vbrMin) {
             result = lame_set_brate(gfp.get(), vbrMin.intValue);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", vbrMin.intValue);
@@ -282,8 +279,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             }
         }
 
-        NSNumber *vbrMax = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate];
-        if (vbrMax != nil) {
+        if (NSNumber *vbrMax = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate]; vbrMax) {
             auto bitrate = vbrMax.intValue * 1000;
             result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
             if (result == -1) {
@@ -298,8 +294,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         }
     }
 
-    SFBAudioEncodingSettingsValue stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
-    if (stereoMode != nil) {
+    if (SFBAudioEncodingSettingsValue stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
+        stereoMode) {
         if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono) {
             result = lame_set_mode(gfp.get(), MONO);
         } else if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo) {

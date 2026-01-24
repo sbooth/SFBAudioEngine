@@ -533,7 +533,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                             }
 
                             // Normalize the values
-                            float maxSampleValue = 1U << 15;
+                            float maxSampleValue = 1u << 15;
                             vDSP_vsdiv(buf, 1, &maxSampleValue, buf, 1,
                                        (vDSP_Length)speexFrameSize * _processingFormat.channelCount);
 

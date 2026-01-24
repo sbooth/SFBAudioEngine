@@ -96,7 +96,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioE
             auto *properties = file.audioProperties();
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
-            if (properties->bitsPerSample()) {
+            if (properties->bitsPerSample() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyBitDepth] = @(properties->bitsPerSample());
             }
         }

@@ -178,8 +178,8 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 8) {
+    if ((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat ||
+        sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8) {
         return nil;
     }
 
@@ -261,8 +261,8 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     }
 
     // Encoder compression level
-    NSNumber *compressionLevel = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACCompressionLevel];
-    if (compressionLevel != nil) {
+    if (NSNumber *compressionLevel = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACCompressionLevel];
+        compressionLevel) {
         unsigned int value = compressionLevel.unsignedIntValue;
         switch (value) {
         case 0 ... 8:
@@ -284,7 +284,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     }
 
     if (NSNumber *verifyEncoding = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACVerifyEncoding];
-        verifyEncoding != nil) {
+        verifyEncoding) {
         FLAC__stream_encoder_set_verify(flac.get(), verifyEncoding.boolValue != 0);
     }
 

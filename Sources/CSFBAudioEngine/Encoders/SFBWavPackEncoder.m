@@ -41,7 +41,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSCParameterAssert(id != NULL);
     SFBWavPackEncoder *encoder = (__bridge SFBWavPackEncoder *)id;
 
-    if (encoder->_firstBlock == nil) {
+    if (!encoder->_firstBlock) {
         encoder->_firstBlock = [NSMutableData dataWithBytes:data length:(NSUInteger)bcount];
     }
 
@@ -75,8 +75,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32) {
+    if ((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat ||
+        sourceFormat.channelCount < 1 || sourceFormat.channelCount > 32) {
         return nil;
     }
 
@@ -101,7 +101,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     // Use WAVFORMATEX channel order
     AVAudioChannelLayout *channelLayout = nil;
 
-    if (sourceFormat.channelLayout != nil) {
+    if (sourceFormat.channelLayout) {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
@@ -163,7 +163,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     _config.flags = CONFIG_MD5_CHECKSUM;
 
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
-    if (level != nil) {
+    if (level) {
         if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast) {
             _config.flags |= CONFIG_FAST_FLAG;
         } else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh) {
