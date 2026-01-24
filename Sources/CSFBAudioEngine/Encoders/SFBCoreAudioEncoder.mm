@@ -353,7 +353,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if ([super openReturningError:error] == NO) {
+    if (![super openReturningError:error]) {
         return NO;
     }
 
