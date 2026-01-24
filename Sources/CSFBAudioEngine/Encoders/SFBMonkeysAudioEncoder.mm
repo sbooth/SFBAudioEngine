@@ -244,7 +244,7 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 

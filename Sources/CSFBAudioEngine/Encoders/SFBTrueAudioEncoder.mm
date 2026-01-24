@@ -110,7 +110,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 

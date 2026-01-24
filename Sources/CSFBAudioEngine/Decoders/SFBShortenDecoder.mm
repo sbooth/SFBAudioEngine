@@ -419,7 +419,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {
@@ -440,7 +440,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error] || ![self parseShortenHeaderReturningError:error]) {
+    if ([super openReturningError:error] == NO || ![self parseShortenHeaderReturningError:error]) {
         return NO;
     }
 

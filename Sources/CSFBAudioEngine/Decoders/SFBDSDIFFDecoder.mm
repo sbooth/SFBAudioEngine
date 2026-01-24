@@ -717,7 +717,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {
@@ -738,7 +738,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 

@@ -91,7 +91,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 
@@ -460,7 +460,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)writeID3v1TagReturningError:(NSError **)error {
-    auto bufsize = lame_get_id3v1_tag(_gfp.get(), NULL, 0);
+    auto bufsize = lame_get_id3v1_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -486,7 +486,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)writeID3v2TagReturningError:(NSError **)error {
-    auto bufsize = lame_get_id3v2_tag(_gfp.get(), NULL, 0);
+    auto bufsize = lame_get_id3v2_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -514,7 +514,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)writeXingHeaderReturningError:(NSError **)error {
-    auto bufsize = lame_get_lametag_frame(_gfp.get(), NULL, 0);
+    auto bufsize = lame_get_lametag_frame(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {

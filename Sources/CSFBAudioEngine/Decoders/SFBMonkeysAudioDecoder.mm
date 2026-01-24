@@ -205,7 +205,7 @@ class APEIOInterface final : public APE::IAPEIO {
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
     if (!header) {
@@ -226,7 +226,7 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 

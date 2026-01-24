@@ -41,7 +41,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
     if (!header) {

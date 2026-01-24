@@ -195,7 +195,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:std::max({SFBMPEG4DetectionSize, SFBCAFDetectionSize,
                                                                SFBAIFFDetectionSize, SFBWAVEDetectionSize})
@@ -240,7 +240,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (![super openReturningError:error]) {
+    if ([super openReturningError:error] == NO) {
         return NO;
     }
 

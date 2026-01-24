@@ -43,7 +43,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
       formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                   error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
     if (!header) {
