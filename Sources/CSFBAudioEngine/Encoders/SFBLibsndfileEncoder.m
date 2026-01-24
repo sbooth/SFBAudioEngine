@@ -18,13 +18,13 @@
 SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile = @"org.sbooth.AudioEngine.Encoder.Libsndfile";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat = @"Major Format";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSubtype = @"Subtype";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian = @"File Endian";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSubtype     = @"Subtype";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian  = @"File Endian";
 
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV = @"WAV";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF =
       @"AIFF";
-SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU = @"AU";
+SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU  = @"AU";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw = @"Raw";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF = @"PAF";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX = @"SVX";
@@ -39,7 +39,7 @@ SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSetting
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5 =
       @"MAT5";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF = @"PVF";
-SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI = @"XI";
+SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI  = @"XI";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK = @"HTK";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS = @"SDS";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR = @"AVR";
@@ -61,10 +61,10 @@ SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsVal
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24 = @"PCM_24";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32 = @"PCM_32";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8 = @"PCM_U8";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat = @"Float";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat  = @"Float";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble = @"Double";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW = @"µ-law";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW = @"A-law";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW   = @"µ-law";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW   = @"A-law";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM =
       @"IMA_ADPCM";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM =
@@ -84,11 +84,11 @@ SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsVal
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12 = @"DWVW_12";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16 = @"DWVW_16";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24 = @"DWVW_24";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N = @"DWVW_N";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8 = @"DPCM_8";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N  = @"DWVW_N";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8  = @"DPCM_8";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16 = @"DPCM_16";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis = @"Vorbis";
-SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus = @"Opus";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis  = @"Vorbis";
+SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus    = @"Opus";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16 = @"ALAC_16";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20 = @"ALAC_20";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24 = @"ALAC_24";
@@ -571,10 +571,10 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     else {
         AudioStreamBasicDescription streamDescription = {0};
 
-        streamDescription.mFormatID = kAudioFormatLinearPCM;
+        streamDescription.mFormatID    = kAudioFormatLinearPCM;
         streamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 
-        streamDescription.mSampleRate = asbd->mSampleRate;
+        streamDescription.mSampleRate       = asbd->mSampleRate;
         streamDescription.mChannelsPerFrame = asbd->mChannelsPerFrame;
 
         streamDescription.mBitsPerChannel = ((asbd->mBitsPerChannel + 7) / 8) * 8;
@@ -584,7 +584,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         streamDescription.mBytesPerPacket =
               ((streamDescription.mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
         streamDescription.mFramesPerPacket = 1;
-        streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
+        streamDescription.mBytesPerFrame   = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
         return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription
                                                   channelLayout:sourceFormat.channelLayout];
@@ -742,7 +742,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                     subtype, _processingFormat);
     }
 
-    int endian = 0;
+    int endian                  = 0;
     NSNumber *fileEndianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
     if (fileEndianSetting) {
         if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault) {
@@ -760,9 +760,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     }
 
     _sfinfo.samplerate = (int)_processingFormat.sampleRate;
-    _sfinfo.channels = (int)_processingFormat.channelCount;
-    _sfinfo.format = majorFormat | subtype | endian;
-    _sfinfo.seekable = 1;
+    _sfinfo.channels   = (int)_processingFormat.channelCount;
+    _sfinfo.format     = majorFormat | subtype | endian;
+    _sfinfo.seekable   = 1;
 
     switch (subtype) {
     case SF_FORMAT_PCM_U8:
@@ -793,10 +793,10 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Set up the virtual IO function pointers
     SF_VIRTUAL_IO virtualIO;
     virtualIO.get_filelen = my_sf_vio_get_filelen;
-    virtualIO.seek = my_sf_vio_seek;
-    virtualIO.read = my_sf_vio_read;
-    virtualIO.write = my_sf_vio_write;
-    virtualIO.tell = my_sf_vio_tell;
+    virtualIO.seek        = my_sf_vio_seek;
+    virtualIO.read        = my_sf_vio_read;
+    virtualIO.write       = my_sf_vio_write;
+    virtualIO.tell        = my_sf_vio_tell;
 
     // Open the output file
     _sndfile = sf_open_virtual(&virtualIO, SFM_WRITE, &_sfinfo, (__bridge void *)self);
@@ -843,7 +843,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Generic libsndfile format ID, will be set to something more specific if known
     outputStreamDescription.mFormatID = 'SNDF';
 
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+    outputStreamDescription.mSampleRate       = _processingFormat.sampleRate;
     outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
 
     FillASBDWithSndfileFormat(&outputStreamDescription, _sfinfo.format);

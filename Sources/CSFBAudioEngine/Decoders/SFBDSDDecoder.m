@@ -29,10 +29,10 @@ static void SFBCreateDSDDecoderLog(void) {
 
 @implementation SFBDSDDecoder
 
-@synthesize inputSource = _inputSource;
-@synthesize sourceFormat = _sourceFormat;
+@synthesize inputSource      = _inputSource;
+@synthesize sourceFormat     = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
-@synthesize properties = _properties;
+@synthesize properties       = _properties;
 
 @dynamic decodingIsLossless;
 @dynamic packetPosition;
@@ -201,7 +201,7 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(inputSource != nil);
 
     NSString *lowercaseExtension = inputSource.url.pathExtension.lowercaseString;
-    NSString *lowercaseMIMEType = mimeTypeHint.lowercaseString;
+    NSString *lowercaseMIMEType  = mimeTypeHint.lowercaseString;
 
     if (detectContentType) {
         // If the input source can't be opened decoding is destined to fail; give up now
@@ -216,12 +216,12 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    int score = 10;
+    int score      = 10;
     Class subclass = nil;
 
     for (SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         int currentScore = 0;
-        Class klass = subclassInfo.klass;
+        Class klass      = subclassInfo.klass;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
@@ -260,7 +260,7 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
 
         if (currentScore > score) {
-            score = currentScore;
+            score    = currentScore;
             subclass = klass;
         }
     }
@@ -345,9 +345,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    _sourceFormat = nil;
+    _sourceFormat     = nil;
     _processingFormat = nil;
-    _properties = nil;
+    _properties       = nil;
     if (_inputSource.isOpen) {
         return [_inputSource closeReturningError:error];
     }
@@ -408,8 +408,8 @@ static NSMutableArray *_registeredSubclasses = nil;
     dispatch_once(&onceToken, ^{ _registeredSubclasses = [NSMutableArray array]; });
 
     SFBDSDDecoderSubclassInfo *subclassInfo = [[SFBDSDDecoderSubclassInfo alloc] init];
-    subclassInfo.klass = subclass;
-    subclassInfo.priority = priority;
+    subclassInfo.klass                      = subclass;
+    subclassInfo.priority                   = priority;
 
     [_registeredSubclasses addObject:subclassInfo];
 

@@ -80,7 +80,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 
     if ((self = [super init])) {
         _decoder = decoder;
-        _marker = 0x05;
+        _marker  = 0x05;
     }
     return self;
 }
@@ -141,16 +141,16 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     // Generate non-interleaved 24-bit big endian output
     AudioStreamBasicDescription processingStreamDescription = {0};
 
-    processingStreamDescription.mFormatID = kAudioFormatLinearPCM /*kSFBAudioFormatDoP*/;
+    processingStreamDescription.mFormatID    = kAudioFormatLinearPCM /*kSFBAudioFormatDoP*/;
     processingStreamDescription.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked |
                                                kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
 
     processingStreamDescription.mSampleRate =
           asbd->mSampleRate / (kSFBPCMFramesPerDSDPacket * DSD_PACKETS_PER_DOP_FRAME);
     processingStreamDescription.mChannelsPerFrame = asbd->mChannelsPerFrame;
-    processingStreamDescription.mBitsPerChannel = 24;
+    processingStreamDescription.mBitsPerChannel   = 24;
 
-    processingStreamDescription.mBytesPerPacket = 3;
+    processingStreamDescription.mBytesPerPacket  = 3;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
           processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
@@ -158,7 +158,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
                                                            channelLayout:_decoder.processingFormat.channelLayout];
 
-    _buffer = [[AVAudioCompressedBuffer alloc]
+    _buffer             = [[AVAudioCompressedBuffer alloc]
              initWithFormat:_decoder.processingFormat
              packetCapacity:BUFFER_SIZE_PACKETS
           maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
@@ -227,11 +227,11 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 
         AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
-        unsigned char marker = _marker;
+        unsigned char marker             = _marker;
         AVAudioChannelCount channelCount = _processingFormat.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const unsigned char *input = (const unsigned char *)_buffer.data + channel;
-            unsigned char *output = (unsigned char *)buffer.audioBufferList->mBuffers[channel].mData +
+            unsigned char *output      = (unsigned char *)buffer.audioBufferList->mBuffers[channel].mData +
                                     buffer.audioBufferList->mBuffers[channel].mDataByteSize;
 
             // The DoP marker should match across channels
@@ -276,7 +276,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     }
 
     _buffer.packetCount = 0;
-    _buffer.byteLength = 0;
+    _buffer.byteLength  = 0;
 
     return YES;
 }

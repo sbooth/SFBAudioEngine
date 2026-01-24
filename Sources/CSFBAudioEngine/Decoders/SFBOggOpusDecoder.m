@@ -17,15 +17,15 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion = @"version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount = @"channel_count";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip = @"pre_skip";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion         = @"version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusChannelCount    = @"channel_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusPreSkip         = @"pre_skip";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusInputSampleRate = @"input_sample_rate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain = @"output_gain";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily = @"mapping_family";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount = @"stream_count";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount = @"coupled_count";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping = @"mapping";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusOutputGain      = @"output_gain";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMappingFamily   = @"mapping_family";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusStreamCount     = @"stream_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusCoupledCount    = @"coupled_count";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping         = @"mapping";
 
 #define OPUS_SAMPLE_RATE 48000
 
@@ -212,7 +212,7 @@ static opus_int64 tell_callback(void *stream) {
 
     sourceStreamDescription.mFormatID = kAudioFormatOpus;
 
-    sourceStreamDescription.mSampleRate = header->input_sample_rate;
+    sourceStreamDescription.mSampleRate       = header->input_sample_rate;
     sourceStreamDescription.mChannelsPerFrame = (UInt32)header->channel_count;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription

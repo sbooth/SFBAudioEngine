@@ -24,7 +24,7 @@
 namespace {
 
 constexpr int kDSDPacketsPerPCMFrame = 8 / kSFBPCMFramesPerDSDPacket;
-constexpr int kBufferSizePackets = 16384;
+constexpr int kBufferSizePackets     = 16384;
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 constexpr unsigned char sBitReverseTable256[256] = {
@@ -203,7 +203,7 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     unsigned bite2;
     unsigned char *p;
     double acc;
-    ffp = ptr->fifopos;
+    ffp  = ptr->fifopos;
     lsbf = lsbf ? 1 : 0;
     while (samples-- > 0) {
         bite1 = *src & 0xFFU;
@@ -212,8 +212,8 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
         }
         ptr->fifo[ffp] = static_cast<unsigned char>(bite1);
         src += src_stride;
-        p = ptr->fifo + ((ffp - CTABLES) & FIFOMASK);
-        *p = sBitReverseTable256[*p & 0xFF];
+        p   = ptr->fifo + ((ffp - CTABLES) & FIFOMASK);
+        *p  = sBitReverseTable256[*p & 0xFF];
         acc = 0;
         for (i = 0; i < CTABLES; ++i) {
             bite1 = ptr->fifo[(ffp - i) & FIFOMASK] & 0xFF;
@@ -376,7 +376,7 @@ class DXD {
                    interleaved:NO
                  channelLayout:_decoder.processingFormat.channelLayout];
 
-    _buffer = [[AVAudioCompressedBuffer alloc]
+    _buffer             = [[AVAudioCompressedBuffer alloc]
              initWithFormat:_decoder.processingFormat
              packetCapacity:kBufferSizePackets
           maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
@@ -435,7 +435,7 @@ class DXD {
     }
 
     AVAudioFrameCount framesRead = 0;
-    const float linearGain = _linearGain;
+    const float linearGain       = _linearGain;
 
     for (;;) {
         AVAudioFrameCount framesRemaining = frameLength - framesRead;
@@ -458,13 +458,13 @@ class DXD {
         // Convert to PCM
         // NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
 
-        float *const *floatChannelData = buffer.floatChannelData;
+        float *const *floatChannelData   = buffer.floatChannelData;
         AVAudioChannelCount channelCount = buffer.format.channelCount;
         const bool isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) ==
                                  kAudioFormatFlagIsBigEndian;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const auto *const input = static_cast<const unsigned char *>(_buffer.data) + channel;
-            float *output = floatChannelData[channel];
+            float *output           = floatChannelData[channel];
             _context[channel].translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
             // Boost signal by 6 dBFS
             vDSP_vsmul(output, 1, &linearGain, output, 1, framesDecoded);
@@ -495,7 +495,7 @@ class DXD {
     }
 
     _buffer.packetCount = 0;
-    _buffer.byteLength = 0;
+    _buffer.byteLength  = 0;
 
     return YES;
 }

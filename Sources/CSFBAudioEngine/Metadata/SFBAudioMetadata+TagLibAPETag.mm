@@ -26,7 +26,7 @@
         }
 
         if (TagLib::APE::Item::Text == item.type()) {
-            NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
+            NSString *key   = [NSString stringWithUTF8String:item.key().toCString(true)];
             NSString *value = [NSString stringWithUTF8String:item.toString().toCString(true)];
 
             if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame) {
@@ -111,10 +111,10 @@
             if ([key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame ||
                 [key caseInsensitiveCompare:@"Cover Art (Back)"] == NSOrderedSame) {
                 auto binaryData = item.binaryData();
-                auto pos = binaryData.find('\0');
+                auto pos        = binaryData.find('\0');
                 if (pos != -1 && binaryData.size() > 3) {
-                    auto upos = static_cast<unsigned int>(pos);
-                    NSData *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
+                    auto upos                   = static_cast<unsigned int>(pos);
+                    NSData *imageData           = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
                                                        length:(binaryData.size() - upos - 1)];
                     SFBAttachedPictureType type = [key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame
                                                         ? SFBAttachedPictureTypeFrontCover

@@ -24,60 +24,60 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion = @"_version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenFileType = @"_fileType";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion        = @"_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenFileType       = @"_fileType";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenNumberChannels = @"_channelCount";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize = @"_blocksize";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate = @"_sampleRate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBitsPerSample = @"_bitsPerSample";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian = @"_bigEndian";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBlockSize      = @"_blocksize";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenSampleRate     = @"_sampleRate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBitsPerSample  = @"_bitsPerSample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian      = @"_bigEndian";
 
 namespace {
 
 // MARK: Constants
 
 // Rice-Golomb code k values
-constexpr auto parameterBitshift = 2;
-constexpr auto parameterChannelCount = 0;
-constexpr auto parameterEnergy = 3;
-constexpr auto parameterExtraByte = 7;
-constexpr auto parameterFileType = 4;
-constexpr auto parameterFunction = 2;
-constexpr auto parameterQLPC = 2;
-constexpr auto parameterSkipBytes = 1;
-constexpr auto parameterUInt32 = 2;
+constexpr auto parameterBitshift          = 2;
+constexpr auto parameterChannelCount      = 0;
+constexpr auto parameterEnergy            = 3;
+constexpr auto parameterExtraByte         = 7;
+constexpr auto parameterFileType          = 4;
+constexpr auto parameterFunction          = 2;
+constexpr auto parameterQLPC              = 2;
+constexpr auto parameterSkipBytes         = 1;
+constexpr auto parameterUInt32            = 2;
 constexpr auto parameterVerbatimChunkSize = 5;
-constexpr auto parameterVerbatimByte = 8;
+constexpr auto parameterVerbatimByte      = 8;
 
 // File commands
-constexpr auto functionDiff0 = 0;
-constexpr auto functionDiff1 = 1;
-constexpr auto functionDiff2 = 2;
-constexpr auto functionDiff3 = 3;
-constexpr auto functionQuit = 4;
+constexpr auto functionDiff0     = 0;
+constexpr auto functionDiff1     = 1;
+constexpr auto functionDiff2     = 2;
+constexpr auto functionDiff3     = 3;
+constexpr auto functionQuit      = 4;
 constexpr auto functionBlocksize = 5;
-constexpr auto functionBitshift = 6;
-constexpr auto functionQLPC = 7;
-constexpr auto functionZero = 8;
-constexpr auto functionVerbatim = 9;
+constexpr auto functionBitshift  = 6;
+constexpr auto functionQLPC      = 7;
+constexpr auto functionZero      = 8;
+constexpr auto functionVerbatim  = 9;
 
 // Format limitations
-constexpr auto maxBlocksize = 65535;
+constexpr auto maxBlocksize              = 65535;
 constexpr auto verbatimChunkMaxSizeBytes = 256;
 
 // File types
-constexpr auto fileTypeSInt8 = 1;
-constexpr auto fileTypeUInt8 = 2;
+constexpr auto fileTypeSInt8    = 1;
+constexpr auto fileTypeUInt8    = 2;
 constexpr auto fileTypeSInt16BE = 3;
 constexpr auto fileTypeUInt16BE = 4;
 constexpr auto fileTypeSInt16LE = 5;
 constexpr auto fileTypeUInt16LE = 6;
 
 // Seeking support
-constexpr auto seekTableRevision = 1;
-constexpr auto seekHeaderSizeBytes = 12;
+constexpr auto seekTableRevision    = 1;
+constexpr auto seekHeaderSizeBytes  = 12;
 constexpr auto seekTrailerSizeBytes = 12;
-constexpr auto seekEntrySizeBytes = 80;
+constexpr auto seekEntrySizeBytes   = 80;
 
 constexpr int32_t roundedShiftDown(int32_t x, int k) noexcept {
     return (k == 0) ? x : (x >> (k - 1)) >> 1;
@@ -115,10 +115,10 @@ class VariableLengthInput {
         delete[] byteBuffer_;
     }
 
-    VariableLengthInput(const VariableLengthInput&) = delete;
-    VariableLengthInput(VariableLengthInput&&) = delete;
+    VariableLengthInput(const VariableLengthInput&)            = delete;
+    VariableLengthInput(VariableLengthInput&&)                 = delete;
     VariableLengthInput& operator=(const VariableLengthInput&) = delete;
-    VariableLengthInput& operator=(VariableLengthInput&&) = delete;
+    VariableLengthInput& operator=(VariableLengthInput&&)      = delete;
 
     /// Input callback type
     using InputBlock = bool (^)(void *buf, size_t len, size_t& read);
@@ -140,9 +140,9 @@ class VariableLengthInput {
             return false;
         }
 
-        byteBuffer_ = byteBuffer;
+        byteBuffer_         = byteBuffer;
         byteBufferPosition_ = byteBuffer_;
-        size_ = size;
+        size_               = size;
 
         return true;
     }
@@ -214,8 +214,8 @@ class VariableLengthInput {
 
     void reset() noexcept {
         byteBufferPosition_ = byteBuffer_;
-        bytesAvailable_ = 0;
-        bitsAvailable_ = 0;
+        bytesAvailable_     = 0;
+        bitsAvailable_      = 0;
     }
 
     bool refill() noexcept {
@@ -234,9 +234,9 @@ class VariableLengthInput {
             return false;
         }
         byteBufferPosition_ = byteBuffer_ + byteBufferPosition;
-        bytesAvailable_ = bytesAvailable;
-        bitBuffer_ = bitBuffer;
-        bitsAvailable_ = bitsAvailable;
+        bytesAvailable_     = bytesAvailable;
+        bitBuffer_          = bitBuffer;
+        bitsAvailable_      = bitsAvailable;
         return true;
     }
 
@@ -285,7 +285,7 @@ struct SeekTableHeader {
 SeekTableHeader parseSeekTableHeader(const void *buf) {
     SeekTableHeader header;
     std::memcpy(header.signature_, buf, 4);
-    header.version_ = OSReadLittleInt32(buf, 4);
+    header.version_  = OSReadLittleInt32(buf, 4);
     header.fileSize_ = OSReadLittleInt32(buf, 8);
 
     return header;
@@ -323,14 +323,14 @@ struct SeekTableEntry {
 
 SeekTableEntry parseSeekTableEntry(const void *buf) {
     SeekTableEntry entry;
-    entry.frameNumber_ = OSReadLittleInt32(buf, 0);
-    entry.byteOffsetInFile_ = OSReadLittleInt32(buf, 4);
+    entry.frameNumber_            = OSReadLittleInt32(buf, 0);
+    entry.byteOffsetInFile_       = OSReadLittleInt32(buf, 4);
     entry.lastBufferReadPosition_ = OSReadLittleInt32(buf, 8);
-    entry.bytesAvailable_ = OSReadLittleInt16(buf, 12);
-    entry.byteBufferPosition_ = OSReadLittleInt16(buf, 14);
-    entry.bitBufferPosition_ = OSReadLittleInt16(buf, 16);
-    entry.bitBuffer_ = OSReadLittleInt32(buf, 18);
-    entry.bitshift_ = OSReadLittleInt16(buf, 22);
+    entry.bytesAvailable_         = OSReadLittleInt16(buf, 12);
+    entry.byteBufferPosition_     = OSReadLittleInt16(buf, 14);
+    entry.bitBufferPosition_      = OSReadLittleInt16(buf, 16);
+    entry.bitBuffer_              = OSReadLittleInt32(buf, 18);
+    entry.bitshift_               = OSReadLittleInt16(buf, 22);
     for (auto i = 0; i < 3; ++i) {
         entry.chanBuf0_[i] = static_cast<int32_t>(OSReadLittleInt32(buf, 24 + 4 * i));
     }
@@ -490,7 +490,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     // Set up the processing format
     AudioStreamBasicDescription processingStreamDescription{};
 
-    processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
+    processingStreamDescription.mFormatID    = kAudioFormatLinearPCM;
     processingStreamDescription.mFormatFlags = kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
     // Apparently *16BE isn't true for 'AIFF'
     //    if(_fileType == fileTypeUInt16BE || _fileType == fileTypeSInt16BE)
@@ -501,11 +501,11 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
     }
 
-    processingStreamDescription.mSampleRate = _sampleRate;
+    processingStreamDescription.mSampleRate       = _sampleRate;
     processingStreamDescription.mChannelsPerFrame = static_cast<UInt32>(_channelCount);
-    processingStreamDescription.mBitsPerChannel = _bitsPerSample;
+    processingStreamDescription.mBitsPerChannel   = _bitsPerSample;
 
-    processingStreamDescription.mBytesPerPacket = (_bitsPerSample + 7) / 8;
+    processingStreamDescription.mBytesPerPacket  = (_bitsPerSample + 7) / 8;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
           processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
@@ -532,9 +532,9 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatShorten;
 
-    sourceStreamDescription.mSampleRate = _sampleRate;
+    sourceStreamDescription.mSampleRate       = _sampleRate;
     sourceStreamDescription.mChannelsPerFrame = static_cast<UInt32>(_channelCount);
-    sourceStreamDescription.mBitsPerChannel = _bitsPerSample;
+    sourceStreamDescription.mBitsPerChannel   = _bitsPerSample;
 
     sourceStreamDescription.mFramesPerPacket = static_cast<UInt32>(_blocksize);
 
@@ -553,7 +553,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     };
 
     _framePosition = 0;
-    _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
+    _frameBuffer   = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                                  frameCapacity:static_cast<AVAudioFrameCount>(_blocksize)];
 
     // Allocate decoding buffers
@@ -671,7 +671,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
     for (;;) {
         if (const auto framesToCopy = std::min(frameLength - framesDecoded, _frameBuffer.frameLength);
             framesToCopy > 0) {
-            const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
+            const auto framesCopied  = [buffer appendFromBuffer:_frameBuffer
                                              readingFromOffset:0
                                                    frameLength:framesToCopy];
             const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
@@ -766,10 +766,10 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
 
     _bitshift = entry->bitshift_;
 
-    _framePosition = entry->frameNumber_;
+    _framePosition           = entry->frameNumber_;
     _frameBuffer.frameLength = 0;
 
-    const auto framesToSkip = static_cast<AVAudioFrameCount>(frame - entry->frameNumber_);
+    const auto framesToSkip         = static_cast<AVAudioFrameCount>(frame - entry->frameNumber_);
     AVAudioFrameCount framesSkipped = 0;
 
     for (;;) {
@@ -976,15 +976,15 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         }
     } else {
         constexpr auto defaultMaxLPC = 0;
-        _blocksize = defaultBlockSize;
-        _maxLPC = defaultMaxLPC;
+        _blocksize                   = defaultBlockSize;
+        _maxLPC                      = defaultMaxLPC;
     }
 
     _wrap = std::max(defaultWrap, _maxLPC);
 
     if (_version > 1) {
         constexpr auto v2LPCQuantOffset = (1 << parameterQLPC);
-        _lpcQuantOffset = v2LPCQuantOffset;
+        _lpcQuantOffset                 = v2LPCQuantOffset;
     }
 
     // Parse the WAVE or AIFF header in the verbatim section
@@ -1081,9 +1081,9 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         return false;
     }
 
-    auto sawFormatChunk = false;
+    auto sawFormatChunk    = false;
     uint32_t dataChunkSize = 0;
-    uint16_t blockAlign = 0;
+    uint16_t blockAlign    = 0;
 
     while (offset < size) {
         chunkID = OSReadBigInt32(chunkData, offset);
@@ -1295,7 +1295,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
         case functionQLPC: {
             int32_t chanOffset;
             int32_t *chanBuffer = _buffer[chan];
-            int resn = 0;
+            int resn            = 0;
             int lpc;
 
             if (cmd != functionZero) {
@@ -1467,7 +1467,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                     for (auto channel = 0; channel < _channelCount; ++channel) {
                         auto *channel_buf = static_cast<uint8_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
-                            const auto value = _buffer[channel][sample] << _bitshift;
+                            const auto value    = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<uint8_t>(std::clamp(value, 0, UINT8_MAX));
                         }
                     }
@@ -1476,7 +1476,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                     for (auto channel = 0; channel < _channelCount; ++channel) {
                         auto *channel_buf = static_cast<int8_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
-                            const auto value = _buffer[channel][sample] << _bitshift;
+                            const auto value    = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<int8_t>(std::clamp(value, INT8_MIN, INT8_MAX));
                         }
                     }
@@ -1486,7 +1486,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                     for (auto channel = 0; channel < _channelCount; ++channel) {
                         auto *channel_buf = static_cast<uint16_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
-                            const auto value = _buffer[channel][sample] << _bitshift;
+                            const auto value    = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<uint16_t>(std::clamp(value, 0, UINT16_MAX));
                         }
                     }
@@ -1496,7 +1496,7 @@ NSError *genericShortenInvalidFormatErrorForURL(NSURL *_Nonnull url) noexcept {
                     for (auto channel = 0; channel < _channelCount; ++channel) {
                         auto *channel_buf = static_cast<int16_t *>(abl->mBuffers[channel].mData);
                         for (auto sample = 0; sample < _blocksize; ++sample) {
-                            const auto value = _buffer[channel][sample] << _bitshift;
+                            const auto value    = _buffer[channel][sample] << _bitshift;
                             channel_buf[sample] = static_cast<int16_t>(std::clamp(value, INT16_MIN, INT16_MAX));
                         }
                     }

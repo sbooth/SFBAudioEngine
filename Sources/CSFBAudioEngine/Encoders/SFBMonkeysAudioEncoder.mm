@@ -210,28 +210,28 @@ class APEIOInterface final : public APE::IAPEIO {
           kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
 #pragma clang diagnostic pop
 
-    streamDescription.mSampleRate = wve.nSamplesPerSec;
+    streamDescription.mSampleRate       = wve.nSamplesPerSec;
     streamDescription.mChannelsPerFrame = wve.nChannels;
-    streamDescription.mBitsPerChannel = wve.wBitsPerSample;
+    streamDescription.mBitsPerChannel   = wve.wBitsPerSample;
 
-    streamDescription.mBytesPerPacket = ((wve.wBitsPerSample + 7) / 8) * streamDescription.mChannelsPerFrame;
+    streamDescription.mBytesPerPacket  = ((wve.wBitsPerSample + 7) / 8) * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
-    streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
+    streamDescription.mBytesPerFrame   = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
     // Use WAVFORMATEX channel order
     AVAudioChannelLayout *channelLayout = nil;
 
     if (sourceFormat.channelLayout != nil) {
         AudioChannelBitmap channelBitmap = 0;
-        UInt32 propertySize = sizeof(channelBitmap);
-        AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
+        UInt32 propertySize              = sizeof(channelBitmap);
+        AudioChannelLayoutTag layoutTag  = sourceFormat.channelLayout.layoutTag;
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
                                                  &propertySize, &channelBitmap);
         if (result == noErr) {
-            AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
-                                      .mChannelBitmap = channelBitmap,
+            AudioChannelLayout acl = {.mChannelLayoutTag          = kAudioChannelLayoutTag_UseChannelBitmap,
+                                      .mChannelBitmap             = channelBitmap,
                                       .mNumberChannelDescriptions = 0};
-            channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
+            channelLayout          = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
         } else {
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
@@ -259,7 +259,7 @@ class APEIOInterface final : public APE::IAPEIO {
             return NO;
         }
 
-        _compressor = std::unique_ptr<APE::IAPECompress>(compressor);
+        _compressor  = std::unique_ptr<APE::IAPECompress>(compressor);
         _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
@@ -269,7 +269,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return NO;
     }
 
-    int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
+    int compressionLevel                = APE_COMPRESSION_LEVEL_NORMAL;
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
     if (level != nil) {
         if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast) {
@@ -313,9 +313,9 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     AudioStreamBasicDescription outputStreamDescription{};
-    outputStreamDescription.mFormatID = kSFBAudioFormatMonkeysAudio;
-    outputStreamDescription.mBitsPerChannel = wve.wBitsPerSample;
-    outputStreamDescription.mSampleRate = wve.nSamplesPerSec;
+    outputStreamDescription.mFormatID         = kSFBAudioFormatMonkeysAudio;
+    outputStreamDescription.mBitsPerChannel   = wve.wBitsPerSample;
+    outputStreamDescription.mSampleRate       = wve.nSamplesPerSec;
     outputStreamDescription.mChannelsPerFrame = wve.nChannels;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
                                                        channelLayout:_processingFormat.channelLayout];
@@ -350,7 +350,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
-    auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
+    auto result       = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
         if (error) {

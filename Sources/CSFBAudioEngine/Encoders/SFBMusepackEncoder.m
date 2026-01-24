@@ -182,9 +182,9 @@ static off_t my_mpc_tell_callback(void *context) {
     }
 
     AudioStreamBasicDescription outputStreamDescription = {0};
-    outputStreamDescription.mFormatID = kSFBAudioFormatMusepack;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
-    outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
+    outputStreamDescription.mFormatID                   = kSFBAudioFormatMusepack;
+    outputStreamDescription.mSampleRate                 = _processingFormat.sampleRate;
+    outputStreamDescription.mChannelsPerFrame           = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
     _framePosition = 0;

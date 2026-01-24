@@ -12,10 +12,10 @@
 - (void)addMetadataFromTagLibTag:(const TagLib::Tag *)tag {
     NSParameterAssert(tag != nil);
 
-    self.title = [NSString stringWithUTF8String:tag->title().toCString(true)];
+    self.title      = [NSString stringWithUTF8String:tag->title().toCString(true)];
     self.albumTitle = [NSString stringWithUTF8String:tag->album().toCString(true)];
-    self.artist = [NSString stringWithUTF8String:tag->artist().toCString(true)];
-    self.genre = [NSString stringWithUTF8String:tag->genre().toCString(true)];
+    self.artist     = [NSString stringWithUTF8String:tag->artist().toCString(true)];
+    self.genre      = [NSString stringWithUTF8String:tag->genre().toCString(true)];
 
     if (tag->year() != 0) {
         self.releaseDate = @(tag->year()).stringValue;

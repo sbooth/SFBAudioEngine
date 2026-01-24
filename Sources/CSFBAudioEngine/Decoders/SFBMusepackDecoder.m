@@ -19,33 +19,33 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency = @"sample_freq";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackChannels = @"channels";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackStreamVersion = @"stream_version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBitrate = @"bitrate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAverageBitrate = @"average_bitrate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMaximumBandIndex = @"max_band";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMidSideStereo = @"ms";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency    = @"sample_freq";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackChannels           = @"channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackStreamVersion      = @"stream_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBitrate            = @"bitrate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAverageBitrate     = @"average_bitrate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMaximumBandIndex   = @"max_band";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackMidSideStereo      = @"ms";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeystreamInfoMusepackFastSeek = @"fast_seek";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBlockPower = @"block_pwr";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBlockPower         = @"block_pwr";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitleGain = @"gain_title";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumGain = @"gain_album";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackAlbumPeak = @"peak_album";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTitlePeak = @"peak_title";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackIsTrueGapless = @"is_true_gapless";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSamples = @"samples";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackIsTrueGapless    = @"is_true_gapless";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSamples          = @"samples";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackBeginningSilence = @"beg_silence";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoderVersion = @"encoder_version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoder = @"encoder";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackPNS = @"pns";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfile = @"profile";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfileName = @"profile_name";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackEncoder        = @"encoder";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackPNS            = @"pns";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfile        = @"profile";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackProfileName    = @"profile_name";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackHeaderPosition = @"header_position";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffset = @"tag_offset";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackHeaderPosition  = @"header_position";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffset       = @"tag_offset";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength = @"total_file_length";
 
 static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size) {
@@ -153,12 +153,12 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         return NO;
     }
 
-    _reader.read = read_callback;
-    _reader.seek = seek_callback;
-    _reader.tell = tell_callback;
+    _reader.read     = read_callback;
+    _reader.seek     = seek_callback;
+    _reader.tell     = tell_callback;
     _reader.get_size = get_size_callback;
-    _reader.canseek = canseek_callback;
-    _reader.data = (__bridge void *)self;
+    _reader.canseek  = canseek_callback;
+    _reader.data     = (__bridge void *)self;
 
     _demux = mpc_demux_init(&_reader);
     if (!_demux) {
@@ -180,7 +180,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     mpc_demux_get_info(_demux, &streaminfo);
 
     _framePosition = 0;
-    _frameLength = mpc_streaminfo_get_length_samples(&streaminfo);
+    _frameLength   = mpc_streaminfo_get_length_samples(&streaminfo);
 
     AVAudioChannelLayout *channelLayout = nil;
     switch (streaminfo.channels) {
@@ -207,7 +207,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatMusepack;
 
-    sourceStreamDescription.mSampleRate = streaminfo.sample_freq;
+    sourceStreamDescription.mSampleRate       = streaminfo.sample_freq;
     sourceStreamDescription.mChannelsPerFrame = (UInt32)streaminfo.channels;
 
     sourceStreamDescription.mFramesPerPacket = (1 << streaminfo.block_pwr);
@@ -247,7 +247,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         SFBAudioDecodingPropertiesKeyMusepackTotalFileLength : @(streaminfo.total_file_length),
     };
 
-    _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:MPC_FRAME_LENGTH];
+    _buffer             = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:MPC_FRAME_LENGTH];
     _buffer.frameLength = 0;
 
     return YES;
@@ -291,7 +291,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
     for (;;) {
         AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+        AVAudioFrameCount framesCopied    = [buffer appendFromBuffer:_buffer
                                                 readingFromOffset:0
                                                       frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];
@@ -338,7 +338,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         float *const *floatChannelData = _buffer.floatChannelData;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const float *input = (float *)frame.buffer + channel;
-            float *output = floatChannelData[channel] + _buffer.frameLength;
+            float *output      = floatChannelData[channel] + _buffer.frameLength;
             for (uint32_t sample = 0; sample < frame.samples; ++sample) {
                 *output++ = *input;
                 input += channelCount;

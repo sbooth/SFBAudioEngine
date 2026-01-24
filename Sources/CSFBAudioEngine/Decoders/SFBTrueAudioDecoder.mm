@@ -19,11 +19,11 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameTrueAudio = @"org.sbooth.AudioEngine.Decoder.TrueAudio";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat = @"format";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat         = @"format";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioNumberChannels = @"nch";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioBitsPerSample = @"bps";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSampleRate = @"sps";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples = @"samples";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioBitsPerSample  = @"bps";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSampleRate     = @"sps";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples        = @"samples";
 
 namespace {
 
@@ -109,10 +109,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         return NO;
     }
 
-    _callbacks = std::make_unique<TTACallbacks>();
-    _callbacks->read = readCallback;
-    _callbacks->write = nullptr;
-    _callbacks->seek = seekCallback;
+    _callbacks           = std::make_unique<TTACallbacks>();
+    _callbacks->read     = readCallback;
+    _callbacks->write    = nullptr;
+    _callbacks->seek     = seekCallback;
     _callbacks->decoder_ = self;
 
     TTA_info streamInfo;
@@ -166,9 +166,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     processingStreamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 #pragma clang diagnostic pop
 
-    processingStreamDescription.mSampleRate = streamInfo.sps;
+    processingStreamDescription.mSampleRate       = streamInfo.sps;
     processingStreamDescription.mChannelsPerFrame = streamInfo.nch;
-    processingStreamDescription.mBitsPerChannel = streamInfo.bps;
+    processingStreamDescription.mBitsPerChannel   = streamInfo.bps;
 
     processingStreamDescription.mBytesPerPacket =
           ((streamInfo.bps + 7) / 8) * processingStreamDescription.mChannelsPerFrame;
@@ -210,16 +210,16 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
                                                            channelLayout:channelLayout];
 
     _framePosition = 0;
-    _frameLength = streamInfo.samples;
+    _frameLength   = streamInfo.samples;
 
     // Set up the source format
     AudioStreamBasicDescription sourceStreamDescription{};
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatTrueAudio;
 
-    sourceStreamDescription.mSampleRate = streamInfo.sps;
+    sourceStreamDescription.mSampleRate       = streamInfo.sps;
     sourceStreamDescription.mChannelsPerFrame = streamInfo.nch;
-    sourceStreamDescription.mBitsPerChannel = streamInfo.bps;
+    sourceStreamDescription.mBitsPerChannel   = streamInfo.bps;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
@@ -269,8 +269,8 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
     try {
         while (_framesToSkip > 0) {
-            auto framesToSkip = std::min(_framesToSkip, frameLength);
-            auto bytesToSkip = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
+            auto framesToSkip  = std::min(_framesToSkip, frameLength);
+            auto bytesToSkip   = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
             auto framesSkipped = _decoder->process_stream(
                   static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
 
@@ -283,7 +283,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         }
 
         auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
-        auto framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(
+        auto framesRead  = static_cast<AVAudioFrameCount>(_decoder->process_stream(
               static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
 
         // EOS
@@ -309,7 +309,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    TTAuint32 seconds = static_cast<TTAuint32>(frame / _processingFormat.sampleRate);
+    TTAuint32 seconds     = static_cast<TTAuint32>(frame / _processingFormat.sampleRate);
     TTAuint32 frame_start = 0;
 
     try {

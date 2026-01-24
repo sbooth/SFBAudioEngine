@@ -23,7 +23,7 @@
     NSParameterAssert(capacity > 0);
 
     if ((self = [super initWithURL:nil])) {
-        _buffer = buffer;
+        _buffer   = buffer;
         _capacity = capacity;
     }
     return self;

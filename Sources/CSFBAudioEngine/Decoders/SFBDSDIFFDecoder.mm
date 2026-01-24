@@ -28,10 +28,10 @@ namespace {
 
 // Convert a four byte chunk ID to a uint32_t
 uint32_t bytesToID(const char bytes[4]) noexcept {
-    auto one = bytes[0];
-    auto two = bytes[1];
+    auto one   = bytes[0];
+    auto two   = bytes[1];
     auto three = bytes[2];
-    auto four = bytes[3];
+    auto four  = bytes[3];
 
     // Verify well-formedness
     if (!std::isprint(one) || !std::isprint(two) || !std::isprint(three) || !std::isprint(four)) {
@@ -105,7 +105,7 @@ AudioChannelLabel channelIDToCoreAudioChannelLabel(uint32_t channelID) noexcept 
 // Base class for DSDIFF chunks
 struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk> {
     using shared_ptr = std::shared_ptr<DSDIFFChunk>;
-    using chunk_map = std::map<uint32_t, shared_ptr>;
+    using chunk_map  = std::map<uint32_t, shared_ptr>;
 
     // Shared pointer support
     shared_ptr getptr() {
@@ -243,7 +243,7 @@ std::shared_ptr<FormatVersionChunk> parseFormatVersionChunk(SFBInputSource *inpu
 
     auto result = std::make_shared<FormatVersionChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -274,7 +274,7 @@ std::shared_ptr<SampleRateChunk> parseSampleRateChunk(SFBInputSource *inputSourc
 
     auto result = std::make_shared<SampleRateChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -300,7 +300,7 @@ std::shared_ptr<ChannelsChunk> parseChannelsChunk(SFBInputSource *inputSource, c
 
     auto result = std::make_shared<ChannelsChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -335,7 +335,7 @@ std::shared_ptr<CompressionTypeChunk> parseCompressionTypeChunk(SFBInputSource *
 
     auto result = std::make_shared<CompressionTypeChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -391,7 +391,7 @@ std::shared_ptr<AbsoluteStartTimeChunk> parseAbsoluteStartTimeChunk(SFBInputSour
 
     auto result = std::make_shared<AbsoluteStartTimeChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -432,7 +432,7 @@ parseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t c
 
     auto result = std::make_shared<LoudspeakerConfigurationChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -458,7 +458,7 @@ std::shared_ptr<PropertyChunk> parsePropertyChunk(SFBInputSource *inputSource, c
 
     auto result = std::make_shared<PropertyChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -558,7 +558,7 @@ std::shared_ptr<DSDSoundDataChunk> parseDSDSoundDataChunk(SFBInputSource *inputS
 
     auto result = std::make_shared<DSDSoundDataChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -585,7 +585,7 @@ std::unique_ptr<FormDSDChunk> parseFormDSDChunk(SFBInputSource *inputSource, con
 
     auto result = std::make_unique<FormDSDChunk>();
 
-    result->chunkID_ = chunkID;
+    result->chunkID_  = chunkID;
     result->dataSize_ = chunkDataSize;
     NSInteger offset;
     if (![inputSource getOffset:&offset error:nil]) {
@@ -751,9 +751,9 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         return NO;
     }
 
-    auto propertyChunk = std::static_pointer_cast<PropertyChunk>(chunks->localChunks_['PROP']);
+    auto propertyChunk   = std::static_pointer_cast<PropertyChunk>(chunks->localChunks_['PROP']);
     auto sampleRateChunk = std::static_pointer_cast<SampleRateChunk>(propertyChunk->localChunks_['FS  ']);
-    auto channelsChunk = std::static_pointer_cast<ChannelsChunk>(propertyChunk->localChunks_['CHNL']);
+    auto channelsChunk   = std::static_pointer_cast<ChannelsChunk>(propertyChunk->localChunks_['CHNL']);
 
     if (!propertyChunk || !sampleRateChunk || !channelsChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
@@ -789,14 +789,14 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     AudioStreamBasicDescription processingStreamDescription{};
 
     // The output format is raw DSD
-    processingStreamDescription.mFormatID = kSFBAudioFormatDSD;
+    processingStreamDescription.mFormatID    = kSFBAudioFormatDSD;
     processingStreamDescription.mFormatFlags = kAudioFormatFlagIsBigEndian;
 
-    processingStreamDescription.mSampleRate = static_cast<Float64>(sampleRateChunk->sampleRate_);
+    processingStreamDescription.mSampleRate       = static_cast<Float64>(sampleRateChunk->sampleRate_);
     processingStreamDescription.mChannelsPerFrame = channelsChunk->numberChannels_;
-    processingStreamDescription.mBitsPerChannel = 1;
+    processingStreamDescription.mBitsPerChannel   = 1;
 
-    processingStreamDescription.mBytesPerPacket = kSFBBytesPerDSDPacketPerChannel * channelsChunk->numberChannels_;
+    processingStreamDescription.mBytesPerPacket  = kSFBBytesPerDSDPacketPerChannel * channelsChunk->numberChannels_;
     processingStreamDescription.mFramesPerPacket = kSFBPCMFramesPerDSDPacket;
 
     _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
@@ -807,9 +807,9 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatDSD;
 
-    sourceStreamDescription.mSampleRate = static_cast<Float64>(sampleRateChunk->sampleRate_);
+    sourceStreamDescription.mSampleRate       = static_cast<Float64>(sampleRateChunk->sampleRate_);
     sourceStreamDescription.mChannelsPerFrame = channelsChunk->numberChannels_;
-    sourceStreamDescription.mBitsPerChannel = 1;
+    sourceStreamDescription.mBitsPerChannel   = 1;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
@@ -823,9 +823,9 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         return NO;
     }
 
-    _audioOffset = soundDataChunk->dataOffset_;
+    _audioOffset    = soundDataChunk->dataOffset_;
     _packetPosition = 0;
-    _packetCount = static_cast<AVAudioFramePosition>(soundDataChunk->dataSize_ - 12) /
+    _packetCount    = static_cast<AVAudioFramePosition>(soundDataChunk->dataSize_ - 12) /
                    (kSFBBytesPerDSDPacketPerChannel * channelsChunk->numberChannels_);
 
     if (![_inputSource seekToOffset:_audioOffset error:error]) {
@@ -862,7 +862,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 
     // Reset output buffer data size
     buffer.packetCount = 0;
-    buffer.byteLength = 0;
+    buffer.byteLength  = 0;
 
     packetCount = std::min(packetCount, buffer.packetCapacity);
     if (packetCount == 0) {
@@ -870,8 +870,8 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     }
 
     AVAudioPacketCount packetsRemaining = static_cast<AVAudioPacketCount>(_packetCount - _packetPosition);
-    AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
-    AVAudioPacketCount packetsRead = 0;
+    AVAudioPacketCount packetsToRead    = std::min(packetCount, packetsRemaining);
+    AVAudioPacketCount packetsRead      = 0;
 
     uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
@@ -879,7 +879,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         // Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
         // a clustered frame (one channel byte per channel)
 
-        auto *buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
+        auto *buf             = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
         NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
         NSInteger bytesRead;

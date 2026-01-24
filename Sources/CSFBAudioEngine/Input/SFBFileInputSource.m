@@ -61,7 +61,7 @@
 - (BOOL)closeReturningError:(NSError **)error {
     if (_file) {
         int result = fclose(_file);
-        _file = NULL;
+        _file      = NULL;
         if (result) {
             int err = errno;
             os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);

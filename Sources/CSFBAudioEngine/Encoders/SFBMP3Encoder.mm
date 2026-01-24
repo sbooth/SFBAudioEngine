@@ -13,18 +13,18 @@
 
 #import <lame/lame.h>
 
-SFBAudioEncoderName const SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality = @"Quality";
+SFBAudioEncoderName const SFBAudioEncoderNameMP3                                = @"org.sbooth.AudioEngine.Encoder.MP3";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality         = @"Quality";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3ConstantBitrate = @"Constant Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3AverageBitrate = @"Average Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseVariableBitrate = @"Use Variable Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality = @"VBR Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate = @"VBR Minimum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate = @"VBR Maximum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode = @"Stereo Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3AverageBitrate  = @"Average Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseVariableBitrate  = @"Use Variable Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality          = @"VBR Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMinimumBitrate   = @"VBR Minimum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate   = @"VBR Maximum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode          = @"Stereo Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain = @"Calculate Replay Gain";
 
-SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono = @"Mono";
+SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono   = @"Mono";
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo = @"Stereo";
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo =
       @"Joint Stereo";
@@ -281,7 +281,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
         if (NSNumber *vbrMax = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate]; vbrMax) {
             auto bitrate = vbrMax.intValue * 1000;
-            result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
+            result       = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_max_bitrate_kbps(%d) failed", bitrate);
                 if (error) {
@@ -318,7 +318,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     auto calculateReplayGain = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CalculateReplayGain] boolValue];
-    result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
+    result                   = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);
         if (error) {
@@ -347,8 +347,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     AudioStreamBasicDescription outputStreamDescription{};
-    outputStreamDescription.mFormatID = kAudioFormatMPEGLayer3;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+    outputStreamDescription.mFormatID         = kAudioFormatMPEGLayer3;
+    outputStreamDescription.mSampleRate       = _processingFormat.sampleRate;
     outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
@@ -383,7 +383,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     const size_t bufsize = static_cast<size_t>(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
-    auto buf = std::make_unique<unsigned char[]>(bufsize);
+    auto buf             = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
         if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -433,7 +433,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
 - (BOOL)flushEncoderReturningError:(NSError **)error {
     const size_t bufsize = 7200;
-    auto buf = std::make_unique<unsigned char[]>(bufsize);
+    auto buf             = std::make_unique<unsigned char[]>(bufsize);
     if (!buf) {
         if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];

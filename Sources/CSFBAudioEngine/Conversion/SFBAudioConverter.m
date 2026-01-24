@@ -201,8 +201,8 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
     __block BOOL decodeResult;
     __block NSError *decodeError = nil;
-    NSError *convertError = nil;
-    NSError *encodeError = nil;
+    NSError *convertError        = nil;
+    NSError *encodeError         = nil;
 
     for (;;) {
         AVAudioConverterOutputStatus status =

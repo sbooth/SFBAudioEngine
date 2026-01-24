@@ -47,30 +47,30 @@ const NSUInteger SFBID3v2FooterSize = 10;
     const unsigned char *bytes = self.bytes;
 
     unsigned char flags = bytes[5];
-    uint32_t size = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
+    uint32_t size       = (bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9];
 
     return SFBID3v2HeaderSize + size + (flags & 0x10 ? SFBID3v2FooterSize : 0);
 }
 
 @end
 
-const NSUInteger SFBAIFFDetectionSize = 12;
-const NSUInteger SFBAPEDetectionSize = 4;
-const NSUInteger SFBCAFDetectionSize = 4;
-const NSUInteger SFBDSDIFFDetectionSize = 16;
-const NSUInteger SFBDSFDetectionSize = 32;
-const NSUInteger SFBFLACDetectionSize = 4;
-const NSUInteger SFBMP3DetectionSize = 3;
-const NSUInteger SFBMPEG4DetectionSize = 8;
-const NSUInteger SFBMusepackDetectionSize = 4;
-const NSUInteger SFBOggFLACDetectionSize = 33;
-const NSUInteger SFBOggOpusDetectionSize = 36;
-const NSUInteger SFBOggSpeexDetectionSize = 36;
+const NSUInteger SFBAIFFDetectionSize      = 12;
+const NSUInteger SFBAPEDetectionSize       = 4;
+const NSUInteger SFBCAFDetectionSize       = 4;
+const NSUInteger SFBDSDIFFDetectionSize    = 16;
+const NSUInteger SFBDSFDetectionSize       = 32;
+const NSUInteger SFBFLACDetectionSize      = 4;
+const NSUInteger SFBMP3DetectionSize       = 3;
+const NSUInteger SFBMPEG4DetectionSize     = 8;
+const NSUInteger SFBMusepackDetectionSize  = 4;
+const NSUInteger SFBOggFLACDetectionSize   = 33;
+const NSUInteger SFBOggOpusDetectionSize   = 36;
+const NSUInteger SFBOggSpeexDetectionSize  = 36;
 const NSUInteger SFBOggVorbisDetectionSize = 35;
-const NSUInteger SFBShortenDetectionSize = 4;
+const NSUInteger SFBShortenDetectionSize   = 4;
 const NSUInteger SFBTrueAudioDetectionSize = 4;
-const NSUInteger SFBWAVEDetectionSize = 12;
-const NSUInteger SFBWavPackDetectionSize = 4;
+const NSUInteger SFBWAVEDetectionSize      = 12;
+const NSUInteger SFBWavPackDetectionSize   = 4;
 
 @implementation NSData (SFBContentTypeMethods)
 

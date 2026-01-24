@@ -24,9 +24,9 @@
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID = @"File Type ID";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatID = @"Format ID";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags = @"Format Flags";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID     = @"File Type ID";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatID       = @"Format ID";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags    = @"Format Flags";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel = @"Bits per Channel";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings =
       @"Audio Converter Property Settings";
@@ -126,7 +126,7 @@ OSStatus readProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, vo
                   UInt32 *actualCount) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
-    SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+    SFBCoreAudioEncoder *encoder  = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputSource *outputSource = encoder->_outputSource;
 
     NSInteger offset;
@@ -157,7 +157,7 @@ OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, c
                    UInt32 *actualCount) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
-    SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+    SFBCoreAudioEncoder *encoder  = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputSource *outputSource = encoder->_outputSource;
 
     NSInteger offset;
@@ -187,7 +187,7 @@ OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, c
 SInt64 getSizeProc(void *inClientData) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
-    SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+    SFBCoreAudioEncoder *encoder  = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputSource *outputSource = encoder->_outputSource;
 
     NSInteger length;
@@ -201,7 +201,7 @@ SInt64 getSizeProc(void *inClientData) noexcept {
 OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
-    SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
+    SFBCoreAudioEncoder *encoder  = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputSource *outputSource = encoder->_outputSource;
 
     // FIXME: Actually do something here
@@ -256,7 +256,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         NSMutableSet *supportedPathExtensions = [NSMutableSet set];
         for (UInt32 type : writableTypes) {
             CFArrayRef extensionsForType = nil;
-            size = sizeof(extensionsForType);
+            size                         = sizeof(extensionsForType);
             result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size,
                                             &extensionsForType);
 
@@ -306,7 +306,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         NSMutableSet *supportedMIMETypes = [NSMutableSet set];
         for (UInt32 type : writableTypes) {
             CFArrayRef mimeTypesForType = nil;
-            size = sizeof(mimeTypesForType);
+            size                        = sizeof(mimeTypesForType);
             result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size,
                                             &mimeTypesForType);
 
@@ -415,7 +415,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
         // There is no way to determine caller intent and select the most appropriate format; use PCM if available,
         // otherwise use the first one
-        formatID = availableFormatIDs[0];
+        formatID    = availableFormatIDs[0];
         auto result = std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
         if (result != std::cend(availableFormatIDs)) {
             formatID = *result;
@@ -446,17 +446,17 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     CXXCoreAudio::CAStreamDescription format{};
 
-    format.mFormatID = formatID;
-    format.mFormatFlags = formatFlags;
-    format.mBitsPerChannel = bitsPerChannel;
-    format.mSampleRate = _processingFormat.sampleRate;
+    format.mFormatID         = formatID;
+    format.mFormatFlags      = formatFlags;
+    format.mBitsPerChannel   = bitsPerChannel;
+    format.mSampleRate       = _processingFormat.sampleRate;
     format.mChannelsPerFrame = _processingFormat.channelCount;
 
     // Flesh out output structure for PCM formats
     if (format.IsPCM()) {
-        format.mBytesPerPacket = format.InterleavedChannelCount() * ((format.mBitsPerChannel + 7) / 8);
+        format.mBytesPerPacket  = format.InterleavedChannelCount() * ((format.mBitsPerChannel + 7) / 8);
         format.mFramesPerPacket = 1;
-        format.mBytesPerFrame = format.mBytesPerPacket / format.mFramesPerPacket;
+        format.mBytesPerFrame   = format.mBytesPerPacket / format.mFramesPerPacket;
     }
     // Adjust the flags for Apple Lossless and FLAC
     else if (format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
@@ -540,7 +540,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
               [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
         audioConverterPropertySettings) {
         AudioConverterRef audioConverter = nullptr;
-        UInt32 size = sizeof(audioConverter);
+        UInt32 size                      = sizeof(audioConverter);
         result = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);
         if (result != noErr) {
             os_log_error(gSFBAudioEncoderLog,
@@ -612,7 +612,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         }
     }
 
-    _af = std::move(af);
+    _af  = std::move(af);
     _eaf = std::move(eaf);
 
     return YES;

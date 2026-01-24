@@ -52,7 +52,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     }
 
     if ((self = [super init])) {
-        _player = std::move(player);
+        _player          = std::move(player);
         _player->player_ = self;
     }
 

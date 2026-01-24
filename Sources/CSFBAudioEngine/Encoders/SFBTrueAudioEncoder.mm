@@ -92,9 +92,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     streamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 #pragma clang diagnostic pop
 
-    streamDescription.mSampleRate = sourceFormat.sampleRate;
+    streamDescription.mSampleRate       = sourceFormat.sampleRate;
     streamDescription.mChannelsPerFrame = sourceFormat.channelCount;
-    streamDescription.mBitsPerChannel = sourceFormat.streamDescription->mBitsPerChannel;
+    streamDescription.mBitsPerChannel   = sourceFormat.streamDescription->mBitsPerChannel;
     if (streamDescription.mBitsPerChannel == 16 || streamDescription.mBitsPerChannel == 24) {
         streamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
     }
@@ -102,7 +102,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     streamDescription.mBytesPerPacket =
           ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
-    streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
+    streamDescription.mBytesPerFrame   = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
     // TODO: what channel layout is appropriate?
     AVAudioChannelLayout *channelLayout = nil;
@@ -126,18 +126,18 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         return NO;
     }
 
-    _callbacks = std::make_unique<TTACallbacks>();
-    _callbacks->read = nullptr;
-    _callbacks->write = writeCallback;
-    _callbacks->seek = seekCallback;
+    _callbacks           = std::make_unique<TTACallbacks>();
+    _callbacks->read     = nullptr;
+    _callbacks->write    = writeCallback;
+    _callbacks->seek     = seekCallback;
     _callbacks->encoder_ = self;
 
     TTA_info streamInfo;
 
-    streamInfo.format = TTA_FORMAT_SIMPLE;
-    streamInfo.nch = _processingFormat.channelCount;
-    streamInfo.bps = _processingFormat.streamDescription->mBitsPerChannel;
-    streamInfo.sps = (TTAuint32)_processingFormat.sampleRate;
+    streamInfo.format  = TTA_FORMAT_SIMPLE;
+    streamInfo.nch     = _processingFormat.channelCount;
+    streamInfo.bps     = _processingFormat.streamDescription->mBitsPerChannel;
+    streamInfo.sps     = (TTAuint32)_processingFormat.sampleRate;
     streamInfo.samples = (TTAuint32)_estimatedFramesToEncode;
 
     try {
@@ -165,9 +165,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     }
 
     AudioStreamBasicDescription outputStreamDescription{};
-    outputStreamDescription.mFormatID = kSFBAudioFormatTrueAudio;
-    outputStreamDescription.mBitsPerChannel = _processingFormat.streamDescription->mBitsPerChannel;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+    outputStreamDescription.mFormatID         = kSFBAudioFormatTrueAudio;
+    outputStreamDescription.mBitsPerChannel   = _processingFormat.streamDescription->mBitsPerChannel;
+    outputStreamDescription.mSampleRate       = _processingFormat.sampleRate;
     outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
                                                        channelLayout:_processingFormat.channelLayout];

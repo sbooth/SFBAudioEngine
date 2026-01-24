@@ -28,12 +28,12 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFil
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel =
       @"APE_INFO_COMPRESSION_LEVEL";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFormatFlags = @"APE_INFO_FORMAT_FLAGS";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate = @"APE_INFO_SAMPLE_RATE";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate  = @"APE_INFO_SAMPLE_RATE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBitsPerSample =
       @"APE_INFO_BITS_PER_SAMPLE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBytesPerSample =
       @"APE_INFO_BYTES_PER_SAMPLE";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioChannels = @"APE_INFO_CHANNELS";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioChannels       = @"APE_INFO_CHANNELS";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlockAlignment = @"APE_INFO_BLOCK_ALIGN";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlocksPerFrame =
       @"APE_INFO_BLOCKS_PER_FRAME";
@@ -230,7 +230,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return NO;
     }
 
-    auto ioInterface = std::make_unique<APEIOInterface>(_inputSource);
+    auto ioInterface  = std::make_unique<APEIOInterface>(_inputSource);
     auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
     if (!decompressor) {
         if (error) {
@@ -247,7 +247,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     _decompressor = std::move(decompressor);
-    _ioInterface = std::move(ioInterface);
+    _ioInterface  = std::move(ioInterface);
 
     AVAudioChannelLayout *channelLayout = nil;
     switch (_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)) {

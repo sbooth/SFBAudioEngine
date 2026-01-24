@@ -273,9 +273,9 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     NSDictionary *imagePropertiesDictionary =
           (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
     if (imagePropertiesDictionary) {
-        NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
+        NSNumber *imageWidth  = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
         NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
-        NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
+        NSNumber *imageDepth  = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
 
         picture->setHeight(imageHeight.intValue);
         picture->setWidth(imageWidth.intValue);

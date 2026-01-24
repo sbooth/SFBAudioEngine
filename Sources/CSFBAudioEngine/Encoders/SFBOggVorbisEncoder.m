@@ -14,10 +14,10 @@
 SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate = @"Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisQuality = @"Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisBitrate = @"Nominal Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMinBitrate = @"Minimum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = @"Maximum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisQuality         = @"Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisBitrate         = @"Nominal Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMinBitrate      = @"Minimum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate      = @"Maximum Bitrate";
 
 @interface SFBOggVorbisEncoder () {
   @private
@@ -123,8 +123,8 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     // Encoder mode
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate] boolValue]) {
         NSNumber *nominal_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisBitrate];
-        NSNumber *min_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisMinBitrate];
-        NSNumber *max_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisMaxBitrate];
+        NSNumber *min_bitrate     = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisMinBitrate];
+        NSNumber *max_bitrate     = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisMaxBitrate];
 
         result = vorbis_encode_init(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate,
                                     min_bitrate ? min_bitrate.longValue * 1000 : -1,
@@ -143,7 +143,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         }
     } else {
         float quality_value = 0.5;
-        NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
+        NSNumber *quality   = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
         if (quality) {
             quality_value = MAX(-0.1F, MIN(1.0F, quality.floatValue));
         }
@@ -225,14 +225,14 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     vorbis_comment_clear(&vc);
 
     AudioStreamBasicDescription outputStreamDescription = {0};
-    outputStreamDescription.mFormatID = kSFBAudioFormatVorbis;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
-    outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
+    outputStreamDescription.mFormatID                   = kSFBAudioFormatVorbis;
+    outputStreamDescription.mSampleRate                 = _processingFormat.sampleRate;
+    outputStreamDescription.mChannelsPerFrame           = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
                                                        channelLayout:_processingFormat.channelLayout];
 
     _framePosition = 0;
-    _isOpen = YES;
+    _isOpen        = YES;
 
     return YES;
 }

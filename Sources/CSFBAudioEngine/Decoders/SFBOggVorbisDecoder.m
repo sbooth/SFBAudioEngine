@@ -17,13 +17,13 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion = @"version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisChannels = @"channels";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisRate = @"rate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateUpper = @"bitrate_upper";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion        = @"version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisChannels       = @"channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisRate           = @"rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateUpper   = @"bitrate_upper";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateNominal = @"bitrate_nominal";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateLower = @"bitrate_lower";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow = @"bitrate_window";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateLower   = @"bitrate_lower";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow  = @"bitrate_window";
 
 static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource) {
     NSCParameterAssert(datasource != NULL);
@@ -128,9 +128,9 @@ static long tell_func_callback(void *datasource) {
         return NO;
     }
 
-    ov_callbacks callbacks = {.read_func = read_func_callback,
-                              .seek_func = seek_func_callback,
-                              .tell_func = tell_func_callback,
+    ov_callbacks callbacks = {.read_func  = read_func_callback,
+                              .seek_func  = seek_func_callback,
+                              .tell_func  = tell_func_callback,
                               .close_func = NULL};
 
     if (ov_test_callbacks((__bridge void *)self, &_vorbisFile, NULL, 0, callbacks)) {
@@ -222,7 +222,7 @@ static long tell_func_callback(void *datasource) {
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatVorbis;
 
-    sourceStreamDescription.mSampleRate = ovInfo->rate;
+    sourceStreamDescription.mSampleRate       = ovInfo->rate;
     sourceStreamDescription.mChannelsPerFrame = (UInt32)ovInfo->channels;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
@@ -283,8 +283,8 @@ static long tell_func_callback(void *datasource) {
     }
 
     AVAudioFrameCount framesRemaining = frameLength;
-    float **pcm_channels = NULL;
-    int bitstream = 0;
+    float **pcm_channels              = NULL;
+    int bitstream                     = 0;
 
     while (framesRemaining > 0) {
         // Decode a chunk of samples from the file
@@ -306,11 +306,11 @@ static long tell_func_callback(void *datasource) {
         }
 
         // Copy the frames from the decoding buffer to the output buffer
-        float *const *floatChannelData = buffer.floatChannelData;
+        float *const *floatChannelData   = buffer.floatChannelData;
         AVAudioChannelCount channelCount = buffer.format.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const float *input = pcm_channels[channel];
-            float *output = floatChannelData[channel] + buffer.frameLength;
+            float *output      = floatChannelData[channel] + buffer.frameLength;
             memcpy(output, input, (size_t)framesRead * sizeof(float));
         }
 

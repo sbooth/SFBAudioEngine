@@ -315,11 +315,11 @@ static const struct ReplayGainFilter sReplayGainFilters[] = {
 static void Filter(const float *input, float *output, size_t nSamples, const float *a, const float *b, size_t order,
                    uint32_t downsample) {
     const float *input_head = input;
-    float *output_head = output;
+    float *output_head      = output;
 
     for (size_t i = 0; i < nSamples; i++, input_head += downsample, ++output_head) {
         const float *input_tail = input_head;
-        float *output_tail = output_head;
+        float *output_tail      = output_head;
 
         double y = *input_head * b[0];
 
@@ -344,7 +344,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     }
 
     int32_t upper = (int32_t)ceil(elems * (1. - RMS_PERCENTILE));
-    size_t i = len;
+    size_t i      = len;
     while (i-- > 0) {
         if ((upper -= array[i]) <= 0) {
             break;
@@ -450,8 +450,8 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     if ((self = [super init])) {
         _trackPeak = -FLT_MAX;
         _albumPeak = -FLT_MAX;
-        _linpre = _linprebuf + MAX_ORDER;
-        _rinpre = _rinprebuf + MAX_ORDER;
+        _linpre    = _linprebuf + MAX_ORDER;
+        _rinpre    = _rinprebuf + MAX_ORDER;
     }
     return self;
 }
@@ -538,7 +538,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     bool isStereo = (outputFormat.channelCount == 2);
 
     for (;;) {
-        __block NSError *err = nil;
+        __block NSError *err                = nil;
         AVAudioConverterOutputStatus status = [converter
                  convertToBuffer:outputBuffer
                            error:error
@@ -752,7 +752,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     }
 
     _lsum = _rsum = 0;
-    _totsamp = 0;
+    _totsamp      = 0;
 }
 
 - (void)setupForAnalysisAtSampleRate:(NSInteger)sampleRate {
@@ -761,7 +761,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     memset(&_filter, 0, sizeof(_filter));
     for (size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
         if (sReplayGainFilters[i].rate == sampleRate) {
-            _filter = sReplayGainFilters[i];
+            _filter            = sReplayGainFilters[i];
             _filter.downsample = 1;
             break;
         }
@@ -773,13 +773,13 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
 
     _lstepbuf = reallocf(_lstepbuf, sizeof(float) * (_sampleWindow + MAX_ORDER));
     _rstepbuf = reallocf(_rstepbuf, sizeof(float) * (_sampleWindow + MAX_ORDER));
-    _loutbuf = reallocf(_loutbuf, sizeof(float) * (_sampleWindow + MAX_ORDER));
-    _routbuf = reallocf(_routbuf, sizeof(float) * (_sampleWindow + MAX_ORDER));
+    _loutbuf  = reallocf(_loutbuf, sizeof(float) * (_sampleWindow + MAX_ORDER));
+    _routbuf  = reallocf(_routbuf, sizeof(float) * (_sampleWindow + MAX_ORDER));
 
     _lstep = _lstepbuf + MAX_ORDER;
     _rstep = _rstepbuf + MAX_ORDER;
-    _lout = _loutbuf + MAX_ORDER;
-    _rout = _routbuf + MAX_ORDER;
+    _lout  = _loutbuf + MAX_ORDER;
+    _rout  = _routbuf + MAX_ORDER;
 
     [self resetState];
 
@@ -801,8 +801,8 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     const float *curright;
 
     long prebufsamples = MAX_ORDER;
-    long batchsamples = (long)num_samples;
-    long cursamplepos = 0;
+    long batchsamples  = (long)num_samples;
+    long cursamplepos  = 0;
 
     if (!stereo) {
         right_samples = left_samples;
@@ -821,15 +821,15 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
         long cursamples = MIN((long)(_sampleWindow - _totsamp), batchsamples);
         if (cursamplepos < MAX_ORDER) {
             downsample = 1;
-            curleft = _linpre + cursamplepos;
-            curright = _rinpre + cursamplepos;
+            curleft    = _linpre + cursamplepos;
+            curright   = _rinpre + cursamplepos;
             if (cursamples > MAX_ORDER - cursamplepos) {
                 cursamples = MAX_ORDER - cursamplepos;
             }
         } else {
             downsample = _filter.downsample;
-            curleft = left_samples + cursamplepos;
-            curright = right_samples + cursamplepos;
+            curleft    = left_samples + cursamplepos;
+            curright   = right_samples + cursamplepos;
         }
 
         Filter(curleft, _lstep + _totsamp, (size_t)cursamples, _filter.AYule, _filter.BYule, YULE_ORDER, downsample);
@@ -855,7 +855,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
         /* Get the Root Mean Square (RMS) for this set of samples */
         if (_totsamp == _sampleWindow) {
             double val = STEPS_per_dB * 10. * log10(((_lsum + _rsum) / _totsamp * 0.5) + 1.e-37);
-            int ival = (int)val;
+            int ival   = (int)val;
             if (ival < 0) {
                 ival = 0;
             }

@@ -96,8 +96,8 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 
     __block BOOL decodeResult;
     __block NSError *decodeError = nil;
-    NSError *convertError = nil;
-    NSError *writeError = nil;
+    NSError *convertError        = nil;
+    NSError *writeError          = nil;
 
     for (;;) {
         AVAudioConverterOutputStatus status =

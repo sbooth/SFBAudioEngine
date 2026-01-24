@@ -21,18 +21,18 @@
 
 #import <simd/simd.h>
 
-SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
+SFBAudioDecoderName const SFBAudioDecoderNameFLAC    = @"org.sbooth.AudioEngine.Decoder.FLAC";
 SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC = @"org.sbooth.AudioEngine.Decoder.OggFLAC";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize = @"min_blocksize";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize = @"max_blocksize";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize = @"min_framesize";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize = @"max_framesize";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACSampleRate = @"sample_rate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACChannels = @"channels";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACBitsPerSample = @"bits_per_sample";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTotalSamples = @"total_samples";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum = @"md5sum";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACSampleRate       = @"sample_rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACChannels         = @"channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACBitsPerSample    = @"bits_per_sample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTotalSamples     = @"total_samples";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum           = @"md5sum";
 
 namespace {
 
@@ -281,11 +281,11 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                                                kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsAlignedHigh;
 #pragma clang diagnostic pop
 
-    processingStreamDescription.mSampleRate = _streamInfo.sample_rate;
+    processingStreamDescription.mSampleRate       = _streamInfo.sample_rate;
     processingStreamDescription.mChannelsPerFrame = _streamInfo.channels;
-    processingStreamDescription.mBitsPerChannel = _streamInfo.bits_per_sample;
+    processingStreamDescription.mBitsPerChannel   = _streamInfo.bits_per_sample;
 
-    processingStreamDescription.mBytesPerPacket = 4;
+    processingStreamDescription.mBytesPerPacket  = 4;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
           processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
@@ -328,7 +328,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     sourceStreamDescription.mFormatID = kAudioFormatFLAC;
 
-    sourceStreamDescription.mSampleRate = _streamInfo.sample_rate;
+    sourceStreamDescription.mSampleRate       = _streamInfo.sample_rate;
     sourceStreamDescription.mChannelsPerFrame = _streamInfo.channels;
     // Apple uses kAppleLosslessFormatFlag_XXBitSourceData to indicate FLAC bit depth in the Core Audio FLAC decoder
     // Since the number of flags is limited the source bit depth is also stored in mBitsPerChannel
@@ -367,7 +367,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     };
 
     // Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-    _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
+    _frameBuffer             = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                                  frameCapacity:_streamInfo.max_blocksize];
     _frameBuffer.frameLength = 0;
 
@@ -416,7 +416,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     for (;;) {
         AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer
+        AVAudioFrameCount framesCopied    = [buffer appendFromBuffer:_frameBuffer
                                                 readingFromOffset:0
                                                       frameLength:framesRemaining];
         [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
@@ -558,17 +558,17 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // FLAC hands us 32-bit signed integers with the samples low-aligned
     if (frame->header.bits_per_sample != 32) [[likely]] {
         // Shift the samples to high alignment
-        const auto shift = 32 - frame->header.bits_per_sample;
-        const auto channels = frame->header.channels;
+        const auto shift     = 32 - frame->header.bits_per_sample;
+        const auto channels  = frame->header.channels;
         const auto blocksize = frame->header.blocksize;
 
         for (uint32_t channel = 0; channel < channels; ++channel) {
             // simd_uint8 and simd_uint16 require 16 byte alignment
-            using simd_vector = simd_uint16;
-            using simd_packed_vector = simd_packed_uint16;
+            using simd_vector                   = simd_uint16;
+            using simd_packed_vector            = simd_packed_uint16;
             constexpr uint32_t simd_vector_size = 16;
 
-            uint32_t *__restrict dst = static_cast<uint32_t *>(abl->mBuffers[channel].mData);
+            uint32_t *__restrict dst          = static_cast<uint32_t *>(abl->mBuffers[channel].mData);
             const FLAC__int32 *__restrict src = buffer[channel];
 
             uint32_t sample = 0;
@@ -591,7 +591,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     }
 
     _frameBuffer.frameLength = frame->header.blocksize;
-    _previousFrameHeader = frame->header;
+    _previousFrameHeader     = frame->header;
 
     return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }

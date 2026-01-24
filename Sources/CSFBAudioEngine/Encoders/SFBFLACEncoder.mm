@@ -14,11 +14,11 @@
 #import <algorithm>
 #import <memory>
 
-SFBAudioEncoderName const SFBAudioEncoderNameFLAC = @"org.sbooth.AudioEngine.Encoder.FLAC";
+SFBAudioEncoderName const SFBAudioEncoderNameFLAC    = @"org.sbooth.AudioEngine.Encoder.FLAC";
 SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC = @"org.sbooth.AudioEngine.Encoder.OggFLAC";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel = @"Compression Level";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding = @"Verify Encoding";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding   = @"Verify Encoding";
 
 namespace {
 
@@ -38,7 +38,7 @@ struct flac__stream_metadata_deleter {
     }
 };
 
-using flac__stream_encoder_unique_ptr = std::unique_ptr<FLAC__StreamEncoder, flac__stream_encoder_deleter>;
+using flac__stream_encoder_unique_ptr  = std::unique_ptr<FLAC__StreamEncoder, flac__stream_encoder_deleter>;
 using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, flac__stream_metadata_deleter>;
 
 } /* namespace */
@@ -64,7 +64,7 @@ FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, F
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder *flacEncoder   = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     NSInteger bytesRead;
@@ -87,7 +87,7 @@ FLAC__StreamEncoderWriteStatus writeCallback(const FLAC__StreamEncoder *encoder,
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder *flacEncoder   = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     NSInteger bytesWritten;
@@ -111,7 +111,7 @@ FLAC__StreamEncoderSeekStatus seekCallback(const FLAC__StreamEncoder *encoder, F
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder *flacEncoder   = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     if (!outputSource.supportsSeeking) {
@@ -130,7 +130,7 @@ FLAC__StreamEncoderTellStatus tellCallback(const FLAC__StreamEncoder *encoder, F
 #pragma unused(encoder)
     NSCParameterAssert(client_data != nullptr);
 
-    SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+    SFBFLACEncoder *flacEncoder   = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputSource *outputSource = flacEncoder->_outputSource;
 
     NSInteger offset;
@@ -192,18 +192,18 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     streamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 #pragma clang diagnostic pop
 
-    streamDescription.mSampleRate = sourceFormat.sampleRate;
+    streamDescription.mSampleRate       = sourceFormat.sampleRate;
     streamDescription.mChannelsPerFrame = sourceFormat.channelCount;
-    streamDescription.mBitsPerChannel = ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * 8;
+    streamDescription.mBitsPerChannel   = ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * 8;
     if (streamDescription.mBitsPerChannel == 32) {
         streamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
     } else {
         streamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
     }
 
-    streamDescription.mBytesPerPacket = sizeof(int32_t) * streamDescription.mChannelsPerFrame;
+    streamDescription.mBytesPerPacket  = sizeof(int32_t) * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
-    streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
+    streamDescription.mBytesPerFrame   = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
     AVAudioChannelLayout *channelLayout = nil;
     switch (sourceFormat.channelCount) {
@@ -356,10 +356,10 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     }
 
     AudioStreamBasicDescription outputStreamDescription{};
-    outputStreamDescription.mFormatID = kAudioFormatFLAC;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+    outputStreamDescription.mFormatID         = kAudioFormatFLAC;
+    outputStreamDescription.mSampleRate       = _processingFormat.sampleRate;
     outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
-    outputStreamDescription.mBitsPerChannel = _processingFormat.streamDescription->mBitsPerChannel;
+    outputStreamDescription.mBitsPerChannel   = _processingFormat.streamDescription->mBitsPerChannel;
     switch (outputStreamDescription.mBitsPerChannel) {
     case 16:
         outputStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
@@ -375,12 +375,12 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
         break;
     }
     outputStreamDescription.mFramesPerPacket = FLAC__stream_encoder_get_blocksize(flac.get());
-    _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
+    _outputFormat                            = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
                                                        channelLayout:_processingFormat.channelLayout];
 
-    _flac = std::move(flac);
+    _flac      = std::move(flac);
     _seektable = std::move(seektable);
-    _padding = std::move(padding);
+    _padding   = std::move(padding);
 
     _framePosition = 0;
 
@@ -429,7 +429,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
         int32_t dst[512];
         const AVAudioFrameCount frameCapacity = sizeof(dst) / format->mBytesPerFrame;
 
-        const auto shift = 32 - bits;
+        const auto shift  = 32 - bits;
         const auto stride = buffer.stride;
 
         auto framesRemaining = frameLength;
@@ -437,8 +437,8 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
             const auto frameCount = std::min(frameCapacity, framesRemaining);
 
             const auto frameOffset = frameLength - framesRemaining;
-            const auto byteOffset = frameOffset * format->mBytesPerFrame;
-            auto *const src = reinterpret_cast<int32_t *>(
+            const auto byteOffset  = frameOffset * format->mBytesPerFrame;
+            auto *const src        = reinterpret_cast<int32_t *>(
                   static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset);
 
             // Shift from high alignment, sign extending in the process

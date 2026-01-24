@@ -19,23 +19,23 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode = @"WavpackGetMode";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackQualifyMode = @"WavpackGetQualifyMode";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion = @"WavpackGetVersion";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat = @"WavpackGetFileFormat";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode          = @"WavpackGetMode";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackQualifyMode   = @"WavpackGetQualifyMode";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion       = @"WavpackGetVersion";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat    = @"WavpackGetFileFormat";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamples = @"WavpackGetNumSamples64";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame =
       @"WavpackGetNumSamplesInFrame";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackSampleRate = @"WavpackGetSampleRate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate =
       @"WavpackGetNativeSampleRate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample = @"WavpackGetBitsPerSample";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample = @"WavpackGetBytesPerSample";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels = @"WavpackGetNumChannels";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackChannelMask = @"WavpackGetChannelMask";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample     = @"WavpackGetBitsPerSample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample    = @"WavpackGetBytesPerSample";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels    = @"WavpackGetNumChannels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackChannelMask       = @"WavpackGetChannelMask";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackReducedChannels = @"WavpackGetReducedChannels";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFloatNormExponent = @"WavpackGetFloatNormExp";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio = @"WavpackGetRatio";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio             = @"WavpackGetRatio";
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -204,13 +204,13 @@ static int can_seek_callback(void *id) {
         return NO;
     }
 
-    _streamReader.read_bytes = read_bytes_callback;
-    _streamReader.get_pos = get_pos_callback;
-    _streamReader.set_pos_abs = set_pos_abs_callback;
-    _streamReader.set_pos_rel = set_pos_rel_callback;
+    _streamReader.read_bytes     = read_bytes_callback;
+    _streamReader.get_pos        = get_pos_callback;
+    _streamReader.set_pos_abs    = set_pos_abs_callback;
+    _streamReader.set_pos_rel    = set_pos_rel_callback;
     _streamReader.push_back_byte = push_back_byte_callback;
-    _streamReader.get_length = get_length_callback;
-    _streamReader.can_seek = can_seek_callback;
+    _streamReader.get_length     = get_length_callback;
+    _streamReader.can_seek       = can_seek_callback;
 
     char errorBuf[80];
 
@@ -238,13 +238,13 @@ static int can_seek_callback(void *id) {
     int channelMask = WavpackGetChannelMask(_wpc);
     if (channelMask) {
         AudioChannelLayout layout = {
-              .mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
-              .mChannelBitmap = channelMask,
+              .mChannelLayoutTag          = kAudioChannelLayoutTag_UseChannelBitmap,
+              .mChannelBitmap             = channelMask,
               .mNumberChannelDescriptions = 0,
         };
 
         AudioChannelLayoutTag tag = 0;
-        UInt32 propertySize = sizeof(tag);
+        UInt32 propertySize       = sizeof(tag);
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof(layout), &layout,
                                                  &propertySize, &tag);
         if (result == noErr) {
@@ -360,11 +360,11 @@ static int can_seek_callback(void *id) {
             processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
         }
 
-        processingStreamDescription.mSampleRate = WavpackGetSampleRate(_wpc);
+        processingStreamDescription.mSampleRate       = WavpackGetSampleRate(_wpc);
         processingStreamDescription.mChannelsPerFrame = (UInt32)WavpackGetNumChannels(_wpc);
-        processingStreamDescription.mBitsPerChannel = (UInt32)WavpackGetBitsPerSample(_wpc);
+        processingStreamDescription.mBitsPerChannel   = (UInt32)WavpackGetBitsPerSample(_wpc);
 
-        processingStreamDescription.mBytesPerPacket = 4;
+        processingStreamDescription.mBytesPerPacket  = 4;
         processingStreamDescription.mFramesPerPacket = 1;
         processingStreamDescription.mBytesPerFrame =
               processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
@@ -374,17 +374,17 @@ static int can_seek_callback(void *id) {
     }
 
     _framePosition = 0;
-    _frameLength = WavpackGetNumSamples64(_wpc);
+    _frameLength   = WavpackGetNumSamples64(_wpc);
 
     // Set up the source format
     AudioStreamBasicDescription sourceStreamDescription = {0};
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatWavPack;
 
-    sourceStreamDescription.mSampleRate = WavpackGetSampleRate(_wpc);
+    sourceStreamDescription.mSampleRate       = WavpackGetSampleRate(_wpc);
     sourceStreamDescription.mChannelsPerFrame = (UInt32)WavpackGetNumChannels(_wpc);
-    sourceStreamDescription.mBitsPerChannel = (UInt32)WavpackGetBitsPerSample(_wpc);
-    sourceStreamDescription.mBytesPerPacket = (UInt32)WavpackGetBytesPerSample(_wpc);
+    sourceStreamDescription.mBitsPerChannel   = (UInt32)WavpackGetBitsPerSample(_wpc);
+    sourceStreamDescription.mBytesPerPacket   = (UInt32)WavpackGetBytesPerSample(_wpc);
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
@@ -482,11 +482,11 @@ static int can_seek_callback(void *id) {
 
         // Floating point files require no special handling other than deinterleaving
         if (mode & MODE_FLOAT) {
-            float *const *floatChannelData = buffer.floatChannelData;
+            float *const *floatChannelData   = buffer.floatChannelData;
             AVAudioChannelCount channelCount = buffer.format.channelCount;
             for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                 const float *input = (float *)_buffer + channel;
-                float *output = floatChannelData[channel] + buffer.frameLength;
+                float *output      = floatChannelData[channel] + buffer.frameLength;
                 for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                     *output++ = *input;
                     input += channelCount;
@@ -507,7 +507,7 @@ static int can_seek_callback(void *id) {
             if (shift) {
                 for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                     const int32_t *input = _buffer + channel;
-                    int32_t *output = int32ChannelData[channel] + buffer.frameLength;
+                    int32_t *output      = int32ChannelData[channel] + buffer.frameLength;
                     for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                         *output++ = (int32_t)((uint32_t)*input << shift);
                         input += channelCount;
@@ -518,7 +518,7 @@ static int can_seek_callback(void *id) {
             else {
                 for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                     const int32_t *input = _buffer + channel;
-                    int32_t *output = int32ChannelData[channel] + buffer.frameLength;
+                    int32_t *output      = int32ChannelData[channel] + buffer.frameLength;
                     for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                         *output++ = *input;
                         input += channelCount;
@@ -533,11 +533,11 @@ static int can_seek_callback(void *id) {
             float scaleFactor = ((uint32_t)1 << ((WavpackGetBytesPerSample(_wpc) * 8) - 1));
 
             // Deinterleave the 32-bit samples and convert to float
-            float *const *floatChannelData = buffer.floatChannelData;
+            float *const *floatChannelData   = buffer.floatChannelData;
             AVAudioChannelCount channelCount = buffer.format.channelCount;
             for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
                 const int32_t *input = _buffer + channel;
-                float *output = floatChannelData[channel] + buffer.frameLength;
+                float *output        = floatChannelData[channel] + buffer.frameLength;
                 for (uint32_t sample = 0; sample < samplesRead; ++sample) {
                     *output++ = *input / scaleFactor;
                     input += channelCount;

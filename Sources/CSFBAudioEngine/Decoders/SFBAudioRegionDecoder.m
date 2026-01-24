@@ -22,7 +22,7 @@
 
 @implementation SFBAudioRegionDecoder
 
-@synthesize actualStartFrame = _startFrame;
+@synthesize actualStartFrame  = _startFrame;
 @synthesize actualFrameLength = _frameLength;
 
 - (instancetype)initWithURL:(NSURL *)url initialFrames:(AVAudioFramePosition)frameLength error:(NSError **)error {
@@ -144,13 +144,13 @@
     NSParameterAssert(repeatCount >= -1);
 
     if ((self = [super init])) {
-        _decoder = decoder;
-        _requestedStartFrame = startFrame;
+        _decoder              = decoder;
+        _requestedStartFrame  = startFrame;
         _requestedFrameLength = frameLength;
-        _repeatCount = repeatCount;
-        _completedLoops = 0;
-        _startFrame = SFBUnknownFramePosition;
-        _frameLength = SFBUnknownFramePosition;
+        _repeatCount          = repeatCount;
+        _completedLoops       = 0;
+        _startFrame           = SFBUnknownFramePosition;
+        _frameLength          = SFBUnknownFramePosition;
     }
     return self;
 }
@@ -253,7 +253,7 @@
         _frameLength = _requestedFrameLength;
     }
 
-    _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_decoder.processingFormat frameCapacity:512];
+    _buffer         = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_decoder.processingFormat frameCapacity:512];
     _completedLoops = 0;
 
     return YES;

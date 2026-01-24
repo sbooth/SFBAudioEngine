@@ -152,7 +152,7 @@ static dumb_off_t get_size_callback(void *f) {
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatModule;
 
-    sourceStreamDescription.mSampleRate = DUMB_SAMPLE_RATE;
+    sourceStreamDescription.mSampleRate       = DUMB_SAMPLE_RATE;
     sourceStreamDescription.mChannelsPerFrame = DUMB_CHANNELS;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
@@ -193,7 +193,7 @@ static dumb_off_t get_size_callback(void *f) {
 
     for (;;) {
         AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesToCopy = MIN(framesRemaining, DUMB_BUF_FRAMES);
+        AVAudioFrameCount framesToCopy    = MIN(framesRemaining, DUMB_BUF_FRAMES);
 
         long samplesSize = framesToCopy;
         long framesCopied =
@@ -234,12 +234,12 @@ static dumb_off_t get_size_callback(void *f) {
 }
 
 - (BOOL)openDecoderReturningError:(NSError **)error {
-    _dfs.open = NULL;
-    _dfs.skip = skip_callback;
-    _dfs.getc = getc_callback;
-    _dfs.getnc = getnc_callback;
-    _dfs.close = close_callback;
-    _dfs.seek = seek_callback;
+    _dfs.open     = NULL;
+    _dfs.skip     = skip_callback;
+    _dfs.getc     = getc_callback;
+    _dfs.getnc    = getnc_callback;
+    _dfs.close    = close_callback;
+    _dfs.seek     = seek_callback;
     _dfs.get_size = get_size_callback;
 
     _df = dumbfile_open_ex((__bridge void *)self, &_dfs);

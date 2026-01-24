@@ -23,20 +23,20 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
 
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString = @"speex_string";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion = @"speex_version";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString    = @"speex_string";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersion   = @"speex_version";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexVersionID = @"speex_version_id";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize = @"header_size";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexRate = @"rate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexMode = @"mode";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexHeaderSize     = @"header_size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexRate           = @"rate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexMode           = @"mode";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexModeBitstreamVersion =
       @"mode_bitstream_version";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels = @"nb_channels";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexBitrate = @"bitrate";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFrameSize = @"frame_size";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexVBR = @"vbr";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels  = @"nb_channels";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexBitrate         = @"bitrate";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFrameSize       = @"frame_size";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexVBR             = @"vbr";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFramesPerPacket = @"frames_per_packet";
-SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders = @"extra_headers";
+SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders    = @"extra_headers";
 
 #define READ_SIZE_BYTES 4096
 
@@ -110,8 +110,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     }
 
     _framePosition = 0;
-    _frameLength = SFBUnknownFrameLength;
-    _serialNumber = -1;
+    _frameLength   = SFBUnknownFrameLength;
+    _serialNumber  = -1;
 
     // Initialize Ogg data struct
     ogg_sync_init(&_syncState);
@@ -281,7 +281,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
     speex_decoder_ctl(_decoder, SPEEX_SET_SAMPLING_RATE, &header->rate);
 
-    _framesPerOggPacket = (header->frames_per_packet == 0 ? 1 : header->frames_per_packet);
+    _framesPerOggPacket    = (header->frames_per_packet == 0 ? 1 : header->frames_per_packet);
     _extraSpeexHeaderCount = header->extra_headers;
 
     // Initialize the speex bit-packing data structure
@@ -293,8 +293,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     if (header->nb_channels == 2) {
         SpeexCallback callback;
         callback.callback_id = SPEEX_INBAND_STEREO;
-        callback.func = speex_std_stereo_request_handler;
-        callback.data = _stereoState;
+        callback.func        = speex_std_stereo_request_handler;
+        callback.data        = _stereoState;
         speex_decoder_ctl(_decoder, SPEEX_SET_HANDLER, &callback);
     }
 
@@ -318,7 +318,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
     sourceStreamDescription.mFormatID = kSFBAudioFormatSpeex;
 
-    sourceStreamDescription.mSampleRate = header->rate;
+    sourceStreamDescription.mSampleRate       = header->rate;
     sourceStreamDescription.mChannelsPerFrame = (UInt32)header->nb_channels;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
@@ -352,7 +352,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     spx_int32_t speexFrameSize = 0;
     speex_decoder_ctl(_decoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 
-    _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
+    _buffer             = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                             frameCapacity:(AVAudioFrameCount)speexFrameSize];
     _buffer.frameLength = 0;
 
@@ -360,7 +360,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    _frameLength = SFBUnknownFrameLength;
+    _frameLength  = SFBUnknownFrameLength;
     _serialNumber = -1;
 
     // Speex cleanup
@@ -414,7 +414,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
     for (;;) {
         AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+        AVAudioFrameCount framesCopied    = [buffer appendFromBuffer:_buffer
                                                 readingFromOffset:0
                                                       frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];

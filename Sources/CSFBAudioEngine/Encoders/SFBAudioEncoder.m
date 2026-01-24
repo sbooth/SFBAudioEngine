@@ -29,11 +29,11 @@ static void SFBCreateAudioEncoderLog(void) {
 
 @implementation SFBAudioEncoder
 
-@synthesize outputSource = _outputSource;
-@synthesize sourceFormat = _sourceFormat;
-@synthesize processingFormat = _processingFormat;
-@synthesize outputFormat = _outputFormat;
-@synthesize settings = _settings;
+@synthesize outputSource            = _outputSource;
+@synthesize sourceFormat            = _sourceFormat;
+@synthesize processingFormat        = _processingFormat;
+@synthesize outputFormat            = _outputFormat;
+@synthesize settings                = _settings;
 @synthesize estimatedFramesToEncode = _estimatedFramesToEncode;
 
 @dynamic encodingIsLossless;
@@ -147,14 +147,14 @@ static NSMutableArray *_registeredSubclasses = nil;
     NSParameterAssert(outputSource != nil);
 
     NSString *lowercaseExtension = outputSource.url.pathExtension.lowercaseString;
-    NSString *lowercaseMIMEType = mimeType.lowercaseString;
+    NSString *lowercaseMIMEType  = mimeType.lowercaseString;
 
-    int score = 10;
+    int score      = 10;
     Class subclass = nil;
 
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
         int currentScore = 0;
-        Class klass = subclassInfo.klass;
+        Class klass      = subclassInfo.klass;
 
         if (lowercaseMIMEType) {
             NSSet *supportedMIMETypes = [klass supportedMIMETypes];
@@ -171,7 +171,7 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
 
         if (currentScore > score) {
-            score = currentScore;
+            score    = currentScore;
             subclass = klass;
         }
     }
@@ -283,7 +283,7 @@ static NSMutableArray *_registeredSubclasses = nil;
         return NO;
     }
 
-    _sourceFormat = sourceFormat;
+    _sourceFormat     = sourceFormat;
     _processingFormat = processingFormat;
 
     return YES;
@@ -297,10 +297,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    _sourceFormat = nil;
+    _sourceFormat     = nil;
     _processingFormat = nil;
-    _outputFormat = nil;
-    _settings = nil;
+    _outputFormat     = nil;
+    _settings         = nil;
     if (_outputSource.isOpen) {
         return [_outputSource closeReturningError:error];
     }
@@ -350,8 +350,8 @@ static NSMutableArray *_registeredSubclasses = nil;
     dispatch_once(&onceToken, ^{ _registeredSubclasses = [NSMutableArray array]; });
 
     SFBAudioEncoderSubclassInfo *subclassInfo = [[SFBAudioEncoderSubclassInfo alloc] init];
-    subclassInfo.klass = subclass;
-    subclassInfo.priority = priority;
+    subclassInfo.klass                        = subclass;
+    subclassInfo.priority                     = priority;
 
     [_registeredSubclasses addObject:subclassInfo];
 

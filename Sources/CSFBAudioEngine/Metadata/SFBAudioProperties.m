@@ -7,13 +7,13 @@
 #import "SFBAudioProperties.h"
 
 // Key names for the properties dictionary
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName = @"Format Name";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength = @"Frame Length";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName   = @"Format Name";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength  = @"Frame Length";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount = @"Channel Count";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth = @"Bit Depth";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate = @"Sample Rate";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration = @"Duration";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate = @"Bitrate";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitDepth     = @"Bit Depth";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate   = @"Sample Rate";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration     = @"Duration";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate      = @"Bitrate";
 
 @interface SFBAudioProperties () {
   @private
@@ -32,15 +32,15 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate = @"Bitrate";
 
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionaryRepresentation {
     if ((self = [super init])) {
-        NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
-        dictionary[SFBAudioPropertiesKeyFormatName] = dictionaryRepresentation[SFBAudioPropertiesKeyFormatName];
-        dictionary[SFBAudioPropertiesKeyFrameLength] = dictionaryRepresentation[SFBAudioPropertiesKeyFrameLength];
+        NSMutableDictionary *dictionary               = [NSMutableDictionary dictionary];
+        dictionary[SFBAudioPropertiesKeyFormatName]   = dictionaryRepresentation[SFBAudioPropertiesKeyFormatName];
+        dictionary[SFBAudioPropertiesKeyFrameLength]  = dictionaryRepresentation[SFBAudioPropertiesKeyFrameLength];
         dictionary[SFBAudioPropertiesKeyChannelCount] = dictionaryRepresentation[SFBAudioPropertiesKeyChannelCount];
-        dictionary[SFBAudioPropertiesKeyBitDepth] = dictionaryRepresentation[SFBAudioPropertiesKeyBitDepth];
-        dictionary[SFBAudioPropertiesKeySampleRate] = dictionaryRepresentation[SFBAudioPropertiesKeySampleRate];
-        dictionary[SFBAudioPropertiesKeyDuration] = dictionaryRepresentation[SFBAudioPropertiesKeyDuration];
-        dictionary[SFBAudioPropertiesKeyBitrate] = dictionaryRepresentation[SFBAudioPropertiesKeyBitrate];
-        _properties = [dictionary copy];
+        dictionary[SFBAudioPropertiesKeyBitDepth]     = dictionaryRepresentation[SFBAudioPropertiesKeyBitDepth];
+        dictionary[SFBAudioPropertiesKeySampleRate]   = dictionaryRepresentation[SFBAudioPropertiesKeySampleRate];
+        dictionary[SFBAudioPropertiesKeyDuration]     = dictionaryRepresentation[SFBAudioPropertiesKeyDuration];
+        dictionary[SFBAudioPropertiesKeyBitrate]      = dictionaryRepresentation[SFBAudioPropertiesKeyBitrate];
+        _properties                                   = [dictionary copy];
     }
     return self;
 }

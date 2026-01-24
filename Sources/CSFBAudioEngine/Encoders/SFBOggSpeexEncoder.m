@@ -18,32 +18,32 @@
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex = @"org.sbooth.AudioEngine.Encoder.OggSpeex";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode = @"Encoding Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexTargetIsBitrate = @"Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexQuality = @"Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexComplexity = @"Complexity";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexBitrate = @"Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVBR = @"Enable VBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate = @"VBR Maximum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVAD = @"Enable VAD";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableDTX = @"Enable DTX";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableABR = @"Enable ABR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDenoiseInput = @"Denoise Input";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableAGC = @"Enable AGC";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode                  = @"Encoding Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexTargetIsBitrate       = @"Encoding Target is Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexQuality               = @"Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexComplexity            = @"Complexity";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexBitrate               = @"Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVBR             = @"Enable VBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate         = @"VBR Maximum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVAD             = @"Enable VAD";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableDTX             = @"Enable DTX";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableABR             = @"Enable ABR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDenoiseInput          = @"Denoise Input";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableAGC             = @"Enable AGC";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter = @"Disable Highpass Filter";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket = @"Speex Frames per Ogg Packet";
 
-SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeNarrowband = @"Narrowband";
-SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeWideband = @"Wideband";
+SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeNarrowband    = @"Narrowband";
+SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeWideband      = @"Wideband";
 SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband = @"Ultra Wideband";
 
 static void vorbis_comment_init(char **comments, size_t *length, const char *vendor_string) {
     size_t vendor_length = strlen(vendor_string);
-    size_t len = 4 + vendor_length + 4;
-    char *p = (char *)malloc(len);
+    size_t len           = 4 + vendor_length + 4;
+    char *p              = (char *)malloc(len);
     if (p == NULL) {
         *comments = NULL;
-        *length = 0;
+        *length   = 0;
         return;
     }
 
@@ -53,7 +53,7 @@ static void vorbis_comment_init(char **comments, size_t *length, const char *ven
     memcpy(p + 4, vendor_string, vendor_length);
     OSWriteLittleInt32(p, 4 + vendor_length, user_comment_list_length);
 
-    *length = len;
+    *length   = len;
     *comments = p;
 }
 
@@ -180,7 +180,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     // Setup the encoder
-    const SpeexMode *speex_mode = NULL;
+    const SpeexMode *speex_mode        = NULL;
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
     if (!mode) {
         if (_processingFormat.sampleRate > 25000) {
@@ -227,7 +227,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                                  frameCapacity:(AVAudioFrameCount)_speex_frame_size];
 
-    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
+    NSNumber *complexity         = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
     spx_int32_t complexity_value = complexity.intValue;
     speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity_value);
 
@@ -291,7 +291,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     speex_encoder_ctl(_st, SPEEX_GET_LOOKAHEAD, &_speex_lookahead);
 
     spx_int32_t denoise_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDenoiseInput] boolValue];
-    spx_int32_t agc_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableAGC] boolValue];
+    spx_int32_t agc_enabled     = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableAGC] boolValue];
     if (denoise_enabled || agc_enabled) {
         _preprocess = speex_preprocess_state_init(_speex_frame_size, rate);
         speex_preprocess_ctl(_preprocess, SPEEX_PREPROCESS_SET_DENOISE, &denoise_enabled);
@@ -304,7 +304,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     speex_init_header(&header, (int)_processingFormat.sampleRate, (int)_processingFormat.channelCount, speex_mode);
 
     _speex_frames_per_ogg_packet = 1; // 1-10 default 1
-    NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket] ?: @1;
+    NSNumber *framesPerPacket    = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket] ?: @1;
     if (framesPerPacket) {
         int intValue = framesPerPacket.intValue;
         if (intValue < 1 || intValue > 10) {
@@ -321,19 +321,19 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     header.frames_per_packet = _speex_frames_per_ogg_packet;
-    header.vbr = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableVBR] boolValue];
-    header.nb_channels = (spx_int32_t)_processingFormat.channelCount;
+    header.vbr               = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableVBR] boolValue];
+    header.nb_channels       = (spx_int32_t)_processingFormat.channelCount;
 
     int packet_size;
     unsigned char *packet_data = (unsigned char *)speex_header_to_packet(&header, &packet_size);
 
     ogg_packet op;
-    op.packet = packet_data;
-    op.bytes = packet_size;
-    op.b_o_s = 1;
-    op.e_o_s = 0;
+    op.packet     = packet_data;
+    op.bytes      = packet_size;
+    op.b_o_s      = 1;
+    op.e_o_s      = 0;
     op.granulepos = 0;
-    op.packetno = 0;
+    op.packetno   = 0;
 
     ogg_stream_packetin(&_os, &op);
     speex_header_free(packet_data);
@@ -373,12 +373,12 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     size_t comments_length;
     vorbis_comment_init(&comments, &comments_length, vendor_string);
 
-    op.packet = (unsigned char *)comments;
-    op.bytes = (long)comments_length;
-    op.b_o_s = 0;
-    op.e_o_s = 0;
+    op.packet     = (unsigned char *)comments;
+    op.bytes      = (long)comments_length;
+    op.b_o_s      = 0;
+    op.e_o_s      = 0;
     op.granulepos = 0;
-    op.packetno = 1;
+    op.packetno   = 1;
 
     ogg_stream_packetin(&_os, &op);
     free(comments);
@@ -414,9 +414,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     _speex_frame_number = -1;
 
     AudioStreamBasicDescription outputStreamDescription = {0};
-    outputStreamDescription.mFormatID = kSFBAudioFormatSpeex;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
-    outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
+    outputStreamDescription.mFormatID                   = kSFBAudioFormatSpeex;
+    outputStreamDescription.mSampleRate                 = _processingFormat.sampleRate;
+    outputStreamDescription.mChannelsPerFrame           = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
     _framePosition = 0;
@@ -502,10 +502,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         int byte_count = speex_bits_write(&_bits, cbits, MAX_FRAME_BYTES);
 
         ogg_packet op;
-        op.packet = (unsigned char *)cbits;
-        op.bytes = byte_count;
-        op.b_o_s = 0;
-        op.e_o_s = 1;
+        op.packet     = (unsigned char *)cbits;
+        op.bytes      = byte_count;
+        op.b_o_s      = 0;
+        op.e_o_s      = 1;
         op.granulepos = ((_speex_frame_number + 1) * _speex_frame_size) - _speex_lookahead;
         if (op.granulepos > _framePosition) {
             op.granulepos = _framePosition;
@@ -564,10 +564,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         speex_bits_reset(&_bits);
 
         ogg_packet op;
-        op.packet = (unsigned char *)cbits;
-        op.bytes = byte_count;
-        op.b_o_s = 0;
-        op.e_o_s = (framesOfSilenceAdded > 0);
+        op.packet     = (unsigned char *)cbits;
+        op.bytes      = byte_count;
+        op.b_o_s      = 0;
+        op.e_o_s      = (framesOfSilenceAdded > 0);
         op.granulepos = ((_speex_frame_number + 1) * _speex_frame_size) - _speex_lookahead;
         if (op.granulepos > _framePosition) {
             op.granulepos = _framePosition;

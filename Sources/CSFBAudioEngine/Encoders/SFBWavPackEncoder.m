@@ -83,35 +83,35 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     // Set up the processing format
     AudioStreamBasicDescription streamDescription = {0};
 
-    streamDescription.mFormatID = kAudioFormatLinearPCM;
+    streamDescription.mFormatID    = kAudioFormatLinearPCM;
     streamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 
-    streamDescription.mSampleRate = sourceFormat.sampleRate;
+    streamDescription.mSampleRate       = sourceFormat.sampleRate;
     streamDescription.mChannelsPerFrame = sourceFormat.channelCount;
-    streamDescription.mBitsPerChannel = sourceFormat.streamDescription->mBitsPerChannel;
+    streamDescription.mBitsPerChannel   = sourceFormat.streamDescription->mBitsPerChannel;
 
     if (streamDescription.mBitsPerChannel == 32) {
         streamDescription.mFormatID |= kAudioFormatFlagIsPacked;
     }
 
-    streamDescription.mBytesPerPacket = 4 * streamDescription.mChannelsPerFrame;
+    streamDescription.mBytesPerPacket  = 4 * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
-    streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
+    streamDescription.mBytesPerFrame   = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
     // Use WAVFORMATEX channel order
     AVAudioChannelLayout *channelLayout = nil;
 
     if (sourceFormat.channelLayout) {
         AudioChannelBitmap channelBitmap = 0;
-        UInt32 propertySize = sizeof(channelBitmap);
-        AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
+        UInt32 propertySize              = sizeof(channelBitmap);
+        AudioChannelLayoutTag layoutTag  = sourceFormat.channelLayout.layoutTag;
         OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
                                                  &propertySize, &channelBitmap);
         if (result == noErr) {
-            AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
-                                      .mChannelBitmap = channelBitmap,
+            AudioChannelLayout acl = {.mChannelLayoutTag          = kAudioChannelLayoutTag_UseChannelBitmap,
+                                      .mChannelBitmap             = channelBitmap,
                                       .mNumberChannelDescriptions = 0};
-            channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
+            channelLayout          = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
         }
         // TODO: Use WavPack channel identities as a fallback?
         else {
@@ -141,9 +141,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 
     //    WavpackSetFileInformation(_wpc, NULL, WP_FORMAT_WAV);
 
-    _config.sample_rate = (int)_processingFormat.sampleRate;
-    _config.num_channels = (int)_processingFormat.channelCount;
-    _config.bits_per_sample = (int)_processingFormat.streamDescription->mBitsPerChannel;
+    _config.sample_rate      = (int)_processingFormat.sampleRate;
+    _config.num_channels     = (int)_processingFormat.channelCount;
+    _config.bits_per_sample  = (int)_processingFormat.streamDescription->mBitsPerChannel;
     _config.bytes_per_sample = (_config.bits_per_sample + 7) / 8;
 
     AVAudioChannelLayout *layout = _processingFormat.channelLayout;
@@ -212,10 +212,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 #pragma clang diagnostic pop
 
     AudioStreamBasicDescription outputStreamDescription = {0};
-    outputStreamDescription.mFormatID = kSFBAudioFormatWavPack;
-    outputStreamDescription.mBitsPerChannel = _processingFormat.streamDescription->mBitsPerChannel;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
-    outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
+    outputStreamDescription.mFormatID                   = kSFBAudioFormatWavPack;
+    outputStreamDescription.mBitsPerChannel             = _processingFormat.streamDescription->mBitsPerChannel;
+    outputStreamDescription.mSampleRate                 = _processingFormat.sampleRate;
+    outputStreamDescription.mChannelsPerFrame           = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
                                                        channelLayout:_processingFormat.channelLayout];
 
@@ -292,9 +292,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     case 3:
         for (AVAudioFrameCount i = 0; i < frameLength; ++i) {
             for (AVAudioFrameCount j = 0; j < _processingFormat.channelCount; ++j) {
-                unsigned char hi = (unsigned char)((*buf >> 16) & 0xff);
+                unsigned char hi  = (unsigned char)((*buf >> 16) & 0xff);
                 unsigned char mid = (unsigned char)((*buf >> 8) & 0xff);
-                unsigned char lo = (unsigned char)(*buf & 0xff);
+                unsigned char lo  = (unsigned char)(*buf & 0xff);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated"
                 CC_MD5_Update(&_md5, &lo, 1);

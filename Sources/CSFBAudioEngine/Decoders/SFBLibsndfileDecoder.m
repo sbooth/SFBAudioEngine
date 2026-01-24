@@ -35,13 +35,13 @@ static void FillOutASBDForLPCM(AudioStreamBasicDescription *_Nonnull asbd, Float
     asbd->mFormatFlags =
           CalculateLPCMFlags(validBitsPerChannel, totalBitsPerChannel, isFloat, isBigEndian, isNonInterleaved);
 
-    asbd->mSampleRate = sampleRate;
+    asbd->mSampleRate       = sampleRate;
     asbd->mChannelsPerFrame = channelsPerFrame;
-    asbd->mBitsPerChannel = validBitsPerChannel;
+    asbd->mBitsPerChannel   = validBitsPerChannel;
 
-    asbd->mBytesPerPacket = (isNonInterleaved ? 1 : channelsPerFrame) * (totalBitsPerChannel / 8);
+    asbd->mBytesPerPacket  = (isNonInterleaved ? 1 : channelsPerFrame) * (totalBitsPerChannel / 8);
     asbd->mFramesPerPacket = 1;
-    asbd->mBytesPerFrame = (isNonInterleaved ? 1 : channelsPerFrame) * (totalBitsPerChannel / 8);
+    asbd->mBytesPerFrame   = (isNonInterleaved ? 1 : channelsPerFrame) * (totalBitsPerChannel / 8);
 }
 
 /// Returns an `AVAudioChannelLayout` object initialized with the channels from a sndfile channel map
@@ -349,10 +349,10 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Set up the virtual IO function pointers
     SF_VIRTUAL_IO virtualIO;
     virtualIO.get_filelen = my_sf_vio_get_filelen;
-    virtualIO.seek = my_sf_vio_seek;
-    virtualIO.read = my_sf_vio_read;
-    virtualIO.write = NULL;
-    virtualIO.tell = my_sf_vio_tell;
+    virtualIO.seek        = my_sf_vio_seek;
+    virtualIO.read        = my_sf_vio_read;
+    virtualIO.write       = NULL;
+    virtualIO.tell        = my_sf_vio_tell;
 
     // Open the input file
     _sndfile = sf_open_virtual(&virtualIO, SFM_READ, &_sfinfo, (__bridge void *)self);
@@ -459,7 +459,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Generic libsndfile format ID, will be set to something more specific if known
     sourceStreamDescription.mFormatID = 'SNDF';
 
-    sourceStreamDescription.mSampleRate = _sfinfo.samplerate;
+    sourceStreamDescription.mSampleRate       = _sfinfo.samplerate;
     sourceStreamDescription.mChannelsPerFrame = (UInt32)_sfinfo.channels;
 
     FillASBDWithSndfileFormat(&sourceStreamDescription, _sfinfo.format);

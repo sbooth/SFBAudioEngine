@@ -17,11 +17,11 @@
 SFBAudioEncoderName const SFBAudioEncoderNameOggOpus = @"org.sbooth.AudioEngine.Encoder.OggOpus";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusPreserveSampleRate = @"Preserve Sample Rate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusComplexity = @"Complexity";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrate = @"Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrateMode = @"Bitrate Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusSignalType = @"Signal Type";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration = @"Frame Duration";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusComplexity         = @"Complexity";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrate            = @"Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrateMode        = @"Bitrate Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusSignalType         = @"Signal Type";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration      = @"Frame Duration";
 
 SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeVBR = @"VBR";
 SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR =
@@ -32,12 +32,12 @@ SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueO
 SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeMusic = @"Music";
 
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms = @"2.5 msec";
-SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration5ms = @"5 msec";
-SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration10ms = @"10 msec";
-SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration20ms = @"20 msec";
-SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration40ms = @"40 msec";
-SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration60ms = @"60 msec";
-SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration80ms = @"80 msec";
+SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration5ms   = @"5 msec";
+SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration10ms  = @"10 msec";
+SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration20ms  = @"20 msec";
+SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration40ms  = @"40 msec";
+SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration60ms  = @"60 msec";
+SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration80ms  = @"80 msec";
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration100ms = @"100 msec";
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration120ms = @"120 msec";
 
@@ -57,7 +57,7 @@ struct ogg_opus_comments_deleter {
     }
 };
 
-using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
+using ogg_opus_enc_unique_ptr      = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
 using ogg_opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, ogg_opus_comments_deleter>;
 
 int writeCallback(void *user_data, const unsigned char *ptr, opus_int32 len) noexcept {
@@ -307,31 +307,31 @@ int closeCallback(void *user_data) noexcept {
         frameDuration) {
         if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms) {
             frameCapacity = 120;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_2_5_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_2_5_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration5ms) {
             frameCapacity = 240;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration10ms) {
             frameCapacity = 480;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_10_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_10_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration20ms) {
             frameCapacity = 960;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration40ms) {
             frameCapacity = 1920;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_40_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_40_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration60ms) {
             frameCapacity = 2880;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_60_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_60_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration80ms) {
             frameCapacity = 3840;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_80_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_80_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration100ms) {
             frameCapacity = 4800;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_100_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_100_MS));
         } else if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration120ms) {
             frameCapacity = 5760;
-            result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_120_MS));
+            result        = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_120_MS));
         } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus frame duration: %{public}@", frameDuration);
         }
@@ -351,13 +351,13 @@ int closeCallback(void *user_data) noexcept {
     _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:frameCapacity];
 
     AudioStreamBasicDescription outputStreamDescription{};
-    outputStreamDescription.mFormatID = kAudioFormatOpus;
-    outputStreamDescription.mSampleRate = _processingFormat.sampleRate;
+    outputStreamDescription.mFormatID         = kAudioFormatOpus;
+    outputStreamDescription.mSampleRate       = _processingFormat.sampleRate;
     outputStreamDescription.mChannelsPerFrame = _processingFormat.channelCount;
     _outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription
                                                        channelLayout:_processingFormat.channelLayout];
 
-    _enc = std::move(enc);
+    _enc      = std::move(enc);
     _comments = std::move(comments);
 
     _framePosition = 0;

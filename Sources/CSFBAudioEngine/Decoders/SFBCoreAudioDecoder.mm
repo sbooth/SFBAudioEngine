@@ -119,7 +119,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         NSMutableSet *supportedPathExtensions = [NSMutableSet set];
         for (UInt32 type : readableTypes) {
             CFArrayRef extensionsForType = nil;
-            size = sizeof(extensionsForType);
+            size                         = sizeof(extensionsForType);
             result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size,
                                             &extensionsForType);
 
@@ -169,7 +169,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         NSMutableSet *supportedMIMETypes = [NSMutableSet set];
         for (UInt32 type : readableTypes) {
             CFArrayRef mimeTypesForType = nil;
-            size = sizeof(mimeTypesForType);
+            size                        = sizeof(mimeTypesForType);
             result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size,
                                             &mimeTypesForType);
 
@@ -292,7 +292,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // Query file format
     AudioStreamBasicDescription format{};
     UInt32 dataSize = sizeof(format);
-    result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
+    result          = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result,
@@ -368,7 +368,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         asbd.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 #pragma clang diagnostic pop
 
-        asbd.mSampleRate = format.mSampleRate;
+        asbd.mSampleRate       = format.mSampleRate;
         asbd.mChannelsPerFrame = format.mChannelsPerFrame;
 
         if (format.mFormatFlags == kAppleLosslessFormatFlag_16BitSourceData) {
@@ -383,9 +383,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
         asbd.mFormatFlags |= asbd.mBitsPerChannel % 8 ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
 
-        asbd.mBytesPerPacket = ((asbd.mBitsPerChannel + 7) / 8) * asbd.mChannelsPerFrame;
+        asbd.mBytesPerPacket  = ((asbd.mBitsPerChannel + 7) / 8) * asbd.mChannelsPerFrame;
         asbd.mFramesPerPacket = 1;
-        asbd.mBytesPerFrame = asbd.mBytesPerPacket / asbd.mFramesPerPacket;
+        asbd.mBytesPerFrame   = asbd.mBytesPerPacket / asbd.mFramesPerPacket;
 
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
     }
@@ -442,7 +442,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         return NO;
     }
 
-    _af = std::move(af);
+    _af  = std::move(af);
     _eaf = std::move(eaf);
 
     return YES;
@@ -473,7 +473,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 - (AVAudioFramePosition)frameLength {
     SInt64 frameLength;
     UInt32 dataSize = sizeof(frameLength);
-    auto result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
+    auto result     = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d '%{public}.4s'",

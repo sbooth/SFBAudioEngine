@@ -37,7 +37,7 @@ namespace sfb {
 class AudioPlayer final {
   public:
     using unique_ptr = std::unique_ptr<AudioPlayer>;
-    using Decoder = id<SFBPCMDecoding>;
+    using Decoder    = id<SFBPCMDecoding>;
 
     /// The shared log for all `AudioPlayer` instances
     static const os_log_t log_;
@@ -105,10 +105,10 @@ class AudioPlayer final {
   public:
     AudioPlayer();
 
-    AudioPlayer(const AudioPlayer&) = delete;
+    AudioPlayer(const AudioPlayer&)            = delete;
     AudioPlayer& operator=(const AudioPlayer&) = delete;
 
-    AudioPlayer(AudioPlayer&&) = delete;
+    AudioPlayer(AudioPlayer&&)            = delete;
     AudioPlayer& operator=(AudioPlayer&&) = delete;
 
     ~AudioPlayer() noexcept;

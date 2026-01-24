@@ -95,7 +95,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         bool ok;
         auto pos = s.find("/", 0);
         if (pos != -1) {
-            auto upos = static_cast<unsigned int>(pos);
+            auto upos    = static_cast<unsigned int>(pos);
             int trackNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
@@ -121,7 +121,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         bool ok;
         auto pos = s.find("/", 0);
         if (pos != -1) {
-            auto upos = static_cast<unsigned int>(pos);
+            auto upos   = static_cast<unsigned int>(pos);
             int discNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.discNumber = @(discNum);
@@ -212,7 +212,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
                                                                           "replaygain_track_gain");
     }
     if (trackGainFrame) {
-        NSString *s = [NSString stringWithUTF8String:trackGainFrame->fieldList().back().toCString(true)];
+        NSString *s              = [NSString stringWithUTF8String:trackGainFrame->fieldList().back().toCString(true)];
         self.replayGainTrackGain = @(s.doubleValue);
         self.replayGainReferenceLoudness = @(89.0);
 
@@ -224,7 +224,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
                                                                           "replaygain_track_peak");
     }
     if (trackPeakFrame) {
-        NSString *s = [NSString stringWithUTF8String:trackPeakFrame->fieldList().back().toCString(true)];
+        NSString *s              = [NSString stringWithUTF8String:trackPeakFrame->fieldList().back().toCString(true)];
         self.replayGainTrackPeak = @(s.doubleValue);
     }
 
@@ -233,7 +233,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
                                                                           "replaygain_album_gain");
     }
     if (albumGainFrame) {
-        NSString *s = [NSString stringWithUTF8String:albumGainFrame->fieldList().back().toCString(true)];
+        NSString *s              = [NSString stringWithUTF8String:albumGainFrame->fieldList().back().toCString(true)];
         self.replayGainAlbumGain = @(s.doubleValue);
         self.replayGainReferenceLoudness = @(89.0);
 
@@ -245,7 +245,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
                                                                           "replaygain_album_peak");
     }
     if (albumPeakFrame) {
-        NSString *s = [NSString stringWithUTF8String:albumPeakFrame->fieldList().back().toCString(true)];
+        NSString *s              = [NSString stringWithUTF8String:albumPeakFrame->fieldList().back().toCString(true)];
         self.replayGainAlbumPeak = @(s.doubleValue);
     }
 
@@ -261,7 +261,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             }
 
             // Attempt to use the master volume if present
-            auto channels = relativeVolume->channels();
+            auto channels    = relativeVolume->channels();
             auto channelType = TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
 
             // Fall back on whatever else exists in the frame
@@ -286,7 +286,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     for (auto *it : tag->frameListMap()["APIC"]) {
         TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
         if (frame) {
-            NSData *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
+            NSData *imageData     = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
             NSString *description = nil;
             if (!frame->description().isEmpty()) {
                 description = [NSString stringWithUTF8String:frame->description().toCString(true)];
@@ -345,7 +345,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
          */
         NSISO8601DateFormatter *formatter = [[NSISO8601DateFormatter alloc] init];
         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-        NSDate *date = [formatter dateFromString:metadata.releaseDate];
+        NSDate *date                      = [formatter dateFromString:metadata.releaseDate];
         if (date) {
             tag->setYear((unsigned int)[gregorianCalendar component:NSCalendarUnitYear fromDate:date]);
 

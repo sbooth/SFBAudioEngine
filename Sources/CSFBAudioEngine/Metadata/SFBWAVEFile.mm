@@ -115,7 +115,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngi
         }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
-        self.metadata = metadata;
+        self.metadata   = metadata;
 
         return YES;
     } catch (const std::exception& e) {

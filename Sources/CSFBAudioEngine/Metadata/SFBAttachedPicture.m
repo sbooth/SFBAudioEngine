@@ -7,8 +7,8 @@
 #import "SFBAttachedPicture.h"
 
 // Key names for the metadata dictionary
-SFBAttachedPictureKey const SFBAttachedPictureKeyImageData = @"Image Data";
-SFBAttachedPictureKey const SFBAttachedPictureKeyType = @"Type";
+SFBAttachedPictureKey const SFBAttachedPictureKeyImageData   = @"Image Data";
+SFBAttachedPictureKey const SFBAttachedPictureKeyType        = @"Type";
 SFBAttachedPictureKey const SFBAttachedPictureKeyDescription = @"Description";
 
 @implementation SFBAttachedPicture
@@ -27,8 +27,8 @@ SFBAttachedPictureKey const SFBAttachedPictureKeyDescription = @"Description";
     NSParameterAssert(imageData != nil);
 
     if ((self = [super init])) {
-        _imageData = [imageData copy];
-        _pictureType = type;
+        _imageData          = [imageData copy];
+        _pictureType        = type;
         _pictureDescription = [description copy];
     }
     return self;
