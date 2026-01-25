@@ -245,7 +245,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexQuality];
     if (quality == nil) {
         quality = @-1;
-    };
+    }
 
     // Encoder mode
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexTargetIsBitrate] boolValue]) {
