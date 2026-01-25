@@ -137,8 +137,8 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     streamInfo.format = TTA_FORMAT_SIMPLE;
     streamInfo.nch = _processingFormat.channelCount;
     streamInfo.bps = _processingFormat.streamDescription->mBitsPerChannel;
-    streamInfo.sps = (TTAuint32)_processingFormat.sampleRate;
-    streamInfo.samples = (TTAuint32)_estimatedFramesToEncode;
+    streamInfo.sps = static_cast<TTAuint32>(_processingFormat.sampleRate);
+    streamInfo.samples = static_cast<TTAuint32>(_estimatedFramesToEncode);
 
     try {
         _encoder = std::make_unique<tta::tta_encoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
