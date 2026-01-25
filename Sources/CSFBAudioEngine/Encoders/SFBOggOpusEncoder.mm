@@ -211,8 +211,8 @@ int closeCallback(void *user_data) noexcept {
 
     if (NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrate]; bitrate != nil) {
         opus_int32 intValue = bitrate.intValue;
-        switch (intValue) {
-        case 6 ... 256:
+        if (intValue >= 6 && intValue <= 256) {
+            // TODO: Opus now supports from 500-512000 bits per second, auto, and max
             result = ope_encoder_ctl(
                   enc.get(),
                   OPUS_SET_BITRATE(std::min(256 * static_cast<opus_int32>(_processingFormat.channelCount), intValue) *
@@ -226,10 +226,8 @@ int closeCallback(void *user_data) noexcept {
                 }
                 return NO;
             }
-            break;
-        default:
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Opus bitrate: %d", intValue);
-            break;
         }
     }
 
@@ -258,8 +256,7 @@ int closeCallback(void *user_data) noexcept {
 
     if (NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusComplexity]; complexity != nil) {
         int intValue = complexity.intValue;
-        switch (intValue) {
-        case 0 ... 10:
+        if (intValue >= 0 && intValue <= 10) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_COMPLEXITY(intValue));
             if (result != OPE_OK) {
                 os_log_error(gSFBAudioEncoderLog, "OPUS_SET_COMPLEXITY failed: %{public}s", ope_strerror(result));
@@ -270,11 +267,8 @@ int closeCallback(void *user_data) noexcept {
                 }
                 return NO;
             }
-            break;
-
-        default:
+        } else {
             os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Opus complexity: %d", intValue);
-            break;
         }
     }
 

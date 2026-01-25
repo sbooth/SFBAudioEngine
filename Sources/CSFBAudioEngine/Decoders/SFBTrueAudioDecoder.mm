@@ -178,19 +178,16 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
     processingStreamDescription.mReserved = 0;
 
-    // True Audio supports 16 to 24 bits per sample
-    switch (streamInfo.bps) {
-    case 16:
-    case 24:
-        processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
-        break;
-
-    case 17 ... 23:
-        // Align high because Apple's AudioConverter doesn't handle low alignment
-        processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
-        break;
-
-    default:
+    // True Audio supports from 16 to 24 bits per sample
+    if (streamInfo.bps >= 16 && streamInfo.bps <= 24) {
+        if ((streamInfo.bps & 0x7) == 0) {
+            // 16 or 24
+            processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
+        } else {
+            // Align high because Apple's AudioConverter doesn't handle low alignment
+            processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+        }
+    } else {
         os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", streamInfo.bps);
         _decoder.reset();
         if (error != nullptr) {

@@ -134,12 +134,11 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
     // Noise shaping and psychoacoustics
     if (NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Quality]; quality != nil) {
-        auto quality_value = quality.intValue;
-        switch (quality_value) {
-        case 0 ... 9:
-            result = lame_set_quality(gfp.get(), quality_value);
+        const auto qualityValue = quality.intValue;
+        if (qualityValue >= 0 && qualityValue <= 9) {
+            result = lame_set_quality(gfp.get(), qualityValue);
             if (result == -1) {
-                os_log_error(gSFBAudioEncoderLog, "lame_set_quality(%d) failed", quality_value);
+                os_log_error(gSFBAudioEncoderLog, "lame_set_quality(%d) failed", qualityValue);
                 if (error != nullptr) {
                     *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                                  code:SFBAudioEncoderErrorCodeInternalError
@@ -147,16 +146,14 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
                 }
                 return NO;
             }
-            break;
-        default:
-            os_log_info(gSFBAudioEncoderLog, "Ignoring invalid LAME quality: %d", quality_value);
-            break;
+        } else {
+            os_log_info(gSFBAudioEncoderLog, "Ignoring invalid LAME quality: %d", qualityValue);
         }
     }
 
     // Constant bitrate encoding
-    NSNumber *cbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3ConstantBitrate];
-    if (cbr) {
+    NSNumber *constantBitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3ConstantBitrate];
+    if (constantBitrate != nil) {
         result = lame_set_VBR(gfp.get(), vbr_off);
         if (result == -1) {
             os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
@@ -168,9 +165,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             return NO;
         }
 
-        result = lame_set_brate(gfp.get(), cbr.intValue);
+        result = lame_set_brate(gfp.get(), constantBitrate.intValue);
         if (result == -1) {
-            os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", cbr.intValue);
+            os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", constantBitrate.intValue);
             if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
@@ -181,9 +178,9 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     // Average bitrate encoding
-    NSNumber *abr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
-    if (abr) {
-        if (cbr) {
+    NSNumber *averageBitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3AverageBitrate];
+    if (averageBitrate != nil) {
+        if (constantBitrate != nil) {
             os_log_info(gSFBAudioEncoderLog, "CBR and ABR bitrates both specified; this is probably not correct");
         }
 
@@ -200,15 +197,15 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
         // values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000
         // bps MP3
-        auto intValue = abr.intValue;
-        if (intValue >= 8000) {
-            intValue = (intValue + 500) / 1000;
+        auto meanBitrate = averageBitrate.intValue;
+        if (meanBitrate >= 8000) {
+            meanBitrate = (meanBitrate + 500) / 1000;
         }
-        intValue = std::clamp(intValue, 8, 320);
+        meanBitrate = std::clamp(meanBitrate, 8, 320);
 
-        result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), intValue);
+        result = lame_set_VBR_mean_bitrate_kbps(gfp.get(), meanBitrate);
         if (result == -1) {
-            os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_mean_bitrate_kbps(%d) failed", intValue);
+            os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_mean_bitrate_kbps(%d) failed", meanBitrate);
             if (error != nullptr) {
                 *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                              code:SFBAudioEncoderErrorCodeInternalError
@@ -219,13 +216,12 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     // Variable bitrate encoding
-    NSNumber *vbr = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseVariableBitrate];
-    if (vbr.boolValue) {
-        if (cbr) {
+    if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseVariableBitrate] boolValue]) {
+        if (constantBitrate != nil) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and CBR bitrate both specified; this is probably not correct");
         }
-        if (abr) {
+        if (averageBitrate) {
             os_log_info(gSFBAudioEncoderLog,
                         "VBR encoding and ABR bitrate both specified; this is probably not correct");
         }
@@ -298,7 +294,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     if (SFBAudioEncodingSettingsValue stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
-        stereoMode) {
+        stereoMode != nil) {
         if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono) {
             result = lame_set_mode(gfp.get(), MONO);
         } else if (stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo) {
@@ -320,7 +316,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         }
     }
 
-    auto calculateReplayGain = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CalculateReplayGain] boolValue];
+    const auto calculateReplayGain =
+          [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CalculateReplayGain] boolValue];
     result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);

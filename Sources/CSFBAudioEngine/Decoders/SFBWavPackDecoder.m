@@ -278,61 +278,52 @@ static int can_seek_callback(void *id) {
         // 255:         Present but unknown or unused channel
 
         for (int i = 0; i < channelCount; ++i) {
-            switch (identities[i]) {
-            case 1 ... 18:
-                labels[i] = identities[i];
-                break;
+            unsigned char ident = identities[i];
+            if ((ident >= 1 && ident <= 18) || (ident >= 33 && ident <= 44) || (ident >= 200 && ident <= 207)) {
+                labels[i] = ident;
+            } else if (ident >= 221 && ident <= 224) {
+                labels[i] = ident + 80;
+            } else {
+                switch (ident) {
+                case 30:
+                    labels[i] = kAudioChannelLabel_Left;
+                    break;
+                case 31:
+                    labels[i] = kAudioChannelLabel_Right;
+                    break;
 
-            case 30:
-                labels[i] = kAudioChannelLabel_Left;
-                break;
-            case 31:
-                labels[i] = kAudioChannelLabel_Right;
-                break;
+                    // FIXME: amio mappings are approximate (or possibly incorrect)
+                case 127:
+                    labels[i] = kAudioChannelLabel_VerticalHeightLeft;
+                    break;
+                case 128:
+                    labels[i] = kAudioChannelLabel_VerticalHeightRight;
+                    break;
+                case 138:
+                    labels[i] = kAudioChannelLabel_LeftBottom;
+                    break;
+                case 139:
+                    labels[i] = kAudioChannelLabel_CenterBottom;
+                    break;
+                case 140:
+                    labels[i] = kAudioChannelLabel_RightBottom;
+                    break;
+                case 141:
+                    labels[i] = kAudioChannelLabel_LeftEdgeOfScreen;
+                    break;
+                case 142:
+                    labels[i] = kAudioChannelLabel_RightEdgeOfScreen;
+                    break;
 
-            case 33 ... 44:
-                labels[i] = identities[i];
-                break;
+                case 255:
+                    labels[i] = kAudioChannelLabel_Unknown;
+                    break;
 
-                // FIXME: amio mappings are approximate (or possible incorrect)
-            case 127:
-                labels[i] = kAudioChannelLabel_VerticalHeightLeft;
-                break;
-            case 128:
-                labels[i] = kAudioChannelLabel_VerticalHeightRight;
-                break;
-            case 138:
-                labels[i] = kAudioChannelLabel_LeftBottom;
-                break;
-            case 139:
-                labels[i] = kAudioChannelLabel_CenterBottom;
-                break;
-            case 140:
-                labels[i] = kAudioChannelLabel_RightBottom;
-                break;
-            case 141:
-                labels[i] = kAudioChannelLabel_LeftEdgeOfScreen;
-                break;
-            case 142:
-                labels[i] = kAudioChannelLabel_RightEdgeOfScreen;
-                break;
-
-            case 200 ... 207:
-                labels[i] = identities[i];
-                break;
-
-            case 221 ... 224:
-                labels[i] = identities[i] + 80;
-                break;
-
-            case 255:
-                labels[i] = kAudioChannelLabel_Unknown;
-                break;
-
-            default:
-                os_log_error(gSFBAudioDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
-                labels[i] = kAudioChannelLabel_Unused;
-                break;
+                default:
+                    os_log_error(gSFBAudioDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
+                    labels[i] = kAudioChannelLabel_Unused;
+                    break;
+                }
             }
         }
 
