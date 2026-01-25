@@ -128,7 +128,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     }
 
     if (_estimatedFramesToEncode > std::numeric_limits<TTAuint32>::max()) {
-        os_log_error(gSFBAudioEncoderLog, "True Audio encoding only supports up to %u samples",
+        os_log_error(gSFBAudioEncoderLog, "True Audio encoding only supports up to %u frames",
                      std::numeric_limits<TTAuint32>::max());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
