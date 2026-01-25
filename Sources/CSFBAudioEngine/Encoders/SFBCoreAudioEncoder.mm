@@ -359,7 +359,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     AudioFileTypeID fileType = 0;
     if (NSNumber *fileTypeSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFileTypeID];
-        fileTypeSetting) {
+        fileTypeSetting != nil) {
         fileType = static_cast<AudioFileTypeID>(fileTypeSetting.unsignedIntValue);
     } else {
         auto typesForExtension = typeIDsForExtension(_outputSource.url.pathExtension);
@@ -368,7 +368,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                          "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set and extension \"%{public}@\" has "
                          "no known AudioFileTypeID",
                          _outputSource.url.pathExtension);
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
                       NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
@@ -391,7 +391,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     AudioFormatID formatID = 0;
     if (NSNumber *formatIDSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatID];
-        formatIDSetting) {
+        formatIDSetting != nil) {
         formatID = static_cast<AudioFormatID>(formatIDSetting.unsignedIntValue);
     } else {
         auto availableFormatIDs = formatIDsForFileTypeID(fileType, true);
@@ -400,7 +400,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                          "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set and file type '%{public}.4s' has no "
                          "known AudioFormatID",
                          SFBCStringForOSType(fileType));
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is an unsupported audio format.", @""), @{
@@ -428,7 +428,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     UInt32 formatFlags = 0;
     if (NSNumber *formatFlagsSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags];
-        formatFlagsSetting) {
+        formatFlagsSetting != nil) {
         formatFlags = static_cast<UInt32>(formatFlagsSetting.unsignedIntValue);
     } else {
         os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatFlags is not set; mFormatFlags "
@@ -437,7 +437,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     UInt32 bitsPerChannel = 0;
     if (NSNumber *bitsPerChannelSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel];
-        bitsPerChannelSetting) {
+        bitsPerChannelSetting != nil) {
         bitsPerChannel = static_cast<UInt32>(bitsPerChannelSetting.unsignedIntValue);
     } else {
         os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; "
@@ -487,7 +487,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
         }
         return NO;
@@ -500,7 +500,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
         }
         return NO;
@@ -514,7 +514,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         os_log_error(gSFBAudioEncoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
                      result, SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
         }
         return NO;
@@ -529,7 +529,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                   gSFBAudioEncoderLog,
                   "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientChannelLayout) failed: %d '%{public}.4s'",
                   result, SFBCStringForOSType(result));
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
             }
             return NO;
@@ -538,7 +538,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     if (NSDictionary *audioConverterPropertySettings =
               [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
-        audioConverterPropertySettings) {
+        audioConverterPropertySettings != nil) {
         AudioConverterRef audioConverter = nullptr;
         UInt32 size = sizeof(audioConverter);
         result = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);
@@ -546,13 +546,13 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
             os_log_error(gSFBAudioEncoderLog,
                          "ExtAudioFileGetProperty (kExtAudioFileProperty_AudioConverter) failed: %d '%{public}.4s'",
                          result, SFBCStringForOSType(result));
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
             }
             return NO;
         }
 
-        if (audioConverter) {
+        if (audioConverter != nullptr) {
             for (NSNumber *key in audioConverterPropertySettings) {
                 AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
                 switch (propertyID) {
@@ -585,7 +585,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                     os_log_error(gSFBAudioEncoderLog,
                                  "AudioConverterSetProperty ('%{public}.4s') failed: %d '%{public}.4s'",
                                  SFBCStringForOSType(propertyID), result, SFBCStringForOSType(result));
-                    if (error) {
+                    if (error != nullptr) {
                         *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
                     }
                     return NO;
@@ -601,7 +601,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                       gSFBAudioEncoderLog,
                       "ExtAudioFileSetProperty (kExtAudioFileProperty_ConverterConfig) failed: %d '%{public}.4s'",
                       result, SFBCStringForOSType(result));
-                if (error) {
+                if (error != nullptr) {
                     *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
                 }
                 return NO;
@@ -653,7 +653,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrite failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
         }
         return NO;

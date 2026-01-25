@@ -720,7 +720,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -745,7 +745,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     auto chunks = parseDSDIFF(_inputSource);
     if (!chunks) {
         os_log_error(gSFBDSDDecoderLog, "Error parsing file");
-        if (error) {
+        if (error != nullptr) {
             *error = createInvalidDSDIFFFileError(_inputSource.url);
         }
         return NO;
@@ -757,7 +757,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 
     if (!propertyChunk || !sampleRateChunk || !channelsChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
-        if (error) {
+        if (error != nullptr) {
             *error = createInvalidDSDIFFFileError(_inputSource.url);
         }
         return NO;
@@ -817,7 +817,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->localChunks_['DSD ']);
     if (!soundDataChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
-        if (error) {
+        if (error != nullptr) {
             *error = createInvalidDSDIFFFileError(_inputSource.url);
         }
         return NO;
@@ -891,7 +891,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         if (bytesRead != bytesToRead) {
             os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %ld bytes, got %ld",
                          static_cast<long>(bytesToRead), bytesRead);
-            if (error) {
+            if (error != nullptr) {
                 *error = createInvalidDSDIFFFileError(_inputSource.url);
             }
             return NO;

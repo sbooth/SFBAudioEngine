@@ -43,7 +43,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBOggSpeexDetectionSize skipID3v2Tag:NO error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -60,7 +60,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
 
         TagLib::Ogg::Speex::File file(&stream);
         if (!file.isValid()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @""), @{
@@ -92,13 +92,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Ogg Speex" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties()) {
+        if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag()) {
-            [metadata addMetadataFromTagLibXiphComment:file.tag()];
+        if (const auto *tag = file.tag(); tag != nullptr) {
+            [metadata addMetadataFromTagLibXiphComment:tag];
         }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
@@ -107,7 +107,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading Ogg Speex properties and metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
@@ -120,7 +120,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
@@ -137,7 +137,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
 
         TagLib::Ogg::Speex::File file(&stream, false);
         if (!file.isValid()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @""), @{
@@ -153,7 +153,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
         sfb::setXiphCommentFromMetadata(self.metadata, file.tag());
 
         if (!file.save()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
@@ -169,7 +169,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggSpeex = @"org.sbooth.Audio
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error writing Ogg Speex metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
