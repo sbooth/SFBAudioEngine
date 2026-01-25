@@ -392,7 +392,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self,
+    return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
                                       [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];
 }
 

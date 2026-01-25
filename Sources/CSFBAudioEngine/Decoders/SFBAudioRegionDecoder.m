@@ -381,7 +381,8 @@
 - (NSString *)description {
     return [NSString
           stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %ld>",
-                           [self class], self, _decoder, _startFrame, _frameLength, (long)_repeatCount];
+                           [self class], (__bridge void *)self, _decoder, _startFrame, _frameLength,
+                           (long)_repeatCount];
 }
 
 @end
