@@ -388,10 +388,9 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         asbd.mBytesPerFrame = asbd.mBytesPerPacket / asbd.mFramesPerPacket;
 
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
-    }
-    // For all other formats convert to the canonical Core Audio format
-    else {
-        if (channelLayout) {
+    } else {
+        // For all other formats convert to the canonical Core Audio format
+        if (channelLayout != nil) {
             _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                                  sampleRate:format.mSampleRate
                                                                 interleaved:NO
