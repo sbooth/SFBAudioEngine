@@ -264,8 +264,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     if (NSNumber *compressionLevel = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACCompressionLevel];
         compressionLevel != nil) {
         unsigned int value = compressionLevel.unsignedIntValue;
-        switch (value) {
-        case 0 ... 8:
+        if (value >= 0 && value <= 8) {
             if (!FLAC__stream_encoder_set_compression_level(flac.get(), value)) {
                 os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_compression_level failed: %{public}s",
                              FLAC__stream_encoder_get_resolved_state_string(flac.get()));
@@ -276,10 +275,8 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
                 }
                 return NO;
             }
-            break;
-        default:
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring invalid FLAC compression level: %d", value);
-            break;
         }
     }
 

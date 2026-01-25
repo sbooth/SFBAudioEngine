@@ -227,7 +227,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                                  frameCapacity:(AVAudioFrameCount)_speex_frame_size];
 
-    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
+    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity];
+    if (complexity == nil) {
+        complexity = @3;
+    }
     spx_int32_t complexity_value = complexity.intValue;
     speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity_value);
 
@@ -239,7 +242,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     spx_int32_t dtx_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableDTX] boolValue];
     spx_int32_t abr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableABR] boolValue];
 
-    NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexQuality] ?: @-1;
+    NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexQuality];
+    if (quality == nil) {
+        quality = @-1;
+    };
 
     // Encoder mode
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexTargetIsBitrate] boolValue]) {
@@ -304,8 +310,8 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     speex_init_header(&header, (int)_processingFormat.sampleRate, (int)_processingFormat.channelCount, speex_mode);
 
     _speex_frames_per_ogg_packet = 1; // 1-10 default 1
-    NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket] ?: @1;
-    if (framesPerPacket) {
+    NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket];
+    if (framesPerPacket != nil) {
         int intValue = framesPerPacket.intValue;
         if (intValue < 1 || intValue > 10) {
             os_log_error(gSFBAudioEncoderLog, "Invalid Speex frames per packet: %d", intValue);

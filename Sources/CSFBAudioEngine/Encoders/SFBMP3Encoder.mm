@@ -135,8 +135,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     // Noise shaping and psychoacoustics
     if (NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Quality]; quality != nil) {
         auto quality_value = quality.intValue;
-        switch (quality_value) {
-        case 0 ... 9:
+        if (quality_value >= 0 && quality_value <= 9) {
             result = lame_set_quality(gfp.get(), quality_value);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_quality(%d) failed", quality_value);
@@ -147,10 +146,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
                 }
                 return NO;
             }
-            break;
-        default:
+        } else {
             os_log_info(gSFBAudioEncoderLog, "Ignoring invalid LAME quality: %d", quality_value);
-            break;
         }
     }
 

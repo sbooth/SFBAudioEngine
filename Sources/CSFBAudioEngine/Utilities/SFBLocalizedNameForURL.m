@@ -11,8 +11,8 @@ NSString *SFBLocalizedNameForURL(NSURL *url) {
         return nil;
     }
     NSString *localizedName = nil;
-    if (![url getResourceValue:&localizedName forKey:NSURLLocalizedNameKey error:nil]) {
+    if (![url getResourceValue:&localizedName forKey:NSURLLocalizedNameKey error:nil] || localizedName == nil) {
         return url.lastPathComponent;
     }
-    return localizedName ?: url.lastPathComponent;
+    return localizedName;
 }
