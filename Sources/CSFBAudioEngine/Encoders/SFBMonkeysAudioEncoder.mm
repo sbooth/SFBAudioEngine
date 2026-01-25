@@ -251,9 +251,9 @@ class APEIOInterface final : public APE::IAPEIO {
     try {
         int result;
         auto *compressor = CreateIAPECompress(&result);
-        if (!compressor) {
+        if (compressor == nullptr) {
             os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
-            if (error) {
+            if (error != nullptr) {
                 *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
             }
             return NO;
@@ -263,15 +263,15 @@ class APEIOInterface final : public APE::IAPEIO {
         _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return NO;
     }
 
     int compressionLevel = APE_COMPRESSION_LEVEL_NORMAL;
-    SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
-    if (level != nil) {
+    if (SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
+        level != nil) {
         if (level == SFBAudioEncodingSettingsValueAPECompressionLevelFast) {
             compressionLevel = APE_COMPRESSION_LEVEL_FAST;
         } else if (level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal) {
@@ -293,7 +293,7 @@ class APEIOInterface final : public APE::IAPEIO {
                                    static_cast<int>(_sourceFormat.channelCount));
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
@@ -304,7 +304,7 @@ class APEIOInterface final : public APE::IAPEIO {
     result = _compressor->StartEx(_ioInterface.get(), &wve, false, MAX_AUDIO_BYTES_UNKNOWN, compressionLevel);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->StartEx() failed: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
@@ -353,7 +353,7 @@ class APEIOInterface final : public APE::IAPEIO {
     auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -370,7 +370,7 @@ class APEIOInterface final : public APE::IAPEIO {
     auto result = _compressor->Finish(nullptr, 0, 0);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];

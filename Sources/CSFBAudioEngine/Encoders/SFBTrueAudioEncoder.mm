@@ -118,7 +118,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     if (_estimatedFramesToEncode <= 0) {
         os_log_error(gSFBAudioEncoderLog,
                      "True Audio encoding requires an accurate value for _estimatedFramesToEncode");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -145,7 +145,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _encoder->init_set_info(&streamInfo, 0);
     } catch (const tta::tta_exception& e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating True Audio encoder: %d", e.code());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
@@ -154,12 +154,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     }
 
     if (!_encoder) {
-        if (error) {
-            if (error) {
-                *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
-                                             code:SFBAudioEncoderErrorCodeInvalidFormat
-                                         userInfo:nil];
-            }
+        if (error != nullptr) {
+            *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+                                         code:SFBAudioEncoderErrorCodeInvalidFormat
+                                     userInfo:nil];
         }
         return NO;
     }
@@ -206,7 +204,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
     } catch (const tta::tta_exception& e) {
         os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", e.code());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -224,7 +222,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _encoder->finalize();
     } catch (const tta::tta_exception& e) {
         os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", e.code());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];

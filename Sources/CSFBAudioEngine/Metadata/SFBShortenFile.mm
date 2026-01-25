@@ -43,7 +43,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -60,7 +60,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                       NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 
         TagLib::Shorten::File file(&stream);
         if (!file.isValid()) {
-            if (error) {
+            if (error != nullptr) {
                 *error = SFBErrorWithLocalizedDescription(
                       SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
                       NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @""), @{
@@ -92,13 +92,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 
         NSMutableDictionary *propertiesDictionary =
               [NSMutableDictionary dictionaryWithObject:@"Shorten" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties()) {
+        if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
 
         SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-        if (file.tag()) {
-            [metadata addMetadataFromTagLibTag:file.tag()];
+        if (const auto *tag = file.tag(); tag != nullptr) {
+            [metadata addMetadataFromTagLibTag:tag];
         }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
@@ -107,7 +107,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
         return YES;
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioFileLog, "Error reading Shorten properties and metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
@@ -118,7 +118,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioE
 
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing Shorten metadata is not supported");
-    if (error) {
+    if (error != nullptr) {
         *error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                                                   NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
                                                       NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(

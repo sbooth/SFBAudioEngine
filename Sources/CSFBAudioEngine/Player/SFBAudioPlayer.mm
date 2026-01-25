@@ -51,7 +51,8 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
         return nil;
     }
 
-    if ((self = [super init])) {
+    self = [super init];
+    if (self != nil) {
         _player = std::move(player);
         _player->player_ = self;
     }
@@ -64,7 +65,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return NO;
     }
     if (!_player->enqueueDecoder(decoder, true, error)) {
@@ -84,7 +85,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return NO;
     }
     return _player->enqueueDecoder(decoder, false, error);
@@ -93,7 +94,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return NO;
     }
     return _player->enqueueDecoder(decoder, forImmediatePlayback, error);

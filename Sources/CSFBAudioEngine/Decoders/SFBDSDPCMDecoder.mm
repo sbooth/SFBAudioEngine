@@ -158,7 +158,7 @@ void dsd2pcm_reset(dsd2pcm_ctx *ptr) noexcept {
  */
 dsd2pcm_ctx *dsd2pcm_init() noexcept {
     dsd2pcm_ctx *ptr = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
-    if (ptr) {
+    if (ptr != nullptr) {
         dsd2pcm_reset(ptr);
     }
     return ptr;
@@ -178,7 +178,7 @@ void dsd2pcm_destroy(dsd2pcm_ctx *ptr) noexcept {
  */
 dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
     dsd2pcm_ctx *p2 = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
-    if (p2) {
+    if (p2 != nullptr) {
         std::memcpy(p2, ptr, sizeof(dsd2pcm_ctx));
     }
     return p2;
@@ -195,7 +195,7 @@ dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
  * @param dst -- pointer to first float (output)
  * @param dst_stride -- dst pointer increment
  */
-void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, int lsbf,
+void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbf,
                        float *dst, ptrdiff_t dst_stride) noexcept {
     unsigned ffp;
     unsigned i;
@@ -204,7 +204,6 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     unsigned char *p;
     double acc;
     ffp = ptr->fifopos;
-    lsbf = lsbf ? 1 : 0;
     while (samples-- > 0) {
         bite1 = *src & 0xFFU;
         if (lsbf) {
@@ -242,14 +241,14 @@ class DXD {
   public:
     DXD()
       : handle_(dsd2pcm_init()) {
-        if (!handle_) {
+        if (handle_ == nullptr) {
             throw std::bad_alloc();
         }
     }
 
     DXD(DXD const& x)
       : handle_(dsd2pcm_clone(x.handle_)) {
-        if (!handle_) {
+        if (handle_ == nullptr) {
             throw std::bad_alloc();
         }
     }
@@ -289,7 +288,7 @@ class DXD {
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource) {
+    if (inputSource == nil) {
         return nil;
     }
     return [self initWithInputSource:inputSource error:error];
@@ -299,7 +298,7 @@ class DXD {
     NSParameterAssert(inputSource != nil);
 
     SFBDSDDecoder *decoder = [[SFBDSDDecoder alloc] initWithInputSource:inputSource error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return nil;
     }
 
@@ -309,7 +308,8 @@ class DXD {
 - (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error {
     NSParameterAssert(decoder != nil);
 
-    if ((self = [super init])) {
+    self = [super init];
+    if (self != nil) {
         _decoder = decoder;
         // 6 dBFS gain -> powf(10.f, 6.f / 20.f) -> 0x1.fec984p+0 (approximately 1.99526231496888)
         _linearGain = 0x1.fec984p+0;
@@ -341,7 +341,7 @@ class DXD {
     const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
@@ -356,7 +356,7 @@ class DXD {
 
     if (asbd->mSampleRate != kSFBSampleRateDSD64) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
@@ -387,7 +387,7 @@ class DXD {
     } catch (const std::exception& e) {
         os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
         _buffer = nil;
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return NO;

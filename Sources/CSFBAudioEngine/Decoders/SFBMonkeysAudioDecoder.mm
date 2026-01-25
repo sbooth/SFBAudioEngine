@@ -208,7 +208,7 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -233,7 +233,7 @@ class APEIOInterface final : public APE::IAPEIO {
     auto ioInterface = std::make_unique<APEIOInterface>(_inputSource);
     auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
     if (!decompressor) {
-        if (error) {
+        if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
                   SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
                   NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @""), @{
@@ -412,7 +412,7 @@ class APEIOInterface final : public APE::IAPEIO {
     if (_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData),
                                static_cast<int64_t>(frameLength), &blocksRead) != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
@@ -429,7 +429,7 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(frame >= 0);
     if (const auto result = _decompressor->Seek(frame); result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio seek error: %d", result);
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
                                      userInfo:@{NSURLErrorKey : _inputSource.url}];
