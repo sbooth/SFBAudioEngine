@@ -191,7 +191,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         break;
 
     default:
-        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %d", streamInfo.bps);
+        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", streamInfo.bps);
         _decoder.reset();
         if (error != nullptr) {
             *error = SFBErrorWithLocalizedDescription(
