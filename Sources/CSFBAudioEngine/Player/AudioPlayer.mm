@@ -94,11 +94,13 @@ NSString *stringDescribingAVAudioFormat(AVAudioFormat *_Nullable format, bool in
     if (includeChannelLayout) {
         NSString *layoutDescription = CXXCoreAudio::AudioChannelLayoutDescription(format.channelLayout.layout);
         if (layoutDescription == nil) {
-            return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [no channel layout]>", format, formatDescription];
+            return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [no channel layout]>", (__bridge void *)format,
+                                              formatDescription];
         }
-        return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [%@]>", format, formatDescription, layoutDescription];
+        return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [%@]>", (__bridge void *)format, formatDescription,
+                                          layoutDescription];
     }
-    return [NSString stringWithFormat:@"<AVAudioFormat %p: %@>", format, formatDescription];
+    return [NSString stringWithFormat:@"<AVAudioFormat %p: %@>", (__bridge void *)format, formatDescription];
 }
 
 /// Returns the next event identification number
@@ -991,7 +993,8 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
 // MARK: - Debugging
 
 void sfb::AudioPlayer::logProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept {
-    NSMutableString *string = [NSMutableString stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", this];
+    NSMutableString *string = [NSMutableString
+          stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", static_cast<const void *>(this)];
 
     const auto engine = engine_;
     const auto sourceNode = sourceNode_;

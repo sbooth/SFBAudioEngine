@@ -501,8 +501,8 @@ class DXD {
 }
 
 - (NSString *)description {
-    return [NSString
-          stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class], self, _decoder, _linearGain];
+    return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class],
+                                      (__bridge void *)self, _decoder, _linearGain];
 }
 
 @end

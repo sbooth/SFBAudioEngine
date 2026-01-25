@@ -282,7 +282,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+    return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], (__bridge void *)self, _decoder];
 }
 
 @end
