@@ -674,7 +674,10 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
 }
 
 NSError *createInvalidDSDIFFFileError(NSURL *url) {
-    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    NSMutableDictionary *userInfo = [NSMutableDictionary
+          dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")
+                        forKey:NSLocalizedRecoverySuggestionErrorKey];
+
     if (url != nil) {
         userInfo[NSLocalizedDescriptionKey] =
               [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""),
@@ -683,8 +686,6 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     } else {
         userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a valid DSDIFF file.", @"");
     }
-    userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-          NSLocalizedString(@"The file's extension may not match the file's type.", @"");
 
     return [NSError errorWithDomain:SFBDSDDecoderErrorDomain
                                code:SFBDSDDecoderErrorCodeInvalidFormat

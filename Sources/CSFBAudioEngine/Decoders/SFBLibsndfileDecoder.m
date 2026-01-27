@@ -7,7 +7,6 @@
 #import "SFBLibsndfileDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLibsndfileUtilities.h"
 #import "SFBLocalizedNameForURL.h"
 
@@ -359,14 +358,24 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     if (!_sndfile) {
         os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” was not recognized.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(_inputSource.url)];
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The format of the file was not recognized.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -538,9 +547,15 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     if (result) {
         os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
         if (error) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+
+            if (_inputSource.url != nil) {
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            }
+
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -555,9 +570,15 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     if (result == -1) {
         os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
         if (error) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+
+            if (_inputSource.url != nil) {
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            }
+
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+                                     userInfo:userInfo];
         }
         return NO;
     }

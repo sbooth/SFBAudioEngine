@@ -109,7 +109,10 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
         if (error) {
-            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"DSD over PCM requires DSD audio input.", @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
             if (_decoder.inputSource.url != nil) {
                 userInfo[NSLocalizedDescriptionKey] =
                       [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
@@ -118,8 +121,6 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
             } else {
                 userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a DSD file.", @"");
             }
-            userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                  NSLocalizedString(@"DSD over PCM requires DSD audio input.", @"");
 
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInvalidFormat
@@ -131,7 +132,10 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     if (!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
         if (error) {
-            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
             if (_decoder.inputSource.url != nil) {
                 userInfo[NSLocalizedDescriptionKey] = [NSString
                       localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” is not supported.",
@@ -142,8 +146,6 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
                 userInfo[NSLocalizedDescriptionKey] =
                       NSLocalizedString(@"The format of the file is not supported.", @"");
             }
-            userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                  NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @"");
 
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInvalidFormat

@@ -8,7 +8,6 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -72,6 +71,27 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         return -1;
     }
     return length;
+}
+
+NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcept {
+    NSMutableDictionary *userInfo = [NSMutableDictionary
+          dictionaryWithObjectsAndKeys:NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+                                       NSLocalizedRecoverySuggestionErrorKey,
+                                       [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
+                                       NSUnderlyingErrorKey, nil];
+
+    if (url != nil) {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+              localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” was not recognized.", @""),
+                                        SFBLocalizedNameForURL(url)];
+        userInfo[NSURLErrorKey] = url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The format of the file was not recognized.", @"");
+    }
+
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeInvalidFormat
+                           userInfo:userInfo];
 }
 
 } /* namespace */
@@ -253,15 +273,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         if (error != nullptr) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = formatNotRecognizedError(_inputSource.url, result);
         }
         return NO;
     }
@@ -274,15 +286,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         if (error != nullptr) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = formatNotRecognizedError(_inputSource.url, result);
         }
         return NO;
     }
@@ -298,9 +302,13 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain
-                                         code:result
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+
+            if (_inputSource.url != nil) {
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            }
+
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:userInfo];
         }
         return NO;
     }
@@ -319,17 +327,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
             std::free(layout);
 
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                          NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain
-                                                                     code:result
-                                                                 userInfo:nil],
-                          NSURLErrorKey : _inputSource.url
-                      },
-                      SFBLocalizedNameForURL(_inputSource.url));
+                *error = formatNotRecognizedError(_inputSource.url, result);
             }
             return NO;
         }
@@ -408,15 +406,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     // attempting to set kExtAudioFileProperty_ClientDataFormat will segfault
     if (_processingFormat == nil) {
         if (error != nullptr) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = formatNotRecognizedError(_inputSource.url, result);
         }
         return NO;
     }
@@ -428,15 +418,7 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
                      result, SFBCStringForOSType(result));
         if (error != nullptr) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” was not recognized.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = formatNotRecognizedError(_inputSource.url, result);
         }
         return NO;
     }
@@ -500,14 +482,17 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
                      SFBCStringForOSType(result));
         buffer.frameLength = 0;
         if (error != nullptr) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:[NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil]
+                                forKey:NSUnderlyingErrorKey];
+
+            if (_inputSource.url != nil) {
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            }
+
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeDecodingError
-                                     userInfo:@{
-                                         NSURLErrorKey : _inputSource.url,
-                                         NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain
-                                                                                    code:result
-                                                                                userInfo:nil]
-                                     }];
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -524,14 +509,17 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         if (error != nullptr) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:[NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil]
+                                forKey:NSUnderlyingErrorKey];
+
+            if (_inputSource.url != nil) {
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            }
+
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{
-                                         NSURLErrorKey : _inputSource.url,
-                                         NSUnderlyingErrorKey : [NSError errorWithDomain:NSOSStatusErrorDomain
-                                                                                    code:result
-                                                                                userInfo:nil]
-                                     }];
+                                     userInfo:userInfo];
         }
         return NO;
     }

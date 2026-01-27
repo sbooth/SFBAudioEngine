@@ -271,7 +271,12 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (!subclass) {
         os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
         if (error) {
-            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(
+                                             @"The file's extension may be missing or may not match the file's type.",
+                                             @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
             if (inputSource.url) {
                 userInfo[NSLocalizedDescriptionKey] = [NSString
                       localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
@@ -282,8 +287,6 @@ static NSMutableArray *_registeredSubclasses = nil;
                 userInfo[NSLocalizedDescriptionKey] =
                       NSLocalizedString(@"The type of the file could not be determined.", @"");
             }
-            userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                  NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"");
 
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
                                          code:SFBAudioDecoderErrorCodeInvalidFormat
