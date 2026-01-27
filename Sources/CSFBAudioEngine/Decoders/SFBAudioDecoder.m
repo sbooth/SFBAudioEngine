@@ -7,7 +7,6 @@
 #import "SFBAudioDecoder.h"
 
 #import "SFBAudioDecoder+Internal.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -272,14 +271,23 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (!subclass) {
         os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                            @"The file's extension may be missing or may not match the file's type.", @""),
-                      NSURLErrorKey : inputSource.url
-                  },
-                  SFBLocalizedNameForURL(inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+            if (inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(inputSource.url)];
+                userInfo[NSURLErrorKey] = inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The type of the file could not be determined.", @"");
+            }
+            userInfo[NSLocalizedRecoverySuggestionErrorKey] =
+                  NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"");
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return nil;
     }
