@@ -8,7 +8,6 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -675,13 +674,21 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
 }
 
 NSError *createInvalidDSDIFFFileError(NSURL *url) {
-    return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
-                                            NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""), @{
-                                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                                      @"The file's extension may not match the file's type.", @""),
-                                                NSURLErrorKey : url
-                                            },
-                                            SFBLocalizedNameForURL(url));
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    if (url != nil) {
+        userInfo[NSLocalizedDescriptionKey] =
+              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""),
+                                                  SFBLocalizedNameForURL(url)];
+        userInfo[NSURLErrorKey] = url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a valid DSDIFF file.", @"");
+    }
+    userInfo[NSLocalizedRecoverySuggestionErrorKey] =
+          NSLocalizedString(@"The file's extension may not match the file's type.", @"");
+
+    return [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                               code:SFBDSDDecoderErrorCodeInvalidFormat
+                           userInfo:userInfo];
 }
 
 } /* namespace */
