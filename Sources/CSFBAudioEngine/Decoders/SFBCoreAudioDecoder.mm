@@ -302,10 +302,9 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         if (error != nullptr) {
-            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
-
+            NSDictionary *userInfo = nil;
             if (_inputSource.url != nil) {
-                userInfo[NSURLErrorKey] = _inputSource.url;
+                userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
             }
 
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:userInfo];
