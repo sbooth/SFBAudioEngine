@@ -402,6 +402,85 @@ static NSMutableArray *_registeredSubclasses = nil;
     __builtin_unreachable();
 }
 
+- (NSError *)invalidFormatError:(NSString *)formatName {
+    return [self invalidFormatError:formatName
+                 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+}
+
+- (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
+    NSParameterAssert(formatName != nil);
+    NSParameterAssert(recoverySuggestion != nil);
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
+                                                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+    if (_inputSource.url) {
+        userInfo[NSLocalizedDescriptionKey] =
+              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid %@ file.", @""),
+                                                  SFBLocalizedNameForURL(_inputSource.url), formatName];
+        userInfo[NSURLErrorKey] = _inputSource.url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+              localizedStringWithFormat:NSLocalizedString(@"The file is not a valid %@ file.", @""), formatName];
+    }
+
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeInvalidFormat
+                           userInfo:userInfo];
+}
+
+- (NSError *)unsupportedFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
+    NSParameterAssert(formatName != nil);
+    NSParameterAssert(recoverySuggestion != nil);
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
+                                                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+    if (_inputSource.url) {
+        userInfo[NSLocalizedDescriptionKey] =
+              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a supported %@ file.", @""),
+                                                  SFBLocalizedNameForURL(_inputSource.url), formatName];
+        userInfo[NSURLErrorKey] = _inputSource.url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+              localizedStringWithFormat:NSLocalizedString(@"The file is not a supported %@ file.", @""), formatName];
+    }
+
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeUnsupportedFormat
+                           userInfo:userInfo];
+}
+
+- (NSError *)genericInternalError {
+    NSDictionary *userInfo = nil;
+    if (_inputSource.url) {
+        userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeInternalError
+                           userInfo:userInfo];
+}
+
+- (NSError *)genericDecodingError {
+    NSDictionary *userInfo = nil;
+    if (_inputSource.url) {
+        userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeDecodingError
+                           userInfo:userInfo];
+}
+
+- (NSError *)genericSeekError {
+    NSDictionary *userInfo = nil;
+    if (_inputSource.url) {
+        userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeSeekError
+                           userInfo:userInfo];
+}
+
 - (NSString *)description {
     return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
                                       [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];

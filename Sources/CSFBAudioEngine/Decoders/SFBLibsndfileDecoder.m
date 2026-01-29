@@ -534,9 +534,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     default:
         os_log_error(gSFBAudioDecoderLog, "Unknown libsndfile read method: %d", _readMethod);
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeInternalError
-                                     userInfo:nil];
+            *error = [self genericInternalError];
         }
         return NO;
     }
@@ -547,14 +545,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     if (result) {
         os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_inputSource.url) {
-                userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
-            }
-
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeDecodingError
-                                     userInfo:userInfo];
+            *error = [self genericDecodingError];
         }
         return NO;
     }
@@ -569,14 +560,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     if (result == -1) {
         os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_inputSource.url) {
-                userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
-            }
-
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:userInfo];
+            *error = [self genericSeekError];
         }
         return NO;
     }

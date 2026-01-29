@@ -8,7 +8,6 @@
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -342,14 +341,22 @@ class DXD {
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
         if (error != nullptr) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"DSD to PCM conversion requires DSD audio input.", @""),
-                      NSURLErrorKey : _decoder.inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_decoder.inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"DSD to PCM conversion requires DSD audio input.", @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] =
+                      [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
+                                                          SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a DSD file.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -357,14 +364,25 @@ class DXD {
     if (asbd->mSampleRate != kSFBSampleRateDSD64) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
         if (error != nullptr) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @""),
-                      NSURLErrorKey : _decoder.inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_decoder.inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.",
+                                                         @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” is not supported.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The format of the file is not supported.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }

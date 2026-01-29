@@ -6,7 +6,6 @@
 
 #import "SFBModuleDecoder.h"
 
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <dumb/dumb.h>
@@ -246,9 +245,7 @@ static dumb_off_t get_size_callback(void *f) {
     if (!_df) {
         os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeInternalError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericInternalError];
         }
         return NO;
     }
@@ -259,14 +256,7 @@ static dumb_off_t get_size_callback(void *f) {
         _df = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"Module", @"")];
         }
         return NO;
     }
@@ -287,14 +277,7 @@ static dumb_off_t get_size_callback(void *f) {
         _df = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"Module", @"")];
         }
         return NO;
     }

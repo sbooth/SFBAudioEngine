@@ -673,25 +673,6 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
     return parseFormDSDChunk(inputSource, chunkID, chunkDataSize);
 }
 
-NSError *createInvalidDSDIFFFileError(NSURL *url) {
-    NSMutableDictionary *userInfo = [NSMutableDictionary
-          dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")
-                        forKey:NSLocalizedRecoverySuggestionErrorKey];
-
-    if (url != nil) {
-        userInfo[NSLocalizedDescriptionKey] =
-              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""),
-                                                  SFBLocalizedNameForURL(url)];
-        userInfo[NSURLErrorKey] = url;
-    } else {
-        userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a valid DSDIFF file.", @"");
-    }
-
-    return [NSError errorWithDomain:SFBDSDDecoderErrorDomain
-                               code:SFBDSDDecoderErrorCodeInvalidFormat
-                           userInfo:userInfo];
-}
-
 } /* namespace */
 
 @interface SFBDSDIFFDecoder () {
@@ -754,7 +735,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     if (!chunks) {
         os_log_error(gSFBDSDDecoderLog, "Error parsing file");
         if (error != nullptr) {
-            *error = createInvalidDSDIFFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
         }
         return NO;
     }
@@ -766,7 +747,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     if (!propertyChunk || !sampleRateChunk || !channelsChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
         if (error != nullptr) {
-            *error = createInvalidDSDIFFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
         }
         return NO;
     }
@@ -826,7 +807,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     if (!soundDataChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
         if (error != nullptr) {
-            *error = createInvalidDSDIFFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
         }
         return NO;
     }
@@ -900,7 +881,7 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
             os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %ld bytes, got %ld",
                          static_cast<long>(bytesToRead), bytesRead);
             if (error != nullptr) {
-                *error = createInvalidDSDIFFFileError(_inputSource.url);
+                *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
             }
             return NO;
         }

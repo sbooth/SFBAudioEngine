@@ -306,7 +306,6 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
             if (_inputSource.url != nil) {
                 userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
             }
-
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:userInfo];
         }
         return NO;
@@ -481,17 +480,10 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
                      SFBCStringForOSType(result));
         buffer.frameLength = 0;
         if (error != nullptr) {
-            NSMutableDictionary *userInfo = [NSMutableDictionary
-                  dictionaryWithObject:[NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil]
-                                forKey:NSUnderlyingErrorKey];
-
-            if (_inputSource.url != nil) {
-                userInfo[NSURLErrorKey] = _inputSource.url;
-            }
-
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeDecodingError
-                                     userInfo:userInfo];
+            NSError *decodingError = [self genericDecodingError];
+            NSMutableDictionary *userInfo = [decodingError.userInfo mutableCopy];
+            userInfo[NSUnderlyingErrorKey] = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:decodingError.domain code:decodingError.code userInfo:userInfo];
         }
         return NO;
     }
@@ -508,17 +500,10 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
         if (error != nullptr) {
-            NSMutableDictionary *userInfo = [NSMutableDictionary
-                  dictionaryWithObject:[NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil]
-                                forKey:NSUnderlyingErrorKey];
-
-            if (_inputSource.url != nil) {
-                userInfo[NSURLErrorKey] = _inputSource.url;
-            }
-
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:userInfo];
+            NSError *seekError = [self genericSeekError];
+            NSMutableDictionary *userInfo = [seekError.userInfo mutableCopy];
+            userInfo[NSUnderlyingErrorKey] = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:seekError.domain code:seekError.code userInfo:userInfo];
         }
         return NO;
     }
