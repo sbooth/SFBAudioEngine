@@ -83,7 +83,11 @@
     NSParameterAssert(offset >= 0);
     if ((NSUInteger)offset > _data.length) {
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : _url}];
+            NSDictionary *userInfo = nil;
+            if(_url) {
+                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+            }
+            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:userInfo];
         }
         return NO;
     }

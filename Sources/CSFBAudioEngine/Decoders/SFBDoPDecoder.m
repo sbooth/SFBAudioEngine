@@ -8,7 +8,6 @@
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -110,13 +109,22 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                                                      NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
-                                                          NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                                                @"DSD over PCM requires DSD audio input.", @""),
-                                                          NSURLErrorKey : _decoder.inputSource.url
-                                                      },
-                                                      SFBLocalizedNameForURL(_decoder.inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"DSD over PCM requires DSD audio input.", @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url != nil) {
+                userInfo[NSLocalizedDescriptionKey] =
+                      [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
+                                                          SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a DSD file.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -124,14 +132,24 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     if (!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @""),
-                      NSURLErrorKey : _decoder.inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_decoder.inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url != nil) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” is not supported.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The format of the file is not supported.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }

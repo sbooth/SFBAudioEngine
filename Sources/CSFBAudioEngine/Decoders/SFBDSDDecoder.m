@@ -7,7 +7,6 @@
 #import "SFBDSDDecoder.h"
 
 #import "SFBDSDDecoder+Internal.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -265,23 +264,38 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    if (subclass && (self = [[subclass alloc] init])) {
-        _inputSource = inputSource;
-        os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
-        return self;
+    if (!subclass) {
+        os_log_debug(gSFBDSDDecoderLog, "Unable to determine content type for %{public}@", inputSource);
+        if (error) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+            if (inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(inputSource.url)];
+                userInfo[NSURLErrorKey] = inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The type of the file could not be determined.", @"");
+            }
+            userInfo[NSLocalizedRecoverySuggestionErrorKey] =
+                  NSLocalizedString(@"The file's extension may be missing or may not match the file's type.", @"");
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
+        }
+        return nil;
     }
 
-    if (error) {
-        *error = SFBErrorWithLocalizedDescription(
-              SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
-              NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
-                  NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                        @"The file's extension may be missing or may not match the file's type.", @""),
-                  NSURLErrorKey : _inputSource.url
-              },
-              SFBLocalizedNameForURL(_inputSource.url));
+    if ((self = [[subclass alloc] init])) {
+        _inputSource = inputSource;
+#if DEBUG
+        os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
+#endif /* DEBUG */
     }
-    return nil;
+
+    return self;
 }
 
 - (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName {
