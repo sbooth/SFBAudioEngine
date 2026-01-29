@@ -8,7 +8,6 @@
 
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <taglib/s3mfile.h>
@@ -51,16 +50,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-                      NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not "
-                                                  @"have appropriate permissions.",
-                                                  @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+                *error = [self genericOpenForReadingError];
             }
             return NO;
         }
@@ -68,14 +58,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
         TagLib::S3M::File file(&stream);
         if (!file.isValid()) {
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The file “%@” is not a valid Scream Tracker 3 module.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+                *error = [self genericInvalidFormatError:NSLocalizedString(@"Scream Tracker 3 module", @"")];
             }
             return NO;
         }
@@ -111,14 +94,10 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing Scream Tracker 3 module metadata is not supported");
     if (error != nullptr) {
-        *error = SFBErrorWithLocalizedDescription(
-              SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-              NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
-                  NSLocalizedRecoverySuggestionErrorKey :
-                        NSLocalizedString(@"Writing Scream Tracker 3 metadata is not supported.", @""),
-                  NSURLErrorKey : self.url
-              },
-              SFBLocalizedNameForURL(self.url));
+        *error =
+              [self saveErrorWithRecoverySuggestion:NSLocalizedString(
+                                                          @"Writing Scream Tracker 3 module metadata is not supported.",
+                                                          @"")];
     }
     return NO;
 }

@@ -7,7 +7,6 @@
 #import "SFBDSDDecoder.h"
 
 #import "SFBDSDDecoder+Internal.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -265,23 +264,41 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    if (subclass && (self = [[subclass alloc] init])) {
-        _inputSource = inputSource;
-        os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
-        return self;
+    if (!subclass) {
+        os_log_debug(gSFBDSDDecoderLog, "Unable to determine content type for %{public}@", inputSource);
+        if (error) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(
+                                             @"The file's extension may be missing or may not match the file's type.",
+                                             @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(inputSource.url)];
+                userInfo[NSURLErrorKey] = inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The type of the file could not be determined.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
+        }
+        return nil;
     }
 
-    if (error) {
-        *error = SFBErrorWithLocalizedDescription(
-              SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
-              NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
-                  NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                        @"The file's extension may be missing or may not match the file's type.", @""),
-                  NSURLErrorKey : _inputSource.url
-              },
-              SFBLocalizedNameForURL(_inputSource.url));
+    if ((self = [[subclass alloc] init])) {
+        _inputSource = inputSource;
+#if DEBUG
+        os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
+#endif /* DEBUG */
     }
-    return nil;
+
+    return self;
 }
 
 - (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName {
@@ -381,6 +398,33 @@ static NSMutableArray *_registeredSubclasses = nil;
 - (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error {
     [self doesNotRecognizeSelector:_cmd];
     __builtin_unreachable();
+}
+
+- (NSError *)invalidFormatError:(NSString *)formatName {
+    return [self invalidFormatError:formatName
+                 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+}
+
+- (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
+    NSParameterAssert(formatName != nil);
+    NSParameterAssert(recoverySuggestion != nil);
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
+                                                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+    if (_inputSource.url) {
+        userInfo[NSLocalizedDescriptionKey] =
+              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid %@ file.", @""),
+                                                  SFBLocalizedNameForURL(_inputSource.url), formatName];
+        userInfo[NSURLErrorKey] = _inputSource.url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+              localizedStringWithFormat:NSLocalizedString(@"The file is not a valid %@ file.", @""), formatName];
+    }
+
+    return [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                               code:SFBDSDDecoderErrorCodeInvalidFormat
+                           userInfo:userInfo];
 }
 
 - (NSString *)description {

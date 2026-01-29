@@ -130,6 +130,22 @@ static void SFBCreateOutputSourceLog(void) {
     __builtin_unreachable();
 }
 
+- (NSError *)posixErrorWithCode:(NSInteger)code {
+    NSDictionary *userInfo = nil;
+    if (_url) {
+        userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
+}
+
+- (NSString *)description {
+    if (_url) {
+        return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
+                                          [[NSFileManager defaultManager] displayNameAtPath:_url.path]];
+    }
+    return [NSString stringWithFormat:@"<%@ %p>", [self class], (__bridge void *)self];
+}
+
 @end
 
 @implementation SFBOutputSource (SFBDataWriting)

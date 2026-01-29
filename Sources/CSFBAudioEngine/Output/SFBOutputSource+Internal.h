@@ -17,6 +17,7 @@ extern os_log_t gSFBOutputSourceLog;
     NSURL *_url;
 }
 - (instancetype)initWithURL:(nullable NSURL *)url NS_DESIGNATED_INITIALIZER;
+- (NSError *)posixErrorWithCode:(NSInteger)code;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -7,7 +7,6 @@
 #import "SFBWavPackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -220,14 +219,7 @@ static int can_seek_callback(void *id) {
     if (!_wpc) {
         os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"WavPack", @"")];
         }
         return NO;
     }
@@ -551,9 +543,7 @@ static int can_seek_callback(void *id) {
     if (!WavpackSeekSample64(_wpc, frame)) {
         os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericSeekError];
         }
         return NO;
     }

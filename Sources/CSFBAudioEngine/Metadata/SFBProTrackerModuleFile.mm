@@ -8,7 +8,6 @@
 
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <taglib/modfile.h>
@@ -50,16 +49,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-                      NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not "
-                                                  @"have appropriate permissions.",
-                                                  @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+                *error = [self genericOpenForReadingError];
             }
             return NO;
         }
@@ -67,14 +57,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
         TagLib::Mod::File file(&stream);
         if (!file.isValid()) {
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The file “%@” is not a valid ProTracker module.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+                *error = [self genericInvalidFormatError:NSLocalizedString(@"ProTracker module", @"")];
             }
             return NO;
         }
@@ -108,14 +91,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing ProTracker module metadata is not supported");
     if (error != nullptr) {
-        *error = SFBErrorWithLocalizedDescription(
-              SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-              NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
-                  NSLocalizedRecoverySuggestionErrorKey :
-                        NSLocalizedString(@"Writing ProTracker module metadata is not supported.", @""),
-                  NSURLErrorKey : self.url
-              },
-              SFBLocalizedNameForURL(self.url));
+        *error = [self
+              saveErrorWithRecoverySuggestion:NSLocalizedString(@"Writing ProTracker module metadata is not supported.",
+                                                                @"")];
     }
     return NO;
 }

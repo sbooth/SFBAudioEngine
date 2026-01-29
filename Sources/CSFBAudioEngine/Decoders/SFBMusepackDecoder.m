@@ -7,7 +7,6 @@
 #import "SFBMusepackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -163,14 +162,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     _demux = mpc_demux_init(&_reader);
     if (!_demux) {
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"Musepack", @"")];
         }
         return NO;
     }
@@ -311,9 +303,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         if (mpc_demux_decode(_demux, &frame)) {
             os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
             if (error) {
-                *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                             code:SFBAudioDecoderErrorCodeDecodingError
-                                         userInfo:@{NSURLErrorKey : _inputSource.url}];
+                *error = [self genericDecodingError];
             }
             return NO;
         }
@@ -360,9 +350,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     if (mpc_demux_seek_sample(_demux, (mpc_uint64_t)frame)) {
         os_log_error(gSFBAudioDecoderLog, "Musepack seek error");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericSeekError];
         }
         return NO;
     }
