@@ -20,26 +20,13 @@
 
 @implementation SFBFileInputSource
 
-#if 0
-- (instancetype)initWithURL:(NSURL *)url
-{
-    NSParameterAssert(url != nil);
-    NSParameterAssert(url.isFileURL);
-    return [super initWithURL:url];
-}
-#endif
-
 - (BOOL)openReturningError:(NSError **)error {
     _file = fopen(_url.fileSystemRepresentation, "r");
     if (!_file) {
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_url) {
-                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
-            }
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:userInfo];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -48,11 +35,7 @@
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fstat failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_url) {
-                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
-            }
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:userInfo];
+            *error = [self posixErrorWithCode:err];
         }
 
         if (fclose(_file)) {
@@ -74,11 +57,7 @@
             int err = errno;
             os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
             if (error) {
-                NSDictionary *userInfo = nil;
-                if (_url) {
-                    userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
-                }
-                *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:userInfo];
+                *error = [self posixErrorWithCode:err];
             }
             return NO;
         }
@@ -100,11 +79,7 @@
         int err = errno;
         os_log_error(gSFBInputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_url) {
-                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
-            }
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:userInfo];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -123,11 +98,7 @@
         int err = errno;
         os_log_error(gSFBInputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_url) {
-                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
-            }
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:userInfo];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -154,11 +125,7 @@
         os_log_error(gSFBInputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {
-            NSDictionary *userInfo = nil;
-            if (_url) {
-                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
-            }
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:userInfo];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }

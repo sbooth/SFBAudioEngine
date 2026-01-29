@@ -145,6 +145,14 @@ static void SFBCreateInputSourceLog(void) {
     __builtin_unreachable();
 }
 
+- (NSError *)posixErrorWithCode:(NSInteger)code {
+    NSDictionary *userInfo = nil;
+    if (_url) {
+        userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
+}
+
 - (NSString *)description {
     if (_url) {
         return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
@@ -292,7 +300,7 @@ static void SFBCreateInputSourceLog(void) {
     if (!self.supportsSeeking) {
         if (error) {
             NSDictionary *userInfo = nil;
-            if(_url) {
+            if (_url) {
                 userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
             }
             *error = [NSError errorWithDomain:SFBInputSourceErrorDomain
@@ -333,7 +341,7 @@ static void SFBCreateInputSourceLog(void) {
     if (data.length < length) {
         if (error) {
             NSDictionary *userInfo = nil;
-            if(_url) {
+            if (_url) {
                 userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
             }
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:userInfo];
