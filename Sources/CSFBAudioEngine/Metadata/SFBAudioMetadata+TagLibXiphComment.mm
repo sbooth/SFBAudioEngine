@@ -107,7 +107,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
         } else {
             // Put all unknown tags into the additional metadata
-            [additionalMetadata setObject:value forKey:key];
+            if (key && value) {
+                [additionalMetadata setObject:value forKey:key];
+            }
         }
     }
 
