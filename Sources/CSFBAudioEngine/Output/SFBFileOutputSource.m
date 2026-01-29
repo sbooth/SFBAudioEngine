@@ -18,22 +18,13 @@
 
 @implementation SFBFileOutputSource
 
-#if 0
-- (instancetype)initWithURL:(NSURL *)url
-{
-    NSParameterAssert(url != nil);
-    NSParameterAssert(url.isFileURL);
-    return [super initWithURL:url];
-}
-#endif
-
 - (BOOL)openReturningError:(NSError **)error {
     _file = fopen(_url.fileSystemRepresentation, "w+");
     if (!_file) {
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -49,7 +40,7 @@
             int err = errno;
             os_log_error(gSFBOutputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
             if (error) {
-                *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+                *error = [self posixErrorWithCode:err];
             }
             return NO;
         }
@@ -71,7 +62,7 @@
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -92,7 +83,7 @@
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "fwrite error: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -111,7 +102,7 @@
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -126,7 +117,7 @@
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -135,7 +126,7 @@
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "fseeko(0, SEEK_END) error: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -145,7 +136,7 @@
         int err = errno;
         os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -155,7 +146,7 @@
         os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
@@ -175,7 +166,7 @@
         os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:err userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:err];
         }
         return NO;
     }
