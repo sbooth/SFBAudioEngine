@@ -27,6 +27,10 @@
 
         if (TagLib::APE::Item::Text == item.type()) {
             NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
+            if (key == nil) {
+                continue;
+            }
+
             NSString *value = [NSString stringWithUTF8String:item.toString().toCString(true)];
 
             if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame) {
@@ -46,21 +50,21 @@
             } else if ([key caseInsensitiveCompare:@"TITLE"] == NSOrderedSame) {
                 self.title = value;
             } else if ([key caseInsensitiveCompare:@"TRACKNUMBER"] == NSOrderedSame) {
-                self.trackNumber = @(value.integerValue);
+                self.trackNumber = value != nil ? @(value.integerValue) : nil;
             } else if ([key caseInsensitiveCompare:@"TRACKTOTAL"] == NSOrderedSame) {
-                self.trackTotal = @(value.integerValue);
+                self.trackTotal = value != nil ? @(value.integerValue) : nil;
             } else if ([key caseInsensitiveCompare:@"COMPILATION"] == NSOrderedSame) {
-                self.compilation = @(value.boolValue);
+                self.compilation = value != nil ? @(value.boolValue) : nil;
             } else if ([key caseInsensitiveCompare:@"DISCNUMBER"] == NSOrderedSame) {
-                self.discNumber = @(value.integerValue);
+                self.discNumber = value != nil ? @(value.integerValue) : nil;
             } else if ([key caseInsensitiveCompare:@"DISCTOTAL"] == NSOrderedSame) {
-                self.discTotal = @(value.integerValue);
+                self.discTotal = value != nil ? @(value.integerValue) : nil;
             } else if ([key caseInsensitiveCompare:@"LYRICS"] == NSOrderedSame) {
                 self.lyrics = value;
             } else if ([key caseInsensitiveCompare:@"BPM"] == NSOrderedSame) {
-                self.bpm = @(value.integerValue);
+                self.bpm = value != nil ? @(value.integerValue) : nil;
             } else if ([key caseInsensitiveCompare:@"RATING"] == NSOrderedSame) {
-                self.rating = @(value.integerValue);
+                self.rating = value != nil ? @(value.integerValue) : nil;
             } else if ([key caseInsensitiveCompare:@"ISRC"] == NSOrderedSame) {
                 self.isrc = value;
             } else if ([key caseInsensitiveCompare:@"MCN"] == NSOrderedSame) {
@@ -82,16 +86,16 @@
             } else if ([key caseInsensitiveCompare:@"GROUPING"] == NSOrderedSame) {
                 self.grouping = value;
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_REFERENCE_LOUDNESS"] == NSOrderedSame) {
-                self.replayGainReferenceLoudness = @(value.doubleValue);
+                self.replayGainReferenceLoudness = value != nil ? @(value.doubleValue) : nil;
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_GAIN"] == NSOrderedSame) {
-                self.replayGainTrackGain = @(value.doubleValue);
+                self.replayGainTrackGain = value != nil ? @(value.doubleValue) : nil;
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_PEAK"] == NSOrderedSame) {
-                self.replayGainTrackPeak = @(value.doubleValue);
+                self.replayGainTrackPeak = value != nil ? @(value.doubleValue) : nil;
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_GAIN"] == NSOrderedSame) {
-                self.replayGainAlbumGain = @(value.doubleValue);
+                self.replayGainAlbumGain = value != nil ? @(value.doubleValue) : nil;
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
-                self.replayGainAlbumPeak = @(value.doubleValue);
-            } else {
+                self.replayGainAlbumPeak = value != nil ? @(value.doubleValue) : nil;
+            } else if (value != nil) {
                 // Put all unknown tags into the additional metadata
                 [additionalMetadata setObject:value forKey:key];
             }
