@@ -715,7 +715,11 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     if (!_input.refill() || !_input.setState(entry->byteBufferPosition_, entry->bytesAvailable_, entry->bitBuffer_,
                                              entry->bitBufferPosition_)) {
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EIO userInfo:@{NSURLErrorKey : _inputSource.url}];
+            NSDictionary *userInfo = nil;
+            if (_inputSource.url) {
+                userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+            }
+            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EIO userInfo:userInfo];
         }
         return NO;
     }
