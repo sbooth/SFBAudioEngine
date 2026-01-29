@@ -292,8 +292,8 @@ static NSMutableArray *_registeredSubclasses = nil;
         os_log_debug(gSFBAudioFileLog, "SFBAudioFile unknown format: \"%{public}@\"", formatName);
         if (error) {
             NSDictionary *userInfo = nil;
-            if (_url) {
-                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+            if (url) {
+                userInfo = [NSDictionary dictionaryWithObject:url forKey:NSURLErrorKey];
             }
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeUnknownFormatName
