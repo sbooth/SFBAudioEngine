@@ -7,7 +7,6 @@
 #import "SFBAudioDecoder.h"
 
 #import "SFBAudioDecoder+Internal.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -272,14 +271,26 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (!subclass) {
         os_log_debug(gSFBAudioDecoderLog, "Unable to determine content type for %{public}@", inputSource);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                            @"The file's extension may be missing or may not match the file's type.", @""),
-                      NSURLErrorKey : inputSource.url
-                  },
-                  SFBLocalizedNameForURL(inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(
+                                             @"The file's extension may be missing or may not match the file's type.",
+                                             @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(inputSource.url)];
+                userInfo[NSURLErrorKey] = inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The type of the file could not be determined.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return nil;
     }
@@ -389,6 +400,85 @@ static NSMutableArray *_registeredSubclasses = nil;
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     [self doesNotRecognizeSelector:_cmd];
     __builtin_unreachable();
+}
+
+- (NSError *)invalidFormatError:(NSString *)formatName {
+    return [self invalidFormatError:formatName
+                 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+}
+
+- (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
+    NSParameterAssert(formatName != nil);
+    NSParameterAssert(recoverySuggestion != nil);
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
+                                                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+    if (_inputSource.url) {
+        userInfo[NSLocalizedDescriptionKey] =
+              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid %@ file.", @""),
+                                                  SFBLocalizedNameForURL(_inputSource.url), formatName];
+        userInfo[NSURLErrorKey] = _inputSource.url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+              localizedStringWithFormat:NSLocalizedString(@"The file is not a valid %@ file.", @""), formatName];
+    }
+
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeInvalidFormat
+                           userInfo:userInfo];
+}
+
+- (NSError *)unsupportedFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
+    NSParameterAssert(formatName != nil);
+    NSParameterAssert(recoverySuggestion != nil);
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
+                                                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+    if (_inputSource.url) {
+        userInfo[NSLocalizedDescriptionKey] =
+              [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a supported %@ file.", @""),
+                                                  SFBLocalizedNameForURL(_inputSource.url), formatName];
+        userInfo[NSURLErrorKey] = _inputSource.url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+              localizedStringWithFormat:NSLocalizedString(@"The file is not a supported %@ file.", @""), formatName];
+    }
+
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeUnsupportedFormat
+                           userInfo:userInfo];
+}
+
+- (NSError *)genericInternalError {
+    NSDictionary *userInfo = nil;
+    if (_inputSource.url) {
+        userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeInternalError
+                           userInfo:userInfo];
+}
+
+- (NSError *)genericDecodingError {
+    NSDictionary *userInfo = nil;
+    if (_inputSource.url) {
+        userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeDecodingError
+                           userInfo:userInfo];
+}
+
+- (NSError *)genericSeekError {
+    NSDictionary *userInfo = nil;
+    if (_inputSource.url) {
+        userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                               code:SFBAudioDecoderErrorCodeSeekError
+                           userInfo:userInfo];
 }
 
 - (NSString *)description {

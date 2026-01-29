@@ -7,7 +7,6 @@
 #import "SFBCoreAudioEncoder.h"
 
 #import "SFBCStringForOSType.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <CXXCoreAudio/CAStreamDescription.hpp>
@@ -369,14 +368,25 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                          "no known AudioFileTypeID",
                          _outputSource.url.pathExtension);
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension does not match any known file type.", @""),
-                          NSURLErrorKey : _outputSource.url
-                      },
-                      SFBLocalizedNameForURL(_outputSource.url));
+                NSMutableDictionary *userInfo = [NSMutableDictionary
+                      dictionaryWithObject:NSLocalizedString(
+                                                 @"The file's extension does not match any known file type.", @"")
+                                    forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+                if (_outputSource.url != nil) {
+                    userInfo[NSLocalizedDescriptionKey] = [NSString
+                          localizedStringWithFormat:NSLocalizedString(
+                                                          @"The type of the file “%@” could not be determined.", @""),
+                                                    SFBLocalizedNameForURL(_outputSource.url)];
+                    userInfo[NSURLErrorKey] = _outputSource.url;
+                } else {
+                    userInfo[NSLocalizedDescriptionKey] =
+                          NSLocalizedString(@"The type of the file could not be determined.", @"");
+                }
+
+                *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+                                             code:SFBAudioEncoderErrorCodeInvalidFormat
+                                         userInfo:userInfo];
             }
             return NO;
         }
@@ -401,14 +411,26 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                          "known AudioFormatID",
                          SFBCStringForOSType(fileType));
             if (error != nullptr) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The file “%@” is an unsupported audio format.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                @"There are no supported audio formats for encoding files of this type.", @""),
-                          NSURLErrorKey : _outputSource.url
-                      },
-                      SFBLocalizedNameForURL(_outputSource.url));
+                NSMutableDictionary *userInfo = [NSMutableDictionary
+                      dictionaryWithObject:
+                            NSLocalizedString(@"There are no supported audio formats for encoding files of this type.",
+                                              @"")
+                                    forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+                if (_outputSource.url != nil) {
+                    userInfo[NSLocalizedDescriptionKey] = [NSString
+                          localizedStringWithFormat:NSLocalizedString(@"The file “%@” is an unsupported audio format.",
+                                                                      @""),
+                                                    SFBLocalizedNameForURL(_outputSource.url)];
+                    userInfo[NSURLErrorKey] = _outputSource.url;
+                } else {
+                    userInfo[NSLocalizedDescriptionKey] =
+                          NSLocalizedString(@"The file is an unsupported audio format.", @"");
+                }
+
+                *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+                                             code:SFBAudioEncoderErrorCodeInvalidFormat
+                                         userInfo:userInfo];
             }
             return NO;
         }

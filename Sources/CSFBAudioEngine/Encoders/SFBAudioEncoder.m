@@ -7,7 +7,6 @@
 #import "SFBAudioEncoder.h"
 
 #import "SFBAudioEncoder+Internal.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -179,14 +178,26 @@ static NSMutableArray *_registeredSubclasses = nil;
     if (!subclass) {
         os_log_debug(gSFBAudioEncoderLog, "Unable to determine content type for %{public}@", outputSource);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” could not be determined.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                            @"The file's extension may be missing or may not match the file's type.", @""),
-                      NSURLErrorKey : outputSource.url
-                  },
-                  SFBLocalizedNameForURL(outputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                  dictionaryWithObject:NSLocalizedString(
+                                             @"The file's extension may be missing or may not match the file's type.",
+                                             @"")
+                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (outputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                      localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
+                                                                  @""),
+                                                SFBLocalizedNameForURL(outputSource.url)];
+                userInfo[NSURLErrorKey] = outputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                      NSLocalizedString(@"The type of the file could not be determined.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+                                         code:SFBAudioEncoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return nil;
     }

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -50,7 +50,7 @@
     size_t bytesAvailable = _capacity - _pos;
     if (bytesAvailable == 0) {
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+            *error = [self posixErrorWithCode:EINVAL];
         }
         return NO;
     }
@@ -74,7 +74,7 @@
     size_t remainingCapacity = _capacity - _pos;
     if (remainingCapacity == 0) {
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+            *error = [self posixErrorWithCode:EINVAL];
         }
         return NO;
     }
@@ -112,7 +112,7 @@
 
     if ((NSUInteger)offset > _capacity) {
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+            *error = [self posixErrorWithCode:EINVAL];
         }
         return NO;
     }
