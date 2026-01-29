@@ -181,7 +181,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", streamInfo.bps);
         _decoder.reset();
         if (error != nullptr) {
-            *error = [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+            *error = [self unsupportedFormatError:NSLocalizedString(@"True Audio", @"")
                                recoverySuggestion:NSLocalizedString(@"The audio bit depth is not supported.", @"")];
         }
         return NO;
