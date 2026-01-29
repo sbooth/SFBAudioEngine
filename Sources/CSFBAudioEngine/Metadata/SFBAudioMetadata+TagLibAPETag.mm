@@ -27,6 +27,10 @@
 
         if (TagLib::APE::Item::Text == item.type()) {
             NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
+            if (key == nil) {
+                continue;
+            }
+
             NSString *value = [NSString stringWithUTF8String:item.toString().toCString(true)];
 
             if ([key caseInsensitiveCompare:@"ALBUM"] == NSOrderedSame) {
@@ -91,7 +95,7 @@
                 self.replayGainAlbumGain = @(value.doubleValue);
             } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
                 self.replayGainAlbumPeak = @(value.doubleValue);
-            } else {
+            } else if (value != nil) {
                 // Put all unknown tags into the additional metadata
                 [additionalMetadata setObject:value forKey:key];
             }

@@ -36,6 +36,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         // According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is
         // a safer choice
         NSString *key = [NSString stringWithUTF8String:it.first.toCString(true)];
+        if (key == nil) {
+            continue;
+        }
 
         // Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
         NSString *value = [NSString stringWithUTF8String:it.second.front().toCString(true)];
@@ -105,7 +108,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         } else if ([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame ||
                    [key caseInsensitiveCompare:@"COVERART"] == NSOrderedSame) {
             // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
-        } else {
+        } else if (value != nil) {
             // Put all unknown tags into the additional metadata
             [additionalMetadata setObject:value forKey:key];
         }
