@@ -11,7 +11,7 @@
 
 #import <CXXCoreAudio/AudioRingBuffer.hpp>
 #import <CXXRingBuffer/RingBuffer.hpp>
-#import <CXXUnfairLock/UnfairLock.hpp>
+#import <mtx/UnfairMutex.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -55,13 +55,13 @@ class AudioPlayer final {
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
-    /// Lock protecting `activeDecoders_`
-    mutable CXXUnfairLock::UnfairLock activeDecodersLock_;
+    /// Mutex protecting `activeDecoders_`
+    mutable mtx::UnfairMutex activeDecodersMutex_;
 
     /// Decoders enqueued for playback that are not yet active
     std::deque<Decoder> queuedDecoders_;
-    /// Lock protecting `queuedDecoders_`
-    mutable CXXUnfairLock::UnfairLock queuedDecodersLock_;
+    /// Mutex protecting `queuedDecoders_`
+    mutable mtx::UnfairMutex queuedDecodersMutex_;
 
     /// Thread used for decoding
     std::jthread decodingThread_;
@@ -82,13 +82,13 @@ class AudioPlayer final {
     AVAudioEngine *engine_{nil};
     /// Source node driving the audio processing graph
     AVAudioSourceNode *sourceNode_{nil};
-    /// Lock protecting playback state and processing graph configuration changes
-    mutable CXXUnfairLock::UnfairLock engineLock_;
+    /// Mutex protecting playback state and processing graph configuration changes
+    mutable mtx::UnfairMutex engineMutex_;
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
-    /// Lock protecting `nowPlaying_`
-    mutable CXXUnfairLock::UnfairLock nowPlayingLock_;
+    /// Mutex protecting `nowPlaying_`
+    mutable mtx::UnfairMutex nowPlayingMutex_;
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};
@@ -307,12 +307,12 @@ class AudioPlayer final {
 // MARK: - Implementation -
 
 inline void AudioPlayer::clearDecoderQueue() noexcept {
-    std::lock_guard lock{queuedDecodersLock_};
+    std::lock_guard lock{queuedDecodersMutex_};
     queuedDecoders_.clear();
 }
 
 inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
-    std::lock_guard lock{queuedDecodersLock_};
+    std::lock_guard lock{queuedDecodersMutex_};
     return queuedDecoders_.empty();
 }
 
@@ -345,12 +345,12 @@ inline bool AudioPlayer::isStopped() const noexcept {
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     return firstActiveDecoderState() != nullptr;
 }
 
 inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
-    std::lock_guard lock{nowPlayingLock_};
+    std::lock_guard lock{nowPlayingMutex_};
     return nowPlaying_;
 }
 

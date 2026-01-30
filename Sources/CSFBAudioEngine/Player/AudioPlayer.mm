@@ -481,7 +481,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     CFNotificationCenterRemoveEveryObserver(notificationCenter, this);
 
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         [engine_ stop];
         flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
                                ~static_cast<unsigned int>(Flags::isPlaying),
@@ -534,7 +534,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
     }
 
     // Ensure only one decoder can be enqueued at a time
-    std::lock_guard lock{queuedDecodersLock_};
+    std::lock_guard lock{queuedDecodersMutex_};
 
     if (forImmediatePlayback) {
         queuedDecoders_.clear();
@@ -579,7 +579,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
     auto didStartEngine = false;
     auto wasPlaying = false;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         if (didStartEngine = !engine_.isRunning; didStartEngine) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
@@ -612,7 +612,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
 bool sfb::AudioPlayer::pause() noexcept {
     auto wasPlaying = false;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         if (!engine_.isRunning) {
             return false;
         }
@@ -632,7 +632,7 @@ bool sfb::AudioPlayer::pause() noexcept {
 bool sfb::AudioPlayer::resume() noexcept {
     auto wasPaused = false;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         if (!engine_.isRunning) {
             return false;
         }
@@ -661,7 +661,7 @@ void sfb::AudioPlayer::stop() noexcept {
 bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
     SFBAudioPlayerPlaybackState playbackState;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
 
         // Currently stopped, transition to playing
         if (!engine_.isRunning) {
@@ -702,7 +702,7 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
 
 void sfb::AudioPlayer::reset() noexcept {
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         [engine_ reset];
     }
     clearDecoderQueue();
@@ -722,7 +722,7 @@ bool sfb::AudioPlayer::engineIsRunning() const noexcept {
 }
 
 sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
         return nil;
@@ -733,7 +733,7 @@ sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
 void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
     Decoder previouslyPlaying = nil;
     {
-        std::lock_guard lock{nowPlayingLock_};
+        std::lock_guard lock{nowPlayingMutex_};
         if (nowPlaying_ == nowPlaying) {
             return;
         }
@@ -751,7 +751,7 @@ void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
 // MARK: - Playback Properties
 
 SFBPlaybackPosition sfb::AudioPlayer::playbackPosition() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
         return SFBInvalidPlaybackPosition;
@@ -760,7 +760,7 @@ SFBPlaybackPosition sfb::AudioPlayer::playbackPosition() const noexcept {
 }
 
 SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
@@ -786,7 +786,7 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
 
 bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition,
                                                   SFBPlaybackTime *playbackTime) const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
@@ -824,7 +824,7 @@ bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
 // MARK: - Seeking
 
 bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -849,7 +849,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -871,7 +871,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
 
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -888,7 +888,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -905,7 +905,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
 }
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
         return false;
@@ -980,7 +980,7 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
     assert(block != nil);
 #endif /* DEBUG */
 
-    std::lock_guard lock{engineLock_};
+    std::lock_guard lock{engineMutex_};
     block(engine_);
 
     assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode &&
@@ -1059,7 +1059,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         auto ringBufferStale = false;
 
         {
-            std::lock_guard lock{activeDecodersLock_};
+            std::lock_guard lock{activeDecodersMutex_};
 
             // Process cancellations
             auto signal = false;
@@ -1128,7 +1128,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                           std::memory_order_acq_rel);
 
                     {
-                        std::lock_guard lock{activeDecodersLock_};
+                        std::lock_guard lock{activeDecodersMutex_};
 
                         // Rewind ensuing decoder states if possible to avoid discarding frames
                         for (const auto& nextDecoderState : activeDecoders_) {
@@ -1184,7 +1184,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Get the earliest decoder state that has not completed decoding
         {
-            std::lock_guard lock{activeDecodersLock_};
+            std::lock_guard lock{activeDecodersMutex_};
 
             const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
                 const auto flags = decoderState->flags_.load(std::memory_order_acquire);
@@ -1205,7 +1205,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             {
                 // Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
                 // when transitioning from queued to active
-                std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+                std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
 
                 if (!queuedDecoders_.empty()) {
                     // Remove the first decoder from the decoder queue
@@ -1288,7 +1288,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (formatMismatch) {
                 // Wait until all other decoders complete processing before reconfiguring the graph
                 const auto okToReconfigure = [&] {
-                    std::lock_guard lock{activeDecodersLock_};
+                    std::lock_guard lock{activeDecodersMutex_};
                     return activeDecoders_.size() == 1;
                 }();
 
@@ -1580,7 +1580,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
 
         int64_t deltaNanos;
         {
-            std::lock_guard lock{activeDecodersLock_};
+            std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState()) {
                 deltaNanos = 7.5 * NSEC_PER_MSEC;
                 // Use a longer timeout when idle
@@ -1629,7 +1629,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     Decoder decoder = nil;
     Decoder currentDecoder = nil;
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -1666,7 +1666,7 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
 
     Decoder decoder = nil;
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -1696,7 +1696,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     NSError *error = nil;
     AVAudioFramePosition framesRendered = 0;
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -1724,7 +1724,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     }
 
     const auto hasNoDecoders = [&] {
-        std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+        std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
         return queuedDecoders_.empty() && activeDecoders_.empty();
     }();
 
@@ -1817,7 +1817,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     std::vector<RenderingEventDetails> queuedEvents;
 
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         AVAudioFramePosition framesRemainingToDistribute = framesRendered;
 
@@ -2026,7 +2026,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         }
 
         const auto hasNoDecoders = [&] {
-            std::scoped_lock lock{that->queuedDecodersLock_, that->activeDecodersLock_};
+            std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
             return that->queuedDecoders_.empty() && that->activeDecoders_.empty();
         }();
 
@@ -2058,7 +2058,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 // MARK: - Active Decoder Management
 
 void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     // Cancel all active decoders
     auto signal = false;
@@ -2079,7 +2079,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
 
 sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() const noexcept {
 #if DEBUG
-    activeDecodersLock_.assert_owner();
+    activeDecodersMutex_.assertIsOwner();
 #endif /* DEBUG */
 
     const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
@@ -2107,7 +2107,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 
     // The output hardware’s channel count or sample rate changed
     {
-        std::unique_lock lock{engineLock_};
+        std::unique_lock lock{engineMutex_};
 
         // AVAudioEngine stops itself when a configuration change occurs
         // Flags::engineIsRunning indicates if the engine was running before the interruption
@@ -2265,7 +2265,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 // MARK: - Processing Graph Management
 
 bool sfb::AudioPlayer::stopEngineIfRunning() noexcept {
-    std::lock_guard lock{engineLock_};
+    std::lock_guard lock{engineMutex_};
     if (!engine_.isRunning) {
         return false;
     }
@@ -2284,7 +2284,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
     os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", stringDescribingAVAudioFormat(format));
 
-    std::lock_guard lock{engineLock_};
+    std::lock_guard lock{engineMutex_};
 
     // Even if the engine isn't running, call -stop to force release of any render resources
     // This is necessary when transitioning between formats with different channel counts
