@@ -10,8 +10,8 @@
 #import "SFBAudioPlayer.h"
 
 #import <CXXCoreAudio/AudioRingBuffer.hpp>
-#import <CXXRingBuffer/RingBuffer.hpp>
 #import <mtx/UnfairMutex.hpp>
+#import <spsc/RingBuffer.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -74,9 +74,9 @@ class AudioPlayer final {
     dispatch_semaphore_t eventSemaphore_{nil};
 
     /// Ring buffer communicating events from the decoding thread to the event processing thread
-    CXXRingBuffer::RingBuffer decodingEvents_;
+    spsc::RingBuffer decodingEvents_;
     /// Ring buffer communicating events from the render block to the event processing thread
-    CXXRingBuffer::RingBuffer renderingEvents_;
+    spsc::RingBuffer renderingEvents_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
