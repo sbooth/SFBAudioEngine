@@ -196,7 +196,7 @@ static dumb_off_t get_size_callback(void *f) {
 
         long samplesSize = framesToCopy;
         long framesCopied =
-              duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0F / DUMB_SAMPLE_RATE,
+              duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE,
                              framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
 
         framesProcessed += framesCopied;
@@ -226,7 +226,7 @@ static dumb_off_t get_size_callback(void *f) {
     }
 
     AVAudioFramePosition framesToSkip = frame - _framePosition;
-    duh_sigrenderer_generate_samples(_dsr, 1, 65536.0F / DUMB_SAMPLE_RATE, framesToSkip, NULL);
+    duh_sigrenderer_generate_samples(_dsr, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToSkip, NULL);
     _framePosition += framesToSkip;
 
     return YES;

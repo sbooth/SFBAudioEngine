@@ -10,8 +10,6 @@
 #import "SFBDSDDecoder.h"
 #import "SFBLocalizedNameForURL.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-
 #import <Accelerate/Accelerate.h>
 
 #import <os/log.h>
