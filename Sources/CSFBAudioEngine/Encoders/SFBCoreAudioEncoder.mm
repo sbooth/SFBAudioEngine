@@ -9,8 +9,6 @@
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
 
-#import <CXXCoreAudio/CAStreamDescription.hpp>
-
 #import <AudioToolbox/AudioToolbox.h>
 
 #import <os/log.h>
@@ -466,7 +464,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                                          "mBitsPerChannel will be zero which is probably incorrect");
     }
 
-    CXXCoreAudio::CAStreamDescription format{};
+    AudioStreamBasicDescription format{};
 
     format.mFormatID = formatID;
     format.mFormatFlags = formatFlags;
@@ -475,8 +473,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     format.mChannelsPerFrame = _processingFormat.channelCount;
 
     // Flesh out output structure for PCM formats
-    if (format.IsPCM()) {
-        format.mBytesPerPacket = format.InterleavedChannelCount() * ((format.mBitsPerChannel + 7) / 8);
+    if (format.mFormatID == kAudioFormatLinearPCM) {
+        format.mBytesPerPacket = format.mChannelsPerFrame * ((format.mBitsPerChannel + 7) / 8);
         format.mFramesPerPacket = 1;
         format.mBytesPerFrame = format.mBytesPerPacket / format.mFramesPerPacket;
     }
