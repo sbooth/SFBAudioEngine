@@ -131,9 +131,8 @@ static NSString *_Nullable fourCharCodeString(UInt32 fourcc) {
     if (isPrintableASCII(u.str[0]) && isPrintableASCII(u.str[1]) && isPrintableASCII(u.str[2]) &&
         isPrintableASCII(u.str[3])) {
         return [NSString stringWithFormat:@"'%.4s'", u.str];
-    } else {
-        return [NSString stringWithFormat:@"0x%.02x%.02x%.02x%.02x", u.str[0], u.str[1], u.str[2], u.str[3]];
     }
+    return [NSString stringWithFormat:@"0x%.02x%.02x%.02x%.02x", u.str[0], u.str[1], u.str[2], u.str[3]];
 }
 
 /// Returns the common PCM format described by an AudioStreamBasicDescription structure.
