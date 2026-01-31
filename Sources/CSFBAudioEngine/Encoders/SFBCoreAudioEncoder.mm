@@ -6,6 +6,8 @@
 
 #import "SFBCoreAudioEncoder.h"
 
+#import "AudioFileWrapper.hpp"
+#import "ExtAudioFileWrapper.hpp"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
 
@@ -15,9 +17,6 @@
 
 #import <algorithm>
 #import <vector>
-
-#import <CXXAudioToolbox/AudioFileWrapper.hpp>
-#import <CXXAudioToolbox/ExtAudioFileWrapper.hpp>
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
 
@@ -212,8 +211,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 @interface SFBCoreAudioEncoder () {
   @private
-    CXXAudioToolbox::AudioFileWrapper _af;
-    CXXAudioToolbox::ExtAudioFileWrapper _eaf;
+    audio_toolbox::AudioFileWrapper _af;
+    audio_toolbox::ExtAudioFileWrapper _eaf;
 }
 @end
 
@@ -513,7 +512,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return NO;
     }
 
-    auto af = CXXAudioToolbox::AudioFileWrapper(audioFile);
+    auto af = audio_toolbox::AudioFileWrapper(audioFile);
 
     ExtAudioFileRef extAudioFile;
     result = ExtAudioFileWrapAudioFileID(af, true, &extAudioFile);
@@ -526,7 +525,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return NO;
     }
 
-    auto eaf = CXXAudioToolbox::ExtAudioFileWrapper(extAudioFile);
+    auto eaf = audio_toolbox::ExtAudioFileWrapper(extAudioFile);
 
     result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription),
                                      _processingFormat.streamDescription);

@@ -28,15 +28,6 @@
       }
     },
     {
-      "identity" : "cxxaudiotoolbox",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXAudioToolbox",
-      "state" : {
-        "revision" : "781eb0c5f89607d31fcc7450f44b6f9d81a10340",
-        "version" : "0.2.0"
-      }
-    },
-    {
       "identity" : "cxxcoreaudio",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXCoreAudio",
