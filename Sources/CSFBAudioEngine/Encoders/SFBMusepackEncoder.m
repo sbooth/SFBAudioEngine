@@ -6,7 +6,6 @@
 
 #import "SFBMusepackEncoder.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <mpc/libmpcenc.h>
 #import <mpc/stream_encoder.h>
 

@@ -9,7 +9,6 @@
 #import "NSData+SFBExtensions.h"
 #import "SFBLocalizedNameForURL.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <vorbis/vorbisfile.h>
 
 #import <os/log.h>

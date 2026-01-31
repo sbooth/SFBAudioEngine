@@ -6,7 +6,6 @@
 
 #import "SFBOggVorbisEncoder.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <vorbis/vorbisenc.h>
 
 #import <os/log.h>
@@ -142,7 +141,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             return NO;
         }
     } else {
-        float quality_value = 0.5;
+        float quality_value = 0.5f;
         NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
         if (quality) {
             quality_value = MAX(-0.1F, MIN(1.0F, quality.floatValue));
