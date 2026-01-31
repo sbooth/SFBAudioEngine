@@ -6,6 +6,8 @@
 
 #import "SFBCoreAudioDecoder.h"
 
+#import "AudioFileWrapper.hpp"
+#import "ExtAudioFileWrapper.hpp"
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
@@ -17,9 +19,6 @@
 #import <algorithm>
 #import <cstdlib>
 #import <vector>
-
-#import <CXXAudioToolbox/AudioFileWrapper.hpp>
-#import <CXXAudioToolbox/ExtAudioFileWrapper.hpp>
 
 SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
 
@@ -98,8 +97,8 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 @interface SFBCoreAudioDecoder () {
   @private
-    CXXAudioToolbox::AudioFileWrapper _af;
-    CXXAudioToolbox::ExtAudioFileWrapper _eaf;
+    audio_toolbox::AudioFileWrapper _af;
+    audio_toolbox::ExtAudioFileWrapper _eaf;
 }
 @end
 
@@ -278,7 +277,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         return NO;
     }
 
-    auto af = CXXAudioToolbox::AudioFileWrapper(audioFile);
+    auto af = audio_toolbox::AudioFileWrapper(audioFile);
 
     ExtAudioFileRef extAudioFile;
     result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
@@ -291,7 +290,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         return NO;
     }
 
-    auto eaf = CXXAudioToolbox::ExtAudioFileWrapper(extAudioFile);
+    auto eaf = audio_toolbox::ExtAudioFileWrapper(extAudioFile);
 
     // Query file format
     AudioStreamBasicDescription format{};
