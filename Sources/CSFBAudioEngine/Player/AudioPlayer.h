@@ -9,8 +9,8 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 
-#import <CXXCoreAudio/AudioRingBuffer.hpp>
 #import <mtx/UnfairMutex.hpp>
+#import <spsc/AudioRingBuffer.hpp>
 #import <spsc/RingBuffer.hpp>
 
 #import <AVFAudio/AVFAudio.h>
@@ -51,7 +51,7 @@ class AudioPlayer final {
     using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
     /// Ring buffer transferring audio between the decoding thread and the render block
-    CXXCoreAudio::AudioRingBuffer audioRingBuffer_;
+    spsc::AudioRingBuffer audioRingBuffer_;
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
