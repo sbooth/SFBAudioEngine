@@ -419,10 +419,10 @@ sfb::AudioPlayer::AudioPlayer() {
     // Allocate the audio ring buffer moving audio from the decoder queue to the render block
     if (!audioRingBuffer_.allocate(*(format.streamDescription), ringBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create audio ring buffer: spsc::AudioRingBuffer::Allocate failed with format "
+                     "Unable to create audio ring buffer: spsc::AudioRingBuffer::allocate failed with format "
                      "%{public}@ and capacity %zu",
                      SFBASBDFormatDescription(format.streamDescription), ringBufferCapacity);
-        throw std::runtime_error("spsc::AudioRingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::AudioRingBuffer::allocate failed");
     }
 
     // ========================================
@@ -431,9 +431,9 @@ sfb::AudioPlayer::AudioPlayer() {
     // The decoding event ring buffer is written to by the decoding thread and read from by the event queue
     if (!decodingEvents_.allocate(decodingEventRingBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create decoding event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
+                     "Unable to create decoding event ring buffer: sfb::RingBuffer::allocate failed with capacity %zu",
                      decodingEventRingBufferCapacity);
-        throw std::runtime_error("spsc::RingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
     decodingSemaphore_ = dispatch_semaphore_create(0);
@@ -445,9 +445,9 @@ sfb::AudioPlayer::AudioPlayer() {
     // The rendering event ring buffer is written to by the render block and read from by the event queue
     if (!renderingEvents_.allocate(renderingEventRingBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create rendering event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
+                     "Unable to create rendering event ring buffer: sfb::RingBuffer::allocate failed with capacity %zu",
                      renderingEventRingBufferCapacity);
-        throw std::runtime_error("spsc::RingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
     eventSemaphore_ = dispatch_semaphore_create(0);
