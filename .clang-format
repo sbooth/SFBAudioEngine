@@ -61,7 +61,7 @@ IncludeCategories:
     Priority: 1
   - Regex: '^<SFBAudioEngine/'
     Priority: 1
-  - Regex: '^<(CXXRingBuffer|CXXUnfairLock|CXXCoreAudio|AVFAudioExtensions)/'
+  - Regex: '^<(spsc|mtx|CXXCoreAudio|AVFAudioExtensions)/'
     Priority: 2
   - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
     Priority: 2

@@ -386,11 +386,11 @@ sfb::AudioPlayer::AudioPlayer() {
     // Event Processing Setup
 
     // The decoding event ring buffer is written to by the decoding thread and read from by the event queue
-    if (!decodingEvents_.Allocate(decodingEventRingBufferCapacity)) {
+    if (!decodingEvents_.allocate(decodingEventRingBufferCapacity)) {
         os_log_error(log_,
                      "Unable to create decoding event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
                      decodingEventRingBufferCapacity);
-        throw std::runtime_error("CXXRingBuffer::RingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::RingBuffer::Allocate failed");
     }
 
     decodingSemaphore_ = dispatch_semaphore_create(0);
@@ -400,11 +400,11 @@ sfb::AudioPlayer::AudioPlayer() {
     }
 
     // The rendering event ring buffer is written to by the render block and read from by the event queue
-    if (!renderingEvents_.Allocate(renderingEventRingBufferCapacity)) {
+    if (!renderingEvents_.allocate(renderingEventRingBufferCapacity)) {
         os_log_error(log_,
                      "Unable to create rendering event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
                      renderingEventRingBufferCapacity);
-        throw std::runtime_error("CXXRingBuffer::RingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::RingBuffer::Allocate failed");
     }
 
     eventSemaphore_ = dispatch_semaphore_create(0);
@@ -481,7 +481,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     CFNotificationCenterRemoveEveryObserver(notificationCenter, this);
 
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         [engine_ stop];
         flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
                                ~static_cast<unsigned int>(Flags::isPlaying),
@@ -534,7 +534,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
     }
 
     // Ensure only one decoder can be enqueued at a time
-    std::lock_guard lock{queuedDecodersLock_};
+    std::lock_guard lock{queuedDecodersMutex_};
 
     if (forImmediatePlayback) {
         queuedDecoders_.clear();
@@ -579,7 +579,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
     auto didStartEngine = false;
     auto wasPlaying = false;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         if (didStartEngine = !engine_.isRunning; didStartEngine) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
@@ -612,7 +612,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
 bool sfb::AudioPlayer::pause() noexcept {
     auto wasPlaying = false;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         if (!engine_.isRunning) {
             return false;
         }
@@ -632,7 +632,7 @@ bool sfb::AudioPlayer::pause() noexcept {
 bool sfb::AudioPlayer::resume() noexcept {
     auto wasPaused = false;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         if (!engine_.isRunning) {
             return false;
         }
@@ -661,7 +661,7 @@ void sfb::AudioPlayer::stop() noexcept {
 bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
     SFBAudioPlayerPlaybackState playbackState;
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
 
         // Currently stopped, transition to playing
         if (!engine_.isRunning) {
@@ -702,7 +702,7 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
 
 void sfb::AudioPlayer::reset() noexcept {
     {
-        std::lock_guard lock{engineLock_};
+        std::lock_guard lock{engineMutex_};
         [engine_ reset];
     }
     clearDecoderQueue();
@@ -722,7 +722,7 @@ bool sfb::AudioPlayer::engineIsRunning() const noexcept {
 }
 
 sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
         return nil;
@@ -733,7 +733,7 @@ sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
 void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
     Decoder previouslyPlaying = nil;
     {
-        std::lock_guard lock{nowPlayingLock_};
+        std::lock_guard lock{nowPlayingMutex_};
         if (nowPlaying_ == nowPlaying) {
             return;
         }
@@ -751,7 +751,7 @@ void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
 // MARK: - Playback Properties
 
 SFBPlaybackPosition sfb::AudioPlayer::playbackPosition() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
         return SFBInvalidPlaybackPosition;
@@ -760,7 +760,7 @@ SFBPlaybackPosition sfb::AudioPlayer::playbackPosition() const noexcept {
 }
 
 SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
@@ -786,7 +786,7 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
 
 bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition,
                                                   SFBPlaybackTime *playbackTime) const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
@@ -824,7 +824,7 @@ bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
 // MARK: - Seeking
 
 bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -849,7 +849,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -871,7 +871,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
 
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -888,7 +888,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr || !decoderState->decoder_.supportsSeeking) {
@@ -905,7 +905,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
 }
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
         return false;
@@ -980,7 +980,7 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
     assert(block != nil);
 #endif /* DEBUG */
 
-    std::lock_guard lock{engineLock_};
+    std::lock_guard lock{engineMutex_};
     block(engine_);
 
     assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode &&
@@ -1059,7 +1059,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         auto ringBufferStale = false;
 
         {
-            std::lock_guard lock{activeDecodersLock_};
+            std::lock_guard lock{activeDecodersMutex_};
 
             // Process cancellations
             auto signal = false;
@@ -1080,8 +1080,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 ringBufferStale = true;
 
                 // Submit the decoder canceled event
-                if (decodingEvents_.WriteValues(DecodingEventCommand::canceled, nextEventIdentificationNumber(),
-                                                decoderState->sequenceNumber_)) {
+                if (decodingEvents_.writeAll(DecodingEventCommand::canceled, nextEventIdentificationNumber(),
+                                             decoderState->sequenceNumber_)) {
                     signal = true;
                 } else {
                     os_log_fault(log_, "Error writing decoder canceled event");
@@ -1128,7 +1128,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                           std::memory_order_acq_rel);
 
                     {
-                        std::lock_guard lock{activeDecodersLock_};
+                        std::lock_guard lock{activeDecodersMutex_};
 
                         // Rewind ensuing decoder states if possible to avoid discarding frames
                         for (const auto& nextDecoderState : activeDecoders_) {
@@ -1184,7 +1184,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Get the earliest decoder state that has not completed decoding
         {
-            std::lock_guard lock{activeDecodersLock_};
+            std::lock_guard lock{activeDecodersMutex_};
 
             const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
                 const auto flags = decoderState->flags_.load(std::memory_order_acquire);
@@ -1205,7 +1205,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             {
                 // Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
                 // when transitioning from queued to active
-                std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+                std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
 
                 if (!queuedDecoders_.empty()) {
                     // Remove the first decoder from the decoder queue
@@ -1288,7 +1288,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (formatMismatch) {
                 // Wait until all other decoders complete processing before reconfiguring the graph
                 const auto okToReconfigure = [&] {
-                    std::lock_guard lock{activeDecodersLock_};
+                    std::lock_guard lock{activeDecodersMutex_};
                     return activeDecoders_.size() == 1;
                 }();
 
@@ -1354,9 +1354,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                         // Submit the decoding started event for the initial start only
                         if (!suspended) {
-                            if (decodingEvents_.WriteValues(DecodingEventCommand::started,
-                                                            nextEventIdentificationNumber(),
-                                                            decoderState->sequenceNumber_)) {
+                            if (decodingEvents_.writeAll(DecodingEventCommand::started, nextEventIdentificationNumber(),
+                                                         decoderState->sequenceNumber_)) {
                                 dispatch_semaphore_signal(eventSemaphore_);
                             } else {
                                 os_log_fault(log_, "Error writing decoding started event");
@@ -1391,9 +1390,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                         // Submit the decoding complete event for the first completion only
                         if (!resumed) {
-                            if (decodingEvents_.WriteValues(DecodingEventCommand::complete,
-                                                            nextEventIdentificationNumber(),
-                                                            decoderState->sequenceNumber_)) {
+                            if (decodingEvents_.writeAll(DecodingEventCommand::complete,
+                                                         nextEventIdentificationNumber(),
+                                                         decoderState->sequenceNumber_)) {
                                 dispatch_semaphore_signal(eventSemaphore_);
                             } else {
                                 os_log_fault(log_, "Error writing decoding complete event");
@@ -1463,7 +1462,7 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
         return;
     }
 
-    auto [front, back] = decodingEvents_.GetWriteVector();
+    auto [front, back] = decodingEvents_.writeVector();
 
     const auto frontSize = front.size();
     const auto spaceNeeded = sizeof(DecodingEventCommand) + sizeof(uint64_t) + sizeof(uint32_t) + errorData.length;
@@ -1497,7 +1496,7 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
     write_single_arg(&dataSize, sizeof dataSize);
     write_single_arg(errorData.bytes, errorData.length);
 
-    decodingEvents_.CommitWrite(cursor);
+    decodingEvents_.commitWrite(cursor);
     dispatch_semaphore_signal(eventSemaphore_);
 }
 
@@ -1536,9 +1535,8 @@ OSStatus sfb::AudioPlayer::render(BOOL& isSilence, const AudioTimeStamp& timesta
                          frameCount);
         }
 #endif /* DEBUG */
-        if (!renderingEvents_.WriteValues(RenderingEventCommand::framesRendered, nextEventIdentificationNumber(),
-                                          timestamp.mHostTime, timestamp.mRateScalar,
-                                          static_cast<uint32_t>(framesRead))) {
+        if (!renderingEvents_.writeAll(RenderingEventCommand::framesRendered, nextEventIdentificationNumber(),
+                                       timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead))) {
             os_log_fault(log_, "Error writing frames rendered event");
         }
     } else {
@@ -1559,28 +1557,27 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
     while (!stoken.stop_requested()) {
         DecodingEventCommand decodingEventCommand;
         uint64_t decodingEventIdentificationNumber;
-        auto gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
+        auto gotDecodingEvent = decodingEvents_.readAll(decodingEventCommand, decodingEventIdentificationNumber);
 
         RenderingEventCommand renderingEventCommand;
         uint64_t renderingEventIdentificationNumber;
-        auto gotRenderingEvent = renderingEvents_.ReadValues(renderingEventCommand, renderingEventIdentificationNumber);
+        auto gotRenderingEvent = renderingEvents_.readAll(renderingEventCommand, renderingEventIdentificationNumber);
 
         // Process all pending decoding and rendering events in sequential order
         while (gotDecodingEvent || gotRenderingEvent) {
             if (gotDecodingEvent &&
                 (!gotRenderingEvent || decodingEventIdentificationNumber < renderingEventIdentificationNumber)) {
                 processDecodingEvent(decodingEventCommand);
-                gotDecodingEvent = decodingEvents_.ReadValues(decodingEventCommand, decodingEventIdentificationNumber);
+                gotDecodingEvent = decodingEvents_.readAll(decodingEventCommand, decodingEventIdentificationNumber);
             } else {
                 processRenderingEvent(renderingEventCommand);
-                gotRenderingEvent =
-                      renderingEvents_.ReadValues(renderingEventCommand, renderingEventIdentificationNumber);
+                gotRenderingEvent = renderingEvents_.readAll(renderingEventCommand, renderingEventIdentificationNumber);
             }
         }
 
         int64_t deltaNanos;
         {
-            std::lock_guard lock{activeDecodersLock_};
+            std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState()) {
                 deltaNanos = 7.5 * NSEC_PER_MSEC;
                 // Use a longer timeout when idle
@@ -1621,7 +1618,7 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
 
 bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     uint64_t sequenceNumber;
-    if (!decodingEvents_.ReadValue(sequenceNumber)) {
+    if (!decodingEvents_.read(sequenceNumber)) {
         os_log_error(log_, "Missing decoder sequence number for decoding started event");
         return false;
     }
@@ -1629,7 +1626,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     Decoder decoder = nil;
     Decoder currentDecoder = nil;
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -1659,14 +1656,14 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
 
 bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
     uint64_t sequenceNumber;
-    if (!decodingEvents_.ReadValue(sequenceNumber)) {
+    if (!decodingEvents_.read(sequenceNumber)) {
         os_log_error(log_, "Missing decoder sequence number for decoding complete event");
         return false;
     }
 
     Decoder decoder = nil;
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -1687,7 +1684,7 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
 
 bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     uint64_t sequenceNumber;
-    if (!decodingEvents_.ReadValue(sequenceNumber)) {
+    if (!decodingEvents_.read(sequenceNumber)) {
         os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
         return false;
     }
@@ -1696,7 +1693,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     NSError *error = nil;
     AVAudioFramePosition framesRendered = 0;
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -1724,7 +1721,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     }
 
     const auto hasNoDecoders = [&] {
-        std::scoped_lock lock{queuedDecodersLock_, activeDecodersLock_};
+        std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
         return queuedDecoders_.empty() && activeDecoders_.empty();
     }();
 
@@ -1743,14 +1740,14 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 bool sfb::AudioPlayer::processDecodingErrorEvent() noexcept {
     // The size in bytes of the archived NSError data
     uint32_t dataSize;
-    if (!decodingEvents_.ReadValue(dataSize)) {
+    if (!decodingEvents_.read(dataSize)) {
         os_log_error(log_, "Missing data size for decoding error event");
         return false;
     }
 
     // The archived NSError data
     NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-    if (decodingEvents_.Read(data.mutableBytes, 1, dataSize, false) != dataSize) {
+    if (decodingEvents_.read(data.mutableBytes, 1, dataSize, false) != dataSize) {
         os_log_error(log_, "Missing or incomplete archived NSError for decoding error event");
         return false;
     }
@@ -1789,7 +1786,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     double rateScalar;
     // The number of valid frames rendered
     uint32_t framesRendered;
-    if (!renderingEvents_.ReadValues(hostTime, rateScalar, framesRendered)) {
+    if (!renderingEvents_.readAll(hostTime, rateScalar, framesRendered)) {
         os_log_error(log_, "Missing timestamp or frames rendered for frames rendered event");
         return false;
     }
@@ -1817,7 +1814,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     std::vector<RenderingEventDetails> queuedEvents;
 
     {
-        std::lock_guard lock{activeDecodersLock_};
+        std::lock_guard lock{activeDecodersMutex_};
 
         AVAudioFramePosition framesRemainingToDistribute = framesRendered;
 
@@ -2026,7 +2023,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         }
 
         const auto hasNoDecoders = [&] {
-            std::scoped_lock lock{that->queuedDecodersLock_, that->activeDecodersLock_};
+            std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
             return that->queuedDecoders_.empty() && that->activeDecoders_.empty();
         }();
 
@@ -2058,7 +2055,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 // MARK: - Active Decoder Management
 
 void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
 
     // Cancel all active decoders
     auto signal = false;
@@ -2079,7 +2076,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
 
 sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() const noexcept {
 #if DEBUG
-    activeDecodersLock_.assert_owner();
+    activeDecodersMutex_.assertIsOwner();
 #endif /* DEBUG */
 
     const auto iter = std::ranges::find_if(activeDecoders_, [](const auto& decoderState) {
@@ -2107,7 +2104,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 
     // The output hardware’s channel count or sample rate changed
     {
-        std::unique_lock lock{engineLock_};
+        std::unique_lock lock{engineMutex_};
 
         // AVAudioEngine stops itself when a configuration change occurs
         // Flags::engineIsRunning indicates if the engine was running before the interruption
@@ -2265,7 +2262,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 // MARK: - Processing Graph Management
 
 bool sfb::AudioPlayer::stopEngineIfRunning() noexcept {
-    std::lock_guard lock{engineLock_};
+    std::lock_guard lock{engineMutex_};
     if (!engine_.isRunning) {
         return false;
     }
@@ -2284,7 +2281,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
     os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", stringDescribingAVAudioFormat(format));
 
-    std::lock_guard lock{engineLock_};
+    std::lock_guard lock{engineMutex_};
 
     // Even if the engine isn't running, call -stop to force release of any render resources
     // This is necessary when transitioning between formats with different channel counts
