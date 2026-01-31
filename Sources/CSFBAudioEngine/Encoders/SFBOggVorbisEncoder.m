@@ -144,7 +144,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         float quality_value = 0.5f;
         NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
         if (quality) {
-            quality_value = MAX(-0.1F, MIN(1.0F, quality.floatValue));
+            quality_value = MAX(-0.1f, MIN(1.0f, quality.floatValue));
         }
 
         result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate,
