@@ -6,14 +6,14 @@
 
 #import "AudioPlayer.h"
 
+#import "SFBACLDescription.h"
+#import "SFBASBDFormatDescription.h"
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer+Internal.h"
 #import "SFBCStringForOSType.h"
 #import "host_time.hpp"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
-#import <CXXCoreAudio/CAChannelLayout.hpp>
-#import <CXXCoreAudio/CAStreamDescription.hpp>
 
 #import <objc/runtime.h>
 
@@ -84,15 +84,59 @@ NSString *_Nullable audioDeviceName(AUAudioUnit *_Nonnull audioUnit) noexcept {
 }
 #endif /* !TARGET_OS_IPHONE */
 
+/// Returns true if two AudioChannelLayout structures are equivalent.
+///
+/// Audio channel layouts are considered equivalent if:
+/// 1) Both are null.
+/// 2) One is null and the other has a mono or stereo layout tag.
+/// 3) kAudioFormatProperty_AreChannelLayoutsEquivalent is true.
+/// @note Two equivalent channel layouts may not be equal.
+/// @return true if the AudioChannelLayout structs are equivalent, false if not.
+bool channelLayoutsAreEquivalent(const AudioChannelLayout *lhs, const AudioChannelLayout *rhs) noexcept {
+    if (lhs == nullptr && rhs == nullptr) {
+        return true;
+    }
+
+    if (lhs != nullptr && rhs == nullptr) {
+        if (const auto tag = lhs->mChannelLayoutTag;
+            tag == kAudioChannelLayoutTag_Mono || tag == kAudioChannelLayoutTag_Stereo) {
+            return true;
+        }
+    } else if (lhs == nullptr && rhs != nullptr) {
+        if (const auto tag = rhs->mChannelLayoutTag;
+            tag == kAudioChannelLayoutTag_Mono || tag == kAudioChannelLayoutTag_Stereo) {
+            return true;
+        }
+    }
+
+    if (lhs == nullptr || rhs == nullptr) {
+        return false;
+    }
+
+    const AudioChannelLayout *layouts[] = {
+          lhs,
+          rhs,
+    };
+    UInt32 layoutsEquivalent = 0;
+    UInt32 propertySize = sizeof layoutsEquivalent;
+    OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof layouts,
+                                             static_cast<const void *>(layouts), &propertySize, &layoutsEquivalent);
+    if (result != noErr) {
+        return false;
+    }
+
+    return layoutsEquivalent != 0;
+}
+
 /// Returns a string describing `format`
 NSString *stringDescribingAVAudioFormat(AVAudioFormat *_Nullable format, bool includeChannelLayout = true) noexcept {
     if (format == nil) {
         return nil;
     }
 
-    NSString *formatDescription = CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*format.streamDescription);
+    NSString *formatDescription = SFBASBDFormatDescription(format.streamDescription);
     if (includeChannelLayout) {
-        NSString *layoutDescription = CXXCoreAudio::AudioChannelLayoutDescription(format.channelLayout.layout);
+        NSString *layoutDescription = SFBACLDescription(format.channelLayout.layout);
         if (layoutDescription == nil) {
             return [NSString stringWithFormat:@"<AVAudioFormat %p: %@ [no channel layout]>", (__bridge void *)format,
                                               formatDescription];
@@ -373,13 +417,12 @@ sfb::AudioPlayer::AudioPlayer() {
     }
 
     // Allocate the audio ring buffer moving audio from the decoder queue to the render block
-    if (!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
+    if (!audioRingBuffer_.allocate(*(format.streamDescription), ringBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format "
+                     "Unable to create audio ring buffer: spsc::AudioRingBuffer::allocate failed with format "
                      "%{public}@ and capacity %zu",
-                     CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)),
-                     ringBufferCapacity);
-        throw std::runtime_error("CXXCoreAudio::AudioRingBuffer::Allocate failed");
+                     SFBASBDFormatDescription(format.streamDescription), ringBufferCapacity);
+        throw std::runtime_error("spsc::AudioRingBuffer::allocate failed");
     }
 
     // ========================================
@@ -388,17 +431,17 @@ sfb::AudioPlayer::AudioPlayer() {
     // The decoding event ring buffer is written to by the decoding thread and read from by the event queue
     if (!decodingEvents_.allocate(decodingEventRingBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create decoding event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
+                     "Unable to create decoding event ring buffer: sfb::RingBuffer::allocate failed with capacity %zu",
                      decodingEventRingBufferCapacity);
-        throw std::runtime_error("spsc::RingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
     // The rendering event ring buffer is written to by the render block and read from by the event queue
     if (!renderingEvents_.allocate(renderingEventRingBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create rendering event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
+                     "Unable to create rendering event ring buffer: sfb::RingBuffer::allocate failed with capacity %zu",
                      renderingEventRingBufferCapacity);
-        throw std::runtime_error("spsc::RingBuffer::Allocate failed");
+        throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
     // Create the dispatch queue used for event processing
@@ -557,7 +600,7 @@ bool sfb::AudioPlayer::formatWillBeGaplessIfEnqueued(AVAudioFormat *format) cons
     // Gapless playback requires the same number of channels at the same sample rate with the same channel layout
     auto renderFormat = [sourceNode_ outputFormatForBus:0];
     return format.channelCount == renderFormat.channelCount && format.sampleRate == renderFormat.sampleRate &&
-           CXXCoreAudio::AVAudioChannelLayoutsAreEquivalent(format.channelLayout, renderFormat.channelLayout);
+           channelLayoutsAreEquivalent(format.channelLayout.layout, renderFormat.channelLayout.layout);
 }
 
 // MARK: - Playback Control
@@ -1321,7 +1364,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (const auto flags = flags_.load(std::memory_order_acquire);
                 (flags & static_cast<unsigned int>(Flags::drainRequired)) == 0) {
                 // Decode and write chunks to the ring buffer
-                while (audioRingBuffer_.FreeSpace() >= ringBufferChunkSize) {
+                while (audioRingBuffer_.freeSpace() >= ringBufferChunkSize) {
                     // Decoding started
                     if (const auto flags = decoderState->flags_.load(std::memory_order_acquire);
                         (flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) == 0) {
@@ -1359,10 +1402,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     }
 
                     // Write the decoded audio to the ring buffer for rendering
-                    const auto framesWritten = audioRingBuffer_.Write(buffer.audioBufferList, buffer.frameLength);
+                    const auto framesWritten = audioRingBuffer_.write(buffer.audioBufferList, buffer.frameLength);
                     if (framesWritten != buffer.frameLength) {
                         os_log_fault(log_,
-                                     "Error writing audio to ring buffer: CXXCoreAudio::AudioRingBuffer::Write failed "
+                                     "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed "
                                      "for %d frames",
                                      buffer.frameLength);
                     }
@@ -1416,14 +1459,14 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         } else {
             // Determine timeout based on ring buffer free space
             // Attempt to keep the ring buffer 75% full
-            const auto targetMaxFreeSpace = audioRingBuffer_.Capacity() / 4;
-            const auto freeSpace = audioRingBuffer_.FreeSpace();
+            const auto targetMaxFreeSpace = audioRingBuffer_.capacity() / 4;
+            const auto freeSpace = audioRingBuffer_.freeSpace();
 
             if (freeSpace > targetMaxFreeSpace) {
                 // Minimal timeout if the ring buffer has more free space than desired
                 deltaNanos = 2.5 * NSEC_PER_MSEC;
             } else {
-                const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.Format().mSampleRate;
+                const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.format().mSampleRate;
                 deltaNanos = duration * NSEC_PER_SEC;
             }
         }
@@ -1495,7 +1538,7 @@ OSStatus sfb::AudioPlayer::render(BOOL& isSilence, const AudioTimeStamp& timesta
 
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
     if ((flags & static_cast<unsigned int>(Flags::drainRequired)) == static_cast<unsigned int>(Flags::drainRequired)) {
-        audioRingBuffer_.Drain();
+        audioRingBuffer_.drain();
         flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
             std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
@@ -1515,7 +1558,7 @@ OSStatus sfb::AudioPlayer::render(BOOL& isSilence, const AudioTimeStamp& timesta
     }
 
     // Read audio from the ring buffer
-    if (const auto framesRead = audioRingBuffer_.Read(outputData, frameCount); framesRead > 0) {
+    if (const auto framesRead = audioRingBuffer_.read(outputData, frameCount); framesRead > 0) {
 #if DEBUG
         if (framesRead != frameCount) {
             os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead,
@@ -2288,12 +2331,11 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     [engine_ disconnectNodeOutput:sourceNode_];
 
     // Allocate the ring buffer for the new format
-    if (!audioRingBuffer_.Allocate(*(format.streamDescription), ringBufferCapacity)) {
+    if (!audioRingBuffer_.allocate(*(format.streamDescription), ringBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create audio ring buffer: CXXCoreAudio::AudioRingBuffer::Allocate failed with format "
+                     "Unable to create audio ring buffer: spsc::AudioRingBuffer::allocate failed with format "
                      "%{public}@ and capacity %zu",
-                     CXXCoreAudio::AudioStreamBasicDescriptionFormatDescription(*(format.streamDescription)),
-                     ringBufferCapacity);
+                     SFBASBDFormatDescription(format.streamDescription), ringBufferCapacity);
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                          code:SFBAudioPlayerErrorCodeInternalError
