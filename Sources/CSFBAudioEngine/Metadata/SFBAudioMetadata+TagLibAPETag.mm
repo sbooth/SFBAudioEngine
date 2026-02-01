@@ -121,11 +121,11 @@
                     NSData *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
                                                        length:(binaryData.size() - upos - 1)];
                     SFBAttachedPictureType type = [key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame
-                                                        ? SFBAttachedPictureTypeFrontCover
-                                                        : SFBAttachedPictureTypeBackCover;
+                                                          ? SFBAttachedPictureTypeFrontCover
+                                                          : SFBAttachedPictureTypeBackCover;
                     NSString *description =
-                          [NSString stringWithUTF8String:TagLib::String(binaryData.mid(0, upos), TagLib::String::UTF8)
-                                                               .toCString(true)];
+                            [NSString stringWithUTF8String:TagLib::String(binaryData.mid(0, upos), TagLib::String::UTF8)
+                                                                   .toCString(true)];
                     [self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
                                                                                  type:type
                                                                           description:description]];
@@ -250,7 +250,7 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
 
                 if (attachedPicture.pictureDescription) {
                     data.append(
-                          TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
+                            TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
                 }
                 data.append('\0');
                 data.append(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),

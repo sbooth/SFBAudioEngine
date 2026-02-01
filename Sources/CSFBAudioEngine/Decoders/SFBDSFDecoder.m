@@ -30,7 +30,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     }
 
     *chunkID =
-          (uint32_t)((chunkIDBytes[0] << 24U) | (chunkIDBytes[1] << 16U) | (chunkIDBytes[2] << 8U) | chunkIDBytes[3]);
+            (uint32_t)((chunkIDBytes[0] << 24U) | (chunkIDBytes[1] << 16U) | (chunkIDBytes[2] << 8U) | chunkIDBytes[3]);
     return YES;
 }
 
@@ -73,8 +73,8 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -323,9 +323,9 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     // Metadata chunk is ignored
 
     _buffer = [[AVAudioCompressedBuffer alloc]
-             initWithFormat:_processingFormat
-             packetCapacity:(DSF_BLOCK_SIZE_BYTES_PER_CHANNEL / kSFBBytesPerDSDPacketPerChannel)
-          maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * channelNum)];
+               initWithFormat:_processingFormat
+               packetCapacity:(DSF_BLOCK_SIZE_BYTES_PER_CHANNEL / kSFBBytesPerDSDPacketPerChannel)
+            maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * channelNum)];
     _buffer.packetCount = 0;
 
     return YES;

@@ -70,12 +70,12 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
     if (!converter) {
         if (error) {
             *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioExporterErrorDomain, SFBAudioExporterErrorCodeFileFormatNotSupported,
-                  NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's format is not supported for export.", @"")
-                  },
-                  SFBLocalizedNameForURL(decoder.inputSource.url));
+                    SFBAudioExporterErrorDomain, SFBAudioExporterErrorCodeFileFormatNotSupported,
+                    NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
+                        NSLocalizedRecoverySuggestionErrorKey :
+                                NSLocalizedString(@"The file's format is not supported for export.", @"")
+                    },
+                    SFBLocalizedNameForURL(decoder.inputSource.url));
         }
         return NO;
     }
@@ -101,26 +101,26 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 
     for (;;) {
         AVAudioConverterOutputStatus status =
-              [converter convertToBuffer:outputBuffer
-                                   error:&convertError
-                      withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets,
-                                                          AVAudioConverterInputStatus *outStatus) {
-                          decodeResult = [decoder decodeIntoBuffer:decodeBuffer
-                                                       frameLength:inNumberOfPackets
-                                                             error:&decodeError];
-                          if (!decodeResult) {
-                              *outStatus = AVAudioConverterInputStatus_NoDataNow;
-                              return nil;
-                          }
+                [converter convertToBuffer:outputBuffer
+                                     error:&convertError
+                        withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets,
+                                                            AVAudioConverterInputStatus *outStatus) {
+                            decodeResult = [decoder decodeIntoBuffer:decodeBuffer
+                                                         frameLength:inNumberOfPackets
+                                                               error:&decodeError];
+                            if (!decodeResult) {
+                                *outStatus = AVAudioConverterInputStatus_NoDataNow;
+                                return nil;
+                            }
 
-                          if (decodeBuffer.frameLength == 0) {
-                              *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                              return nil;
-                          }
+                            if (decodeBuffer.frameLength == 0) {
+                                *outStatus = AVAudioConverterInputStatus_EndOfStream;
+                                return nil;
+                            }
 
-                          *outStatus = AVAudioConverterInputStatus_HaveData;
-                          return decodeBuffer;
-                      }];
+                            *outStatus = AVAudioConverterInputStatus_HaveData;
+                            return decodeBuffer;
+                        }];
 
         // Verify decoding was successful
         if (!decodeResult) {

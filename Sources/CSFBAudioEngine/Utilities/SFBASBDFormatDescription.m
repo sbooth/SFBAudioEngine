@@ -116,9 +116,7 @@ static NSString *_Nullable formatIDName(AudioFormatID formatID) {
 }
 
 /// Returns true if c is a printable ASCII character.
-static bool isPrintableASCII(unsigned char c) {
-    return c > 0x1F && c < 0x7F;
-}
+static bool isPrintableASCII(unsigned char c) { return c > 0x1F && c < 0x7F; }
 
 /// Creates a string representation of a four-character code.
 static NSString *_Nullable fourCharCodeString(UInt32 fourcc) {
@@ -152,8 +150,8 @@ static enum CommonPCMFormat identifyCommonPCMFormat(const AudioStreamBasicDescri
         (streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) != kAudioFormatFlagsNativeEndian ||
         ((streamDescription->mBitsPerChannel / 8) *
          (((streamDescription->mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0)
-                ? streamDescription->mChannelsPerFrame
-                : 1)) != streamDescription->mBytesPerFrame) {
+                  ? streamDescription->mChannelsPerFrame
+                  : 1)) != streamDescription->mBytesPerFrame) {
         return none;
     }
 
@@ -190,7 +188,7 @@ NSString *SFBASBDFormatDescription(const AudioStreamBasicDescription *streamDesc
 
     // Channels and sample rate
     NSMutableString *result = [NSMutableString
-          stringWithFormat:@"%u ch @ %g Hz, ", streamDescription->mChannelsPerFrame, streamDescription->mSampleRate];
+            stringWithFormat:@"%u ch @ %g Hz, ", streamDescription->mChannelsPerFrame, streamDescription->mSampleRate];
 
     // Shorter description for common formats
     enum CommonPCMFormat commonPCMFormat = identifyCommonPCMFormat(streamDescription);
@@ -233,13 +231,13 @@ NSString *SFBASBDFormatDescription(const AudioStreamBasicDescription *streamDesc
         }
 
         const UInt32 interleavedChannelCount =
-              ((streamDescription->mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0)
-                    ? streamDescription->mChannelsPerFrame
-                    : 1;
+                ((streamDescription->mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0)
+                        ? streamDescription->mChannelsPerFrame
+                        : 1;
         const UInt32 sampleWordSize =
-              (interleavedChannelCount == 0 || streamDescription->mBytesPerFrame % interleavedChannelCount != 0)
-                    ? 0
-                    : streamDescription->mBytesPerFrame / interleavedChannelCount;
+                (interleavedChannelCount == 0 || streamDescription->mBytesPerFrame % interleavedChannelCount != 0)
+                        ? 0
+                        : streamDescription->mBytesPerFrame / interleavedChannelCount;
 
         // Endianness
         if (sampleWordSize > 1) {

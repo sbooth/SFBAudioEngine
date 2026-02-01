@@ -27,15 +27,13 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayG
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono = @"Mono";
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo = @"Stereo";
 SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo =
-      @"Joint Stereo";
+        @"Joint Stereo";
 
 namespace {
 
 /// A `std::unique_ptr` deleter for `lame_global_flags` objects
 struct lame_global_flags_deleter {
-    void operator()(lame_global_flags *gfp) {
-        lame_close(gfp);
-    }
+    void operator()(lame_global_flags *gfp) { lame_close(gfp); }
 };
 
 using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_global_flags_deleter>;
@@ -317,7 +315,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     const auto calculateReplayGain =
-          [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CalculateReplayGain] boolValue];
+            [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CalculateReplayGain] boolValue];
     result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);
@@ -392,8 +390,8 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     auto result = lame_encode_buffer_interleaved_ieee_float(
-          _gfp.get(), static_cast<const float *>(buffer.audioBufferList->mBuffers[0].mData),
-          static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
+            _gfp.get(), static_cast<const float *>(buffer.audioBufferList->mBuffers[0].mData),
+            static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_buffer_interleaved_ieee_float failed");
         if (error != nullptr) {

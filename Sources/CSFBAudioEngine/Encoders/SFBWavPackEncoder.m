@@ -20,11 +20,11 @@ SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel = @"Compression Level";
 
 SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelFast =
-      @"Fast";
+        @"Fast";
 SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh =
-      @"High";
+        @"High";
 SFBAudioEncodingSettingsValueWavPackCompressionLevel const
-      SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh = @"Very High";
+        SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh = @"Very High";
 
 @interface SFBWavPackEncoder () {
   @package

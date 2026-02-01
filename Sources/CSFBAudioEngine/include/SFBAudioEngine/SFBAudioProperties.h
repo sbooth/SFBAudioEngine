@@ -29,7 +29,7 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;
 
 /// Class providing information on basic audio properties
 NS_SWIFT_NAME(AudioProperties)
-@interface SFBAudioProperties : NSObject<NSCopying>
+@interface SFBAudioProperties : NSObject <NSCopying>
 
 /// Returns an initialized an `SFBAudioProperties` object
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
@@ -37,7 +37,7 @@ NS_SWIFT_NAME(AudioProperties)
 /// Returns an initialized an `SFBAudioProperties` object populated with values from `dictionaryRepresentation`
 /// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAudioPropertiesKey, id> *)dictionaryRepresentation
-      NS_DESIGNATED_INITIALIZER;
+        NS_DESIGNATED_INITIALIZER;
 
 /// The name of the audio format
 @property(nonatomic, nullable, readonly) NSString *formatName;

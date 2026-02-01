@@ -80,8 +80,8 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -119,7 +119,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         _decoder = std::make_unique<tta::tta_decoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
         _decoder->init_get_info(&streamInfo, 0);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", e.code());
         if (error != nullptr) {
             *error = [self genericInternalError];
@@ -161,10 +161,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     processingStreamDescription.mBitsPerChannel = streamInfo.bps;
 
     processingStreamDescription.mBytesPerPacket =
-          ((streamInfo.bps + 7) / 8) * processingStreamDescription.mChannelsPerFrame;
+            ((streamInfo.bps + 7) / 8) * processingStreamDescription.mChannelsPerFrame;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
-          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+            processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
     processingStreamDescription.mReserved = 0;
 
@@ -253,7 +253,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
             auto framesToSkip = std::min(_framesToSkip, frameLength);
             auto bytesToSkip = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
             auto framesSkipped = _decoder->process_stream(
-                  static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
+                    static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
 
             // EOS reached finishing seek
             if (framesSkipped == 0) {
@@ -265,7 +265,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
         auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
         auto framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(
-              static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
+                static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
 
         // EOS
         if (framesRead == 0) {
@@ -276,7 +276,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _framePosition += framesRead;
 
         return YES;
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
         if (error != nullptr) {
             *error = [self genericDecodingError];
@@ -293,7 +293,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
     try {
         _decoder->set_position(seconds, &frame_start);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
         if (error != nullptr) {
             *error = [self genericSeekError];

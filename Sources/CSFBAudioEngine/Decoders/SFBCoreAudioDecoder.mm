@@ -74,15 +74,15 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
 
 NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcept {
     NSMutableDictionary *userInfo = [NSMutableDictionary
-          dictionaryWithObjectsAndKeys:NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                                       NSLocalizedRecoverySuggestionErrorKey,
-                                       [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
-                                       NSUnderlyingErrorKey, nil];
+            dictionaryWithObjectsAndKeys:NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+                                         NSLocalizedRecoverySuggestionErrorKey,
+                                         [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
+                                         NSUnderlyingErrorKey, nil];
 
     if (url != nil) {
         userInfo[NSLocalizedDescriptionKey] = [NSString
-              localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” was not recognized.", @""),
-                                        SFBLocalizedNameForURL(url)];
+                localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” was not recognized.", @""),
+                                          SFBLocalizedNameForURL(url)];
         userInfo[NSURLErrorKey] = url;
     } else {
         userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The format of the file was not recognized.", @"");
@@ -146,9 +146,9 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
                 [supportedPathExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
             } else {
                 os_log_error(
-                      gSFBAudioDecoderLog,
-                      "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'",
-                      result, SFBCStringForOSType(result));
+                        gSFBAudioDecoderLog,
+                        "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'",
+                        result, SFBCStringForOSType(result));
             }
         }
 
@@ -212,8 +212,8 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -335,9 +335,9 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         // ExtAudioFile occasionally returns empty channel layouts; ignore them
         if (channelLayout.channelCount != format.mChannelsPerFrame) {
             os_log_error(
-                  gSFBAudioDecoderLog,
-                  "Channel count mismatch between AudioStreamBasicDescription (%u) and AVAudioChannelLayout (%u)",
-                  format.mChannelsPerFrame, channelLayout.channelCount);
+                    gSFBAudioDecoderLog,
+                    "Channel count mismatch between AudioStreamBasicDescription (%u) and AVAudioChannelLayout (%u)",
+                    format.mChannelsPerFrame, channelLayout.channelCount);
             channelLayout = nil;
         }
     } else {

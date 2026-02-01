@@ -34,8 +34,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -63,7 +63,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
         }
 
         NSMutableDictionary *propertiesDictionary =
-              [NSMutableDictionary dictionaryWithObject:@"Extended Module" forKey:SFBAudioPropertiesKeyFormatName];
+                [NSMutableDictionary dictionaryWithObject:@"Extended Module" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
         self.metadata = metadata;
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error reading extended module properties and metadata: %{public}s", e.what());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
@@ -92,8 +92,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth
     os_log_error(gSFBAudioFileLog, "Writing extended module metadata is not supported");
     if (error != nullptr) {
         *error = [self
-              saveErrorWithRecoverySuggestion:NSLocalizedString(@"Writing extended module metadata is not supported.",
-                                                                @"")];
+                saveErrorWithRecoverySuggestion:NSLocalizedString(@"Writing extended module metadata is not supported.",
+                                                                  @"")];
     }
     return NO;
 }

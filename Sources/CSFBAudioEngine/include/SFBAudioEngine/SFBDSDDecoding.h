@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Protocol defining the interface for audio decoders producing DSD audio
 NS_SWIFT_NAME(DSDDecoding)
-@protocol SFBDSDDecoding<SFBAudioDecoding>
+@protocol SFBDSDDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
 

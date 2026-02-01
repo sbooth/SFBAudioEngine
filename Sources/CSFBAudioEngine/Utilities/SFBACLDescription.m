@@ -282,7 +282,7 @@ NSString *_Nullable channelLayoutTagName(AudioChannelLayoutTag layoutTag) {
 /// This is the value of kAudioFormatProperty_ChannelShortName or kAudioFormatProperty_ChannelName.
 static NSString *_Nullable channelLabelName(AudioChannelLabel channelLabel, BOOL shortName) {
     AudioFormatPropertyID property =
-          shortName ? kAudioFormatProperty_ChannelShortName : kAudioFormatProperty_ChannelName;
+            shortName ? kAudioFormatProperty_ChannelShortName : kAudioFormatProperty_ChannelName;
     CFStringRef channelName = NULL;
     UInt32 dataSize = sizeof channelName;
     OSStatus result = AudioFormatGetProperty(property, sizeof channelLabel, &channelLabel, &dataSize, &channelName);
@@ -303,7 +303,7 @@ static NSString *_Nullable channelLayoutName(const AudioChannelLayout *_Nullable
     }
 
     AudioFormatPropertyID property =
-          simpleName ? kAudioFormatProperty_ChannelLayoutSimpleName : kAudioFormatProperty_ChannelLayoutName;
+            simpleName ? kAudioFormatProperty_ChannelLayoutSimpleName : kAudioFormatProperty_ChannelLayoutName;
     UInt32 layoutSize = offsetof(AudioChannelLayout, mChannelDescriptions) +
                         (channelLayout->mNumberChannelDescriptions * sizeof(AudioChannelDescription));
     CFStringRef layoutName = NULL;
@@ -350,9 +350,9 @@ NSString *SFBACLDescription(const AudioChannelLayout *channelLayout) {
                 }
 
                 NSString *coordinateString =
-                      [NSString stringWithFormat:formatString, desc->mCoordinates[0], desc->mCoordinates[1],
-                                                 desc->mCoordinates[2],
-                                                 (desc->mChannelFlags & kAudioChannelFlags_Meters) ? " m" : ""];
+                        [NSString stringWithFormat:formatString, desc->mCoordinates[0], desc->mCoordinates[1],
+                                                   desc->mCoordinates[2],
+                                                   (desc->mChannelFlags & kAudioChannelFlags_Meters) ? " m" : ""];
 
                 [array addObject:coordinateString];
             } else {
@@ -375,8 +375,8 @@ NSString *SFBACLDescription(const AudioChannelLayout *channelLayout) {
 
     if (channelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
         NSMutableString *result =
-              [NSMutableString stringWithFormat:@"Bitmap %#x (%u ch)", channelLayout->mChannelBitmap,
-                                                __builtin_popcount(channelLayout->mChannelBitmap)];
+                [NSMutableString stringWithFormat:@"Bitmap %#x (%u ch)", channelLayout->mChannelBitmap,
+                                                  __builtin_popcount(channelLayout->mChannelBitmap)];
         if (layoutName) {
             [result appendFormat:@", %@", layoutName];
         }
@@ -384,8 +384,8 @@ NSString *SFBACLDescription(const AudioChannelLayout *channelLayout) {
     }
 
     NSMutableString *result = [NSMutableString
-          stringWithFormat:@"%@ (0x%x, %u ch)", channelLayoutTagName(channelLayout->mChannelLayoutTag),
-                           channelLayout->mChannelLayoutTag, channelLayout->mChannelLayoutTag & 0xffff];
+            stringWithFormat:@"%@ (0x%x, %u ch)", channelLayoutTagName(channelLayout->mChannelLayoutTag),
+                             channelLayout->mChannelLayoutTag, channelLayout->mChannelLayoutTag & 0xffff];
     if (layoutName) {
         [result appendFormat:@", %@", layoutName];
     }

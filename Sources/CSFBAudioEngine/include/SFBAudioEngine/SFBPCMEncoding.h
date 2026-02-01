@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Protocol defining the interface for audio encoders consuming PCM audio
 NS_SWIFT_NAME(PCMEncoding)
-@protocol SFBPCMEncoding<SFBAudioEncoding>
+@protocol SFBPCMEncoding <SFBAudioEncoding>
 
 #pragma mark - Position and Length Information
 

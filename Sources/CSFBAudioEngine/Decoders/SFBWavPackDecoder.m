@@ -24,10 +24,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat = @"WavpackGetFileFormat";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamples = @"WavpackGetNumSamples64";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame =
-      @"WavpackGetNumSamplesInFrame";
+        @"WavpackGetNumSamplesInFrame";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackSampleRate = @"WavpackGetSampleRate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate =
-      @"WavpackGetNativeSampleRate";
+        @"WavpackGetNativeSampleRate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample = @"WavpackGetBitsPerSample";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample = @"WavpackGetBytesPerSample";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels = @"WavpackGetNumChannels";
@@ -175,8 +175,8 @@ static int can_seek_callback(void *id) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -230,9 +230,9 @@ static int can_seek_callback(void *id) {
     int channelMask = WavpackGetChannelMask(_wpc);
     if (channelMask) {
         AudioChannelLayout layout = {
-              .mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
-              .mChannelBitmap = channelMask,
-              .mNumberChannelDescriptions = 0,
+                .mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
+                .mChannelBitmap = channelMask,
+                .mNumberChannelDescriptions = 0,
         };
 
         AudioChannelLayoutTag tag = 0;
@@ -336,7 +336,7 @@ static int can_seek_callback(void *id) {
 
         processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
         processingStreamDescription.mFormatFlags =
-              kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+                kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
         // Align high because Apple's AudioConverter doesn't handle low alignment
         if (WavpackGetBitsPerSample(_wpc) != 32) {
@@ -350,7 +350,7 @@ static int can_seek_callback(void *id) {
         processingStreamDescription.mBytesPerPacket = 4;
         processingStreamDescription.mFramesPerPacket = 1;
         processingStreamDescription.mBytesPerFrame =
-              processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+                processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
                                                                channelLayout:channelLayout];

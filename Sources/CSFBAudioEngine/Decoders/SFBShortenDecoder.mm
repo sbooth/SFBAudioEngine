@@ -78,13 +78,10 @@ constexpr auto seekHeaderSizeBytes = 12;
 constexpr auto seekTrailerSizeBytes = 12;
 constexpr auto seekEntrySizeBytes = 80;
 
-constexpr int32_t roundedShiftDown(int32_t x, int k) noexcept {
-    return (k == 0) ? x : (x >> (k - 1)) >> 1;
-}
+constexpr int32_t roundedShiftDown(int32_t x, int k) noexcept { return (k == 0) ? x : (x >> (k - 1)) >> 1; }
 
 /// Returns a two-dimensional `rows` x `cols` array using one allocation from `malloc`
-template <typename T>
-T **allocateContiguous2DArray(size_t rows, size_t cols) noexcept {
+template <typename T> T **allocateContiguous2DArray(size_t rows, size_t cols) noexcept {
     T **result = static_cast<T **>(std::malloc((rows * sizeof(T *)) + (rows * cols * sizeof(T))));
     if (!result) {
         return nullptr;
@@ -101,31 +98,27 @@ class VariableLengthInput {
   public:
     // An entry i has the lowest i bits set
     static constexpr uint32_t maskTable_[] = {
-          0x0,       0x1,       0x3,        0x7,        0xf,        0x1f,      0x3f,     0x7f,      0xff,
-          0x1ff,     0x3ff,     0x7ff,      0xfff,      0x1fff,     0x3fff,    0x7fff,   0xffff,    0x1ffff,
-          0x3ffff,   0x7ffff,   0xfffff,    0x1fffff,   0x3fffff,   0x7fffff,  0xffffff, 0x1ffffff, 0x3ffffff,
-          0x7ffffff, 0xfffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff};
+            0x0,       0x1,       0x3,        0x7,        0xf,        0x1f,      0x3f,     0x7f,      0xff,
+            0x1ff,     0x3ff,     0x7ff,      0xfff,      0x1fff,     0x3fff,    0x7fff,   0xffff,    0x1ffff,
+            0x3ffff,   0x7ffff,   0xfffff,    0x1fffff,   0x3fffff,   0x7fffff,  0xffffff, 0x1ffffff, 0x3ffffff,
+            0x7ffffff, 0xfffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff};
 
     /// Creates an empty `VariableLengthInput` object
     /// - important: `Allocate()` must be called before using
     VariableLengthInput() noexcept = default;
 
-    ~VariableLengthInput() {
-        delete[] byteBuffer_;
-    }
+    ~VariableLengthInput() { delete[] byteBuffer_; }
 
-    VariableLengthInput(const VariableLengthInput&) = delete;
-    VariableLengthInput(VariableLengthInput&&) = delete;
-    VariableLengthInput& operator=(const VariableLengthInput&) = delete;
-    VariableLengthInput& operator=(VariableLengthInput&&) = delete;
+    VariableLengthInput(const VariableLengthInput &) = delete;
+    VariableLengthInput(VariableLengthInput &&) = delete;
+    VariableLengthInput &operator=(const VariableLengthInput &) = delete;
+    VariableLengthInput &operator=(VariableLengthInput &&) = delete;
 
     /// Input callback type
-    using InputBlock = bool (^)(void *buf, size_t len, size_t& read);
+    using InputBlock = bool (^)(void *buf, size_t len, size_t &read);
 
     /// Sets the input callback
-    void setInputCallback(InputBlock block) noexcept {
-        inputBlock_ = block;
-    }
+    void setInputCallback(InputBlock block) noexcept { inputBlock_ = block; }
 
     /// Allocates an internal buffer of the specified size
     /// - warning: Sizes other than `512` will break seeking
@@ -146,7 +139,7 @@ class VariableLengthInput {
         return true;
     }
 
-    bool getRiceGolombCode(int32_t& i32, int k) noexcept {
+    bool getRiceGolombCode(int32_t &i32, int k) noexcept {
 #if DEBUG
         assert(k < 32);
 #endif /* DEBUG */
@@ -183,7 +176,7 @@ class VariableLengthInput {
         return true;
     }
 
-    bool getInt32(int32_t& i32, int k) noexcept {
+    bool getInt32(int32_t &i32, int k) noexcept {
         int32_t var;
         if (!getRiceGolombCode(var, k + 1)) {
             return false;
@@ -198,7 +191,7 @@ class VariableLengthInput {
         return true;
     }
 
-    bool getUInt32(uint32_t& ui32, int version, int k) noexcept {
+    bool getUInt32(uint32_t &ui32, int version, int k) noexcept {
         if (version > 0 && !getRiceGolombCode(k, parameterUInt32)) {
             return false;
         }
@@ -405,8 +398,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -450,10 +443,10 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                      _fileType);
         if (error != nullptr) {
             *error = [self
-                  unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
-                      recoverySuggestion:NSLocalizedString(
-                                               @"The audio bit depth and sample type combination is not supported.",
-                                               @"")];
+                    unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
+                        recoverySuggestion:NSLocalizedString(
+                                                   @"The audio bit depth and sample type combination is not supported.",
+                                                   @"")];
         }
         return NO;
     }
@@ -483,7 +476,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     processingStreamDescription.mBytesPerPacket = (_bitsPerSample + 7) / 8;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
-          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+            processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
     AVAudioChannelLayout *channelLayout = nil;
     switch (_channelCount) {
@@ -694,7 +687,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             NSError *seekError = [self genericSeekError];
             NSMutableDictionary *userInfo = [seekError.userInfo mutableCopy];
             userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                  NSLocalizedString(@"There is no suitable seek table entry for the requested audio frame.", @"");
+                    NSLocalizedString(@"There is no suitable seek table entry for the requested audio frame.", @"");
             *error = [NSError errorWithDomain:seekError.domain code:seekError.code userInfo:userInfo];
         }
         return NO;
@@ -813,7 +806,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     }
 
     __weak SFBInputSource *inputSource = self->_inputSource;
-    _input.setInputCallback(^bool(void *buf, size_t len, size_t& read) {
+    _input.setInputCallback(^bool(void *buf, size_t len, size_t &read) {
         NSInteger bytesRead;
         if (![inputSource readBytes:buf length:static_cast<NSInteger>(len) bytesRead:&bytesRead error:nil]) {
             return false;
@@ -850,9 +843,9 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
         channelCount > maxChannelCount) {
         os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", channelCount);
         if (error != nullptr) {
-            *error = [self
-                  unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
-                      recoverySuggestion:NSLocalizedString(@"The number of channels is invalid or unsupported.", @"")];
+            *error = [self unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
+                               recoverySuggestion:NSLocalizedString(
+                                                          @"The number of channels is invalid or unsupported.", @"")];
         }
         return false;
     }
@@ -870,8 +863,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
             if (error != nullptr) {
                 *error = [self
-                      unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
-                          recoverySuggestion:NSLocalizedString(@"The block size is invalid or unsupported.", @"")];
+                        unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
+                            recoverySuggestion:NSLocalizedString(@"The block size is invalid or unsupported.", @"")];
             }
             return false;
         }
@@ -882,10 +875,10 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             os_log_error(gSFBAudioDecoderLog, "Invalid maximum linear predictor order: %u", maxLPC);
             if (error != nullptr) {
                 *error = [self
-                      unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
-                          recoverySuggestion:NSLocalizedString(
-                                                   @"The maximum linear predictor order is invalid or unsupported.",
-                                                   @"")];
+                        unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
+                            recoverySuggestion:NSLocalizedString(
+                                                       @"The maximum linear predictor order is invalid or unsupported.",
+                                                       @"")];
             }
             return false;
         }
@@ -1041,8 +1034,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", formatTag);
                 if (error != nullptr) {
                     *error = [self
-                          unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
-                              recoverySuggestion:NSLocalizedString(@"The WAVE format tag is not supported.", @"")];
+                            unsupportedFormatError:NSLocalizedString(@"Shorten", @"")
+                                recoverySuggestion:NSLocalizedString(@"The WAVE format tag is not supported.", @"")];
                 }
                 return false;
             }
@@ -1660,9 +1653,9 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     }
     if (startOffset != entries[0].byteOffsetInFile_) {
         os_log_error(
-              gSFBAudioDecoderLog,
-              "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)",
-              (long)startOffset, entries[0].byteOffsetInFile_);
+                gSFBAudioDecoderLog,
+                "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)",
+                (long)startOffset, entries[0].byteOffsetInFile_);
         return false;
     }
     if (_bitshift != entries[0].bitshift_) {

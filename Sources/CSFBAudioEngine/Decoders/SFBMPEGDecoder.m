@@ -153,8 +153,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -431,7 +431,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 
         // Deinterleave the samples
         AVAudioFrameCount framesDecoded =
-              (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
+                (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
 
         float *const *floatChannelData = _buffer.floatChannelData;
         AVAudioChannelCount channelCount = _buffer.format.channelCount;

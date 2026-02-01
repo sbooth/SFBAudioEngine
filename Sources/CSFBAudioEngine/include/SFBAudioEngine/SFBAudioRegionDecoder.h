@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// An audio decoder supporting a repeating audio region
 NS_SWIFT_NAME(AudioRegionDecoder)
-@interface SFBAudioRegionDecoder : NSObject<SFBPCMDecoding>
+@interface SFBAudioRegionDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

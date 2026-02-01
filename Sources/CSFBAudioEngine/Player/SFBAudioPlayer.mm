@@ -32,7 +32,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
                                               }
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(
-                                                        @"The format is invalid, unknown, or unsupported.", @"");
+                                                          @"The format is invalid, unknown, or unsupported.", @"");
                                               }
                                               break;
                                           }
@@ -46,7 +46,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
     try {
         player = std::make_unique<sfb::AudioPlayer>();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(sfb::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
         return nil;
     }
@@ -106,8 +106,8 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder
-      forImmediatePlayback:(BOOL)forImmediatePlayback
-                     error:(NSError **)error {
+        forImmediatePlayback:(BOOL)forImmediatePlayback
+                       error:(NSError **)error {
     NSParameterAssert(decoder != nil);
     return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
 }

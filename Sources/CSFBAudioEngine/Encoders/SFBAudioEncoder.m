@@ -41,32 +41,32 @@ static void SFBCreateAudioEncoderLog(void) {
 static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)load {
-    [NSError
-          setUserInfoValueProviderForDomain:SFBAudioEncoderErrorDomain
-                                   provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-                                       switch (err.code) {
-                                       case SFBAudioEncoderErrorCodeUnknownEncoder:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"The requested encoder is unavailable.", @"");
-                                           }
-                                           break;
+    [NSError setUserInfoValueProviderForDomain:SFBAudioEncoderErrorDomain
+                                      provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+                                          switch (err.code) {
+                                          case SFBAudioEncoderErrorCodeUnknownEncoder:
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                  return NSLocalizedString(@"The requested encoder is unavailable.",
+                                                                           @"");
+                                              }
+                                              break;
 
-                                       case SFBAudioEncoderErrorCodeInvalidFormat:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(
-                                                     @"The format is invalid, unknown, or unsupported.", @"");
-                                           }
-                                           break;
+                                          case SFBAudioEncoderErrorCodeInvalidFormat:
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                  return NSLocalizedString(
+                                                          @"The format is invalid, unknown, or unsupported.", @"");
+                                              }
+                                              break;
 
-                                       case SFBAudioEncoderErrorCodeInternalError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"An internal encoder error occurred.", @"");
-                                           }
-                                           break;
-                                       }
+                                          case SFBAudioEncoderErrorCodeInternalError:
+                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                  return NSLocalizedString(@"An internal encoder error occurred.", @"");
+                                              }
+                                              break;
+                                          }
 
-                                       return nil;
-                                   }];
+                                          return nil;
+                                      }];
 }
 
 + (NSSet *)supportedPathExtensions {
@@ -179,20 +179,20 @@ static NSMutableArray *_registeredSubclasses = nil;
         os_log_debug(gSFBAudioEncoderLog, "Unable to determine content type for %{public}@", outputSource);
         if (error) {
             NSMutableDictionary *userInfo = [NSMutableDictionary
-                  dictionaryWithObject:NSLocalizedString(
-                                             @"The file's extension may be missing or may not match the file's type.",
-                                             @"")
-                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+                    dictionaryWithObject:
+                            NSLocalizedString(@"The file's extension may be missing or may not match the file's type.",
+                                              @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
 
             if (outputSource.url) {
                 userInfo[NSLocalizedDescriptionKey] = [NSString
-                      localizedStringWithFormat:NSLocalizedString(@"The type of the file “%@” could not be determined.",
-                                                                  @""),
-                                                SFBLocalizedNameForURL(outputSource.url)];
+                        localizedStringWithFormat:NSLocalizedString(
+                                                          @"The type of the file “%@” could not be determined.", @""),
+                                                  SFBLocalizedNameForURL(outputSource.url)];
                 userInfo[NSURLErrorKey] = outputSource.url;
             } else {
                 userInfo[NSLocalizedDescriptionKey] =
-                      NSLocalizedString(@"The type of the file could not be determined.", @"");
+                        NSLocalizedString(@"The type of the file could not be determined.", @"");
             }
 
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -358,7 +358,9 @@ static NSMutableArray *_registeredSubclasses = nil;
     //             NSStringFromClass(subclass));
 
     static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{ _registeredSubclasses = [NSMutableArray array]; });
+    dispatch_once(&onceToken, ^{
+        _registeredSubclasses = [NSMutableArray array];
+    });
 
     SFBAudioEncoderSubclassInfo *subclassInfo = [[SFBAudioEncoderSubclassInfo alloc] init];
     subclassInfo.klass = subclass;

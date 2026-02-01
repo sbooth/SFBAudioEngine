@@ -12,6 +12,6 @@ CF_EXTERN_C_BEGIN
 /// current locale
 NSError *_Nonnull SFBErrorWithLocalizedDescription(NSErrorDomain _Nonnull domain, NSInteger code,
                                                    NSString *_Nonnull format, NSDictionary *_Nullable userInfo, ...)
-      NS_FORMAT_FUNCTION(3, 5);
+        NS_FORMAT_FUNCTION(3, 5);
 
 CF_EXTERN_C_END
