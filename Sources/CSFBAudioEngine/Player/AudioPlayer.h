@@ -67,12 +67,12 @@ class AudioPlayer final {
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Dispatch semaphore used for communication with the decoding thread
-    dsema::Semaphore decodingSemaphore_{intptr_t{0}};
+    dsema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Dispatch semaphore used for communication with the event processing thread
-    dsema::Semaphore eventSemaphore_{intptr_t{0}};
+    dsema::Semaphore eventSemaphore_{0};
 
     /// Ring buffer communicating events from the decoding thread to the event processing thread
     spsc::RingBuffer decodingEvents_;
