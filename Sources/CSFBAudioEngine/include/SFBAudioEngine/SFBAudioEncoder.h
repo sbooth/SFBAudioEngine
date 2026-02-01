@@ -165,8 +165,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEn
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
 
 /// Constant type for APE compression levels
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueAPECompressionLevel NS_TYPED_ENUM NS_SWIFT_NAME(APECompressionLevel);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueAPECompressionLevel
+        NS_TYPED_ENUM NS_SWIFT_NAME(APECompressionLevel);
 
 /// Fast compression
 extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelFast;
@@ -203,8 +203,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMod
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain;
 
 /// Constant type for MP3 stereo modes
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueMP3StereoMode NS_TYPED_ENUM NS_SWIFT_NAME(MP3StereoMode);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueMP3StereoMode
+        NS_TYPED_ENUM NS_SWIFT_NAME(MP3StereoMode);
 
 /// Mono mode
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono;
@@ -234,8 +234,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusSignalTy
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration;
 
 /// Constant type for Opus bitrate modes
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueOpusBitrateMode NS_TYPED_ENUM NS_SWIFT_NAME(OpusBitrateMode);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusBitrateMode
+        NS_TYPED_ENUM NS_SWIFT_NAME(OpusBitrateMode);
 
 /// VBR
 extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeVBR;
@@ -245,8 +245,8 @@ extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettin
 extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR;
 
 /// Constant type for Opus signal type
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueOpusSignalType NS_TYPED_ENUM NS_SWIFT_NAME(OpusSignalType);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusSignalType
+        NS_TYPED_ENUM NS_SWIFT_NAME(OpusSignalType);
 
 /// Voice
 extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeVoice;
@@ -254,8 +254,8 @@ extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSetting
 extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeMusic;
 
 /// Constant type for Opus frame duration
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueOpusFrameDuration NS_TYPED_ENUM NS_SWIFT_NAME(OpusFrameDuration);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusFrameDuration
+        NS_TYPED_ENUM NS_SWIFT_NAME(OpusFrameDuration);
 
 /// 2.5 msec
 extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms;
@@ -336,8 +336,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBit
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
 
 /// Constant type for WavPack  compression levels
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueWavPackCompressionLevel NS_TYPED_ENUM NS_SWIFT_NAME(WavPackCompressionLevel);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueWavPackCompressionLevel
+        NS_TYPED_ENUM NS_SWIFT_NAME(WavPackCompressionLevel);
 
 /// Fast compression
 extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const
@@ -384,8 +384,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSu
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian;
 
 /// Constant type for Libsndfile major formats
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueLibsndfileMajorFormat NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileMajorFormat);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileMajorFormat
+        NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileMajorFormat);
 
 /// Microsoft WAV format
 extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV;
@@ -439,8 +439,8 @@ extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncoding
 extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64;
 
 /// Constant type for Libsndfile subtypes
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueLibsndfileSubtype NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileSubtype);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileSubtype
+        NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileSubtype);
 
 /// Signed 8 bit data
 extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8;
@@ -506,8 +506,8 @@ extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSett
 extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32;
 
 /// Constant type for Libsndfile file endian-ness
-typedef SFBAudioEncodingSettingsValue
-        SFBAudioEncodingSettingsValueLibsndfileFileEndian NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileFileEndian);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileFileEndian
+        NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileFileEndian);
 
 /// Default file endian-ness
 extern SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault;
