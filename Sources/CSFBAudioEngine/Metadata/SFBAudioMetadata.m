@@ -135,7 +135,7 @@ static id _sharedKeySet;
     [_pictures removeAllObjects];
 }
 
-// MARK: Basic Metadata
+// MARK: - Basic Metadata
 
 - (NSString *)title {
     return [_metadata objectForKey:SFBAudioMetadataKeyTitle];
@@ -297,7 +297,7 @@ static id _sharedKeySet;
     [_metadata setValue:musicBrainzRecordingID forKey:SFBAudioMetadataKeyMusicBrainzRecordingID];
 }
 
-// MARK: Sorting Metadata
+// MARK: - Sorting Metadata
 
 - (NSString *)titleSortOrder {
     return [_metadata objectForKey:SFBAudioMetadataKeyTitleSortOrder];
@@ -347,7 +347,7 @@ static id _sharedKeySet;
     [_metadata setValue:genreSortOrder forKey:SFBAudioMetadataKeyGenreSortOrder];
 }
 
-// MARK: Grouping Metadata
+// MARK: - Grouping Metadata
 
 - (NSString *)grouping {
     return [_metadata objectForKey:SFBAudioMetadataKeyGrouping];
@@ -357,7 +357,7 @@ static id _sharedKeySet;
     [_metadata setValue:grouping forKey:SFBAudioMetadataKeyGrouping];
 }
 
-// MARK: Additional Metadata
+// MARK: - Additional Metadata
 
 - (NSDictionary *)additionalMetadata {
     return [_metadata objectForKey:SFBAudioMetadataKeyAdditionalMetadata];
@@ -367,7 +367,7 @@ static id _sharedKeySet;
     [_metadata setValue:[additionalMetadata copy] forKey:SFBAudioMetadataKeyAdditionalMetadata];
 }
 
-// MARK: Replay Gain Metadata
+// MARK: - Replay Gain Metadata
 
 - (NSNumber *)replayGainReferenceLoudness {
     return [_metadata objectForKey:SFBAudioMetadataKeyReplayGainReferenceLoudness];
@@ -409,7 +409,7 @@ static id _sharedKeySet;
     [_metadata setValue:replayGainAlbumPeak forKey:SFBAudioMetadataKeyReplayGainAlbumPeak];
 }
 
-// MARK: Metadata Utilities
+// MARK: - Metadata Utilities
 
 - (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata {
     if (kind & SFBAudioMetadataKindBasic) {
@@ -521,13 +521,13 @@ static id _sharedKeySet;
     [_metadata removeAllObjects];
 }
 
-// MARK: Attached Pictures
+// MARK: - Attached Pictures
 
 - (NSSet *)attachedPictures {
     return [_pictures copy];
 }
 
-// MARK: Attached Picture Utilities
+// MARK: - Attached Picture Utilities
 
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata {
     for (SFBAttachedPicture *picture in metadata.attachedPictures) {
@@ -565,7 +565,7 @@ static id _sharedKeySet;
     [_pictures removeAllObjects];
 }
 
-// MARK: External Representation
+// MARK: - External Representation
 
 - (NSDictionary *)dictionaryRepresentation {
     NSMutableDictionary *dictionary = [_metadata mutableCopy];

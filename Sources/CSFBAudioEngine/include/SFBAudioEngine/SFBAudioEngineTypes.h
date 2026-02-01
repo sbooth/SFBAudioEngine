@@ -6,7 +6,7 @@
 
 #import <CoreAudioTypes/CoreAudioTypes.h>
 
-// MARK: Audio Format Identifiers
+// MARK: - Audio Format Identifiers
 
 /// Additional audio format IDs
 CF_ENUM(AudioFormatID) {
