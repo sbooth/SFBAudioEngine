@@ -37,8 +37,6 @@ constexpr unsigned char sBitReverseTable256[256] = {
 // SPDX-SnippetLicenseIdentifier: BSD-2-Clause-Views
 // SPDX-SnippetComment: Adapted from 'dsd2pcm.c'
 
-// The code performing the DSD to PCM conversion was modified from dsd2pcm.c:
-
 #define HTAPS 48                  /* number of FIR constants */
 #define FIFOSIZE 16               /* must be a power of two */
 #define FIFOMASK (FIFOSIZE - 1)   /* bit mask for FIFO offsets */
