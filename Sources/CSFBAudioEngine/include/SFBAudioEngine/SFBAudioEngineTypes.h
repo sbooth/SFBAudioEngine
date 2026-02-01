@@ -8,6 +8,8 @@
 
 // MARK: - Audio Format Identifiers
 
+// clang-format off
+
 /// Additional audio format IDs
 CF_ENUM(AudioFormatID) {
     /// Direct Stream Digital (DSD)
@@ -70,6 +72,8 @@ CF_ENUM(int) {
     kSFBBytesPerDSDPacketPerChannel CF_SWIFT_NAME(bytesPerDSDPacketPerChannel) = 1,
 };
 
+// clang-format on
+
 #ifdef __OBJC__
 
 #import <AVFAudio/AVFAudio.h>
@@ -79,6 +83,8 @@ CF_ENUM(int) {
 
 /// Value representing an invalid or unknown time
 extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(unknownTime);
+
+// clang-format off
 
 /// Frame and packet unknowns
 NS_ENUM(AVAudioFramePosition) {
@@ -91,6 +97,8 @@ NS_ENUM(AVAudioFramePosition) {
     /// Value representing an invalid or unknown audio packet count
     SFBUnknownPacketCount NS_SWIFT_NAME(unknownPacketCount) = -1,
 };
+
+// clang-format on
 
 // MARK: - Playback Position
 

@@ -120,8 +120,8 @@ static dumb_off_t get_size_callback(void *f) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -196,8 +196,8 @@ static dumb_off_t get_size_callback(void *f) {
 
         long samplesSize = framesToCopy;
         long framesCopied =
-              duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE,
-                             framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
+                duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE,
+                               framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
 
         framesProcessed += framesCopied;
 

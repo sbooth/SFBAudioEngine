@@ -42,7 +42,7 @@ extern SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile;
 
 /// A decoder providing audio as PCM
 NS_SWIFT_NAME(AudioDecoder)
-@interface SFBAudioDecoder : NSObject<SFBPCMDecoding>
+@interface SFBAudioDecoder : NSObject <SFBPCMDecoding>
 
 // MARK: - File Format Support
 
@@ -101,7 +101,7 @@ NS_SWIFT_NAME(AudioDecoder)
 /// - parameter inputSource: The input source
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
-      NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -142,7 +142,7 @@ NS_SWIFT_NAME(AudioDecoder)
 /// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url
                          decoderName:(SFBAudioDecoderName)decoderName
-      NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
 /// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter decoderName: The name of the decoder to use
@@ -156,7 +156,7 @@ NS_SWIFT_NAME(AudioDecoder)
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
                                  decoderName:(SFBAudioDecoderName)decoderName
-      NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter decoderName: The name of the decoder to use

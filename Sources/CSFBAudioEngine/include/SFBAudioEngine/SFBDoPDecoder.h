@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// A decoder supporting DSD over PCM (DoP)
 /// - seealso: http://dsd-guide.com/sites/default/files/white-papers/DoP_openStandard_1v1.pdf
 NS_SWIFT_NAME(DoPDecoder)
-@interface SFBDoPDecoder : NSObject<SFBPCMDecoding>
+@interface SFBDoPDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

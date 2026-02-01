@@ -14,7 +14,7 @@
 #import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
-      @"org.sbooth.AudioEngine.File.ImpulseTrackerModule";
+        @"org.sbooth.AudioEngine.File.ImpulseTrackerModule";
 
 @implementation SFBImpulseTrackerModuleFile
 
@@ -35,8 +35,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -64,8 +64,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
         }
 
         NSMutableDictionary *propertiesDictionary =
-              [NSMutableDictionary dictionaryWithObject:@"Impulse Tracker Module"
-                                                 forKey:SFBAudioPropertiesKeyFormatName];
+                [NSMutableDictionary dictionaryWithObject:@"Impulse Tracker Module"
+                                                   forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
@@ -79,7 +79,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
         self.metadata = metadata;
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error reading Impulse Tracker module properties and metadata: %{public}s",
                      e.what());
         if (error != nullptr) {
@@ -95,8 +95,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
     os_log_error(gSFBAudioFileLog, "Writing Impulse Tracker module metadata is not supported");
     if (error != nullptr) {
         *error = [self
-              saveErrorWithRecoverySuggestion:NSLocalizedString(
-                                                    @"Writing Impulse Tracker module metadata is not supported.", @"")];
+                saveErrorWithRecoverySuggestion:NSLocalizedString(
+                                                        @"Writing Impulse Tracker module metadata is not supported.",
+                                                        @"")];
     }
     return NO;
 }

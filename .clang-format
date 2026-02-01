@@ -1,40 +1,25 @@
 BasedOnStyle: LLVM
 
+ColumnLimit: 120
+
 IndentWidth: 4
-ContinuationIndentWidth: 6
 TabWidth: 4
 UseTab: Never
 
-ColumnLimit: 120
+ContinuationIndentWidth: 8
+ConstructorInitializerIndentWidth: 4
+ObjCBlockIndentWidth: 4
 
 InsertBraces: true
 
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortBlocksOnASingleLine: Empty
-
-ConstructorInitializerIndentWidth: 2
-PackConstructorInitializers: NextLineOnly
-
-PointerAlignment: Right
-ReferenceAlignment: Left
-DerivePointerAlignment: false
-
-BreakTemplateDeclarations: Yes
-
-ObjCBlockIndentWidth: 4
-
 AttributeMacros:
-  - CF_SWIFT_NAME
   - CF_REFINED_FOR_SWIFT
   - CF_RELEASES_ARGUMENT
-  - NS_SWIFT_NAME
   - NS_REFINED_FOR_SWIFT
   - NS_DESIGNATED_INITIALIZER
   - NS_UNAVAILABLE
   - NS_SWIFT_UNAVAILABLE
   - NS_FORMAT_FUNCTION
-
-TypenameMacros:
   - NS_TYPED_ENUM
   - NS_TYPED_EXTENSIBLE_ENUM
 
@@ -61,7 +46,7 @@ IncludeCategories:
     Priority: 1
   - Regex: '^<SFBAudioEngine/'
     Priority: 1
-  - Regex: '^<(spsc|mtx|dsema|CXXCoreAudio|AVFAudioExtensions)/'
+  - Regex: '^<(dsema|mtx|spsc|AVFAudioExtensions)/'
     Priority: 2
   - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
     Priority: 2

@@ -24,9 +24,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) {
-        CFRelease(cf);
-    }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -156,17 +154,17 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // MusicBrainz
     if (auto *musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
-              const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
+                const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
         musicBrainzReleaseIDFrame) {
         self.musicBrainzReleaseID =
-              [NSString stringWithUTF8String:musicBrainzReleaseIDFrame->fieldList().back().toCString(true)];
+                [NSString stringWithUTF8String:musicBrainzReleaseIDFrame->fieldList().back().toCString(true)];
     }
 
     if (auto *musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(
-              const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
+                const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
         musicBrainzRecordingIDFrame) {
         self.musicBrainzRecordingID =
-              [NSString stringWithUTF8String:musicBrainzRecordingIDFrame->fieldList().back().toCString(true)];
+                [NSString stringWithUTF8String:musicBrainzRecordingIDFrame->fieldList().back().toCString(true)];
     }
 
     // Sorting and grouping
@@ -255,7 +253,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
         for (auto *frameIterator : tag->frameListMap()["RVA2"]) {
             TagLib::ID3v2::RelativeVolumeFrame *relativeVolume =
-                  dynamic_cast<TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
+                    dynamic_cast<TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
             if (!relativeVolume) {
                 continue;
             }
@@ -293,9 +291,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
             }
 
             SFBAttachedPicture *picture =
-                  [[SFBAttachedPicture alloc] initWithImageData:imageData
-                                                           type:static_cast<SFBAttachedPictureType>(frame->type())
-                                                    description:description];
+                    [[SFBAttachedPicture alloc] initWithImageData:imageData
+                                                             type:static_cast<SFBAttachedPictureType>(frame->type())
+                                                      description:description];
             [self attachPicture:picture];
         }
     }
@@ -390,7 +388,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     if (metadata.trackNumber && metadata.trackTotal) {
         auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(
-              [NSString stringWithFormat:@"%@/%@", metadata.trackNumber, metadata.trackTotal]));
+                [NSString stringWithFormat:@"%@/%@", metadata.trackNumber, metadata.trackTotal]));
         tag->addFrame(frame);
     } else if (metadata.trackNumber) {
         auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
@@ -416,7 +414,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     if (metadata.discNumber && metadata.discTotal) {
         auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
         frame->setText(TagLib::StringFromNSString(
-              [NSString stringWithFormat:@"%@/%@", metadata.discNumber, metadata.discTotal]));
+                [NSString stringWithFormat:@"%@/%@", metadata.discNumber, metadata.discTotal]));
         tag->addFrame(frame);
     } else if (metadata.discNumber) {
         auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
@@ -539,7 +537,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_track_gain");
         frame->setText(TagLib::StringFromNSString(
-              [NSString stringWithFormat:@"%+2.2f dB", metadata.replayGainTrackGain.doubleValue]));
+                [NSString stringWithFormat:@"%+2.2f dB", metadata.replayGainTrackGain.doubleValue]));
         tag->addFrame(frame);
     }
 
@@ -547,7 +545,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_track_peak");
         frame->setText(TagLib::StringFromNSString(
-              [NSString stringWithFormat:@"%1.8f dB", metadata.replayGainTrackPeak.doubleValue]));
+                [NSString stringWithFormat:@"%1.8f dB", metadata.replayGainTrackPeak.doubleValue]));
         tag->addFrame(frame);
     }
 
@@ -555,7 +553,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_album_gain");
         frame->setText(TagLib::StringFromNSString(
-              [NSString stringWithFormat:@"%+2.2f dB", metadata.replayGainAlbumGain.doubleValue]));
+                [NSString stringWithFormat:@"%+2.2f dB", metadata.replayGainAlbumGain.doubleValue]));
         tag->addFrame(frame);
     }
 
@@ -563,7 +561,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_album_peak");
         frame->setText(TagLib::StringFromNSString(
-              [NSString stringWithFormat:@"%1.8f dB", metadata.replayGainAlbumPeak.doubleValue]));
+                [NSString stringWithFormat:@"%1.8f dB", metadata.replayGainAlbumPeak.doubleValue]));
         tag->addFrame(frame);
     }
 
@@ -591,7 +589,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     if (setAlbumArt) {
         for (SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
             cg_image_source_unique_ptr imageSource{
-                  CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+                    CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
             if (!imageSource) {
                 continue;
             }

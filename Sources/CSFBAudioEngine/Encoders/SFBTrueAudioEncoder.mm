@@ -101,7 +101,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     }
 
     streamDescription.mBytesPerPacket =
-          ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
+            ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
     streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
@@ -155,7 +155,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         _encoder = std::make_unique<tta::tta_encoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
         _encoder->init_set_info(&streamInfo, 0);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating True Audio encoder: %d", e.code());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -214,7 +214,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
         _encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", e.code());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
@@ -232,7 +232,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     try {
         _encoder->finalize();
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", e.code());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain

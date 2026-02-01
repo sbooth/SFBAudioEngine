@@ -105,8 +105,8 @@ static opus_int64 tell_callback(void *stream) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -187,7 +187,7 @@ static opus_int64 tell_callback(void *stream) {
         break;
     default:
         channelLayout = [AVAudioChannelLayout
-              layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)header->channel_count)];
+                layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)header->channel_count)];
         break;
     }
 

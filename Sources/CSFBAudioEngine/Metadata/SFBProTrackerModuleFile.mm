@@ -34,8 +34,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -63,7 +63,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
         }
 
         NSMutableDictionary *propertiesDictionary =
-              [NSMutableDictionary dictionaryWithObject:@"ProTracker Module" forKey:SFBAudioPropertiesKeyFormatName];
+                [NSMutableDictionary dictionaryWithObject:@"ProTracker Module" forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
         self.metadata = metadata;
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error reading ProTracker module properties and metadata: %{public}s", e.what());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
@@ -92,8 +92,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
     os_log_error(gSFBAudioFileLog, "Writing ProTracker module metadata is not supported");
     if (error != nullptr) {
         *error = [self
-              saveErrorWithRecoverySuggestion:NSLocalizedString(@"Writing ProTracker module metadata is not supported.",
-                                                                @"")];
+                saveErrorWithRecoverySuggestion:NSLocalizedString(
+                                                        @"Writing ProTracker module metadata is not supported.", @"")];
     }
     return NO;
 }

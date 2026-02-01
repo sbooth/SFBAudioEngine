@@ -25,7 +25,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration =
 
 SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeVBR = @"VBR";
 SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR =
-      @"Constrained VBR";
+        @"Constrained VBR";
 SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR = @"Hard CBR";
 
 SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeVoice = @"Voice";
@@ -45,16 +45,12 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `OggOpusEnc` objects
 struct ogg_opus_enc_deleter {
-    void operator()(OggOpusEnc *enc) {
-        ope_encoder_destroy(enc);
-    }
+    void operator()(OggOpusEnc *enc) { ope_encoder_destroy(enc); }
 };
 
 /// A `std::unique_ptr` deleter for `OggOpusComments` objects
 struct ogg_opus_comments_deleter {
-    void operator()(OggOpusComments *comments) {
-        ope_comments_destroy(comments);
-    }
+    void operator()(OggOpusComments *comments) { ope_comments_destroy(comments); }
 };
 
 using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
@@ -151,7 +147,7 @@ int closeCallback(void *user_data) noexcept {
         break;
     default:
         channelLayout =
-              [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | sourceFormat.channelCount)];
+                [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | sourceFormat.channelCount)];
         break;
     }
 
@@ -196,9 +192,9 @@ int closeCallback(void *user_data) noexcept {
     }
 
     ogg_opus_enc_unique_ptr enc{(ope_encoder_create_callbacks(
-          &callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate),
-          static_cast<int>(_processingFormat.channelCount),
-          _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
+            &callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate),
+            static_cast<int>(_processingFormat.channelCount),
+            _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};
     if (!enc) {
         os_log_error(gSFBAudioEncoderLog, "ope_encoder_create_callbacks failed: %{public}s", ope_strerror(result));
         if (error != nullptr) {
@@ -214,9 +210,9 @@ int closeCallback(void *user_data) noexcept {
         if (intValue >= 6 && intValue <= 256) {
             // TODO: Opus now supports from 500-512000 bits per second, auto, and max
             result = ope_encoder_ctl(
-                  enc.get(),
-                  OPUS_SET_BITRATE(std::min(256 * static_cast<opus_int32>(_processingFormat.channelCount), intValue) *
-                                   1000));
+                    enc.get(),
+                    OPUS_SET_BITRATE(std::min(256 * static_cast<opus_int32>(_processingFormat.channelCount), intValue) *
+                                     1000));
             if (result != OPE_OK) {
                 os_log_error(gSFBAudioEncoderLog, "OPUS_SET_BITRATE failed: %{public}s", ope_strerror(result));
                 if (error != nullptr) {
@@ -297,7 +293,7 @@ int closeCallback(void *user_data) noexcept {
     AVAudioFrameCount frameCapacity = 960;
 
     if (SFBAudioEncodingSettingsValue frameDuration =
-              [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusFrameDuration];
+                [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusFrameDuration];
         frameDuration) {
         if (frameDuration == SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms) {
             frameCapacity = 120;
@@ -422,9 +418,9 @@ int closeCallback(void *user_data) noexcept {
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     // Write remaining partial frame
     if (!_frameBuffer.isEmpty) {
-        int result =
-              ope_encoder_write_float(_enc.get(), static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
-                                      static_cast<int>(_frameBuffer.frameLength));
+        int result = ope_encoder_write_float(_enc.get(),
+                                             static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
+                                             static_cast<int>(_frameBuffer.frameLength));
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
             if (error != nullptr) {

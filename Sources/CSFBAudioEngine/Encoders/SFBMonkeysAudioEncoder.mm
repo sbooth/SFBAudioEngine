@@ -29,20 +29,19 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel
 
 SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelFast = @"Fast";
 SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelNormal =
-      @"Normal";
+        @"Normal";
 SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelHigh = @"High";
 SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh =
-      @"Extra High";
+        @"Extra High";
 SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelInsane =
-      @"Insane";
+        @"Insane";
 
 namespace {
 
 // The I/O interface for MAC
 class APEIOInterface final : public APE::IAPEIO {
   public:
-    explicit APEIOInterface(SFBOutputSource *outputSource)
-      : outputSource_(outputSource) {}
+    explicit APEIOInterface(SFBOutputSource *outputSource) : outputSource_(outputSource) {}
 
     int Open(const wchar_t *pName, bool bOpenReadOnly) override {
 #pragma unused(pName)
@@ -51,9 +50,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_INVALID_INPUT_FILE;
     }
 
-    int Close() override {
-        return ERROR_SUCCESS;
-    }
+    int Close() override { return ERROR_SUCCESS; }
 
     int Read(void *pBuffer, unsigned int nBytesToRead, unsigned int *pBytesRead) override {
         NSInteger bytesRead;
@@ -112,13 +109,9 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_IO_WRITE;
     }
 
-    int Delete() override {
-        return ERROR_IO_WRITE;
-    }
+    int Delete() override { return ERROR_IO_WRITE; }
 
-    int SetEOF() override {
-        return ERROR_IO_WRITE;
-    }
+    int SetEOF() override { return ERROR_IO_WRITE; }
 
     unsigned char *GetBuffer(int *pnBufferBytes) override {
 #pragma unused(pnBufferBytes)
@@ -207,7 +200,7 @@ class APEIOInterface final : public APE::IAPEIO {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
     streamDescription.mFormatFlags =
-          kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+            kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
 #pragma clang diagnostic pop
 
     streamDescription.mSampleRate = wve.nSamplesPerSec;
@@ -261,7 +254,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
         _compressor = std::unique_ptr<APE::IAPECompress>(compressor);
         _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];

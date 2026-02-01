@@ -318,7 +318,7 @@
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
         AVAudioFrameCount framesRemainingInRegion =
-              (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
+                (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
         AVAudioFrameCount framesToDecode = MIN(MIN(framesRemaining, framesRemainingInRegion), _buffer.frameCapacity);
 
         // Nothing left to read
@@ -380,9 +380,9 @@
 
 - (NSString *)description {
     return [NSString
-          stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %ld>",
-                           [self class], (__bridge void *)self, _decoder, _startFrame, _frameLength,
-                           (long)_repeatCount];
+            stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %ld>",
+                             [self class], (__bridge void *)self, _decoder, _startFrame, _frameLength,
+                             (long)_repeatCount];
 }
 
 @end

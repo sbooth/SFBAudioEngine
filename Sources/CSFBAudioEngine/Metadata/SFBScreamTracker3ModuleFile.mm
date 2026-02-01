@@ -14,7 +14,7 @@
 #import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
-      @"org.sbooth.AudioEngine.File.ScreamTracker3Module";
+        @"org.sbooth.AudioEngine.File.ScreamTracker3Module";
 
 @implementation SFBScreamTracker3ModuleFile
 
@@ -35,8 +35,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -64,8 +64,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
         }
 
         NSMutableDictionary *propertiesDictionary =
-              [NSMutableDictionary dictionaryWithObject:@"Scream Tracker 3 Module"
-                                                 forKey:SFBAudioPropertiesKeyFormatName];
+                [NSMutableDictionary dictionaryWithObject:@"Scream Tracker 3 Module"
+                                                   forKey:SFBAudioPropertiesKeyFormatName];
         if (file.audioProperties() != nullptr) {
             sfb::addAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
         }
@@ -79,7 +79,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
         self.metadata = metadata;
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error reading Scream Tracker 3 module properties and metadata: %{public}s",
                      e.what());
         if (error != nullptr) {
@@ -94,10 +94,10 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing Scream Tracker 3 module metadata is not supported");
     if (error != nullptr) {
-        *error =
-              [self saveErrorWithRecoverySuggestion:NSLocalizedString(
-                                                          @"Writing Scream Tracker 3 module metadata is not supported.",
-                                                          @"")];
+        *error = [self
+                saveErrorWithRecoverySuggestion:NSLocalizedString(
+                                                        @"Writing Scream Tracker 3 module metadata is not supported.",
+                                                        @"")];
     }
     return NO;
 }

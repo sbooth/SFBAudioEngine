@@ -20,16 +20,16 @@ class AudioFileWrapper final {
     AudioFileWrapper() noexcept = default;
 
     // This class is non-copyable
-    AudioFileWrapper(const AudioFileWrapper&) = delete;
+    AudioFileWrapper(const AudioFileWrapper &) = delete;
 
     // This class is non-assignable
-    AudioFileWrapper& operator=(const AudioFileWrapper&) = delete;
+    AudioFileWrapper &operator=(const AudioFileWrapper &) = delete;
 
     /// Move constructor.
-    AudioFileWrapper(AudioFileWrapper&& other) noexcept;
+    AudioFileWrapper(AudioFileWrapper &&other) noexcept;
 
     /// Move assignment operator.
-    AudioFileWrapper& operator=(AudioFileWrapper&& other) noexcept;
+    AudioFileWrapper &operator=(AudioFileWrapper &&other) noexcept;
 
     /// Calls AudioFileClose on the managed AudioFile object.
     ~AudioFileWrapper() noexcept;
@@ -51,7 +51,7 @@ class AudioFileWrapper final {
     void reset(AudioFileID _Nullable audioFile = nullptr) noexcept;
 
     /// Swaps the managed AudioFile object with the managed AudioFile object from another audio file wrapper.
-    void swap(AudioFileWrapper& other) noexcept;
+    void swap(AudioFileWrapper &other) noexcept;
 
     /// Releases ownership of the managed AudioFile object and returns it.
     /// @note The caller assumes responsibility for closing the returned AudioFile object using AudioFileClose.
@@ -64,32 +64,22 @@ class AudioFileWrapper final {
 
 // MARK: - Implementation -
 
-inline AudioFileWrapper::AudioFileWrapper(AudioFileWrapper&& other) noexcept
-  : audioFile_{other.release()} {}
+inline AudioFileWrapper::AudioFileWrapper(AudioFileWrapper &&other) noexcept : audioFile_{other.release()} {}
 
-inline AudioFileWrapper& AudioFileWrapper::operator=(AudioFileWrapper&& other) noexcept {
+inline AudioFileWrapper &AudioFileWrapper::operator=(AudioFileWrapper &&other) noexcept {
     reset(other.release());
     return *this;
 }
 
-inline AudioFileWrapper::~AudioFileWrapper() noexcept {
-    reset();
-}
+inline AudioFileWrapper::~AudioFileWrapper() noexcept { reset(); }
 
-inline AudioFileWrapper::AudioFileWrapper(AudioFileID _Nullable audioFile) noexcept
-  : audioFile_{audioFile} {}
+inline AudioFileWrapper::AudioFileWrapper(AudioFileID _Nullable audioFile) noexcept : audioFile_{audioFile} {}
 
-inline AudioFileWrapper::operator bool() const noexcept {
-    return audioFile_ != nullptr;
-}
+inline AudioFileWrapper::operator bool() const noexcept { return audioFile_ != nullptr; }
 
-inline AudioFileWrapper::operator AudioFileID _Nullable() const noexcept {
-    return audioFile_;
-}
+inline AudioFileWrapper::operator AudioFileID _Nullable() const noexcept { return audioFile_; }
 
-inline AudioFileID _Nullable AudioFileWrapper::get() const noexcept {
-    return audioFile_;
-}
+inline AudioFileID _Nullable AudioFileWrapper::get() const noexcept { return audioFile_; }
 
 inline void AudioFileWrapper::reset(AudioFileID _Nullable audioFile) noexcept {
     if (auto old = std::exchange(audioFile_, audioFile); old) {
@@ -97,12 +87,8 @@ inline void AudioFileWrapper::reset(AudioFileID _Nullable audioFile) noexcept {
     }
 }
 
-inline void AudioFileWrapper::swap(AudioFileWrapper& other) noexcept {
-    std::swap(audioFile_, other.audioFile_);
-}
+inline void AudioFileWrapper::swap(AudioFileWrapper &other) noexcept { std::swap(audioFile_, other.audioFile_); }
 
-inline AudioFileID _Nullable AudioFileWrapper::release() noexcept {
-    return std::exchange(audioFile_, nullptr);
-}
+inline AudioFileID _Nullable AudioFileWrapper::release() noexcept { return std::exchange(audioFile_, nullptr); }
 
 } /* namespace audio_toolbox */

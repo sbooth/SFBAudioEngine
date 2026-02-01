@@ -106,11 +106,11 @@ class AudioPlayer final {
   public:
     AudioPlayer();
 
-    AudioPlayer(const AudioPlayer&) = delete;
-    AudioPlayer& operator=(const AudioPlayer&) = delete;
+    AudioPlayer(const AudioPlayer &) = delete;
+    AudioPlayer &operator=(const AudioPlayer &) = delete;
 
-    AudioPlayer(AudioPlayer&&) = delete;
-    AudioPlayer& operator=(AudioPlayer&&) = delete;
+    AudioPlayer(AudioPlayer &&) = delete;
+    AudioPlayer &operator=(AudioPlayer &&) = delete;
 
     ~AudioPlayer() noexcept;
 
@@ -216,7 +216,7 @@ class AudioPlayer final {
     // MARK: - Rendering
 
     /// Render block implementation
-    OSStatus render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount,
+    OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                     AudioBufferList *_Nonnull outputData) noexcept;
 
     // MARK: - Events
@@ -320,7 +320,7 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
-          static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     const auto state = flags & mask;
     assert(state != static_cast<unsigned int>(Flags::isPlaying));
     return static_cast<SFBAudioPlayerPlaybackState>(state);
@@ -329,14 +329,14 @@ inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
 inline bool AudioPlayer::isPlaying() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
-          static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     return (flags & mask) == mask;
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
-          static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
 }
 
@@ -355,17 +355,11 @@ inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
     return nowPlaying_;
 }
 
-inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept {
-    return sourceNode_;
-}
+inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { return sourceNode_; }
 
-inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept {
-    return engine_.mainMixerNode;
-}
+inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
-inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept {
-    return engine_.outputNode;
-}
+inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
 
 } /* namespace sfb */
 

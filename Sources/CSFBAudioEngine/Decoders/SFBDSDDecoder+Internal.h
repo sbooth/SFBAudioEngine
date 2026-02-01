@@ -29,8 +29,8 @@ extern os_log_t gSFBDSDDecoderLog;
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the test was successfully performed, `NO` otherwise
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error;
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error;
 
 /// Returns an invalid format error with a description similar to "The file is not a valid XXX file"
 /// - parameter formatName: The localized name of the audio format

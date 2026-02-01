@@ -291,7 +291,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     spx_int32_t highpass_enabled =
-          ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
+            ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
     speex_encoder_ctl(_st, SPEEX_SET_HIGHPASS, &highpass_enabled);
 
     speex_encoder_ctl(_st, SPEEX_GET_LOOKAHEAD, &_speex_lookahead);

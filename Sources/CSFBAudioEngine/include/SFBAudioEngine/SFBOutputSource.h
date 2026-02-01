@@ -67,9 +67,9 @@ NS_SWIFT_NAME(OutputSource)
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if any bytes were written, `NO` otherwise
 - (BOOL)writeBytes:(const void *)buffer
-            length:(NSInteger)length
-      bytesWritten:(NSInteger *)bytesWritten
-             error:(NSError **)error NS_REFINED_FOR_SWIFT;
+              length:(NSInteger)length
+        bytesWritten:(NSInteger *)bytesWritten
+               error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// `YES` if the end of input has been reached
 @property(nonatomic, readonly) BOOL atEOF;

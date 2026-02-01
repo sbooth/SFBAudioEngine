@@ -20,9 +20,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) {
-        CFRelease(cf);
-    }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -45,7 +43,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
     if (tag->contains("\251day")) {
         self.releaseDate =
-              [NSString stringWithUTF8String:tag->item("\251day").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("\251day").toStringList().toString().toCString(true)];
     }
 
     if (tag->contains("trkn")) {
@@ -83,23 +81,23 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // Sorting
     if (tag->contains("sonm")) {
         self.titleSortOrder =
-              [NSString stringWithUTF8String:tag->item("sonm").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("sonm").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soal")) {
         self.albumTitleSortOrder =
-              [NSString stringWithUTF8String:tag->item("soal").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soal").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soar")) {
         self.artistSortOrder =
-              [NSString stringWithUTF8String:tag->item("soar").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soar").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soaa")) {
         self.albumArtistSortOrder =
-              [NSString stringWithUTF8String:tag->item("soaa").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soaa").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soco")) {
         self.composerSortOrder =
-              [NSString stringWithUTF8String:tag->item("soco").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soco").toStringList().toString().toCString(true)];
     }
 
     if (tag->contains("\251grp")) {
@@ -118,18 +116,18 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // MusicBrainz
     if (tag->contains("---:com.apple.iTunes:MusicBrainz Album Id")) {
         self.musicBrainzReleaseID =
-              [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id")
-                                                   .toStringList()
-                                                   .toString()
-                                                   .toCString(true)];
+                [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id")
+                                                       .toStringList()
+                                                       .toString()
+                                                       .toCString(true)];
     }
 
     if (tag->contains("---:com.apple.iTunes:MusicBrainz Track Id")) {
         self.musicBrainzRecordingID =
-              [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id")
-                                                   .toStringList()
-                                                   .toString()
-                                                   .toCString(true)];
+                [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id")
+                                                       .toStringList()
+                                                       .toString()
+                                                       .toCString(true)];
     }
 
     // ReplayGain
@@ -293,7 +291,7 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
         auto list = TagLib::MP4::CoverArtList();
         for (SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
             cg_image_source_unique_ptr imageSource{
-                  CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+                    CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
             if (!imageSource) {
                 continue;
             }
@@ -315,8 +313,8 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
             }
 
             auto picture = TagLib::MP4::CoverArt(
-                  type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
-                                           static_cast<unsigned int>(attachedPicture.imageData.length)));
+                    type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
+                                             static_cast<unsigned int>(attachedPicture.imageData.length)));
             list.append(picture);
         }
 

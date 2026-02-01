@@ -37,9 +37,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamDecoder` objects
 struct flac__stream_decoder_deleter {
-    void operator()(FLAC__StreamDecoder *decoder) {
-        FLAC__stream_decoder_delete(decoder);
-    }
+    void operator()(FLAC__StreamDecoder *decoder) { FLAC__stream_decoder_delete(decoder); }
 };
 
 using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
@@ -194,8 +192,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -274,7 +272,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     processingStreamDescription.mBytesPerPacket = 4;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
-          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+            processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
     _flac = std::move(flac);
 
@@ -486,9 +484,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             os_log_error(gSFBAudioDecoderLog, "Change in channel count from %d to %d detected",
                          _previousFrameHeader.channels, frame->header.channels);
 
-            _writeError =
-                  [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
-                            recoverySuggestion:NSLocalizedString(@"Changes in channel count are not supported.", @"")];
+            _writeError = [self
+                    unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                        recoverySuggestion:NSLocalizedString(@"Changes in channel count are not supported.", @"")];
 
             _frameBuffer.frameLength = 0;
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -500,8 +498,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                          static_cast<double>(frame->header.sample_rate) / 1000.0);
 
             _writeError =
-                  [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
-                            recoverySuggestion:NSLocalizedString(@"Changes in sample rate are not supported.", @"")];
+                    [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                              recoverySuggestion:NSLocalizedString(@"Changes in sample rate are not supported.", @"")];
 
             _frameBuffer.frameLength = 0;
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -590,8 +588,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 

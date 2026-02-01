@@ -57,7 +57,7 @@ uint32_t bytesToID(const char bytes[4]) noexcept {
 }
 
 // Read an ID as a uint32_t, performing validation
-bool readID(SFBInputSource *inputSource, uint32_t& chunkID) noexcept {
+bool readID(SFBInputSource *inputSource, uint32_t &chunkID) noexcept {
     NSCParameterAssert(inputSource != nil);
 
     char chunkIDBytes[4];
@@ -107,9 +107,7 @@ struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk> {
     using chunk_map = std::map<uint32_t, shared_ptr>;
 
     // Shared pointer support
-    shared_ptr getptr() {
-        return shared_from_this();
-    }
+    shared_ptr getptr() { return shared_from_this(); }
 
     uint32_t chunkID_;
     uint64_t dataSize_;
@@ -220,7 +218,7 @@ struct DSDSoundDataChunk : public DSDIFFChunk {};
 
 // MARK: DSDIFF parsing
 
-bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize) noexcept {
+bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t &chunkID, uint64_t &chunkDataSize) noexcept {
     if (!readID(inputSource, chunkID)) {
         return false;
     }
@@ -703,8 +701,8 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 

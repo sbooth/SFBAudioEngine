@@ -124,8 +124,8 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -185,7 +185,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         // FIXME: Is there a standard ordering for multichannel files? WAVEFORMATEX?
     default:
         channelLayout =
-              [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | streaminfo.channels)];
+                [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | streaminfo.channels)];
         break;
     }
 

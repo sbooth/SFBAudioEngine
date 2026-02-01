@@ -29,7 +29,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexHeaderS
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexRate = @"rate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexMode = @"mode";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexModeBitstreamVersion =
-      @"mode_bitstream_version";
+        @"mode_bitstream_version";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexNumberChannels = @"nb_channels";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexBitrate = @"bitrate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexFrameSize = @"frame_size";
@@ -80,8 +80,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -195,11 +195,12 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
         if (error) {
             *error = [self
-                  unsupportedFormatError:NSLocalizedString(@"Ogg Speex", @"")
-                      recoverySuggestion:[NSString
-                                               localizedStringWithFormat:NSLocalizedString(
-                                                                               @"Speex mode %d is not supported.", @""),
-                                                                         header->mode]];
+                    unsupportedFormatError:NSLocalizedString(@"Ogg Speex", @"")
+                        recoverySuggestion:[NSString
+                                                   localizedStringWithFormat:NSLocalizedString(
+                                                                                     @"Speex mode %d is not supported.",
+                                                                                     @""),
+                                                                             header->mode]];
         }
         return NO;
     }
@@ -211,11 +212,12 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
         if (error) {
             *error = [self
-                  unsupportedFormatError:NSLocalizedString(@"Ogg Speex", @"")
-                      recoverySuggestion:[NSString localizedStringWithFormat:
-                                                         NSLocalizedString(
-                                                               @"Speex bitstream version %d is not supported.", @""),
-                                                         header->mode_bitstream_version]];
+                    unsupportedFormatError:NSLocalizedString(@"Ogg Speex", @"")
+                        recoverySuggestion:[NSString localizedStringWithFormat:
+                                                             NSLocalizedString(
+                                                                     @"Speex bitstream version %d is not supported.",
+                                                                     @""),
+                                                             header->mode_bitstream_version]];
         }
         return NO;
     }
@@ -230,7 +232,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
             NSError *internalError = [self genericInternalError];
             NSMutableDictionary *userInfo = [internalError.userInfo mutableCopy];
             userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                  NSLocalizedString(@"Unable to initialize the Speex decoder.", @"");
+                    NSLocalizedString(@"Unable to initialize the Speex decoder.", @"");
             *error = [NSError errorWithDomain:internalError.domain code:internalError.code userInfo:userInfo];
         }
         return NO;
@@ -404,7 +406,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                         NSError *decodingError = [self genericDecodingError];
                         NSMutableDictionary *userInfo = [decodingError.userInfo mutableCopy];
                         userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                              NSLocalizedString(@"Ogg loss of streaming.", @"");
+                                NSLocalizedString(@"Ogg loss of streaming.", @"");
                         *error = [NSError errorWithDomain:decodingError.domain
                                                      code:decodingError.code
                                                  userInfo:userInfo];
@@ -459,7 +461,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                                     NSError *decodingError = [self genericDecodingError];
                                     NSMutableDictionary *userInfo = [decodingError.userInfo mutableCopy];
                                     userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                                          NSLocalizedString(@"Possible corrupted stream.", @"");
+                                            NSLocalizedString(@"Possible corrupted stream.", @"");
                                     *error = [NSError errorWithDomain:decodingError.domain
                                                                  code:decodingError.code
                                                              userInfo:userInfo];
@@ -474,7 +476,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                                     NSError *decodingError = [self genericDecodingError];
                                     NSMutableDictionary *userInfo = [decodingError.userInfo mutableCopy];
                                     userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                                          NSLocalizedString(@"Decoding overflow; possible corrupted stream.", @"");
+                                            NSLocalizedString(@"Decoding overflow; possible corrupted stream.", @"");
                                     *error = [NSError errorWithDomain:decodingError.domain
                                                                  code:decodingError.code
                                                              userInfo:userInfo];
@@ -544,7 +546,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                         NSError *decodingError = [self genericDecodingError];
                         NSMutableDictionary *userInfo = [decodingError.userInfo mutableCopy];
                         userInfo[NSLocalizedRecoverySuggestionErrorKey] =
-                              NSLocalizedString(@"Error reading Ogg page.", @"");
+                                NSLocalizedString(@"Error reading Ogg page.", @"");
                         *error = [NSError errorWithDomain:decodingError.domain
                                                      code:decodingError.code
                                                  userInfo:userInfo];

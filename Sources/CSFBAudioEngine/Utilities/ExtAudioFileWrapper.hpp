@@ -20,16 +20,16 @@ class ExtAudioFileWrapper final {
     ExtAudioFileWrapper() noexcept = default;
 
     // This class is non-copyable
-    ExtAudioFileWrapper(const ExtAudioFileWrapper&) = delete;
+    ExtAudioFileWrapper(const ExtAudioFileWrapper &) = delete;
 
     // This class is non-assignable
-    ExtAudioFileWrapper& operator=(const ExtAudioFileWrapper&) = delete;
+    ExtAudioFileWrapper &operator=(const ExtAudioFileWrapper &) = delete;
 
     /// Move constructor.
-    ExtAudioFileWrapper(ExtAudioFileWrapper&& other) noexcept;
+    ExtAudioFileWrapper(ExtAudioFileWrapper &&other) noexcept;
 
     /// Move assignment operator.
-    ExtAudioFileWrapper& operator=(ExtAudioFileWrapper&& other) noexcept;
+    ExtAudioFileWrapper &operator=(ExtAudioFileWrapper &&other) noexcept;
 
     /// Calls ExtAudioFileDispose on the managed ExtAudioFile object.
     ~ExtAudioFileWrapper() noexcept;
@@ -53,7 +53,7 @@ class ExtAudioFileWrapper final {
 
     /// Swaps the managed ExtAudioFile object with the managed ExtAudioFile object from another extended audio file
     /// wrapper.
-    void swap(ExtAudioFileWrapper& other) noexcept;
+    void swap(ExtAudioFileWrapper &other) noexcept;
 
     /// Releases ownership of the managed ExtAudioFile object and returns it.
     /// @note The caller assumes responsibility for disposing of the returned ExtAudioFile object using
@@ -67,32 +67,24 @@ class ExtAudioFileWrapper final {
 
 // MARK: - Implementation -
 
-inline ExtAudioFileWrapper::ExtAudioFileWrapper(ExtAudioFileWrapper&& other) noexcept
-  : extAudioFile_{other.release()} {}
+inline ExtAudioFileWrapper::ExtAudioFileWrapper(ExtAudioFileWrapper &&other) noexcept
+    : extAudioFile_{other.release()} {}
 
-inline ExtAudioFileWrapper& ExtAudioFileWrapper::operator=(ExtAudioFileWrapper&& other) noexcept {
+inline ExtAudioFileWrapper &ExtAudioFileWrapper::operator=(ExtAudioFileWrapper &&other) noexcept {
     reset(other.release());
     return *this;
 }
 
-inline ExtAudioFileWrapper::~ExtAudioFileWrapper() noexcept {
-    reset();
-}
+inline ExtAudioFileWrapper::~ExtAudioFileWrapper() noexcept { reset(); }
 
 inline ExtAudioFileWrapper::ExtAudioFileWrapper(ExtAudioFileRef _Nullable extAudioFile) noexcept
-  : extAudioFile_{extAudioFile} {}
+    : extAudioFile_{extAudioFile} {}
 
-inline ExtAudioFileWrapper::operator bool() const noexcept {
-    return extAudioFile_ != nullptr;
-}
+inline ExtAudioFileWrapper::operator bool() const noexcept { return extAudioFile_ != nullptr; }
 
-inline ExtAudioFileWrapper::operator ExtAudioFileRef _Nullable() const noexcept {
-    return extAudioFile_;
-}
+inline ExtAudioFileWrapper::operator ExtAudioFileRef _Nullable() const noexcept { return extAudioFile_; }
 
-inline ExtAudioFileRef _Nullable ExtAudioFileWrapper::get() const noexcept {
-    return extAudioFile_;
-}
+inline ExtAudioFileRef _Nullable ExtAudioFileWrapper::get() const noexcept { return extAudioFile_; }
 
 inline void ExtAudioFileWrapper::reset(ExtAudioFileRef _Nullable extAudioFile) noexcept {
     if (auto oldExtAudioFile = std::exchange(extAudioFile_, extAudioFile); oldExtAudioFile) {
@@ -100,7 +92,7 @@ inline void ExtAudioFileWrapper::reset(ExtAudioFileRef _Nullable extAudioFile) n
     }
 }
 
-inline void ExtAudioFileWrapper::swap(ExtAudioFileWrapper& other) noexcept {
+inline void ExtAudioFileWrapper::swap(ExtAudioFileWrapper &other) noexcept {
     std::swap(extAudioFile_, other.extAudioFile_);
 }
 

@@ -26,16 +26,12 @@ constexpr uint32_t kDefaultPaddingSize = 8192;
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamEncoder` objects
 struct flac__stream_encoder_deleter {
-    void operator()(FLAC__StreamEncoder *encoder) {
-        FLAC__stream_encoder_delete(encoder);
-    }
+    void operator()(FLAC__StreamEncoder *encoder) { FLAC__stream_encoder_delete(encoder); }
 };
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamMetadata` objects
 struct flac__stream_metadata_deleter {
-    void operator()(FLAC__StreamMetadata *metadata) {
-        FLAC__metadata_object_delete(metadata);
-    }
+    void operator()(FLAC__StreamMetadata *metadata) { FLAC__metadata_object_delete(metadata); }
 };
 
 using flac__stream_encoder_unique_ptr = std::unique_ptr<FLAC__StreamEncoder, flac__stream_encoder_deleter>;
@@ -311,8 +307,8 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
 
         // Append seekpoints (one every 10 seconds)
         if (!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(
-                  seektable.get(), static_cast<uint32_t>(10 * _processingFormat.sampleRate),
-                  static_cast<FLAC__uint64>(_estimatedFramesToEncode))) {
+                    seektable.get(), static_cast<uint32_t>(10 * _processingFormat.sampleRate),
+                    static_cast<FLAC__uint64>(_estimatedFramesToEncode))) {
             os_log_error(gSFBAudioEncoderLog,
                          "FLAC__metadata_object_seektable_template_append_spaced_points_by_samples failed");
             if (error != nullptr) {
@@ -436,7 +432,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
             const auto frameOffset = frameLength - framesRemaining;
             const auto byteOffset = frameOffset * format->mBytesPerFrame;
             auto *const src = reinterpret_cast<int32_t *>(
-                  static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset);
+                    static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData) + byteOffset);
 
             // Shift from high alignment, sign extending in the process
             for (AVAudioFrameCount i = 0; i < frameCount * stride; ++i) {
@@ -459,7 +455,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
     } else {
         // Pass 32-bit samples straight through
         if (!FLAC__stream_encoder_process_interleaved(
-                  _flac.get(), static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData), frameLength)) {
+                    _flac.get(), static_cast<int32_t *>(buffer.audioBufferList->mBuffers[0].mData), frameLength)) {
             os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s",
                          FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
             if (error != nullptr) {

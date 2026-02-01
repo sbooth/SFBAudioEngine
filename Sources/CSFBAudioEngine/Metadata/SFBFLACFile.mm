@@ -39,8 +39,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
     NSParameterAssert(formatIsSupported != nullptr);
 
@@ -77,7 +77,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
         }
 
         NSMutableDictionary *propertiesDictionary =
-              [NSMutableDictionary dictionaryWithObject:@"FLAC" forKey:SFBAudioPropertiesKeyFormatName];
+                [NSMutableDictionary dictionaryWithObject:@"FLAC" forKey:SFBAudioPropertiesKeyFormatName];
         if (const auto *properties = file.audioProperties(); properties != nullptr) {
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
@@ -114,16 +114,16 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
             }
 
             [metadata attachPicture:[[SFBAttachedPicture alloc]
-                                          initWithImageData:imageData
-                                                       type:static_cast<SFBAttachedPictureType>(iter->type())
-                                                description:description]];
+                                            initWithImageData:imageData
+                                                         type:static_cast<SFBAttachedPictureType>(iter->type())
+                                                  description:description]];
         }
 
         self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
         self.metadata = metadata;
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error reading FLAC properties and metadata: %{public}s", e.what());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
@@ -182,7 +182,7 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngi
         }
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error writing FLAC metadata: %{public}s", e.what());
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain

@@ -16,9 +16,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) {
-        CFRelease(cf);
-    }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -128,9 +126,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
 
         [self attachPicture:[[SFBAttachedPicture alloc]
-                                  initWithImageData:imageData
-                                               type:static_cast<SFBAttachedPictureType>(iter->type())
-                                        description:description]];
+                                    initWithImageData:imageData
+                                                 type:static_cast<SFBAttachedPictureType>(iter->type())
+                                          description:description]];
     }
 }
 
@@ -251,7 +249,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     assert(attachedPicture != nil);
 
     cg_image_source_unique_ptr imageSource{
-          CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+            CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
     if (!imageSource) {
         return nullptr;
     }
@@ -274,7 +272,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
 
     // Flesh out the height, width, and depth
     NSDictionary *imagePropertiesDictionary =
-          (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
+            (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
     if (imagePropertiesDictionary) {
         NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
         NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];

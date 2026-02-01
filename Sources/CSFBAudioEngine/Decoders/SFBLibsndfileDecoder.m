@@ -32,7 +32,7 @@ static void FillOutASBDForLPCM(AudioStreamBasicDescription *_Nonnull asbd, Float
 
     asbd->mFormatID = kAudioFormatLinearPCM;
     asbd->mFormatFlags =
-          CalculateLPCMFlags(validBitsPerChannel, totalBitsPerChannel, isFloat, isBigEndian, isNonInterleaved);
+            CalculateLPCMFlags(validBitsPerChannel, totalBitsPerChannel, isFloat, isBigEndian, isNonInterleaved);
 
     asbd->mSampleRate = sampleRate;
     asbd->mChannelsPerFrame = channelsPerFrame;
@@ -285,8 +285,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -359,18 +359,18 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
         if (error) {
             NSMutableDictionary *userInfo = [NSMutableDictionary
-                  dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")
-                                forKey:NSLocalizedRecoverySuggestionErrorKey];
+                    dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
 
             if (_inputSource.url) {
                 userInfo[NSLocalizedDescriptionKey] = [NSString
-                      localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” was not recognized.",
-                                                                  @""),
-                                                SFBLocalizedNameForURL(_inputSource.url)];
+                        localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” was not recognized.",
+                                                                    @""),
+                                                  SFBLocalizedNameForURL(_inputSource.url)];
                 userInfo[NSURLErrorKey] = _inputSource.url;
             } else {
                 userInfo[NSLocalizedDescriptionKey] =
-                      NSLocalizedString(@"The format of the file was not recognized.", @"");
+                        NSLocalizedString(@"The format of the file was not recognized.", @"");
             }
 
             *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
@@ -454,7 +454,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
             break;
         default:
             channelLayout = [AVAudioChannelLayout
-                  layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_sfinfo.channels)];
+                    layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)_sfinfo.channels)];
             break;
         }
     }
