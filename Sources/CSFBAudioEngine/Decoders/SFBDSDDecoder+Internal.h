@@ -43,7 +43,7 @@ extern os_log_t gSFBDSDDecoderLog;
 - (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion;
 @end
 
-#pragma mark - Subclass Registration and Lookup
+// MARK: - Subclass Registration and Lookup
 
 @interface SFBDSDDecoder (SFBDSDDecoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)

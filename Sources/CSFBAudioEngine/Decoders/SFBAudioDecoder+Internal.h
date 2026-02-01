@@ -57,7 +57,7 @@ extern os_log_t gSFBAudioDecoderLog;
 - (NSError *)genericSeekError;
 @end
 
-#pragma mark - Subclass Registration
+// MARK: - Subclass Registration
 
 @interface SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)

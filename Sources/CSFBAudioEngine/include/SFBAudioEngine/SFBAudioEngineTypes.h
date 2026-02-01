@@ -6,7 +6,7 @@
 
 #import <CoreAudioTypes/CoreAudioTypes.h>
 
-#pragma mark Audio Format Identifiers
+// MARK: - Audio Format Identifiers
 
 // clang-format off
 
@@ -34,7 +34,7 @@ CF_ENUM(AudioFormatID) {
     kSFBAudioFormatWavPack CF_SWIFT_NAME(wavPack) = 'WV  ',
 };
 
-#pragma mark - DSD Constants
+// MARK: - DSD Constants
 
 /// DSD sample rates (named as multiples of the CD sample rate, 44,100 Hz)
 CF_ENUM(uint32_t) {
@@ -79,7 +79,7 @@ CF_ENUM(int) {
 #import <AVFAudio/AVFAudio.h>
 #import <Foundation/Foundation.h>
 
-#pragma mark - Constants for Unknowns
+// MARK: - Constants for Unknowns
 
 /// Value representing an invalid or unknown time
 extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(unknownTime);
@@ -100,7 +100,7 @@ NS_ENUM(AVAudioFramePosition) {
 
 // clang-format on
 
-#pragma mark - Playback Position
+// MARK: - Playback Position
 
 /// Playback position information
 struct NS_SWIFT_SENDABLE SFBPlaybackPosition {
@@ -120,7 +120,7 @@ NS_INLINE BOOL SFBPlaybackPositionIsValid(SFBPlaybackPosition playbackPosition) 
            playbackPosition.frameLength != SFBUnknownFrameLength;
 }
 
-#pragma mark - Playback Time
+// MARK: - Playback Time
 
 /// Playback time information
 struct NS_SWIFT_SENDABLE SFBPlaybackTime {

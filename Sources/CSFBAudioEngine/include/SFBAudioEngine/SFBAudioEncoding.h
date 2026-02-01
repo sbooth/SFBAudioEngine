@@ -21,12 +21,12 @@ typedef id SFBAudioEncodingSettingsValue NS_SWIFT_NAME(AudioEncodingSettingsValu
 NS_SWIFT_NAME(AudioEncoding)
 @protocol SFBAudioEncoding
 
-#pragma mark - Output
+// MARK: - Output
 
 /// The output source consuming data from this encoder
 @property(nonatomic, readonly) SFBOutputSource *outputSource;
 
-#pragma mark - Audio Format Information
+// MARK: - Audio Format Information
 
 /// The source audio format
 @property(nonatomic, readonly) AVAudioFormat *sourceFormat;
@@ -45,7 +45,7 @@ NS_SWIFT_NAME(AudioEncoding)
 /// - returns: The processing format corresponding to `sourceFormat`, or `nil` if `sourceFormat` is not supported
 - (nullable AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat;
 
-#pragma mark - Setup and Teardown
+// MARK: - Setup and Teardown
 
 /// Sets the source audio format for the encoder
 /// - note: If supported, the source format is used  to determine the appropriate `processingFormat`
@@ -67,7 +67,7 @@ NS_SWIFT_NAME(AudioEncoding)
 /// Returns `YES` if the encoder is open
 @property(nonatomic, readonly) BOOL isOpen;
 
-#pragma mark - Encoding
+// MARK: - Encoding
 
 /// Encoder settings
 @property(nonatomic, copy, nullable) NSDictionary<SFBAudioEncodingSettingsKey, SFBAudioEncodingSettingsValue> *settings;

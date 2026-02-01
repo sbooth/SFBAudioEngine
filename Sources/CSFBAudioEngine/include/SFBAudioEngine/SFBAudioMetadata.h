@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -123,7 +123,7 @@ NS_SWIFT_NAME(AudioMetadata)
 /// - seealso: `-removeAllAttachedPictures`
 - (void)removeAll;
 
-#pragma mark - Basic Metadata
+// MARK: - Basic Metadata
 
 /// The title
 @property(nonatomic, nullable) NSString *title;
@@ -185,7 +185,7 @@ NS_SWIFT_NAME(AudioMetadata)
 /// The MusicBrainz recording ID
 @property(nonatomic, nullable) NSString *musicBrainzRecordingID;
 
-#pragma mark - Sorting Metadata
+// MARK: - Sorting Metadata
 
 /// The title sort order
 @property(nonatomic, nullable) NSString *titleSortOrder;
@@ -205,17 +205,17 @@ NS_SWIFT_NAME(AudioMetadata)
 /// The genre sort order
 @property(nonatomic, nullable) NSString *genreSortOrder;
 
-#pragma mark - Grouping Metadata
+// MARK: - Grouping Metadata
 
 /// The grouping
 @property(nonatomic, nullable) NSString *grouping;
 
-#pragma mark - Additional Metadata
+// MARK: - Additional Metadata
 
 /// The additional metadata
 @property(nonatomic, nullable) NSDictionary *additionalMetadata;
 
-#pragma mark - ReplayGain Metadata
+// MARK: - ReplayGain Metadata
 
 /// The replay gain reference loudness
 @property(nonatomic, nullable) NSNumber *replayGainReferenceLoudness NS_REFINED_FOR_SWIFT;
@@ -232,7 +232,7 @@ NS_SWIFT_NAME(AudioMetadata)
 /// The replay gain album peak
 @property(nonatomic, nullable) NSNumber *replayGainAlbumPeak NS_REFINED_FOR_SWIFT;
 
-#pragma mark - Metadata Utilities
+// MARK: - Metadata Utilities
 
 /// Copies all metadata from `metadata`
 /// - note: Does not copy album artwork
@@ -262,12 +262,12 @@ NS_SWIFT_NAME(AudioMetadata)
 /// - seealso: `-removeAllAttachedPictures`
 - (void)removeAllMetadata;
 
-#pragma mark - Attached Pictures
+// MARK: - Attached Pictures
 
 /// Get all attached pictures
 @property(nonatomic, readonly) NSSet<SFBAttachedPicture *> *attachedPictures;
 
-#pragma mark - Attached Picture Utilities
+// MARK: - Attached Picture Utilities
 
 /// Copies album artwork from `metadata`
 /// - note: This clears existing album artwork
@@ -292,7 +292,7 @@ NS_SWIFT_NAME(AudioMetadata)
 /// Remove all attached pictures
 - (void)removeAllAttachedPictures;
 
-#pragma mark - External Representation
+// MARK: - External Representation
 
 /// Copy the values contained in this object to a dictionary
 /// - returns: A dictionary containing this object's metadata and attached pictures
@@ -302,7 +302,7 @@ NS_SWIFT_NAME(AudioMetadata)
 /// - parameter dictionary: A dictionary containing the desired values
 - (void)setFromDictionaryRepresentation:(NSDictionary<SFBAudioMetadataKey, id> *)dictionary NS_SWIFT_NAME(setFrom(_:));
 
-#pragma mark - Dictionary-Like Interface
+// MARK: - Dictionary-Like Interface
 
 /// Returns the metadata value for a key
 /// - parameter key: The key for the desired metadata value

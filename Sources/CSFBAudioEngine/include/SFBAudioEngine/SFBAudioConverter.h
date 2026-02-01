@@ -144,7 +144,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error;
 
-#pragma mark - Conversion Information
+// MARK: - Conversion Information
 
 /// The decoder supplying the audio to be converted
 @property(nonatomic, readonly) id<SFBPCMDecoding> decoder;
@@ -157,7 +157,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// The encoder receving the intermediate audio for encoding
 @property(nonatomic, readonly) id<SFBPCMEncoding> encoder;
 
-#pragma mark - Conversion
+// MARK: - Conversion
 
 /// Converts audio
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -166,7 +166,7 @@ NS_SWIFT_NAME(AudioConverter)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioConverter`
 extern NSErrorDomain const SFBAudioConverterErrorDomain NS_SWIFT_NAME(AudioConverter.ErrorDomain);

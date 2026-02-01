@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 NS_SWIFT_NAME(PCMDecoding)
 @protocol SFBPCMDecoding <SFBAudioDecoding>
 
-#pragma mark - Position and Length Information
+// MARK: - Position and Length Information
 
 /// The decoder's current frame position or `SFBUnknownFramePosition` if unknown
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_SWIFT_NAME(position);
@@ -20,7 +20,7 @@ NS_SWIFT_NAME(PCMDecoding)
 /// The decoder's length in frames or `SFBUnknownFrameLength` if unknown
 @property(nonatomic, readonly) AVAudioFramePosition frameLength NS_SWIFT_NAME(length);
 
-#pragma mark - Decoding
+// MARK: - Decoding
 
 /// Decodes audio
 /// - parameter buffer: A buffer to receive the decoded audio
@@ -31,7 +31,7 @@ NS_SWIFT_NAME(PCMDecoding)
              frameLength:(AVAudioFrameCount)frameLength
                    error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 /// Seeks to the specified frame
 /// - parameter frame: The desired frame

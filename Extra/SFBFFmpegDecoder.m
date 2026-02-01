@@ -24,12 +24,12 @@
 #define BUF_SIZE 4096
 #define ERRBUF_SIZE 512
 
-#pragma mark Initialization
+// MARK: Initialization
 
 static void SetupFFmpeg(void) __attribute__((constructor));
 static void SetupFFmpeg() { av_log_set_level(AV_LOG_QUIET); }
 
-#pragma mark Callbacks
+// MARK: Callbacks
 
 static int my_read_packet(void *opaque, unsigned char *buf, int buf_size) {
     assert(opaque != NULL);

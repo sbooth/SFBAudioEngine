@@ -30,7 +30,7 @@ constexpr unsigned char sBitReverseTable256[256] = {
 #define R6(n) R4(n), R4(n + 2 * 4), R4(n + 1 * 4), R4(n + 3 * 4)
         R6(0), R6(2), R6(1), R6(3)};
 
-#pragma mark Begin DSD2PCM
+// MARK: Begin DSD2PCM
 
 // The code performing the DSD to PCM conversion was modified from dsd2pcm.c:
 
@@ -221,14 +221,14 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     ptr->fifopos = ffp;
 }
 
-#pragma mark End DSD2PCM
+// MARK: End DSD2PCM
 
-#pragma mark Initialization
+// MARK: Initialization
 
 void setupDSD2PCM() noexcept __attribute__((constructor));
 void setupDSD2PCM() noexcept { dsd2pcm_precalc(); }
 
-#pragma mark DXD
+// MARK: DXD
 
 class DXD {
   public:

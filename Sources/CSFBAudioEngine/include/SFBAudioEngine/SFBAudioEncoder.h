@@ -40,7 +40,7 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile;
 NS_SWIFT_NAME(AudioEncoder)
 @interface SFBAudioEncoder : NSObject <SFBPCMEncoding>
 
-#pragma mark - File Format Support
+// MARK: - File Format Support
 
 /// A set containing the supported path extensions
 @property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
@@ -54,7 +54,7 @@ NS_SWIFT_NAME(AudioEncoder)
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
-#pragma mark - Creation
+// MARK: - Creation
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -137,7 +137,7 @@ NS_SWIFT_NAME(AudioEncoder)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioEncoder` and subclasses
 extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder.ErrorDomain);
@@ -152,14 +152,14 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode){
     SFBAudioEncoderErrorCodeInternalError = 2,
 } NS_SWIFT_NAME(AudioEncoder.Error);
 
-#pragma mark - FLAC Encoder Settings
+// MARK: - FLAC Encoder Settings
 
 /// FLAC compression level (`NSNumber` from 0 (lowest) to 8 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
 /// Set to nonzero to verify FLAC encoding (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
 
-#pragma mark - Monkey's Audio Encoder Settings
+// MARK: - Monkey's Audio Encoder Settings
 
 /// APE compression level (`SFBAudioEncodingSettingsValueAPECompressionLevel`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
@@ -179,7 +179,7 @@ extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSe
 /// Insane compression
 extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelInsane;
 
-#pragma mark - MP3 Encoder Settings
+// MARK: - MP3 Encoder Settings
 
 // Valid bitrates for MPEG 1 Layer III are 32 40 48 56 64 80 96 112 128 160 192 224 256 320
 
@@ -213,12 +213,12 @@ extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettings
 /// Joint stereo mode
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo;
 
-#pragma mark - Musepack Encoder Settings
+// MARK: - Musepack Encoder Settings
 
 /// Musepack quality (`NSNumber` from 0.0 (worst) to 10.0 (best))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality;
 
-#pragma mark - Opus Encoder Settings
+// MARK: - Opus Encoder Settings
 
 /// Set to nonzero to disable resampling (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusPreserveSampleRate;
@@ -276,7 +276,7 @@ extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSett
 /// 120 msec
 extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration120ms;
 
-#pragma mark - Speex Encoder Settings
+// MARK: - Speex Encoder Settings
 
 /// Speex encoding mode (`SFBAudioEncodingSettingsValueSpeexMode`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode;
@@ -317,7 +317,7 @@ extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValu
 /// Ultra-wideband
 extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband;
 
-#pragma mark - Vorbis Encoder Settings
+// MARK: - Vorbis Encoder Settings
 
 /// Set to nonzero to target bitrate instead of quality (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate;
@@ -330,7 +330,7 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMinBit
 /// Vorbis maximum bitrate (`NSNumber`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate;
 
-#pragma mark - WavPack Encoder Settings
+// MARK: - WavPack Encoder Settings
 
 /// WavPack compression level (`SFBAudioEncodingSettingsValueWavPackCompressionLevel`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
@@ -349,7 +349,7 @@ extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const
 extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const
         SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh;
 
-#pragma mark - Core Audio Encoder Settings
+// MARK: - Core Audio Encoder Settings
 
 /// Core Audio file type ID (`NSNumber` representing `AudioFileTypeID`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID;
@@ -374,7 +374,7 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBit
 /// `kAudioConverterPropertyDitherBitDepth` (macOS only)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
 
-#pragma mark - Libsndfile Encoder Settings
+// MARK: - Libsndfile Encoder Settings
 
 /// Libsndfile major format (`SFBAudioEncodingSettingsValueLibsndfileMajorFormat`)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat;

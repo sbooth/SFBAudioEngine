@@ -44,7 +44,7 @@ extern SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile;
 NS_SWIFT_NAME(AudioDecoder)
 @interface SFBAudioDecoder : NSObject <SFBPCMDecoding>
 
-#pragma mark - File Format Support
+// MARK: - File Format Support
 
 /// A set containing the supported path extensions
 @property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
@@ -58,7 +58,7 @@ NS_SWIFT_NAME(AudioDecoder)
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
-#pragma mark - Creation
+// MARK: - Creation
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -177,7 +177,7 @@ NS_SWIFT_NAME(AudioDecoder)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
 extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
@@ -198,7 +198,7 @@ typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode){
     SFBAudioDecoderErrorCodeSeekError = 5,
 } NS_SWIFT_NAME(AudioDecoder.Error);
 
-#pragma mark - FLAC and Ogg FLAC Decoder Properties
+// MARK: - FLAC and Ogg FLAC Decoder Properties
 
 /// FLAC minimum block size (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize;
@@ -219,7 +219,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTota
 /// FLAC MD5 sum (`NSData`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum;
 
-#pragma mark - Monkey's Audio Decoder Properties
+// MARK: - Monkey's Audio Decoder Properties
 
 /// Monkey's Audio file version * 1000 (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion;
@@ -264,7 +264,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysA
 /// Monkey's Audio `YES` if this is an APL file (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPL;
 
-#pragma mark - Musepack Decoder Properties
+// MARK: - Musepack Decoder Properties
 
 /// Musepack sample frequency in Hz (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency;
@@ -319,7 +319,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepack
 /// Musepack total file length in bytes (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength;
 
-#pragma mark - Ogg Opus Decoder Properties
+// MARK: - Ogg Opus Decoder Properties
 
 /// Ogg Opus format version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion;
@@ -340,7 +340,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusC
 /// Ogg Opus mapping from coded stream channels to output channels (`NSData`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping;
 
-#pragma mark - Ogg Speex Decoder Properties
+// MARK: - Ogg Speex Decoder Properties
 
 /// Ogg Speex Speex string, always `"Speex   "`  (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString;
@@ -369,7 +369,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeex
 /// Ogg Speex number of additional headers after the comments (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders;
 
-#pragma mark - Ogg Vorbis Decoder Properties
+// MARK: - Ogg Vorbis Decoder Properties
 
 /// Ogg Vorbis version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion;
@@ -386,7 +386,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbi
 /// Ogg Vorbis bitrate window (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow;
 
-#pragma mark - Shorten Decoder Properties
+// MARK: - Shorten Decoder Properties
 
 /// Shorten version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion;
@@ -403,7 +403,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenB
 /// Shorten big endian (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian;
 
-#pragma mark - True Audio Decoder Properties
+// MARK: - True Audio Decoder Properties
 
 /// True Audio format (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat;
@@ -416,7 +416,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudi
 /// True Audio number of samples (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples;
 
-#pragma mark - WavPack Decoder Properties
+// MARK: - WavPack Decoder Properties
 
 /// WavPack mode (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode;

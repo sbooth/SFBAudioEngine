@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -60,12 +60,12 @@ NS_SWIFT_NAME(AudioProperties)
 /// The audio bitrate in KiB/sec
 @property(nonatomic, nullable, readonly) NSNumber *bitrate NS_REFINED_FOR_SWIFT;
 
-#pragma mark - External Representation
+// MARK: - External Representation
 
 /// A dictionary containing the audio properties
 @property(nonatomic, readonly) NSDictionary<SFBAudioPropertiesKey, id> *dictionaryRepresentation;
 
-#pragma mark - Dictionary-Like Interface
+// MARK: - Dictionary-Like Interface
 
 /// Returns the property value for a key
 /// - parameter key: The key for the desired property value
