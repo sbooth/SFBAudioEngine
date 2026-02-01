@@ -21,12 +21,12 @@ typedef id SFBAudioDecodingPropertiesValue NS_SWIFT_NAME(AudioDecodingProperties
 NS_SWIFT_NAME(AudioDecoding)
 @protocol SFBAudioDecoding
 
-#pragma mark - Input
+// MARK: - Input
 
 /// The input source providing data to this decoder
 @property(nonatomic, readonly) SFBInputSource *inputSource;
 
-#pragma mark - Audio Format Information
+// MARK: - Audio Format Information
 
 /// The format of the encoded audio data
 @property(nonatomic, readonly) AVAudioFormat *sourceFormat;
@@ -41,7 +41,7 @@ NS_SWIFT_NAME(AudioDecoding)
 /// - note: Properties are read when the decoder is opened
 @property(nonatomic, readonly) NSDictionary<SFBAudioDecodingPropertiesKey, SFBAudioDecodingPropertiesValue> *properties;
 
-#pragma mark - Setup and Teardown
+// MARK: - Setup and Teardown
 
 /// Opens the decoder for reading
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -56,7 +56,7 @@ NS_SWIFT_NAME(AudioDecoding)
 /// `YES` if the decoder is open
 @property(nonatomic, readonly) BOOL isOpen;
 
-#pragma mark - Decoding
+// MARK: - Decoding
 
 /// Decodes audio
 /// - parameter buffer: A buffer to receive the decoded audio
@@ -64,7 +64,7 @@ NS_SWIFT_NAME(AudioDecoding)
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error NS_SWIFT_NAME(decode(into:));
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 /// `YES` if the decoder is seekable
 @property(nonatomic, readonly) BOOL supportsSeeking;

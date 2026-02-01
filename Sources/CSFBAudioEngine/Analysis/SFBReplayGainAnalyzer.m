@@ -654,7 +654,7 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
     return @{SFBReplayGainAnalyzerGainKey : @(gain), SFBReplayGainAnalyzerPeakKey : @(peak)};
 }
 
-#pragma mark Internal
+// MARK: Internal
 
 + (NSInteger)maximumSupportedSampleRate {
     static NSInteger sampleRate = 0;

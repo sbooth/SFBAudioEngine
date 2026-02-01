@@ -63,7 +63,7 @@ using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, fla
 - (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status;
 @end
 
-#pragma mark FLAC Callbacks
+// MARK: FLAC Callbacks
 
 namespace {
 

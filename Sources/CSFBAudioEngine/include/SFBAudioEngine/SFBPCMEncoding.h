@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -12,12 +12,12 @@ NS_ASSUME_NONNULL_BEGIN
 NS_SWIFT_NAME(PCMEncoding)
 @protocol SFBPCMEncoding<SFBAudioEncoding>
 
-#pragma mark - Position and Length Information
+// MARK: - Position and Length Information
 
 /// Returns the encoder's current frame position or `SFBUnknownFramePosition` if unknown
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_SWIFT_NAME(position);
 
-#pragma mark - Encoding
+// MARK: - Encoding
 
 /// The estimated number of frames to encode or `0` if unknown
 @property(nonatomic) AVAudioFramePosition estimatedFramesToEncode;
