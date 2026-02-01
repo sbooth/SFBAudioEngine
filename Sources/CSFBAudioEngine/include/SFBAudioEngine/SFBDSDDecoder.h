@@ -20,7 +20,7 @@ extern SFBDSDDecoderName const SFBDSDDecoderNameDSF;
 NS_SWIFT_NAME(DSDDecoder)
 @interface SFBDSDDecoder : NSObject<SFBDSDDecoding>
 
-#pragma mark - File Format Support
+// MARK: - File Format Support
 
 /// Returns a set containing the supported path extensions
 @property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
@@ -34,7 +34,7 @@ NS_SWIFT_NAME(DSDDecoder)
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
-#pragma mark - Creation
+// MARK: - Creation
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -153,7 +153,7 @@ NS_SWIFT_NAME(DSDDecoder)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBDSDDecoder` and subclasses
 extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);

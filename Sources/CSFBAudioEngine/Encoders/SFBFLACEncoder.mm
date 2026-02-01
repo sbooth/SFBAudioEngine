@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
 // Part of https://github.com/sbooth/SFBAudioEngine
 // MIT license
 //
@@ -55,7 +55,7 @@ using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, f
 - (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error;
 @end
 
-#pragma mark FLAC Callbacks
+// MARK: FLAC Callbacks
 
 namespace {
 

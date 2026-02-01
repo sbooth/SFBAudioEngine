@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 NS_SWIFT_NAME(DSDDecoding)
 @protocol SFBDSDDecoding<SFBAudioDecoding>
 
-#pragma mark - Position and Length Information
+// MARK: - Position and Length Information
 
 /// The decoder's current packet position or `SFBUnknownPacketPosition` if unknown
 @property(nonatomic, readonly) AVAudioFramePosition packetPosition NS_SWIFT_NAME(position);
@@ -20,7 +20,7 @@ NS_SWIFT_NAME(DSDDecoding)
 /// The decoder's length in packets or `SFBUnknownPacketCount` if unknown
 @property(nonatomic, readonly) AVAudioFramePosition packetCount NS_SWIFT_NAME(count);
 
-#pragma mark - Decoding
+// MARK: - Decoding
 
 /// Decodes audio
 /// - parameter buffer: A buffer to receive the decoded audio
@@ -31,7 +31,7 @@ NS_SWIFT_NAME(DSDDecoding)
              packetCount:(AVAudioPacketCount)packetCount
                    error:(NSError **)error NS_SWIFT_NAME(decode(into:count:));
 
-#pragma mark - Seeking
+// MARK: - Seeking
 
 /// Seeks to the specified packet
 /// - parameter packet: The desired packet

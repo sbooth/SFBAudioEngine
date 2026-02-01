@@ -25,7 +25,7 @@ extern os_log_t gSFBAudioEncoderLog;
 @property(class, nonatomic, readonly) SFBAudioEncoderName encoderName;
 @end
 
-#pragma mark - Subclass Registration
+// MARK: - Subclass Registration
 
 @interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)

@@ -99,7 +99,7 @@ AudioChannelLabel channelIDToCoreAudioChannelLabel(uint32_t channelID) noexcept 
     return kAudioChannelLabel_Unknown;
 }
 
-#pragma mark DSDIFF chunks
+// MARK: DSDIFF chunks
 
 // Base class for DSDIFF chunks
 struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk> {
@@ -218,7 +218,7 @@ struct DSDSoundDataChunk : public DSDIFFChunk {};
 // class ManufacturerSpecificChunk : public DSDIFFChunk
 //{};
 
-#pragma mark DSDIFF parsing
+// MARK: DSDIFF parsing
 
 bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize) noexcept {
     if (!readID(inputSource, chunkID)) {
