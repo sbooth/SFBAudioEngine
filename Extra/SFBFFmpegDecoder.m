@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2013-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2013 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBFFmpegDecoder.h"
