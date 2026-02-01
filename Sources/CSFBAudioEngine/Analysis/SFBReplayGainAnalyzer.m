@@ -483,8 +483,8 @@ static float AnalyzeResult(const uint32_t *array, size_t len) {
                     SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
                     NSLocalizedString(@"The file “%@” does not contain audio at a supported sample rate.", @""), @{
                         NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                @"Only sample rates of 8.0 kHz, 11.025 kHz, 12.0 kHz, 16.0 kHz, 22.05 "
-                                @"kHz, 24.0 kHz, 32.0 kHz, 44.1 kHz, 48 kHz and multiples are supported.",
+                                @"Only sample rates of 8.0 kHz, 11.025 kHz, 12.0 kHz, 16.0 kHz, 22.05 kHz, 24.0 kHz, "
+                                @"32.0 kHz, 44.1 kHz, 48 kHz and multiples are supported.",
                                 @"")
                     },
                     SFBLocalizedNameForURL(url));
