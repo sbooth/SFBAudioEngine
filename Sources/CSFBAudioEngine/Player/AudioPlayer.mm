@@ -393,24 +393,12 @@ sfb::AudioPlayer::AudioPlayer() {
         throw std::runtime_error("spsc::RingBuffer::Allocate failed");
     }
 
-    decodingSemaphore_ = dispatch_semaphore_create(0);
-    if (decodingSemaphore_ == nullptr) {
-        os_log_error(log_, "Unable to create decoding event semaphore: dispatch_semaphore_create failed");
-        throw std::runtime_error("Unable to create decoding event dispatch semaphore");
-    }
-
     // The rendering event ring buffer is written to by the render block and read from by the event queue
     if (!renderingEvents_.allocate(renderingEventRingBufferCapacity)) {
         os_log_error(log_,
                      "Unable to create rendering event ring buffer: sfb::RingBuffer::Allocate failed with capacity %zu",
                      renderingEventRingBufferCapacity);
         throw std::runtime_error("spsc::RingBuffer::Allocate failed");
-    }
-
-    eventSemaphore_ = dispatch_semaphore_create(0);
-    if (eventSemaphore_ == nullptr) {
-        os_log_error(log_, "Unable to create rendering event semaphore: dispatch_semaphore_create failed");
-        throw std::runtime_error("Unable to create rendering event dispatch semaphore");
     }
 
     // Create the dispatch queue used for event processing
@@ -493,7 +481,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     // Register a stop callback for the decoding thread
     std::stop_callback decodingThreadStopCallback(decodingThread_.get_stop_token(),
-                                                  [this] { dispatch_semaphore_signal(decodingSemaphore_); });
+                                                  [this] { decodingSemaphore_.signal(); });
 
     // Issue a stop request to the decoding thread and wait for it to exit
     decodingThread_.request_stop();
@@ -505,7 +493,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     // Register a stop callback for the event processing thread
     std::stop_callback eventThreadStopCallback(eventThread_.get_stop_token(),
-                                               [this] { dispatch_semaphore_signal(eventSemaphore_); });
+                                               [this] { eventSemaphore_.signal(); });
 
     // Issue a stop request to the event processing thread and wait for it to exit
     eventThread_.request_stop();
@@ -558,7 +546,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
         flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
     }
 
-    dispatch_semaphore_signal(decodingSemaphore_);
+    decodingSemaphore_.signal();
 
     return true;
 }
@@ -843,7 +831,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
     targetFrame = std::clamp(targetFrame, 0LL, frameLength - 1);
 
     decoderState->requestSeekToFrame(targetFrame);
-    dispatch_semaphore_signal(decodingSemaphore_);
+    decodingSemaphore_.signal();
 
     return true;
 }
@@ -863,7 +851,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
     targetFrame = std::clamp(targetFrame, 0LL, frameLength - 1);
 
     decoderState->requestSeekToFrame(targetFrame);
-    dispatch_semaphore_signal(decodingSemaphore_);
+    decodingSemaphore_.signal();
 
     return true;
 }
@@ -882,7 +870,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     const auto targetFrame = static_cast<AVAudioFramePosition>(frameLength * position);
 
     decoderState->requestSeekToFrame(targetFrame);
-    dispatch_semaphore_signal(decodingSemaphore_);
+    decodingSemaphore_.signal();
 
     return true;
 }
@@ -899,7 +887,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
     frame = std::clamp(frame, 0LL, frameLength - 1);
 
     decoderState->requestSeekToFrame(frame);
-    dispatch_semaphore_signal(decodingSemaphore_);
+    decodingSemaphore_.signal();
 
     return true;
 }
@@ -1090,7 +1078,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
             // Signal the event thread if any decoders were canceled
             if (signal) {
-                dispatch_semaphore_signal(eventSemaphore_);
+                eventSemaphore_.signal();
             }
 
             // Get the earliest decoder state that has not completed rendering
@@ -1356,7 +1344,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         if (!suspended) {
                             if (decodingEvents_.writeAll(DecodingEventCommand::started, nextEventIdentificationNumber(),
                                                          decoderState->sequenceNumber_)) {
-                                dispatch_semaphore_signal(eventSemaphore_);
+                                eventSemaphore_.signal();
                             } else {
                                 os_log_fault(log_, "Error writing decoding started event");
                             }
@@ -1393,7 +1381,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             if (decodingEvents_.writeAll(DecodingEventCommand::complete,
                                                          nextEventIdentificationNumber(),
                                                          decoderState->sequenceNumber_)) {
-                                dispatch_semaphore_signal(eventSemaphore_);
+                                eventSemaphore_.signal();
                             } else {
                                 os_log_fault(log_, "Error writing decoding complete event");
                             }
@@ -1442,7 +1430,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
-        dispatch_semaphore_wait(decodingSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
+        decodingSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
 
     next_outer_iteration:;
     }
@@ -1497,7 +1485,7 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
     write_single_arg(errorData.bytes, errorData.length);
 
     decodingEvents_.commitWrite(cursor);
-    dispatch_semaphore_signal(eventSemaphore_);
+    eventSemaphore_.signal();
 }
 
 // MARK: - Rendering
@@ -1587,7 +1575,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
         }
 
         // Decoding events will be signaled; render events are polled using the timeout
-        dispatch_semaphore_wait(eventSemaphore_, dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
+        eventSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);
@@ -2070,7 +2058,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
 
     // Signal the decoding thread if any cancelations were requested
     if (signal) {
-        dispatch_semaphore_signal(decodingSemaphore_);
+        decodingSemaphore_.signal();
     }
 }
 

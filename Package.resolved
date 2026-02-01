@@ -37,6 +37,15 @@
       }
     },
     {
+      "identity" : "cxxdispatchsemaphore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXDispatchSemaphore",
+      "state" : {
+        "revision" : "8da1c6761e0ceaa84ae6461eb9dc5430d44e6afb",
+        "version" : "0.3.0"
+      }
+    },
+    {
       "identity" : "cxxmonkeysaudio",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMonkeysAudio",
