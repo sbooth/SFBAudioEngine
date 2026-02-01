@@ -31,39 +31,11 @@ constexpr unsigned char sBitReverseTable256[256] = {
 #define R6(n) R4(n), R4(n + 2 * 4), R4(n + 1 * 4), R4(n + 3 * 4)
         R6(0), R6(2), R6(1), R6(3)};
 
-// MARK: Begin DSD2PCM
+// MARK: - Begin DSD2PCM
 
-// The code performing the DSD to PCM conversion was modified from dsd2pcm.c:
-
-/*
-
- Copyright 2009, 2011 Sebastian Gesemann. All rights reserved.
-
- Redistribution and use in source and binary forms, with or without modification, are
- permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of
- conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list
- of conditions and the following disclaimer in the documentation and/or other materials
- provided with the distribution.
-
- THIS SOFTWARE IS PROVIDED BY SEBASTIAN GESEMANN ''AS IS'' AND ANY EXPRESS OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SEBASTIAN GESEMANN OR
- CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- The views and conclusions contained in the software and documentation are those of the
- authors and should not be interpreted as representing official policies, either expressed
- or implied, of Sebastian Gesemann.
-
- */
+// SPDX-SnippetCopyrightText: 2009,2011 Sebastian Gesemann
+// SPDX-SnippetLicenseIdentifier: BSD-2-Clause-Views
+// SPDX-SnippetComment: Adapted from 'dsd2pcm.c'
 
 #define HTAPS 48                  /* number of FIR constants */
 #define FIFOSIZE 16               /* must be a power of two */
@@ -222,7 +194,7 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     ptr->fifopos = ffp;
 }
 
-// MARK: End DSD2PCM
+// MARK: End DSD2PCM -
 
 // MARK: Initialization
 
