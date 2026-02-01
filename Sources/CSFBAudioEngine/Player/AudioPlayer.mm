@@ -1418,7 +1418,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     const auto framesWritten = audioRingBuffer_.write(buffer.audioBufferList, buffer.frameLength);
                     if (framesWritten != buffer.frameLength) {
                         os_log_fault(log_,
-                                     "Error writing audio to ring buffer: spsc::AudioRingBuffer::Write failed "
+                                     "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed "
                                      "for %d frames",
                                      buffer.frameLength);
                     }
