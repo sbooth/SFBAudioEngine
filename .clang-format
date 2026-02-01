@@ -67,7 +67,7 @@ IncludeCategories:
     Priority: 2
   - Regex: '^<(CoreFoundation|CoreAudioTypes|CoreAudio|AudioToolbox|Foundation|AVFAudio|Accelerate|CommonCrypto|ImageIO|UniformTypeIdentifiers)/'
     Priority: 3
-  - Regex: '^<(dispatch|libkern|mach|objc|os)/'
+  - Regex: '^<(libkern|mach|objc|os)/'
     Priority: 5
   - Regex: '^<[^./>]+>$'
     Priority: 10
