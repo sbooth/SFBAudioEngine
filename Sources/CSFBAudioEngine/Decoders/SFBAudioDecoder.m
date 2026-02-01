@@ -51,34 +51,30 @@ static NSMutableArray *_registeredSubclasses = nil;
                                              }
                                              break;
 
-                                         case SFBAudioDecoderErrorCodeInvalidFormat: {
+                                         case SFBAudioDecoderErrorCodeInvalidFormat:
                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                  return NSLocalizedString(@"The format is invalid or unknown.", @"");
                                              }
                                              break;
-                                         }
 
-                                         case SFBAudioDecoderErrorCodeUnsupportedFormat: {
+                                         case SFBAudioDecoderErrorCodeUnsupportedFormat:
                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                  return NSLocalizedString(@"The PCM audio format is unsupported.", @"");
                                              }
                                              break;
-                                         }
 
-                                         case SFBAudioDecoderErrorCodeInternalError: {
+                                         case SFBAudioDecoderErrorCodeInternalError:
                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                  return NSLocalizedString(@"An internal decoder error occurred.", @"");
                                              }
                                              break;
-                                         }
 
-                                         case SFBAudioDecoderErrorCodeDecodingError: {
+                                         case SFBAudioDecoderErrorCodeDecodingError:
                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                  return NSLocalizedString(
                                                          @"An error occurred during PCM audio decoding.", @"");
                                              }
                                              break;
-                                         }
 
                                          case SFBAudioDecoderErrorCodeSeekError:
                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
