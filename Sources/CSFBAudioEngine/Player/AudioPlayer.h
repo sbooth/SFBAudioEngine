@@ -8,9 +8,9 @@
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
-#import "Semaphore.hpp"
 
 #import <CXXCoreAudio/AudioRingBuffer.hpp>
+#import <dsema/Semaphore.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/RingBuffer.hpp>
 
