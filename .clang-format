@@ -31,11 +31,6 @@ StatementMacros:
   - NS_ASSUME_NONNULL_BEGIN
   - NS_ASSUME_NONNULL_END
 
-# Included in LLVM style
-# WhitespaceSensitiveMacros:
-#   - CF_SWIFT_NAME
-#   - NS_SWIFT_NAME
-
 Macros:
   - "CF_ENUM(type)=enum : type"
   - "CF_ENUM(type,name)=enum name : type"
