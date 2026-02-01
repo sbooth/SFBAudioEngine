@@ -1,8 +1,9 @@
 // swift-tools-version: 5.6
 //
-// Copyright (c) 2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2024 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 import PackageDescription
