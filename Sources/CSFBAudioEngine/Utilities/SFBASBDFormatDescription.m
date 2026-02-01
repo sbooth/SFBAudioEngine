@@ -117,7 +117,7 @@ static NSString *_Nullable formatIDName(AudioFormatID formatID) {
 
 /// Returns true if c is a printable ASCII character.
 static bool isPrintableASCII(unsigned char c) {
-    return c > 0x1f && c < 0x7f;
+    return c > 0x1F && c < 0x7F;
 }
 
 /// Creates a string representation of a four-character code.
@@ -188,10 +188,9 @@ NSString *SFBASBDFormatDescription(const AudioStreamBasicDescription *streamDesc
         return nil;
     }
 
-    NSMutableString *result = [NSMutableString string];
-
     // Channels and sample rate
-    [result appendFormat:@"%u ch @ %g Hz, ", streamDescription->mChannelsPerFrame, streamDescription->mSampleRate];
+    NSMutableString *result = [NSMutableString
+          stringWithFormat:@"%u ch @ %g Hz, ", streamDescription->mChannelsPerFrame, streamDescription->mSampleRate];
 
     // Shorter description for common formats
     enum CommonPCMFormat commonPCMFormat = identifyCommonPCMFormat(streamDescription);
