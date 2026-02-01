@@ -9,6 +9,7 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 
+#import <dsema/Semaphore.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
 #import <spsc/RingBuffer.hpp>
@@ -66,12 +67,12 @@ class AudioPlayer final {
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Dispatch semaphore used for communication with the decoding thread
-    dispatch_semaphore_t decodingSemaphore_{nil};
+    dsema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Dispatch semaphore used for communication with the event processing thread
-    dispatch_semaphore_t eventSemaphore_{nil};
+    dsema::Semaphore eventSemaphore_{0};
 
     /// Ring buffer communicating events from the decoding thread to the event processing thread
     spsc::RingBuffer decodingEvents_;
