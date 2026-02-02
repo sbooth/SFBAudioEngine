@@ -16,7 +16,17 @@ public struct ReplayGain {
 }
 
 extension ReplayGainAnalyzer {
-    /// Analyzes the given album's replay gain
+    /// Calculates replay gain for a single track
+    /// - parameter urls: The URLs to analyze
+    /// - returns: The track's gain and peak information
+    /// - throws: An `NSError` object if an error occurs
+    public class func analyzeTrack(_ url: URL) throws -> ReplayGain {
+        let analyzer = ReplayGainAnalyzer()
+        analyzer.calculateAlbumReplayGain = false
+        return try analyzer.analyzeTrack(url)
+    }
+
+    /// Calculates replay gain for an album
     /// - parameter urls: The URLs to analyze
     /// - returns: The album's gain and peak information keyed by URL
     /// - throws: An `NSError` object if an error occurs
@@ -24,6 +34,7 @@ extension ReplayGainAnalyzer {
         var trackReplayGain = [URL: ReplayGain]()
 
         let analyzer = ReplayGainAnalyzer()
+        analyzer.calculateAlbumReplayGain = true
         for url in urls {
             trackReplayGain[url] = try analyzer.analyzeTrack(url)
         }
