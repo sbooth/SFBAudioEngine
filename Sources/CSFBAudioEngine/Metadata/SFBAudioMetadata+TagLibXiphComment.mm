@@ -160,7 +160,7 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetXiphComment(tag, key, nil);
     } else {
         SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
@@ -172,7 +172,7 @@ void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *k
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetXiphComment(tag, key, nil);
     } else {
         if (!format) {
