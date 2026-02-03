@@ -144,7 +144,7 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
     // Remove the existing comment with this name
     tag->removeFields(key);
 
-    if (value) {
+    if (value != nil) {
         tag->addField(key, TagLib::StringFromNSString(value));
     }
 }
@@ -175,7 +175,7 @@ void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *k
     if (value == nil) {
         SetXiphComment(tag, key, nil);
     } else {
-        if (!format) {
+        if (format == nil) {
             SetXiphComment(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
         } else {
             SetXiphComment(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
@@ -218,8 +218,7 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
     SetXiphComment(tag, "GROUPING", metadata.grouping);
 
     // Additional metadata
-    NSDictionary *additionalMetadata = metadata.additionalMetadata;
-    if (additionalMetadata) {
+    if (NSDictionary *additionalMetadata = metadata.additionalMetadata; additionalMetadata != nil) {
         for (NSString *key in additionalMetadata) {
             SetXiphComment(tag, key.UTF8String, additionalMetadata[key]);
         }
@@ -259,29 +258,34 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
     picture->setData(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                         static_cast<unsigned int>(attachedPicture.imageData.length)));
     picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture.pictureType));
-    if (attachedPicture.pictureDescription) {
-        picture->setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
+    if (NSString *pictureDescription = attachedPicture.pictureDescription; pictureDescription != nil) {
+        picture->setDescription(TagLib::StringFromNSString(pictureDescription));
     }
 
     // Convert the image's UTI into a MIME type
-    if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
+    if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier != nullptr) {
         UTType *type = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
-        if (NSString *mimeType = [type preferredMIMEType]; mimeType) {
+        if (NSString *mimeType = [type preferredMIMEType]; mimeType != nil) {
             picture->setMimeType(TagLib::StringFromNSString(mimeType));
         }
     }
 
     // Flesh out the height, width, and depth
-    NSDictionary *imagePropertiesDictionary =
-            (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
-    if (imagePropertiesDictionary) {
-        NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
-        NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
-        NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
-
-        picture->setHeight(imageHeight.intValue);
-        picture->setWidth(imageWidth.intValue);
-        picture->setColorDepth(imageDepth.intValue);
+    if (NSDictionary *imagePropertiesDictionary =
+                (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
+        imagePropertiesDictionary != nil) {
+        if (NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
+            imageWidth != nil) {
+            picture->setWidth(imageWidth.intValue);
+        }
+        if (NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
+            imageHeight != nil) {
+            picture->setHeight(imageHeight.intValue);
+        }
+        if (NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
+            imageDepth != nil) {
+            picture->setColorDepth(imageDepth.intValue);
+        }
     }
 
     return picture;
