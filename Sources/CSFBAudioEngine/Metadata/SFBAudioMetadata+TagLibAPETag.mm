@@ -151,7 +151,7 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
     // Remove the existing comment with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nil) {
         tag->addValue(key, TagLib::StringFromNSString(value));
     }
 }
@@ -167,7 +167,7 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetAPETag(tag, key, nil);
     } else {
         SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
@@ -178,7 +178,7 @@ void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber 
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetAPETag(tag, key, nil);
     } else {
         if (!format) {

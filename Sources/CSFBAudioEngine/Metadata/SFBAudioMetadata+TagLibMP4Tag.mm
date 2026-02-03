@@ -184,7 +184,7 @@ void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nil) {
         tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
     }
 }
@@ -196,7 +196,7 @@ void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nil) {
         tag->setItem(key, TagLib::MP4::Item(value.intValue));
     }
 }
@@ -208,7 +208,7 @@ void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOn
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (valueOne || valueTwo) {
+    if (valueOne != nil || valueTwo != nil) {
         tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
     }
 }
@@ -217,7 +217,7 @@ void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) 
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         tag->removeItem(key);
     } else {
         tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
@@ -228,7 +228,7 @@ void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetMP4Item(tag, key, nil);
     } else {
         if (!format) {
