@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioEncoder.h"
@@ -25,7 +26,7 @@ extern os_log_t gSFBAudioEncoderLog;
 @property(class, nonatomic, readonly) SFBAudioEncoderName encoderName;
 @end
 
-#pragma mark - Subclass Registration
+// MARK: - Subclass Registration
 
 @interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)

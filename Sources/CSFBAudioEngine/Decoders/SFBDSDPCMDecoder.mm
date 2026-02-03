@@ -1,17 +1,15 @@
 //
-// Copyright (c) 2018-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2018 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDSDPCMDecoder.h"
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import <Accelerate/Accelerate.h>
 
@@ -31,41 +29,13 @@ constexpr unsigned char sBitReverseTable256[256] = {
 #define R2(n) n, n + 2 * 64, n + 1 * 64, n + 3 * 64
 #define R4(n) R2(n), R2(n + 2 * 16), R2(n + 1 * 16), R2(n + 3 * 16)
 #define R6(n) R4(n), R4(n + 2 * 4), R4(n + 1 * 4), R4(n + 3 * 4)
-      R6(0), R6(2), R6(1), R6(3)};
+        R6(0), R6(2), R6(1), R6(3)};
 
-#pragma mark Begin DSD2PCM
+// MARK: - Begin DSD2PCM
 
-// The code performing the DSD to PCM conversion was modified from dsd2pcm.c:
-
-/*
-
- Copyright 2009, 2011 Sebastian Gesemann. All rights reserved.
-
- Redistribution and use in source and binary forms, with or without modification, are
- permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of
- conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list
- of conditions and the following disclaimer in the documentation and/or other materials
- provided with the distribution.
-
- THIS SOFTWARE IS PROVIDED BY SEBASTIAN GESEMANN ''AS IS'' AND ANY EXPRESS OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SEBASTIAN GESEMANN OR
- CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- The views and conclusions contained in the software and documentation are those of the
- authors and should not be interpreted as representing official policies, either expressed
- or implied, of Sebastian Gesemann.
-
- */
+// SPDX-SnippetCopyrightText: 2009,2011 Sebastian Gesemann
+// SPDX-SnippetLicenseIdentifier: BSD-2-Clause-Views
+// SPDX-SnippetComment: Adapted from 'dsd2pcm.c'
 
 #define HTAPS 48                  /* number of FIR constants */
 #define FIFOSIZE 16               /* must be a power of two */
@@ -97,18 +67,18 @@ constexpr unsigned char sBitReverseTable256[256] = {
  * The 2nd half (48 coeffs) of a 96-tap symmetric lowpass filter
  */
 constexpr double htaps[HTAPS] = {
-      0.09950731974056658,    0.09562845727714668,    0.08819647126516944,    0.07782552527068175,
-      0.06534876523171299,    0.05172629311427257,    0.0379429484910187,     0.02490921351762261,
-      0.0133774746265897,     0.003883043418804416,   -0.003284703416210726,  -0.008080250212687497,
-      -0.01067241812471033,   -0.01139427235000863,   -0.0106813877974587,    -0.009007905078766049,
-      -0.006828859761015335,  -0.004535184322001496,  -0.002425035959059578,  -0.0006922187080790708,
-      0.0005700762133516592,  0.001353838005269448,   0.001713709169690937,   0.001742046839472948,
-      0.001545601648013235,   0.001226696225277855,   0.0008704322683580222,  0.0005381636200535649,
-      0.000266446345425276,   7.002968738383528e-05,  -5.279407053811266e-05, -0.0001140625650874684,
-      -0.0001304796361231895, -0.0001189970287491285, -9.396247155265073e-05, -6.577634378272832e-05,
-      -4.07492895872535e-05,  -2.17407957554587e-05,  -9.163058931391722e-06, -2.017460145032201e-06,
-      1.249721855219005e-06,  2.166655190537392e-06,  1.930520892991082e-06,  1.319400334374195e-06,
-      7.410039764949091e-07,  3.423230509967409e-07,  1.244182214744588e-07,  3.130441005359396e-08};
+        0.09950731974056658,    0.09562845727714668,    0.08819647126516944,    0.07782552527068175,
+        0.06534876523171299,    0.05172629311427257,    0.0379429484910187,     0.02490921351762261,
+        0.0133774746265897,     0.003883043418804416,   -0.003284703416210726,  -0.008080250212687497,
+        -0.01067241812471033,   -0.01139427235000863,   -0.0106813877974587,    -0.009007905078766049,
+        -0.006828859761015335,  -0.004535184322001496,  -0.002425035959059578,  -0.0006922187080790708,
+        0.0005700762133516592,  0.001353838005269448,   0.001713709169690937,   0.001742046839472948,
+        0.001545601648013235,   0.001226696225277855,   0.0008704322683580222,  0.0005381636200535649,
+        0.000266446345425276,   7.002968738383528e-05,  -5.279407053811266e-05, -0.0001140625650874684,
+        -0.0001304796361231895, -0.0001189970287491285, -9.396247155265073e-05, -6.577634378272832e-05,
+        -4.07492895872535e-05,  -2.17407957554587e-05,  -9.163058931391722e-06, -2.017460145032201e-06,
+        1.249721855219005e-06,  2.166655190537392e-06,  1.930520892991082e-06,  1.319400334374195e-06,
+        7.410039764949091e-07,  3.423230509967409e-07,  1.244182214744588e-07,  3.130441005359396e-08};
 
 float ctables[CTABLES][256];
 
@@ -158,7 +128,7 @@ void dsd2pcm_reset(dsd2pcm_ctx *ptr) noexcept {
  */
 dsd2pcm_ctx *dsd2pcm_init() noexcept {
     dsd2pcm_ctx *ptr = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
-    if (ptr) {
+    if (ptr != nullptr) {
         dsd2pcm_reset(ptr);
     }
     return ptr;
@@ -168,9 +138,7 @@ dsd2pcm_ctx *dsd2pcm_init() noexcept {
  * deinitializes a "dsd2pcm engine"
  * (releases memory, don't forget!)
  */
-void dsd2pcm_destroy(dsd2pcm_ctx *ptr) noexcept {
-    std::free(ptr);
-}
+void dsd2pcm_destroy(dsd2pcm_ctx *ptr) noexcept { std::free(ptr); }
 
 /**
  * clones the context and returns a pointer to the
@@ -178,7 +146,7 @@ void dsd2pcm_destroy(dsd2pcm_ctx *ptr) noexcept {
  */
 dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
     dsd2pcm_ctx *p2 = static_cast<dsd2pcm_ctx *>(std::malloc(sizeof(dsd2pcm_ctx)));
-    if (p2) {
+    if (p2 != nullptr) {
         std::memcpy(p2, ptr, sizeof(dsd2pcm_ctx));
     }
     return p2;
@@ -195,7 +163,7 @@ dsd2pcm_ctx *dsd2pcm_clone(dsd2pcm_ctx *ptr) noexcept {
  * @param dst -- pointer to first float (output)
  * @param dst_stride -- dst pointer increment
  */
-void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, int lsbf,
+void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbf,
                        float *dst, ptrdiff_t dst_stride) noexcept {
     unsigned ffp;
     unsigned i;
@@ -204,7 +172,6 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     unsigned char *p;
     double acc;
     ffp = ptr->fifopos;
-    lsbf = lsbf ? 1 : 0;
     while (samples-- > 0) {
         bite1 = *src & 0xFFU;
         if (lsbf) {
@@ -227,38 +194,32 @@ void dsd2pcm_translate(dsd2pcm_ctx *ptr, size_t samples, const unsigned char *sr
     ptr->fifopos = ffp;
 }
 
-#pragma mark End DSD2PCM
+// MARK: End DSD2PCM -
 
-#pragma mark Initialization
+// MARK: Initialization
 
 void setupDSD2PCM() noexcept __attribute__((constructor));
-void setupDSD2PCM() noexcept {
-    dsd2pcm_precalc();
-}
+void setupDSD2PCM() noexcept { dsd2pcm_precalc(); }
 
-#pragma mark DXD
+// MARK: DXD
 
 class DXD {
   public:
-    DXD()
-      : handle_(dsd2pcm_init()) {
-        if (!handle_) {
+    DXD() : handle_(dsd2pcm_init()) {
+        if (handle_ == nullptr) {
             throw std::bad_alloc();
         }
     }
 
-    DXD(DXD const& x)
-      : handle_(dsd2pcm_clone(x.handle_)) {
-        if (!handle_) {
+    DXD(DXD const &x) : handle_(dsd2pcm_clone(x.handle_)) {
+        if (handle_ == nullptr) {
             throw std::bad_alloc();
         }
     }
 
-    ~DXD() noexcept {
-        dsd2pcm_destroy(handle_);
-    }
+    ~DXD() noexcept { dsd2pcm_destroy(handle_); }
 
-    DXD& operator=(DXD x) {
+    DXD &operator=(DXD x) {
         std::swap(handle_, x.handle_);
         return *this;
     }
@@ -289,7 +250,7 @@ class DXD {
     NSParameterAssert(url != nil);
 
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
-    if (!inputSource) {
+    if (inputSource == nil) {
         return nil;
     }
     return [self initWithInputSource:inputSource error:error];
@@ -299,7 +260,7 @@ class DXD {
     NSParameterAssert(inputSource != nil);
 
     SFBDSDDecoder *decoder = [[SFBDSDDecoder alloc] initWithInputSource:inputSource error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return nil;
     }
 
@@ -309,7 +270,8 @@ class DXD {
 - (instancetype)initWithDecoder:(id<SFBDSDDecoding>)decoder error:(NSError **)error {
     NSParameterAssert(decoder != nil);
 
-    if ((self = [super init])) {
+    self = [super init];
+    if (self != nil) {
         _decoder = decoder;
         // 6 dBFS gain -> powf(10.f, 6.f / 20.f) -> 0x1.fec984p+0 (approximately 1.99526231496888)
         _linearGain = 0x1.fec984p+0;
@@ -341,53 +303,72 @@ class DXD {
     const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"DSD to PCM conversion requires DSD audio input.", @""),
-                      NSURLErrorKey : _decoder.inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_decoder.inputSource.url));
+        if (error != nullptr) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                    dictionaryWithObject:NSLocalizedString(@"DSD to PCM conversion requires DSD audio input.", @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] =
+                        [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
+                                                            SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a DSD file.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
 
     if (asbd->mSampleRate != kSFBSampleRateDSD64) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The sample rate is not supported for DSD to PCM conversion.", @""),
-                      NSURLErrorKey : _decoder.inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_decoder.inputSource.url));
+        if (error != nullptr) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                    dictionaryWithObject:NSLocalizedString(
+                                                 @"The sample rate is not supported for DSD to PCM conversion.", @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                        localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” is not supported.",
+                                                                    @""),
+                                                  SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                        NSLocalizedString(@"The format of the file is not supported.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
 
     // Generate non-interleaved 32-bit float output
     _processingFormat = [[AVAudioFormat alloc]
-          initWithCommonFormat:AVAudioPCMFormatFloat32
-                    sampleRate:(asbd->mSampleRate / (kSFBPCMFramesPerDSDPacket * kDSDPacketsPerPCMFrame))
-                   interleaved:NO
-                 channelLayout:_decoder.processingFormat.channelLayout];
+            initWithCommonFormat:AVAudioPCMFormatFloat32
+                      sampleRate:(asbd->mSampleRate / (kSFBPCMFramesPerDSDPacket * kDSDPacketsPerPCMFrame))
+                     interleaved:NO
+                   channelLayout:_decoder.processingFormat.channelLayout];
 
     _buffer = [[AVAudioCompressedBuffer alloc]
-             initWithFormat:_decoder.processingFormat
-             packetCapacity:kBufferSizePackets
-          maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
+               initWithFormat:_decoder.processingFormat
+               packetCapacity:kBufferSizePackets
+            maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
     _buffer.packetCount = 0;
 
     try {
         _context.resize(asbd->mChannelsPerFrame);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioDecoderLog, "Error resizing _context: %{public}s", e.what());
         _buffer = nil;
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return NO;
@@ -460,7 +441,8 @@ class DXD {
 
         float *const *floatChannelData = buffer.floatChannelData;
         AVAudioChannelCount channelCount = buffer.format.channelCount;
-        bool isBigEndian = _buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian;
+        const bool isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) ==
+                                 kAudioFormatFlagIsBigEndian;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const auto *const input = static_cast<const unsigned char *>(_buffer.data) + channel;
             float *output = floatChannelData[channel];
@@ -500,8 +482,8 @@ class DXD {
 }
 
 - (NSString *)description {
-    return [NSString
-          stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class], self, _decoder, _linearGain];
+    return [NSString stringWithFormat:@"<%@ %p: _decoder = %@, _linearGain = %.2f>", [self class],
+                                      (__bridge void *)self, _decoder, _linearGain];
 }
 
 @end

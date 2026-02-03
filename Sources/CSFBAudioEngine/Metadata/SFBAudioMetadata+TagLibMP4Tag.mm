@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
@@ -10,19 +11,17 @@
 
 #import <taglib/mp4coverart.h>
 
-#import <cstdio>
-#import <memory>
-
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
+#import <cstdio>
+#import <memory>
 
 namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) {
-        CFRelease(cf);
-    }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -45,25 +44,25 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
     if (tag->contains("\251day")) {
         self.releaseDate =
-              [NSString stringWithUTF8String:tag->item("\251day").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("\251day").toStringList().toString().toCString(true)];
     }
 
     if (tag->contains("trkn")) {
-        auto track = tag->item("trkn").toIntPair();
-        if (track.first) {
-            self.trackNumber = @(track.first);
+        auto [trackNumber, trackTotal] = tag->item("trkn").toIntPair();
+        if (trackNumber != 0) {
+            self.trackNumber = @(trackNumber);
         }
-        if (track.second) {
-            self.trackTotal = @(track.second);
+        if (trackTotal != 0) {
+            self.trackTotal = @(trackTotal);
         }
     }
     if (tag->contains("disk")) {
-        auto disc = tag->item("disk").toIntPair();
-        if (disc.first) {
-            self.discNumber = @(disc.first);
+        auto [discNumber, discTotal] = tag->item("disk").toIntPair();
+        if (discNumber != 0) {
+            self.discNumber = @(discNumber);
         }
-        if (disc.second) {
-            self.discTotal = @(disc.second);
+        if (discTotal != 0) {
+            self.discTotal = @(discTotal);
         }
     }
     if (tag->contains("cpil")) {
@@ -72,8 +71,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
     }
     if (tag->contains("tmpo")) {
-        auto bpm = tag->item("tmpo").toInt();
-        if (bpm) {
+        if (auto bpm = tag->item("tmpo").toInt(); bpm != 0) {
             self.bpm = @(bpm);
         }
     }
@@ -84,23 +82,23 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // Sorting
     if (tag->contains("sonm")) {
         self.titleSortOrder =
-              [NSString stringWithUTF8String:tag->item("sonm").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("sonm").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soal")) {
         self.albumTitleSortOrder =
-              [NSString stringWithUTF8String:tag->item("soal").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soal").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soar")) {
         self.artistSortOrder =
-              [NSString stringWithUTF8String:tag->item("soar").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soar").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soaa")) {
         self.albumArtistSortOrder =
-              [NSString stringWithUTF8String:tag->item("soaa").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soaa").toStringList().toString().toCString(true)];
     }
     if (tag->contains("soco")) {
         self.composerSortOrder =
-              [NSString stringWithUTF8String:tag->item("soco").toStringList().toString().toCString(true)];
+                [NSString stringWithUTF8String:tag->item("soco").toStringList().toString().toCString(true)];
     }
 
     if (tag->contains("\251grp")) {
@@ -119,18 +117,18 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // MusicBrainz
     if (tag->contains("---:com.apple.iTunes:MusicBrainz Album Id")) {
         self.musicBrainzReleaseID =
-              [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id")
-                                                   .toStringList()
-                                                   .toString()
-                                                   .toCString(true)];
+                [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id")
+                                                       .toStringList()
+                                                       .toString()
+                                                       .toCString(true)];
     }
 
     if (tag->contains("---:com.apple.iTunes:MusicBrainz Track Id")) {
         self.musicBrainzRecordingID =
-              [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id")
-                                                   .toStringList()
-                                                   .toString()
-                                                   .toCString(true)];
+                [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id")
+                                                       .toStringList()
+                                                       .toString()
+                                                       .toCString(true)];
     }
 
     // ReplayGain
@@ -180,8 +178,8 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 namespace {
 
 void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     // Remove the existing item with this name
     tag->removeItem(key);
@@ -192,20 +190,20 @@ void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
 }
 
 void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value != nil) {
+    if (value) {
         tag->setItem(key, TagLib::MP4::Item(value.intValue));
     }
 }
 
 void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOne, NSNumber *valueTwo) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     // Remove the existing item with this name
     tag->removeItem(key);
@@ -216,10 +214,10 @@ void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOn
 }
 
 void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    if (value == nil) {
+    if (!value) {
         tag->removeItem(key);
     } else {
         tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
@@ -227,17 +225,25 @@ void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) 
 }
 
 void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber *value, NSString *format = nil) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    SetMP4Item(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (!value) {
+        SetMP4Item(tag, key, nil);
+    } else {
+        if (!format) {
+            SetMP4Item(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetMP4Item(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
 
 void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt) {
-    NSCParameterAssert(metadata != nil);
-    assert(nullptr != tag);
+    assert(metadata != nil);
+    assert(tag != nullptr);
 
     SetMP4Item(tag, "\251nam", metadata.title);
     SetMP4Item(tag, "\251ART", metadata.artist);
@@ -286,7 +292,7 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
         auto list = TagLib::MP4::CoverArtList();
         for (SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
             cg_image_source_unique_ptr imageSource{
-                  CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+                    CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
             if (!imageSource) {
                 continue;
             }
@@ -308,8 +314,8 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
             }
 
             auto picture = TagLib::MP4::CoverArt(
-                  type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
-                                           static_cast<unsigned int>(attachedPicture.imageData.length)));
+                    type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
+                                             static_cast<unsigned int>(attachedPicture.imageData.length)));
             list.append(picture);
         }
 

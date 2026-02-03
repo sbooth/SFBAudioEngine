@@ -1,8 +1,9 @@
 // swift-tools-version: 5.6
 //
-// Copyright (c) 2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2024 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 import PackageDescription
@@ -24,10 +25,10 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/sbooth/AVFAudioExtensions", .upToNextMinor(from: "0.5.0")),
-        .package(url: "https://github.com/sbooth/CXXAudioToolbox", .upToNextMinor(from: "0.2.0")),
-        .package(url: "https://github.com/sbooth/CXXCoreAudio", .upToNextMinor(from: "0.5.1")),
-        .package(url: "https://github.com/sbooth/CXXRingBuffer", .upToNextMinor(from: "0.5.2")),
-        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.2.0")),
+        .package(url: "https://github.com/sbooth/CXXAudioRingBuffer", .upToNextMinor(from: "0.1.0")),
+        .package(url: "https://github.com/sbooth/CXXDispatchSemaphore", .upToNextMinor(from: "0.4.0")),
+        .package(url: "https://github.com/sbooth/CXXRingBuffer", .upToNextMinor(from: "0.6.0")),
+        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.3.0")),
 
         // Standalone dependencies from source
         .package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
@@ -62,8 +63,8 @@ let package = Package(
             name: "CSFBAudioEngine",
             dependencies: [
                 .product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
-                .product(name: "CXXAudioToolbox", package: "CXXAudioToolbox"),
-                .product(name: "CXXCoreAudio", package: "CXXCoreAudio"),
+                .product(name: "CXXAudioRingBuffer", package: "CXXAudioRingBuffer"),
+                .product(name: "CXXDispatchSemaphore", package: "CXXDispatchSemaphore"),
                 .product(name: "CXXRingBuffer", package: "CXXRingBuffer"),
                 .product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
                 // Standalone dependencies

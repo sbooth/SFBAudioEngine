@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBModuleFile.h"
@@ -36,8 +37,9 @@
     DUMBFILE *df = dumbfile_open(self.url.fileSystemRepresentation);
     if (!df) {
         os_log_error(gSFBAudioFileLog, "dumbfile_open failed");
-        if (error)
+        if (error) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EIO userInfo:nil];
+        }
         return NO;
     }
 
@@ -62,15 +64,16 @@
 
     if (!duh) {
         dumbfile_close(df);
-        if (error)
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Module.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : self.url
-                  },
-                  SFBLocalizedNameForURL(self.url));
+                    SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
+                    NSLocalizedString(@"The file “%@” is not a valid Module.", @""), @{
+                        NSLocalizedRecoverySuggestionErrorKey :
+                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
+                        NSURLErrorKey : self.url
+                    },
+                    SFBLocalizedNameForURL(self.url));
+        }
         return NO;
     }
 
@@ -82,7 +85,7 @@
 
     self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
     self.metadata = [[SFBAudioMetadata alloc]
-          initWithDictionaryRepresentation:@{SFBAudioMetadataKeyTitle : @(duh_get_tag(duh, "TITLE"))}];
+            initWithDictionaryRepresentation:@{SFBAudioMetadataKeyTitle : @(duh_get_tag(duh, "TITLE"))}];
 
     unload_duh(duh);
     dumbfile_close(df);
@@ -92,14 +95,15 @@
 
 - (BOOL)writeMetadataReturningError:(NSError **)error {
     os_log_error(gSFBAudioFileLog, "Writing Module metadata is not supported");
-    if (error)
+    if (error) {
         *error = SFBErrorWithLocalizedDescription(SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
                                                   NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
                                                       NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                                            @"Writing Module metadata is not supported.", @""),
+                                                              @"Writing Module metadata is not supported.", @""),
                                                       NSURLErrorKey : self.url
                                                   },
                                                   SFBLocalizedNameForURL(self.url));
+    }
     return NO;
 }
 
