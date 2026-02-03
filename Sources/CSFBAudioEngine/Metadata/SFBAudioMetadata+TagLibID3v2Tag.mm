@@ -567,7 +567,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         tag->addFrame(frame);
 
         auto *relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
-        relativeVolume->setIdentification(TagLib::String("album", TagLib::String::Latin1));
+        relativeVolume->setIdentification("album");
         relativeVolume->setVolumeAdjustment(replayGainAlbumGain.floatValue,
                                             TagLib::ID3v2::RelativeVolumeFrame::MasterVolume);
         tag->addFrame(relativeVolume);
