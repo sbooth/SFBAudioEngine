@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		321091D92F3178F20024A44F /* AudioFileWrapper.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 321091D32F3178F20024A44F /* AudioFileWrapper.hpp */; };
+		321091DA2F3178F20024A44F /* ExtAudioFileWrapper.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 321091D42F3178F20024A44F /* ExtAudioFileWrapper.hpp */; };
+		321091DB2F3178F20024A44F /* SFBACLDescription.h in Headers */ = {isa = PBXBuildFile; fileRef = 321091D52F3178F20024A44F /* SFBACLDescription.h */; };
+		321091DC2F3178F20024A44F /* SFBASBDFormatDescription.h in Headers */ = {isa = PBXBuildFile; fileRef = 321091D72F3178F20024A44F /* SFBASBDFormatDescription.h */; };
+		321091DD2F3178F20024A44F /* SFBACLDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 321091D62F3178F20024A44F /* SFBACLDescription.m */; };
+		321091DE2F3178F20024A44F /* SFBASBDFormatDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 321091D82F3178F20024A44F /* SFBASBDFormatDescription.m */; };
+		321091E12F31797D0024A44F /* CXXDispatchSemaphore in Frameworks */ = {isa = PBXBuildFile; productRef = 321091E02F31797D0024A44F /* CXXDispatchSemaphore */; };
+		321091E42F3179A60024A44F /* CXXAudioRingBuffer in Frameworks */ = {isa = PBXBuildFile; productRef = 321091E32F3179A60024A44F /* CXXAudioRingBuffer */; };
 		321C18B12CF7886000670824 /* vorbis in Frameworks */ = {isa = PBXBuildFile; productRef = 321C18B02CF7886000670824 /* vorbis */; };
 		321C18B42CF7887600670824 /* speex in Frameworks */ = {isa = PBXBuildFile; productRef = 321C18B32CF7887600670824 /* speex */; };
 		321C18B72CF7888800670824 /* lame in Frameworks */ = {isa = PBXBuildFile; productRef = 321C18B62CF7888800670824 /* lame */; };
@@ -125,8 +133,6 @@
 		3237E2172CF786BA0084AA51 /* SFBDoPDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E12E2CF785DD0084AA51 /* SFBDoPDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3237E2182CF786BA0084AA51 /* SFBAudioEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3237E1242CF785DD0084AA51 /* SFBAudioEncoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3237E21E2CF787330084AA51 /* AVFAudioExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 3237E21D2CF787330084AA51 /* AVFAudioExtensions */; };
-		3241D7CA2EDCA8660078AB9F /* CXXCoreAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 3241D7C92EDCA8660078AB9F /* CXXCoreAudio */; };
-		3241D7CD2EDCA8750078AB9F /* CXXAudioToolbox in Frameworks */ = {isa = PBXBuildFile; productRef = 3241D7CC2EDCA8750078AB9F /* CXXAudioToolbox */; };
 		3241D7D02EDCA8830078AB9F /* CXXRingBuffer in Frameworks */ = {isa = PBXBuildFile; productRef = 3241D7CF2EDCA8830078AB9F /* CXXRingBuffer */; };
 		3241D7D32EDCA88F0078AB9F /* CXXUnfairLock in Frameworks */ = {isa = PBXBuildFile; productRef = 3241D7D22EDCA88F0078AB9F /* CXXUnfairLock */; };
 		3241D7D72EDCA8DC0078AB9F /* AudioPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3241D7D52EDCA8DC0078AB9F /* AudioPlayer.mm */; };
@@ -223,6 +229,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		321091D32F3178F20024A44F /* AudioFileWrapper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AudioFileWrapper.hpp; sourceTree = "<group>"; };
+		321091D42F3178F20024A44F /* ExtAudioFileWrapper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ExtAudioFileWrapper.hpp; sourceTree = "<group>"; };
+		321091D52F3178F20024A44F /* SFBACLDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBACLDescription.h; sourceTree = "<group>"; };
+		321091D62F3178F20024A44F /* SFBACLDescription.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBACLDescription.m; sourceTree = "<group>"; };
+		321091D72F3178F20024A44F /* SFBASBDFormatDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SFBASBDFormatDescription.h; sourceTree = "<group>"; };
+		321091D82F3178F20024A44F /* SFBASBDFormatDescription.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBASBDFormatDescription.m; sourceTree = "<group>"; };
 		3237E0CF2CF7855B0084AA51 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3237E0DA2CF785DD0084AA51 /* SFBReplayGainAnalyzer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBReplayGainAnalyzer.m; sourceTree = "<group>"; };
 		3237E0DC2CF785DD0084AA51 /* SFBAudioConverter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
@@ -428,21 +440,21 @@
 			files = (
 				328E81672CF7891A00BFCEB2 /* tta-cpp in Frameworks */,
 				321C18BA2CF7889A00670824 /* mpc in Frameworks */,
+				321091E42F3179A60024A44F /* CXXAudioRingBuffer in Frameworks */,
 				321C18B42CF7887600670824 /* speex in Frameworks */,
 				328E816A2CF7898C00BFCEB2 /* ImageIO.framework in Frameworks */,
 				321C18BD2CF788AB00670824 /* mpg123 in Frameworks */,
 				322CE34D2CF788020070996C /* wavpack in Frameworks */,
 				322CE34A2CF7878D0070996C /* taglib in Frameworks */,
 				322CE3532CF788240070996C /* FLAC in Frameworks */,
-				3241D7CA2EDCA8660078AB9F /* CXXCoreAudio in Frameworks */,
 				322CE3472CF787740070996C /* MAC in Frameworks */,
 				322CE3562CF788360070996C /* opus in Frameworks */,
 				321C18B12CF7886000670824 /* vorbis in Frameworks */,
 				321C18B72CF7888800670824 /* lame in Frameworks */,
-				3241D7CD2EDCA8750078AB9F /* CXXAudioToolbox in Frameworks */,
 				3241D7D02EDCA8830078AB9F /* CXXRingBuffer in Frameworks */,
 				328E816C2CF789A800BFCEB2 /* UniformTypeIdentifiers.framework in Frameworks */,
 				3241D7D32EDCA88F0078AB9F /* CXXUnfairLock in Frameworks */,
+				321091E12F31797D0024A44F /* CXXDispatchSemaphore in Frameworks */,
 				322CE3442CF787630070996C /* dumb in Frameworks */,
 				322CE3502CF788120070996C /* ogg in Frameworks */,
 				328E81642CF7890700BFCEB2 /* sndfile in Frameworks */,
@@ -715,10 +727,16 @@
 		3237E1982CF785DD0084AA51 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				321091D32F3178F20024A44F /* AudioFileWrapper.hpp */,
+				321091D42F3178F20024A44F /* ExtAudioFileWrapper.hpp */,
 				3237E1902CF785DD0084AA51 /* NSData+SFBExtensions.h */,
 				3237E1912CF785DD0084AA51 /* NSData+SFBExtensions.m */,
 				3237E1942CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.h */,
 				3237E1952CF785DD0084AA51 /* NSFileHandle+SFBHeaderReading.m */,
+				321091D52F3178F20024A44F /* SFBACLDescription.h */,
+				321091D62F3178F20024A44F /* SFBACLDescription.m */,
+				321091D72F3178F20024A44F /* SFBASBDFormatDescription.h */,
+				321091D82F3178F20024A44F /* SFBASBDFormatDescription.m */,
 				32B6CAB52D5318AF0093855B /* SFBAudioEngineTypes.m */,
 				3237E1962CF785DD0084AA51 /* SFBCStringForOSType.h */,
 				329625A52F19F5B9008EEF6E /* SFBErrorWithLocalizedDescription.h */,
@@ -850,6 +868,10 @@
 				3237E2082CF786BA0084AA51 /* SFBAttachedPicture.h in Headers */,
 				3237E2092CF786BA0084AA51 /* SFBInputSource.h in Headers */,
 				3237E20A2CF786BA0084AA51 /* SFBAudioEngine.h in Headers */,
+				321091D92F3178F20024A44F /* AudioFileWrapper.hpp in Headers */,
+				321091DA2F3178F20024A44F /* ExtAudioFileWrapper.hpp in Headers */,
+				321091DB2F3178F20024A44F /* SFBACLDescription.h in Headers */,
+				321091DC2F3178F20024A44F /* SFBASBDFormatDescription.h in Headers */,
 				32F6E5C12D2B02F00029B972 /* SFBLibsndfileUtilities.h in Headers */,
 				3237E20B2CF786BA0084AA51 /* SFBAudioProperties.h in Headers */,
 				3237E20C2CF786BA0084AA51 /* SFBPCMEncoding.h in Headers */,
@@ -942,10 +964,10 @@
 				321C18BC2CF788AB00670824 /* mpg123 */,
 				328E81632CF7890700BFCEB2 /* sndfile */,
 				328E81662CF7891A00BFCEB2 /* tta-cpp */,
-				3241D7C92EDCA8660078AB9F /* CXXCoreAudio */,
-				3241D7CC2EDCA8750078AB9F /* CXXAudioToolbox */,
 				3241D7CF2EDCA8830078AB9F /* CXXRingBuffer */,
 				3241D7D22EDCA88F0078AB9F /* CXXUnfairLock */,
+				321091E02F31797D0024A44F /* CXXDispatchSemaphore */,
+				321091E32F3179A60024A44F /* CXXAudioRingBuffer */,
 			);
 			productName = SFBAudioEngine;
 			productReference = 3237E0CF2CF7855B0084AA51 /* SFBAudioEngine.framework */;
@@ -990,10 +1012,10 @@
 				321C18BB2CF788AB00670824 /* XCRemoteSwiftPackageReference "mpg123-binary-xcframework" */,
 				328E81622CF7890700BFCEB2 /* XCRemoteSwiftPackageReference "sndfile-binary-xcframework" */,
 				328E81652CF7891A00BFCEB2 /* XCRemoteSwiftPackageReference "tta-cpp-binary-xcframework" */,
-				3241D7C82EDCA8660078AB9F /* XCRemoteSwiftPackageReference "CXXCoreAudio" */,
-				3241D7CB2EDCA8740078AB9F /* XCRemoteSwiftPackageReference "CXXAudioToolbox" */,
 				3241D7CE2EDCA8830078AB9F /* XCRemoteSwiftPackageReference "CXXRingBuffer" */,
 				3241D7D12EDCA88F0078AB9F /* XCRemoteSwiftPackageReference "CXXUnfairLock" */,
+				321091DF2F31797D0024A44F /* XCRemoteSwiftPackageReference "CXXDispatchSemaphore" */,
+				321091E22F3179A60024A44F /* XCRemoteSwiftPackageReference "CXXAudioRingBuffer" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3237E0D02CF7855B0084AA51 /* Products */;
@@ -1090,6 +1112,8 @@
 				3237E1ED2CF7868B0084AA51 /* SFBFileOutputSource.m in Sources */,
 				3237E1EE2CF7868B0084AA51 /* SFBMusepackDecoder.m in Sources */,
 				3237E1EF2CF7868B0084AA51 /* SFBTrueAudioFile.mm in Sources */,
+				321091DD2F3178F20024A44F /* SFBACLDescription.m in Sources */,
+				321091DE2F3178F20024A44F /* SFBASBDFormatDescription.m in Sources */,
 				3237E1F02CF7868B0084AA51 /* SFBProTrackerModuleFile.mm in Sources */,
 				3237E1F12CF7868B0084AA51 /* SFBOggVorbisDecoder.m in Sources */,
 				3237E1F22CF7868B0084AA51 /* SFBAudioPlayer.mm in Sources */,
@@ -1358,6 +1382,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		321091DF2F31797D0024A44F /* XCRemoteSwiftPackageReference "CXXDispatchSemaphore" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sbooth/CXXDispatchSemaphore";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.4.0;
+			};
+		};
+		321091E22F3179A60024A44F /* XCRemoteSwiftPackageReference "CXXAudioRingBuffer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sbooth/CXXAudioRingBuffer";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 		321C18AF2CF7886000670824 /* XCRemoteSwiftPackageReference "vorbis-binary-xcframework" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sbooth/vorbis-binary-xcframework";
@@ -1462,28 +1502,12 @@
 				minimumVersion = 0.5.0;
 			};
 		};
-		3241D7C82EDCA8660078AB9F /* XCRemoteSwiftPackageReference "CXXCoreAudio" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sbooth/CXXCoreAudio";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.1;
-			};
-		};
-		3241D7CB2EDCA8740078AB9F /* XCRemoteSwiftPackageReference "CXXAudioToolbox" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sbooth/CXXAudioToolbox";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.0;
-			};
-		};
 		3241D7CE2EDCA8830078AB9F /* XCRemoteSwiftPackageReference "CXXRingBuffer" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sbooth/CXXRingBuffer";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.2;
+				minimumVersion = 0.6.0;
 			};
 		};
 		3241D7D12EDCA88F0078AB9F /* XCRemoteSwiftPackageReference "CXXUnfairLock" */ = {
@@ -1491,7 +1515,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXUnfairLock";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.0;
+				minimumVersion = 0.3.0;
 			};
 		};
 		328E81622CF7890700BFCEB2 /* XCRemoteSwiftPackageReference "sndfile-binary-xcframework" */ = {
@@ -1513,6 +1537,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		321091E02F31797D0024A44F /* CXXDispatchSemaphore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 321091DF2F31797D0024A44F /* XCRemoteSwiftPackageReference "CXXDispatchSemaphore" */;
+			productName = CXXDispatchSemaphore;
+		};
+		321091E32F3179A60024A44F /* CXXAudioRingBuffer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 321091E22F3179A60024A44F /* XCRemoteSwiftPackageReference "CXXAudioRingBuffer" */;
+			productName = CXXAudioRingBuffer;
+		};
 		321C18B02CF7886000670824 /* vorbis */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 321C18AF2CF7886000670824 /* XCRemoteSwiftPackageReference "vorbis-binary-xcframework" */;
@@ -1577,16 +1611,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3237E21C2CF787330084AA51 /* XCRemoteSwiftPackageReference "AVFAudioExtensions" */;
 			productName = AVFAudioExtensions;
-		};
-		3241D7C92EDCA8660078AB9F /* CXXCoreAudio */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3241D7C82EDCA8660078AB9F /* XCRemoteSwiftPackageReference "CXXCoreAudio" */;
-			productName = CXXCoreAudio;
-		};
-		3241D7CC2EDCA8750078AB9F /* CXXAudioToolbox */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3241D7CB2EDCA8740078AB9F /* XCRemoteSwiftPackageReference "CXXAudioToolbox" */;
-			productName = CXXAudioToolbox;
 		};
 		3241D7CF2EDCA8830078AB9F /* CXXRingBuffer */ = {
 			isa = XCSwiftPackageProductDependency;
