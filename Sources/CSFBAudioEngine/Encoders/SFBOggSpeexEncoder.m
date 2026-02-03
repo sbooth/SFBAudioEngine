@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBOggSpeexEncoder.h"
@@ -60,28 +61,28 @@ static void vorbis_comment_init(char **comments, size_t *length, const char *ven
 #if 0
 static void vorbis_comment_add(char **comments, size_t *length, const char *tag, const char *val)
 {
-	char *p = *comments;
+    char *p = *comments;
 
-	size_t vendor_length = OSReadLittleInt32(p, 0);
-	size_t user_comment_list_length = OSReadLittleInt32(p, 4 + vendor_length);
+    size_t vendor_length = OSReadLittleInt32(p, 0);
+    size_t user_comment_list_length = OSReadLittleInt32(p, 4 + vendor_length);
 
-	size_t tag_len = (tag ? strlen(tag) : 0);
-	size_t val_len = strlen(val);
-	size_t len = (*length) + 4 + tag_len + val_len;
-	p = (char *)reallocf(p, len);
-	if(p == NULL) {
-		*comments = NULL;
-		*length = 0;
-		return;
-	}
+    size_t tag_len = (tag ? strlen(tag) : 0);
+    size_t val_len = strlen(val);
+    size_t len = (*length) + 4 + tag_len + val_len;
+    p = (char *)reallocf(p, len);
+    if(p == NULL) {
+        *comments = NULL;
+        *length = 0;
+        return;
+    }
 
-	OSWriteLittleInt32(p, *length, tag_len + val_len);  /* length of comment */
-	if(tag) memcpy(p + *length + 4, tag, tag_len);  /* comment */
-	memcpy(p + *length + 4 + tag_len, val, val_len);  /* comment */
-	OSWriteLittleInt32(p, 4 + vendor_length, user_comment_list_length + 1);
+    OSWriteLittleInt32(p, *length, tag_len + val_len);  /* length of comment */
+    if(tag) memcpy(p + *length + 4, tag, tag_len);  /* comment */
+    memcpy(p + *length + 4 + tag_len, val, val_len);  /* comment */
+    OSWriteLittleInt32(p, 4 + vendor_length, user_comment_list_length + 1);
 
-	*comments = p;
-	*length = len;
+    *comments = p;
+    *length = len;
 }
 #endif
 
@@ -136,7 +137,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     double sampleRate = sourceFormat.sampleRate;
 
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
-    if (mode != nil) {
+    if (mode) {
         // Determine the desired sample rate
         if (mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband) {
             sampleRate = 8000;
@@ -158,10 +159,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    //	NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
-    //	NSAssert(_processingFormat.sampleRate >= 6000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
-    //	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
-    //	NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
+    //    NSAssert(_processingFormat.sampleRate >= 6000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
+    //    NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
 
     if (![super openReturningError:error]) {
         return NO;
@@ -182,7 +183,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     // Setup the encoder
     const SpeexMode *speex_mode = NULL;
     SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
-    if (mode == nil) {
+    if (!mode) {
         if (_processingFormat.sampleRate > 25000) {
             speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
         } else if (_processingFormat.sampleRate > 12500) {
@@ -227,7 +228,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                                  frameCapacity:(AVAudioFrameCount)_speex_frame_size];
 
-    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
+    NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity];
+    if (complexity == nil) {
+        complexity = @3;
+    }
     spx_int32_t complexity_value = complexity.intValue;
     speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity_value);
 
@@ -239,7 +243,10 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     spx_int32_t dtx_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableDTX] boolValue];
     spx_int32_t abr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableABR] boolValue];
 
-    NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexQuality] ?: @-1;
+    NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexQuality];
+    if (quality == nil) {
+        quality = @-1;
+    }
 
     // Encoder mode
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexTargetIsBitrate] boolValue]) {
@@ -285,7 +292,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     spx_int32_t highpass_enabled =
-          ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
+            ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
     speex_encoder_ctl(_st, SPEEX_SET_HIGHPASS, &highpass_enabled);
 
     speex_encoder_ctl(_st, SPEEX_GET_LOOKAHEAD, &_speex_lookahead);
@@ -304,7 +311,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     speex_init_header(&header, (int)_processingFormat.sampleRate, (int)_processingFormat.channelCount, speex_mode);
 
     _speex_frames_per_ogg_packet = 1; // 1-10 default 1
-    NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket] ?: @1;
+    NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket];
     if (framesPerPacket != nil) {
         int intValue = framesPerPacket.intValue;
         if (intValue < 1 || intValue > 10) {

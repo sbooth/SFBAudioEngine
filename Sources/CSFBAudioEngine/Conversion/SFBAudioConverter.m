@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioConverter.h"
@@ -28,7 +29,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
                                           case SFBAudioConverterErrorCodeFormatNotSupported:
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(
-                                                        @"The requested audio format is not supported.", @"");
+                                                          @"The requested audio format is not supported.", @"");
                                               }
                                               break;
                                           }
@@ -116,9 +117,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 }
 
 - (instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder
-                          encoder:(id<SFBPCMEncoding>)encoder
-      requestedIntermediateFormat:(AVAudioFormat * (^)(AVAudioFormat *))intermediateFormatBlock
-                            error:(NSError **)error {
+                            encoder:(id<SFBPCMEncoding>)encoder
+        requestedIntermediateFormat:(AVAudioFormat * (^)(AVAudioFormat *))intermediateFormatBlock
+                              error:(NSError **)error {
     NSParameterAssert(decoder != nil);
     NSParameterAssert(encoder != nil);
 
@@ -136,16 +137,16 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
                 AVAudioChannelLayout *decoderChannelLayout = decoder.processingFormat.channelLayout;
                 if (decoderChannelLayout) {
                     desiredIntermediateFormat =
-                          [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
-                                                           sampleRate:decoder.processingFormat.sampleRate
-                                                          interleaved:YES
-                                                        channelLayout:decoderChannelLayout];
+                            [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
+                                                             sampleRate:decoder.processingFormat.sampleRate
+                                                            interleaved:YES
+                                                          channelLayout:decoderChannelLayout];
                 } else {
                     desiredIntermediateFormat =
-                          [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
-                                                           sampleRate:decoder.processingFormat.sampleRate
-                                                             channels:decoder.processingFormat.channelCount
-                                                          interleaved:YES];
+                            [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
+                                                             sampleRate:decoder.processingFormat.sampleRate
+                                                               channels:decoder.processingFormat.channelCount
+                                                            interleaved:YES];
                 }
             }
 
@@ -171,12 +172,12 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
         if (!_intermediateConverter) {
             if (error) {
                 *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioConverterErrorDomain, SFBAudioConverterErrorCodeFormatNotSupported,
-                      NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's format is not supported for conversion.", @"")
-                      },
-                      SFBLocalizedNameForURL(decoder.inputSource.url));
+                        SFBAudioConverterErrorDomain, SFBAudioConverterErrorCodeFormatNotSupported,
+                        NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
+                            NSLocalizedRecoverySuggestionErrorKey :
+                                    NSLocalizedString(@"The file's format is not supported for conversion.", @"")
+                        },
+                        SFBLocalizedNameForURL(decoder.inputSource.url));
             }
             return nil;
         }
@@ -206,26 +207,26 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 
     for (;;) {
         AVAudioConverterOutputStatus status =
-              [_intermediateConverter convertToBuffer:encodeBuffer
-                                                error:&convertError
-                                   withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets,
-                                                                       AVAudioConverterInputStatus *outStatus) {
-                                       decodeResult = [self->_decoder decodeIntoBuffer:decodeBuffer
-                                                                           frameLength:inNumberOfPackets
-                                                                                 error:&decodeError];
-                                       if (!decodeResult) {
-                                           *outStatus = AVAudioConverterInputStatus_NoDataNow;
-                                           return nil;
-                                       }
+                [_intermediateConverter convertToBuffer:encodeBuffer
+                                                  error:&convertError
+                                     withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets,
+                                                                         AVAudioConverterInputStatus *outStatus) {
+                                         decodeResult = [self->_decoder decodeIntoBuffer:decodeBuffer
+                                                                             frameLength:inNumberOfPackets
+                                                                                   error:&decodeError];
+                                         if (!decodeResult) {
+                                             *outStatus = AVAudioConverterInputStatus_NoDataNow;
+                                             return nil;
+                                         }
 
-                                       if (decodeBuffer.frameLength == 0) {
-                                           *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                                           return nil;
-                                       }
+                                         if (decodeBuffer.frameLength == 0) {
+                                             *outStatus = AVAudioConverterInputStatus_EndOfStream;
+                                             return nil;
+                                         }
 
-                                       *outStatus = AVAudioConverterInputStatus_HaveData;
-                                       return decodeBuffer;
-                                   }];
+                                         *outStatus = AVAudioConverterInputStatus_HaveData;
+                                         return decodeBuffer;
+                                     }];
 
         // Verify decoding was successful
         if (!decodeResult) {

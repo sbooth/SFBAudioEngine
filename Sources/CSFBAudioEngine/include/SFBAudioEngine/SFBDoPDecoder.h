@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBDSDDecoding.h>
@@ -12,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// A decoder supporting DSD over PCM (DoP)
 /// - seealso: http://dsd-guide.com/sites/default/files/white-papers/DoP_openStandard_1v1.pdf
 NS_SWIFT_NAME(DoPDecoder)
-@interface SFBDoPDecoder : NSObject<SFBPCMDecoding>
+@interface SFBDoPDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

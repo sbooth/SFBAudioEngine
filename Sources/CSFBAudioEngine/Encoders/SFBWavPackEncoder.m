@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBWavPackEncoder.h"
@@ -20,11 +21,11 @@ SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel = @"Compression Level";
 
 SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelFast =
-      @"Fast";
+        @"Fast";
 SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh =
-      @"High";
+        @"High";
 SFBAudioEncodingSettingsValueWavPackCompressionLevel const
-      SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh = @"Very High";
+        SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh = @"Very High";
 
 @interface SFBWavPackEncoder () {
   @package
@@ -41,7 +42,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSCParameterAssert(id != NULL);
     SFBWavPackEncoder *encoder = (__bridge SFBWavPackEncoder *)id;
 
-    if (encoder->_firstBlock == nil) {
+    if (!encoder->_firstBlock) {
         encoder->_firstBlock = [NSMutableData dataWithBytes:data length:(NSUInteger)bcount];
     }
 
@@ -75,8 +76,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat || sourceFormat.channelCount < 1 ||
-        sourceFormat.channelCount > 32) {
+    if ((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat ||
+        sourceFormat.channelCount < 1 || sourceFormat.channelCount > 32) {
         return nil;
     }
 
@@ -101,7 +102,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     // Use WAVFORMATEX channel order
     AVAudioChannelLayout *channelLayout = nil;
 
-    if (sourceFormat.channelLayout != nil) {
+    if (sourceFormat.channelLayout) {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
@@ -139,7 +140,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
         return NO;
     }
 
-    //	WavpackSetFileInformation(_wpc, NULL, WP_FORMAT_WAV);
+    //    WavpackSetFileInformation(_wpc, NULL, WP_FORMAT_WAV);
 
     _config.sample_rate = (int)_processingFormat.sampleRate;
     _config.num_channels = (int)_processingFormat.channelCount;
@@ -163,7 +164,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     _config.flags = CONFIG_MD5_CHECKSUM;
 
     SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
-    if (level != nil) {
+    if (level) {
         if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast) {
             _config.flags |= CONFIG_FAST_FLAG;
         } else if (level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh) {

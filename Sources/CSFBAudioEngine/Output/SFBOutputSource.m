@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBBufferOutputSource.h"
@@ -103,9 +104,9 @@ static void SFBCreateOutputSourceLog(void) {
 }
 
 - (BOOL)writeBytes:(const void *)buffer
-            length:(NSInteger)length
-      bytesWritten:(NSInteger *)bytesWritten
-             error:(NSError **)error {
+              length:(NSInteger)length
+        bytesWritten:(NSInteger *)bytesWritten
+               error:(NSError **)error {
     [self doesNotRecognizeSelector:_cmd];
     __builtin_unreachable();
 }
@@ -128,6 +129,22 @@ static void SFBCreateOutputSourceLog(void) {
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     [self doesNotRecognizeSelector:_cmd];
     __builtin_unreachable();
+}
+
+- (NSError *)posixErrorWithCode:(NSInteger)code {
+    NSDictionary *userInfo = nil;
+    if (_url) {
+        userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
+}
+
+- (NSString *)description {
+    if (_url) {
+        return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
+                                          [[NSFileManager defaultManager] displayNameAtPath:_url.path]];
+    }
+    return [NSString stringWithFormat:@"<%@ %p>", [self class], (__bridge void *)self];
 }
 
 @end

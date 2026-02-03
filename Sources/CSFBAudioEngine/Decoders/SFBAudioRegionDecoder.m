@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioRegionDecoder.h"
@@ -318,7 +319,7 @@
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
         AVAudioFrameCount framesRemainingInRegion =
-              (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
+                (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
         AVAudioFrameCount framesToDecode = MIN(MIN(framesRemaining, framesRemainingInRegion), _buffer.frameCapacity);
 
         // Nothing left to read
@@ -380,8 +381,9 @@
 
 - (NSString *)description {
     return [NSString
-          stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %ld>",
-                           [self class], self, _decoder, _startFrame, _frameLength, (long)_repeatCount];
+            stringWithFormat:@"<%@ %p: _decoder = %@, _startFrame = %lld, _frameLength = %lld, _repeatCount = %ld>",
+                             [self class], (__bridge void *)self, _decoder, _startFrame, _frameLength,
+                             (long)_repeatCount];
 }
 
 @end

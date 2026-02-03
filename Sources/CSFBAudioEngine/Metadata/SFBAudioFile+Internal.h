@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioFile.h"
@@ -25,12 +26,29 @@ extern os_log_t gSFBAudioFileLog;
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the test was successfully performed, `NO` otherwise
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error;
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error;
 
+/// Returns an invalid format error with a description similar to "The file is not a valid XXX file"
+/// - parameter formatName: The localized name of the audio format
+/// - returns: An error in `SFBAudioFileErrorDomain` with code `SFBAudioFileErrorCodeInvalidFormat`
+- (NSError *)genericInvalidFormatError:(NSString *)formatName;
+/// Returns an input/output error with a description similar to "The file could not be opened for reading"
+/// - returns: An error in `SFBAudioFileErrorDomain` with code `SFBAudioFileErrorCodeInputOutput`
+- (NSError *)genericOpenForReadingError;
+/// Returns an input/output error with a description similar to "The file could not be opened for writing"
+/// - returns: An error in `SFBAudioFileErrorDomain` with code `SFBAudioFileErrorCodeInputOutput`
+- (NSError *)genericOpenForWritingError;
+/// Returns an input/output error with a description similar to "The file could not be saved"
+/// - returns: An error in `SFBAudioFileErrorDomain` with code `SFBAudioFileErrorCodeInputOutput`
+- (NSError *)genericSaveError;
+/// Returns an input/output error with a description similar to "The file could not be saved"
+/// - parameter recoverySuggestion: A localized error recovery suggestion
+/// - returns: An error in `SFBAudioFileErrorDomain` with code `SFBAudioFileErrorCodeInputOutput`
+- (NSError *)saveErrorWithRecoverySuggestion:(NSString *)recoverySuggestion;
 @end
 
-#pragma mark - Subclass Registration
+// MARK: - Subclass Registration
 
 @interface SFBAudioFile (SFBAudioFileSubclassRegistration)
 /// Register a subclass with the default priority (`0`)

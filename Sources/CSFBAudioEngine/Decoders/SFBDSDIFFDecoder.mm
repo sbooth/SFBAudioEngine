@@ -1,14 +1,14 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDSDIFFDecoder.h"
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -58,7 +58,7 @@ uint32_t bytesToID(const char bytes[4]) noexcept {
 }
 
 // Read an ID as a uint32_t, performing validation
-bool readID(SFBInputSource *inputSource, uint32_t& chunkID) noexcept {
+bool readID(SFBInputSource *inputSource, uint32_t &chunkID) noexcept {
     NSCParameterAssert(inputSource != nil);
 
     char chunkIDBytes[4];
@@ -100,7 +100,7 @@ AudioChannelLabel channelIDToCoreAudioChannelLabel(uint32_t channelID) noexcept 
     return kAudioChannelLabel_Unknown;
 }
 
-#pragma mark DSDIFF chunks
+// MARK: DSDIFF chunks
 
 // Base class for DSDIFF chunks
 struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk> {
@@ -108,9 +108,7 @@ struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk> {
     using chunk_map = std::map<uint32_t, shared_ptr>;
 
     // Shared pointer support
-    shared_ptr getptr() {
-        return shared_from_this();
-    }
+    shared_ptr getptr() { return shared_from_this(); }
 
     uint32_t chunkID_;
     uint64_t dataSize_;
@@ -171,57 +169,57 @@ struct DSDSoundDataChunk : public DSDIFFChunk {};
 
 // 'DST ', 'DSTI', 'COMT', 'DIIN', 'MANF' are not handled
 
-//	// 'DST ' in 'FRM8'
-//	class DSTSoundDataChunk : public DSDIFFChunk
-//	{};
+//// 'DST ' in 'FRM8'
+// class DSTSoundDataChunk : public DSDIFFChunk
+//{};
 //
-//	// 'FRTE' in 'DST '
-//	class DSTFrameInformationChunk : public DSDIFFChunk
-//	{};
+//// 'FRTE' in 'DST '
+// class DSTFrameInformationChunk : public DSDIFFChunk
+//{};
 //
-//	// 'FRTE' in 'DST '
-//	class DSTFrameDataChunk : public DSDIFFChunk
-//	{};
+//// 'FRTE' in 'DST '
+// class DSTFrameDataChunk : public DSDIFFChunk
+//{};
 //
-//	// 'FRTE' in 'DST '
-//	class DSTFrameCRCChunk : public DSDIFFChunk
-//	{};
+//// 'FRTE' in 'DST '
+// class DSTFrameCRCChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DSTI' in 'FRM8'
-//	class DSTSoundIndexChunk : public DSDIFFChunk
-//	{};
+//// 'DSTI' in 'FRM8'
+// class DSTSoundIndexChunk : public DSDIFFChunk
+//{};
 //
-//	// 'COMT' in 'FRM8'
-//	class CommentsChunk : public DSDIFFChunk
-//	{};
+//// 'COMT' in 'FRM8'
+// class CommentsChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DIIN' in 'FRM8'
-//	class EditedMasterInformationChunk : public DSDIFFChunk
-//	{};
+//// 'DIIN' in 'FRM8'
+// class EditedMasterInformationChunk : public DSDIFFChunk
+//{};
 //
-//	// 'EMID' in 'DIIN'
-//	class EditedMasterIDChunk : public DSDIFFChunk
-//	{};
+//// 'EMID' in 'DIIN'
+// class EditedMasterIDChunk : public DSDIFFChunk
+//{};
 //
-//	// 'MARK' in 'DIIN'
-//	class MarkerChunk : public DSDIFFChunk
-//	{};
+//// 'MARK' in 'DIIN'
+// class MarkerChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DIAR' in 'DIIN'
-//	class ArtistChunk : public DSDIFFChunk
-//	{};
+//// 'DIAR' in 'DIIN'
+// class ArtistChunk : public DSDIFFChunk
+//{};
 //
-//	// 'DITI' in 'DIIN'
-//	class TitleChunk : public DSDIFFChunk
-//	{};
+//// 'DITI' in 'DIIN'
+// class TitleChunk : public DSDIFFChunk
+//{};
 //
-//	// 'MANF' in 'FRM8'
-//	class ManufacturerSpecificChunk : public DSDIFFChunk
-//	{};
+//// 'MANF' in 'FRM8'
+// class ManufacturerSpecificChunk : public DSDIFFChunk
+//{};
 
-#pragma mark DSDIFF parsing
+// MARK: DSDIFF parsing
 
-bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize) noexcept {
+bool readChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t &chunkID, uint64_t &chunkDataSize) noexcept {
     if (!readID(inputSource, chunkID)) {
         return false;
     }
@@ -674,16 +672,6 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
     return parseFormDSDChunk(inputSource, chunkID, chunkDataSize);
 }
 
-NSError *createInvalidDSDIFFFileError(NSURL *url) {
-    return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
-                                            NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @""), @{
-                                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                                      @"The file's extension may not match the file's type.", @""),
-                                                NSURLErrorKey : url
-                                            },
-                                            SFBLocalizedNameForURL(url));
-}
-
 } /* namespace */
 
 @interface SFBDSDIFFDecoder () {
@@ -714,13 +702,13 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -745,8 +733,8 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     auto chunks = parseDSDIFF(_inputSource);
     if (!chunks) {
         os_log_error(gSFBDSDDecoderLog, "Error parsing file");
-        if (error) {
-            *error = createInvalidDSDIFFFileError(_inputSource.url);
+        if (error != nullptr) {
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
         }
         return NO;
     }
@@ -757,8 +745,8 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
 
     if (!propertyChunk || !sampleRateChunk || !channelsChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
-        if (error) {
-            *error = createInvalidDSDIFFFileError(_inputSource.url);
+        if (error != nullptr) {
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
         }
         return NO;
     }
@@ -817,8 +805,8 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
     auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->localChunks_['DSD ']);
     if (!soundDataChunk) {
         os_log_error(gSFBDSDDecoderLog, "Missing chunk in file");
-        if (error) {
-            *error = createInvalidDSDIFFFileError(_inputSource.url);
+        if (error != nullptr) {
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
         }
         return NO;
     }
@@ -891,8 +879,8 @@ NSError *createInvalidDSDIFFFileError(NSURL *url) {
         if (bytesRead != bytesToRead) {
             os_log_error(gSFBDSDDecoderLog, "Missing audio data: requested %ld bytes, got %ld",
                          static_cast<long>(bytesToRead), bytesRead);
-            if (error) {
-                *error = createInvalidDSDIFFFileError(_inputSource.url);
+            if (error != nullptr) {
+                *error = [self invalidFormatError:NSLocalizedString(@"DSD Interchange", @"")];
             }
             return NO;
         }

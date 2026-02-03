@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBModuleDecoder.h"
 
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <dumb/dumb.h>
@@ -121,8 +121,8 @@ static dumb_off_t get_size_callback(void *f) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -197,8 +197,8 @@ static dumb_off_t get_size_callback(void *f) {
 
         long samplesSize = framesToCopy;
         long framesCopied =
-              duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0F / DUMB_SAMPLE_RATE,
-                             framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
+                duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE,
+                               framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
 
         framesProcessed += framesCopied;
 
@@ -227,7 +227,7 @@ static dumb_off_t get_size_callback(void *f) {
     }
 
     AVAudioFramePosition framesToSkip = frame - _framePosition;
-    duh_sigrenderer_generate_samples(_dsr, 1, 65536.0F / DUMB_SAMPLE_RATE, framesToSkip, NULL);
+    duh_sigrenderer_generate_samples(_dsr, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToSkip, NULL);
     _framePosition += framesToSkip;
 
     return YES;
@@ -246,9 +246,7 @@ static dumb_off_t get_size_callback(void *f) {
     if (!_df) {
         os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeInternalError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericInternalError];
         }
         return NO;
     }
@@ -259,14 +257,7 @@ static dumb_off_t get_size_callback(void *f) {
         _df = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"Module", @"")];
         }
         return NO;
     }
@@ -287,14 +278,7 @@ static dumb_off_t get_size_callback(void *f) {
         _df = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Module file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"Module", @"")];
         }
         return NO;
     }

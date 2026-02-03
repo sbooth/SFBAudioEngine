@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2024-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2024 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBLibsndfileUtilities.h"
@@ -61,13 +62,13 @@ void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format) {
         break;
 
     case SF_FORMAT_FLOAT:
-        //			asbd->mFormatID = kAudioFormatLinearPCM;
+        //        asbd->mFormatID = kAudioFormatLinearPCM;
         asbd->mFormatFlags = kAudioFormatFlagIsFloat;
         asbd->mBitsPerChannel = 32;
         break;
 
     case SF_FORMAT_DOUBLE:
-        //			asbd->mFormatID = kAudioFormatLinearPCM;
+        //        asbd->mFormatID = kAudioFormatLinearPCM;
         asbd->mFormatFlags = kAudioFormatFlagIsFloat;
         asbd->mBitsPerChannel = 64;
         break;
