@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2022 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioProperties.h"
@@ -78,13 +79,13 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate = @"Bitrate";
     return [_properties objectForKey:SFBAudioPropertiesKeyBitrate];
 }
 
-#pragma mark - External Representation
+// MARK: - External Representation
 
 - (NSDictionary *)dictionaryRepresentation {
     return _properties;
 }
 
-#pragma mark - Dictionary-Like Interface
+// MARK: - Dictionary-Like Interface
 
 - (id)objectForKey:(SFBAudioPropertiesKey)key {
     return [_properties objectForKey:key];

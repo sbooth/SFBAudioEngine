@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <Foundation/Foundation.h>
@@ -48,7 +49,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer)
 /// Returns the album gain in dB (`SFBReplayGainAnalyzerGainKey`) and peak sample value normalized to [-1, 1)
 /// (`SFBReplayGainAnalyzerPeakKey`), or `nil` on error
 - (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)albumGainAndPeakSampleReturningError:(NSError **)error
-      NS_REFINED_FOR_SWIFT;
+        NS_REFINED_FOR_SWIFT;
 
 @end
 

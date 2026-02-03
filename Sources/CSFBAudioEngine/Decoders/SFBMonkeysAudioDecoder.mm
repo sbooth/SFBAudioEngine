@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <os/log.h>
@@ -18,7 +19,6 @@
 #undef PLATFORM_APPLE
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 #import "SFBMonkeysAudioDecoder.h"
 
@@ -26,51 +26,50 @@ SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEn
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion = @"APE_INFO_FILE_VERSION";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel =
-      @"APE_INFO_COMPRESSION_LEVEL";
+        @"APE_INFO_COMPRESSION_LEVEL";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFormatFlags = @"APE_INFO_FORMAT_FLAGS";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate = @"APE_INFO_SAMPLE_RATE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBitsPerSample =
-      @"APE_INFO_BITS_PER_SAMPLE";
+        @"APE_INFO_BITS_PER_SAMPLE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBytesPerSample =
-      @"APE_INFO_BYTES_PER_SAMPLE";
+        @"APE_INFO_BYTES_PER_SAMPLE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioChannels = @"APE_INFO_CHANNELS";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlockAlignment = @"APE_INFO_BLOCK_ALIGN";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioBlocksPerFrame =
-      @"APE_INFO_BLOCKS_PER_FRAME";
+        @"APE_INFO_BLOCKS_PER_FRAME";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFinalFrameBlocks =
-      @"APE_INFO_FINAL_FRAME_BLOCKS";
+        @"APE_INFO_FINAL_FRAME_BLOCKS";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalFrames = @"APE_INFO_TOTAL_FRAMES";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVHeaderBytes =
-      @"APE_INFO_WAV_HEADER_BYTES";
+        @"APE_INFO_WAV_HEADER_BYTES";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTerminatingBytes =
-      @"APE_INFO_WAV_TERMINATING_BYTES";
+        @"APE_INFO_WAV_TERMINATING_BYTES";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVDataBytes = @"APE_INFO_WAV_DATA_BYTES";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes =
-      @"APE_INFO_WAV_TOTAL_BYTES";
+        @"APE_INFO_WAV_TOTAL_BYTES";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes =
-      @"APE_INFO_APE_TOTAL_BYTES";
+        @"APE_INFO_APE_TOTAL_BYTES";
 // SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks = @"APE_INFO_TOTAL_BLOCKS";
 // SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds =
 // @"APE_INFO_LENGTH_MS"; SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate =
 // @"APE_INFO_AVERAGE_BITRATE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioDecompressedBitrate =
-      @"APE_INFO_DECOMPRESSED_BITRATE";
+        @"APE_INFO_DECOMPRESSED_BITRATE";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPL = @"APE_INFO_APL";
 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks =
-      @"APE_DECOMPRESS_TOTAL_BLOCKS";
+        @"APE_DECOMPRESS_TOTAL_BLOCKS";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds =
-      @"APE_DECOMPRESS_LENGTH_MS";
+        @"APE_DECOMPRESS_LENGTH_MS";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate =
-      @"APE_DECOMPRESS_AVERAGE_BITRATE";
+        @"APE_DECOMPRESS_AVERAGE_BITRATE";
 
 namespace {
 
 // The I/O interface for MAC
 class APEIOInterface final : public APE::IAPEIO {
   public:
-    explicit APEIOInterface(SFBInputSource *inputSource)
-      : inputSource_(inputSource) {}
+    explicit APEIOInterface(SFBInputSource *inputSource) : inputSource_(inputSource) {}
 
     int Open(const wchar_t *pName, bool bOpenReadOnly) override {
 #pragma unused(pName)
@@ -79,9 +78,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_INVALID_INPUT_FILE;
     }
 
-    int Close() override {
-        return ERROR_SUCCESS;
-    }
+    int Close() override { return ERROR_SUCCESS; }
 
     int Read(void *pBuffer, unsigned int nBytesToRead, unsigned int *pBytesRead) override {
         NSInteger bytesRead;
@@ -112,23 +109,23 @@ class APEIOInterface final : public APE::IAPEIO {
         case APE::SeekFileBegin:
             // offset remains unchanged
             break;
-        case APE::SeekFileCurrent: {
-            NSInteger inputSourceOffset;
-            if ([inputSource_ getOffset:&inputSourceOffset error:nil]) {
+        case APE::SeekFileCurrent:
+            if (NSInteger inputSourceOffset; [inputSource_ getOffset:&inputSourceOffset error:nil]) {
                 offset += inputSourceOffset;
             }
             break;
-        }
-        case APE::SeekFileEnd: {
-            NSInteger inputSourceLength;
-            if ([inputSource_ getLength:&inputSourceLength error:nil]) {
+        case APE::SeekFileEnd:
+            if (NSInteger inputSourceLength; [inputSource_ getLength:&inputSourceLength error:nil]) {
                 offset += inputSourceLength;
             }
             break;
         }
+
+        if (![inputSource_ seekToOffset:offset error:nil]) {
+            return ERROR_IO_READ;
         }
 
-        return ![inputSource_ seekToOffset:offset error:nil];
+        return ERROR_SUCCESS;
     }
 
     int Create(const wchar_t *pName) override {
@@ -136,13 +133,9 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_IO_WRITE;
     }
 
-    int Delete() override {
-        return ERROR_IO_WRITE;
-    }
+    int Delete() override { return ERROR_IO_WRITE; }
 
-    int SetEOF() override {
-        return ERROR_IO_WRITE;
-    }
+    int SetEOF() override { return ERROR_IO_WRITE; }
 
     unsigned char *GetBuffer(int *pnBufferBytes) override {
 #pragma unused(pnBufferBytes)
@@ -202,13 +195,13 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -233,15 +226,8 @@ class APEIOInterface final : public APE::IAPEIO {
     auto ioInterface = std::make_unique<APEIOInterface>(_inputSource);
     auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
     if (!decompressor) {
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+        if (error != nullptr) {
+            *error = [self invalidFormatError:NSLocalizedString(@"Monkey's Audio", @"")];
         }
         return NO;
     }
@@ -259,9 +245,9 @@ class APEIOInterface final : public APE::IAPEIO {
         break;
         // FIXME: Is there a standard ordering for multichannel files? WAVEFORMATEX?
     default:
-        channelLayout = [AVAudioChannelLayout
-              layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | static_cast<UInt32>(_decompressor->GetInfo(
-                                                                          APE::IAPEDecompress::APE_INFO_CHANNELS)))];
+        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown |
+                                                                   static_cast<UInt32>(_decompressor->GetInfo(
+                                                                           APE::IAPEDecompress::APE_INFO_CHANNELS)))];
         break;
     }
 
@@ -272,20 +258,20 @@ class APEIOInterface final : public APE::IAPEIO {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
     processingStreamDescription.mFormatFlags =
-          kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
+            kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
 #pragma clang diagnostic pop
 
     processingStreamDescription.mBitsPerChannel =
-          static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
+            static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
     processingStreamDescription.mSampleRate = _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
     processingStreamDescription.mChannelsPerFrame =
-          static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
+            static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
 
     processingStreamDescription.mBytesPerPacket =
-          (processingStreamDescription.mBitsPerChannel / 8) * processingStreamDescription.mChannelsPerFrame;
+            (processingStreamDescription.mBitsPerChannel / 8) * processingStreamDescription.mChannelsPerFrame;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
-          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+            processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
     processingStreamDescription.mReserved = 0;
 
@@ -298,10 +284,10 @@ class APEIOInterface final : public APE::IAPEIO {
     sourceStreamDescription.mFormatID = kSFBAudioFormatMonkeysAudio;
 
     sourceStreamDescription.mBitsPerChannel =
-          static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
+            static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE));
     sourceStreamDescription.mSampleRate = _decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE);
     sourceStreamDescription.mChannelsPerFrame =
-          static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
+            static_cast<UInt32>(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS));
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
@@ -309,46 +295,46 @@ class APEIOInterface final : public APE::IAPEIO {
     // Populate codec properties
     _properties = @{
         SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FILE_VERSION)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FILE_VERSION)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioCompressionLevel :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_COMPRESSION_LEVEL)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_COMPRESSION_LEVEL)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioFormatFlags :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FORMAT_FLAGS)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FORMAT_FLAGS)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioSampleRate :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_SAMPLE_RATE)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioBitsPerSample :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BITS_PER_SAMPLE)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioBytesPerSample :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BYTES_PER_SAMPLE)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BYTES_PER_SAMPLE)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioChannels :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_CHANNELS)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioBlockAlignment :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BLOCK_ALIGN)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BLOCK_ALIGN)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioBlocksPerFrame :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BLOCKS_PER_FRAME)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_BLOCKS_PER_FRAME)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioFinalFrameBlocks :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FINAL_FRAME_BLOCKS)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_FINAL_FRAME_BLOCKS)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioTotalFrames :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_FRAMES)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_FRAMES)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioWAVHeaderBytes :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_HEADER_BYTES)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_HEADER_BYTES)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTerminatingBytes :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TERMINATING_BYTES)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TERMINATING_BYTES)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioWAVDataBytes :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_DATA_BYTES)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_DATA_BYTES)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TOTAL_BYTES)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_WAV_TOTAL_BYTES)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APE_TOTAL_BYTES)),
-        //		SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks:
-        //@(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_BLOCKS)),
-        //		SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds:
-        //@(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_LENGTH_MS)),
-        //		SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate:
-        //@(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_AVERAGE_BITRATE)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_APE_TOTAL_BYTES)),
+        //        SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks:
+        //            @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_TOTAL_BLOCKS)),
+        //        SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds:
+        //            @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_LENGTH_MS)),
+        //        SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate:
+        //            @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_AVERAGE_BITRATE)),
         // APE_INFO_FRAME_BITRATE
         SFBAudioDecodingPropertiesKeyMonkeysAudioDecompressedBitrate :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_DECOMPRESSED_BITRATE)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_INFO_DECOMPRESSED_BITRATE)),
         // APE_INFO_PEAK_LEVEL
         // APE_INFO_SEEK_BIT
         // APE_INFO_SEEK_BYTE
@@ -365,12 +351,12 @@ class APEIOInterface final : public APE::IAPEIO {
         // APE_DECOMPRESS_CURRENT_BLOCK
         // APE_DECOMPRESS_CURRENT_MS
         SFBAudioDecodingPropertiesKeyMonkeysAudioTotalBlocks :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_TOTAL_BLOCKS)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_TOTAL_BLOCKS)),
         SFBAudioDecodingPropertiesKeyMonkeysAudioLengthMilliseconds :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_LENGTH_MS)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_LENGTH_MS)),
         // APE_DECOMPRESS_CURRENT_BITRATE
         SFBAudioDecodingPropertiesKeyMonkeysAudioAverageBitrate :
-              @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_AVERAGE_BITRATE)),
+                @(_decompressor->GetInfo(APE::IAPEDecompress::APE_DECOMPRESS_AVERAGE_BITRATE)),
         // APE_DECOMPRESS_CURRENT_FRAME
     };
 
@@ -410,12 +396,10 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int64_t blocksRead = 0;
     if (_decompressor->GetData(static_cast<unsigned char *>(buffer.audioBufferList->mBuffers[0].mData),
-                               static_cast<int64_t>(frameLength), &blocksRead)) {
+                               static_cast<int64_t>(frameLength), &blocksRead) != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
-        if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeDecodingError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+        if (error != nullptr) {
+            *error = [self genericDecodingError];
         }
         return NO;
     }
@@ -429,10 +413,8 @@ class APEIOInterface final : public APE::IAPEIO {
     NSParameterAssert(frame >= 0);
     if (const auto result = _decompressor->Seek(frame); result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioDecoderLog, "Monkey's Audio seek error: %d", result);
-        if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+        if (error != nullptr) {
+            *error = [self genericSeekError];
         }
         return NO;
     }

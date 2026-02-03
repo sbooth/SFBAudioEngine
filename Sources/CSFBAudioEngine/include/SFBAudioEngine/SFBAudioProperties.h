@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <Foundation/Foundation.h>
@@ -29,7 +30,7 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;
 
 /// Class providing information on basic audio properties
 NS_SWIFT_NAME(AudioProperties)
-@interface SFBAudioProperties : NSObject<NSCopying>
+@interface SFBAudioProperties : NSObject <NSCopying>
 
 /// Returns an initialized an `SFBAudioProperties` object
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
@@ -37,7 +38,7 @@ NS_SWIFT_NAME(AudioProperties)
 /// Returns an initialized an `SFBAudioProperties` object populated with values from `dictionaryRepresentation`
 /// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAudioPropertiesKey, id> *)dictionaryRepresentation
-      NS_DESIGNATED_INITIALIZER;
+        NS_DESIGNATED_INITIALIZER;
 
 /// The name of the audio format
 @property(nonatomic, nullable, readonly) NSString *formatName;
@@ -60,12 +61,12 @@ NS_SWIFT_NAME(AudioProperties)
 /// The audio bitrate in KiB/sec
 @property(nonatomic, nullable, readonly) NSNumber *bitrate NS_REFINED_FOR_SWIFT;
 
-#pragma mark - External Representation
+// MARK: - External Representation
 
 /// A dictionary containing the audio properties
 @property(nonatomic, readonly) NSDictionary<SFBAudioPropertiesKey, id> *dictionaryRepresentation;
 
-#pragma mark - Dictionary-Like Interface
+// MARK: - Dictionary-Like Interface
 
 /// Returns the property value for a key
 /// - parameter key: The key for the desired property value

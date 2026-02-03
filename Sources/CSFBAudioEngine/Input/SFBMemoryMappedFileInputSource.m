@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBMemoryMappedFileInputSource.h"
@@ -13,7 +14,7 @@
     NSParameterAssert(url.isFileURL);
 
     NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedAlways error:error];
-    if (data == nil) {
+    if (!data) {
         return nil;
     }
 

@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioPlayer+Internal.h"
@@ -32,7 +33,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
                                               }
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(
-                                                        @"The format is invalid, unknown, or unsupported.", @"");
+                                                          @"The format is invalid, unknown, or unsupported.", @"");
                                               }
                                               break;
                                           }
@@ -46,12 +47,13 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
     try {
         player = std::make_unique<sfb::AudioPlayer>();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(sfb::AudioPlayer::log_, "Unable to create std::unique_ptr<AudioPlayer>: %{public}s", e.what());
         return nil;
     }
 
-    if ((self = [super init])) {
+    self = [super init];
+    if (self != nil) {
         _player = std::move(player);
         _player->player_ = self;
     }
@@ -64,7 +66,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return NO;
     }
     if (!_player->enqueueDecoder(decoder, true, error)) {
@@ -84,7 +86,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return NO;
     }
     return _player->enqueueDecoder(decoder, false, error);
@@ -93,7 +95,7 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 - (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error {
     NSParameterAssert(url != nil);
     SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder) {
+    if (decoder == nil) {
         return NO;
     }
     return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
@@ -105,8 +107,8 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 }
 
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder
-      forImmediatePlayback:(BOOL)forImmediatePlayback
-                     error:(NSError **)error {
+        forImmediatePlayback:(BOOL)forImmediatePlayback
+                       error:(NSError **)error {
     NSParameterAssert(decoder != nil);
     return _player->enqueueDecoder(decoder, forImmediatePlayback, error);
 }

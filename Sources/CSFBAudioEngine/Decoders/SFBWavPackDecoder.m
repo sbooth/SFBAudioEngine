@@ -1,13 +1,13 @@
 //
-// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBWavPackDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -25,10 +25,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackVersion 
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackFileFormat = @"WavpackGetFileFormat";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamples = @"WavpackGetNumSamples64";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberSamplesInFrame =
-      @"WavpackGetNumSamplesInFrame";
+        @"WavpackGetNumSamplesInFrame";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackSampleRate = @"WavpackGetSampleRate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNativeSampleRate =
-      @"WavpackGetNativeSampleRate";
+        @"WavpackGetNativeSampleRate";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBitsPerSample = @"WavpackGetBitsPerSample";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackBytesPerSample = @"WavpackGetBytesPerSample";
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackNumberChannels = @"WavpackGetNumChannels";
@@ -176,8 +176,8 @@ static int can_seek_callback(void *id) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -220,14 +220,7 @@ static int can_seek_callback(void *id) {
     if (!_wpc) {
         os_log_error(gSFBAudioDecoderLog, "Error opening WavPack file: %s", errorBuf);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"WavPack", @"")];
         }
         return NO;
     }
@@ -238,9 +231,9 @@ static int can_seek_callback(void *id) {
     int channelMask = WavpackGetChannelMask(_wpc);
     if (channelMask) {
         AudioChannelLayout layout = {
-              .mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
-              .mChannelBitmap = channelMask,
-              .mNumberChannelDescriptions = 0,
+                .mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
+                .mChannelBitmap = channelMask,
+                .mNumberChannelDescriptions = 0,
         };
 
         AudioChannelLayoutTag tag = 0;
@@ -278,61 +271,52 @@ static int can_seek_callback(void *id) {
         // 255:         Present but unknown or unused channel
 
         for (int i = 0; i < channelCount; ++i) {
-            switch (identities[i]) {
-            case 1 ... 18:
-                labels[i] = identities[i];
-                break;
+            unsigned char ident = identities[i];
+            if ((ident >= 1 && ident <= 18) || (ident >= 33 && ident <= 44) || (ident >= 200 && ident <= 207)) {
+                labels[i] = ident;
+            } else if (ident >= 221 && ident <= 224) {
+                labels[i] = ident + 80;
+            } else {
+                switch (ident) {
+                case 30:
+                    labels[i] = kAudioChannelLabel_Left;
+                    break;
+                case 31:
+                    labels[i] = kAudioChannelLabel_Right;
+                    break;
 
-            case 30:
-                labels[i] = kAudioChannelLabel_Left;
-                break;
-            case 31:
-                labels[i] = kAudioChannelLabel_Right;
-                break;
+                    // FIXME: amio mappings are approximate (or possibly incorrect)
+                case 127:
+                    labels[i] = kAudioChannelLabel_VerticalHeightLeft;
+                    break;
+                case 128:
+                    labels[i] = kAudioChannelLabel_VerticalHeightRight;
+                    break;
+                case 138:
+                    labels[i] = kAudioChannelLabel_LeftBottom;
+                    break;
+                case 139:
+                    labels[i] = kAudioChannelLabel_CenterBottom;
+                    break;
+                case 140:
+                    labels[i] = kAudioChannelLabel_RightBottom;
+                    break;
+                case 141:
+                    labels[i] = kAudioChannelLabel_LeftEdgeOfScreen;
+                    break;
+                case 142:
+                    labels[i] = kAudioChannelLabel_RightEdgeOfScreen;
+                    break;
 
-            case 33 ... 44:
-                labels[i] = identities[i];
-                break;
+                case 255:
+                    labels[i] = kAudioChannelLabel_Unknown;
+                    break;
 
-                // FIXME: amio mappings are approximate (or possible incorrect)
-            case 127:
-                labels[i] = kAudioChannelLabel_VerticalHeightLeft;
-                break;
-            case 128:
-                labels[i] = kAudioChannelLabel_VerticalHeightRight;
-                break;
-            case 138:
-                labels[i] = kAudioChannelLabel_LeftBottom;
-                break;
-            case 139:
-                labels[i] = kAudioChannelLabel_CenterBottom;
-                break;
-            case 140:
-                labels[i] = kAudioChannelLabel_RightBottom;
-                break;
-            case 141:
-                labels[i] = kAudioChannelLabel_LeftEdgeOfScreen;
-                break;
-            case 142:
-                labels[i] = kAudioChannelLabel_RightEdgeOfScreen;
-                break;
-
-            case 200 ... 207:
-                labels[i] = identities[i];
-                break;
-
-            case 221 ... 224:
-                labels[i] = identities[i] + 80;
-                break;
-
-            case 255:
-                labels[i] = kAudioChannelLabel_Unknown;
-                break;
-
-            default:
-                os_log_error(gSFBAudioDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
-                labels[i] = kAudioChannelLabel_Unused;
-                break;
+                default:
+                    os_log_error(gSFBAudioDecoderLog, "Invalid WavPack channel ID: %d", identities[i]);
+                    labels[i] = kAudioChannelLabel_Unused;
+                    break;
+                }
             }
         }
 
@@ -341,19 +325,19 @@ static int can_seek_callback(void *id) {
 
     // Floating-point and lossy files will be handed off in the canonical Core Audio format
     int mode = WavpackGetMode(_wpc);
-    //	int qmode = WavpackGetQualifyMode(_wpc);
+    //    int qmode = WavpackGetQualifyMode(_wpc);
     if (MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
         _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                              sampleRate:WavpackGetSampleRate(_wpc)
                                                             interleaved:NO
                                                           channelLayout:channelLayout];
-        //	} else if(qmode & QMODE_DSD_AUDIO) {
+        //    } else if(qmode & QMODE_DSD_AUDIO) {
     } else {
         AudioStreamBasicDescription processingStreamDescription = {0};
 
         processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
         processingStreamDescription.mFormatFlags =
-              kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+                kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
         // Align high because Apple's AudioConverter doesn't handle low alignment
         if (WavpackGetBitsPerSample(_wpc) != 32) {
@@ -367,7 +351,7 @@ static int can_seek_callback(void *id) {
         processingStreamDescription.mBytesPerPacket = 4;
         processingStreamDescription.mFramesPerPacket = 1;
         processingStreamDescription.mBytesPerFrame =
-              processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+                processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
         _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
                                                                channelLayout:channelLayout];
@@ -478,7 +462,7 @@ static int can_seek_callback(void *id) {
 
         // The samples returned are handled differently based on the file's mode
         int mode = WavpackGetMode(_wpc);
-        //		int qmode = WavpackGetQualifyMode(_wpc);
+        //        int qmode = WavpackGetQualifyMode(_wpc);
 
         // Floating point files require no special handling other than deinterleaving
         if (mode & MODE_FLOAT) {
@@ -560,9 +544,7 @@ static int can_seek_callback(void *id) {
     if (!WavpackSeekSample64(_wpc, frame)) {
         os_log_error(gSFBAudioDecoderLog, "WavPack seek error");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericSeekError];
         }
         return NO;
     }

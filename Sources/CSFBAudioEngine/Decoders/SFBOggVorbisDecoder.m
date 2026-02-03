@@ -1,16 +1,15 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBOggVorbisDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <vorbis/vorbisfile.h>
 
 #import <os/log.h>
@@ -100,8 +99,8 @@ static long tell_func_callback(void *datasource) {
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -135,14 +134,7 @@ static long tell_func_callback(void *datasource) {
 
     if (ov_test_callbacks((__bridge void *)self, &_vorbisFile, NULL, 0, callbacks)) {
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid Ogg Vorbis file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"Ogg Vorbis", @"")];
         }
         return NO;
     }
@@ -155,9 +147,7 @@ static long tell_func_callback(void *datasource) {
         }
 
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeInternalError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericInternalError];
         }
         return NO;
     }
@@ -171,9 +161,7 @@ static long tell_func_callback(void *datasource) {
         }
 
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeInternalError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericInternalError];
         }
         return NO;
     }
@@ -208,7 +196,7 @@ static long tell_func_callback(void *datasource) {
         break;
     default:
         channelLayout =
-              [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)ovInfo->channels)];
+                [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)ovInfo->channels)];
         break;
     }
 
@@ -293,9 +281,7 @@ static long tell_func_callback(void *datasource) {
         if (framesRead < 0) {
             os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis decoding error");
             if (error) {
-                *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                             code:SFBAudioDecoderErrorCodeDecodingError
-                                         userInfo:@{NSURLErrorKey : _inputSource.url}];
+                *error = [self genericDecodingError];
             }
             return NO;
         }
@@ -326,9 +312,7 @@ static long tell_func_callback(void *datasource) {
     if (ov_pcm_seek(&_vorbisFile, frame)) {
         os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis seek error");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericSeekError];
         }
         return NO;
     }

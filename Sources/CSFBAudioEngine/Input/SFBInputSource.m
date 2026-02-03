@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "NSData+SFBExtensions.h"
@@ -76,7 +77,7 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-    if (data == nil) {
+    if (!data) {
         return nil;
     }
     return [[SFBDataInputSource alloc] initWithData:data];
@@ -86,7 +87,7 @@ static void SFBCreateInputSourceLog(void) {
     NSParameterAssert(bytes != NULL);
     NSParameterAssert(length >= 0);
     NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-    if (data == nil) {
+    if (!data) {
         return nil;
     }
     return [[SFBDataInputSource alloc] initWithData:data];
@@ -145,12 +146,20 @@ static void SFBCreateInputSourceLog(void) {
     __builtin_unreachable();
 }
 
+- (NSError *)posixErrorWithCode:(NSInteger)code {
+    NSDictionary *userInfo = nil;
+    if (_url) {
+        userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+    }
+    return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:userInfo];
+}
+
 - (NSString *)description {
     if (_url) {
-        return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self,
+        return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
                                           [[NSFileManager defaultManager] displayNameAtPath:_url.path]];
     }
-    return [NSString stringWithFormat:@"<%@ %p>", [self class], self];
+    return [NSString stringWithFormat:@"<%@ %p>", [self class], (__bridge void *)self];
 }
 
 @end
@@ -291,9 +300,13 @@ static void SFBCreateInputSourceLog(void) {
 
     if (!self.supportsSeeking) {
         if (error) {
+            NSDictionary *userInfo = nil;
+            if (_url) {
+                userInfo = [NSDictionary dictionaryWithObject:_url forKey:NSURLErrorKey];
+            }
             *error = [NSError errorWithDomain:SFBInputSourceErrorDomain
                                          code:SFBInputSourceErrorCodeNotSeekable
-                                     userInfo:@{NSURLErrorKey : _url}];
+                                     userInfo:userInfo];
         }
         return nil;
     }
@@ -328,7 +341,7 @@ static void SFBCreateInputSourceLog(void) {
 
     if (data.length < length) {
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:EINVAL];
         }
         return nil;
     }

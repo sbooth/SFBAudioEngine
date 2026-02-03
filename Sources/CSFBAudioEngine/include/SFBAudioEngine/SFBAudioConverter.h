@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
@@ -72,7 +73,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// - returns: An initialized `SFBAudioConverter` object for the specified URLs, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL
                       destinationURL:(NSURL *)destinationURL
-      NS_SWIFT_UNAVAILABLE("Use -initWithURL:destinationURL:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithURL:destinationURL:error: instead");
 /// Returns an initialized `SFBAudioConverter` object for the given URLs or `nil` on failure
 /// - parameter sourceURL: The source URL
 /// - parameter destinationURL: The destination URL
@@ -86,7 +87,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// - returns: An initialized `SFBAudioConverter` object for the specified URL and encoder, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL
                              encoder:(id<SFBPCMEncoding>)encoder
-      NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoder:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoder:error: instead");
 /// Returns an initialized `SFBAudioConverter` object for the given URL and encoder or `nil` on failure
 /// - parameter sourceURL: The source URL
 /// - parameter encoder: The encoder
@@ -100,7 +101,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// - returns: An initialized `SFBAudioConverter` object for the specified decoder and URL, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder
                           destinationURL:(NSURL *)destinationURL
-      NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:destinationURL:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:destinationURL:error: instead");
 /// Returns an initialized `SFBAudioConverter` object for the given decoder and URL or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter destinationURL: The destination URL
@@ -116,7 +117,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// - returns: An initialized `SFBAudioConverter` object for the specified decoder and encoder, or `nil` on failure
 - (nullable instancetype)initWithDecoder:(id<SFBPCMDecoding>)decoder
                                  encoder:(id<SFBPCMEncoding>)encoder
-      NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:error: instead");
 /// Returns an initialized `SFBAudioConverter` object for the given decoder and encoder or `nil` on failure
 /// - parameter decoder: The decoder
 /// - parameter encoder: The encoder
@@ -144,7 +145,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error;
 
-#pragma mark - Conversion Information
+// MARK: - Conversion Information
 
 /// The decoder supplying the audio to be converted
 @property(nonatomic, readonly) id<SFBPCMDecoding> decoder;
@@ -157,7 +158,7 @@ NS_SWIFT_NAME(AudioConverter)
 /// The encoder receving the intermediate audio for encoding
 @property(nonatomic, readonly) id<SFBPCMEncoding> encoder;
 
-#pragma mark - Conversion
+// MARK: - Conversion
 
 /// Converts audio
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -166,7 +167,7 @@ NS_SWIFT_NAME(AudioConverter)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioConverter`
 extern NSErrorDomain const SFBAudioConverterErrorDomain NS_SWIFT_NAME(AudioConverter.ErrorDomain);

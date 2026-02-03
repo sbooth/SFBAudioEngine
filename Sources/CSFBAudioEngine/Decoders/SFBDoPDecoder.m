@@ -1,17 +1,15 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDoPDecoder.h"
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import <os/log.h>
 
@@ -25,7 +23,7 @@ static const unsigned char sBitReverseTable256[256] = {
 #define R2(n) n, n + 2 * 64, n + 1 * 64, n + 3 * 64
 #define R4(n) R2(n), R2(n + 2 * 16), R2(n + 1 * 16), R2(n + 3 * 16)
 #define R6(n) R4(n), R4(n + 2 * 4), R4(n + 1 * 4), R4(n + 3 * 4)
-      R6(0), R6(2), R6(1), R6(3)};
+        R6(0), R6(2), R6(1), R6(3)};
 
 // Support DSD64, DSD128, and DSD256 (64x, 128x, and 256x the CD sample rate of 44.1 kHz)
 // as well as the 48.0 kHz variants 6.144 MHz and 12.288 MHz
@@ -110,13 +108,22 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 
     if (asbd->mFormatID != kSFBAudioFormatDSD) {
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                                                      NSLocalizedString(@"The file “%@” is not a DSD file.", @""), @{
-                                                          NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                                                @"DSD over PCM requires DSD audio input.", @""),
-                                                          NSURLErrorKey : _decoder.inputSource.url
-                                                      },
-                                                      SFBLocalizedNameForURL(_decoder.inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                    dictionaryWithObject:NSLocalizedString(@"DSD over PCM requires DSD audio input.", @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url != nil) {
+                userInfo[NSLocalizedDescriptionKey] =
+                        [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a DSD file.", @""),
+                                                            SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] = NSLocalizedString(@"The file is not a DSD file.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -124,19 +131,29 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     if (!IsSupportedDoPSampleRate(asbd->mSampleRate)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for DoP: %g", asbd->mSampleRate);
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @""),
-                      NSURLErrorKey : _decoder.inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_decoder.inputSource.url));
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                    dictionaryWithObject:NSLocalizedString(@"The sample rate is not supported for DSD over PCM.", @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (_decoder.inputSource.url != nil) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                        localizedStringWithFormat:NSLocalizedString(@"The format of the file “%@” is not supported.",
+                                                                    @""),
+                                                  SFBLocalizedNameForURL(_decoder.inputSource.url)];
+                userInfo[NSURLErrorKey] = _decoder.inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                        NSLocalizedString(@"The format of the file is not supported.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
+                                         code:SFBAudioDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
         }
         return NO;
     }
 
-    _reverseBits = !(asbd->mFormatFlags & kAudioFormatFlagIsBigEndian);
+    _reverseBits = (asbd->mFormatFlags & kAudioFormatFlagIsBigEndian) == 0;
 
     // Generate non-interleaved 24-bit big endian output
     AudioStreamBasicDescription processingStreamDescription = {0};
@@ -146,22 +163,22 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
                                                kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
 
     processingStreamDescription.mSampleRate =
-          asbd->mSampleRate / (kSFBPCMFramesPerDSDPacket * DSD_PACKETS_PER_DOP_FRAME);
+            asbd->mSampleRate / (kSFBPCMFramesPerDSDPacket * DSD_PACKETS_PER_DOP_FRAME);
     processingStreamDescription.mChannelsPerFrame = asbd->mChannelsPerFrame;
     processingStreamDescription.mBitsPerChannel = 24;
 
     processingStreamDescription.mBytesPerPacket = 3;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
-          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+            processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
     _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
                                                            channelLayout:_decoder.processingFormat.channelLayout];
 
     _buffer = [[AVAudioCompressedBuffer alloc]
-             initWithFormat:_decoder.processingFormat
-             packetCapacity:BUFFER_SIZE_PACKETS
-          maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
+               initWithFormat:_decoder.processingFormat
+               packetCapacity:BUFFER_SIZE_PACKETS
+            maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
     _buffer.packetCount = 0;
 
     return YES;
@@ -282,7 +299,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], self, _decoder];
+    return [NSString stringWithFormat:@"<%@ %p: %@>", [self class], (__bridge void *)self, _decoder];
 }
 
 @end

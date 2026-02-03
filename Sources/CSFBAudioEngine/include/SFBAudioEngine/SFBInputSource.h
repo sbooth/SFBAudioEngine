@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <Foundation/Foundation.h>
@@ -105,7 +106,7 @@ NS_SWIFT_NAME(InputSource)
 
 @end
 
-#pragma mark - Typed and Byte-Ordered Reading
+// MARK: - Typed and Byte-Ordered Reading
 
 /// Signed integer reading
 @interface SFBInputSource (SFBSignedIntegerReading)
@@ -214,7 +215,7 @@ NS_SWIFT_NAME(InputSource)
 - (nullable NSData *)readHeaderOfLength:(NSUInteger)length skipID3v2Tag:(BOOL)skipID3v2Tag error:(NSError **)error;
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBInputSource` and subclasses
 extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.ErrorDomain);

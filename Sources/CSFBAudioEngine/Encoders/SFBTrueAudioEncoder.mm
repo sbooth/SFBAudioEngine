@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBTrueAudioEncoder.h"
@@ -9,6 +10,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <limits>
 #import <memory>
 
 #import <tta-cpp/libtta.h>
@@ -76,7 +78,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     NSParameterAssert(sourceFormat != nil);
 
     // Validate format
-    if (sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat ||
+    if ((sourceFormat.streamDescription->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat ||
         sourceFormat.streamDescription->mBitsPerChannel < MIN_BPS ||
         sourceFormat.streamDescription->mBitsPerChannel > MAX_BPS || sourceFormat.channelCount < 1 ||
         sourceFormat.channelCount > MAX_NCH) {
@@ -100,7 +102,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     }
 
     streamDescription.mBytesPerPacket =
-          ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
+            ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
     streamDescription.mFramesPerPacket = 1;
     streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
@@ -118,7 +120,18 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     if (_estimatedFramesToEncode <= 0) {
         os_log_error(gSFBAudioEncoderLog,
                      "True Audio encoding requires an accurate value for _estimatedFramesToEncode");
-        if (error) {
+        if (error != nullptr) {
+            *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+                                         code:SFBAudioEncoderErrorCodeInternalError
+                                     userInfo:nil];
+        }
+        return NO;
+    }
+
+    if (_estimatedFramesToEncode > std::numeric_limits<TTAuint32>::max()) {
+        os_log_error(gSFBAudioEncoderLog, "True Audio encoding only supports up to %u frames",
+                     std::numeric_limits<TTAuint32>::max());
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -137,15 +150,15 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     streamInfo.format = TTA_FORMAT_SIMPLE;
     streamInfo.nch = _processingFormat.channelCount;
     streamInfo.bps = _processingFormat.streamDescription->mBitsPerChannel;
-    streamInfo.sps = (TTAuint32)_processingFormat.sampleRate;
-    streamInfo.samples = (TTAuint32)_estimatedFramesToEncode;
+    streamInfo.sps = static_cast<TTAuint32>(_processingFormat.sampleRate);
+    streamInfo.samples = static_cast<TTAuint32>(_estimatedFramesToEncode);
 
     try {
         _encoder = std::make_unique<tta::tta_encoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
         _encoder->init_set_info(&streamInfo, 0);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating True Audio encoder: %d", e.code());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:nil];
@@ -154,12 +167,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     }
 
     if (!_encoder) {
-        if (error) {
-            if (error) {
-                *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
-                                             code:SFBAudioEncoderErrorCodeInvalidFormat
-                                         userInfo:nil];
-            }
+        if (error != nullptr) {
+            *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
+                                         code:SFBAudioEncoderErrorCodeInvalidFormat
+                                     userInfo:nil];
         }
         return NO;
     }
@@ -204,9 +215,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
         _encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", e.code());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
@@ -222,9 +233,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     try {
         _encoder->finalize();
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", e.code());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
                                      userInfo:nil];
