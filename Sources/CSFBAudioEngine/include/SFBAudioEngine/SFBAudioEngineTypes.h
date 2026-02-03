@@ -1,12 +1,15 @@
 //
-// Copyright (c) 2006-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <CoreAudioTypes/CoreAudioTypes.h>
 
-#pragma mark Audio Format Identifiers
+// MARK: - Audio Format Identifiers
+
+// clang-format off
 
 /// Additional audio format IDs
 CF_ENUM(AudioFormatID) {
@@ -32,7 +35,7 @@ CF_ENUM(AudioFormatID) {
     kSFBAudioFormatWavPack CF_SWIFT_NAME(wavPack) = 'WV  ',
 };
 
-#pragma mark - DSD Constants
+// MARK: - DSD Constants
 
 /// DSD sample rates (named as multiples of the CD sample rate, 44,100 Hz)
 CF_ENUM(uint32_t) {
@@ -70,15 +73,19 @@ CF_ENUM(int) {
     kSFBBytesPerDSDPacketPerChannel CF_SWIFT_NAME(bytesPerDSDPacketPerChannel) = 1,
 };
 
+// clang-format on
+
 #ifdef __OBJC__
 
 #import <AVFAudio/AVFAudio.h>
 #import <Foundation/Foundation.h>
 
-#pragma mark - Constants for Unknowns
+// MARK: - Constants for Unknowns
 
 /// Value representing an invalid or unknown time
 extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(unknownTime);
+
+// clang-format off
 
 /// Frame and packet unknowns
 NS_ENUM(AVAudioFramePosition) {
@@ -92,7 +99,9 @@ NS_ENUM(AVAudioFramePosition) {
     SFBUnknownPacketCount NS_SWIFT_NAME(unknownPacketCount) = -1,
 };
 
-#pragma mark - Playback Position
+// clang-format on
+
+// MARK: - Playback Position
 
 /// Playback position information
 struct NS_SWIFT_SENDABLE SFBPlaybackPosition {
@@ -112,7 +121,7 @@ NS_INLINE BOOL SFBPlaybackPositionIsValid(SFBPlaybackPosition playbackPosition) 
            playbackPosition.frameLength != SFBUnknownFrameLength;
 }
 
-#pragma mark - Playback Time
+// MARK: - Playback Time
 
 /// Playback time information
 struct NS_SWIFT_SENDABLE SFBPlaybackTime {

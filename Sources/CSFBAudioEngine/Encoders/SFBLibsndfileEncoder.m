@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBLibsndfileEncoder.h"
@@ -23,38 +24,38 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndia
 
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV = @"WAV";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF =
-      @"AIFF";
+        @"AIFF";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU = @"AU";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw = @"Raw";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF = @"PAF";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX = @"SVX";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST =
-      @"NIST";
+        @"NIST";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC = @"VOC";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM =
-      @"IRCAM";
+        @"IRCAM";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64 = @"W64";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4 =
-      @"MAT4";
+        @"MAT4";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5 =
-      @"MAT5";
+        @"MAT5";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF = @"PVF";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI = @"XI";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK = @"HTK";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS = @"SDS";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR = @"AVR";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX =
-      @"WAVEX";
+        @"WAVEX";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2 = @"SD2";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC =
-      @"FLAC";
+        @"FLAC";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF = @"CAF";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE = @"WVE";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg = @"Ogg";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K =
-      @"MPC2K";
+        @"MPC2K";
 SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64 =
-      @"RF64";
+        @"RF64";
 
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8 = @"PCM_S8";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16 = @"PCM_16";
@@ -66,18 +67,18 @@ SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsVal
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW = @"µ-law";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW = @"A-law";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM =
-      @"IMA_ADPCM";
+        @"IMA_ADPCM";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM =
-      @"MS_ADPCM";
+        @"MS_ADPCM";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610 = @"GSM610";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM =
-      @"VOX_ADPCM";
+        @"VOX_ADPCM";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16 =
-      @"NMS_ADPCM_16";
+        @"NMS_ADPCM_16";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24 =
-      @"NMS_ADPCM_24";
+        @"NMS_ADPCM_24";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32 =
-      @"NMS_ADPCM_32";
+        @"NMS_ADPCM_32";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32 = @"G721_32";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24 = @"G723_24";
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40 = @"G723_40";
@@ -95,9 +96,9 @@ SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsVal
 SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32 = @"ALAC_32";
 
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault =
-      @"Default";
+        @"Default";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle =
-      @"Little";
+        @"Little";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianBig = @"Big";
 SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU = @"CPU";
 
@@ -132,7 +133,7 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
         return 0;
     }
 
-    if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
+    if ((asbd->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32) {
             return SF_FORMAT_FLOAT;
         }
@@ -140,25 +141,27 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
             return SF_FORMAT_DOUBLE;
         }
     } else {
+        BOOL isSignedInteger =
+                (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) == kAudioFormatFlagIsSignedInteger;
         switch (asbd->mBitsPerChannel) {
         case 8:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_S8;
             } else {
                 return SF_FORMAT_PCM_U8;
             }
         case 16:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_16;
             }
             break;
         case 24:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_24;
             }
             break;
         case 32:
-            if (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+            if (isSignedInteger) {
                 return SF_FORMAT_PCM_32;
             }
             break;
@@ -195,10 +198,15 @@ static void SndfileChannelMapWithChannelDescriptions(int *_Nonnull channel_map, 
             break;
 
             // WAVEFORMATEXTENSIBLE standard channels (in dwChannelMask order)
-            //			case kAudioChannelLabel_Left: 					channel_map[i] = SF_CHANNEL_MAP_FRONT_LEFT;
-            // break; 			case kAudioChannelLabel_Right: 					channel_map[i] =
-            // SF_CHANNEL_MAP_FRONT_RIGHT; break; 			case kAudioChannelLabel_Center: channel_map[i] =
-            // SF_CHANNEL_MAP_FRONT_CENTER; break;
+            //            case kAudioChannelLabel_Left:
+            //                channel_map[i] = SF_CHANNEL_MAP_FRONT_LEFT;
+            //                break;
+            //            case kAudioChannelLabel_Right:
+            //                channel_map[i] = SF_CHANNEL_MAP_FRONT_RIGHT;
+            //                break;
+            //            case kAudioChannelLabel_Center:
+            //                channel_map[i] = SF_CHANNEL_MAP_FRONT_CENTER;
+            //                break;
         case kAudioChannelLabel_LFEScreen:
             channel_map[i] = SF_CHANNEL_MAP_LFE;
             break;
@@ -363,9 +371,8 @@ static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int ch
     }
     if (layoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
         return SndfileChannelMapWithChannelBitmap(channel_map, channels, channelLayout.layout->mChannelBitmap, error);
-    } else {
-        return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
     }
+    return SndfileChannelMapWithChannelLayoutTag(channel_map, channels, layoutTag, error);
 }
 
 enum WriteMethod {
@@ -529,8 +536,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     case SF_FORMAT_PCM_16:
     case SF_FORMAT_PCM_24:
     case SF_FORMAT_PCM_32:
-        //		case SF_FORMAT_FLOAT:
-        //		case SF_FORMAT_DOUBLE:
+        //    case SF_FORMAT_FLOAT:
+        //    case SF_FORMAT_DOUBLE:
     case SF_FORMAT_ALAC_16:
     case SF_FORMAT_ALAC_20:
     case SF_FORMAT_ALAC_24:
@@ -553,7 +560,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     }
 
     // Floating point
-    if (asbd->mFormatFlags & kAudioFormatFlagIsFloat) {
+    if ((asbd->mFormatFlags & kAudioFormatFlagIsFloat) == kAudioFormatFlagIsFloat) {
         if (asbd->mBitsPerChannel == 32) {
             return [sourceFormat transformedToCommonFormat:AVAudioPCMFormatFloat32 interleaved:YES];
         }
@@ -573,10 +580,10 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
         streamDescription.mBitsPerChannel = ((asbd->mBitsPerChannel + 7) / 8) * 8;
         streamDescription.mFormatFlags |=
-              streamDescription.mBitsPerChannel % 8 ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
+                streamDescription.mBitsPerChannel % 8 ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
 
         streamDescription.mBytesPerPacket =
-              ((streamDescription.mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
+                ((streamDescription.mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
         streamDescription.mFramesPerPacket = 1;
         streamDescription.mBytesPerFrame = streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
@@ -594,8 +601,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     int majorFormat = 0;
     SFBAudioEncodingSettingsValue majorFormatSetting =
-          [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileMajorFormat];
-    if (majorFormatSetting != nil) {
+            [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileMajorFormat];
+    if (majorFormatSetting) {
         if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV) {
             majorFormat = SF_FORMAT_WAV;
         } else if (majorFormatSetting == SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF) {
@@ -662,8 +669,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     int subtype = 0;
     SFBAudioEncodingSettingsValue subtypeSetting =
-          [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileSubtype];
-    if (subtypeSetting != nil) {
+            [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileSubtype];
+    if (subtypeSetting) {
         if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8) {
             subtype = SF_FORMAT_PCM_S8;
         } else if (subtypeSetting == SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16) {
@@ -801,9 +808,9 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
                                      userInfo:@{
                                          NSLocalizedDescriptionKey : NSLocalizedString(
-                                               @"The requested output format is not supported by Libsndfile.", @""),
+                                                 @"The requested output format is not supported by Libsndfile.", @""),
                                          NSLocalizedRecoverySuggestionErrorKey :
-                                               NSLocalizedString(@"The format is not supported.", @"")
+                                                 NSLocalizedString(@"The format is not supported.", @"")
                                      }];
         }
         return NO;
@@ -883,18 +890,18 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     switch (_writeMethod) {
     case Short:
         framesWritten =
-              sf_writef_short(_sndfile, (const short *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
+                sf_writef_short(_sndfile, (const short *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
         break;
     case Int:
         framesWritten = sf_writef_int(_sndfile, (const int *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
         break;
     case Float:
         framesWritten =
-              sf_writef_float(_sndfile, (const float *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
+                sf_writef_float(_sndfile, (const float *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
         break;
     case Double:
         framesWritten =
-              sf_writef_double(_sndfile, (const double *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
+                sf_writef_double(_sndfile, (const double *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
         break;
     default:
         os_log_error(gSFBAudioEncoderLog, "Unknown libsndfile write method: %d", _writeMethod);

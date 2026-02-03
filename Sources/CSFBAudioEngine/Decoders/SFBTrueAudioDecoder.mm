@@ -1,13 +1,13 @@
 //
-// Copyright (c) 2011-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBTrueAudioDecoder.h"
 
 #import "NSData+SFBExtensions.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -81,13 +81,13 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -120,26 +120,17 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         _decoder = std::make_unique<tta::tta_decoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
         _decoder->init_get_info(&streamInfo, 0);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", e.code());
-        if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeInternalError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+        if (error != nullptr) {
+            *error = [self genericInternalError];
         }
         return NO;
     }
 
     if (!_decoder) {
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid True Audio file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+        if (error != nullptr) {
+            *error = [self invalidFormatError:NSLocalizedString(@"True Audio", @"")];
         }
         return NO;
     }
@@ -171,37 +162,28 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     processingStreamDescription.mBitsPerChannel = streamInfo.bps;
 
     processingStreamDescription.mBytesPerPacket =
-          ((streamInfo.bps + 7) / 8) * processingStreamDescription.mChannelsPerFrame;
+            ((streamInfo.bps + 7) / 8) * processingStreamDescription.mChannelsPerFrame;
     processingStreamDescription.mFramesPerPacket = 1;
     processingStreamDescription.mBytesPerFrame =
-          processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
+            processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
     processingStreamDescription.mReserved = 0;
 
-    // True Audio supports 16 to 24 bits per sample
-    switch (streamInfo.bps) {
-    case 16:
-    case 24:
-        processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
-        break;
-
-    case 17 ... 23:
-        // Align high because Apple's AudioConverter doesn't handle low alignment
-        processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
-        break;
-
-    default:
-        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %d", streamInfo.bps);
+    // True Audio supports from 16 to 24 bits per sample
+    if (streamInfo.bps >= 16 && streamInfo.bps <= 24) {
+        if ((streamInfo.bps & 0x7) == 0) {
+            // 16 or 24
+            processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
+        } else {
+            // Align high because Apple's AudioConverter doesn't handle low alignment
+            processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+        }
+    } else {
+        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", streamInfo.bps);
         _decoder.reset();
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeUnsupportedFormat,
-                  NSLocalizedString(@"The file “%@” is not a supported True Audio file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The audio bit depth is not supported.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+        if (error != nullptr) {
+            *error = [self unsupportedFormatError:NSLocalizedString(@"True Audio", @"")
+                               recoverySuggestion:NSLocalizedString(@"The audio bit depth is not supported.", @"")];
         }
         return NO;
     }
@@ -272,7 +254,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
             auto framesToSkip = std::min(_framesToSkip, frameLength);
             auto bytesToSkip = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
             auto framesSkipped = _decoder->process_stream(
-                  static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
+                    static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
 
             // EOS reached finishing seek
             if (framesSkipped == 0) {
@@ -284,7 +266,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
         auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
         auto framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(
-              static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
+                static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
 
         // EOS
         if (framesRead == 0) {
@@ -295,12 +277,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _framePosition += framesRead;
 
         return YES;
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
-        if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeDecodingError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+        if (error != nullptr) {
+            *error = [self genericDecodingError];
         }
         return NO;
     }
@@ -314,12 +294,10 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
     try {
         _decoder->set_position(seconds, &frame_start);
-    } catch (const tta::tta_exception& e) {
+    } catch (const tta::tta_exception &e) {
         os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
-        if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+        if (error != nullptr) {
+            *error = [self genericSeekError];
         }
         return NO;
     }

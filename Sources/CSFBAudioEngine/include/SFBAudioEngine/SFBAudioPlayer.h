@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
@@ -95,8 +96,8 @@ NS_SWIFT_NAME(AudioPlayer)
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url
-      forImmediatePlayback:(BOOL)forImmediatePlayback
-                     error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
+        forImmediatePlayback:(BOOL)forImmediatePlayback
+                       error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 /// Enqueues a decoder for subsequent playback
 /// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
 /// - parameter decoder: The decoder to enqueue
@@ -113,8 +114,8 @@ NS_SWIFT_NAME(AudioPlayer)
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder
-      forImmediatePlayback:(BOOL)forImmediatePlayback
-                     error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
+        forImmediatePlayback:(BOOL)forImmediatePlayback
+                       error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 
 /// Returns `YES` if audio with `format` will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
@@ -315,7 +316,7 @@ typedef NS_ERROR_ENUM(SFBAudioPlayerErrorDomain, SFBAudioPlayerErrorCode){
 
 /// Delegate methods supported by `SFBAudioPlayer`
 NS_SWIFT_NAME(AudioPlayer.Delegate)
-@protocol SFBAudioPlayerDelegate<NSObject>
+@protocol SFBAudioPlayerDelegate <NSObject>
 @optional
 /// Called to notify the delegate before decoding the first frame of audio from a decoder
 /// - warning: Do not change any properties of `decoder`
@@ -333,8 +334,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter decoder: The decoder for which rendering will start
 /// - parameter hostTime: The host time at which the first audio frame from `decoder` will reach the device
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
-      renderingWillStart:(id<SFBPCMDecoding>)decoder
-              atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillStart:at:));
+        renderingWillStart:(id<SFBPCMDecoding>)decoder
+                atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillStart:at:));
 /// Called to notify the delegate when rendering the first frame of audio from a decoder
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing decoder
@@ -346,8 +347,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter decoder: The decoder for which rendering will complete
 /// - parameter hostTime: The host time at which the final audio frame from `decoder` will finish playing on the device
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
-      renderingWillComplete:(id<SFBPCMDecoding>)decoder
-                 atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillComplete:at:));
+        renderingWillComplete:(id<SFBPCMDecoding>)decoder
+                   atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillComplete:at:));
 /// Called to notify the delegate when rendering the final frame of audio from a decoder
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
@@ -372,8 +373,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter decoder: The decoder for which decoding and rendering are canceled
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
-      decoderCanceled:(id<SFBPCMDecoding>)decoder
-       framesRendered:(AVAudioFramePosition)framesRendered;
+        decoderCanceled:(id<SFBPCMDecoding>)decoder
+         framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate that the decoding process for a decoder has been aborted because of an error
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
@@ -381,9 +382,9 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter error: The error causing `decoder` to abort
 /// - parameter framesRendered: The number of audio frames from `decoder` that were rendered
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
-      decodingAborted:(id<SFBPCMDecoding>)decoder
-                error:(NSError *)error
-       framesRendered:(AVAudioFramePosition)framesRendered;
+        decodingAborted:(id<SFBPCMDecoding>)decoder
+                  error:(NSError *)error
+         framesRendered:(AVAudioFramePosition)framesRendered;
 /// Called to notify the delegate when an asynchronous error occurs
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter error: The error
@@ -406,13 +407,14 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter format: The rendering format of the source node
 /// - returns: The `AVAudioNode` to which the source node should be connected
 - (AVAudioNode *)audioPlayer:(SFBAudioPlayer *)audioPlayer
-      reconfigureProcessingGraph:(AVAudioEngine *)engine
-                      withFormat:(AVAudioFormat *)format NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
+        reconfigureProcessingGraph:(AVAudioEngine *)engine
+                        withFormat:(AVAudioFormat *)format
+        NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
 /// Called to notify the delegate when the configuration of the `AVAudioEngine` changes
 /// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer
-      NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
+        NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
 #if TARGET_OS_IPHONE
 /// Called to notify the delegate of an `AVAudioSession` interruption begin or end
 ///

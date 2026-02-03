@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBAudioEncoding.h>
@@ -10,14 +11,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Protocol defining the interface for audio encoders consuming PCM audio
 NS_SWIFT_NAME(PCMEncoding)
-@protocol SFBPCMEncoding<SFBAudioEncoding>
+@protocol SFBPCMEncoding <SFBAudioEncoding>
 
-#pragma mark - Position and Length Information
+// MARK: - Position and Length Information
 
 /// Returns the encoder's current frame position or `SFBUnknownFramePosition` if unknown
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_SWIFT_NAME(position);
 
-#pragma mark - Encoding
+// MARK: - Encoding
 
 /// The estimated number of frames to encode or `0` if unknown
 @property(nonatomic) AVAudioFramePosition estimatedFramesToEncode;

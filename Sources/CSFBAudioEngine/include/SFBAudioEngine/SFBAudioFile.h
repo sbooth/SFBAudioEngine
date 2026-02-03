@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBAudioMetadata.h>
@@ -134,7 +135,7 @@ NS_SWIFT_NAME(AudioFile)
 /// - parameter formatName: The name of the format to use
 - (nullable instancetype)initWithURL:(NSURL *)url
                           formatName:(SFBAudioFileFormatName)formatName
-      NS_SWIFT_UNAVAILABLE("Use -initWithURL:formatName:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithURL:formatName:error: instead");
 /// Returns an initialized `SFBAudioFile` object for the specified URL
 /// - note: Does not read audio properties or metadata
 /// - parameter url: The URL
@@ -165,7 +166,7 @@ NS_SWIFT_NAME(AudioFile)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioFile` and subclasses
 extern NSErrorDomain const SFBAudioFileErrorDomain NS_SWIFT_NAME(AudioFile.ErrorDomain);

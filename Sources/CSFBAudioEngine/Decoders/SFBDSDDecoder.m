@@ -1,13 +1,13 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDSDDecoder.h"
 
 #import "SFBDSDDecoder+Internal.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -18,9 +18,7 @@ NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecod
 os_log_t gSFBDSDDecoderLog = NULL;
 
 static void SFBCreateDSDDecoderLog(void) __attribute__((constructor));
-static void SFBCreateDSDDecoderLog(void) {
-    gSFBDSDDecoderLog = os_log_create("org.sbooth.AudioEngine", "DSDDecoder");
-}
+static void SFBCreateDSDDecoderLog(void) { gSFBDSDDecoderLog = os_log_create("org.sbooth.AudioEngine", "DSDDecoder"); }
 
 @interface SFBDSDDecoderSubclassInfo : NSObject
 @property(nonatomic) Class klass;
@@ -42,52 +40,52 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)load {
     [NSError
-          setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain
-                                   provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
-                                       switch (err.code) {
-                                       case SFBDSDDecoderErrorCodeUnknownDecoder:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"The requested DSD decoder is unavailable.",
-                                                                        @"");
-                                           }
-                                           break;
+            setUserInfoValueProviderForDomain:SFBDSDDecoderErrorDomain
+                                     provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
+                                         switch (err.code) {
+                                         case SFBDSDDecoderErrorCodeUnknownDecoder:
+                                             if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                 return NSLocalizedString(@"The requested DSD decoder is unavailable.",
+                                                                          @"");
+                                             }
+                                             break;
 
-                                       case SFBDSDDecoderErrorCodeInvalidFormat:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"The format is invalid or unknown.", @"");
-                                           }
-                                           break;
+                                         case SFBDSDDecoderErrorCodeInvalidFormat:
+                                             if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                 return NSLocalizedString(@"The format is invalid or unknown.", @"");
+                                             }
+                                             break;
 
-                                       case SFBDSDDecoderErrorCodeUnsupportedFormat:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"The DSD audio format is unsupported.", @"");
-                                           }
-                                           break;
+                                         case SFBDSDDecoderErrorCodeUnsupportedFormat:
+                                             if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                 return NSLocalizedString(@"The DSD audio format is unsupported.", @"");
+                                             }
+                                             break;
 
-                                       case SFBDSDDecoderErrorCodeInternalError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"An internal decoder error occurred.", @"");
-                                           }
-                                           break;
+                                         case SFBDSDDecoderErrorCodeInternalError:
+                                             if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                 return NSLocalizedString(@"An internal decoder error occurred.", @"");
+                                             }
+                                             break;
 
-                                       case SFBDSDDecoderErrorCodeDecodingError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(@"An error occurred during DSD audio decoding.",
-                                                                        @"");
-                                           }
-                                           break;
+                                         case SFBDSDDecoderErrorCodeDecodingError:
+                                             if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                 return NSLocalizedString(
+                                                         @"An error occurred during DSD audio decoding.", @"");
+                                             }
+                                             break;
 
-                                       case SFBDSDDecoderErrorCodeSeekError:
-                                           if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                               return NSLocalizedString(
-                                                     @"An error occurred seeking to the requested DSD packet position.",
-                                                     @"");
-                                           }
-                                           break;
-                                       }
+                                         case SFBDSDDecoderErrorCodeSeekError:
+                                             if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
+                                                 return NSLocalizedString(@"An error occurred seeking to the requested "
+                                                                          @"DSD packet position.",
+                                                                          @"");
+                                             }
+                                             break;
+                                         }
 
-                                       return nil;
-                                   }];
+                                         return nil;
+                                     }];
 }
 
 + (NSSet *)supportedPathExtensions {
@@ -114,8 +112,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     [self doesNotRecognizeSelector:_cmd];
     __builtin_unreachable();
 }
@@ -265,23 +263,41 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
     }
 
-    if (subclass && (self = [[subclass alloc] init])) {
-        _inputSource = inputSource;
-        os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
-        return self;
+    if (!subclass) {
+        os_log_debug(gSFBDSDDecoderLog, "Unable to determine content type for %{public}@", inputSource);
+        if (error) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary
+                    dictionaryWithObject:
+                            NSLocalizedString(@"The file's extension may be missing or may not match the file's type.",
+                                              @"")
+                                  forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+            if (inputSource.url) {
+                userInfo[NSLocalizedDescriptionKey] = [NSString
+                        localizedStringWithFormat:NSLocalizedString(
+                                                          @"The type of the file “%@” could not be determined.", @""),
+                                                  SFBLocalizedNameForURL(inputSource.url)];
+                userInfo[NSURLErrorKey] = inputSource.url;
+            } else {
+                userInfo[NSLocalizedDescriptionKey] =
+                        NSLocalizedString(@"The type of the file could not be determined.", @"");
+            }
+
+            *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                                         code:SFBDSDDecoderErrorCodeInvalidFormat
+                                     userInfo:userInfo];
+        }
+        return nil;
     }
 
-    if (error) {
-        *error = SFBErrorWithLocalizedDescription(
-              SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
-              NSLocalizedString(@"The type of the file “%@” could not be determined.", @""), @{
-                  NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                        @"The file's extension may be missing or may not match the file's type.", @""),
-                  NSURLErrorKey : _inputSource.url
-              },
-              SFBLocalizedNameForURL(_inputSource.url));
+    if ((self = [[subclass alloc] init])) {
+        _inputSource = inputSource;
+#if DEBUG
+        os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
+#endif /* DEBUG */
     }
-    return nil;
+
+    return self;
 }
 
 - (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName {
@@ -383,8 +399,35 @@ static NSMutableArray *_registeredSubclasses = nil;
     __builtin_unreachable();
 }
 
+- (NSError *)invalidFormatError:(NSString *)formatName {
+    return [self invalidFormatError:formatName
+                 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+}
+
+- (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
+    NSParameterAssert(formatName != nil);
+    NSParameterAssert(recoverySuggestion != nil);
+
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
+                                                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
+
+    if (_inputSource.url) {
+        userInfo[NSLocalizedDescriptionKey] =
+                [NSString localizedStringWithFormat:NSLocalizedString(@"The file “%@” is not a valid %@ file.", @""),
+                                                    SFBLocalizedNameForURL(_inputSource.url), formatName];
+        userInfo[NSURLErrorKey] = _inputSource.url;
+    } else {
+        userInfo[NSLocalizedDescriptionKey] = [NSString
+                localizedStringWithFormat:NSLocalizedString(@"The file is not a valid %@ file.", @""), formatName];
+    }
+
+    return [NSError errorWithDomain:SFBDSDDecoderErrorDomain
+                               code:SFBDSDDecoderErrorCodeInvalidFormat
+                           userInfo:userInfo];
+}
+
 - (NSString *)description {
-    return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], self,
+    return [NSString stringWithFormat:@"<%@ %p: \"%@\">", [self class], (__bridge void *)self,
                                       [[NSFileManager defaultManager] displayNameAtPath:_inputSource.url.path]];
 }
 
@@ -400,11 +443,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 + (void)registerSubclass:(Class)subclass priority:(int)priority {
-    //	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of
-    // SFBDSDDecoder", NSStringFromClass(subclass));
+    //    NSAssert([subclass isKindOfClass:[self class]],
+    //             @"Unable to register class '%@' because it is not a subclass of SFBDSDDecoder",
+    //             NSStringFromClass(subclass));
 
     static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{ _registeredSubclasses = [NSMutableArray array]; });
+    dispatch_once(&onceToken, ^{
+        _registeredSubclasses = [NSMutableArray array];
+    });
 
     SFBDSDDecoderSubclassInfo *subclassInfo = [[SFBDSDDecoderSubclassInfo alloc] init];
     subclassInfo.klass = subclass;
@@ -422,9 +468,8 @@ static NSMutableArray *_registeredSubclasses = nil;
         }
         if (a < b) {
             return NSOrderedDescending;
-        } else {
-            return NSOrderedSame;
         }
+        return NSOrderedSame;
     }];
 }
 

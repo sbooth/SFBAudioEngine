@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #pragma once
@@ -9,9 +10,10 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 
-#import <CXXCoreAudio/AudioRingBuffer.hpp>
-#import <CXXRingBuffer/RingBuffer.hpp>
-#import <CXXUnfairLock/UnfairLock.hpp>
+#import <dsema/Semaphore.hpp>
+#import <mtx/UnfairMutex.hpp>
+#import <spsc/AudioRingBuffer.hpp>
+#import <spsc/RingBuffer.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -51,44 +53,44 @@ class AudioPlayer final {
     using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
     /// Ring buffer transferring audio between the decoding thread and the render block
-    CXXCoreAudio::AudioRingBuffer audioRingBuffer_;
+    spsc::AudioRingBuffer audioRingBuffer_;
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
-    /// Lock protecting `activeDecoders_`
-    mutable CXXUnfairLock::UnfairLock activeDecodersLock_;
+    /// Mutex protecting `activeDecoders_`
+    mutable mtx::UnfairMutex activeDecodersMutex_;
 
     /// Decoders enqueued for playback that are not yet active
     std::deque<Decoder> queuedDecoders_;
-    /// Lock protecting `queuedDecoders_`
-    mutable CXXUnfairLock::UnfairLock queuedDecodersLock_;
+    /// Mutex protecting `queuedDecoders_`
+    mutable mtx::UnfairMutex queuedDecodersMutex_;
 
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Dispatch semaphore used for communication with the decoding thread
-    dispatch_semaphore_t decodingSemaphore_{nil};
+    dsema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Dispatch semaphore used for communication with the event processing thread
-    dispatch_semaphore_t eventSemaphore_{nil};
+    dsema::Semaphore eventSemaphore_{0};
 
     /// Ring buffer communicating events from the decoding thread to the event processing thread
-    CXXRingBuffer::RingBuffer decodingEvents_;
+    spsc::RingBuffer decodingEvents_;
     /// Ring buffer communicating events from the render block to the event processing thread
-    CXXRingBuffer::RingBuffer renderingEvents_;
+    spsc::RingBuffer renderingEvents_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
     /// Source node driving the audio processing graph
     AVAudioSourceNode *sourceNode_{nil};
-    /// Lock protecting playback state and processing graph configuration changes
-    mutable CXXUnfairLock::UnfairLock engineLock_;
+    /// Mutex protecting playback state and processing graph configuration changes
+    mutable mtx::UnfairMutex engineMutex_;
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
-    /// Lock protecting `nowPlaying_`
-    mutable CXXUnfairLock::UnfairLock nowPlayingLock_;
+    /// Mutex protecting `nowPlaying_`
+    mutable mtx::UnfairMutex nowPlayingMutex_;
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};
@@ -105,11 +107,11 @@ class AudioPlayer final {
   public:
     AudioPlayer();
 
-    AudioPlayer(const AudioPlayer&) = delete;
-    AudioPlayer& operator=(const AudioPlayer&) = delete;
+    AudioPlayer(const AudioPlayer &) = delete;
+    AudioPlayer &operator=(const AudioPlayer &) = delete;
 
-    //	AudioPlayer(AudioPlayer&&) = delete;
-    //	AudioPlayer& operator=(AudioPlayer&&) = delete;
+    AudioPlayer(AudioPlayer &&) = delete;
+    AudioPlayer &operator=(AudioPlayer &&) = delete;
 
     ~AudioPlayer() noexcept;
 
@@ -194,13 +196,13 @@ class AudioPlayer final {
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
         /// Cached value of `engine_.isRunning`
-        engineIsRunning = 1U << 0,
+        engineIsRunning = 1u << 0,
         /// The render block should output audio
-        isPlaying = 1U << 1,
+        isPlaying = 1u << 1,
         /// The render block should output silence
-        isMuted = 1U << 2,
+        isMuted = 1u << 2,
         /// The ring buffer needs to be drained during the next render cycle
-        drainRequired = 1U << 3,
+        drainRequired = 1u << 3,
     };
 
     // MARK: - Decoding
@@ -215,7 +217,7 @@ class AudioPlayer final {
     // MARK: - Rendering
 
     /// Render block implementation
-    OSStatus render(BOOL& isSilence, const AudioTimeStamp& timestamp, AVAudioFrameCount frameCount,
+    OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                     AudioBufferList *_Nonnull outputData) noexcept;
 
     // MARK: - Events
@@ -277,7 +279,7 @@ class AudioPlayer final {
     void cancelActiveDecoders() noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
-    DecoderState *const _Nullable firstActiveDecoderState() const noexcept;
+    DecoderState *_Nullable firstActiveDecoderState() const noexcept;
 
   public:
     // MARK: - AVAudioEngine Notification Handling
@@ -307,19 +309,19 @@ class AudioPlayer final {
 // MARK: - Implementation -
 
 inline void AudioPlayer::clearDecoderQueue() noexcept {
-    std::lock_guard lock{queuedDecodersLock_};
+    std::lock_guard lock{queuedDecodersMutex_};
     queuedDecoders_.clear();
 }
 
 inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
-    std::lock_guard lock{queuedDecodersLock_};
+    std::lock_guard lock{queuedDecodersMutex_};
     return queuedDecoders_.empty();
 }
 
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
-          static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     const auto state = flags & mask;
     assert(state != static_cast<unsigned int>(Flags::isPlaying));
     return static_cast<SFBAudioPlayerPlaybackState>(state);
@@ -328,43 +330,37 @@ inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
 inline bool AudioPlayer::isPlaying() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
-          static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     return (flags & mask) == mask;
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
     constexpr auto mask =
-          static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
     return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = flags_.load(std::memory_order_acquire);
-    return !(flags & static_cast<unsigned int>(Flags::engineIsRunning));
+    return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) == 0;
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
-    std::lock_guard lock{activeDecodersLock_};
+    std::lock_guard lock{activeDecodersMutex_};
     return firstActiveDecoderState() != nullptr;
 }
 
 inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
-    std::lock_guard lock{nowPlayingLock_};
+    std::lock_guard lock{nowPlayingMutex_};
     return nowPlaying_;
 }
 
-inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept {
-    return sourceNode_;
-}
+inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { return sourceNode_; }
 
-inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept {
-    return engine_.mainMixerNode;
-}
+inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
-inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept {
-    return engine_.outputNode;
-}
+inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
 
 } /* namespace sfb */
 

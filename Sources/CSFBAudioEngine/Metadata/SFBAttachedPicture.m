@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2012-2021 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2012 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAttachedPicture.h"
