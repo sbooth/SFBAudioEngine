@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDSDDecoder.h"
@@ -29,11 +30,21 @@ extern os_log_t gSFBDSDDecoderLog;
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the test was successfully performed, `NO` otherwise
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error;
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error;
+
+/// Returns an invalid format error with a description similar to "The file is not a valid XXX file"
+/// - parameter formatName: The localized name of the audio format
+/// - returns: An error in `SFBDSDDecoderErrorDomain` with code `SFBDSDDecoderErrorCodeInvalidFormat`
+- (NSError *)invalidFormatError:(NSString *)formatName;
+/// Returns an invalid format error with a description similar to "The file is not a valid XXX file"
+/// - parameter formatName: The localized name of the audio format
+/// - parameter recoverySuggestion: A localized error recovery suggestion
+/// - returns: An error in `SFBDSDDecoderErrorDomain` with code `SFBDSDDecoderErrorCodeInvalidFormat`
+- (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion;
 @end
 
-#pragma mark - Subclass Registration and Lookup
+// MARK: - Subclass Registration and Lookup
 
 @interface SFBDSDDecoder (SFBDSDDecoderSubclassRegistration)
 /// Register a subclass with the default priority (`0`)

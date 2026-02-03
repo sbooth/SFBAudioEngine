@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDataInputSource.h"
@@ -83,7 +84,7 @@
     NSParameterAssert(offset >= 0);
     if ((NSUInteger)offset > _data.length) {
         if (error) {
-            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{NSURLErrorKey : _url}];
+            *error = [self posixErrorWithCode:EINVAL];
         }
         return NO;
     }

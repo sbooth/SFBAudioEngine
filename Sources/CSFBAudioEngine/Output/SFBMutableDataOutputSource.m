@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBMutableDataOutputSource.h"
@@ -58,9 +59,9 @@
 }
 
 - (BOOL)writeBytes:(const void *)buffer
-            length:(NSInteger)length
-      bytesWritten:(NSInteger *)bytesWritten
-             error:(NSError **)error {
+              length:(NSInteger)length
+        bytesWritten:(NSInteger *)bytesWritten
+               error:(NSError **)error {
     NSParameterAssert(buffer != NULL);
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesWritten != NULL);

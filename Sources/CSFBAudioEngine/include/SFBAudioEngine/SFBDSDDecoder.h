@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBDSDDecoding.h>
@@ -18,9 +19,9 @@ extern SFBDSDDecoderName const SFBDSDDecoderNameDSF;
 
 /// A decoder providing audio as DSD
 NS_SWIFT_NAME(DSDDecoder)
-@interface SFBDSDDecoder : NSObject<SFBDSDDecoding>
+@interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 
-#pragma mark - File Format Support
+// MARK: - File Format Support
 
 /// Returns a set containing the supported path extensions
 @property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
@@ -34,7 +35,7 @@ NS_SWIFT_NAME(DSDDecoder)
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
-#pragma mark - Creation
+// MARK: - Creation
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -77,7 +78,7 @@ NS_SWIFT_NAME(DSDDecoder)
 /// - parameter inputSource: The input source
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
-      NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -118,7 +119,7 @@ NS_SWIFT_NAME(DSDDecoder)
 /// - returns: An initialized `SFBDSDDecoder` object for the specified URL, or `nil` on failure
 - (nullable instancetype)initWithURL:(NSURL *)url
                          decoderName:(SFBDSDDecoderName)decoderName
-      NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
 /// Returns an initialized `SFBDSDDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter decoderName: The name of the decoder to use
@@ -132,7 +133,7 @@ NS_SWIFT_NAME(DSDDecoder)
 /// - returns: An initialized `SFBDSDDecoder` object for the specified input source, or `nil` on failure
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
                                  decoderName:(SFBDSDDecoderName)decoderName
-      NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
+        NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
 /// Returns an initialized `SFBDSDDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter decoderName: The name of the decoder to use
@@ -153,7 +154,7 @@ NS_SWIFT_NAME(DSDDecoder)
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBDSDDecoder` and subclasses
 extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);

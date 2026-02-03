@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2012-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2012 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <Foundation/Foundation.h>
@@ -67,7 +68,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
 ///
 /// Most file formats may have more than one attached picture of each type.
 NS_SWIFT_NAME(AttachedPicture)
-@interface SFBAttachedPicture : NSObject<NSCopying>
+@interface SFBAttachedPicture : NSObject <NSCopying>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -94,7 +95,7 @@ NS_SWIFT_NAME(AttachedPicture)
 /// Returns `nil` if `dictionaryRepresentation` does not contain image data
 /// - parameter dictionaryRepresentation: A dictionary containing the desired values
 - (nullable instancetype)initWithDictionaryRepresentation:
-      (NSDictionary<SFBAttachedPictureKey, id> *)dictionaryRepresentation;
+        (NSDictionary<SFBAttachedPictureKey, id> *)dictionaryRepresentation;
 
 /// Copy the values contained in this object to a dictionary
 /// - returns: A dictionary containing this object's artwork information

@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioMetadata+TagLibTag.h"
@@ -17,11 +18,11 @@
     self.artist = [NSString stringWithUTF8String:tag->artist().toCString(true)];
     self.genre = [NSString stringWithUTF8String:tag->genre().toCString(true)];
 
-    if (tag->year()) {
+    if (tag->year() != 0) {
         self.releaseDate = @(tag->year()).stringValue;
     }
 
-    if (tag->track()) {
+    if (tag->track() != 0) {
         self.trackNumber = @(tag->track());
     }
 
@@ -31,14 +32,14 @@
 @end
 
 void sfb::setTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag) {
-    NSCParameterAssert(metadata != nil);
-    assert(nullptr != tag);
+    assert(metadata != nil);
+    assert(tag != nullptr);
 
     tag->setTitle(TagLib::StringFromNSString(metadata.title));
     tag->setArtist(TagLib::StringFromNSString(metadata.artist));
     tag->setAlbum(TagLib::StringFromNSString(metadata.albumTitle));
     tag->setComment(TagLib::StringFromNSString(metadata.comment));
     tag->setGenre(TagLib::StringFromNSString(metadata.genre));
-    tag->setYear(metadata.releaseDate ? (unsigned int)metadata.releaseDate.intValue : 0);
+    tag->setYear(metadata.releaseDate ? static_cast<unsigned int>(metadata.releaseDate.intValue) : 0);
     tag->setTrack(metadata.trackNumber.unsignedIntValue);
 }

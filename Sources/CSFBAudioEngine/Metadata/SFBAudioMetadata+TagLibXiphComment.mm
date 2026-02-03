@@ -1,24 +1,23 @@
 //
-// Copyright (c) 2010-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "TagLibStringUtilities.h"
 
-#import <memory>
-
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
+#import <memory>
 
 namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) {
-        CFRelease(cf);
-    }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -36,6 +35,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         // According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is
         // a safer choice
         NSString *key = [NSString stringWithUTF8String:it.first.toCString(true)];
+        if (key == nil) {
+            continue;
+        }
 
         // Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
         NSString *value = [NSString stringWithUTF8String:it.second.front().toCString(true)];
@@ -57,21 +59,21 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         } else if ([key caseInsensitiveCompare:@"TITLE"] == NSOrderedSame) {
             self.title = value;
         } else if ([key caseInsensitiveCompare:@"TRACKNUMBER"] == NSOrderedSame) {
-            self.trackNumber = @(value.integerValue);
+            self.trackNumber = value != nil ? @(value.integerValue) : nil;
         } else if ([key caseInsensitiveCompare:@"TRACKTOTAL"] == NSOrderedSame) {
-            self.trackTotal = @(value.integerValue);
+            self.trackTotal = value != nil ? @(value.integerValue) : nil;
         } else if ([key caseInsensitiveCompare:@"COMPILATION"] == NSOrderedSame) {
-            self.compilation = @(value.boolValue);
+            self.compilation = value != nil ? @(value.boolValue) : nil;
         } else if ([key caseInsensitiveCompare:@"DISCNUMBER"] == NSOrderedSame) {
-            self.discNumber = @(value.integerValue);
+            self.discNumber = value != nil ? @(value.integerValue) : nil;
         } else if ([key caseInsensitiveCompare:@"DISCTOTAL"] == NSOrderedSame) {
-            self.discTotal = @(value.integerValue);
+            self.discTotal = value != nil ? @(value.integerValue) : nil;
         } else if ([key caseInsensitiveCompare:@"LYRICS"] == NSOrderedSame) {
             self.lyrics = value;
         } else if ([key caseInsensitiveCompare:@"BPM"] == NSOrderedSame) {
-            self.bpm = @(value.integerValue);
+            self.bpm = value != nil ? @(value.integerValue) : nil;
         } else if ([key caseInsensitiveCompare:@"RATING"] == NSOrderedSame) {
-            self.rating = @(value.integerValue);
+            self.rating = value != nil ? @(value.integerValue) : nil;
         } else if ([key caseInsensitiveCompare:@"ISRC"] == NSOrderedSame) {
             self.isrc = value;
         } else if ([key caseInsensitiveCompare:@"MCN"] == NSOrderedSame) {
@@ -93,25 +95,25 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         } else if ([key caseInsensitiveCompare:@"GROUPING"] == NSOrderedSame) {
             self.grouping = value;
         } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_REFERENCE_LOUDNESS"] == NSOrderedSame) {
-            self.replayGainReferenceLoudness = @(value.doubleValue);
+            self.replayGainReferenceLoudness = value != nil ? @(value.doubleValue) : nil;
         } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_GAIN"] == NSOrderedSame) {
-            self.replayGainTrackGain = @(value.doubleValue);
+            self.replayGainTrackGain = value != nil ? @(value.doubleValue) : nil;
         } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_TRACK_PEAK"] == NSOrderedSame) {
-            self.replayGainTrackPeak = @(value.doubleValue);
+            self.replayGainTrackPeak = value != nil ? @(value.doubleValue) : nil;
         } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_GAIN"] == NSOrderedSame) {
-            self.replayGainAlbumGain = @(value.doubleValue);
+            self.replayGainAlbumGain = value != nil ? @(value.doubleValue) : nil;
         } else if ([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame) {
-            self.replayGainAlbumPeak = @(value.doubleValue);
+            self.replayGainAlbumPeak = value != nil ? @(value.doubleValue) : nil;
         } else if ([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame ||
                    [key caseInsensitiveCompare:@"COVERART"] == NSOrderedSame) {
             // TagLib parses "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments as pictures, so ignore them here
-        } else {
+        } else if (value != nil) {
             // Put all unknown tags into the additional metadata
             [additionalMetadata setObject:value forKey:key];
         }
     }
 
-    if (additionalMetadata.count) {
+    if (additionalMetadata.count > 0) {
         self.additionalMetadata = additionalMetadata;
     }
 
@@ -125,9 +127,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
 
         [self attachPicture:[[SFBAttachedPicture alloc]
-                                  initWithImageData:imageData
-                                               type:static_cast<SFBAttachedPictureType>(iter->type())
-                                        description:description]];
+                                    initWithImageData:imageData
+                                                 type:static_cast<SFBAttachedPictureType>(iter->type())
+                                          description:description]];
     }
 }
 
@@ -136,8 +138,8 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 namespace {
 
 void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     // Remove the existing comment with this name
     tag->removeFields(key);
@@ -148,17 +150,17 @@ void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *va
 }
 
 void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
     SetXiphComment(tag, key, value.stringValue);
 }
 
 void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    if (value == nil) {
+    if (!value) {
         SetXiphComment(tag, key, nil);
     } else {
         SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
@@ -167,17 +169,25 @@ void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNum
 
 void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value,
                                     NSString *format = nil) {
-    assert(nullptr != tag);
-    assert(nullptr != key);
+    assert(tag != nullptr);
+    assert(key != nullptr);
 
-    SetXiphComment(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+    if (!value) {
+        SetXiphComment(tag, key, nil);
+    } else {
+        if (!format) {
+            SetXiphComment(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
+        } else {
+            SetXiphComment(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
+        }
+    }
 }
 
 } /* namespace */
 
 void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt) {
-    NSCParameterAssert(metadata != nil);
-    assert(nullptr != tag);
+    assert(metadata != nil);
+    assert(tag != nullptr);
 
     // Standard tags
     SetXiphComment(tag, "ALBUM", metadata.albumTitle);
@@ -237,10 +247,10 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
 }
 
 std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture) {
-    NSCParameterAssert(attachedPicture != nil);
+    assert(attachedPicture != nil);
 
     cg_image_source_unique_ptr imageSource{
-          CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
+            CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
     if (!imageSource) {
         return nullptr;
     }
@@ -263,7 +273,7 @@ std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(
 
     // Flesh out the height, width, and depth
     NSDictionary *imagePropertiesDictionary =
-          (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
+            (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource.get(), 0, nullptr);
     if (imagePropertiesDictionary) {
         NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
         NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];

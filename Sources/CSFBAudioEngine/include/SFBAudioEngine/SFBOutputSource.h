@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <Foundation/Foundation.h>
@@ -67,9 +68,9 @@ NS_SWIFT_NAME(OutputSource)
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if any bytes were written, `NO` otherwise
 - (BOOL)writeBytes:(const void *)buffer
-            length:(NSInteger)length
-      bytesWritten:(NSInteger *)bytesWritten
-             error:(NSError **)error NS_REFINED_FOR_SWIFT;
+              length:(NSInteger)length
+        bytesWritten:(NSInteger *)bytesWritten
+               error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// `YES` if the end of input has been reached
 @property(nonatomic, readonly) BOOL atEOF;
@@ -99,7 +100,7 @@ NS_SWIFT_NAME(OutputSource)
 - (BOOL)writeData:(NSData *)data error:(NSError **)error;
 @end
 
-#pragma mark - Typed and Byte-Ordered Writing
+// MARK: - Typed and Byte-Ordered Writing
 
 /// Signed integer writing
 @interface SFBOutputSource (SFBSignedIntegerWriting)
@@ -187,7 +188,7 @@ NS_SWIFT_NAME(OutputSource)
 - (BOOL)writeUInt64LittleEndian:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBOutputSource` and subclasses
 extern NSErrorDomain const SFBOutputSourceErrorDomain NS_SWIFT_NAME(OutputSource.ErrorDomain);

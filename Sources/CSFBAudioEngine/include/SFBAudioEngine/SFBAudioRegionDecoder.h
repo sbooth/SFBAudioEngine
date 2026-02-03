@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
@@ -10,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// An audio decoder supporting a repeating audio region
 NS_SWIFT_NAME(AudioRegionDecoder)
-@interface SFBAudioRegionDecoder : NSObject<SFBPCMDecoding>
+@interface SFBAudioRegionDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

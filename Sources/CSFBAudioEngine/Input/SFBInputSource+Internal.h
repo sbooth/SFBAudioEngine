@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBInputSource.h"
@@ -17,6 +18,7 @@ extern os_log_t gSFBInputSourceLog;
     NSURL *_url;
 }
 - (instancetype)initWithURL:(nullable NSURL *)url NS_DESIGNATED_INITIALIZER;
+- (NSError *)posixErrorWithCode:(NSInteger)code;
 @end
 
 NS_ASSUME_NONNULL_END

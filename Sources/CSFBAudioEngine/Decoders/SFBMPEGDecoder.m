@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBMPEGDecoder.h"
 
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -154,8 +154,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -250,14 +250,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 
     if (!_mpg123) {
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"MP3", @"")];
         }
         return NO;
     }
@@ -271,14 +264,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         _mpg123 = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"MP3", @"")];
         }
         return NO;
     }
@@ -288,14 +274,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         _mpg123 = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"MP3", @"")];
         }
         return NO;
     }
@@ -312,14 +291,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         _mpg123 = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"MP3", @"")];
         }
         return NO;
     }
@@ -379,14 +351,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         _mpg123 = NULL;
 
         if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                  SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCodeInvalidFormat,
-                  NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @""), @{
-                      NSLocalizedRecoverySuggestionErrorKey :
-                            NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                      NSURLErrorKey : _inputSource.url
-                  },
-                  SFBLocalizedNameForURL(_inputSource.url));
+            *error = [self invalidFormatError:NSLocalizedString(@"MP3", @"")];
         }
         return NO;
     }
@@ -460,16 +425,14 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         if (result != MPG123_OK) {
             os_log_error(gSFBAudioDecoderLog, "mpg123_decode_frame failed: %{public}s", mpg123_strerror(_mpg123));
             if (error) {
-                *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                             code:SFBAudioDecoderErrorCodeDecodingError
-                                         userInfo:@{NSURLErrorKey : _inputSource.url}];
+                *error = [self genericDecodingError];
             }
             return NO;
         }
 
         // Deinterleave the samples
         AVAudioFrameCount framesDecoded =
-              (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
+                (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
 
         float *const *floatChannelData = _buffer.floatChannelData;
         AVAudioChannelCount channelCount = _buffer.format.channelCount;
@@ -497,9 +460,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     if (offset < 0) {
         os_log_error(gSFBAudioDecoderLog, "mpg123 seek error");
         if (error) {
-            *error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-                                         code:SFBAudioDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+            *error = [self genericSeekError];
         }
         return NO;
     }

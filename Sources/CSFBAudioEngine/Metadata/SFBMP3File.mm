@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBMP3File.h"
@@ -12,7 +13,6 @@
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <taglib/mpegfile.h>
@@ -42,13 +42,13 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
 }
 
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    NSParameterAssert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBMP3DetectionSize skipID3v2Tag:YES error:error];
-    if (!header) {
+    if (header == nil) {
         return NO;
     }
 
@@ -65,70 +65,53 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
         if (!stream.isOpen()) {
-            if (error) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-                      NSLocalizedString(@"The file “%@” could not be opened for reading.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not "
-                                                  @"have appropriate permissions.",
-                                                  @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+            if (error != nullptr) {
+                *error = [self genericOpenForReadingError];
             }
             return NO;
         }
 
         TagLib::MPEG::File file(&stream);
         if (!file.isValid()) {
-            if (error) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The file “%@” is not a valid MPEG file.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+            if (error != nullptr) {
+                *error = [self genericInvalidFormatError:NSLocalizedString(@"MPEG", @"")];
             }
             return NO;
         }
 
         NSMutableDictionary *propertiesDictionary =
-              [NSMutableDictionary dictionaryWithObject:@"MP3" forKey:SFBAudioPropertiesKeyFormatName];
-        if (file.audioProperties()) {
-            auto *properties = file.audioProperties();
+                [NSMutableDictionary dictionaryWithObject:@"MP3" forKey:SFBAudioPropertiesKeyFormatName];
+        if (const auto *properties = file.audioProperties(); properties != nullptr) {
             sfb::addAudioPropertiesToDictionary(properties, propertiesDictionary);
 
             // TODO: Is this too much information?
 #if 0
-			switch(properties->version()) {
-				case TagLib::MPEG::Header::Version1:
-					switch(properties->layer()) {
-						case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer I";		break;
-						case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer II";		break;
-						case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer III";	break;
-					}
-					break;
-				case TagLib::MPEG::Header::Version2:
-					switch(properties->layer()) {
-						case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer I";		break;
-						case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer II";		break;
-						case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer III";	break;
-					}
-					break;
-				case TagLib::MPEG::Header::Version2_5:
-					switch(properties->layer()) {
-						case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer I";	break;
-						case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer II";	break;
-						case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer III";	break;
-					}
-					break;
-			}
+            switch(properties->version()) {
+                case TagLib::MPEG::Header::Version1:
+                    switch(properties->layer()) {
+                        case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer I";      break;
+                        case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer II";     break;
+                        case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-1 Layer III";    break;
+                    }
+                    break;
+                case TagLib::MPEG::Header::Version2:
+                    switch(properties->layer()) {
+                        case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer I";      break;
+                        case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer II";     break;
+                        case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2 Layer III";    break;
+                    }
+                    break;
+                case TagLib::MPEG::Header::Version2_5:
+                    switch(properties->layer()) {
+                        case 1: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer I";    break;
+                        case 2: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer II";   break;
+                        case 3: propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"MPEG-2.5 Layer III";  break;
+                    }
+                    break;
+            }
 #endif
 
-            if (properties->xingHeader() && properties->xingHeader()->totalFrames()) {
+            if (properties->xingHeader() && properties->xingHeader()->totalFrames() != 0) {
                 propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->xingHeader()->totalFrames());
             }
         }
@@ -150,9 +133,9 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
         self.metadata = metadata;
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error reading MPEG properties and metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];
@@ -165,32 +148,16 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
     try {
         TagLib::FileStream stream(self.url.fileSystemRepresentation);
         if (!stream.isOpen()) {
-            if (error) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-                      NSLocalizedString(@"The file “%@” could not be opened for writing.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not "
-                                                  @"have appropriate permissions.",
-                                                  @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+            if (error != nullptr) {
+                *error = [self genericOpenForWritingError];
             }
             return NO;
         }
 
         TagLib::MPEG::File file(&stream, false);
         if (!file.isValid()) {
-            if (error) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInvalidFormat,
-                      NSLocalizedString(@"The file “%@” is not a valid MPEG file.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+            if (error != nullptr) {
+                *error = [self genericInvalidFormatError:NSLocalizedString(@"MPEG", @"")];
             }
             return NO;
         }
@@ -208,23 +175,16 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngin
         sfb::setID3v2TagFromMetadata(self.metadata, file.ID3v2Tag(true));
 
         if (!file.save()) {
-            if (error) {
-                *error = SFBErrorWithLocalizedDescription(
-                      SFBAudioFileErrorDomain, SFBAudioFileErrorCodeInputOutput,
-                      NSLocalizedString(@"The file “%@” could not be saved.", @""), @{
-                          NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's extension may not match the file's type.", @""),
-                          NSURLErrorKey : self.url
-                      },
-                      SFBLocalizedNameForURL(self.url));
+            if (error != nullptr) {
+                *error = [self genericSaveError];
             }
             return NO;
         }
 
         return YES;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         os_log_error(gSFBAudioFileLog, "Error writing MPEG metadata: %{public}s", e.what());
-        if (error) {
+        if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioFileErrorDomain
                                          code:SFBAudioFileErrorCodeInternalError
                                      userInfo:nil];

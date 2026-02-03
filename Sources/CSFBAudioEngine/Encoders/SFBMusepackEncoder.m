@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBMusepackEncoder.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <mpc/libmpcenc.h>
 #import <mpc/stream_encoder.h>
 
@@ -154,7 +154,7 @@ static off_t my_mpc_tell_callback(void *context) {
     }
 
     NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMusepackQuality];
-    if (quality != nil) {
+    if (quality) {
         float quality_value = quality.floatValue;
         if (quality_value < 0 || quality_value > 10) {
             os_log_info(gSFBAudioEncoderLog, "Ignoring invalid Musepack quality: %g", quality_value);

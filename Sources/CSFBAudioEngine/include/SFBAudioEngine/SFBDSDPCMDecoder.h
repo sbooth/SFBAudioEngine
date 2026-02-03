@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2018-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2018 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBDSDDecoding.h>
@@ -11,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// A decoder supporting DSD64 to PCM conversion
 NS_SWIFT_NAME(DSDPCMDecoder)
-@interface SFBDSDPCMDecoder : NSObject<SFBPCMDecoding>
+@interface SFBDSDPCMDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

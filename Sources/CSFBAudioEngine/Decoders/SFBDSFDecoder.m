@@ -1,14 +1,14 @@
 //
-// Copyright (c) 2014-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2014 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBDSFDecoder.h"
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
-#import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
 
 #import <os/log.h>
@@ -31,18 +31,8 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     }
 
     *chunkID =
-          (uint32_t)((chunkIDBytes[0] << 24U) | (chunkIDBytes[1] << 16U) | (chunkIDBytes[2] << 8U) | chunkIDBytes[3]);
+            (uint32_t)((chunkIDBytes[0] << 24U) | (chunkIDBytes[1] << 16U) | (chunkIDBytes[2] << 8U) | chunkIDBytes[3]);
     return YES;
-}
-
-static NSError *CreateInvalidDSFFileError(NSURL *url) {
-    return SFBErrorWithLocalizedDescription(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCodeInvalidFormat,
-                                            NSLocalizedString(@"The file “%@” is not a valid DSF file.", @""), @{
-                                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                                                      @"The file's extension may not match the file's type.", @""),
-                                                NSURLErrorKey : url
-                                            },
-                                            SFBLocalizedNameForURL(url));
 }
 
 // For the size of matrices this class deals with the naive approach is adequate
@@ -84,8 +74,8 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
 }
 
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
-      formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
-                  error:(NSError **)error {
+        formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
+                    error:(NSError **)error {
     NSParameterAssert(inputSource != nil);
     NSParameterAssert(formatIsSupported != NULL);
 
@@ -117,7 +107,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (!ReadChunkID(_inputSource, &chunkID) || chunkID != 'DSD ') {
         os_log_error(gSFBDSDDecoderLog, "Unable to read 'DSD ' chunk");
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -129,7 +119,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt64LittleEndian:&chunkSize error:nil] || chunkSize != 28) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected 'DSD ' chunk size: %llu", chunkSize);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -137,7 +127,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt64LittleEndian:&fileSize error:nil]) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read file size in 'DSD ' chunk");
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -145,7 +135,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt64LittleEndian:&metadataOffset error:nil]) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read metadata offset in 'DSD ' chunk");
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -154,7 +144,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (!ReadChunkID(_inputSource, &chunkID) || chunkID != 'fmt ') {
         os_log_error(gSFBDSDDecoderLog, "Unable to read 'fmt ' chunk");
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -162,7 +152,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt64LittleEndian:&chunkSize error:nil] || chunkSize != 52) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected 'fmt ' chunk size: %llu", chunkSize);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -180,7 +170,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt32LittleEndian:&formatVersion error:nil] || formatVersion != 1) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected format version in 'fmt ': %u", formatVersion);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -188,7 +178,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt32LittleEndian:&formatID error:nil] || formatID != 0) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected format ID in 'fmt ': %{public}.4s", SFBCStringForOSType(formatID));
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -196,7 +186,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt32LittleEndian:&channelType error:nil] || (channelType < 1 || channelType > 7)) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected channel type in 'fmt ': %u", channelType);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -204,7 +194,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt32LittleEndian:&channelNum error:nil] || (channelNum < 1 || channelNum > 6)) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected channel count in 'fmt ': %u", channelNum);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -213,7 +203,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
         (samplingFrequency != kSFBSampleRateDSD64 && samplingFrequency != kSFBSampleRateDSD128)) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected sample rate in 'fmt ': %u", samplingFrequency);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -221,7 +211,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt32LittleEndian:&bitsPerSample error:nil] || (bitsPerSample != 1 && bitsPerSample != 8)) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected bits per sample in 'fmt ': %u", bitsPerSample);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -229,7 +219,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt64LittleEndian:&sampleCount error:nil]) {
         os_log_error(gSFBDSDDecoderLog, "Unable to read sample count in 'fmt ' chunk");
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -238,7 +228,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
         blockSizePerChannel != DSF_BLOCK_SIZE_BYTES_PER_CHANNEL) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected block size per channel in 'fmt ': %u", blockSizePerChannel);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -246,7 +236,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt32LittleEndian:&reserved error:nil] || reserved != 0) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected non-zero value for reserved in 'fmt ': %u", reserved);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -255,7 +245,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (!ReadChunkID(_inputSource, &chunkID) || chunkID != 'data') {
         os_log_error(gSFBDSDDecoderLog, "Unable to read 'data' chunk");
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -263,7 +253,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     if (![_inputSource readUInt64LittleEndian:&chunkSize error:nil]) {
         os_log_error(gSFBDSDDecoderLog, "Unexpected 'data' chunk size: %llu", chunkSize);
         if (error) {
-            *error = CreateInvalidDSFFileError(_inputSource.url);
+            *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
         }
         return NO;
     }
@@ -334,9 +324,9 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     // Metadata chunk is ignored
 
     _buffer = [[AVAudioCompressedBuffer alloc]
-             initWithFormat:_processingFormat
-             packetCapacity:(DSF_BLOCK_SIZE_BYTES_PER_CHANNEL / kSFBBytesPerDSDPacketPerChannel)
-          maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * channelNum)];
+               initWithFormat:_processingFormat
+               packetCapacity:(DSF_BLOCK_SIZE_BYTES_PER_CHANNEL / kSFBBytesPerDSDPacketPerChannel)
+            maximumPacketSize:(kSFBBytesPerDSDPacketPerChannel * channelNum)];
     _buffer.packetCount = 0;
 
     return YES;
@@ -436,9 +426,14 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
         os_log_debug(gSFBDSDDecoderLog, "Error seeking to input offset %lld: %{public}@", _audioOffset + blockOffset,
                      seekError);
         if (error) {
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:seekError
+                                                                               forKey:NSUnderlyingErrorKey];
+            if (_inputSource.url != nil) {
+                userInfo[NSURLErrorKey] = _inputSource.url;
+            }
             *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
                                          code:SFBDSDDecoderErrorCodeSeekError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url, NSUnderlyingErrorKey : seekError}];
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -486,9 +481,13 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
         os_log_error(gSFBDSDDecoderLog, "Missing data in audio block: requested %u bytes, got %ld", bufsize,
                      (long)bytesRead);
         if (error) {
+            NSDictionary *userInfo = nil;
+            if (_inputSource.url) {
+                userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
+            }
             *error = [NSError errorWithDomain:SFBDSDDecoderErrorDomain
                                          code:SFBDSDDecoderErrorCodeDecodingError
-                                     userInfo:@{NSURLErrorKey : _inputSource.url}];
+                                     userInfo:userInfo];
         }
         return NO;
     }

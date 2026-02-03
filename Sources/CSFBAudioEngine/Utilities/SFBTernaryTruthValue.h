@@ -1,12 +1,15 @@
 //
-// Copyright (c) 2023-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2023 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #pragma once
 
 #import <CoreFoundation/CoreFoundation.h>
+
+// clang-format off
 
 /// A three-valued logic truth value (AKA tribool)
 /// No assumption is made whether unknown implies true
@@ -18,3 +21,5 @@ typedef CF_CLOSED_ENUM(NSInteger, SFBTernaryTruthValue) {
     /// Unknown
     SFBTernaryTruthValueUnknown CF_SWIFT_NAME(ternaryUnknown) = -1,
 } CF_SWIFT_NAME(TernaryTruthValue);
+
+// clang-format on

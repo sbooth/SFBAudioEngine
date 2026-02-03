@@ -1,12 +1,12 @@
 //
-// Copyright (c) 2020-2026 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBOggVorbisEncoder.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <vorbis/vorbisenc.h>
 
 #import <os/log.h>
@@ -90,7 +90,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         break;
     }
 
-    if (channelLayout == nil) {
+    if (!channelLayout) {
         return nil;
     }
 
@@ -127,9 +127,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         NSNumber *max_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisMaxBitrate];
 
         result = vorbis_encode_init(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate,
-                                    min_bitrate != nil ? min_bitrate.longValue * 1000 : -1,
-                                    nominal_bitrate != nil ? nominal_bitrate.longValue * 1000 : 128000,
-                                    max_bitrate != nil ? max_bitrate.longValue * 1000 : -1);
+                                    min_bitrate ? min_bitrate.longValue * 1000 : -1,
+                                    nominal_bitrate ? nominal_bitrate.longValue * 1000 : 128000,
+                                    max_bitrate ? max_bitrate.longValue * 1000 : -1);
         if (result != 0) {
             os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
             vorbis_info_clear(&_vi);
@@ -142,10 +142,10 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             return NO;
         }
     } else {
-        float quality_value = 0.5;
+        float quality_value = 0.5f;
         NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyVorbisQuality];
-        if (quality != nil) {
-            quality_value = MAX(-0.1F, MIN(1.0F, quality.floatValue));
+        if (quality) {
+            quality_value = MAX(-0.1f, MIN(1.0f, quality.floatValue));
         }
 
         result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate,
