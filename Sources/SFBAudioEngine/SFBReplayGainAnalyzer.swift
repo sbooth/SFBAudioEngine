@@ -17,40 +17,47 @@ public struct ReplayGain {
 
 extension ReplayGainAnalyzer {
     /// Calculates replay gain for a single track
-    /// - parameter urls: The URLs to analyze
+    /// - parameter url: The URL to analyze
     /// - returns: The track's gain and peak information
     /// - throws: An `NSError` object if an error occurs
     public class func analyzeTrack(_ url: URL) throws -> ReplayGain {
         let analyzer = ReplayGainAnalyzer()
-        analyzer.calculateAlbumReplayGain = false
         return try analyzer.analyzeTrack(url)
     }
 
     /// Calculates replay gain for an album
     /// - parameter urls: The URLs to analyze
-    /// - returns: The album's gain and peak information keyed by URL
+    /// - returns: The album and track gain and peak information
     /// - throws: An `NSError` object if an error occurs
     public class func analyzeAlbum(_ urls: [URL]) throws -> (ReplayGain, [URL: ReplayGain]) {
-        var trackReplayGain = [URL: ReplayGain]()
-
         let analyzer = ReplayGainAnalyzer()
-        analyzer.calculateAlbumReplayGain = true
-        for url in urls {
-            trackReplayGain[url] = try analyzer.analyzeTrack(url)
-        }
-
-        return (try analyzer.albumReplayGain(), trackReplayGain)
+        return try analyzer.analyzeAlbum(urls)
     }
 
-    /// Returns replay gain gain and normalized peak information for `url`
+    /// Calculates replay gain for a single track
+    /// - parameter url: The URL to analyze
+    /// - returns: The track's gain and peak information
+    /// - throws: An `NSError` object if an error occurs
     public func analyzeTrack(_ url: URL) throws -> ReplayGain {
         let replayGain = try __analyzeTrack(url)
-        return ReplayGain(gain: replayGain[.gainKey]!.floatValue, peak: replayGain[.peakKey]!.floatValue)
+        return ReplayGain(gain: replayGain[.gain]!.floatValue, peak: replayGain[.peak]!.floatValue)
     }
 
-    /// Returns replay gain gain and normalized peak information for the album
-    public func albumReplayGain() throws -> ReplayGain {
-        let replayGain = try __albumGainAndPeakSampleReturningError()
-        return ReplayGain(gain: replayGain[.gainKey]!.floatValue, peak: replayGain[.peakKey]!.floatValue)
+    /// Calculates replay gain for an album
+    /// - parameter urls: The URLs to analyze
+    /// - returns: The album and track gain and peak information
+    /// - throws: An `NSError` object if an error occurs
+    public func analyzeAlbum(_ urls: [URL]) throws -> (ReplayGain, [URL: ReplayGain]) {
+        let replayGain = try __analyzeAlbum(urls)
+        let albumReplayGain = ReplayGain(gain: (replayGain[Key.gain] as! NSNumber).floatValue, peak: (replayGain[Key.peak] as! NSNumber).floatValue)
+
+        var trackReplayGains: [URL: ReplayGain] = [:]
+        for (key, value) in replayGain {
+            if let url = key as? URL, let trackReplayGain = value as? NSDictionary {
+                trackReplayGains[url] = ReplayGain(gain: (trackReplayGain[Key.gain] as! NSNumber).floatValue, peak: (trackReplayGain[Key.peak] as! NSNumber).floatValue)
+            }
+        }
+
+        return (albumReplayGain, trackReplayGains)
     }
 }

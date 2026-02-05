@@ -15,19 +15,107 @@
 #import <os/log.h>
 
 #import <memory>
+#import <vector>
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
 
 // Key names for the metadata dictionary
-NSString *const SFBReplayGainAnalyzerGainKey = @"Gain";
-NSString *const SFBReplayGainAnalyzerPeakKey = @"Peak";
+NSString *const SFBReplayGainAnalyzerKeyGain = @"Gain";
+NSString *const SFBReplayGainAnalyzerKeyPeak = @"Peak";
 
-#define BUFFER_SIZE_FRAMES 2048
+namespace {
+
+constexpr std::size_t bufferSizeFrames = 2048;
+constexpr float referenceLoudness = -18.f;
+
+struct ReplayGainContext {
+    NSArray *urls_;
+    std::vector<std::unique_ptr<loudness::EbuR128Analyzer>> analyzers_;
+    std::vector<NSError *> errors_;
+};
+
+void analyzeURL(void *context, size_t iteration) noexcept {
+    auto ctx = static_cast<ReplayGainContext *>(context);
+
+    NSURL *url = [ctx->urls_ objectAtIndex:iteration];
+
+    NSError *error = nil;
+    SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:&error];
+    if (decoder == nil || ![decoder openReturningError:&error]) {
+        ctx->errors_[iteration] = error;
+        return;
+    }
+
+    AVAudioFormat *inputFormat = decoder.processingFormat;
+    AVAudioFormat *outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
+                                                                   sampleRate:inputFormat.sampleRate
+                                                                     channels:inputFormat.channelCount
+                                                                  interleaved:NO];
+
+    AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
+                                                                  toFormat:outputFormat];
+    if (converter == nil) {
+        return;
+    }
+
+    AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat
+                                                                   frameCapacity:bufferSizeFrames];
+    AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat
+                                                                   frameCapacity:bufferSizeFrames];
+
+    try {
+        auto channelWeights = loudness::DefaultChannelWeights();
+
+        ctx->analyzers_[iteration] = std::make_unique<loudness::EbuR128Analyzer>(
+                outputFormat.channelCount, channelWeights, outputFormat.sampleRate, false);
+        auto &analyzer = ctx->analyzers_[iteration];
+
+        for (;;) {
+            __block NSError *err = nil;
+            AVAudioConverterOutputStatus status = [converter
+                       convertToBuffer:outputBuffer
+                                 error:&error
+                    withInputFromBlock:^AVAudioBuffer *_Nullable(AVAudioPacketCount inNumberOfPackets,
+                                                                 AVAudioConverterInputStatus *_Nonnull outStatus) {
+                        BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
+                        if (!result) {
+                            os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
+                        }
+
+                        if (result && decodeBuffer.frameLength == 0) {
+                            *outStatus = AVAudioConverterInputStatus_EndOfStream;
+                        } else {
+                            *outStatus = AVAudioConverterInputStatus_HaveData;
+                        }
+
+                        return decodeBuffer;
+                    }];
+
+            if (status == AVAudioConverterOutputStatus_Error) {
+                ctx->errors_[iteration] = err;
+                return;
+            }
+            if (status == AVAudioConverterOutputStatus_EndOfStream) {
+                break;
+            }
+
+            AVAudioFrameCount frameCount = outputBuffer.frameLength;
+
+            analyzer->Process(outputBuffer.floatChannelData[0], frameCount,
+                              loudness::EbuR128Analyzer::SampleFormat::FLOAT,
+                              loudness::EbuR128Analyzer::SampleLayout::PLANAR_CONTIGUOUS);
+        }
+    } catch (const std::exception &e) {
+        os_log_error(OS_LOG_DEFAULT, "Error analyzing audio: %{public}s", e.what());
+        return;
+    }
+}
+
+} /* namespace */
 
 @interface SFBReplayGainAnalyzer () {
   @private
-    std::unique_ptr<loudness::EbuR128Analyzer> _albumAnalyzer;
     AVAudioFormat *_albumFormat;
 }
 @end
@@ -51,13 +139,6 @@ NSString *const SFBReplayGainAnalyzerPeakKey = @"Peak";
                                                                            @"");
                                               }
                                               break;
-
-                                          case SFBReplayGainAnalyzerErrorCodeAlbumReplayGainDisabled:
-                                              if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
-                                                  return NSLocalizedString(
-                                                          @"Album replay gain analysis was not enabled.", @"");
-                                              }
-                                              break;
                                           }
 
                                           return nil;
@@ -66,140 +147,123 @@ NSString *const SFBReplayGainAnalyzerPeakKey = @"Peak";
 
 + (NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url error:(NSError **)error {
     SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
-    analyzer.calculateAlbumReplayGain = NO;
     return [analyzer analyzeTrack:url error:error];
 }
 
 + (NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error {
-    NSMutableDictionary *result = [NSMutableDictionary dictionary];
-
     SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
-    analyzer.calculateAlbumReplayGain = YES;
-
-    for (NSURL *url in urls) {
-        NSDictionary *replayGain = [analyzer analyzeTrack:url error:error];
-        if (!replayGain) {
-            return nil;
-        }
-        result[url] = replayGain;
-    }
-
-    NSDictionary *albumGainAndPeakSample = [analyzer albumGainAndPeakSampleReturningError:error];
-    if (!albumGainAndPeakSample) {
-        return nil;
-    }
-
-    [result addEntriesFromDictionary:albumGainAndPeakSample];
-    return [result copy];
+    return [analyzer analyzeAlbum:urls error:error];
 }
 
 - (NSDictionary *)analyzeTrack:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
 
-    SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-    if (!decoder || ![decoder openReturningError:error]) {
-        return nil;
-    }
-
-    AVAudioFormat *inputFormat = decoder.processingFormat;
-    AVAudioFormat *outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
-                                                                   sampleRate:inputFormat.sampleRate
-                                                                     channels:inputFormat.channelCount
-                                                                  interleaved:NO];
-
-    if (/*_calculateAlbumReplayGain &&*/ _albumFormat && ![_albumFormat isEqual:outputFormat]) {
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                    SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
-                    NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                        NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")
-                    },
-                    SFBLocalizedNameForURL(url));
+    ReplayGainContext ctx{};
+    ctx.urls_ = @[ url ];
+    try {
+        ctx.analyzers_.resize(1);
+        ctx.errors_.resize(1);
+    } catch (const std::exception &e) {
+        if (error != nil) {
+            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
         return nil;
     }
 
-    AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
-                                                                  toFormat:outputFormat];
-    if (!converter) {
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                    SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
-                    NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                        NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")
-                    },
-                    SFBLocalizedNameForURL(url));
+    analyzeURL(&ctx, 1);
+
+    auto &analyzer = ctx.analyzers_[0];
+    if (analyzer == nullptr) {
+        if (error != nil) {
+            if (NSError *err = ctx.errors_[0]; err != nil) {
+                *error = err;
+            } else {
+                *error = SFBErrorWithLocalizedDescription(
+                        SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
+                        NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
+                            NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
+                                    @"The file's format is not supported for replay gain analysis.", @"")
+                        },
+                        SFBLocalizedNameForURL(url));
+            }
         }
         return nil;
     }
 
-    AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat
-                                                                   frameCapacity:BUFFER_SIZE_FRAMES];
-    AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat
-                                                                   frameCapacity:BUFFER_SIZE_FRAMES];
+    auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
+    auto digitalPeak = analyzer->digital_peak();
+
+    if (!loudness.has_value()) {
+        if (error != nil) {
+            *error = SFBErrorWithLocalizedDescription(
+                    SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                    NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                        NSLocalizedRecoverySuggestionErrorKey :
+                                NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
+                    },
+                    SFBLocalizedNameForURL(url));
+        }
+
+        return nil;
+    }
+
+    const auto gain = referenceLoudness - loudness.value();
+    return @{SFBReplayGainAnalyzerKeyGain : @(gain), SFBReplayGainAnalyzerKeyPeak : @(digitalPeak)};
+}
+
+- (NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error {
+    NSParameterAssert(urls != nil);
+
+    const auto count = urls.count;
+
+    ReplayGainContext ctx{};
+    ctx.urls_ = urls;
+
+    std::vector<loudness::EbuR128Analyzer *> analyzers{};
 
     try {
-        auto channelWeights = loudness::DefaultChannelWeights();
-
-        if (_calculateAlbumReplayGain && !_albumAnalyzer) {
-            _albumAnalyzer = std::make_unique<loudness::EbuR128Analyzer>(outputFormat.channelCount, channelWeights,
-                                                                         outputFormat.sampleRate, false);
-            _albumFormat = outputFormat;
+        ctx.analyzers_.resize(count);
+        ctx.errors_.resize(count);
+        analyzers.resize(count);
+    } catch (const std::exception &e) {
+        if (error != nil) {
+            *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
         }
+        return nil;
+    }
 
-        loudness::EbuR128Analyzer trackAnalyzer(outputFormat.channelCount, channelWeights, outputFormat.sampleRate,
-                                                false);
+    dispatch_apply_f(count, DISPATCH_APPLY_AUTO, &ctx, analyzeURL);
 
-        for (;;) {
-            __block NSError *err = nil;
-            AVAudioConverterOutputStatus status = [converter
-                       convertToBuffer:outputBuffer
-                                 error:error
-                    withInputFromBlock:^AVAudioBuffer *_Nullable(AVAudioPacketCount inNumberOfPackets,
-                                                                 AVAudioConverterInputStatus *_Nonnull outStatus) {
-                        BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
-                        if (!result) {
-                            os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
-                        }
+    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    float albumPeak = 0.f;
 
-                        if (result && decodeBuffer.frameLength == 0) {
-                            *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                        } else {
-                            *outStatus = AVAudioConverterInputStatus_HaveData;
-                        }
-
-                        return decodeBuffer;
-                    }];
-
-            if (status == AVAudioConverterOutputStatus_Error) {
-                if (error) {
+    for (NSUInteger i = 0; i < count; ++i) {
+        NSURL *url = [urls objectAtIndex:i];
+        auto &analyzer = ctx.analyzers_[i];
+        if (analyzer == nullptr) {
+            if (error != nil) {
+                if (NSError *err = ctx.errors_[i]; err != nil) {
                     *error = err;
+                } else {
+                    *error = SFBErrorWithLocalizedDescription(
+                            SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
+                            NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
+                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
+                                        @"The file's format is not supported for replay gain analysis.", @"")
+                            },
+                            SFBLocalizedNameForURL(url));
                 }
-                return nil;
             }
-            if (status == AVAudioConverterOutputStatus_EndOfStream) {
-                break;
-            }
-
-            AVAudioFrameCount frameCount = outputBuffer.frameLength;
-
-            trackAnalyzer.Process(outputBuffer.floatChannelData[0], frameCount,
-                                  loudness::EbuR128Analyzer::SampleFormat::FLOAT,
-                                  loudness::EbuR128Analyzer::SampleLayout::PLANAR_CONTIGUOUS);
-            if (_calculateAlbumReplayGain) {
-                _albumAnalyzer->Process(outputBuffer.floatChannelData[0], frameCount,
-                                        loudness::EbuR128Analyzer::SampleFormat::FLOAT,
-                                        loudness::EbuR128Analyzer::SampleLayout::PLANAR_CONTIGUOUS);
-            }
+            return nil;
         }
 
-        auto loudness = trackAnalyzer.GetRelativeGatedIntegratedLoudness();
-        auto digitalPeak = trackAnalyzer.digital_peak();
+        analyzers[i] = analyzer.get();
+
+        auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
+        auto digitalPeak = analyzer->digital_peak();
 
         if (!loudness.has_value()) {
-            if (error) {
+            if (error != nil) {
                 *error = SFBErrorWithLocalizedDescription(
                         SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
                         NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
@@ -208,46 +272,20 @@ NSString *const SFBReplayGainAnalyzerPeakKey = @"Peak";
                         },
                         SFBLocalizedNameForURL(url));
             }
+
             return nil;
         }
 
-        const auto gain = -18.f - loudness.value();
+        albumPeak = std::max(albumPeak, digitalPeak);
 
-        return @{SFBReplayGainAnalyzerGainKey : @(gain), SFBReplayGainAnalyzerPeakKey : @(digitalPeak)};
-    } catch (const std::exception &e) {
-        if (error) {
-            *error = SFBErrorWithLocalizedDescription(
-                    SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
-                    NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                        NSLocalizedRecoverySuggestionErrorKey :
-                                NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")
-                    },
-                    SFBLocalizedNameForURL(url));
-        }
-        return nil;
-    }
-}
-
-- (NSDictionary *)albumGainAndPeakSampleReturningError:(NSError **)error {
-    if (!_calculateAlbumReplayGain) {
-        if (error) {
-            *error = [NSError errorWithDomain:SFBReplayGainAnalyzerErrorDomain
-                                         code:SFBReplayGainAnalyzerErrorCodeAlbumReplayGainDisabled
-                                     userInfo:nil];
-        }
-        return nil;
+        const auto gain = referenceLoudness - loudness.value();
+        [result setObject:@{SFBReplayGainAnalyzerKeyGain : @(gain), SFBReplayGainAnalyzerKeyPeak : @(digitalPeak)}
+                   forKey:url];
     }
 
-    std::optional<float> loudness;
-    float digitalPeak = 0;
-
-    if (_albumAnalyzer) {
-        loudness = _albumAnalyzer->GetRelativeGatedIntegratedLoudness();
-        digitalPeak = _albumAnalyzer->digital_peak();
-    }
-
+    auto loudness = loudness::EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(analyzers);
     if (!loudness.has_value()) {
-        if (error) {
+        if (error != nil) {
             *error = [NSError errorWithDomain:SFBReplayGainAnalyzerErrorDomain
                                          code:SFBReplayGainAnalyzerErrorCodeInsufficientSamples
                                      userInfo:@{
@@ -257,12 +295,16 @@ NSString *const SFBReplayGainAnalyzerPeakKey = @"Peak";
                                                  @"The audio duration is too short for replay gain analysis.", @"")
                                      }];
         }
+
         return nil;
     }
 
-    const auto gain = -18.f - loudness.value();
+    const auto gain = referenceLoudness - loudness.value();
 
-    return @{SFBReplayGainAnalyzerGainKey : @(gain), SFBReplayGainAnalyzerPeakKey : @(digitalPeak)};
+    [result setObject:@(gain) forKey:SFBReplayGainAnalyzerKeyGain];
+    [result setObject:@(albumPeak) forKey:SFBReplayGainAnalyzerKeyPeak];
+
+    return result;
 }
 
 @end

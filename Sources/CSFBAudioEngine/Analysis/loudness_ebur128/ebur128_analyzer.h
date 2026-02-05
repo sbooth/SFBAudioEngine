@@ -198,6 +198,10 @@ class EbuR128Analyzer {
   // requires at least one momentary block of loudness to have been processed.
   std::optional<float> GetRelativeGatedIntegratedLoudness() const;
 
+  // Same as above but concatenates data from multiple analyzers
+  // Added by sfb 20260203
+  static std::optional<float> GetRelativeGatedIntegratedLoudness(std::vector<EbuR128Analyzer *> analyzers);
+
   // Return the loudness range measured by LRA, which is the measurement defined
   // by EBU TECH 3342. Return value will *not* provide a LRA measurement for
   // short audio clips, because LRA requires at least one short term block of
