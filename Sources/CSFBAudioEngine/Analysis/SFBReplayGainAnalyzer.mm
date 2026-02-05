@@ -113,12 +113,6 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
 } /* namespace */
 
-@interface SFBReplayGainAnalyzer () {
-  @private
-    AVAudioFormat *_albumFormat;
-}
-@end
-
 @implementation SFBReplayGainAnalyzer
 
 + (void)load {
