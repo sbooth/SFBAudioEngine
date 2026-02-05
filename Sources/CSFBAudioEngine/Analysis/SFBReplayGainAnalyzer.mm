@@ -73,7 +73,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
         for (;;) {
             __block NSError *err = nil;
-            AVAudioConverterOutputStatus status = [converter
+            auto status = [converter
                        convertToBuffer:outputBuffer
                                  error:&error
                     withInputFromBlock:^AVAudioBuffer *_Nullable(AVAudioPacketCount inNumberOfPackets,
@@ -81,22 +81,31 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                         BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
                         if (!result) {
                             os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
-                        }
-
-                        if (result && decodeBuffer.frameLength == 0) {
                             *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                        } else {
-                            *outStatus = AVAudioConverterInputStatus_HaveData;
+                            return nil;
                         }
 
+                        if (decodeBuffer.frameLength == 0) {
+                            *outStatus = AVAudioConverterInputStatus_EndOfStream;
+                            return nil;
+                        }
+
+                        *outStatus = AVAudioConverterInputStatus_HaveData;
                         return decodeBuffer;
                     }];
 
             if (status == AVAudioConverterOutputStatus_Error) {
-                ctx->errors_[iteration] = err;
+                ctx->analyzers_[iteration].reset();
+                ctx->errors_[iteration] = error;
                 return;
             }
+
             if (status == AVAudioConverterOutputStatus_EndOfStream) {
+                if (err != nil) {
+                    ctx->analyzers_[iteration].reset();
+                    ctx->errors_[iteration] = err;
+                    return;
+                }
                 break;
             }
 
@@ -108,6 +117,8 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         }
     } catch (const std::exception &e) {
         os_log_error(OS_LOG_DEFAULT, "Error analyzing audio: %{public}s", e.what());
+        ctx->analyzers_[iteration].reset();
+        ctx->errors_[iteration] = [NSError errorWithDomain:NSPOSIXErrorDomain code:EFTYPE userInfo:nil];
         return;
     }
 }
