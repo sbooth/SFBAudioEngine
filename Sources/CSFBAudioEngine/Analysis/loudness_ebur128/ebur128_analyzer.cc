@@ -68,9 +68,9 @@ EbuR128Analyzer::EbuR128Analyzer(int32_t num_input_channels,
                                  int32_t sample_rate,
                                  bool enable_true_peak_measurement)
     : interleaved_stride_(num_input_channels),
-      num_channels_being_measured_(std::min<int64_t>(
+      num_channels_being_measured_(std::min<int32_t>(
           {kMaxNumChannelsMeasured, num_input_channels,
-           static_cast<int64_t>(input_channel_weights.size())})),
+           static_cast<int32_t>(input_channel_weights.size())})),
       momentary_block_size_samples_(sample_rate * kMomentaryBlockSizeSeconds),
       one_over_momentary_block_size_samples_(
           1.0f / static_cast<float>(momentary_block_size_samples_)),
@@ -557,9 +557,9 @@ std::optional<EbuR128Analyzer::LRAStats> EbuR128Analyzer::GetLoudnessRangeStats(
   // Determine the array index for 10th percentile and 95th percentile. The
   // rounding mechanism for computing the index is taken from the Matlab
   // implementation described in EBU 3342.
-  const int64_t length_minus_one = gated_short_term_values.size() - 1;
-  const int32_t index_10th = std::lround(length_minus_one * 0.1f);
-  const int32_t index_95th = std::lround(length_minus_one * 0.95f);
+  const std::vector<float>::size_type length_minus_one = gated_short_term_values.size() - 1;
+  const long index_10th = std::lround(length_minus_one * 0.1f);
+  const long index_95th = std::lround(length_minus_one * 0.95f);
 
   lra_stats.short_term_10th_percentile_lkfs =
       ClampAndSanitizeDBFS(gated_short_term_values[index_10th]);
@@ -593,9 +593,9 @@ EbuR128Analyzer::GetRms100msStats() const {
   // Determine the array index for 10th percentile and 95th percentile. The
   // rounding mechanism for computing the index is taken from the Matlab
   // implementation described in EBU 3342.
-  const int64_t length_minus_one = sorted_rms_values.size() - 1;
-  const int32_t index_10th = std::lround(length_minus_one * 0.1f);
-  const int32_t index_95th = std::lround(length_minus_one * 0.95f);
+  const std::vector<float>::size_type length_minus_one = sorted_rms_values.size() - 1;
+  const long index_10th = std::lround(length_minus_one * 0.1f);
+  const long index_95th = std::lround(length_minus_one * 0.95f);
 
   rms_stats.rms_10th_percentile_dbfs =
       ClampAndSanitizeDBFS(sorted_rms_values[index_10th]);
