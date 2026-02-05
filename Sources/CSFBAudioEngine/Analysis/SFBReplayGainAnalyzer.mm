@@ -48,10 +48,18 @@ void analyzeURL(void *context, size_t iteration) noexcept {
     }
 
     AVAudioFormat *inputFormat = decoder.processingFormat;
-    AVAudioFormat *outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
-                                                                   sampleRate:inputFormat.sampleRate
-                                                                     channels:inputFormat.channelCount
-                                                                  interleaved:NO];
+    AVAudioFormat *outputFormat = nil;
+    if (AVAudioChannelLayout *channelLayout = inputFormat.channelLayout; channelLayout != nil) {
+        outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
+                                                        sampleRate:inputFormat.sampleRate
+                                                       interleaved:NO
+                                                     channelLayout:channelLayout];
+    } else {
+        outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
+                                                        sampleRate:inputFormat.sampleRate
+                                                          channels:inputFormat.channelCount
+                                                       interleaved:NO];
+    }
 
     AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
                                                                   toFormat:outputFormat];
