@@ -67,9 +67,9 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         return;
     }
 
-    AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat
-                                                                   frameCapacity:bufferSizeFrames];
     AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat
+                                                                   frameCapacity:bufferSizeFrames];
+    AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat
                                                                    frameCapacity:bufferSizeFrames];
 
     try {
@@ -80,46 +80,27 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         auto &analyzer = ctx->analyzers_[iteration];
 
         for (;;) {
-            __block NSError *err = nil;
-            auto status = [converter
-                       convertToBuffer:outputBuffer
-                                 error:&error
-                    withInputFromBlock:^AVAudioBuffer *_Nullable(AVAudioPacketCount inNumberOfPackets,
-                                                                 AVAudioConverterInputStatus *_Nonnull outStatus) {
-                        BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
-                        if (!result) {
-                            os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
-                            *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                            return nil;
-                        }
-
-                        if (decodeBuffer.frameLength == 0) {
-                            *outStatus = AVAudioConverterInputStatus_EndOfStream;
-                            return nil;
-                        }
-
-                        *outStatus = AVAudioConverterInputStatus_HaveData;
-                        return decodeBuffer;
-                    }];
-
-            if (status == AVAudioConverterOutputStatus_Error) {
+            auto result = [decoder decodeIntoBuffer:decodeBuffer frameLength:decodeBuffer.frameCapacity error:&error];
+            if (!result) {
+                os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", error);
                 ctx->analyzers_[iteration].reset();
                 ctx->errors_[iteration] = error;
                 return;
             }
 
-            if (status == AVAudioConverterOutputStatus_EndOfStream) {
-                if (err != nil) {
-                    ctx->analyzers_[iteration].reset();
-                    ctx->errors_[iteration] = err;
-                    return;
-                }
-                break;
+            if (decodeBuffer.frameLength == 0) {
+                return;
             }
 
-            AVAudioFrameCount frameCount = outputBuffer.frameLength;
+            result = [converter convertToBuffer:outputBuffer fromBuffer:decodeBuffer error:&error];
+            if (!result) {
+                os_log_error(OS_LOG_DEFAULT, "Error converting audio: %{public}@", error);
+                ctx->analyzers_[iteration].reset();
+                ctx->errors_[iteration] = error;
+                return;
+            }
 
-            analyzer->Process(outputBuffer.floatChannelData[0], frameCount,
+            analyzer->Process(outputBuffer.floatChannelData[0], outputBuffer.frameLength,
                               loudness::EbuR128Analyzer::SampleFormat::FLOAT,
                               loudness::EbuR128Analyzer::SampleLayout::PLANAR_CONTIGUOUS);
         }
@@ -127,7 +108,6 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         os_log_error(OS_LOG_DEFAULT, "Error analyzing audio: %{public}s", e.what());
         ctx->analyzers_[iteration].reset();
         ctx->errors_[iteration] = [NSError errorWithDomain:NSPOSIXErrorDomain code:EFTYPE userInfo:nil];
-        return;
     }
 }
 
