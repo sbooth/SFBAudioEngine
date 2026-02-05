@@ -18,7 +18,7 @@ extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerKeyGain;
 /// The peak sample value normalized to [-1, 1) (`NSNumber`)
 extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerKeyPeak;
 
-/// A class that calculates revised replay gain
+/// A class that calculates revised replay gain using ITU BS.1770 loudness measurements with a reference level of -18 LUFS
 /// - seealso: https://wiki.hydrogenaudio.org/index.php?title=Revised_ReplayGain_specification
 NS_SWIFT_NAME(ReplayGainAnalyzer)
 @interface SFBReplayGainAnalyzer : NSObject
