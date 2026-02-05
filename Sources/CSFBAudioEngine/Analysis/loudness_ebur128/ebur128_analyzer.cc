@@ -486,7 +486,7 @@ std::optional<float> EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(std::ve
   }
 
   const float sum_of_abs_gated_momentary_powers = std::accumulate(std::begin(analyzers), std::end(analyzers), 0.0f, [](float f, const auto *analyzer) { return f + analyzer->sum_of_abs_gated_momentary_powers_; });
-  const float num_abs_gated_momentary_powers = std::accumulate(std::begin(analyzers), std::end(analyzers), 0.0f, [](float f, const auto *analyzer) { return f + analyzer->num_abs_gated_momentary_powers_; });
+  const int64_t num_abs_gated_momentary_powers = std::accumulate(std::begin(analyzers), std::end(analyzers), 0LL, [](int64_t i, const auto *analyzer) { return i + analyzer->num_abs_gated_momentary_powers_; });
 
   const float abs_gated_avg_power = sum_of_abs_gated_momentary_powers / num_abs_gated_momentary_powers;
   const float abs_gated_loudness = GetLoudnessForPower(abs_gated_avg_power);

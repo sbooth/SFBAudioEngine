@@ -41,7 +41,7 @@ inline constexpr BiquadCoeffs kKWeighting44100Stage1 = {
 inline constexpr BiquadCoeffs kKWeighting44100Stage2 = {
     -1.98916967362980f, 0.989199035787039f, 1.0f, -2.0f, 1.0f};
 
-// If sample rate is too low, a second set of coeffecients are not generated.
+// If sample rate is too low, a second set of coefficients are not generated.
 // These coefficients describe fallback coefficients to be used if bilinear
 // transform code does not provide the filter.
 inline constexpr BiquadCoeffs kKWeightingFallbackStage1 = {0.0f, 0.0f, 1.0f,

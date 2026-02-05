@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LOUDNESS_EBUR12_SRC_AUDIO_DATA_ACCESS_PATTERNS_H_
-#define LOUDNESS_EBUR12_SRC_AUDIO_DATA_ACCESS_PATTERNS_H_
+#ifndef LOUDNESS_EBUR128_SRC_AUDIO_DATA_ACCESS_PATTERNS_H_
+#define LOUDNESS_EBUR128_SRC_AUDIO_DATA_ACCESS_PATTERNS_H_
 
 //
 // EbuR128Analyzer supports several sample formats and sample layouts, but
@@ -320,4 +320,4 @@ GetSampleFromOrigin<double, EbuR128Analyzer::PLANAR_NON_CONTIGUOUS>(
 }
 
 }  // namespace loudness
-#endif  // LOUDNESS_EBUR12_SRC_AUDIO_DATA_ACCESS_PATTERNS_H_
+#endif  // LOUDNESS_EBUR128_SRC_AUDIO_DATA_ACCESS_PATTERNS_H_

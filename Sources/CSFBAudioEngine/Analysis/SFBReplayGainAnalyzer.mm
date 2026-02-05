@@ -163,7 +163,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         return nil;
     }
 
-    analyzeURL(&ctx, 1);
+    analyzeURL(&ctx, 0);
 
     auto &analyzer = ctx.analyzers_[0];
     if (analyzer == nullptr) {

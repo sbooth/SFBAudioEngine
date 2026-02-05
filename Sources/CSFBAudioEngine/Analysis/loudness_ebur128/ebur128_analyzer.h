@@ -311,7 +311,7 @@ class EbuR128Analyzer {
 
     // Completed stats for the corresponding momentary /
     // short term / rms block. Updated per 100 ms step, but note that
-    // momentary_sst is only valid after processing 4 steps (400 ms) amd
+    // momentary_sst is only valid after processing 4 steps (400 ms) and
     // short-term is only valid after 30 steps (3 seconds).
     float rms_sst = 0.0;
     float momentary_sst = 0.0;
