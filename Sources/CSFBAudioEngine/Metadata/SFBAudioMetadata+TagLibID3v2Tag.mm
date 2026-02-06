@@ -555,7 +555,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_track_peak");
         frame->setText(
-                TagLib::StringFromNSString([NSString stringWithFormat:@"%1.8f dB", replayGainTrackPeak.doubleValue]));
+                TagLib::StringFromNSString([NSString stringWithFormat:@"%1.8f", replayGainTrackPeak.doubleValue]));
         tag->addFrame(frame);
     }
 
@@ -577,7 +577,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
         frame->setDescription("replaygain_album_peak");
         frame->setText(
-                TagLib::StringFromNSString([NSString stringWithFormat:@"%1.8f dB", replayGainAlbumPeak.doubleValue]));
+                TagLib::StringFromNSString([NSString stringWithFormat:@"%1.8f", replayGainAlbumPeak.doubleValue]));
         tag->addFrame(frame);
     }
 
