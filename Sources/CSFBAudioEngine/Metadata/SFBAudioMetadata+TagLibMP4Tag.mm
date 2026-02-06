@@ -282,11 +282,11 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_gain", metadata.replayGainTrackGain,
                                @"%2.2f dB");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_peak", metadata.replayGainTrackPeak,
-                               @"%1.8f dB");
+                               @"%1.8f");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_gain", metadata.replayGainAlbumGain,
                                @"%2.2f dB");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_peak", metadata.replayGainAlbumPeak,
-                               @"%1.8f dB");
+                               @"%1.8f");
 
     if (setAlbumArt) {
         auto list = TagLib::MP4::CoverArtList();
