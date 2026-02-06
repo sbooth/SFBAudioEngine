@@ -475,18 +475,24 @@ std::optional<float> EbuR128Analyzer::GetRelativeGatedIntegratedLoudness()
 
 // Added by sfb 20260203
 std::optional<float> EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(std::vector<EbuR128Analyzer *> analyzers) {
-  const auto all_empty = std::all_of(std::begin(analyzers), std::end(analyzers), [](const auto *analyzer) { return analyzer->ungated_momentary_powers_.empty(); });
+  bool all_empty = true;
+  bool all_zero = true;
+  float sum_of_abs_gated_momentary_powers = 0.0f;
+  int64_t num_abs_gated_momentary_powers = 0;
+  for (const auto *analyzer : analyzers) {
+    all_empty &= analyzer->ungated_momentary_powers_.empty();
+    all_zero &= analyzer->num_abs_gated_momentary_powers_ == 0;
+    sum_of_abs_gated_momentary_powers += analyzer->sum_of_abs_gated_momentary_powers_;
+    num_abs_gated_momentary_powers += analyzer->num_abs_gated_momentary_powers_;
+  }
+
   if (all_empty) {
     return std::nullopt;
   }
 
-  const auto all_zero = std::all_of(std::begin(analyzers), std::end(analyzers), [](const auto *analyzer) { return analyzer->num_abs_gated_momentary_powers_ == 0; });
   if (all_zero) {
       return kMinLKFS;
   }
-
-  const float sum_of_abs_gated_momentary_powers = std::accumulate(std::begin(analyzers), std::end(analyzers), 0.0f, [](float f, const auto *analyzer) { return f + analyzer->sum_of_abs_gated_momentary_powers_; });
-  const int64_t num_abs_gated_momentary_powers = std::accumulate(std::begin(analyzers), std::end(analyzers), 0LL, [](int64_t i, const auto *analyzer) { return i + analyzer->num_abs_gated_momentary_powers_; });
 
   const float abs_gated_avg_power = sum_of_abs_gated_momentary_powers / num_abs_gated_momentary_powers;
   const float abs_gated_loudness = GetLoudnessForPower(abs_gated_avg_power);
@@ -494,11 +500,13 @@ std::optional<float> EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(std::ve
   const float rel_threshold = abs_gated_loudness + k1770RelativeThresholdLU;
   const float rel_power_threshold = GetPowerForLoudness(rel_threshold);
 
+  const float effective_threshold = std::max(kPowerAbsoluteThreshold, rel_power_threshold);
+
   float sum_of_rel_gated_momentary_powers = 0.0f;
   int64_t num_rel_gated_momentary_powers = 0;
   for (const auto *analyzer : analyzers) {
     for (float ungated_power : analyzer->ungated_momentary_powers_) {
-      if (ungated_power > kPowerAbsoluteThreshold && ungated_power > rel_power_threshold) {
+      if (ungated_power > effective_threshold) {
         sum_of_rel_gated_momentary_powers += ungated_power;
         ++num_rel_gated_momentary_powers;
       }
