@@ -102,7 +102,8 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                 return;
             }
 
-            auto status = ebur128_add_frames_float(analyzer.get(), outputBuffer.floatChannelData[0], outputBuffer.frameLength);
+            auto status = ebur128_add_frames_float(analyzer.get(), outputBuffer.floatChannelData[0],
+                                                   outputBuffer.frameLength);
             if (status != EBUR128_SUCCESS) {
                 os_log_error(OS_LOG_DEFAULT, "ebur128_add_frames_float failed: %d", result);
                 ctx->analyzers_[iteration].reset();
@@ -226,12 +227,12 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         os_log_error(OS_LOG_DEFAULT, "ebur128_loudness_global failed: %d", result);
         if (error) {
             *error = SFBErrorWithLocalizedDescription(
-                                                      SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
-                                                      NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
-                NSLocalizedRecoverySuggestionErrorKey :
-                    NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
-            },
-                                                      SFBLocalizedNameForURL(url));
+                    SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                    NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                        NSLocalizedRecoverySuggestionErrorKey :
+                                NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
+                    },
+                    SFBLocalizedNameForURL(url));
         }
         return nil;
     }
@@ -244,12 +245,12 @@ void analyzeURL(void *context, size_t iteration) noexcept {
             os_log_error(OS_LOG_DEFAULT, "ebur128_sample_peak failed: %d", result);
             if (error) {
                 *error = SFBErrorWithLocalizedDescription(
-                                                          SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
-                                                          NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
-                    NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                    @"The audio duration is too short for replay gain analysis.", @"")
-                },
-                                                          SFBLocalizedNameForURL(url));
+                        SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                        NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                            NSLocalizedRecoverySuggestionErrorKey :
+                                    NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
+                        },
+                        SFBLocalizedNameForURL(url));
             }
             return nil;
         }
@@ -296,12 +297,12 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                     *error = err;
                 } else {
                     *error = SFBErrorWithLocalizedDescription(
-                                                              SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
-                                                              NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
-                        NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                        @"The file's format is not supported for replay gain analysis.", @"")
-                    },
-                                                              SFBLocalizedNameForURL(url));
+                            SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported,
+                            NSLocalizedString(@"The format of the file “%@” is not supported.", @""), @{
+                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
+                                        @"The file's format is not supported for replay gain analysis.", @"")
+                            },
+                            SFBLocalizedNameForURL(url));
                 }
             }
             return nil;
@@ -315,12 +316,12 @@ void analyzeURL(void *context, size_t iteration) noexcept {
             os_log_error(OS_LOG_DEFAULT, "ebur128_loudness_global failed: %d", result);
             if (error) {
                 *error = SFBErrorWithLocalizedDescription(
-                                                          SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
-                                                          NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
-                    NSLocalizedRecoverySuggestionErrorKey :
-                        NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
-                },
-                                                          SFBLocalizedNameForURL(url));
+                        SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                        NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                            NSLocalizedRecoverySuggestionErrorKey :
+                                    NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
+                        },
+                        SFBLocalizedNameForURL(url));
             }
             return nil;
         }
@@ -333,12 +334,12 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                 os_log_error(OS_LOG_DEFAULT, "ebur128_sample_peak failed: %d", result);
                 if (error) {
                     *error = SFBErrorWithLocalizedDescription(
-                                                              SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
-                                                              NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
-                        NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                        @"The audio duration is too short for replay gain analysis.", @"")
-                    },
-                                                              SFBLocalizedNameForURL(url));
+                            SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                            NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
+                                        @"The audio duration is too short for replay gain analysis.", @"")
+                            },
+                            SFBLocalizedNameForURL(url));
                 }
                 return nil;
             }
@@ -346,7 +347,6 @@ void analyzeURL(void *context, size_t iteration) noexcept {
             digitalPeak = std::max(digitalPeak, peak);
             albumPeak = std::max(albumPeak, digitalPeak);
         }
-
 
         const auto gain = referenceLoudness - loudness;
         [trackReplayGain setObject:[[SFBReplayGain alloc] initWithGain:gain peak:digitalPeak] forKey:url];
@@ -360,11 +360,11 @@ void analyzeURL(void *context, size_t iteration) noexcept {
             *error = [NSError errorWithDomain:SFBReplayGainAnalyzerErrorDomain
                                          code:SFBReplayGainAnalyzerErrorCodeInsufficientSamples
                                      userInfo:@{
-                NSLocalizedDescriptionKey : NSLocalizedString(
-                @"The files do not contain sufficient audio for analysis.", @""),
-                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
-                @"The audio duration is too short for replay gain analysis.", @"")
-            }];
+                                         NSLocalizedDescriptionKey : NSLocalizedString(
+                                                 @"The files do not contain sufficient audio for analysis.", @""),
+                                         NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
+                                                 @"The audio duration is too short for replay gain analysis.", @"")
+                                     }];
         }
     }
 
