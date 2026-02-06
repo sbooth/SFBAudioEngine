@@ -446,14 +446,15 @@ std::optional<float> EbuR128Analyzer::GetRelativeGatedIntegratedLoudness()
   const float rel_threshold = abs_gated_loudness + k1770RelativeThresholdLU;
   const float rel_power_threshold = GetPowerForLoudness(rel_threshold);
 
+  const float effective_power_threshold = std::max(kPowerAbsoluteThreshold, rel_power_threshold);
+
   float sum_of_rel_gated_momentary_powers = 0.0f;
   int64_t num_rel_gated_momentary_powers = 0;
   for (float ungated_power : ungated_momentary_powers_) {
     // For quiet signals, relative threshold could potentially be less than
     // absolute threshold, and so the requirement is that power must be larger
     // than both thresholds for relative loudness.
-    if (ungated_power > kPowerAbsoluteThreshold &&
-        ungated_power > rel_power_threshold) {
+    if (ungated_power > effective_power_threshold) {
       sum_of_rel_gated_momentary_powers += ungated_power;
       ++num_rel_gated_momentary_powers;
     }
