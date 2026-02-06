@@ -500,13 +500,13 @@ std::optional<float> EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(std::ve
   const float rel_threshold = abs_gated_loudness + k1770RelativeThresholdLU;
   const float rel_power_threshold = GetPowerForLoudness(rel_threshold);
 
-  const float effective_threshold = std::max(kPowerAbsoluteThreshold, rel_power_threshold);
+  const float effective_power_threshold = std::max(kPowerAbsoluteThreshold, rel_power_threshold);
 
   float sum_of_rel_gated_momentary_powers = 0.0f;
   int64_t num_rel_gated_momentary_powers = 0;
   for (const auto *analyzer : analyzers) {
     for (float ungated_power : analyzer->ungated_momentary_powers_) {
-      if (ungated_power > effective_threshold) {
+      if (ungated_power > effective_power_threshold) {
         sum_of_rel_gated_momentary_powers += ungated_power;
         ++num_rel_gated_momentary_powers;
       }
