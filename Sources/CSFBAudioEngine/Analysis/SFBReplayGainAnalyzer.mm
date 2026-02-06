@@ -110,12 +110,12 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 } /* namespace */
 
 @interface SFBReplayGain ()
--(instancetype)initWithGain:(float)gain peak:(float)peak;
+- (instancetype)initWithGain:(float)gain peak:(float)peak;
 @end
 
 @implementation SFBReplayGain
 - (instancetype)initWithGain:(float)gain peak:(float)peak {
-    if((self = [super init])) {
+    if ((self = [super init])) {
         _gain = gain;
         _peak = peak;
     }
@@ -124,14 +124,16 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 @end
 
 @interface SFBAlbumReplayGain ()
--(instancetype)initWithReplayGain:(SFBReplayGain *)replayGain trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain;
+- (instancetype)initWithReplayGain:(SFBReplayGain *)replayGain
+                   trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain;
 @end
 
 @implementation SFBAlbumReplayGain
-- (instancetype)initWithReplayGain:(SFBReplayGain *)replayGain trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain {
+- (instancetype)initWithReplayGain:(SFBReplayGain *)replayGain
+                   trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain {
     NSParameterAssert(replayGain != nil);
     NSParameterAssert(trackReplayGain != nil);
-    if((self = [super init])) {
+    if ((self = [super init])) {
         _replayGain = replayGain;
         _trackReplayGain = trackReplayGain;
     }

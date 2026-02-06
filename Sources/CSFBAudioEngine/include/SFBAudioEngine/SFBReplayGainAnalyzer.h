@@ -22,9 +22,9 @@ NS_SWIFT_NAME(ReplayGain)
 NS_SWIFT_NAME(AlbumReplayGain)
 @interface SFBAlbumReplayGain : NSObject
 /// The album replay gain information
-@property(nonatomic, nonnull, readonly) SFBReplayGain * replayGain;
+@property(nonatomic, nonnull, readonly) SFBReplayGain *replayGain;
 /// The track replay gain information
-@property(nonatomic, nonnull, readonly) NSDictionary<NSURL *, SFBReplayGain *> * trackReplayGain;
+@property(nonatomic, nonnull, readonly) NSDictionary<NSURL *, SFBReplayGain *> *trackReplayGain;
 @end
 
 /// A class that calculates revised replay gain using ITU BS.1770 loudness measurements with a reference level of -18
