@@ -308,7 +308,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     const auto removeAllTXXXFramesWithDescription = [tag](const TagLib::String &description) noexcept {
         auto *frame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, description);
-        while(frame != nullptr) {
+        while (frame != nullptr) {
             tag->removeFrame(frame);
             frame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, description);
         }
