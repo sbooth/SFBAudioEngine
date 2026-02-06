@@ -105,7 +105,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
             auto status = ebur128_add_frames_float(analyzer.get(), outputBuffer.floatChannelData[0],
                                                    outputBuffer.frameLength);
             if (status != EBUR128_SUCCESS) {
-                os_log_error(OS_LOG_DEFAULT, "ebur128_add_frames_float failed: %d", result);
+                os_log_error(OS_LOG_DEFAULT, "ebur128_add_frames_float failed: %d", status);
                 ctx->analyzers_[iteration].reset();
                 ctx->errors_[iteration] = [NSError errorWithDomain:NSPOSIXErrorDomain code:EFTYPE userInfo:nil];
             }
