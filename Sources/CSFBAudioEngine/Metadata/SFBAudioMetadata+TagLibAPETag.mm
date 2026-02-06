@@ -26,7 +26,7 @@
             continue;
         }
 
-        if (TagLib::APE::Item::Text == item.type()) {
+        if (auto type = item.type(); type == TagLib::APE::Item::Text) {
             NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
             if (key == nil) {
                 continue;
@@ -100,7 +100,7 @@
                 // Put all unknown tags into the additional metadata
                 [additionalMetadata setObject:value forKey:key];
             }
-        } else if (TagLib::APE::Item::Binary == item.type()) {
+        } else if (type == TagLib::APE::Item::Binary) {
             NSString *key = [NSString stringWithUTF8String:item.key().toCString(true)];
 
             // From http://www.hydrogenaudio.org/forums/index.php?showtopic=40603&view=findpost&p=504669
@@ -151,7 +151,7 @@ void SetAPETag(TagLib::APE::Tag *tag, const char *key, NSString *value) {
     // Remove the existing comment with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nil) {
         tag->addValue(key, TagLib::StringFromNSString(value));
     }
 }
@@ -167,7 +167,7 @@ void SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, NSNumber *value) {
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetAPETag(tag, key, nil);
     } else {
         SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
@@ -178,10 +178,10 @@ void SetAPETagDoubleWithFormat(TagLib::APE::Tag *tag, const char *key, NSNumber 
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetAPETag(tag, key, nil);
     } else {
-        if (!format) {
+        if (format == nil) {
             SetAPETag(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
         } else {
             SetAPETag(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
@@ -224,8 +224,7 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
     SetAPETag(tag, "GROUPING", metadata.grouping);
 
     // Additional metadata
-    NSDictionary *additionalMetadata = metadata.additionalMetadata;
-    if (additionalMetadata) {
+    if (NSDictionary *additionalMetadata = metadata.additionalMetadata; additionalMetadata != nil) {
         for (NSString *key in additionalMetadata) {
             SetAPETag(tag, key.UTF8String, additionalMetadata[key]);
         }
@@ -245,21 +244,20 @@ void sfb::setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *ta
     if (setAlbumArt) {
         for (SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
             // APE can handle front and back covers natively
-            if (SFBAttachedPictureTypeFrontCover == attachedPicture.pictureType ||
-                SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {
+            if (auto pictureType = attachedPicture.pictureType;
+                pictureType == SFBAttachedPictureTypeFrontCover || pictureType == SFBAttachedPictureTypeBackCover) {
                 TagLib::ByteVector data;
 
-                if (attachedPicture.pictureDescription) {
-                    data.append(
-                            TagLib::StringFromNSString(attachedPicture.pictureDescription).data(TagLib::String::UTF8));
+                if (NSString *pictureDescription = attachedPicture.pictureDescription; pictureDescription != nil) {
+                    data.append(TagLib::StringFromNSString(pictureDescription).data(TagLib::String::UTF8));
                 }
                 data.append('\0');
                 data.append(TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                                static_cast<unsigned int>(attachedPicture.imageData.length)));
 
-                if (SFBAttachedPictureTypeFrontCover == attachedPicture.pictureType) {
+                if (pictureType == SFBAttachedPictureTypeFrontCover) {
                     tag->setData("Cover Art (Front)", data);
-                } else if (SFBAttachedPictureTypeBackCover == attachedPicture.pictureType) {
+                } else if (pictureType == SFBAttachedPictureTypeBackCover) {
                     tag->setData("Cover Art (Back)", data);
                 }
             }

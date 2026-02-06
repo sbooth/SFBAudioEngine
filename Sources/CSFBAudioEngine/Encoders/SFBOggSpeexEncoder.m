@@ -251,7 +251,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     // Encoder mode
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexTargetIsBitrate] boolValue]) {
         NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexBitrate];
-        if (bitrate) {
+        if (bitrate != nil) {
             spx_int32_t bitrate_value = bitrate.intValue;
             speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
         } else {

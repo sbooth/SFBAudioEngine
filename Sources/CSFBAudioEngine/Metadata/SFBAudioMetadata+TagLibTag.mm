@@ -14,19 +14,18 @@
     NSParameterAssert(tag != nil);
 
     self.title = [NSString stringWithUTF8String:tag->title().toCString(true)];
-    self.albumTitle = [NSString stringWithUTF8String:tag->album().toCString(true)];
     self.artist = [NSString stringWithUTF8String:tag->artist().toCString(true)];
+    self.albumTitle = [NSString stringWithUTF8String:tag->album().toCString(true)];
     self.genre = [NSString stringWithUTF8String:tag->genre().toCString(true)];
-
-    if (tag->year() != 0) {
-        self.releaseDate = @(tag->year()).stringValue;
-    }
-
-    if (tag->track() != 0) {
-        self.trackNumber = @(tag->track());
-    }
-
     self.comment = [NSString stringWithUTF8String:tag->comment().toCString(true)];
+
+    if (auto year = tag->year(); year != 0) {
+        self.releaseDate = @(year).stringValue;
+    }
+
+    if (auto track = tag->track(); track != 0) {
+        self.trackNumber = @(track);
+    }
 }
 
 @end
@@ -38,8 +37,18 @@ void sfb::setTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag) {
     tag->setTitle(TagLib::StringFromNSString(metadata.title));
     tag->setArtist(TagLib::StringFromNSString(metadata.artist));
     tag->setAlbum(TagLib::StringFromNSString(metadata.albumTitle));
-    tag->setComment(TagLib::StringFromNSString(metadata.comment));
     tag->setGenre(TagLib::StringFromNSString(metadata.genre));
-    tag->setYear(metadata.releaseDate ? static_cast<unsigned int>(metadata.releaseDate.intValue) : 0);
-    tag->setTrack(metadata.trackNumber.unsignedIntValue);
+    tag->setComment(TagLib::StringFromNSString(metadata.comment));
+
+    if (NSString *releaseDate = metadata.releaseDate; releaseDate != nil) {
+        tag->setYear(static_cast<unsigned int>(releaseDate.intValue));
+    } else {
+        tag->setYear(0);
+    }
+
+    if (NSNumber *trackNumber = metadata.trackNumber; trackNumber != nil) {
+        tag->setTrack(trackNumber.unsignedIntValue);
+    } else {
+        tag->setTrack(0);
+    }
 }
