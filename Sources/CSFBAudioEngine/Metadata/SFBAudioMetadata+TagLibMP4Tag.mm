@@ -184,7 +184,7 @@ void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nil) {
         tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
     }
 }
@@ -196,7 +196,7 @@ void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) {
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (value) {
+    if (value != nil) {
         tag->setItem(key, TagLib::MP4::Item(value.intValue));
     }
 }
@@ -208,7 +208,7 @@ void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOn
     // Remove the existing item with this name
     tag->removeItem(key);
 
-    if (valueOne || valueTwo) {
+    if (valueOne != nil || valueTwo != nil) {
         tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
     }
 }
@@ -217,7 +217,7 @@ void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value) 
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         tag->removeItem(key);
     } else {
         tag->setItem(key, TagLib::MP4::Item(value.boolValue ? 1 : 0));
@@ -228,7 +228,7 @@ void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber
     assert(tag != nullptr);
     assert(key != nullptr);
 
-    if (!value) {
+    if (value == nil) {
         SetMP4Item(tag, key, nil);
     } else {
         if (!format) {
@@ -282,11 +282,11 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_gain", metadata.replayGainTrackGain,
                                @"%2.2f dB");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_peak", metadata.replayGainTrackPeak,
-                               @"%1.8f dB");
+                               @"%1.8f");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_gain", metadata.replayGainAlbumGain,
                                @"%2.2f dB");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_peak", metadata.replayGainAlbumPeak,
-                               @"%1.8f dB");
+                               @"%1.8f");
 
     if (setAlbumArt) {
         auto list = TagLib::MP4::CoverArtList();
@@ -300,9 +300,9 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
             auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
 
             // Determine the image type
-            if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
-                UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
-                if ([utType conformsToType:UTTypeBMP]) {
+            if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier != nullptr) {
+                if (UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+                    [utType conformsToType:UTTypeBMP]) {
                     type = TagLib::MP4::CoverArt::CoverArt::BMP;
                 } else if ([utType conformsToType:UTTypePNG]) {
                     type = TagLib::MP4::CoverArt::CoverArt::PNG;

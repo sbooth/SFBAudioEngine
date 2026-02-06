@@ -745,7 +745,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     int endian = 0;
     NSNumber *fileEndianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
-    if (fileEndianSetting) {
+    if (fileEndianSetting != nil) {
         if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault) {
             endian = SF_ENDIAN_FILE;
         } else if (fileEndianSetting == SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle) {
