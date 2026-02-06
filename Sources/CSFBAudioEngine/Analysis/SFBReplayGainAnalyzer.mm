@@ -20,10 +20,6 @@
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
 
-// Key names for the metadata dictionary
-NSString *const SFBReplayGainAnalyzerKeyGain = @"Gain";
-NSString *const SFBReplayGainAnalyzerKeyPeak = @"Peak";
-
 namespace {
 
 constexpr std::size_t bufferSizeFrames = 2048;
@@ -113,6 +109,36 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
 } /* namespace */
 
+@interface SFBReplayGain ()
+-(instancetype)initWithGain:(float)gain peak:(float)peak;
+@end
+
+@implementation SFBReplayGain
+- (instancetype)initWithGain:(float)gain peak:(float)peak {
+    if((self = [super init])) {
+        _gain = gain;
+        _peak = peak;
+    }
+    return self;
+}
+@end
+
+@interface SFBAlbumReplayGain ()
+-(instancetype)initWithReplayGain:(SFBReplayGain *)replayGain trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain;
+@end
+
+@implementation SFBAlbumReplayGain
+- (instancetype)initWithReplayGain:(SFBReplayGain *)replayGain trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain {
+    NSParameterAssert(replayGain != nil);
+    NSParameterAssert(trackReplayGain != nil);
+    if((self = [super init])) {
+        _replayGain = replayGain;
+        _trackReplayGain = trackReplayGain;
+    }
+    return self;
+}
+@end
+
 @implementation SFBReplayGainAnalyzer
 
 + (void)load {
@@ -138,17 +164,17 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                                       }];
 }
 
-+ (NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url error:(NSError **)error {
++ (SFBReplayGain *)analyzeTrack:(NSURL *)url error:(NSError **)error {
     SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
     return [analyzer analyzeTrack:url error:error];
 }
 
-+ (NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error {
++ (SFBAlbumReplayGain *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error {
     SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
     return [analyzer analyzeAlbum:urls error:error];
 }
 
-- (NSDictionary *)analyzeTrack:(NSURL *)url error:(NSError **)error {
+- (SFBReplayGain *)analyzeTrack:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
 
     ReplayGainContext ctx{};
@@ -201,10 +227,10 @@ void analyzeURL(void *context, size_t iteration) noexcept {
     }
 
     const auto gain = referenceLoudness - loudness.value();
-    return @{SFBReplayGainAnalyzerKeyGain : @(gain), SFBReplayGainAnalyzerKeyPeak : @(digitalPeak)};
+    return [[SFBReplayGain alloc] initWithGain:gain peak:digitalPeak];
 }
 
-- (NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error {
+- (SFBAlbumReplayGain *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error {
     NSParameterAssert(urls != nil);
 
     const auto count = urls.count;
@@ -227,7 +253,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
     dispatch_apply_f(count, DISPATCH_APPLY_AUTO, &ctx, analyzeURL);
 
-    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    NSMutableDictionary *trackReplayGain = [NSMutableDictionary dictionary];
     float albumPeak = 0.f;
 
     for (NSUInteger i = 0; i < count; ++i) {
@@ -272,8 +298,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         albumPeak = std::max(albumPeak, digitalPeak);
 
         const auto gain = referenceLoudness - loudness.value();
-        [result setObject:@{SFBReplayGainAnalyzerKeyGain : @(gain), SFBReplayGainAnalyzerKeyPeak : @(digitalPeak)}
-                   forKey:url];
+        [trackReplayGain setObject:[[SFBReplayGain alloc] initWithGain:gain peak:digitalPeak] forKey:url];
     }
 
     auto loudness = loudness::EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(analyzers);
@@ -294,10 +319,8 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
     const auto gain = referenceLoudness - loudness.value();
 
-    [result setObject:@(gain) forKey:SFBReplayGainAnalyzerKeyGain];
-    [result setObject:@(albumPeak) forKey:SFBReplayGainAnalyzerKeyPeak];
-
-    return result;
+    SFBReplayGain *replayGain = [[SFBReplayGain alloc] initWithGain:gain peak:albumPeak];
+    return [[SFBAlbumReplayGain alloc] initWithReplayGain:replayGain trackReplayGain:trackReplayGain];
 }
 
 @end

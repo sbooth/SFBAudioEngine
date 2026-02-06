@@ -9,14 +9,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// A key in a replay gain dictionary
-typedef NSString *SFBReplayGainAnalyzerKey NS_TYPED_ENUM NS_SWIFT_NAME(ReplayGainAnalyzer.Key);
+/// Replay gain adjustment and peak sample amplitude
+NS_SWIFT_NAME(ReplayGain)
+@interface SFBReplayGain : NSObject
+/// The replay gain adjustment in dB
+@property(nonatomic, readonly) float gain;
+/// The peak sample amplitude normalized to [-1, 1)
+@property(nonatomic, readonly) float peak;
+@end
 
-// Replay gain dictionary keys
-/// The gain in dB (`NSNumber`)
-extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerKeyGain;
-/// The peak sample value normalized to [-1, 1) (`NSNumber`)
-extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerKeyPeak;
+/// Album replay gain information
+NS_SWIFT_NAME(AlbumReplayGain)
+@interface SFBAlbumReplayGain : NSObject
+/// The album replay gain information
+@property(nonatomic, nonnull, readonly) SFBReplayGain * replayGain;
+/// The track replay gain information
+@property(nonatomic, nonnull, readonly) NSDictionary<NSURL *, SFBReplayGain *> * trackReplayGain;
+@end
 
 /// A class that calculates revised replay gain using ITU BS.1770 loudness measurements with a reference level of -18
 /// LUFS
@@ -27,36 +36,26 @@ NS_SWIFT_NAME(ReplayGainAnalyzer)
 /// Calculates replay gain for a single track
 /// - parameter url: The URL to analyze
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: A dictionary containing the track gain in dB (`SFBReplayGainAnalyzerKeyGain`) and peak sample value
-/// normalized to [-1, 1) (`SFBReplayGainAnalyzerKeyPeak`), or `nil` on error
-+ (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url
-                                                                        error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// - returns: The replay gain information or `nil` on error
++ (nullable SFBReplayGain *)analyzeTrack:(NSURL *)url error:(NSError **)error;
 
 /// Calculates replay gain for an album
-///
-/// The returned dictionary will contain the album gain and peak sample and the track gains and peak samples keyed by
-/// URL
 /// - parameter urls: The URLs to analyze
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: A dictionary of gain and peak information, or `nil` on error
-+ (nullable NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// - returns: The replay gain information or `nil` on error
++ (nullable SFBAlbumReplayGain *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error;
 
 /// Calculates replay gain for a single track
 /// - parameter url: The URL to analyze
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: A dictionary containing the track gain in dB (`SFBReplayGainAnalyzerKeyGain`) and peak sample value
-/// normalized to [-1, 1) (`SFBReplayGainAnalyzerKeyPeak`), or `nil` on error
-- (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url
-                                                                        error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// - returns: The replay gain information or `nil` on error
+- (nullable SFBReplayGain *)analyzeTrack:(NSURL *)url error:(NSError **)error;
 
 /// Calculates replay gain for an album
-///
-/// The returned dictionary will contain the album gain and peak sample, and the track gains and peak samples keyed by
-/// URL
 /// - parameter urls: The URLs to analyze
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: A dictionary of gain and peak information, or `nil` on error
-- (nullable NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// - returns: The replay gain information or `nil` on error
+- (nullable SFBAlbumReplayGain *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error;
 
 @end
 
