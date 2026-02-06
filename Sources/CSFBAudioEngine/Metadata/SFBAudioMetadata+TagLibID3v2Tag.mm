@@ -514,21 +514,37 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
     // ReplayGain
 
     // Write TXXX frames
+    if (auto *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_TRACK_GAIN");
+        trackGainFrame != nullptr) {
+        tag->removeFrame(trackGainFrame);
+    }
     if (auto *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_gain");
         trackGainFrame != nullptr) {
         tag->removeFrame(trackGainFrame);
     }
 
+    if (auto *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_TRACK_PEAK");
+        trackPeakFrame != nullptr) {
+        tag->removeFrame(trackPeakFrame);
+    }
     if (auto *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_peak");
         trackPeakFrame != nullptr) {
         tag->removeFrame(trackPeakFrame);
     }
 
+    if (auto *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_ALBUM_GAIN");
+        albumGainFrame != nullptr) {
+        tag->removeFrame(albumGainFrame);
+    }
     if (auto *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
         albumGainFrame != nullptr) {
         tag->removeFrame(albumGainFrame);
     }
 
+    if (auto *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_ALBUM_PEAK");
+        albumPeakFrame != nullptr) {
+        tag->removeFrame(albumPeakFrame);
+    }
     if (auto *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
         albumPeakFrame != nullptr) {
         tag->removeFrame(albumPeakFrame);
@@ -539,7 +555,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     if (NSNumber *replayGainTrackGain = metadata.replayGainTrackGain; replayGainTrackGain != nil) {
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
-        frame->setDescription("replaygain_track_gain");
+        frame->setDescription("REPLAYGAIN_TRACK_GAIN");
         frame->setText(
                 TagLib::StringFromNSString([NSString stringWithFormat:@"%+2.2f dB", replayGainTrackGain.doubleValue]));
         tag->addFrame(frame);
@@ -553,7 +569,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     if (NSNumber *replayGainTrackPeak = metadata.replayGainTrackPeak; replayGainTrackPeak != nil) {
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
-        frame->setDescription("replaygain_track_peak");
+        frame->setDescription("REPLAYGAIN_TRACK_PEAK");
         frame->setText(
                 TagLib::StringFromNSString([NSString stringWithFormat:@"%1.8f", replayGainTrackPeak.doubleValue]));
         tag->addFrame(frame);
@@ -561,7 +577,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     if (NSNumber *replayGainAlbumGain = metadata.replayGainAlbumGain; replayGainAlbumGain != nil) {
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
-        frame->setDescription("replaygain_album_gain");
+        frame->setDescription("REPLAYGAIN_ALBUM_GAIN");
         frame->setText(
                 TagLib::StringFromNSString([NSString stringWithFormat:@"%+2.2f dB", replayGainAlbumGain.doubleValue]));
         tag->addFrame(frame);
@@ -575,7 +591,7 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
 
     if (NSNumber *replayGainAlbumPeak = metadata.replayGainAlbumPeak; replayGainAlbumPeak != nil) {
         auto *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
-        frame->setDescription("replaygain_album_peak");
+        frame->setDescription("REPLAYGAIN_ALBUM_PEAK");
         frame->setText(
                 TagLib::StringFromNSString([NSString stringWithFormat:@"%1.8f", replayGainAlbumPeak.doubleValue]));
         tag->addFrame(frame);
