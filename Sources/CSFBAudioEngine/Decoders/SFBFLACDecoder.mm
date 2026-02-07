@@ -604,15 +604,14 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         for (FLAC__uint32 i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
             // Look for a channel mask; see https://www.ietf.org/rfc/rfc9639.html#channel-mask
             const auto &comment = metadata->data.vorbis_comment.comments[i];
-            constexpr char *prefix = "WAVEFORMATEXTENSIBLE_CHANNEL_MASK=";
+            const char *prefix = "WAVEFORMATEXTENSIBLE_CHANNEL_MASK=";
             constexpr auto prefixLength = 34;
             constexpr auto minValidLength = prefixLength + 2 + 1 /* '0xN' */;
             if (comment.length >= minValidLength && comment.entry[0] == prefix[0] && memcmp(comment.entry, prefix, prefixLength) == 0) {
                 const char *value = reinterpret_cast<const char *>(comment.entry) + prefixLength;
-                char *end = nullptr;
-                _channelMask = std::strtoul(value, &end, 16);
-                if (errno == ERANGE) {
-                    os_log_error(gSFBAudioDecoderLog, "Invalid WAVEFORMATEXTENSIBLE_CHANNEL_MASK (ERANGE)");
+                _channelMask = static_cast<uint32_t>(std::strtoul(value, nullptr, 16));
+                if (_channelMask == 0 || _channelMask > 0x3FFFF) {
+                    os_log_error(gSFBAudioDecoderLog, "Invalid value \"%{public}s\" for WAVEFORMATEXTENSIBLE_CHANNEL_MASK", value);
                     _channelMask = 0;
                 }
             }
