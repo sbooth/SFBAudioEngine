@@ -307,10 +307,13 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     _flac = std::move(flac);
 
     AVAudioChannelLayout *channelLayout = nil;
+
     if (_channelMask != 0) {
         assert(__builtin_popcount(_channelMask) == _streamInfo.channels);
         channelLayout = channelLayoutFromWAVEMask(_channelMask);
-    } else {
+    }
+
+    if (channelLayout == nil) {
         switch (_streamInfo.channels) {
         case 1:
             channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
@@ -403,6 +406,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     _frameBuffer = nil;
     memset(&_streamInfo, 0, sizeof(_streamInfo));
+    _channelMask = 0;
 
     return [super closeReturningError:error];
 }
