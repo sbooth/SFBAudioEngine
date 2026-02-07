@@ -14,6 +14,8 @@
 #import <FLAC/metadata.h>
 #import <FLAC/stream_decoder.h>
 
+#import <AudioToolbox/AudioFormat.h>
+
 #import <os/log.h>
 
 #import <algorithm>
@@ -43,12 +45,35 @@ struct flac__stream_decoder_deleter {
 
 using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
 
+/// Returns an AVAudioChannelLayout for the given WAVE channel mask
+AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) noexcept {
+    NSCParameterAssert(dwChannelMask != 0);
+
+    UInt32 propertySize = 0;
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask, &propertySize);
+    if (status != noErr)  {
+        return nil;
+    }
+
+    AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(malloc(propertySize));
+    status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask, &propertySize, layout);
+    if (status != noErr) {
+        free(layout);
+        return nil;
+    }
+
+    AVAudioChannelLayout *channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:layout];
+    free(layout);
+    return channelLayout;
+}
+
 } /* namespace */
 
 @interface SFBFLACDecoder () {
   @private
     flac__stream_decoder_unique_ptr _flac;
     FLAC__StreamMetadata_StreamInfo _streamInfo;
+    uint32_t _channelMask; /* from WAVEFORMATEXTENSIBLE_CHANNEL_MASK */
     AVAudioFramePosition _framePosition;
     FLAC__FrameHeader _previousFrameHeader;
     AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
@@ -278,31 +303,36 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     _flac = std::move(flac);
 
     AVAudioChannelLayout *channelLayout = nil;
-    switch (_streamInfo.channels) {
-    case 1:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
-        break;
-    case 2:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
-        break;
-    case 3:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_3_0_A];
-        break;
-    case 4:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_4_0_B];
-        break;
-    case 5:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_0_B];
-        break;
-    case 6:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_1_B];
-        break;
-    case 7:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_6_1];
-        break;
-    case 8:
-        channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_7_1];
-        break;
+    if (_channelMask != 0) {
+        assert(__builtin_popcount(_channelMask) == _streamInfo.channels);
+        channelLayout = channelLayoutFromWAVEMask(_channelMask);
+    } else {
+        switch (_streamInfo.channels) {
+        case 1:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
+            break;
+        case 2:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
+            break;
+        case 3:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_3_0_A];
+            break;
+        case 4:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_4_0_B];
+            break;
+        case 5:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_0_B];
+            break;
+        case 6:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_5_1_B];
+            break;
+        case 7:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_6_1];
+            break;
+        case 8:
+            channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_WAVE_7_1];
+            break;
+        }
     }
 
     _processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription
@@ -456,6 +486,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error {
+    if (!FLAC__stream_decoder_set_metadata_respond(decoder, FLAC__METADATA_TYPE_VORBIS_COMMENT)) {
+        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
+    }
+
     auto status = FLAC__stream_decoder_init_stream(decoder, readCallback, seekCallback, tellCallback, lengthCallback,
                                                    eofCallback, writeCallback, metadataCallback, errorCallback,
                                                    (__bridge void *)self);
@@ -561,6 +595,18 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
+    } else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
+        for (FLAC__uint32 i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
+            const auto str = reinterpret_cast<const char *>(metadata->data.vorbis_comment.comments[i].entry);
+            if (strcmp(str, "WAVEFORMATEXTENSIBLE_CHANNEL_MASK") != 0) {
+                char *end = nullptr;
+                _channelMask = std::strtoul(str, &end, 16);
+                if (errno == ERANGE) {
+                    os_log_error(gSFBAudioDecoderLog, "Invalid WAVEFORMATEXTENSIBLE_CHANNEL_MASK (ERANGE)");
+                    _channelMask = 0;
+                }
+            }
+        }
     }
 }
 
@@ -609,6 +655,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error {
+    if (!FLAC__stream_decoder_set_metadata_respond(decoder, FLAC__METADATA_TYPE_VORBIS_COMMENT)) {
+        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
+    }
 
     auto status = FLAC__stream_decoder_init_ogg_stream(decoder, readCallback, seekCallback, tellCallback,
                                                        lengthCallback, eofCallback, writeCallback, metadataCallback,
