@@ -20,6 +20,7 @@
 
 #import <algorithm>
 #import <cstdlib>
+#import <cstring>
 #import <memory>
 
 #import <simd/simd.h>
@@ -601,13 +602,22 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
     } else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
         for (FLAC__uint32 i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
-            const auto str = reinterpret_cast<const char *>(metadata->data.vorbis_comment.comments[i].entry);
-            if (strcmp(str, "WAVEFORMATEXTENSIBLE_CHANNEL_MASK") != 0) {
-                char *end = nullptr;
-                _channelMask = std::strtoul(str, &end, 16);
-                if (errno == ERANGE) {
-                    os_log_error(gSFBAudioDecoderLog, "Invalid WAVEFORMATEXTENSIBLE_CHANNEL_MASK (ERANGE)");
-                    _channelMask = 0;
+            // Look for a channel mask; see https://www.ietf.org/rfc/rfc9639.html#channel-mask
+            const auto *str = reinterpret_cast<const char *>(metadata->data.vorbis_comment.comments[i].entry);
+            constexpr char *commentName = "WAVEFORMATEXTENSIBLE_CHANNEL_MASK";
+            constexpr auto commentNameLength = 33;
+            constexpr auto minValidLength = commentNameLength + 1 + 2 + 1 /* '=0xN' */ ;
+            if (str[0] == 'W' && metadata->data.vorbis_comment.comments[i].length > minValidLength && memcmp(str, commentName, commentNameLength) == 0) {
+                const char *sep = strchr(str, '=');
+                if (sep != nullptr) {
+                    char *end = nullptr;
+                    _channelMask = std::strtoul(++sep, &end, 16);
+                    if (errno == ERANGE) {
+                        os_log_error(gSFBAudioDecoderLog, "Invalid WAVEFORMATEXTENSIBLE_CHANNEL_MASK (ERANGE)");
+                        _channelMask = 0;
+                    }
+                } else {
+                    os_log_error(gSFBAudioDecoderLog, "Malformed WAVEFORMATEXTENSIBLE_CHANNEL_MASK Vorbis comment");
                 }
             }
         }
