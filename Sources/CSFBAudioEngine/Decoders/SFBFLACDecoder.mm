@@ -51,13 +51,15 @@ AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) 
     NSCParameterAssert(dwChannelMask != 0);
 
     UInt32 propertySize = 0;
-    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask, &propertySize);
-    if (status != noErr)  {
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask,
+                                                 &dwChannelMask, &propertySize);
+    if (status != noErr) {
         return nil;
     }
 
     AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(malloc(propertySize));
-    status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask, &propertySize, layout);
+    status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask,
+                                    &propertySize, layout);
     if (status != noErr) {
         free(layout);
         return nil;
@@ -488,7 +490,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error {
     if (!FLAC__stream_decoder_set_metadata_respond(decoder, FLAC__METADATA_TYPE_VORBIS_COMMENT)) {
-        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
+        os_log_error(gSFBAudioDecoderLog,
+                     "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
     }
 
     auto status = FLAC__stream_decoder_init_stream(decoder, readCallback, seekCallback, tellCallback, lengthCallback,
@@ -657,7 +660,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
 - (BOOL)initializeFLACStreamDecoder:(FLAC__StreamDecoder *)decoder error:(NSError **)error {
     if (!FLAC__stream_decoder_set_metadata_respond(decoder, FLAC__METADATA_TYPE_VORBIS_COMMENT)) {
-        os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
+        os_log_error(gSFBAudioDecoderLog,
+                     "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
     }
 
     auto status = FLAC__stream_decoder_init_ogg_stream(decoder, readCallback, seekCallback, tellCallback,
