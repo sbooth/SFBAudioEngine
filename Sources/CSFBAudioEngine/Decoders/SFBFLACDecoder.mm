@@ -19,6 +19,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cstdlib>
 #import <memory>
 
 #import <simd/simd.h>
