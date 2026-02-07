@@ -619,6 +619,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             constexpr auto prefixLength = 34;
             constexpr auto minValidLength = prefixLength + 2 + 1 /* '0xN' */;
             if (comment.length >= minValidLength && comment.entry[0] == prefix[0] && memcmp(comment.entry, prefix, prefixLength) == 0) {
+                if (_channelMask != 0) {
+                    os_log_debug(gSFBAudioDecoderLog, "Multiple WAVEFORMATEXTENSIBLE_CHANNEL_MASK Vorbis comments");
+                }
                 const char *value = reinterpret_cast<const char *>(comment.entry) + prefixLength;
                 _channelMask = static_cast<uint32_t>(std::strtoul(value, nullptr, 16));
                 if (_channelMask == 0 || _channelMask > 0x3FFFF) {
