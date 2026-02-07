@@ -59,6 +59,10 @@ AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) 
     }
 
     AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(malloc(propertySize));
+    if (layout == nullptr) {
+        return nullptr;
+    }
+
     status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask,
                                     &propertySize, layout);
     if (status != noErr) {
