@@ -54,13 +54,13 @@ AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) 
     UInt32 propertySize = 0;
     OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask,
                                                  &dwChannelMask, &propertySize);
-    if (status != noErr) {
+    if (status != noErr || propertySize == 0) {
         return nil;
     }
 
     AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(malloc(propertySize));
     if (layout == nullptr) {
-        return nullptr;
+        return nil;
     }
 
     status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask, &dwChannelMask,
@@ -313,8 +313,11 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     AVAudioChannelLayout *channelLayout = nil;
 
     if (_channelMask != 0) {
-        assert(__builtin_popcount(_channelMask) == _streamInfo.channels);
-        channelLayout = channelLayoutFromWAVEMask(_channelMask);
+        if (__builtin_popcount(_channelMask) == _streamInfo.channels) {
+            channelLayout = channelLayoutFromWAVEMask(_channelMask);
+        } else {
+            os_log_error(gSFBAudioDecoderLog, "Ignoring invalid channel mask 0x%x (%d channels) for %u-channel stream", _channelMask, __builtin_popcount(_channelMask), _streamInfo.channels);
+        }
     }
 
     if (channelLayout == nil) {
