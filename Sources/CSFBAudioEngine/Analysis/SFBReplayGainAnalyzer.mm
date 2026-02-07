@@ -10,7 +10,7 @@
 #import "SFBAudioDecoder.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
-#import "loudness_ebur128/ebur128_analyzer.h"
+#import "ebur128/ebur128.h"
 
 #import <os/log.h>
 
@@ -22,12 +22,19 @@ NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.
 
 namespace {
 
+/// A `std::unique_ptr` deleter for `ebur128_state`
+struct ebur128_state_deleter {
+    void operator()(ebur128_state *state) { ebur128_destroy(&state); }
+};
+
+using ebur128_ptr = std::unique_ptr<ebur128_state, ebur128_state_deleter>;
+
 constexpr std::size_t bufferSizeFrames = 2048;
 constexpr float referenceLoudness = -18.f;
 
 struct ReplayGainContext {
     NSArray *urls_;
-    std::vector<std::unique_ptr<loudness::EbuR128Analyzer>> analyzers_;
+    std::vector<ebur128_ptr> analyzers_;
     std::vector<NSError *> errors_;
 };
 
@@ -48,13 +55,13 @@ void analyzeURL(void *context, size_t iteration) noexcept {
     if (AVAudioChannelLayout *channelLayout = inputFormat.channelLayout; channelLayout != nil) {
         outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                         sampleRate:inputFormat.sampleRate
-                                                       interleaved:NO
+                                                       interleaved:YES
                                                      channelLayout:channelLayout];
     } else {
         outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                         sampleRate:inputFormat.sampleRate
                                                           channels:inputFormat.channelCount
-                                                       interleaved:NO];
+                                                       interleaved:YES];
     }
 
     AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat
@@ -69,10 +76,9 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                                                                    frameCapacity:bufferSizeFrames];
 
     try {
-        auto channelWeights = loudness::DefaultChannelWeights();
 
-        ctx->analyzers_[iteration] = std::make_unique<loudness::EbuR128Analyzer>(
-                outputFormat.channelCount, channelWeights, outputFormat.sampleRate, false);
+        ctx->analyzers_[iteration] = ebur128_ptr(ebur128_init(outputFormat.channelCount, outputFormat.sampleRate,
+                                                              EBUR128_MODE_SAMPLE_PEAK | EBUR128_MODE_I));
         auto &analyzer = ctx->analyzers_[iteration];
 
         for (;;) {
@@ -96,9 +102,13 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                 return;
             }
 
-            analyzer->Process(outputBuffer.floatChannelData[0], outputBuffer.frameLength,
-                              loudness::EbuR128Analyzer::SampleFormat::FLOAT,
-                              loudness::EbuR128Analyzer::SampleLayout::PLANAR_CONTIGUOUS);
+            auto status = ebur128_add_frames_float(analyzer.get(), outputBuffer.floatChannelData[0],
+                                                   outputBuffer.frameLength);
+            if (status != EBUR128_SUCCESS) {
+                os_log_error(OS_LOG_DEFAULT, "ebur128_add_frames_float failed: %d", status);
+                ctx->analyzers_[iteration].reset();
+                ctx->errors_[iteration] = [NSError errorWithDomain:NSPOSIXErrorDomain code:EFTYPE userInfo:nil];
+            }
         }
     } catch (const std::exception &e) {
         os_log_error(OS_LOG_DEFAULT, "Error analyzing audio: %{public}s", e.what());
@@ -211,11 +221,11 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         return nil;
     }
 
-    auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
-    auto digitalPeak = analyzer->digital_peak();
-
-    if (!loudness.has_value()) {
-        if (error != nil) {
+    double loudness;
+    auto result = ebur128_loudness_global(analyzer.get(), &loudness);
+    if (result != EBUR128_SUCCESS) {
+        os_log_error(OS_LOG_DEFAULT, "ebur128_loudness_global failed: %d", result);
+        if (error) {
             *error = SFBErrorWithLocalizedDescription(
                     SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
                     NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
@@ -224,11 +234,31 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                     },
                     SFBLocalizedNameForURL(url));
         }
-
         return nil;
     }
 
-    const auto gain = referenceLoudness - loudness.value();
+    double digitalPeak = 0;
+    for (unsigned int channel = 0; channel < analyzer->channels; ++channel) {
+        double peak;
+        result = ebur128_sample_peak(analyzer.get(), channel, &peak);
+        if (result != EBUR128_SUCCESS) {
+            os_log_error(OS_LOG_DEFAULT, "ebur128_sample_peak failed: %d", result);
+            if (error) {
+                *error = SFBErrorWithLocalizedDescription(
+                        SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                        NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                            NSLocalizedRecoverySuggestionErrorKey :
+                                    NSLocalizedString(@"The audio duration is too short for replay gain analysis.", @"")
+                        },
+                        SFBLocalizedNameForURL(url));
+            }
+            return nil;
+        }
+
+        digitalPeak = std::max(digitalPeak, peak);
+    }
+
+    const auto gain = -18.0 - loudness;
     return [[SFBReplayGain alloc] initWithGain:gain peak:digitalPeak];
 }
 
@@ -240,7 +270,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
     ReplayGainContext ctx{};
     ctx.urls_ = urls;
 
-    std::vector<loudness::EbuR128Analyzer *> analyzers{};
+    std::vector<ebur128_state *> analyzers{};
 
     try {
         ctx.analyzers_.resize(count);
@@ -256,7 +286,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
     dispatch_apply_f(count, DISPATCH_APPLY_AUTO, &ctx, analyzeURL);
 
     NSMutableDictionary *trackReplayGain = [NSMutableDictionary dictionary];
-    float albumPeak = 0.f;
+    double albumPeak = 0.0;
 
     for (NSUInteger i = 0; i < count; ++i) {
         NSURL *url = [urls objectAtIndex:i];
@@ -280,11 +310,11 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
         analyzers[i] = analyzer.get();
 
-        auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
-        auto digitalPeak = analyzer->digital_peak();
-
-        if (!loudness.has_value()) {
-            if (error != nil) {
+        double loudness;
+        auto result = ebur128_loudness_global(analyzer.get(), &loudness);
+        if (result != EBUR128_SUCCESS) {
+            os_log_error(OS_LOG_DEFAULT, "ebur128_loudness_global failed: %d", result);
+            if (error) {
                 *error = SFBErrorWithLocalizedDescription(
                         SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
                         NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
@@ -293,19 +323,40 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                         },
                         SFBLocalizedNameForURL(url));
             }
-
             return nil;
         }
 
-        albumPeak = std::max(albumPeak, digitalPeak);
+        double digitalPeak = 0;
+        for (unsigned int channel = 0; channel < analyzer->channels; ++channel) {
+            double peak;
+            result = ebur128_sample_peak(analyzer.get(), channel, &peak);
+            if (result != EBUR128_SUCCESS) {
+                os_log_error(OS_LOG_DEFAULT, "ebur128_sample_peak failed: %d", result);
+                if (error) {
+                    *error = SFBErrorWithLocalizedDescription(
+                            SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCodeInsufficientSamples,
+                            NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @""), @{
+                                NSLocalizedRecoverySuggestionErrorKey : NSLocalizedString(
+                                        @"The audio duration is too short for replay gain analysis.", @"")
+                            },
+                            SFBLocalizedNameForURL(url));
+                }
+                return nil;
+            }
 
-        const auto gain = referenceLoudness - loudness.value();
+            digitalPeak = std::max(digitalPeak, peak);
+            albumPeak = std::max(albumPeak, digitalPeak);
+        }
+
+        const auto gain = referenceLoudness - loudness;
         [trackReplayGain setObject:[[SFBReplayGain alloc] initWithGain:gain peak:digitalPeak] forKey:url];
     }
 
-    auto loudness = loudness::EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(analyzers);
-    if (!loudness.has_value()) {
-        if (error != nil) {
+    double loudness;
+    auto result = ebur128_loudness_global_multiple(analyzers.data(), analyzers.size(), &loudness);
+    if (result != EBUR128_SUCCESS) {
+        os_log_error(OS_LOG_DEFAULT, "ebur128_loudness_global_multiple failed: %d", result);
+        if (error) {
             *error = [NSError errorWithDomain:SFBReplayGainAnalyzerErrorDomain
                                          code:SFBReplayGainAnalyzerErrorCodeInsufficientSamples
                                      userInfo:@{
@@ -315,11 +366,9 @@ void analyzeURL(void *context, size_t iteration) noexcept {
                                                  @"The audio duration is too short for replay gain analysis.", @"")
                                      }];
         }
-
-        return nil;
     }
 
-    const auto gain = referenceLoudness - loudness.value();
+    const auto gain = referenceLoudness - loudness;
 
     SFBReplayGain *replayGain = [[SFBReplayGain alloc] initWithGain:gain peak:albumPeak];
     return [[SFBAlbumReplayGain alloc] initWithReplayGain:replayGain trackReplayGain:trackReplayGain];
