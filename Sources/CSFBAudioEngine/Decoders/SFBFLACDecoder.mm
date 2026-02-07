@@ -603,21 +603,17 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     } else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
         for (FLAC__uint32 i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
             // Look for a channel mask; see https://www.ietf.org/rfc/rfc9639.html#channel-mask
-            const auto *str = reinterpret_cast<const char *>(metadata->data.vorbis_comment.comments[i].entry);
-            constexpr char *commentName = "WAVEFORMATEXTENSIBLE_CHANNEL_MASK";
-            constexpr auto commentNameLength = 33;
-            constexpr auto minValidLength = commentNameLength + 1 + 2 + 1 /* '=0xN' */ ;
-            if (str[0] == 'W' && metadata->data.vorbis_comment.comments[i].length > minValidLength && memcmp(str, commentName, commentNameLength) == 0) {
-                const char *sep = strchr(str, '=');
-                if (sep != nullptr) {
-                    char *end = nullptr;
-                    _channelMask = std::strtoul(++sep, &end, 16);
-                    if (errno == ERANGE) {
-                        os_log_error(gSFBAudioDecoderLog, "Invalid WAVEFORMATEXTENSIBLE_CHANNEL_MASK (ERANGE)");
-                        _channelMask = 0;
-                    }
-                } else {
-                    os_log_error(gSFBAudioDecoderLog, "Malformed WAVEFORMATEXTENSIBLE_CHANNEL_MASK Vorbis comment");
+            const auto &comment = metadata->data.vorbis_comment.comments[i];
+            constexpr char *prefix = "WAVEFORMATEXTENSIBLE_CHANNEL_MASK=";
+            constexpr auto prefixLength = 34;
+            constexpr auto minValidLength = prefixLength + 2 + 1 /* '0xN' */;
+            if (comment.length >= minValidLength && comment.entry[0] == prefix[0] && memcmp(comment.entry, prefix, prefixLength) == 0) {
+                const char *value = reinterpret_cast<const char *>(comment.entry) + prefixLength;
+                char *end = nullptr;
+                _channelMask = std::strtoul(value, &end, 16);
+                if (errno == ERANGE) {
+                    os_log_error(gSFBAudioDecoderLog, "Invalid WAVEFORMATEXTENSIBLE_CHANNEL_MASK (ERANGE)");
+                    _channelMask = 0;
                 }
             }
         }
