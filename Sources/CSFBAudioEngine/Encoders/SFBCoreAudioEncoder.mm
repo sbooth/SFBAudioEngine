@@ -652,10 +652,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    OSStatus result = ExtAudioFileTell(_eaf, &currentFrame);
-    if (result != noErr) {
-        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    OSStatus status = ExtAudioFileTell(_eaf, &currentFrame);
+    if (status != noErr) {
+        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         return SFBUnknownFramePosition;
     }
     return currentFrame;

@@ -238,9 +238,9 @@ static int can_seek_callback(void *id) {
 
         AudioChannelLayoutTag tag = 0;
         UInt32 propertySize = sizeof(tag);
-        OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof(layout), &layout,
+        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof layout, &layout,
                                                  &propertySize, &tag);
-        if (result == noErr) {
+        if (status == noErr) {
             channelLayout = [[AVAudioChannelLayout alloc] initWithLayoutTag:tag];
         } else {
             channelLayout = [AVAudioChannelLayout layoutWithLayout:&layout];
