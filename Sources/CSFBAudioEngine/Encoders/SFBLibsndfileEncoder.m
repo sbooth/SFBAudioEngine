@@ -281,7 +281,7 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
     NSCParameterAssert(channels > 0);
 
     UInt32 dataSize;
-    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap),
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof channelBitmap,
                                                  &channelBitmap, &dataSize);
     if (status != noErr) {
         if (error) {
@@ -322,7 +322,7 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
     NSCParameterAssert(channels > 0);
 
     UInt32 dataSize;
-    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag),
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof layoutTag,
                                                  &layoutTag, &dataSize);
     if (status != noErr) {
         if (error) {

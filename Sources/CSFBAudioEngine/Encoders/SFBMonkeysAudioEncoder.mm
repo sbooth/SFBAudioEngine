@@ -219,7 +219,7 @@ class APEIOInterface final : public APE::IAPEIO {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
+        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof layoutTag, &layoutTag,
                                                  &propertySize, &channelBitmap);
         if (status == noErr) {
             AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
