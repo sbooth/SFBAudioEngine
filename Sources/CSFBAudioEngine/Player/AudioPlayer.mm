@@ -1954,12 +1954,12 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
     if (now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / 1e6, decoder);
-    }
+    } else {
 #if DEBUG
-    else
         os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(hostTime - now)) / 1e6, decoder);
 #endif /* DEBUG */
+    }
 
     // Since the rendering started notification is submitted for asynchronous execution,
     // store a weak reference to the owning SFBAudioPlayer to prevent use-after-free
@@ -1988,9 +1988,10 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         const auto now = host_time::current();
         const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
         const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
-        if (delta > tolerance)
+        if (delta > tolerance) {
             os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6,
                          now > hostTime ? "late" : "early");
+        }
 #endif /* DEBUG */
 
         that->setNowPlaying(decoder);
@@ -2010,12 +2011,12 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
     if (now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / 1e6, decoder);
-    }
+    } else {
 #if DEBUG
-    else
         os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(hostTime - now)) / 1e6, decoder);
 #endif /* DEBUG */
+    }
 
     // Since the rendering complete notification is submitted for asynchronous execution,
     // store a weak reference to the owning SFBAudioPlayer to prevent use-after-free
@@ -2045,9 +2046,10 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         const auto now = host_time::current();
         const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
         const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
-        if (delta > tolerance)
+        if (delta > tolerance) {
             os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6,
                          now > hostTime ? "late" : "early");
+        }
 #endif /* DEBUG */
 
         if ([player.delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)]) {
