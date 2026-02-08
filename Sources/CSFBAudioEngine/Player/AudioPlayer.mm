@@ -123,9 +123,9 @@ bool channelLayoutsAreEquivalent(const AudioChannelLayout *lhs, const AudioChann
     };
     UInt32 layoutsEquivalent = 0;
     UInt32 propertySize = sizeof layoutsEquivalent;
-    OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof layouts,
+    OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof layouts,
                                              static_cast<const void *>(layouts), &propertySize, &layoutsEquivalent);
-    if (result != noErr) {
+    if (status != noErr) {
         return false;
     }
 

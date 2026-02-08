@@ -281,11 +281,11 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
     NSCParameterAssert(channels > 0);
 
     UInt32 dataSize;
-    OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap),
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap),
                                                  &channelBitmap, &dataSize);
-    if (result != noErr) {
+    if (status != noErr) {
         if (error) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
@@ -298,12 +298,12 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
         return NO;
     }
 
-    result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap), &channelBitmap,
+    status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof(channelBitmap), &channelBitmap,
                                     &dataSize, channelLayout);
-    if (result != noErr) {
+    if (status != noErr) {
         free(channelLayout);
         if (error) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
@@ -322,11 +322,11 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
     NSCParameterAssert(channels > 0);
 
     UInt32 dataSize;
-    OSStatus result = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag),
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag),
                                                  &layoutTag, &dataSize);
-    if (result != noErr) {
+    if (status != noErr) {
         if (error) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
@@ -339,12 +339,12 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
         return NO;
     }
 
-    result = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag), &layoutTag, &dataSize,
+    status = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag, sizeof(layoutTag), &layoutTag, &dataSize,
                                     channelLayout);
-    if (result != noErr) {
+    if (status != noErr) {
         free(channelLayout);
         if (error) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
