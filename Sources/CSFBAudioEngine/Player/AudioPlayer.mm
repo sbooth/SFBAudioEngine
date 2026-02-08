@@ -16,6 +16,8 @@
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 
+#import <AudioToolbox/AudioFormat.h>
+
 #import <objc/runtime.h>
 
 #import <algorithm>
@@ -54,6 +56,7 @@ void audioSessionInterruptionNotificationCallback(CFNotificationCenterRef center
                                                   CFDictionaryRef userInfo) {
 #pragma unused(center)
 #pragma unused(name)
+#pragma unused(object)
     auto that = static_cast<sfb::AudioPlayer *>(observer);
     that->handleAudioSessionInterruption((__bridge NSDictionary *)userInfo);
 }
@@ -2210,7 +2213,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
 
         {
-            std::lock_guard lock{engineLock_};
+            std::lock_guard lock{engineMutex_};
             const auto prevFlags = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
                                                             ~static_cast<unsigned int>(Flags::isPlaying),
                                                     std::memory_order_acq_rel);
@@ -2252,7 +2255,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         }
 
         {
-            std::unique_lock lock{engineLock_};
+            std::unique_lock lock{engineMutex_};
 
             if ((preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) ==
                 static_cast<unsigned int>(Flags::engineIsRunning)) {
