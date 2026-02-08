@@ -313,7 +313,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     AVAudioChannelLayout *channelLayout = nil;
 
     if (_channelMask != 0) {
-        if (__builtin_popcount(_channelMask) == _streamInfo.channels) {
+        if (static_cast<uint32_t>(__builtin_popcount(_channelMask)) == _streamInfo.channels) {
             channelLayout = channelLayoutFromWAVEMask(_channelMask);
         } else {
             os_log_error(gSFBAudioDecoderLog, "Ignoring invalid channel mask 0x%x (%d channels) for %u-channel stream", _channelMask, __builtin_popcount(_channelMask), _streamInfo.channels);
