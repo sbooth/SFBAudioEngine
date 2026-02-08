@@ -282,11 +282,11 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_gain", metadata.replayGainTrackGain,
                                @"%2.2f dB");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_peak", metadata.replayGainTrackPeak,
-                               @"%1.8f dB");
+                               @"%1.8f");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_gain", metadata.replayGainAlbumGain,
                                @"%2.2f dB");
     SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_peak", metadata.replayGainAlbumPeak,
-                               @"%1.8f dB");
+                               @"%1.8f");
 
     if (setAlbumArt) {
         auto list = TagLib::MP4::CoverArtList();
@@ -300,9 +300,9 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
             auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
 
             // Determine the image type
-            if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier) {
-                UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
-                if ([utType conformsToType:UTTypeBMP]) {
+            if (CFStringRef typeIdentifier = CGImageSourceGetType(imageSource.get()); typeIdentifier != nullptr) {
+                if (UTType *utType = [UTType typeWithIdentifier:(__bridge NSString *)typeIdentifier];
+                    [utType conformsToType:UTTypeBMP]) {
                     type = TagLib::MP4::CoverArt::CoverArt::BMP;
                 } else if ([utType conformsToType:UTTypePNG]) {
                     type = TagLib::MP4::CoverArt::CoverArt::PNG;
