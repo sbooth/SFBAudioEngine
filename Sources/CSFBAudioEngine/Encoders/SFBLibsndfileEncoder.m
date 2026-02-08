@@ -322,8 +322,8 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
     NSCParameterAssert(channels > 0);
 
     UInt32 dataSize;
-    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof layoutTag,
-                                                 &layoutTag, &dataSize);
+    OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof layoutTag, &layoutTag,
+                                                 &dataSize);
     if (status != noErr) {
         if (error) {
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
