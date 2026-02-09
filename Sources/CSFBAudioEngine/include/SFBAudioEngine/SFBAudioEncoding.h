@@ -24,7 +24,7 @@ NS_SWIFT_NAME(AudioEncoding)
 
 // MARK: - Output
 
-/// The output source consuming data from this encoder
+/// The output target consuming data from this encoder
 @property(nonatomic, readonly) SFBOutputTarget *outputTarget;
 
 // MARK: - Audio Format Information
