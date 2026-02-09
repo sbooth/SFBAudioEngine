@@ -407,16 +407,16 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
         // offset remains unchanged
         break;
     case SEEK_CUR: {
-        NSInteger inputSourceOffset;
-        if ([encoder->_outputTarget getOffset:&inputSourceOffset error:nil]) {
-            offset += inputSourceOffset;
+        NSInteger outputTargetOffset;
+        if ([encoder->_outputTarget getOffset:&outputTargetOffset error:nil]) {
+            offset += outputTargetOffset;
         }
         break;
     }
     case SEEK_END: {
-        NSInteger inputSourceLength;
-        if ([encoder->_outputTarget getLength:&inputSourceLength error:nil]) {
-            offset += inputSourceLength;
+        NSInteger outputTargetLength;
+        if ([encoder->_outputTarget getLength:&outputTargetLength error:nil]) {
+            offset += outputTargetLength;
         }
         break;
     }
@@ -426,12 +426,12 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
         return -1;
     }
 
-    NSInteger inputSourceOffset;
-    if (![encoder->_outputTarget getOffset:&inputSourceOffset error:nil]) {
+    NSInteger outputTargetOffset;
+    if (![encoder->_outputTarget getOffset:&outputTargetOffset error:nil]) {
         return -1;
     }
 
-    return inputSourceOffset;
+    return outputTargetOffset;
 }
 
 static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {

@@ -87,13 +87,13 @@ class APEIOInterface final : public APE::IAPEIO {
             // offset remains unchanged
             break;
         case APE::SeekFileCurrent:
-            if (NSInteger inputSourceOffset; [outputTarget_ getOffset:&inputSourceOffset error:nil]) {
-                offset += inputSourceOffset;
+            if (NSInteger outputTargetOffset; [outputTarget_ getOffset:&outputTargetOffset error:nil]) {
+                offset += outputTargetOffset;
             }
             break;
         case APE::SeekFileEnd:
-            if (NSInteger inputSourceLength; [outputTarget_ getLength:&inputSourceLength error:nil]) {
-                offset += inputSourceLength;
+            if (NSInteger outputTargetLength; [outputTarget_ getLength:&outputTargetLength error:nil]) {
+                offset += outputTargetLength;
             }
             break;
         }
