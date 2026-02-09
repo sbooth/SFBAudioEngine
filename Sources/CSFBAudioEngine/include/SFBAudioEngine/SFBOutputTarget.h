@@ -9,48 +9,48 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// An output source
-NS_SWIFT_NAME(OutputSource)
-@interface SFBOutputSource : NSObject
+/// An output target
+NS_SWIFT_NAME(OutputTarget)
+@interface SFBOutputTarget : NSObject
 
-/// Returns an initialized `SFBOutputSource` object for the given URL or `nil` on failure
+/// Returns an initialized `SFBOutputTarget` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: An initialized `SFBOutputSource` object for the specified URL, or `nil` on failure
-+ (nullable instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error;
+/// - returns: An initialized `SFBOutputTarget` object for the specified URL, or `nil` on failure
++ (nullable instancetype)outputTargetForURL:(NSURL *)url error:(NSError **)error;
 
-/// Returns an initialized `SFBOutputSource` writing to an internal data object
-+ (instancetype)dataOutputSource NS_SWIFT_NAME(makeForData());
+/// Returns an initialized `SFBOutputTarget` writing to an internal data object
++ (instancetype)dataOutputTarget NS_SWIFT_NAME(makeForData());
 
-/// Returns an initialized `SFBOutputSource` for the given buffer
+/// Returns an initialized `SFBOutputTarget` for the given buffer
 /// - parameter buffer: A buffer to receive output
 /// - parameter capacity: The capacity of `buffer` in bytes
-/// - returns: An initialized `SFBOutputSource` object
-+ (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
+/// - returns: An initialized `SFBOutputTarget` object
++ (instancetype)outputTargetWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// The URL corresponding to this output source or `nil` if none
+/// The URL corresponding to this output target or `nil` if none
 @property(nonatomic, nullable, readonly) NSURL *url;
 
-/// The underlying data object for this output source or `nil` if none
+/// The underlying data object for this output target or `nil` if none
 @property(nonatomic, nullable, readonly) NSData *data;
 
-/// Opens the output source for writing
+/// Opens the output target for writing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)openReturningError:(NSError **)error NS_SWIFT_NAME(open());
 
-/// Closes the output source
+/// Closes the output target
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// `YES` if the output source is open
+/// `YES` if the output target is open
 @property(nonatomic, readonly) BOOL isOpen;
 
-/// Reads bytes from the input
+/// Reads bytes from the output
 /// - parameter buffer: A buffer to receive data
 /// - parameter length: The maximum number of bytes to read
 /// - parameter bytesRead: The number of bytes actually read
@@ -92,7 +92,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Data writing
-@interface SFBOutputSource (SFBDataWriting)
+@interface SFBOutputTarget (SFBDataWriting)
 /// Writes data to the output
 /// - parameter data: The data to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -103,7 +103,7 @@ NS_SWIFT_NAME(OutputSource)
 // MARK: - Typed and Byte-Ordered Writing
 
 /// Signed integer writing
-@interface SFBOutputSource (SFBSignedIntegerWriting)
+@interface SFBOutputTarget (SFBSignedIntegerWriting)
 /// Writes an 8-bit signed integer to the output
 /// - parameter i8: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -127,7 +127,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Unsigned integer writing
-@interface SFBOutputSource (SFBUnsignedIntegerWriting)
+@interface SFBOutputTarget (SFBUnsignedIntegerWriting)
 /// Writes an 8-bit unsigned integer to the output
 /// - parameter ui8: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -151,7 +151,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Big-endian unsigned integer writing
-@interface SFBOutputSource (SFBBigEndianWriting)
+@interface SFBOutputTarget (SFBBigEndianWriting)
 /// Writes an 16-bit unsigned integer to the output in big-endian format
 /// - parameter ui16: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -170,7 +170,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Little-endian unsigned integer writing
-@interface SFBOutputSource (SFBLittleEndianWriting)
+@interface SFBOutputTarget (SFBLittleEndianWriting)
 /// Writes an 16-bit unsigned integer to the output in little-endian format
 /// - parameter ui16: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -190,15 +190,15 @@ NS_SWIFT_NAME(OutputSource)
 
 // MARK: - Error Information
 
-/// The `NSErrorDomain` used by `SFBOutputSource` and subclasses
-extern NSErrorDomain const SFBOutputSourceErrorDomain NS_SWIFT_NAME(OutputSource.ErrorDomain);
+/// The `NSErrorDomain` used by `SFBOutputTarget` and subclasses
+extern NSErrorDomain const SFBOutputTargetErrorDomain NS_SWIFT_NAME(OutputTarget.ErrorDomain);
 
-/// Possible `NSError` error codes used by `SFBOutputSource`
-typedef NS_ERROR_ENUM(SFBOutputSourceErrorDomain, SFBOutputSourceErrorCode){
+/// Possible `NSError` error codes used by `SFBOutputTarget`
+typedef NS_ERROR_ENUM(SFBOutputTargetErrorDomain, SFBOutputTargetErrorCode){
     /// File not found
-    SFBOutputSourceErrorCodeFileNotFound = 0,
+    SFBOutputTargetErrorCodeFileNotFound = 0,
     /// Input/output error
-    SFBOutputSourceErrorCodeInputOutput = 1,
-} NS_SWIFT_NAME(OutputSource.Error);
+    SFBOutputTargetErrorCodeInputOutput = 1,
+} NS_SWIFT_NAME(OutputTarget.Error);
 
 NS_ASSUME_NONNULL_END

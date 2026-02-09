@@ -72,8 +72,8 @@ The output file's format is inferred from the file extension.
 More complex conversions are supported including writing to `Data` instead of files:
 
 ~~~swift
-let output = OutputSource.makeForData()
-let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
+let output = OutputTarget.makeForData()
+let encoder = try AudioEncoder(outputTarget: output, encoderName: .coreAudio)
 encoder.settings = [
     .coreAudioFileTypeID: kAudioFileM4AType,
     .coreAudioFormatID: kAudioFormatMPEG4AAC,
@@ -114,9 +114,9 @@ Three special decoder subclasses that decorate an underlying audio decoder insta
 
 ## Encoding
 
-[Audio encoders](Sources/CSFBAudioEngine/Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Sources/CSFBAudioEngine/include/SFBOutputSource.h) which may refer to a file, buffer, or data.
+[Audio encoders](Sources/CSFBAudioEngine/SFBAudioEngine/Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputTarget](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBOutputTarget.h) which may refer to a file, buffer, or data.
 
-All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Sources/CSFBAudioEngine/include/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Sources/CSFBAudioEngine/include/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
+All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Sources/CSFBAudioEngine/include/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Sources/CSFBAudioEngine/include/SFBAudioEngine/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
 
 Encoders don't support arbitrary input formats. The processing format used by an encoder is derived from a desired format combined with the encoder's settings.
 
