@@ -219,9 +219,9 @@ class APEIOInterface final : public APE::IAPEIO {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-        OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
+        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof layoutTag, &layoutTag,
                                                  &propertySize, &channelBitmap);
-        if (result == noErr) {
+        if (status == noErr) {
             AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
                                       .mChannelBitmap = channelBitmap,
                                       .mNumberChannelDescriptions = 0};
@@ -230,7 +230,7 @@ class APEIOInterface final : public APE::IAPEIO {
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
                         "'%{public}.4s'",
-                        layoutTag, result, SFBCStringForOSType(result));
+                        layoutTag, status, SFBCStringForOSType(status));
         }
     }
 
