@@ -388,7 +388,7 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger length;
-    if (![encoder->_outputSource getLength:&length error:nil]) {
+    if (![encoder->_outputTarget getLength:&length error:nil]) {
         return -1;
     }
     return length;
@@ -398,7 +398,7 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
     NSCParameterAssert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
-    if (!encoder->_outputSource.supportsSeeking) {
+    if (!encoder->_outputTarget.supportsSeeking) {
         return -1;
     }
 
@@ -408,26 +408,26 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
         break;
     case SEEK_CUR: {
         NSInteger inputSourceOffset;
-        if ([encoder->_outputSource getOffset:&inputSourceOffset error:nil]) {
+        if ([encoder->_outputTarget getOffset:&inputSourceOffset error:nil]) {
             offset += inputSourceOffset;
         }
         break;
     }
     case SEEK_END: {
         NSInteger inputSourceLength;
-        if ([encoder->_outputSource getLength:&inputSourceLength error:nil]) {
+        if ([encoder->_outputTarget getLength:&inputSourceLength error:nil]) {
             offset += inputSourceLength;
         }
         break;
     }
     }
 
-    if (![encoder->_outputSource seekToOffset:offset error:nil]) {
+    if (![encoder->_outputTarget seekToOffset:offset error:nil]) {
         return -1;
     }
 
     NSInteger inputSourceOffset;
-    if (![encoder->_outputSource getOffset:&inputSourceOffset error:nil]) {
+    if (![encoder->_outputTarget getOffset:&inputSourceOffset error:nil]) {
         return -1;
     }
 
@@ -440,7 +440,7 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
     NSInteger bytesRead;
-    if (![encoder->_outputSource readBytes:ptr length:count bytesRead:&bytesRead error:nil]) {
+    if (![encoder->_outputTarget readBytes:ptr length:count bytesRead:&bytesRead error:nil]) {
         return -1;
     }
     return bytesRead;
@@ -452,7 +452,7 @@ static sf_count_t my_sf_vio_write(const void *ptr, sf_count_t count, void *user_
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
     NSInteger bytesWritten;
-    if (![encoder->_outputSource writeBytes:ptr length:(NSInteger)count bytesWritten:&bytesWritten error:nil]) {
+    if (![encoder->_outputTarget writeBytes:ptr length:(NSInteger)count bytesWritten:&bytesWritten error:nil]) {
         return 0;
     }
 
@@ -464,7 +464,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger offset;
-    if (![encoder->_outputSource getOffset:&offset error:nil]) {
+    if (![encoder->_outputTarget getOffset:&offset error:nil]) {
         return -1;
     }
     return offset;
@@ -660,11 +660,11 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
                          majorFormatSetting);
         }
     } else {
-        majorFormat = MajorFormatForExtension(_outputSource.url.pathExtension);
+        majorFormat = MajorFormatForExtension(_outputTarget.url.pathExtension);
         os_log_info(gSFBAudioEncoderLog,
                     "SFBAudioEncodingSettingsKeyLibsndfileMajorFormat is not set: guessed 0x%x based on extension "
                     "\"%{public}@\"",
-                    majorFormat, _outputSource.url.pathExtension);
+                    majorFormat, _outputTarget.url.pathExtension);
     }
 
     int subtype = 0;

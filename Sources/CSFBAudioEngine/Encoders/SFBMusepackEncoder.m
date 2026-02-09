@@ -21,7 +21,7 @@ static size_t my_mpc_write_callback(const void *restrict ptr, size_t size, size_
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger bytesWritten;
-    if (![encoder->_outputSource writeBytes:ptr
+    if (![encoder->_outputTarget writeBytes:ptr
                                      length:(NSInteger)(size * nitems)
                                bytesWritten:&bytesWritten
                                       error:nil]) {
@@ -39,27 +39,27 @@ static int my_mpc_seek_callback(void *context, off_t offset, int whence) {
         // offset remains unchanged
         break;
     case SEEK_CUR: {
-        NSInteger outputSourceOffset;
-        if ([encoder->_outputSource getOffset:&outputSourceOffset error:nil]) {
-            offset += outputSourceOffset;
+        NSInteger outputTargetOffset;
+        if ([encoder->_outputTarget getOffset:&outputTargetOffset error:nil]) {
+            offset += outputTargetOffset;
         }
         break;
     }
     case SEEK_END: {
-        NSInteger outputSourceLength;
-        if ([encoder->_outputSource getLength:&outputSourceLength error:nil]) {
-            offset += outputSourceLength;
+        NSInteger outputTargetLength;
+        if ([encoder->_outputTarget getLength:&outputTargetLength error:nil]) {
+            offset += outputTargetLength;
         }
         break;
     }
     }
 
-    if (![encoder->_outputSource seekToOffset:offset error:nil]) {
+    if (![encoder->_outputTarget seekToOffset:offset error:nil]) {
         return -1;
     }
 
-    NSInteger outputSourceOffset;
-    if (![encoder->_outputSource getOffset:&outputSourceOffset error:nil]) {
+    NSInteger outputTargetOffset;
+    if (![encoder->_outputTarget getOffset:&outputTargetOffset error:nil]) {
         return -1;
     }
 
@@ -71,7 +71,7 @@ static off_t my_mpc_tell_callback(void *context) {
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger offset;
-    if (![encoder->_outputSource getOffset:&offset error:nil]) {
+    if (![encoder->_outputTarget getOffset:&offset error:nil]) {
         return -1;
     }
 

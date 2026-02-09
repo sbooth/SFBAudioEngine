@@ -47,7 +47,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     }
 
     NSInteger bytesWritten;
-    return [encoder->_outputSource writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
+    return [encoder->_outputTarget writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
 }
 
 @implementation SFBWavPackEncoder
@@ -357,10 +357,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 
     if (_estimatedFramesToEncode != _framePosition && _firstBlock) {
         WavpackUpdateNumSamples(_wpc, _firstBlock.mutableBytes);
-        if (![_outputSource seekToOffset:0 error:error]) {
+        if (![_outputTarget seekToOffset:0 error:error]) {
             return NO;
         }
-        if (![_outputSource writeData:_firstBlock error:error]) {
+        if (![_outputTarget writeData:_firstBlock error:error]) {
             return NO;
         }
     }
