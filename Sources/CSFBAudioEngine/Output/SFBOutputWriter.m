@@ -20,7 +20,7 @@ static void SFBCreateOutputSourceLog(void) {
     gSFBOutputSourceLog = os_log_create("org.sbooth.AudioEngine", "OutputSource");
 }
 
-@implementation SFBOutputSource
+@implementation SFBOutputWriter
 
 + (void)load {
     [NSError setUserInfoValueProviderForDomain:SFBOutputSourceErrorDomain
@@ -149,7 +149,7 @@ static void SFBCreateOutputSourceLog(void) {
 
 @end
 
-@implementation SFBOutputSource (SFBDataWriting)
+@implementation SFBOutputWriter (SFBDataWriting)
 - (BOOL)writeData:(NSData *)data error:(NSError **)error {
     NSParameterAssert(data != nil);
     NSInteger bytesWritten;
@@ -158,7 +158,7 @@ static void SFBCreateOutputSourceLog(void) {
 }
 @end
 
-@implementation SFBOutputSource (SFBSignedIntegerWriting)
+@implementation SFBOutputWriter (SFBSignedIntegerWriting)
 - (BOOL)writeInt8:(int8_t)i8 error:(NSError **)error {
     return [self writeUInt8:(uint8_t)i8 error:error];
 }
@@ -173,7 +173,7 @@ static void SFBCreateOutputSourceLog(void) {
 }
 @end
 
-@implementation SFBOutputSource (SFBUnsignedIntegerWriting)
+@implementation SFBOutputWriter (SFBUnsignedIntegerWriting)
 - (BOOL)writeUInt8:(uint8_t)ui8 error:(NSError **)error {
     NSInteger bytesWritten;
     return [self writeBytes:&ui8 length:sizeof(uint8_t) bytesWritten:&bytesWritten error:error] &&
@@ -200,7 +200,7 @@ static void SFBCreateOutputSourceLog(void) {
 
 @end
 
-@implementation SFBOutputSource (SFBBigEndianWriting)
+@implementation SFBOutputWriter (SFBBigEndianWriting)
 - (BOOL)writeUInt16BigEndian:(uint16_t)ui16 error:(NSError **)error {
     return [self writeUInt16:OSSwapHostToBigInt16(ui16) error:error];
 }
@@ -212,7 +212,7 @@ static void SFBCreateOutputSourceLog(void) {
 }
 @end
 
-@implementation SFBOutputSource (SFBLittleEndianWriting)
+@implementation SFBOutputWriter (SFBLittleEndianWriting)
 - (BOOL)writeUInt16LittleEndian:(uint16_t)ui16 error:(NSError **)error {
     return [self writeUInt16:OSSwapHostToLittleInt16(ui16) error:error];
 }

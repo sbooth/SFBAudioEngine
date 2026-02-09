@@ -5,29 +5,26 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBBufferOutputSource.h"
+#import "SFBMutableDataOutputWriter.h"
 
-#import <stdint.h>
-
-@interface SFBBufferOutputSource () {
+@interface SFBMutableDataOutputWriter () {
   @private
-    void *_buffer;
-    size_t _capacity;
-    size_t _pos;
+    NSMutableData *_data;
+    NSUInteger _pos;
 }
 @end
 
-@implementation SFBBufferOutputSource
+@implementation SFBMutableDataOutputWriter
 
-- (instancetype)initWithBuffer:(void *)buffer capacity:(size_t)capacity {
-    NSParameterAssert(buffer != nil);
-    NSParameterAssert(capacity > 0);
-
+- (instancetype)init {
     if ((self = [super initWithURL:nil])) {
-        _buffer = buffer;
-        _capacity = capacity;
+        _data = [NSMutableData data];
     }
     return self;
+}
+
+- (NSData *)data {
+    return _data;
 }
 
 - (BOOL)openReturningError:(NSError **)error {
@@ -35,12 +32,12 @@
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    _buffer = nil;
+    _data = nil;
     return YES;
 }
 
 - (BOOL)isOpen {
-    return _buffer != nil;
+    return _data != nil;
 }
 
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error {
@@ -48,18 +45,15 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesRead != NULL);
 
-    size_t bytesAvailable = _capacity - _pos;
-    if (bytesAvailable == 0) {
-        if (error) {
-            *error = [self posixErrorWithCode:EINVAL];
-        }
-        return NO;
+    NSUInteger count = (NSUInteger)length;
+    NSUInteger remaining = _data.length - _pos;
+    if (count > remaining) {
+        count = remaining;
     }
 
-    size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
-    memcpy(buffer, (const unsigned char *)_buffer + _pos, bytesToCopy);
-    _pos += bytesToCopy;
-    *bytesRead = (NSInteger)bytesToCopy;
+    [_data getBytes:buffer range:NSMakeRange(_pos, count)];
+    _pos += count;
+    *bytesRead = (NSInteger)count;
 
     return YES;
 }
@@ -72,24 +66,14 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesWritten != NULL);
 
-    size_t remainingCapacity = _capacity - _pos;
-    if (remainingCapacity == 0) {
-        if (error) {
-            *error = [self posixErrorWithCode:EINVAL];
-        }
-        return NO;
-    }
-
-    size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
-    memcpy((unsigned char *)_buffer + _pos, buffer, bytesToCopy);
-    _pos += bytesToCopy;
-    *bytesWritten = (NSInteger)bytesToCopy;
-
+    [_data appendBytes:buffer length:(NSUInteger)length];
+    _pos += (NSUInteger)length;
+    *bytesWritten = length;
     return YES;
 }
 
 - (BOOL)atEOF {
-    return _pos == _capacity;
+    return _pos == _data.length;
 }
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error {
@@ -100,7 +84,7 @@
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error {
     NSParameterAssert(length != NULL);
-    *length = (NSInteger)_capacity;
+    *length = (NSInteger)_data.length;
     return YES;
 }
 
@@ -111,11 +95,8 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     NSParameterAssert(offset >= 0);
 
-    if ((NSUInteger)offset > _capacity) {
-        if (error) {
-            *error = [self posixErrorWithCode:EINVAL];
-        }
-        return NO;
+    if ((NSUInteger)offset > _data.length) {
+        [_data increaseLengthBy:((NSUInteger)offset - _data.length + 1)];
     }
 
     _pos = (NSUInteger)offset;

@@ -5,13 +5,15 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBOutputSource+Internal.h"
+#import "SFBOutputWriter+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBFileOutputSource : SFBOutputSource
+@interface SFBBufferOutputWriter : SFBOutputWriter
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
+- (instancetype)initWithURL:(nullable NSURL *)url NS_UNAVAILABLE;
+- (instancetype)initWithBuffer:(void *)buffer capacity:(size_t)capacity NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

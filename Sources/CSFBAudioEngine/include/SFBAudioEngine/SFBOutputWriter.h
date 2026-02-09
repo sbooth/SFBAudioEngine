@@ -11,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// An output source
 NS_SWIFT_NAME(OutputSource)
-@interface SFBOutputSource : NSObject
+@interface SFBOutputWriter : NSObject
 
 /// Returns an initialized `SFBOutputSource` object for the given URL or `nil` on failure
 /// - parameter url: The URL
@@ -92,7 +92,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Data writing
-@interface SFBOutputSource (SFBDataWriting)
+@interface SFBOutputWriter (SFBDataWriting)
 /// Writes data to the output
 /// - parameter data: The data to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -103,7 +103,7 @@ NS_SWIFT_NAME(OutputSource)
 // MARK: - Typed and Byte-Ordered Writing
 
 /// Signed integer writing
-@interface SFBOutputSource (SFBSignedIntegerWriting)
+@interface SFBOutputWriter (SFBSignedIntegerWriting)
 /// Writes an 8-bit signed integer to the output
 /// - parameter i8: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -127,7 +127,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Unsigned integer writing
-@interface SFBOutputSource (SFBUnsignedIntegerWriting)
+@interface SFBOutputWriter (SFBUnsignedIntegerWriting)
 /// Writes an 8-bit unsigned integer to the output
 /// - parameter ui8: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -151,7 +151,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Big-endian unsigned integer writing
-@interface SFBOutputSource (SFBBigEndianWriting)
+@interface SFBOutputWriter (SFBBigEndianWriting)
 /// Writes an 16-bit unsigned integer to the output in big-endian format
 /// - parameter ui16: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -170,7 +170,7 @@ NS_SWIFT_NAME(OutputSource)
 @end
 
 /// Little-endian unsigned integer writing
-@interface SFBOutputSource (SFBLittleEndianWriting)
+@interface SFBOutputWriter (SFBLittleEndianWriting)
 /// Writes an 16-bit unsigned integer to the output in little-endian format
 /// - parameter ui16: The value to write
 /// - parameter error: An optional pointer to an `NSError` object to receive error information

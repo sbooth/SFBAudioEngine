@@ -5,11 +5,11 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBOutputSource+Internal.h"
+#import "SFBOutputWriter+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBMutableDataOutputSource : SFBOutputSource
+@interface SFBMutableDataOutputWriter : SFBOutputWriter
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithURL:(nullable NSURL *)url NS_UNAVAILABLE;
 @end
