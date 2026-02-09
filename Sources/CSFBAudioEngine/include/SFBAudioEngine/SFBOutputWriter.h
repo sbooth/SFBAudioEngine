@@ -9,45 +9,45 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// An output source
-NS_SWIFT_NAME(OutputSource)
+/// An output writer
+NS_SWIFT_NAME(OutputWriter)
 @interface SFBOutputWriter : NSObject
 
-/// Returns an initialized `SFBOutputSource` object for the given URL or `nil` on failure
+/// Returns an initialized `SFBOutputWriter` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: An initialized `SFBOutputSource` object for the specified URL, or `nil` on failure
-+ (nullable instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error;
+/// - returns: An initialized `SFBOutputWriter` object for the specified URL, or `nil` on failure
++ (nullable instancetype)outputWriterForURL:(NSURL *)url error:(NSError **)error;
 
-/// Returns an initialized `SFBOutputSource` writing to an internal data object
-+ (instancetype)dataOutputSource NS_SWIFT_NAME(makeForData());
+/// Returns an initialized `SFBOutputWriter` writing to an internal data object
++ (instancetype)dataOutputWriter NS_SWIFT_NAME(makeForData());
 
-/// Returns an initialized `SFBOutputSource` for the given buffer
+/// Returns an initialized `SFBOutputWriter` for the given buffer
 /// - parameter buffer: A buffer to receive output
 /// - parameter capacity: The capacity of `buffer` in bytes
-/// - returns: An initialized `SFBOutputSource` object
-+ (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
+/// - returns: An initialized `SFBOutputWriter` object
++ (instancetype)outputWriterWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-/// The URL corresponding to this output source or `nil` if none
+/// The URL corresponding to this output writer or `nil` if none
 @property(nonatomic, nullable, readonly) NSURL *url;
 
-/// The underlying data object for this output source or `nil` if none
+/// The underlying data object for this output writer or `nil` if none
 @property(nonatomic, nullable, readonly) NSData *data;
 
-/// Opens the output source for writing
+/// Opens the output writer for writing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)openReturningError:(NSError **)error NS_SWIFT_NAME(open());
 
-/// Closes the output source
+/// Closes the output writer
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` on success, `NO` otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
-/// `YES` if the output source is open
+/// `YES` if the output writer is open
 @property(nonatomic, readonly) BOOL isOpen;
 
 /// Reads bytes from the input
@@ -190,15 +190,15 @@ NS_SWIFT_NAME(OutputSource)
 
 // MARK: - Error Information
 
-/// The `NSErrorDomain` used by `SFBOutputSource` and subclasses
-extern NSErrorDomain const SFBOutputSourceErrorDomain NS_SWIFT_NAME(OutputSource.ErrorDomain);
+/// The `NSErrorDomain` used by `SFBOutputWriter` and subclasses
+extern NSErrorDomain const SFBOutputWriterErrorDomain NS_SWIFT_NAME(OutputWriter.ErrorDomain);
 
-/// Possible `NSError` error codes used by `SFBOutputSource`
-typedef NS_ERROR_ENUM(SFBOutputSourceErrorDomain, SFBOutputSourceErrorCode){
+/// Possible `NSError` error codes used by `SFBOutputWriter`
+typedef NS_ERROR_ENUM(SFBOutputWriterErrorDomain, SFBOutputWriterErrorCode){
     /// File not found
-    SFBOutputSourceErrorCodeFileNotFound = 0,
+    SFBOutputWriterErrorCodeFileNotFound = 0,
     /// Input/output error
-    SFBOutputSourceErrorCodeInputOutput = 1,
-} NS_SWIFT_NAME(OutputSource.Error);
+    SFBOutputWriterErrorCodeInputOutput = 1,
+} NS_SWIFT_NAME(OutputWriter.Error);
 
 NS_ASSUME_NONNULL_END

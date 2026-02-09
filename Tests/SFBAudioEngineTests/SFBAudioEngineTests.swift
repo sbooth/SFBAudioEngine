@@ -20,8 +20,8 @@ final class SFBAudioEngineTests: XCTestCase {
         XCTAssertEqual(try input.length, 16)
     }
 
-    func testOutputSourceFromData() throws {
-        let output = OutputSource.makeForData()
+    func testOutputWriterFromData() throws {
+        let output = OutputWriter.makeForData()
         XCTAssertEqual(output.isOpen, true)
         XCTAssertEqual(output.supportsSeeking, true)
         var i: UInt32 = 0x12345678

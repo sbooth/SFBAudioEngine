@@ -29,7 +29,7 @@ static void SFBCreateAudioEncoderLog(void) {
 
 @implementation SFBAudioEncoder
 
-@synthesize outputSource = _outputSource;
+@synthesize outputWriter = _outputWriter;
 @synthesize sourceFormat = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
 @synthesize outputFormat = _outputFormat;
@@ -126,27 +126,27 @@ static NSMutableArray *_registeredSubclasses = nil;
 - (instancetype)initWithURL:(NSURL *)url mimeType:(NSString *)mimeType error:(NSError **)error {
     NSParameterAssert(url != nil);
 
-    SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
-    if (!outputSource) {
+    SFBOutputWriter *outputWriter = [SFBOutputWriter outputWriterForURL:url error:error];
+    if (!outputWriter) {
         return nil;
     }
-    return [self initWithOutputSource:outputSource mimeType:mimeType error:error];
+    return [self initWithOutputWriter:outputWriter mimeType:mimeType error:error];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource {
-    return [self initWithOutputSource:outputSource mimeType:nil error:nil];
+- (instancetype)initWithOutputWriter:(SFBOutputWriter *)outputWriter {
+    return [self initWithOutputWriter:outputWriter mimeType:nil error:nil];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource error:(NSError **)error {
-    return [self initWithOutputSource:outputSource mimeType:nil error:error];
+- (instancetype)initWithOutputWriter:(SFBOutputWriter *)outputWriter error:(NSError **)error {
+    return [self initWithOutputWriter:outputWriter mimeType:nil error:error];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource
+- (instancetype)initWithOutputWriter:(SFBOutputWriter *)outputWriter
                             mimeType:(NSString *)mimeType
                                error:(NSError **)error {
-    NSParameterAssert(outputSource != nil);
+    NSParameterAssert(outputWriter != nil);
 
-    NSString *lowercaseExtension = outputSource.url.pathExtension.lowercaseString;
+    NSString *lowercaseExtension = outputWriter.url.pathExtension.lowercaseString;
     NSString *lowercaseMIMEType = mimeType.lowercaseString;
 
     int score = 10;
@@ -177,7 +177,7 @@ static NSMutableArray *_registeredSubclasses = nil;
     }
 
     if (!subclass) {
-        os_log_debug(gSFBAudioEncoderLog, "Unable to determine content type for %{public}@", outputSource);
+        os_log_debug(gSFBAudioEncoderLog, "Unable to determine content type for %{public}@", outputWriter);
         if (error) {
             NSMutableDictionary *userInfo = [NSMutableDictionary
                     dictionaryWithObject:
@@ -185,12 +185,12 @@ static NSMutableArray *_registeredSubclasses = nil;
                                               @"")
                                   forKey:NSLocalizedRecoverySuggestionErrorKey];
 
-            if (outputSource.url) {
+            if (outputWriter.url) {
                 userInfo[NSLocalizedDescriptionKey] = [NSString
                         localizedStringWithFormat:NSLocalizedString(
                                                           @"The type of the file “%@” could not be determined.", @""),
-                                                  SFBLocalizedNameForURL(outputSource.url)];
-                userInfo[NSURLErrorKey] = outputSource.url;
+                                                  SFBLocalizedNameForURL(outputWriter.url)];
+                userInfo[NSURLErrorKey] = outputWriter.url;
             } else {
                 userInfo[NSLocalizedDescriptionKey] =
                         NSLocalizedString(@"The type of the file could not be determined.", @"");
@@ -204,7 +204,7 @@ static NSMutableArray *_registeredSubclasses = nil;
     }
 
     if ((self = [[subclass alloc] init])) {
-        _outputSource = outputSource;
+        _outputWriter = outputWriter;
         os_log_debug(gSFBAudioEncoderLog, "Created %{public}@ based on score of %i", self, score);
     }
 
@@ -218,21 +218,21 @@ static NSMutableArray *_registeredSubclasses = nil;
 - (instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error {
     NSParameterAssert(url != nil);
 
-    SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
-    if (!outputSource) {
+    SFBOutputWriter *outputWriter = [SFBOutputWriter outputWriterForURL:url error:error];
+    if (!outputWriter) {
         return nil;
     }
-    return [self initWithOutputSource:outputSource encoderName:encoderName error:error];
+    return [self initWithOutputWriter:outputWriter encoderName:encoderName error:error];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName {
-    return [self initWithOutputSource:outputSource encoderName:encoderName error:nil];
+- (instancetype)initWithOutputWriter:(SFBOutputWriter *)outputWriter encoderName:(SFBAudioEncoderName)encoderName {
+    return [self initWithOutputWriter:outputWriter encoderName:encoderName error:nil];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource
+- (instancetype)initWithOutputWriter:(SFBOutputWriter *)outputWriter
                          encoderName:(SFBAudioEncoderName)encoderName
                                error:(NSError **)error {
-    NSParameterAssert(outputSource != nil);
+    NSParameterAssert(outputWriter != nil);
 
     Class subclass = nil;
     for (SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
@@ -254,7 +254,7 @@ static NSMutableArray *_registeredSubclasses = nil;
     }
 
     if ((self = [[subclass alloc] init])) {
-        _outputSource = outputSource;
+        _outputWriter = outputWriter;
     }
 
     return self;
@@ -302,8 +302,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)openReturningError:(NSError **)error {
-    if (!_outputSource.isOpen) {
-        return [_outputSource openReturningError:error];
+    if (!_outputWriter.isOpen) {
+        return [_outputWriter openReturningError:error];
     }
     return YES;
 }
@@ -313,8 +313,8 @@ static NSMutableArray *_registeredSubclasses = nil;
     _processingFormat = nil;
     _outputFormat = nil;
     _settings = nil;
-    if (_outputSource.isOpen) {
-        return [_outputSource closeReturningError:error];
+    if (_outputWriter.isOpen) {
+        return [_outputWriter closeReturningError:error];
     }
     return YES;
 }

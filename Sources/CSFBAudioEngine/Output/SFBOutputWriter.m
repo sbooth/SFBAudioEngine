@@ -5,34 +5,34 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBBufferOutputSource.h"
-#import "SFBFileOutputSource.h"
-#import "SFBMutableDataOutputSource.h"
-#import "SFBOutputSource+Internal.h"
+#import "SFBBufferOutputWriter.h"
+#import "SFBFileOutputWriter.h"
+#import "SFBMutableDataOutputWriter.h"
+#import "SFBOutputWriter+Internal.h"
 
-// NSError domain for OutputSource and subclasses
-NSErrorDomain const SFBOutputSourceErrorDomain = @"org.sbooth.AudioEngine.OutputSource";
+// NSError domain for OutputWriter and subclasses
+NSErrorDomain const SFBOutputWriterErrorDomain = @"org.sbooth.AudioEngine.OutputWriter";
 
-os_log_t gSFBOutputSourceLog = NULL;
+os_log_t gSFBOutputWriterLog = NULL;
 
-static void SFBCreateOutputSourceLog(void) __attribute__((constructor));
-static void SFBCreateOutputSourceLog(void) {
-    gSFBOutputSourceLog = os_log_create("org.sbooth.AudioEngine", "OutputSource");
+static void SFBCreateOutputWriterLog(void) __attribute__((constructor));
+static void SFBCreateOutputWriterLog(void) {
+    gSFBOutputWriterLog = os_log_create("org.sbooth.AudioEngine", "OutputWriter");
 }
 
 @implementation SFBOutputWriter
 
 + (void)load {
-    [NSError setUserInfoValueProviderForDomain:SFBOutputSourceErrorDomain
+    [NSError setUserInfoValueProviderForDomain:SFBOutputWriterErrorDomain
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
-                                          case SFBOutputSourceErrorCodeFileNotFound:
+                                          case SFBOutputWriterErrorCodeFileNotFound:
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The requested file was not found.", @"");
                                               }
                                               break;
 
-                                          case SFBOutputSourceErrorCodeInputOutput:
+                                          case SFBOutputWriterErrorCodeInputOutput:
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"An input/output error occurred.", @"");
                                               }
@@ -43,11 +43,11 @@ static void SFBCreateOutputSourceLog(void) {
                                       }];
 }
 
-+ (instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error {
++ (instancetype)outputWriterForURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
 
     if (url.isFileURL) {
-        return [[SFBFileOutputSource alloc] initWithURL:url];
+        return [[SFBFileOutputWriter alloc] initWithURL:url];
     }
 
     if (error) {
@@ -56,14 +56,14 @@ static void SFBCreateOutputSourceLog(void) {
     return nil;
 }
 
-+ (instancetype)dataOutputSource {
-    return [[SFBMutableDataOutputSource alloc] init];
++ (instancetype)dataOutputWriter {
+    return [[SFBMutableDataOutputWriter alloc] init];
 }
 
-+ (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity {
++ (instancetype)outputWriterWithBuffer:(void *)buffer capacity:(NSInteger)capacity {
     NSParameterAssert(buffer != NULL);
     NSParameterAssert(capacity >= 0);
-    return [[SFBBufferOutputSource alloc] initWithBuffer:buffer capacity:(size_t)capacity];
+    return [[SFBBufferOutputWriter alloc] initWithBuffer:buffer capacity:(size_t)capacity];
 }
 
 - (instancetype)initWithURL:(NSURL *)url {

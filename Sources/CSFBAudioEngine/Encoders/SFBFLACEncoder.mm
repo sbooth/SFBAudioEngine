@@ -62,16 +62,16 @@ FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, F
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
-    SFBOutputSource *outputSource = flacEncoder->_outputSource;
+    SFBOutputWriter *outputWriter = flacEncoder->_outputWriter;
 
     NSInteger bytesRead;
-    if (![outputSource readBytes:buffer length:static_cast<NSInteger>(*bytes) bytesRead:&bytesRead error:nil]) {
+    if (![outputWriter readBytes:buffer length:static_cast<NSInteger>(*bytes) bytesRead:&bytesRead error:nil]) {
         return FLAC__STREAM_ENCODER_READ_STATUS_ABORT;
     }
 
     *bytes = static_cast<size_t>(bytesRead);
 
-    if (bytesRead == 0 && outputSource.atEOF) {
+    if (bytesRead == 0 && outputWriter.atEOF) {
         return FLAC__STREAM_ENCODER_READ_STATUS_END_OF_STREAM;
     }
 
@@ -85,10 +85,10 @@ FLAC__StreamEncoderWriteStatus writeCallback(const FLAC__StreamEncoder *encoder,
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
-    SFBOutputSource *outputSource = flacEncoder->_outputSource;
+    SFBOutputWriter *outputWriter = flacEncoder->_outputWriter;
 
     NSInteger bytesWritten;
-    if (![outputSource writeBytes:static_cast<const void *>(buffer)
+    if (![outputWriter writeBytes:static_cast<const void *>(buffer)
                            length:static_cast<NSInteger>(bytes)
                      bytesWritten:&bytesWritten
                             error:nil] ||
@@ -109,13 +109,13 @@ FLAC__StreamEncoderSeekStatus seekCallback(const FLAC__StreamEncoder *encoder, F
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
-    SFBOutputSource *outputSource = flacEncoder->_outputSource;
+    SFBOutputWriter *outputWriter = flacEncoder->_outputWriter;
 
-    if (!outputSource.supportsSeeking) {
+    if (!outputWriter.supportsSeeking) {
         return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
     }
 
-    if (![outputSource seekToOffset:static_cast<NSInteger>(absolute_byte_offset) error:nil]) {
+    if (![outputWriter seekToOffset:static_cast<NSInteger>(absolute_byte_offset) error:nil]) {
         return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
     }
 
@@ -128,10 +128,10 @@ FLAC__StreamEncoderTellStatus tellCallback(const FLAC__StreamEncoder *encoder, F
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
-    SFBOutputSource *outputSource = flacEncoder->_outputSource;
+    SFBOutputWriter *outputWriter = flacEncoder->_outputWriter;
 
     NSInteger offset;
-    if (![outputSource getOffset:&offset error:nil]) {
+    if (![outputWriter getOffset:&offset error:nil]) {
         return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
     }
 
