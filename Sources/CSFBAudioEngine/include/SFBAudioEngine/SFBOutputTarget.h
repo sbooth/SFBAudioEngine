@@ -50,7 +50,7 @@ NS_SWIFT_NAME(OutputTarget)
 /// `YES` if the output target is open
 @property(nonatomic, readonly) BOOL isOpen;
 
-/// Reads bytes from the input
+/// Reads bytes from the output
 /// - parameter buffer: A buffer to receive data
 /// - parameter length: The maximum number of bytes to read
 /// - parameter bytesRead: The number of bytes actually read

@@ -8,7 +8,7 @@
 import Foundation
 
 extension OutputTarget {
-    /// Reads bytes from the input
+    /// Reads bytes from the output
     /// - parameter buffer: A buffer to receive data
     /// - parameter length: The maximum number of bytes to read
     /// - returns: The number of bytes actually read
