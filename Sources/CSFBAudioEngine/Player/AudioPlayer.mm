@@ -629,8 +629,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
         const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) |
                                                        static_cast<unsigned int>(Flags::isPlaying),
                                                std::memory_order_acq_rel);
-        wasPlaying = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) ==
-                     static_cast<unsigned int>(Flags::isPlaying);
+        wasPlaying = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) != 0;
         assert(!(didStartEngine && wasPlaying));
     }
 
@@ -651,8 +650,7 @@ bool sfb::AudioPlayer::pause() noexcept {
         }
         const auto prevFlags =
                 flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-        wasPlaying = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) ==
-                     static_cast<unsigned int>(Flags::isPlaying);
+        wasPlaying = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) != 0;
     }
 
     if (wasPlaying && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -1169,8 +1167,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             if ((flags & static_cast<unsigned int>(DecoderState::Flags::isCanceled)) != 0) {
                                 continue;
                             }
-                            if ((flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) ==
-                                static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) {
+                            if ((flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) != 0) {
                                 os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
                                 // TODO: Investigate a per-state buffer to mitigate frame loss
@@ -1436,7 +1433,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }
 
                 // Clear the mute flag if needed now that the ring buffer is full
-                if ((flags & static_cast<unsigned int>(Flags::isMuted)) == static_cast<unsigned int>(Flags::isMuted)) {
+                if ((flags & static_cast<unsigned int>(Flags::isMuted)) != 0) {
                     flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
                 }
             }
@@ -1533,7 +1530,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     const auto flags = flags_.load(std::memory_order_acquire);
 
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
-    if ((flags & static_cast<unsigned int>(Flags::drainRequired)) == static_cast<unsigned int>(Flags::drainRequired)) {
+    if ((flags & static_cast<unsigned int>(Flags::drainRequired)) != 0) {
         audioRingBuffer_.drain();
         flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
@@ -2180,8 +2177,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         }
 
         // Restart AVAudioEngine if previously running
-        if ((prevState & static_cast<unsigned int>(Flags::engineIsRunning)) ==
-            static_cast<unsigned int>(Flags::engineIsRunning)) {
+        if ((prevState & static_cast<unsigned int>(Flags::engineIsRunning)) != 0) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                 lock.unlock();
@@ -2253,8 +2249,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         {
             std::unique_lock lock{engineMutex_};
 
-            if ((preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) ==
-                static_cast<unsigned int>(Flags::engineIsRunning)) {
+            if ((preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) != 0) {
                 if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                     os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                     lock.unlock();
@@ -2371,8 +2366,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     [engine_ prepare];
 
     // Restart AVAudioEngine and playback as appropriate
-    if ((prevState & static_cast<unsigned int>(Flags::engineIsRunning)) ==
-        static_cast<unsigned int>(Flags::engineIsRunning)) {
+    if ((prevState & static_cast<unsigned int>(Flags::engineIsRunning)) != 0) {
         if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
             os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
             // TODO: Re-evaluate whether failure to start AVAudioEngine during reconfiguration
