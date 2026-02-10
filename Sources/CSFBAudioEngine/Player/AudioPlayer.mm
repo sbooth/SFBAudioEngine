@@ -1140,8 +1140,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }
                 ringBufferStale = true;
 
-                if ((flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) ==
-                    static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) {
+                if ((flags & static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) != 0) {
                     os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
 
                     // The decoder has not completed rendering so the ring buffer format and the decoder's format still
