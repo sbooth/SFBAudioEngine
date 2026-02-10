@@ -1280,8 +1280,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         if (decoderState != nullptr) {
             // Before decoding starts determine the decoder and ring buffer format compatibility
-            if ((decoderState->flags_.load(std::memory_order_acquire) &
-                 static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) == 0) {
+            if (const auto flags = decoderState->flags_.load(std::memory_order_acquire);
+                (flags & static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) == 0) {
                 // Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel
                 // layout)
                 if (auto renderFormat = decoderState->converter_.outputFormat;
