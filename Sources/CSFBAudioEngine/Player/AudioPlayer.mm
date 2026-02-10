@@ -1498,13 +1498,14 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
 
     const auto frontSize = front.size();
     const auto spaceNeeded = sizeof(DecodingEventCommand) + sizeof(uint64_t) + sizeof(uint32_t) + errorData.length;
+
     if (frontSize + back.size() < spaceNeeded) {
         os_log_fault(log_, "Insufficient space to write decoding error event");
         return;
     }
 
     std::size_t cursor = 0;
-    auto write_single_arg = [&](const void *arg, std::size_t len) noexcept {
+    auto writeArg = [&](const void *arg, std::size_t len) noexcept {
         const auto *src = static_cast<const unsigned char *>(arg);
         if (cursor + len <= frontSize) {
             std::memcpy(front.data() + cursor, src, len);
@@ -1523,10 +1524,10 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
     const auto identificationNumber = nextEventIdentificationNumber();
     const auto dataSize = static_cast<uint32_t>(errorData.length);
 
-    write_single_arg(&command, sizeof command);
-    write_single_arg(&identificationNumber, sizeof identificationNumber);
-    write_single_arg(&dataSize, sizeof dataSize);
-    write_single_arg(errorData.bytes, errorData.length);
+    writeArg(&command, sizeof command);
+    writeArg(&identificationNumber, sizeof identificationNumber);
+    writeArg(&dataSize, sizeof dataSize);
+    writeArg(errorData.bytes, errorData.length);
 
     decodingEvents_.commitWrite(cursor);
     eventSemaphore_.signal();
