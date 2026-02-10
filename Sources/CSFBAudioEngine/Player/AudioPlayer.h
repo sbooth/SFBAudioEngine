@@ -196,8 +196,6 @@ class AudioPlayer final {
   private:
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
-        /// All clear
-        none = 0,
         /// Cached value of `engine_.isRunning`
         engineIsRunning = 1u << 0,
         /// The render block should output audio
