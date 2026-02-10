@@ -216,7 +216,9 @@ class AudioPlayer final {
     friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::and_impl(l, r); }
 
     /// Atomically loads `flags_` using the specified memory order and returns the result
-    Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept;
+    Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
+        return static_cast<Flags>(flags_.load(order));
+    }
 
     // MARK: - Decoding
 
@@ -331,10 +333,6 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
     return queuedDecoders_.empty();
 }
 
-inline auto AudioPlayer::loadFlags(std::memory_order order) const noexcept -> Flags {
-    return static_cast<Flags>(flags_.load(order));
-}
-
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     constexpr auto mask = Flags::engineIsRunning | Flags::isPlaying;
@@ -350,7 +348,7 @@ inline bool AudioPlayer::isPlaying() const noexcept {
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::masked_matches(flags, Flags::engineIsRunning | Flags::isPlaying, Flags::engineIsRunning);
+    return bits::has_flag_but_not(flags, Flags::engineIsRunning, Flags::isPlaying);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
