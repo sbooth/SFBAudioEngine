@@ -253,9 +253,8 @@ struct AudioPlayer::DecoderState final {
     // Enable bitmask operations for `Flags`
     friend constexpr void is_bitmask_enum(Flags);
 
-    // Hidden friends
+    // Hidden friend
     friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::or_impl(l, r); }
-    friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::and_impl(l, r); }
 
     /// Atomically loads `flags_` using the specified memory order and returns the result
     Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
