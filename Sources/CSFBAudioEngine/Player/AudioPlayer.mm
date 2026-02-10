@@ -745,8 +745,7 @@ void sfb::AudioPlayer::reset() noexcept {
 bool sfb::AudioPlayer::engineIsRunning() const noexcept {
     const auto isRunning = engine_.isRunning;
 #if DEBUG
-    assert(static_cast<bool>(flags_.load(std::memory_order_acquire) &
-                             static_cast<unsigned int>(Flags::engineIsRunning)) == isRunning &&
+    assert(static_cast<bool>(loadFlags() & Flags::engineIsRunning) == isRunning &&
            "Cached value for engine_.isRunning invalid");
 #endif /* DEBUG */
     return isRunning;
@@ -1014,8 +1013,7 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
 
     assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode &&
            "Illegal AVAudioEngine configuration");
-    assert(engine_.isRunning == static_cast<bool>(flags_.load(std::memory_order_acquire) &
-                                                  static_cast<unsigned int>(Flags::engineIsRunning)) &&
+    assert(engine_.isRunning == static_cast<bool>(loadFlags() & Flags::engineIsRunning) &&
            "AVAudioEngine may not be started or stopped outside of AudioPlayer");
 }
 
@@ -1356,8 +1354,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         if (decoderState != nullptr) {
-            if (const auto flags = flags_.load(std::memory_order_acquire);
-                (flags & static_cast<unsigned int>(Flags::drainRequired)) == 0) {
+            if (const auto flags = loadFlags(); !bits::has_flag(flags, Flags::drainRequired)) {
                 // Decode and write chunks to the ring buffer
                 while (audioRingBuffer_.freeSpace() >= ringBufferChunkSize) {
                     // Decoding started
@@ -1433,7 +1430,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }
 
                 // Clear the mute flag if needed now that the ring buffer is full
-                if ((flags & static_cast<unsigned int>(Flags::isMuted)) != 0) {
+                if (bits::has_flag(flags, Flags::isMuted)) {
                     flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
                 }
             }
@@ -1527,10 +1524,10 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
 
 OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                                   AudioBufferList *outputData) noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
+    const auto flags = loadFlags();
 
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
-    if ((flags & static_cast<unsigned int>(Flags::drainRequired)) != 0) {
+    if (bits::has_flag(flags, Flags::drainRequired)) {
         audioRingBuffer_.drain();
         flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
@@ -1541,8 +1538,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     // Output silence if not playing or muted
-    if (constexpr auto mask = static_cast<unsigned int>(Flags::isPlaying) | static_cast<unsigned int>(Flags::isMuted);
-        (flags & mask) != static_cast<unsigned int>(Flags::isPlaying)) {
+    if (!bits::masked_matches(flags, Flags::isPlaying | Flags::isMuted, Flags::isPlaying)) {
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
             std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
         }
@@ -1669,8 +1665,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
         [player_.delegate audioPlayer:player_ decodingStarted:decoder];
     }
 
-    if (const auto flags = flags_.load(std::memory_order_acquire);
-        (flags & static_cast<unsigned int>(Flags::isPlaying)) == 0 && decoder == currentDecoder) {
+    if (const auto flags = loadFlags(); !bits::has_flag(flags, Flags::isPlaying) && decoder == currentDecoder) {
         setNowPlaying(decoder);
     }
 

@@ -9,6 +9,7 @@
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
+#import "bitmask_enum.hpp"
 
 #import <dsema/Semaphore.hpp>
 #import <mtx/UnfairMutex.hpp>
@@ -195,6 +196,8 @@ class AudioPlayer final {
   private:
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
+        /// All clear
+        none = 0,
         /// Cached value of `engine_.isRunning`
         engineIsRunning = 1u << 0,
         /// The render block should output audio
@@ -204,6 +207,16 @@ class AudioPlayer final {
         /// The ring buffer needs to be drained during the next render cycle
         drainRequired = 1u << 3,
     };
+
+    // Enable bitmask operations for `Flags`
+    friend constexpr void is_bitmask_enum(Flags);
+
+    // Hidden friends
+    friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::or_impl(l, r); }
+    friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::and_impl(l, r); }
+
+    /// Atomically loads `flags_` using the specified memory order and returns the result
+    Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept;
 
     // MARK: - Decoding
 
@@ -318,32 +331,31 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
     return queuedDecoders_.empty();
 }
 
+inline auto AudioPlayer::loadFlags(std::memory_order order) const noexcept -> Flags {
+    return static_cast<Flags>(flags_.load(order));
+}
+
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
-    constexpr auto mask =
-            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
+    const auto flags = loadFlags();
+    constexpr auto mask = Flags::engineIsRunning | Flags::isPlaying;
     const auto state = flags & mask;
-    assert(state != static_cast<unsigned int>(Flags::isPlaying));
+    assert(state != Flags::isPlaying);
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
 inline bool AudioPlayer::isPlaying() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
-    constexpr auto mask =
-            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-    return (flags & mask) == mask;
+    const auto flags = loadFlags();
+    return bits::has_all(flags, Flags::engineIsRunning | Flags::isPlaying);
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
-    constexpr auto mask =
-            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-    return (flags & mask) == static_cast<unsigned int>(Flags::engineIsRunning);
+    const auto flags = loadFlags();
+    return bits::masked_matches(flags, Flags::engineIsRunning | Flags::isPlaying, Flags::engineIsRunning);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
-    const auto flags = flags_.load(std::memory_order_acquire);
-    return (flags & static_cast<unsigned int>(Flags::engineIsRunning)) == 0;
+    const auto flags = loadFlags();
+    return !bits::has_flag(flags, Flags::engineIsRunning);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
