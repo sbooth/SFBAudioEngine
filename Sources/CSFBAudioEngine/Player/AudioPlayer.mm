@@ -1505,7 +1505,7 @@ void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
     }
 
     std::size_t cursor = 0;
-    auto writeArg = [&](const void *arg, std::size_t len) noexcept {
+    const auto writeArg = [&](const void *arg, std::size_t len) noexcept {
         const auto *src = static_cast<const unsigned char *>(arg);
         if (cursor + len <= frontSize) {
             std::memcpy(front.data() + cursor, src, len);
