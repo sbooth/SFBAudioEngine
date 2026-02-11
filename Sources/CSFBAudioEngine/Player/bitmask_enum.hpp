@@ -77,7 +77,7 @@ template <BitmaskEnum E> constexpr bool has_flag(E value, E flag) noexcept { ret
 /// Returns true if the non-zero bits from set are set in value and the non-zero bits from clear are clear in value
 template <BitmaskEnum E> constexpr bool has_flag_but_not(E value, E set, E clear) noexcept {
     using U = std::underlying_type_t<E>;
-    assert((static_cast<U>(set) & static_cast<U>(clear)) == 0 && "on and off bits may not overlap");
+    assert((static_cast<U>(set) & static_cast<U>(clear)) == 0 && "bits set and bits clear may not overlap");
     return (static_cast<U>(value) & (static_cast<U>(set) | static_cast<U>(clear))) == static_cast<U>(set);
 }
 
