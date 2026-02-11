@@ -27,7 +27,7 @@ TTAint32 writeCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
     TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
     NSInteger bytesWritten;
-    if (![iocb->encoder_->_outputSource writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil]) {
+    if (![iocb->encoder_->_outputTarget writeBytes:buffer length:size bytesWritten:&bytesWritten error:nil]) {
         return -1;
     }
     return (TTAint32)bytesWritten;
@@ -36,7 +36,7 @@ TTAint32 writeCallback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuin
 TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept {
     TTACallbacks *iocb = static_cast<TTACallbacks *>(io);
 
-    if (![iocb->encoder_->_outputSource seekToOffset:offset error:nil]) {
+    if (![iocb->encoder_->_outputTarget seekToOffset:offset error:nil]) {
         return -1;
     }
     return offset;

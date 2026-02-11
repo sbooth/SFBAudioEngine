@@ -285,9 +285,9 @@ static NSString *_Nullable channelLabelName(AudioChannelLabel channelLabel, BOOL
             shortName ? kAudioFormatProperty_ChannelShortName : kAudioFormatProperty_ChannelName;
     CFStringRef channelName = NULL;
     UInt32 dataSize = sizeof channelName;
-    OSStatus result = AudioFormatGetProperty(property, sizeof channelLabel, &channelLabel, &dataSize, &channelName);
+    OSStatus status = AudioFormatGetProperty(property, sizeof channelLabel, &channelLabel, &dataSize, &channelName);
 
-    if (result != noErr) {
+    if (status != noErr) {
         return nil;
     }
 
@@ -308,9 +308,9 @@ static NSString *_Nullable channelLayoutName(const AudioChannelLayout *_Nullable
                         (channelLayout->mNumberChannelDescriptions * sizeof(AudioChannelDescription));
     CFStringRef layoutName = NULL;
     UInt32 dataSize = sizeof layoutName;
-    OSStatus result = AudioFormatGetProperty(property, layoutSize, channelLayout, &dataSize, &layoutName);
+    OSStatus status = AudioFormatGetProperty(property, layoutSize, channelLayout, &dataSize, &layoutName);
 
-    if (result != noErr) {
+    if (status != noErr) {
         return nil;
     }
 
