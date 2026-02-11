@@ -30,19 +30,19 @@ template <typename T>
 concept BitmaskEnum =
         std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>> && requires(T t) { is_bitmask_enum(t); };
 
-/// Returns the bitwise OR of l and r
-template <BitmaskEnum E> [[nodiscard]] constexpr E operator|(E l, E r) noexcept {
-    return static_cast<E>(to_underlying(l) | to_underlying(r));
+/// Returns the bitwise OR of lhs and rhs
+template <BitmaskEnum E> [[nodiscard]] constexpr E operator|(E lhs, E rhs) noexcept {
+    return static_cast<E>(to_underlying(lhs) | to_underlying(rhs));
 }
 
-/// Returns the bitwise AND of l and r
-template <BitmaskEnum E> [[nodiscard]] constexpr E operator&(E l, E r) noexcept {
-    return static_cast<E>(to_underlying(l) & to_underlying(r));
+/// Returns the bitwise AND of lhs and rhs
+template <BitmaskEnum E> [[nodiscard]] constexpr E operator&(E lhs, E rhs) noexcept {
+    return static_cast<E>(to_underlying(lhs) & to_underlying(rhs));
 }
 
-/// Returns the bitwise XOR of l and r
-template <BitmaskEnum E> [[nodiscard]] constexpr E operator^(E l, E r) noexcept {
-    return static_cast<E>(to_underlying(l) ^ to_underlying(r));
+/// Returns the bitwise XOR of lhs and rhs
+template <BitmaskEnum E> [[nodiscard]] constexpr E operator^(E lhs, E rhs) noexcept {
+    return static_cast<E>(to_underlying(lhs) ^ to_underlying(rhs));
 }
 
 /// Returns true if all non-zero bits in mask are set in value
