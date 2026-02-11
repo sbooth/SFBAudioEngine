@@ -1541,7 +1541,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     // Output silence if not playing or muted
-    if ((flags & (Flags::isMuted | Flags::isPlaying)) != Flags::isPlaying) {
+    if (!bits::has_all_and_none(flags, Flags::isPlaying, Flags::isMuted)) {
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
             std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
         }
