@@ -1101,8 +1101,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // Process cancellations
             auto signal = false;
             for (const auto &decoderState : activeDecoders_) {
-                if (const auto flags = decoderState->loadFlags();
-                    !bits::has_flag(flags, DecoderState::Flags::cancelRequested)) {
+                if (!bits::has_flag(decoderState->loadFlags(), DecoderState::Flags::cancelRequested)) {
                     continue;
                 }
 
@@ -1282,8 +1281,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         if (decoderState != nullptr) {
             // Before decoding starts determine the decoder and ring buffer format compatibility
-            if (const auto flags = decoderState->loadFlags();
-                !bits::has_flag(flags, DecoderState::Flags::decodingStarted)) {
+            if (!bits::has_flag(decoderState->loadFlags(), DecoderState::Flags::decodingStarted)) {
                 // Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel
                 // layout)
                 if (auto renderFormat = decoderState->converter_.outputFormat;
@@ -1670,7 +1668,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
         [player_.delegate audioPlayer:player_ decodingStarted:decoder];
     }
 
-    if (const auto flags = loadFlags(); !bits::has_flag(flags, Flags::isPlaying) && decoder == currentDecoder) {
+    if (!bits::has_flag(loadFlags(), Flags::isPlaying) && decoder == currentDecoder) {
         setNowPlaying(decoder);
     }
 
@@ -2081,7 +2079,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
     // Cancel all active decoders
     auto signal = false;
     for (const auto &decoderState : activeDecoders_) {
-        if (const auto flags = decoderState->loadFlags(); !bits::has_flag(flags, DecoderState::Flags::isCanceled)) {
+        if (!bits::has_flag(decoderState->loadFlags(), DecoderState::Flags::isCanceled)) {
             decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
                                           std::memory_order_acq_rel);
             signal = true;
