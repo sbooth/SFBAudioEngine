@@ -351,7 +351,7 @@ inline bool AudioPlayer::isPaused() const noexcept {
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return !bits::has_all(flags, Flags::engineIsRunning);
+    return bits::has_none(flags, Flags::engineIsRunning);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
