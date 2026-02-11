@@ -213,9 +213,24 @@ class AudioPlayer final {
     friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
     friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::operator&(l, r); }
 
-    /// Atomically loads `flags_` using the specified memory order and returns the result
-    Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
+    /// Atomically loads the value of `flags_` using the specified memory order and returns the result
+    [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
         return static_cast<Flags>(flags_.load(order));
+    }
+
+    /// Atomically sets flags using the specified memory order and returns the previous value
+    Flags setFlags(Flags flags, std::memory_order order = std::memory_order_acq_rel) noexcept {
+        return static_cast<Flags>(flags_.fetch_or(bits::to_underlying(flags), order));
+    }
+
+    /// Atomically toggles flags using the specified memory order and returns the previous value
+    Flags toggleFlags(Flags flags, std::memory_order order = std::memory_order_acq_rel) noexcept {
+        return static_cast<Flags>(flags_.fetch_xor(bits::to_underlying(flags), order));
+    }
+
+    /// Atomically clears flags using the specified memory order and returns the previous value
+    Flags clearFlags(Flags flags, std::memory_order order = std::memory_order_acq_rel) noexcept {
+        return static_cast<Flags>(flags_.fetch_and(~bits::to_underlying(flags), order));
     }
 
     // MARK: - Decoding
@@ -333,9 +348,8 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
-    constexpr auto mask = Flags::engineIsRunning | Flags::isPlaying;
-    const auto state = flags & mask;
-    assert(state != Flags::isPlaying);
+    const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
+    assert(!bits::is_set_without(state, Flags::isPlaying, Flags::engineIsRunning));
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
