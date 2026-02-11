@@ -681,7 +681,7 @@ bool sfb::AudioPlayer::resume() noexcept {
             return false;
         }
         const auto prevFlags = setFlags(Flags::isPlaying);
-        wasPaused = bits::is_set(prevFlags, Flags::isPlaying);
+        wasPaused = bits::is_clear(prevFlags, Flags::isPlaying);
     }
 
     if (wasPaused && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -724,7 +724,8 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         } else {
             // Toggle playing/paused
-            if (const auto prevFlags = toggleFlags(Flags::isPlaying); bits::is_set(prevFlags, Flags::isPlaying)) {
+            const auto prevFlags = toggleFlags(Flags::isPlaying);
+            if (bits::is_set(prevFlags, Flags::isPlaying)) {
                 playbackState = SFBAudioPlayerPlaybackStatePaused;
             } else {
                 playbackState = SFBAudioPlayerPlaybackStatePlaying;
