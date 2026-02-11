@@ -7,73 +7,73 @@
 
 #pragma once
 
+#include <bit>
 #include <cassert>
 #include <concepts>
 #include <type_traits>
 
 namespace bits {
 
+#if __cpp_lib_to_underlying >= 202102L
+using std::to_underlying;
+#else
+/// Reimplementation of std::to_underlying
+template <typename E>
+    requires std::is_enum_v<E>
+[[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept {
+    return static_cast<std::underlying_type_t<E>>(e);
+}
+#endif
+
 /// An enumeration supporting bitmask operations
 template <typename T>
 concept BitmaskEnum =
-        std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>> && requires(T t) { is_bitmask_enum(t); };
+        std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>> && requires(T t) { is_bitmask_enum(t); };
 
 /// Returns the bitwise OR of l and r
-template <BitmaskEnum E> constexpr E or_impl(E l, E r) noexcept {
-    using U = std::underlying_type_t<E>;
-    return static_cast<E>(static_cast<U>(l) | static_cast<U>(r));
+template <BitmaskEnum E> [[nodiscard]] constexpr E operator|(E l, E r) noexcept {
+    return static_cast<E>(to_underlying(l) | to_underlying(r));
 }
 
 /// Returns the bitwise AND of l and r
-template <BitmaskEnum E> constexpr E and_impl(E l, E r) noexcept {
-    using U = std::underlying_type_t<E>;
-    return static_cast<E>(static_cast<U>(l) & static_cast<U>(r));
+template <BitmaskEnum E> [[nodiscard]] constexpr E operator&(E l, E r) noexcept {
+    return static_cast<E>(to_underlying(l) & to_underlying(r));
 }
 
 /// Returns the bitwise XOR of l and r
-template <BitmaskEnum E> constexpr E xor_impl(E l, E r) noexcept {
-    using U = std::underlying_type_t<E>;
-    return static_cast<E>(static_cast<U>(l) ^ static_cast<U>(r));
+template <BitmaskEnum E> [[nodiscard]] constexpr E operator^(E l, E r) noexcept {
+    return static_cast<E>(to_underlying(l) ^ to_underlying(r));
 }
 
 /// Returns true if all non-zero bits in mask are set in value
-template <BitmaskEnum E> constexpr bool has_all(E value, E mask) noexcept {
-    using U = std::underlying_type_t<E>;
-    return (static_cast<U>(value) & static_cast<U>(mask)) == static_cast<U>(mask);
+template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all(E value, E mask) noexcept {
+    return (to_underlying(value) & to_underlying(mask)) == to_underlying(mask);
 }
 
 /// Returns true if at least one non-zero bit in mask is set in value
-template <BitmaskEnum E> constexpr bool has_any(E value, E mask) noexcept {
-    using U = std::underlying_type_t<E>;
-    return (static_cast<U>(value) & static_cast<U>(mask)) != 0;
+template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any(E value, E mask) noexcept {
+    return (to_underlying(value) & to_underlying(mask)) != 0;
 }
 
 /// Returns true if all non-zero bits in mask are clear in value
-template <BitmaskEnum E> constexpr bool has_none(E value, E mask) noexcept {
-    using U = std::underlying_type_t<E>;
-    return (static_cast<U>(value) & static_cast<U>(mask)) == 0;
+template <BitmaskEnum E> [[nodiscard]] constexpr bool has_none(E value, E mask) noexcept {
+    return (to_underlying(value) & to_underlying(mask)) == 0;
 }
 
 /// Returns true if all bits in value are clear
-template <BitmaskEnum E> constexpr bool is_empty(E value) noexcept {
-    return static_cast<std::underlying_type_t<E>>(value) == 0;
-}
+template <BitmaskEnum E> [[nodiscard]] constexpr bool is_empty(E value) noexcept { return to_underlying(value) == 0; }
 
 /// Returns true if only one bit is set in value
-template <BitmaskEnum E> constexpr bool is_single_bit(E value) noexcept {
-    using U = std::underlying_type_t<E>;
-    U v = static_cast<U>(value);
-    return v != 0 && (v & (v - 1)) == 0;
+template <BitmaskEnum E> [[nodiscard]] constexpr bool is_single_bit(E value) noexcept {
+    return std::has_single_bit(to_underlying(value));
 }
 
-/// Returns true if all non-zero bits in flag are set in value
-template <BitmaskEnum E> constexpr bool has_flag(E value, E flag) noexcept { return has_all(value, flag); }
-
-/// Returns true if the non-zero bits from set are set in value and the non-zero bits from clear are clear in value
-template <BitmaskEnum E> constexpr bool has_flag_but_not(E value, E set, E clear) noexcept {
-    using U = std::underlying_type_t<E>;
-    assert((static_cast<U>(set) & static_cast<U>(clear)) == 0 && "bits set and bits clear may not overlap");
-    return (static_cast<U>(value) & (static_cast<U>(set) | static_cast<U>(clear))) == static_cast<U>(set);
+/// Returns true if the non-zero bits from required are set in value and the non-zero bits from forbidden are clear in
+/// value
+template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, E required, E forbidden) noexcept {
+    assert((to_underlying(required) & to_underlying(forbidden)) == 0 &&
+           "bits required and bits forbidden may not overlap");
+    return (to_underlying(value) & (to_underlying(required) | to_underlying(forbidden))) == to_underlying(required);
 }
 
 } /* namespace bits */

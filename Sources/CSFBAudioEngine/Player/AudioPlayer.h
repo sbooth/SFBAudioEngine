@@ -210,8 +210,8 @@ class AudioPlayer final {
     friend constexpr void is_bitmask_enum(Flags);
 
     // Hidden friends
-    friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::or_impl(l, r); }
-    friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::and_impl(l, r); }
+    friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
+    friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::operator&(l, r); }
 
     /// Atomically loads `flags_` using the specified memory order and returns the result
     Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
@@ -346,12 +346,12 @@ inline bool AudioPlayer::isPlaying() const noexcept {
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_flag_but_not(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::has_all_and_none(flags, Flags::engineIsRunning, Flags::isPlaying);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return !bits::has_flag(flags, Flags::engineIsRunning);
+    return !bits::has_all(flags, Flags::engineIsRunning);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
