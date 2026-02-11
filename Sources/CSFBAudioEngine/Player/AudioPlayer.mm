@@ -1409,7 +1409,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                     // Decoding complete
                     if (const auto flags = decoderState->loadFlags();
-                        !bits::has_flag(flags, DecoderState::Flags::decodingComplete)) {
+                        bits::has_flag(flags, DecoderState::Flags::decodingComplete)) {
                         const bool resumed = bits::has_flag(flags, DecoderState::Flags::decodingResumed);
 
                         // Submit the decoding complete event for the first completion only
@@ -1543,7 +1543,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     // Output silence if not playing or muted
-    if (bits::has_flag_but_not(flags, Flags::isMuted, Flags::isPlaying)) {
+    if ((flags & (Flags::isMuted | Flags::isPlaying)) != Flags::isPlaying) {
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
             std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
         }
