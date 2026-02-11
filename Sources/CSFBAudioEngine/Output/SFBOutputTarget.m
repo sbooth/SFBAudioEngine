@@ -5,34 +5,34 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBBufferOutputSource.h"
-#import "SFBFileOutputSource.h"
-#import "SFBMutableDataOutputSource.h"
-#import "SFBOutputSource+Internal.h"
+#import "SFBBufferOutputTarget.h"
+#import "SFBFileOutputTarget.h"
+#import "SFBMutableDataOutputTarget.h"
+#import "SFBOutputTarget+Internal.h"
 
-// NSError domain for OutputSource and subclasses
-NSErrorDomain const SFBOutputSourceErrorDomain = @"org.sbooth.AudioEngine.OutputSource";
+// NSError domain for OutputTarget and subclasses
+NSErrorDomain const SFBOutputTargetErrorDomain = @"org.sbooth.AudioEngine.OutputTarget";
 
-os_log_t gSFBOutputSourceLog = NULL;
+os_log_t gSFBOutputTargetLog = NULL;
 
-static void SFBCreateOutputSourceLog(void) __attribute__((constructor));
-static void SFBCreateOutputSourceLog(void) {
-    gSFBOutputSourceLog = os_log_create("org.sbooth.AudioEngine", "OutputSource");
+static void SFBCreateOutputTargetLog(void) __attribute__((constructor));
+static void SFBCreateOutputTargetLog(void) {
+    gSFBOutputTargetLog = os_log_create("org.sbooth.AudioEngine", "OutputTarget");
 }
 
-@implementation SFBOutputSource
+@implementation SFBOutputTarget
 
 + (void)load {
-    [NSError setUserInfoValueProviderForDomain:SFBOutputSourceErrorDomain
+    [NSError setUserInfoValueProviderForDomain:SFBOutputTargetErrorDomain
                                       provider:^id(NSError *err, NSErrorUserInfoKey userInfoKey) {
                                           switch (err.code) {
-                                          case SFBOutputSourceErrorCodeFileNotFound:
+                                          case SFBOutputTargetErrorCodeFileNotFound:
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"The requested file was not found.", @"");
                                               }
                                               break;
 
-                                          case SFBOutputSourceErrorCodeInputOutput:
+                                          case SFBOutputTargetErrorCodeInputOutput:
                                               if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey]) {
                                                   return NSLocalizedString(@"An input/output error occurred.", @"");
                                               }
@@ -43,11 +43,11 @@ static void SFBCreateOutputSourceLog(void) {
                                       }];
 }
 
-+ (instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error {
++ (instancetype)outputTargetForURL:(NSURL *)url error:(NSError **)error {
     NSParameterAssert(url != nil);
 
     if (url.isFileURL) {
-        return [[SFBFileOutputSource alloc] initWithURL:url];
+        return [[SFBFileOutputTarget alloc] initWithURL:url];
     }
 
     if (error) {
@@ -56,14 +56,14 @@ static void SFBCreateOutputSourceLog(void) {
     return nil;
 }
 
-+ (instancetype)dataOutputSource {
-    return [[SFBMutableDataOutputSource alloc] init];
++ (instancetype)dataOutputTarget {
+    return [[SFBMutableDataOutputTarget alloc] init];
 }
 
-+ (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity {
++ (instancetype)outputTargetWithBuffer:(void *)buffer capacity:(NSInteger)capacity {
     NSParameterAssert(buffer != NULL);
     NSParameterAssert(capacity >= 0);
-    return [[SFBBufferOutputSource alloc] initWithBuffer:buffer capacity:(size_t)capacity];
+    return [[SFBBufferOutputTarget alloc] initWithBuffer:buffer capacity:(size_t)capacity];
 }
 
 - (instancetype)initWithURL:(NSURL *)url {
@@ -149,7 +149,7 @@ static void SFBCreateOutputSourceLog(void) {
 
 @end
 
-@implementation SFBOutputSource (SFBDataWriting)
+@implementation SFBOutputTarget (SFBDataWriting)
 - (BOOL)writeData:(NSData *)data error:(NSError **)error {
     NSParameterAssert(data != nil);
     NSInteger bytesWritten;
@@ -158,7 +158,7 @@ static void SFBCreateOutputSourceLog(void) {
 }
 @end
 
-@implementation SFBOutputSource (SFBSignedIntegerWriting)
+@implementation SFBOutputTarget (SFBSignedIntegerWriting)
 - (BOOL)writeInt8:(int8_t)i8 error:(NSError **)error {
     return [self writeUInt8:(uint8_t)i8 error:error];
 }
@@ -173,7 +173,7 @@ static void SFBCreateOutputSourceLog(void) {
 }
 @end
 
-@implementation SFBOutputSource (SFBUnsignedIntegerWriting)
+@implementation SFBOutputTarget (SFBUnsignedIntegerWriting)
 - (BOOL)writeUInt8:(uint8_t)ui8 error:(NSError **)error {
     NSInteger bytesWritten;
     return [self writeBytes:&ui8 length:sizeof(uint8_t) bytesWritten:&bytesWritten error:error] &&
@@ -200,7 +200,7 @@ static void SFBCreateOutputSourceLog(void) {
 
 @end
 
-@implementation SFBOutputSource (SFBBigEndianWriting)
+@implementation SFBOutputTarget (SFBBigEndianWriting)
 - (BOOL)writeUInt16BigEndian:(uint16_t)ui16 error:(NSError **)error {
     return [self writeUInt16:OSSwapHostToBigInt16(ui16) error:error];
 }
@@ -212,7 +212,7 @@ static void SFBCreateOutputSourceLog(void) {
 }
 @end
 
-@implementation SFBOutputSource (SFBLittleEndianWriting)
+@implementation SFBOutputTarget (SFBLittleEndianWriting)
 - (BOOL)writeUInt16LittleEndian:(uint16_t)ui16 error:(NSError **)error {
     return [self writeUInt16:OSSwapHostToLittleInt16(ui16) error:error];
 }
