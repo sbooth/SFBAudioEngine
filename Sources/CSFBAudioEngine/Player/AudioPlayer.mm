@@ -257,8 +257,18 @@ struct AudioPlayer::DecoderState final {
     friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
 
     /// Atomically loads `flags_` using the specified memory order and returns the result
-    Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
+    [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
         return static_cast<Flags>(flags_.load(order));
+    }
+
+    /// Atomically sets flags using the specified memory order and returns the previous value
+    Flags setFlags(Flags flags, std::memory_order order = std::memory_order_acq_rel) noexcept {
+        return static_cast<Flags>(flags_.fetch_or(bits::to_underlying(flags), order));
+    }
+
+    /// Atomically clears flags using the specified memory order and returns the previous value
+    Flags clearFlags(Flags flags, std::memory_order order = std::memory_order_acq_rel) noexcept {
+        return static_cast<Flags>(flags_.fetch_and(~bits::to_underlying(flags), order));
     }
 
     DecoderState(Decoder _Nonnull decoder) noexcept;
@@ -339,7 +349,7 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
     }
 
     if (decodeBuffer_.frameLength == 0) {
-        flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
+        setFlags(Flags::decodingComplete);
 
 #if false
         // Some formats may not know the exact number of frames in advance
@@ -362,7 +372,7 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
     // If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
     // decoding is complete
     if (buffer.frameLength != buffer.frameCapacity) {
-        flags_.fetch_or(static_cast<unsigned int>(Flags::decodingComplete), std::memory_order_acq_rel);
+        setFlags(Flags::decodingComplete);
     }
 
     return true;
@@ -371,7 +381,7 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
 /// Sets the pending seek request to `frame`
 inline void AudioPlayer::DecoderState::requestSeekToFrame(AVAudioFramePosition frame) noexcept {
     seekOffset_.store(frame, std::memory_order_release);
-    flags_.fetch_or(static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
+    setFlags(Flags::seekPending);
 }
 
 /// Performs the pending seek request
@@ -401,7 +411,7 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     }
 
     // Clear the seek request
-    flags_.fetch_and(~static_cast<unsigned int>(Flags::seekPending), std::memory_order_acq_rel);
+    clearFlags(Flags::seekPending);
 
     // Update the frame counters accordingly
     // A seek is handled in essentially the same way as initial playback
@@ -527,9 +537,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     {
         std::lock_guard lock{engineMutex_};
         [engine_ stop];
-        flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
-                                 ~static_cast<unsigned int>(Flags::isPlaying),
-                         std::memory_order_acq_rel);
+        clearFlags(Flags::engineIsRunning | Flags::isPlaying);
     }
 
     clearDecoderQueue();
@@ -598,7 +606,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
     if (forImmediatePlayback) {
         cancelActiveDecoders();
         // Mute until the decoder becomes active
-        flags_.fetch_or(static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
+        setFlags(Flags::isMuted);
     }
 
     decodingSemaphore_.signal();
@@ -626,9 +634,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
         if (didStartEngine = !engine_.isRunning; didStartEngine) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-                flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
-                                         ~static_cast<unsigned int>(Flags::isPlaying),
-                                 std::memory_order_acq_rel);
+                clearFlags(Flags::engineIsRunning | Flags::isPlaying);
                 if (error != nullptr) {
                     *error = startError;
                 }
@@ -636,10 +642,8 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
             }
         }
 
-        const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) |
-                                                       static_cast<unsigned int>(Flags::isPlaying),
-                                               std::memory_order_acq_rel);
-        wasPlaying = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) != 0;
+        const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
+        wasPlaying = bits::is_set(prevFlags, Flags::isPlaying);
         assert(!(didStartEngine && wasPlaying));
     }
 
@@ -658,9 +662,8 @@ bool sfb::AudioPlayer::pause() noexcept {
         if (!engine_.isRunning) {
             return false;
         }
-        const auto prevFlags =
-                flags_.fetch_and(~static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-        wasPlaying = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) != 0;
+        const auto prevFlags = clearFlags(Flags::isPlaying);
+        wasPlaying = bits::is_set(prevFlags, Flags::isPlaying);
     }
 
     if (wasPlaying && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -677,8 +680,8 @@ bool sfb::AudioPlayer::resume() noexcept {
         if (!engine_.isRunning) {
             return false;
         }
-        const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel);
-        wasPaused = (prevFlags & static_cast<unsigned int>(Flags::isPlaying)) == 0;
+        const auto prevFlags = setFlags(Flags::isPlaying);
+        wasPaused = bits::is_clear(prevFlags, Flags::isPlaying);
     }
 
     if (wasPaused && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -708,25 +711,21 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
         if (!engine_.isRunning) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-                flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
-                                         ~static_cast<unsigned int>(Flags::isPlaying),
-                                 std::memory_order_acq_rel);
+                clearFlags(Flags::engineIsRunning | Flags::isPlaying);
                 if (error != nullptr) {
                     *error = startError;
                 }
                 return false;
             }
 
-            const auto prevFlags = flags_.fetch_or(static_cast<unsigned int>(Flags::engineIsRunning) |
-                                                           static_cast<unsigned int>(Flags::isPlaying),
-                                                   std::memory_order_acq_rel);
-            assert((prevFlags & static_cast<unsigned int>(Flags::isPlaying)) == 0);
+            const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
+            assert(bits::is_clear(prevFlags, Flags::isPlaying));
 
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         } else {
             // Toggle playing/paused
-            if (flags_.fetch_xor(static_cast<unsigned int>(Flags::isPlaying), std::memory_order_acq_rel) &
-                static_cast<unsigned int>(Flags::isPlaying)) {
+            const auto prevFlags = toggleFlags(Flags::isPlaying);
+            if (bits::is_set(prevFlags, Flags::isPlaying)) {
                 playbackState = SFBAudioPlayerPlaybackStatePaused;
             } else {
                 playbackState = SFBAudioPlayerPlaybackStatePlaying;
@@ -1111,8 +1110,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
                 }
 
-                decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::isCanceled),
-                                              std::memory_order_acq_rel);
+                decoderState->setFlags(DecoderState::Flags::isCanceled);
                 ringBufferStale = true;
 
                 // Submit the decoder canceled event
@@ -1138,8 +1136,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (const auto flags = decoderState->loadFlags(); bits::is_set(flags, DecoderState::Flags::seekPending)) {
                 if (NSError *seekError = nil; !decoderState->performSeek(&seekError)) {
                     decoderState->error_ = seekError;
-                    decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                                  std::memory_order_acq_rel);
+                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
                     continue;
                 }
                 ringBufferStale = true;
@@ -1155,8 +1152,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     fetchUpdate(
                             decoderState->flags_,
                             [](auto val) noexcept {
-                                return (val & ~static_cast<unsigned int>(DecoderState::Flags::decodingComplete)) |
-                                       static_cast<unsigned int>(DecoderState::Flags::decodingResumed);
+                                return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
+                                       bits::to_underlying(DecoderState::Flags::decodingResumed);
                             },
                             std::memory_order_acq_rel);
 
@@ -1181,9 +1178,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                     nextDecoderState->requestSeekToFrame(0);
                                     if (NSError *seekError = nil; !nextDecoderState->performSeek(&seekError)) {
                                         nextDecoderState->error_ = seekError;
-                                        nextDecoderState->flags_.fetch_or(
-                                                static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                                std::memory_order_acq_rel);
+                                        nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
                                         continue;
                                     }
                                 } else {
@@ -1195,9 +1190,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                 fetchUpdate(
                                         nextDecoderState->flags_,
                                         [](auto val) noexcept {
-                                            return (val &
-                                                    ~static_cast<unsigned int>(DecoderState::Flags::decodingStarted)) |
-                                                   static_cast<unsigned int>(DecoderState::Flags::decodingSuspended);
+                                            return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
+                                                   bits::to_underlying(DecoderState::Flags::decodingSuspended);
                                         },
                                         std::memory_order_acq_rel);
                             }
@@ -1210,7 +1204,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         // Request a drain of the ring buffer during the next render cycle to prevent audible artifacts from seeking or
         // cancellation
         if (ringBufferStale) {
-            flags_.fetch_or(static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
+            setFlags(Flags::drainRequired);
         }
 
         // Get the earliest decoder state that has not completed decoding
@@ -1270,8 +1264,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                code:SFBAudioPlayerErrorCodeInternalError
                                                            userInfo:nil];
-                    decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                                  std::memory_order_acq_rel);
+                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
                     continue;
                 }
 
@@ -1298,9 +1291,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                        code:SFBAudioPlayerErrorCodeInternalError
                                                                    userInfo:nil];
-                            decoderState->flags_.fetch_or(
-                                    static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                    std::memory_order_acq_rel);
+                            decoderState->setFlags(DecoderState::Flags::cancelRequested);
                             continue;
                         }
                     }
@@ -1321,7 +1312,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }();
 
                 if (okToReconfigure) {
-                    flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_release);
+                    clearFlags(Flags::drainRequired);
                     formatMismatch = false;
 
                     os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
@@ -1329,8 +1320,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     auto renderFormat = decoderState->converter_.outputFormat;
                     if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
                         decoderState->error_ = error;
-                        decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                                      std::memory_order_acq_rel);
+                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
                         continue;
                     }
 
@@ -1346,9 +1336,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                        code:SFBAudioPlayerErrorCodeInternalError
                                                                    userInfo:nil];
-                            decoderState->flags_.fetch_or(
-                                    static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                    std::memory_order_acq_rel);
+                            decoderState->setFlags(DecoderState::Flags::cancelRequested);
                             continue;
                         }
                     }
@@ -1374,8 +1362,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                          decoderState->decoder_);
                         }
 
-                        decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::decodingStarted),
-                                                      std::memory_order_acq_rel);
+                        decoderState->setFlags(DecoderState::Flags::decodingStarted);
 
                         // Submit the decoding started event for the initial start only
                         if (!suspended) {
@@ -1391,8 +1378,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     // Decode audio into the buffer, converting to the rendering format in the process
                     if (NSError *error = nil; !decoderState->decodeAudio(buffer, &error)) {
                         decoderState->error_ = error;
-                        decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                                      std::memory_order_acq_rel);
+                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
                         goto next_outer_iteration;
                     }
 
@@ -1434,7 +1420,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                 // Clear the mute flag if needed now that the ring buffer is full
                 if (bits::is_set(flags, Flags::isMuted)) {
-                    flags_.fetch_and(~static_cast<unsigned int>(Flags::isMuted), std::memory_order_acq_rel);
+                    clearFlags(Flags::isMuted);
                 }
             }
         }
@@ -1532,7 +1518,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
     if (bits::is_set(flags, Flags::drainRequired)) {
         audioRingBuffer_.drain();
-        flags_.fetch_and(~static_cast<unsigned int>(Flags::drainRequired), std::memory_order_acq_rel);
+        clearFlags(Flags::drainRequired);
         for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
             std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
         }
@@ -1868,8 +1854,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
             // Rendering is starting
             if (bits::has_none(flags, DecoderState::Flags::isCanceled | DecoderState::Flags::renderingStarted)) {
-                (*iter)->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::renderingStarted),
-                                         std::memory_order_acq_rel);
+                (*iter)->setFlags(DecoderState::Flags::renderingStarted);
 
                 const auto frameOffset = framesRendered - framesRemainingToDistribute;
                 const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
@@ -2080,8 +2065,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
     auto signal = false;
     for (const auto &decoderState : activeDecoders_) {
         if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::isCanceled)) {
-            decoderState->flags_.fetch_or(static_cast<unsigned int>(DecoderState::Flags::cancelRequested),
-                                          std::memory_order_acq_rel);
+            decoderState->setFlags(DecoderState::Flags::cancelRequested);
             signal = true;
         }
     }
@@ -2126,12 +2110,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 
         // AVAudioEngine stops itself when a configuration change occurs
         // Flags::engineIsRunning indicates if the engine was running before the interruption
-        const auto prevFlags = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
-                                                        ~static_cast<unsigned int>(Flags::isPlaying),
-                                                std::memory_order_acq_rel);
-        constexpr auto mask =
-                static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-        const auto prevState = prevFlags & mask;
+        const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
+        const auto prevState = prevFlags & (Flags::engineIsRunning | Flags::isPlaying);
 
         AVAudioOutputNode *outputNode = engine_.outputNode;
         AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
@@ -2170,7 +2150,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         }
 
         // Restart AVAudioEngine if previously running
-        if ((prevState & static_cast<unsigned int>(Flags::engineIsRunning)) != 0) {
+        if (bits::is_set(prevState, Flags::engineIsRunning)) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                 lock.unlock();
@@ -2181,7 +2161,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             }
 
             // Restore previous playback state
-            flags_.fetch_or(prevState, std::memory_order_acq_rel);
+            setFlags(prevState);
         }
     }
 
@@ -2199,15 +2179,12 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
         {
             std::lock_guard lock{engineMutex_};
-            const auto prevFlags = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
-                                                            ~static_cast<unsigned int>(Flags::isPlaying),
-                                                    std::memory_order_acq_rel);
-            constexpr auto mask =
-                    static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-            preInterruptState_ = prevFlags & mask;
+            const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
+            preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineIsRunning | Flags::isPlaying));
         }
 
-        if (preInterruptState_ && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+        if (preInterruptState_ != 0 && [player_.delegate respondsToSelector:@selector(audioPlayer:
+                                                                                    playbackStateChanged:)]) {
             [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
         }
 
@@ -2239,10 +2216,12 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             return;
         }
 
+        const auto preInterruptState = static_cast<Flags>(preInterruptState_);
+
         {
             std::unique_lock lock{engineMutex_};
 
-            if ((preInterruptState_ & static_cast<unsigned int>(Flags::engineIsRunning)) != 0) {
+            if (bits::is_set(preInterruptState, Flags::engineIsRunning)) {
                 if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                     os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                     lock.unlock();
@@ -2253,10 +2232,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
                 }
             }
 
-            const auto prevFlags = flags_.fetch_or(preInterruptState_, std::memory_order_acq_rel);
-            constexpr auto mask =
-                    static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-            assert((prevFlags & mask) != static_cast<unsigned int>(Flags::isPlaying));
+            const auto prevFlags = setFlags(preInterruptState);
+            assert(!bits::is_set_without(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
         }
 
         if (preInterruptState_ && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -2283,8 +2260,7 @@ bool sfb::AudioPlayer::stopEngineIfRunning() noexcept {
         return false;
     }
     [engine_ stop];
-    flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) & ~static_cast<unsigned int>(Flags::isPlaying),
-                     std::memory_order_acq_rel);
+    clearFlags(Flags::engineIsRunning | Flags::isPlaying);
     return true;
 }
 
@@ -2304,12 +2280,8 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     [engine_ stop];
 
     // Attempt to preserve the playback state
-    const auto prevFlags = flags_.fetch_and(~static_cast<unsigned int>(Flags::engineIsRunning) &
-                                                    ~static_cast<unsigned int>(Flags::isPlaying),
-                                            std::memory_order_acq_rel);
-    constexpr auto mask =
-            static_cast<unsigned int>(Flags::engineIsRunning) | static_cast<unsigned int>(Flags::isPlaying);
-    const auto prevState = prevFlags & mask;
+    const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
+    const auto prevState = prevFlags & (Flags::engineIsRunning | Flags::isPlaying);
 
     // Reconfigure the processing graph
     AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_
@@ -2359,7 +2331,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     [engine_ prepare];
 
     // Restart AVAudioEngine and playback as appropriate
-    if ((prevState & static_cast<unsigned int>(Flags::engineIsRunning)) != 0) {
+    if (bits::is_set(prevState, Flags::engineIsRunning)) {
         if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
             os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
             // TODO: Re-evaluate whether failure to start AVAudioEngine during reconfiguration
@@ -2371,7 +2343,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
             return false;
         }
 
-        flags_.fetch_or(prevState, std::memory_order_acq_rel);
+        setFlags(prevState);
     }
 
     return true;
