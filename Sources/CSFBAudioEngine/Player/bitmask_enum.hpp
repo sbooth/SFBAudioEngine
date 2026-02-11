@@ -13,33 +13,28 @@
 
 namespace bits {
 
+/// An enumeration supporting bitmask operations
+template <typename T>
+concept BitmaskEnum =
+        std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>> && requires(T t) { is_bitmask_enum(t); };
+
 /// Returns the bitwise OR of l and r
-template <typename E> constexpr E or_impl(E l, E r) noexcept {
+template <BitmaskEnum E> constexpr E or_impl(E l, E r) noexcept {
     using U = std::underlying_type_t<E>;
     return static_cast<E>(static_cast<U>(l) | static_cast<U>(r));
 }
 
 /// Returns the bitwise AND of l and r
-template <typename E> constexpr E and_impl(E l, E r) noexcept {
+template <BitmaskEnum E> constexpr E and_impl(E l, E r) noexcept {
     using U = std::underlying_type_t<E>;
     return static_cast<E>(static_cast<U>(l) & static_cast<U>(r));
 }
 
 /// Returns the bitwise XOR of l and r
-template <typename E> constexpr E xor_impl(E l, E r) noexcept {
+template <BitmaskEnum E> constexpr E xor_impl(E l, E r) noexcept {
     using U = std::underlying_type_t<E>;
     return static_cast<E>(static_cast<U>(l) ^ static_cast<U>(r));
 }
-
-/// Returns the bitwise NOT of v
-template <typename E> constexpr E not_impl(E v) noexcept {
-    return static_cast<E>(~static_cast<std::underlying_type_t<E>>(v));
-}
-
-/// An enumeration supporting bitmask operations
-template <typename T>
-concept BitmaskEnum =
-        std::is_enum_v<T> && std::is_unsigned_v<std::underlying_type_t<T>> && requires(T t) { is_bitmask_enum(t); };
 
 /// Returns true if all non-zero bits in mask are set in value
 template <BitmaskEnum E> constexpr bool has_all(E value, E mask) noexcept {
@@ -82,14 +77,3 @@ template <BitmaskEnum E> constexpr bool has_flag_but_not(E value, E set, E clear
 }
 
 } /* namespace bits */
-
-// Global operators
-//
-// template <bits::BitmaskEnum E> constexpr E operator|(E l, E r) noexcept { return bits::or_impl(l, r); }
-// template <bits::BitmaskEnum E> constexpr E operator&(E l, E r) noexcept { return bits::and_impl(l, r); }
-// template <bits::BitmaskEnum E> constexpr E operator^(E l, E r) noexcept { return bits::xor_impl(l, r); }
-// template <bits::BitmaskEnum E> constexpr E operator~(E v) noexcept { return bits::not_impl(v); }
-//
-// template <bits::BitmaskEnum E> constexpr E& operator|=(E& l, E r) noexcept { return l = (l | r); }
-// template <bits::BitmaskEnum E> constexpr E& operator&=(E& l, E r) noexcept { return l = (l & r); }
-// template <bits::BitmaskEnum E> constexpr E& operator^=(E& l, E r) noexcept { return l = (l ^ r); }
