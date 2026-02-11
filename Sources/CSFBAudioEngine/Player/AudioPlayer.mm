@@ -755,7 +755,7 @@ void sfb::AudioPlayer::reset() noexcept {
 bool sfb::AudioPlayer::engineIsRunning() const noexcept {
     const auto isRunning = engine_.isRunning;
 #if DEBUG
-    assert(static_cast<bool>(loadFlags() & Flags::engineIsRunning) == isRunning &&
+    assert(bits::has_flag(loadFlags(), Flags::engineIsRunning) == isRunning &&
            "Cached value for engine_.isRunning invalid");
 #endif /* DEBUG */
     return isRunning;
@@ -1023,7 +1023,7 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
 
     assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode &&
            "Illegal AVAudioEngine configuration");
-    assert(engine_.isRunning == static_cast<bool>(loadFlags() & Flags::engineIsRunning) &&
+    assert(engine_.isRunning == bits::has_flag(loadFlags(), Flags::engineIsRunning) &&
            "AVAudioEngine may not be started or stopped outside of AudioPlayer");
 }
 
