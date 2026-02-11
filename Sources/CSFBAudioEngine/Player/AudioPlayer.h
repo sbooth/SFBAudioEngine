@@ -346,12 +346,12 @@ inline bool AudioPlayer::isPlaying() const noexcept {
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_all_and_none(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::is_set_without(flags, Flags::engineIsRunning, Flags::isPlaying);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_none(flags, Flags::engineIsRunning);
+    return bits::is_clear(flags, Flags::engineIsRunning);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
