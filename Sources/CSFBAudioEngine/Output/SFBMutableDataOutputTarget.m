@@ -5,16 +5,16 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBMutableDataOutputSource.h"
+#import "SFBMutableDataOutputTarget.h"
 
-@interface SFBMutableDataOutputSource () {
+@interface SFBMutableDataOutputTarget () {
   @private
     NSMutableData *_data;
     NSUInteger _pos;
 }
 @end
 
-@implementation SFBMutableDataOutputSource
+@implementation SFBMutableDataOutputTarget
 
 - (instancetype)init {
     if ((self = [super initWithURL:nil])) {
