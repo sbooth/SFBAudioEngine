@@ -7,8 +7,8 @@
 
 import Foundation
 
-extension OutputSource {
-    /// Reads bytes from the input
+extension OutputTarget {
+    /// Reads bytes from the output
     /// - parameter buffer: A buffer to receive data
     /// - parameter length: The maximum number of bytes to read
     /// - returns: The number of bytes actually read

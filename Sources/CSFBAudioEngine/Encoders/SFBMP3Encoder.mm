@@ -404,7 +404,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
     }
 
     NSInteger bytesWritten;
-    if (![_outputSource writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] ||
+    if (![_outputTarget writeBytes:buf.get() length:result bytesWritten:&bytesWritten error:error] ||
         bytesWritten != result) {
         return NO;
     }
@@ -468,7 +468,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:buf.get()
+        if (![_outputTarget writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
@@ -494,7 +494,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:buf.get()
+        if (![_outputTarget writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||
@@ -521,12 +521,12 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
         auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
 
-        if (![_outputSource seekToOffset:_id3v2TagSize error:error]) {
+        if (![_outputTarget seekToOffset:_id3v2TagSize error:error]) {
             return NO;
         }
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:buf.get()
+        if (![_outputTarget writeBytes:buf.get()
                                 length:static_cast<NSInteger>(result)
                           bytesWritten:&bytesWritten
                                  error:error] ||

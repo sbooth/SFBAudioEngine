@@ -352,14 +352,14 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         }
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.header_len) {
             speex_encoder_destroy(_st);
             ogg_stream_clear(&_os);
             return NO;
         }
 
-        if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.body_len) {
             speex_encoder_destroy(_st);
             ogg_stream_clear(&_os);
@@ -397,14 +397,14 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         }
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.header_len) {
             speex_encoder_destroy(_st);
             ogg_stream_clear(&_os);
             return NO;
         }
 
-        if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.body_len) {
             speex_encoder_destroy(_st);
             ogg_stream_clear(&_os);
@@ -530,12 +530,12 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         }
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.header_len) {
             return NO;
         }
 
-        if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.body_len) {
             return NO;
         }
@@ -591,12 +591,12 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
             }
 
             NSInteger bytesWritten;
-            if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+            if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
                 bytesWritten != og.header_len) {
                 return NO;
             }
 
-            if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+            if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
                 bytesWritten != og.body_len) {
                 return NO;
             }

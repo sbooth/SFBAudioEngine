@@ -313,10 +313,11 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     AVAudioChannelLayout *channelLayout = nil;
 
     if (_channelMask != 0) {
-        if (__builtin_popcount(_channelMask) == _streamInfo.channels) {
+        if (static_cast<uint32_t>(__builtin_popcount(_channelMask)) == _streamInfo.channels) {
             channelLayout = channelLayoutFromWAVEMask(_channelMask);
         } else {
-            os_log_error(gSFBAudioDecoderLog, "Ignoring invalid channel mask 0x%x (%d channels) for %u-channel stream", _channelMask, __builtin_popcount(_channelMask), _streamInfo.channels);
+            os_log_error(gSFBAudioDecoderLog, "Ignoring invalid channel mask 0x%x (%d channels) for %u-channel stream",
+                         _channelMask, __builtin_popcount(_channelMask), _streamInfo.channels);
         }
     }
 
@@ -618,14 +619,16 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             const char *prefix = "WAVEFORMATEXTENSIBLE_CHANNEL_MASK=";
             constexpr auto prefixLength = 34;
             constexpr auto minValidLength = prefixLength + 2 + 1 /* '0xN' */;
-            if (comment.length >= minValidLength && comment.entry[0] == prefix[0] && memcmp(comment.entry, prefix, prefixLength) == 0) {
+            if (comment.length >= minValidLength && comment.entry[0] == prefix[0] &&
+                memcmp(comment.entry, prefix, prefixLength) == 0) {
                 if (_channelMask != 0) {
                     os_log_debug(gSFBAudioDecoderLog, "Multiple WAVEFORMATEXTENSIBLE_CHANNEL_MASK Vorbis comments");
                 }
                 const char *value = reinterpret_cast<const char *>(comment.entry) + prefixLength;
                 _channelMask = static_cast<uint32_t>(std::strtoul(value, nullptr, 16));
                 if (_channelMask == 0 || _channelMask > 0x3FFFF) {
-                    os_log_error(gSFBAudioDecoderLog, "Invalid value \"%{public}s\" for WAVEFORMATEXTENSIBLE_CHANNEL_MASK", value);
+                    os_log_error(gSFBAudioDecoderLog,
+                                 "Invalid value \"%{public}s\" for WAVEFORMATEXTENSIBLE_CHANNEL_MASK", value);
                     _channelMask = 0;
                 }
             }
