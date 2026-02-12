@@ -1643,7 +1643,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
             return false;
         }
 
-        if (const auto *decoderState = firstActiveDecoderState(); decoderState) {
+        if (const auto *decoderState = firstActiveDecoderState(); decoderState != nullptr) {
             currentDecoder = decoderState->decoder_;
         }
     }
