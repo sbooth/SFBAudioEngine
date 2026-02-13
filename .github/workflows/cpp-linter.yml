@@ -3,17 +3,19 @@ on:
   push:
     branches: [ "main" ]
     paths: 
-      - 'Sources/CSFBAudioEngine/**.h'
-      - 'Sources/CSFBAudioEngine/**.hpp'
-      - 'Sources/CSFBAudioEngine/**.m'
-      - 'Sources/CSFBAudioEngine/**.mm'
+      - 'Sources/CSFBAudioEngine/**/*.h'
+      - 'Sources/CSFBAudioEngine/**/*.hpp'
+      - 'Sources/CSFBAudioEngine/**/*.m'
+      - 'Sources/CSFBAudioEngine/**/*.mm'
+      - '.clang-format'
   pull_request:
     branches: [ "main" ]
     paths: 
-      - 'Sources/CSFBAudioEngine/**.h'
-      - 'Sources/CSFBAudioEngine/**.hpp'
-      - 'Sources/CSFBAudioEngine/**.m'
-      - 'Sources/CSFBAudioEngine/**.mm'
+      - 'Sources/CSFBAudioEngine/**/*.h'
+      - 'Sources/CSFBAudioEngine/**/*.hpp'
+      - 'Sources/CSFBAudioEngine/**/*.m'
+      - 'Sources/CSFBAudioEngine/**/*.mm'
+      - '.clang-format'
 permissions:
   contents: read
   pull-requests: write
