@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMonkeysAudio",
       "state" : {
-        "revision" : "f8f445c5e545cf78ec8c097a3c236659e1e4ba8b",
-        "version" : "11.82.0"
+        "revision" : "79cafc4dfccff8b9d3065cbf198f6e171a9409c3",
+        "version" : "12.13.0"
       }
     },
     {
@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/mpg123-binary-xcframework",
       "state" : {
-        "revision" : "54f515998ff4604e87bd27cf15e57089881cf3ff",
-        "version" : "0.3.0"
+        "revision" : "acc2c651cbd8fff8bc8cdeb4faf14b35ba81adee",
+        "version" : "0.3.1"
       }
     },
     {
@@ -131,8 +131,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/opus-binary-xcframework",
       "state" : {
-        "revision" : "74201a6af424e7e3a007fd5e401e9d2ce6896628",
-        "version" : "0.2.2"
+        "revision" : "8e23828b9d88f0ff1ff2d7c4bcb65739a4bdeff8",
+        "version" : "0.3.0"
       }
     },
     {
@@ -167,8 +167,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/wavpack-binary-xcframework",
       "state" : {
-        "revision" : "4463d800294a573ac8902b5d100e4a8676df6086",
-        "version" : "0.1.2"
+        "revision" : "c8c2a9f930349a7209e14f6e5667fc5cc38b6c4b",
+        "version" : "0.2.0"
       }
     }
   ],
