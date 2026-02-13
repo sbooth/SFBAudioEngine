@@ -38,6 +38,7 @@ jobs:
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
           format-review: true
           extensions: 'h,hpp,c,cpp,m,mm'
+          version: 21
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed > 0
         run: exit 1
