@@ -1,0 +1,28 @@
+name: cpp-linter
+on:
+  push:
+    branches: [ "main" ]
+    paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', **.cpp']
+  pull_request:
+    branches: [ "main" ]
+    paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', **.cpp']
+permissions:
+  contents: read
+jobs:
+  cpp-linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: cpp-linter
+        uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: 'file'
+          tidy-checks: '-*'
+          thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
+      - name: Fail fast?!
+        if: steps.linter.outputs.checks-failed > 0
+        run: exit 1
