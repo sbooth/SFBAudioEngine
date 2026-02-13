@@ -6,7 +6,7 @@
 //
 
 #import <SFBAudioEngine/SFBAudioEngineTypes.h>
-#import <SFBAudioEngine/SFBOutputSource.h>
+#import <SFBAudioEngine/SFBOutputTarget.h>
 
 #import <AVFAudio/AVFAudio.h>
 #import <Foundation/Foundation.h>
@@ -24,8 +24,8 @@ NS_SWIFT_NAME(AudioEncoding)
 
 // MARK: - Output
 
-/// The output source consuming data from this encoder
-@property(nonatomic, readonly) SFBOutputSource *outputSource;
+/// The output target consuming data from this encoder
+@property(nonatomic, readonly) SFBOutputTarget *outputTarget;
 
 // MARK: - Audio Format Information
 

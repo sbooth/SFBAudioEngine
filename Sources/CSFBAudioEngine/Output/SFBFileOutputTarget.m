@@ -5,25 +5,25 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBFileOutputSource.h"
+#import "SFBFileOutputTarget.h"
 
-#import "SFBOutputSource+Internal.h"
+#import "SFBOutputTarget+Internal.h"
 
 #import <stdio.h>
 
-@interface SFBFileOutputSource () {
+@interface SFBFileOutputTarget () {
   @private
     FILE *_file;
 }
 @end
 
-@implementation SFBFileOutputSource
+@implementation SFBFileOutputTarget
 
 - (BOOL)openReturningError:(NSError **)error {
     _file = fopen(_url.fileSystemRepresentation, "w+");
     if (!_file) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "fopen failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -39,7 +39,7 @@
         _file = NULL;
         if (result) {
             int err = errno;
-            os_log_error(gSFBOutputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
+            os_log_error(gSFBOutputTargetLog, "fclose failed: %{public}s (%d)", strerror(err), err);
             if (error) {
                 *error = [self posixErrorWithCode:err];
             }
@@ -61,7 +61,7 @@
     size_t read = fread(buffer, 1, (size_t)length, _file);
     if (read != (size_t)length && ferror(_file)) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "fread error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -82,7 +82,7 @@
     size_t written = fwrite(buffer, 1, (size_t)length, _file);
     if (written != (size_t)length) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "fwrite error: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "fwrite error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -101,7 +101,7 @@
     off_t result = ftello(_file);
     if (result == -1) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -116,7 +116,7 @@
     off_t offset = ftello(_file);
     if (offset == -1) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -125,7 +125,7 @@
 
     if (fseeko(_file, 0, SEEK_END)) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "fseeko(0, SEEK_END) error: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "fseeko(0, SEEK_END) error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -135,7 +135,7 @@
     off_t len = ftello(_file);
     if (len == -1) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
+        os_log_error(gSFBOutputTargetLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
         }
@@ -144,7 +144,7 @@
 
     if (fseeko(_file, offset, SEEK_SET)) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
+        os_log_error(gSFBOutputTargetLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -164,7 +164,7 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     if (fseeko(_file, offset, SEEK_SET)) {
         int err = errno;
-        os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
+        os_log_error(gSFBOutputTargetLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {
             *error = [self posixErrorWithCode:err];

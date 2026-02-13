@@ -15,7 +15,7 @@ extern os_log_t gSFBAudioEncoderLog;
 
 @interface SFBAudioEncoder () {
   @package
-    SFBOutputSource *_outputSource;
+    SFBOutputTarget *_outputTarget;
     AVAudioFormat *_sourceFormat;
     AVAudioFormat *_processingFormat;
     AVAudioFormat *_outputFormat;

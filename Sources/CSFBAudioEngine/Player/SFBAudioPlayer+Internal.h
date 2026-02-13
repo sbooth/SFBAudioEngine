@@ -8,8 +8,6 @@
 #import "AudioPlayer.h"
 #import "SFBAudioPlayer.h"
 
-#import <memory>
-
 @interface SFBAudioPlayer () {
   @package
     /// The underlying AudioPlayer instance

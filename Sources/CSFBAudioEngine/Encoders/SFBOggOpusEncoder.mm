@@ -60,13 +60,13 @@ using ogg_opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, ogg_opus_c
 int writeCallback(void *user_data, const unsigned char *ptr, opus_int32 len) noexcept {
     SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
     NSInteger bytesWritten;
-    return ![encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] ||
+    return ![encoder->_outputTarget writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] ||
            bytesWritten != len;
 }
 
 int closeCallback(void *user_data) noexcept {
     SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
-    return ![encoder->_outputSource closeReturningError:nil];
+    return ![encoder->_outputTarget closeReturningError:nil];
 }
 
 } /* namespace */

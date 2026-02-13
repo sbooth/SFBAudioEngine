@@ -124,24 +124,24 @@ OSStatus readProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, vo
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputTarget *outputTarget = encoder->_outputTarget;
 
     NSInteger offset;
-    if (![outputSource getOffset:&offset error:nil]) {
+    if (![outputTarget getOffset:&offset error:nil]) {
         return kAudioFileUnspecifiedError;
     }
 
     if (inPosition != offset) {
-        if (!outputSource.supportsSeeking) {
+        if (!outputTarget.supportsSeeking) {
             return kAudioFileOperationNotSupportedError;
         }
-        if (![outputSource seekToOffset:inPosition error:nil]) {
+        if (![outputTarget seekToOffset:inPosition error:nil]) {
             return kAudioFileUnspecifiedError;
         }
     }
 
     NSInteger bytesRead;
-    if (![outputSource readBytes:buffer length:(NSInteger)requestCount bytesRead:&bytesRead error:nil]) {
+    if (![outputTarget readBytes:buffer length:(NSInteger)requestCount bytesRead:&bytesRead error:nil]) {
         return kAudioFileUnspecifiedError;
     }
 
@@ -155,24 +155,24 @@ OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, c
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputTarget *outputTarget = encoder->_outputTarget;
 
     NSInteger offset;
-    if (![outputSource getOffset:&offset error:nil]) {
+    if (![outputTarget getOffset:&offset error:nil]) {
         return kAudioFileUnspecifiedError;
     }
 
     if (inPosition != offset) {
-        if (!outputSource.supportsSeeking) {
+        if (!outputTarget.supportsSeeking) {
             return kAudioFileOperationNotSupportedError;
         }
-        if (![outputSource seekToOffset:inPosition error:nil]) {
+        if (![outputTarget seekToOffset:inPosition error:nil]) {
             return kAudioFileUnspecifiedError;
         }
     }
 
     NSInteger bytesWritten;
-    if (![outputSource writeBytes:buffer length:(NSInteger)requestCount bytesWritten:&bytesWritten error:nil]) {
+    if (![outputTarget writeBytes:buffer length:(NSInteger)requestCount bytesWritten:&bytesWritten error:nil]) {
         return kAudioFileUnspecifiedError;
     }
 
@@ -185,10 +185,10 @@ SInt64 getSizeProc(void *inClientData) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputTarget *outputTarget = encoder->_outputTarget;
 
     NSInteger length;
-    if (![outputSource getLength:&length error:nil]) {
+    if (![outputTarget getLength:&length error:nil]) {
         return -1;
     }
 
@@ -199,10 +199,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     NSCParameterAssert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
-    SFBOutputSource *outputSource = encoder->_outputSource;
+    SFBOutputTarget *outputTarget = encoder->_outputTarget;
 
     // FIXME: Actually do something here
-    (void)outputSource;
+    (void)outputTarget;
     (void)inSize;
 
     return kAudioFileOperationNotSupportedError;
@@ -359,25 +359,25 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         fileTypeSetting != nil) {
         fileType = static_cast<AudioFileTypeID>(fileTypeSetting.unsignedIntValue);
     } else {
-        auto typesForExtension = typeIDsForExtension(_outputSource.url.pathExtension);
+        auto typesForExtension = typeIDsForExtension(_outputTarget.url.pathExtension);
         if (typesForExtension.empty()) {
             os_log_error(gSFBAudioEncoderLog,
                          "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set and extension \"%{public}@\" has "
                          "no known AudioFileTypeID",
-                         _outputSource.url.pathExtension);
+                         _outputTarget.url.pathExtension);
             if (error != nullptr) {
                 NSMutableDictionary *userInfo = [NSMutableDictionary
                         dictionaryWithObject:NSLocalizedString(
                                                      @"The file's extension does not match any known file type.", @"")
                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
 
-                if (_outputSource.url != nil) {
+                if (_outputTarget.url != nil) {
                     userInfo[NSLocalizedDescriptionKey] = [NSString
                             localizedStringWithFormat:NSLocalizedString(
                                                               @"The type of the file “%@” could not be determined.",
                                                               @""),
-                                                      SFBLocalizedNameForURL(_outputSource.url)];
-                    userInfo[NSURLErrorKey] = _outputSource.url;
+                                                      SFBLocalizedNameForURL(_outputTarget.url)];
+                    userInfo[NSURLErrorKey] = _outputTarget.url;
                 } else {
                     userInfo[NSLocalizedDescriptionKey] =
                             NSLocalizedString(@"The type of the file could not be determined.", @"");
@@ -395,7 +395,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         os_log_info(gSFBAudioEncoderLog,
                     "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set: guessed '%{public}.4s' based on "
                     "extension \"%{public}@\"",
-                    SFBCStringForOSType(fileType), _outputSource.url.pathExtension);
+                    SFBCStringForOSType(fileType), _outputTarget.url.pathExtension);
     }
 
     AudioFormatID formatID = 0;
@@ -416,12 +416,12 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                                         @"There are no supported audio formats for encoding files of this type.", @"")
                                       forKey:NSLocalizedRecoverySuggestionErrorKey];
 
-                if (_outputSource.url != nil) {
+                if (_outputTarget.url != nil) {
                     userInfo[NSLocalizedDescriptionKey] = [NSString
                             localizedStringWithFormat:NSLocalizedString(
                                                               @"The file “%@” is an unsupported audio format.", @""),
-                                                      SFBLocalizedNameForURL(_outputSource.url)];
-                    userInfo[NSURLErrorKey] = _outputSource.url;
+                                                      SFBLocalizedNameForURL(_outputTarget.url)];
+                    userInfo[NSURLErrorKey] = _outputTarget.url;
                 } else {
                     userInfo[NSLocalizedDescriptionKey] =
                             NSLocalizedString(@"The file is an unsupported audio format.", @"");
@@ -652,10 +652,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    OSStatus result = ExtAudioFileTell(_eaf, &currentFrame);
-    if (result != noErr) {
-        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    OSStatus status = ExtAudioFileTell(_eaf, &currentFrame);
+    if (status != noErr) {
+        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         return SFBUnknownFramePosition;
     }
     return currentFrame;

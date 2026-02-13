@@ -201,7 +201,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
         }
 
         NSInteger bytesWritten;
-        if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.header_len) {
             vorbis_comment_clear(&vc);
             vorbis_block_clear(&_vb);
@@ -211,7 +211,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
             return NO;
         }
 
-        if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+        if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
             bytesWritten != og.body_len) {
             vorbis_comment_clear(&vc);
             vorbis_block_clear(&_vb);
@@ -342,12 +342,12 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
                 }
 
                 NSInteger bytesWritten;
-                if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+                if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
                     bytesWritten != og.header_len) {
                     return NO;
                 }
 
-                if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+                if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
                     bytesWritten != og.body_len) {
                     return NO;
                 }
@@ -436,12 +436,12 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
                 }
 
                 NSInteger bytesWritten;
-                if (![_outputSource writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
+                if (![_outputTarget writeBytes:og.header length:og.header_len bytesWritten:&bytesWritten error:error] ||
                     bytesWritten != og.header_len) {
                     return NO;
                 }
 
-                if (![_outputSource writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
+                if (![_outputTarget writeBytes:og.body length:og.body_len bytesWritten:&bytesWritten error:error] ||
                     bytesWritten != og.body_len) {
                     return NO;
                 }

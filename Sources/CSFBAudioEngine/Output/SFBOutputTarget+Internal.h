@@ -5,15 +5,15 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBOutputSource.h"
+#import "SFBOutputTarget.h"
 
 #import <os/log.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern os_log_t gSFBOutputSourceLog;
+extern os_log_t gSFBOutputTargetLog;
 
-@interface SFBOutputSource () {
+@interface SFBOutputTarget () {
   @package
     NSURL *_url;
 }

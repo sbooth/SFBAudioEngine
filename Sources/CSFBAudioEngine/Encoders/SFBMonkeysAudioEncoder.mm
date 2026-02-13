@@ -42,7 +42,7 @@ namespace {
 // The I/O interface for MAC
 class APEIOInterface final : public APE::IAPEIO {
   public:
-    explicit APEIOInterface(SFBOutputSource *outputSource) : outputSource_(outputSource) {}
+    explicit APEIOInterface(SFBOutputTarget *outputTarget) : outputTarget_(outputTarget) {}
 
     int Open(const wchar_t *pName, bool bOpenReadOnly) override {
 #pragma unused(pName)
@@ -55,7 +55,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int Read(void *pBuffer, unsigned int nBytesToRead, unsigned int *pBytesRead) override {
         NSInteger bytesRead;
-        if (![outputSource_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil]) {
+        if (![outputTarget_ readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil]) {
             return ERROR_IO_READ;
         }
 
@@ -66,7 +66,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     int Write(const void *pBuffer, unsigned int nBytesToWrite, unsigned int *pBytesWritten) override {
         NSInteger bytesWritten;
-        if (![outputSource_ writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] ||
+        if (![outputTarget_ writeBytes:pBuffer length:(NSInteger)nBytesToWrite bytesWritten:&bytesWritten error:nil] ||
             bytesWritten != nBytesToWrite) {
             return ERROR_IO_WRITE;
         }
@@ -77,7 +77,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     int Seek(APE::int64 nPosition, APE::SeekMethod nMethod) override {
-        if (!outputSource_.supportsSeeking) {
+        if (!outputTarget_.supportsSeeking) {
             return ERROR_IO_READ;
         }
 
@@ -87,18 +87,18 @@ class APEIOInterface final : public APE::IAPEIO {
             // offset remains unchanged
             break;
         case APE::SeekFileCurrent:
-            if (NSInteger inputSourceOffset; [outputSource_ getOffset:&inputSourceOffset error:nil]) {
-                offset += inputSourceOffset;
+            if (NSInteger outputTargetOffset; [outputTarget_ getOffset:&outputTargetOffset error:nil]) {
+                offset += outputTargetOffset;
             }
             break;
         case APE::SeekFileEnd:
-            if (NSInteger inputSourceLength; [outputSource_ getLength:&inputSourceLength error:nil]) {
-                offset += inputSourceLength;
+            if (NSInteger outputTargetLength; [outputTarget_ getLength:&outputTargetLength error:nil]) {
+                offset += outputTargetLength;
             }
             break;
         }
 
-        if (![outputSource_ seekToOffset:offset error:nil]) {
+        if (![outputTarget_ seekToOffset:offset error:nil]) {
             return ERROR_IO_READ;
         }
 
@@ -121,7 +121,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetPosition() override {
         NSInteger offset;
-        if (![outputSource_ getOffset:&offset error:nil]) {
+        if (![outputTarget_ getOffset:&offset error:nil]) {
             return -1;
         }
         return offset;
@@ -129,7 +129,7 @@ class APEIOInterface final : public APE::IAPEIO {
 
     APE::int64 GetSize() override {
         NSInteger length;
-        if (![outputSource_ getLength:&length error:nil]) {
+        if (![outputTarget_ getLength:&length error:nil]) {
             return -1;
         }
         return length;
@@ -141,7 +141,7 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
   private:
-    SFBOutputSource *outputSource_;
+    SFBOutputTarget *outputTarget_;
 };
 
 } /* namespace */
@@ -219,9 +219,9 @@ class APEIOInterface final : public APE::IAPEIO {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-        OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
+        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof layoutTag, &layoutTag,
                                                  &propertySize, &channelBitmap);
-        if (result == noErr) {
+        if (status == noErr) {
             AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
                                       .mChannelBitmap = channelBitmap,
                                       .mNumberChannelDescriptions = 0};
@@ -230,7 +230,7 @@ class APEIOInterface final : public APE::IAPEIO {
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
                         "'%{public}.4s'",
-                        layoutTag, result, SFBCStringForOSType(result));
+                        layoutTag, status, SFBCStringForOSType(status));
         }
     }
 
@@ -254,7 +254,7 @@ class APEIOInterface final : public APE::IAPEIO {
         }
 
         _compressor = std::unique_ptr<APE::IAPECompress>(compressor);
-        _ioInterface = std::make_unique<APEIOInterface>(_outputSource);
+        _ioInterface = std::make_unique<APEIOInterface>(_outputTarget);
     } catch (const std::exception &e) {
         os_log_error(gSFBAudioEncoderLog, "Error creating Monkey's Audio encoder: %{public}s", e.what());
         if (error != nullptr) {

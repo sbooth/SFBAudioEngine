@@ -47,7 +47,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
     }
 
     NSInteger bytesWritten;
-    return [encoder->_outputSource writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
+    return [encoder->_outputTarget writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
 }
 
 @implementation SFBWavPackEncoder
@@ -106,9 +106,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-        OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag,
+        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof layoutTag, &layoutTag,
                                                  &propertySize, &channelBitmap);
-        if (result == noErr) {
+        if (status == noErr) {
             AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
                                       .mChannelBitmap = channelBitmap,
                                       .mNumberChannelDescriptions = 0};
@@ -119,7 +119,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
             os_log_info(gSFBAudioEncoderLog,
                         "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
                         "'%{public}.4s'",
-                        layoutTag, result, SFBCStringForOSType(result));
+                        layoutTag, status, SFBCStringForOSType(status));
         }
     }
 
@@ -357,10 +357,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
 
     if (_estimatedFramesToEncode != _framePosition && _firstBlock) {
         WavpackUpdateNumSamples(_wpc, _firstBlock.mutableBytes);
-        if (![_outputSource seekToOffset:0 error:error]) {
+        if (![_outputTarget seekToOffset:0 error:error]) {
             return NO;
         }
-        if (![_outputSource writeData:_firstBlock error:error]) {
+        if (![_outputTarget writeData:_firstBlock error:error]) {
             return NO;
         }
     }

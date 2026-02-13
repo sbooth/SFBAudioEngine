@@ -5,11 +5,11 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBBufferOutputSource.h"
+#import "SFBBufferOutputTarget.h"
 
 #import <stdint.h>
 
-@interface SFBBufferOutputSource () {
+@interface SFBBufferOutputTarget () {
   @private
     void *_buffer;
     size_t _capacity;
@@ -17,7 +17,7 @@
 }
 @end
 
-@implementation SFBBufferOutputSource
+@implementation SFBBufferOutputTarget
 
 - (instancetype)initWithBuffer:(void *)buffer capacity:(size_t)capacity {
     NSParameterAssert(buffer != nil);

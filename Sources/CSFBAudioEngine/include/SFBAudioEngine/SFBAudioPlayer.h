@@ -355,13 +355,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter decoder: The decoder for which rendering is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
 /// Called to notify the delegate when the now playing item changes
-/// - warning: Do not change any properties of `nowPlaying` or `previouslyPlaying`
+/// - warning: Do not change any properties of `nowPlaying`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter nowPlaying: The decoder that is now playing
-/// - parameter previouslyPlaying: The decoder that was playing previously
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
-        nowPlayingChanged:(nullable id<SFBPCMDecoding>)nowPlaying
-        previouslyPlaying:(nullable id<SFBPCMDecoding>)previouslyPlaying;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer nowPlayingChanged:(nullable id<SFBPCMDecoding>)nowPlaying;
 /// Called to notify the delegate when the playback state changes
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter playbackState: The current playback state
@@ -413,11 +410,13 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
         reconfigureProcessingGraph:(AVAudioEngine *)engine
                         withFormat:(AVAudioFormat *)format
         NS_SWIFT_NAME(audioPlayer(_:reconfigureProcessingGraph:with:));
-/// Called to notify the delegate when the configuration of the `AVAudioEngine` changes
-/// - note: Use this instead of listening for `AVAudioEngineConfigurationChangeNotification`
+/// Called to notify the delegate when the hardware channel count or sample rate of the `AVAudioEngine` output unit
+/// changes
+///
+/// This method is called after the processing graph is updated for the new hardware channel count or sample rate
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
-- (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer
-        NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
+/// - parameter userInfo: The `userInfo` object from the notification
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioEngineConfigurationChange:(nullable NSDictionary *)userInfo;
 #if TARGET_OS_IPHONE
 /// Called to notify the delegate of an `AVAudioSession` interruption begin or end
 ///
