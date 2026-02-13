@@ -2,10 +2,10 @@ name: cpp-linter
 on:
   push:
     branches: [ "main" ]
-    paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', **.cpp']
+    paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', '**.cpp']
   pull_request:
     branches: [ "main" ]
-    paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', **.cpp']
+    paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', '**.cpp']
 permissions:
   contents: read
   pull-requests: write
