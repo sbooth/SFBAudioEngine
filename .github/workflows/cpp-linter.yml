@@ -8,6 +8,7 @@ on:
     paths: ['**.h', '**.hpp', '**.m', '**.mm', '**.c', **.cpp']
 permissions:
   contents: read
+  pull-requests: write
 jobs:
   cpp-linter:
     runs-on: ubuntu-latest
@@ -23,6 +24,7 @@ jobs:
           style: 'file'
           tidy-checks: '-*'
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
+          format-review: true
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed > 0
         run: exit 1
