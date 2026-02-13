@@ -5,6 +5,8 @@ on:
     paths: 
       - 'Sources/CSFBAudioEngine/**/*.h'
       - 'Sources/CSFBAudioEngine/**/*.hpp'
+      - 'Sources/CSFBAudioEngine/**/*.c'
+      - 'Sources/CSFBAudioEngine/**/*.cpp'
       - 'Sources/CSFBAudioEngine/**/*.m'
       - 'Sources/CSFBAudioEngine/**/*.mm'
   pull_request:
@@ -12,6 +14,8 @@ on:
     paths: 
       - 'Sources/CSFBAudioEngine/**/*.h'
       - 'Sources/CSFBAudioEngine/**/*.hpp'
+      - 'Sources/CSFBAudioEngine/**/*.c'
+      - 'Sources/CSFBAudioEngine/**/*.cpp'
       - 'Sources/CSFBAudioEngine/**/*.m'
       - 'Sources/CSFBAudioEngine/**/*.mm'
 permissions:
@@ -33,6 +37,8 @@ jobs:
           tidy-checks: '-*'
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
           format-review: true
+          extensions: 'h,hpp,c,cpp,m,mm'
+          version: 21
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed > 0
         run: exit 1
