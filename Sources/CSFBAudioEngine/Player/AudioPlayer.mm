@@ -1584,10 +1584,10 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
         int64_t deltaNanos;
         {
             std::lock_guard lock{activeDecodersMutex_};
-            if (firstActiveDecoderState()) {
+            if (firstActiveDecoderState() != nullptr) {
                 deltaNanos = 7.5 * NSEC_PER_MSEC;
-                // Use a longer timeout when idle
             } else {
+                // Use a longer timeout when idle
                 deltaNanos = NSEC_PER_SEC / 2;
             }
         }
@@ -1643,7 +1643,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
             return false;
         }
 
-        if (const auto *decoderState = firstActiveDecoderState(); decoderState) {
+        if (const auto *decoderState = firstActiveDecoderState(); decoderState != nullptr) {
             currentDecoder = decoderState->decoder_;
         }
     }
