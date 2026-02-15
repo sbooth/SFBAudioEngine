@@ -330,8 +330,10 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
-    const bool seekPending = bits::is_set(loadFlags(), Flags::seekPending);
-    return seekPending ? seekOffset_.load(std::memory_order_acquire) : framesRendered_.load(std::memory_order_acquire);
+    if (bits::is_set(loadFlags(), Flags::seekPending)) {
+        return seekOffset_.load(std::memory_order_acquire);
+    }
+    return framesRendered_.load(std::memory_order_acquire);
 }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept {
