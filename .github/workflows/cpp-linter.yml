@@ -2,7 +2,7 @@ name: cpp-linter
 on:
   push:
     branches: [ "main" ]
-    paths: 
+    paths:
       - 'Sources/CSFBAudioEngine/**/*.h'
       - 'Sources/CSFBAudioEngine/**/*.hpp'
       - 'Sources/CSFBAudioEngine/**/*.c'
@@ -11,7 +11,7 @@ on:
       - 'Sources/CSFBAudioEngine/**/*.mm'
   pull_request:
     branches: [ "main" ]
-    paths: 
+    paths:
       - 'Sources/CSFBAudioEngine/**/*.h'
       - 'Sources/CSFBAudioEngine/**/*.hpp'
       - 'Sources/CSFBAudioEngine/**/*.c'
