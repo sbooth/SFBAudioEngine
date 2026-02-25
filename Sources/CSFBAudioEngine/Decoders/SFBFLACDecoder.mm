@@ -428,6 +428,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (AVAudioFramePosition)frameLength {
+    if (_streamInfo.total_samples == 0) {
+        return SFBUnknownFrameLength;
+    }
     return static_cast<AVAudioFramePosition>(_streamInfo.total_samples);
 }
 
