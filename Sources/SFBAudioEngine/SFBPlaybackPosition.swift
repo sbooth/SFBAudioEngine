@@ -28,12 +28,12 @@ extension PlaybackPosition {
 
     /// Returns `current` as a fraction of `total`
     public var progress: Double? {
-        return (self == .invalid || frameLength == 0) ? nil : Double(framePosition) / Double(frameLength)
+        (self == .invalid || frameLength == 0) ? nil : Double(framePosition) / Double(frameLength)
     }
 
     /// Returns the frames remaining
     public var remaining: AVAudioFramePosition? {
-        return self == .invalid ? nil : frameLength - framePosition
+        self == .invalid ? nil : frameLength - framePosition
     }
 }
 
