@@ -115,12 +115,6 @@ typedef struct SFBPlaybackPosition SFBPlaybackPosition;
 /// Value representing an invalid or unknown playback position
 extern const SFBPlaybackPosition SFBInvalidPlaybackPosition NS_SWIFT_NAME(PlaybackPosition.invalid);
 
-/// Returns `YES` if the current frame position and total number of frames in `playbackPosition` are valid
-NS_INLINE BOOL SFBPlaybackPositionIsValid(SFBPlaybackPosition playbackPosition) {
-    return playbackPosition.framePosition != SFBUnknownFramePosition &&
-           playbackPosition.frameLength != SFBUnknownFrameLength;
-}
-
 // MARK: - Playback Time
 
 /// Playback time information
@@ -134,10 +128,5 @@ typedef struct SFBPlaybackTime SFBPlaybackTime;
 
 /// Value representing an invalid or unknown playback time
 extern const SFBPlaybackTime SFBInvalidPlaybackTime NS_SWIFT_NAME(PlaybackTime.invalid);
-
-/// Returns `YES` if the current time and total time in `playbackTime` are valid
-NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
-    return playbackTime.currentTime != SFBUnknownTime && playbackTime.totalTime != SFBUnknownTime;
-}
 
 #endif /* __OBJC__ */
