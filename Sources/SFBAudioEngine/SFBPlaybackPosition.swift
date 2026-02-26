@@ -8,6 +8,15 @@
 import Foundation
 
 extension PlaybackPosition {
+    /// Returns `true` if both the current frame position and total number of frames are valid
+    public var isValid: Bool {
+        framePosition != unknownFramePosition && frameLength != unknownFrameLength
+    }
+    /// Returns `true` if either the current frame position or total number of frames is valid
+    public var isPartiallyValid: Bool {
+        framePosition != unknownFramePosition || frameLength != unknownFrameLength
+    }
+
     /// Returns `true` if the current frame position is valid
     public var isFramePositionValid: Bool {
         framePosition != unknownFramePosition

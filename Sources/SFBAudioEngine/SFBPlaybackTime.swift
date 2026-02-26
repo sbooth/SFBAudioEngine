@@ -8,6 +8,15 @@
 import Foundation
 
 extension PlaybackTime {
+    /// Returns `true` if both the current time and total time are valid
+    public var isValid: Bool {
+        currentTime != unknownTime && totalTime != unknownTime
+    }
+    /// Returns `true` if either the current time or total time is valid
+    public var isPartiallyValid: Bool {
+        currentTime != unknownTime || totalTime != unknownTime
+    }
+
     /// Returns `true` if the current time is valid
     public var isCurrentTimeValid: Bool {
         currentTime != unknownTime
