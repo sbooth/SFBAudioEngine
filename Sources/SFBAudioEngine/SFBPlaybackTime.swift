@@ -32,17 +32,17 @@ extension PlaybackTime {
 
     /// Returns `current` as a fraction of `total`
     public var progress: Double? {
-        guard isValid else {
-            return nil
-        }
-        return currentTime / totalTime
+        (self == .invalid || totalTime == 0) ? nil : currentTime / totalTime
     }
 
     /// Returns the time remaining
     public var remaining: TimeInterval? {
-        guard isValid else {
-            return nil
-        }
-        return totalTime - currentTime
+        self == .invalid ? nil : totalTime - currentTime
+    }
+}
+
+extension PlaybackTime: Equatable {
+    public static func == (lhs: PlaybackTime, rhs: PlaybackTime) -> Bool {
+        lhs.currentTime == rhs.currentTime && lhs.totalTime == rhs.totalTime
     }
 }
