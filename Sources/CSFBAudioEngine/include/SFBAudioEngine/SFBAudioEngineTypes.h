@@ -113,6 +113,8 @@ struct NS_SWIFT_SENDABLE SFBPlaybackPosition {
 typedef struct SFBPlaybackPosition SFBPlaybackPosition;
 
 /// Value representing an invalid or unknown playback position
+///
+/// An invalid or unknown playback position is defined as `{SFBUnknownFramePosition, SFBUnknownFrameLength}`
 extern const SFBPlaybackPosition SFBInvalidPlaybackPosition NS_SWIFT_NAME(PlaybackPosition.invalid);
 
 /// Returns `YES` if the current frame position and total number of frames in `playbackPosition` are valid
@@ -133,6 +135,8 @@ struct NS_SWIFT_SENDABLE SFBPlaybackTime {
 typedef struct SFBPlaybackTime SFBPlaybackTime;
 
 /// Value representing an invalid or unknown playback time
+///
+/// An invalid or unknown playback time is defined as `{SFBUnknownTime, SFBUnknownTime}`
 extern const SFBPlaybackTime SFBInvalidPlaybackTime NS_SWIFT_NAME(PlaybackTime.invalid);
 
 /// Returns `YES` if the current time and total time in `playbackTime` are valid
