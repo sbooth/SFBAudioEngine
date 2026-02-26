@@ -117,9 +117,15 @@ typedef struct SFBPlaybackPosition SFBPlaybackPosition;
 /// An invalid or unknown playback position is defined as `{SFBUnknownFramePosition, SFBUnknownFrameLength}`
 extern const SFBPlaybackPosition SFBInvalidPlaybackPosition NS_SWIFT_NAME(PlaybackPosition.invalid);
 
-/// Returns `YES` if the current frame position and total number of frames in `playbackPosition` are valid
+/// Returns `YES` if both the current frame position and total number of frames in `playbackPosition` are valid
 NS_INLINE BOOL SFBPlaybackPositionIsValid(SFBPlaybackPosition playbackPosition) {
     return playbackPosition.framePosition != SFBUnknownFramePosition &&
+           playbackPosition.frameLength != SFBUnknownFrameLength;
+}
+
+/// Returns `YES` if either the current frame position or total number of frames in `playbackPosition` is valid
+NS_INLINE BOOL SFBPlaybackPositionIsPartiallyValid(SFBPlaybackPosition playbackPosition) {
+    return playbackPosition.framePosition != SFBUnknownFramePosition ||
            playbackPosition.frameLength != SFBUnknownFrameLength;
 }
 
@@ -139,9 +145,14 @@ typedef struct SFBPlaybackTime SFBPlaybackTime;
 /// An invalid or unknown playback time is defined as `{SFBUnknownTime, SFBUnknownTime}`
 extern const SFBPlaybackTime SFBInvalidPlaybackTime NS_SWIFT_NAME(PlaybackTime.invalid);
 
-/// Returns `YES` if the current time and total time in `playbackTime` are valid
+/// Returns `YES` if both the current time and total time in `playbackTime` are valid
 NS_INLINE BOOL SFBPlaybackTimeIsValid(SFBPlaybackTime playbackTime) {
     return playbackTime.currentTime != SFBUnknownTime && playbackTime.totalTime != SFBUnknownTime;
+}
+
+/// Returns `YES` if either the current time or total time in `playbackTime` is valid
+NS_INLINE BOOL SFBPlaybackTimeIsPartiallyValid(SFBPlaybackTime playbackTime) {
+    return playbackTime.currentTime != SFBUnknownTime || playbackTime.totalTime != SFBUnknownTime;
 }
 
 #endif /* __OBJC__ */
