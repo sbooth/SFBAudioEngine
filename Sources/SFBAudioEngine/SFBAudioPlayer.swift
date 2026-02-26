@@ -8,37 +8,37 @@
 import Foundation
 
 extension AudioPlayer {
-    /// Returns the frame position in the current decoder or `nil` if the current decoder is `nil`
+    /// Returns the frame position in the current decoder or `nil` if unknown or the current decoder is `nil`
     public var framePosition: AVAudioFramePosition? {
         let framePosition = __framePosition
         return framePosition == unknownFramePosition ? nil : framePosition
     }
 
-    /// Returns the frame length of the current decoder or `nil` if the current decoder is `nil`
+    /// Returns the frame length of the current decoder or `nil` if unknown or the current decoder is `nil`
     public var frameLength: AVAudioFramePosition? {
         let frameLength = __frameLength
         return frameLength == unknownFrameLength ? nil : frameLength
     }
 
-    /// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
+    /// Returns the playback position in the current decoder or `nil` if invalid or the current decoder is `nil`
     public var position: PlaybackPosition? {
         let position = playbackPosition
         return position == .invalid ? nil : position
     }
 
-    /// Returns the current time in the current decoder or `nil` if the current decoder is `nil`
+    /// Returns the current time in the current decoder or `nil` if unknown or the current decoder is `nil`
     public var currentTime: TimeInterval? {
         let currentTime = __currentTime
         return currentTime == unknownTime ? nil : currentTime
     }
 
-    /// Returns the total time of the current decoder or `nil` if the current decoder is `nil`
+    /// Returns the total time of the current decoder or `nil` if unknown or the current decoder is `nil`
     public var totalTime: TimeInterval? {
         let totalTime = __totalTime
         return totalTime == unknownTime ? nil : totalTime
     }
 
-    /// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
+    /// Returns the playback time in the current decoder or `nil` if invalid or the current decoder is `nil`
     public var time: PlaybackTime? {
         let time = playbackTime
         return time == .invalid ? nil : time
