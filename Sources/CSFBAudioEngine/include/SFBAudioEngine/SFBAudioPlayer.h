@@ -180,18 +180,18 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Properties
 
-/// The frame position in the current decoder or `SFBUnknownFramePosition` if the current decoder is `nil`
+/// The frame position in the current decoder or `SFBUnknownFramePosition` if unknown or the current decoder is `nil`
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
-/// The frame length of the current decoder or `SFBUnknownFrameLength` if the current decoder is `nil`
+/// The frame length of the current decoder or `SFBUnknownFrameLength` if unknown or the current decoder is `nil`
 @property(nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if the current decoder is `nil`
+/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current decoder is `nil`
 @property(nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
-/// The current time in the current decoder or `SFBUnknownTime` if the current decoder is `nil`
+/// The current time in the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
 @property(nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
-/// The total time of the current decoder or `SFBUnknownTime` if the current decoder is `nil`
+/// The total time of the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
 @property(nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if the current decoder is `nil`
+/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if unknown or the current decoder is `nil`
 @property(nonatomic, readonly) SFBPlaybackTime playbackTime;
 
 /// Retrieves the playback position and time
