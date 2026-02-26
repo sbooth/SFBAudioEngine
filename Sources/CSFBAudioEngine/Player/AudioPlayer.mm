@@ -1029,6 +1029,10 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
 // MARK: - Debugging
 
 void sfb::AudioPlayer::logProcessingGraphDescription(os_log_t log, os_log_type_t type) const noexcept {
+    if (!os_log_type_enabled(log, type)) {
+        return;
+    }
+
     NSMutableString *string = [NSMutableString
             stringWithFormat:@"<AudioPlayer: %p> audio processing graph:\n", static_cast<const void *>(this)];
 
