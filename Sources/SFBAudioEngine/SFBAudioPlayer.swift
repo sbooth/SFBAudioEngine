@@ -23,10 +23,7 @@ extension AudioPlayer {
     /// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
     public var position: PlaybackPosition? {
         let position = playbackPosition
-        if position == .invalid {
-            return nil
-        }
-        return position
+        return position == .invalid ? nil : position
     }
 
     /// Returns the current time in the current decoder or `nil` if the current decoder is `nil`
@@ -44,10 +41,7 @@ extension AudioPlayer {
     /// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
     public var time: PlaybackTime? {
         let time = playbackTime
-        if time == .invalid {
-            return nil
-        }
-        return time
+        return time == .invalid ? nil : time
     }
 
     /// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
