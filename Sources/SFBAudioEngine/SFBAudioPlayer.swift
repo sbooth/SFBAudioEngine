@@ -21,6 +21,7 @@ extension AudioPlayer {
     }
 
     /// Returns the playback position in the current decoder or `nil` if invalid or the current decoder is `nil`
+    /// - note: Depending on the decoder's capabilities the returned playback position may only be partially valid.
     public var position: PlaybackPosition? {
         let position = playbackPosition
         return position == .invalid ? nil : position
@@ -39,12 +40,14 @@ extension AudioPlayer {
     }
 
     /// Returns the playback time in the current decoder or `nil` if invalid or the current decoder is `nil`
+    /// - note: Depending on the decoder's capabilities the returned playback time may only be partially valid.
     public var time: PlaybackTime? {
         let time = playbackTime
         return time == .invalid ? nil : time
     }
 
     /// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
+    /// - note: Depending on the decoder's capabilities the returned playback position and time may only be partially valid.
     public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
         var positionAndTime = (position: PlaybackPosition(), time: PlaybackTime())
         guard getPlaybackPosition(&positionAndTime.position, andTime: &positionAndTime.time) else {
