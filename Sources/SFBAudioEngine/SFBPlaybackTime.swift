@@ -28,18 +28,12 @@ extension PlaybackTime {
 
     /// Returns `current` as a fraction of `total`
     public var progress: Double? {
-        guard currentTime != unknownTime && totalTime != unknownTime else {
-            return nil
-        }
-        return currentTime / totalTime
+        return (self == .invalid || totalTime == 0) ? nil : currentTime / totalTime
     }
 
     /// Returns the time remaining
     public var remaining: TimeInterval? {
-        guard currentTime != unknownTime && totalTime != unknownTime else {
-            return nil
-        }
-        return totalTime - currentTime
+        return self == .invalid ? nil : totalTime - currentTime
     }
 }
 
