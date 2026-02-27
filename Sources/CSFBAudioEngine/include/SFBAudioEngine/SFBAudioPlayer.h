@@ -225,7 +225,7 @@ NS_SWIFT_NAME(AudioPlayer)
 /// - parameter timeInSeconds: The desired time in seconds
 /// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
-/// Seeks to the specified positioni n the current decoder
+/// Seeks to the specified position in the current decoder
 /// - parameter position: The desired position in the interval `[0, 1)`
 /// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
