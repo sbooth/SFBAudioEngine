@@ -875,35 +875,17 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
         return false;
     }
 
-    const auto frameCount = secondsToSkip * decoderState->sampleRate_;
-    if (frameCount >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max()) || frameCount <= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::min())) {
-        return false;
-    }
-
-    const auto framesToSkip = static_cast<AVAudioFramePosition>(frameCount);
-    if (framesToSkip == 0) {
+    if (secondsToSkip == 0) {
         return true;
     }
 
-    const auto framePosition = decoderState->framePosition();
-    if (framePosition == SFBUnknownFramePosition || std::numeric_limits<AVAudioFramePosition>::max() - framePosition > framesToSkip) {
+    const auto framesToSkip = secondsToSkip * decoderState->sampleRate_;
+    if (framesToSkip >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max()) ||
+        framesToSkip <= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::min())) {
         return false;
     }
 
-    const auto targetFrame = framePosition + framesToSkip;
-    if (targetFrame < 0) {
-        return false;
-    }
-
-    const auto frameLength = decoderState->frameLength();
-    if (frameLength == SFBUnknownFrameLength || targetFrame >= frameLength) {
-        return false;
-    }
-
-    decoderState->requestSeekToFrame(targetFrame);
-    decodingSemaphore_.signal();
-
-    return true;
+    return performClampingSeekToFrame(decoderState, static_cast<AVAudioFramePosition>(framesToSkip), true);
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
@@ -918,28 +900,20 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
         return false;
     }
 
-    const auto frameCount = timeInSeconds * decoderState->sampleRate_;
-    if (frameCount >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max())) {
+    const auto requestedFrame = timeInSeconds * decoderState->sampleRate_;
+    if (requestedFrame >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max())) {
         return false;
     }
 
-    const auto targetFrame = static_cast<AVAudioFramePosition>(frameCount);
-
-    const auto frameLength = decoderState->frameLength();
-    if (frameLength == SFBUnknownFrameLength || targetFrame >= frameLength) {
-        return false;
-    }
-
-    decoderState->requestSeekToFrame(targetFrame);
-    decodingSemaphore_.signal();
-
-    return true;
+    return performClampingSeekToFrame(decoderState, static_cast<AVAudioFramePosition>(requestedFrame), false);
 }
 
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
-    if (position < 0 || position >= 1 || !std::isfinite(position)) {
+    if (!std::isfinite(position)) {
         return false;
     }
+
+    position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
 
     std::lock_guard lock{activeDecodersMutex_};
 
@@ -954,9 +928,6 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     }
 
     const auto targetFrame = static_cast<AVAudioFramePosition>(frameLength * position);
-    if (targetFrame >= frameLength) {
-        return false;
-    }
 
     decoderState->requestSeekToFrame(targetFrame);
     decodingSemaphore_.signal();
@@ -965,10 +936,6 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
-    if (frame < 0) {
-        return false;
-    }
-
     std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
@@ -976,15 +943,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
         return false;
     }
 
-    const auto frameLength = decoderState->frameLength();
-    if (frameLength == SFBUnknownFrameLength || frame >= frameLength) {
-        return false;
-    }
-
-    decoderState->requestSeekToFrame(frame);
-    decodingSemaphore_.signal();
-
-    return true;
+    return performClampingSeekToFrame(decoderState, frame, false);
 }
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
@@ -994,6 +953,46 @@ bool sfb::AudioPlayer::supportsSeeking() const noexcept {
         return false;
     }
     return decoderState->decoder_.supportsSeeking;
+}
+
+bool sfb::AudioPlayer::performClampingSeekToFrame(DecoderState *decoderState, AVAudioFramePosition frame,
+                                                  bool isRelative) noexcept {
+#if DEBUG
+    activeDecodersMutex_.assertIsOwner();
+    assert(decoderState != nullptr);
+#endif /* DEBUG */
+
+    // Require a valid frame length even though not strictly required for seeking in general
+    const auto frameLength = decoderState->frameLength();
+    if (frameLength == SFBUnknownFrameLength || frameLength < 1) {
+        return false;
+    }
+
+    auto targetFrame = frame;
+
+    if (isRelative) {
+        const auto framePosition = decoderState->framePosition();
+        if (framePosition == SFBUnknownFramePosition) {
+            return false;
+        }
+
+        if (frame > 0 && framePosition > std::numeric_limits<AVAudioFramePosition>::max() - frame) {
+            return false;
+        }
+
+        if (frame < 0 && framePosition < std::numeric_limits<AVAudioFramePosition>::min() - frame) {
+            return false;
+        }
+
+        targetFrame += framePosition;
+    }
+
+    targetFrame = std::clamp(targetFrame, 0LL, frameLength - 1);
+
+    decoderState->requestSeekToFrame(targetFrame);
+    decodingSemaphore_.signal();
+
+    return true;
 }
 
 #if !TARGET_OS_IPHONE
