@@ -962,20 +962,18 @@ bool sfb::AudioPlayer::performClampingSeekToFrame(DecoderState *decoderState, AV
     assert(decoderState != nullptr);
 #endif /* DEBUG */
 
+    const auto framePosition = decoderState->framePosition();
+    if (framePosition == SFBUnknownFramePosition) {
+        return false;
+    }
+
     // Require a valid frame length even though not strictly required for seeking in general
     const auto frameLength = decoderState->frameLength();
     if (frameLength == SFBUnknownFrameLength || frameLength < 1) {
         return false;
     }
 
-    auto targetFrame = frame;
-
     if (isRelative) {
-        const auto framePosition = decoderState->framePosition();
-        if (framePosition == SFBUnknownFramePosition) {
-            return false;
-        }
-
         if (frame > 0 && framePosition > std::numeric_limits<AVAudioFramePosition>::max() - frame) {
             return false;
         }
@@ -984,13 +982,15 @@ bool sfb::AudioPlayer::performClampingSeekToFrame(DecoderState *decoderState, AV
             return false;
         }
 
-        targetFrame += framePosition;
+        frame += framePosition;
     }
 
-    targetFrame = std::clamp(targetFrame, 0LL, frameLength - 1);
+    frame = std::clamp(frame, 0LL, frameLength - 1);
 
-    decoderState->requestSeekToFrame(targetFrame);
-    decodingSemaphore_.signal();
+    if (framePosition != frame) {
+        decoderState->requestSeekToFrame(frame);
+        decodingSemaphore_.signal();
+    }
 
     return true;
 }
