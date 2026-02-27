@@ -24,6 +24,7 @@
 #import <atomic>
 #import <cmath>
 #import <concepts>
+#import <limits>
 #import <ranges>
 
 namespace {
@@ -863,6 +864,10 @@ bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
 // MARK: - Seeking
 
 bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
+    if (!std::isfinite(secondsToSkip)) {
+        return false;
+    }
+
     std::lock_guard lock{activeDecodersMutex_};
 
     auto *decoderState = firstActiveDecoderState();
@@ -870,15 +875,18 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
         return false;
     }
 
-    const auto sampleRate = decoderState->sampleRate_;
-    const auto framesToSkip = static_cast<AVAudioFramePosition>(secondsToSkip * sampleRate);
+    const auto frameCount = secondsToSkip * decoderState->sampleRate_;
+    if (frameCount >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max()) || frameCount <= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::min())) {
+        return false;
+    }
 
+    const auto framesToSkip = static_cast<AVAudioFramePosition>(frameCount);
     if (framesToSkip == 0) {
         return true;
     }
 
     const auto framePosition = decoderState->framePosition();
-    if (framePosition == SFBUnknownFramePosition) {
+    if (framePosition == SFBUnknownFramePosition || std::numeric_limits<AVAudioFramePosition>::max() - framePosition > framesToSkip) {
         return false;
     }
 
@@ -899,7 +907,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
-    if (timeInSeconds < 0) {
+    if (timeInSeconds < 0 || !std::isfinite(timeInSeconds)) {
         return false;
     }
 
@@ -910,8 +918,12 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
         return false;
     }
 
-    const auto sampleRate = decoderState->sampleRate_;
-    const auto targetFrame = static_cast<AVAudioFramePosition>(timeInSeconds * sampleRate);
+    const auto frameCount = timeInSeconds * decoderState->sampleRate_;
+    if (frameCount >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max())) {
+        return false;
+    }
+
+    const auto targetFrame = static_cast<AVAudioFramePosition>(frameCount);
 
     const auto frameLength = decoderState->frameLength();
     if (frameLength == SFBUnknownFrameLength || targetFrame >= frameLength) {
@@ -925,7 +937,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
-    if (position < 0 || position >= 1) {
+    if (position < 0 || position >= 1 || !std::isfinite(position)) {
         return false;
     }
 
@@ -942,6 +954,9 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     }
 
     const auto targetFrame = static_cast<AVAudioFramePosition>(frameLength * position);
+    if (targetFrame >= frameLength) {
+        return false;
+    }
 
     decoderState->requestSeekToFrame(targetFrame);
     decodingSemaphore_.signal();
