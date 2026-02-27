@@ -923,7 +923,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     }
 
     const auto frameLength = decoderState->frameLength();
-    if (frameLength == SFBUnknownFrameLength) {
+    if (frameLength == SFBUnknownFrameLength || frameLength < 1) {
         return false;
     }
 
