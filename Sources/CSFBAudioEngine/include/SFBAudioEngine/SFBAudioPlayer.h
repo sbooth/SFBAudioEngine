@@ -206,10 +206,10 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
 - (BOOL)seekForward;
 /// Seeks backward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
 - (BOOL)seekBackward;
 
 /// Seeks forward in the current decoder by the specified number of seconds
