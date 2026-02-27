@@ -206,32 +206,32 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekForward;
 /// Seeks backward in the current decoder by 3 seconds
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekBackward;
 
 /// Seeks forward in the current decoder by the specified number of seconds
 /// - parameter secondsToSkip: The number of seconds to skip forward
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(forward:));
 /// Seeks backward in the current decoder by the specified number of seconds
 /// - parameter secondsToSkip: The number of seconds to skip backward
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(backward:));
 
 /// Seeks to the specified time in the current decoder
 /// - parameter timeInSeconds: The desired time in seconds
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified positioni n the current decoder
 /// - parameter position: The desired position in the interval `[0, 1)`
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
 /// - parameter frame: The desired audio frame
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the seek is invalid or the current decoder is `nil`
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame NS_SWIFT_NAME(seek(frame:));
 
 /// Returns `YES` if the current decoder supports seeking
