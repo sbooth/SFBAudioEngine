@@ -8,10 +8,15 @@
 import Foundation
 
 extension PlaybackTime {
-    /// Returns `true` if the current time and total time are valid
+    /// Returns `true` if both the current time and total time are valid
     public var isValid: Bool {
         currentTime != unknownTime && totalTime != unknownTime
     }
+    /// Returns `true` if either the current time or total time is valid
+    public var isPartiallyValid: Bool {
+        currentTime != unknownTime || totalTime != unknownTime
+    }
+
     /// Returns `true` if the current time is valid
     public var isCurrentTimeValid: Bool {
         currentTime != unknownTime
@@ -32,17 +37,17 @@ extension PlaybackTime {
 
     /// Returns `current` as a fraction of `total`
     public var progress: Double? {
-        guard isValid else {
-            return nil
-        }
-        return currentTime / totalTime
+        (self == .invalid || totalTime == 0) ? nil : currentTime / totalTime
     }
 
     /// Returns the time remaining
     public var remaining: TimeInterval? {
-        guard isValid else {
-            return nil
-        }
-        return totalTime - currentTime
+        self == .invalid ? nil : totalTime - currentTime
+    }
+}
+
+extension PlaybackTime: Equatable {
+    public static func == (lhs: PlaybackTime, rhs: PlaybackTime) -> Bool {
+        lhs.currentTime == rhs.currentTime && lhs.totalTime == rhs.totalTime
     }
 }
