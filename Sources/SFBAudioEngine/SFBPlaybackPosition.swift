@@ -8,10 +8,15 @@
 import Foundation
 
 extension PlaybackPosition {
-    /// Returns `true` if the current frame position and total number of frames are valid
+    /// Returns `true` if both the current frame position and total number of frames are valid
     public var isValid: Bool {
         framePosition != unknownFramePosition && frameLength != unknownFrameLength
     }
+    /// Returns `true` if either the current frame position or total number of frames is valid
+    public var isPartiallyValid: Bool {
+        framePosition != unknownFramePosition || frameLength != unknownFrameLength
+    }
+
     /// Returns `true` if the current frame position is valid
     public var isFramePositionValid: Bool {
         framePosition != unknownFramePosition
@@ -32,17 +37,17 @@ extension PlaybackPosition {
 
     /// Returns `current` as a fraction of `total`
     public var progress: Double? {
-        guard isValid else {
-            return nil
-        }
-        return Double(framePosition) / Double(frameLength)
+        (self == .invalid || frameLength == 0) ? nil : Double(framePosition) / Double(frameLength)
     }
 
     /// Returns the frames remaining
     public var remaining: AVAudioFramePosition? {
-        guard isValid else {
-            return nil
-        }
-        return frameLength - framePosition
+        self == .invalid ? nil : frameLength - framePosition
+    }
+}
+
+extension PlaybackPosition: Equatable {
+    public static func == (lhs: PlaybackPosition, rhs: PlaybackPosition) -> Bool {
+        lhs.framePosition == rhs.framePosition && lhs.frameLength == rhs.frameLength
     }
 }

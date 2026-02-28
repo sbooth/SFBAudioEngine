@@ -179,6 +179,11 @@ class AudioPlayer final {
     bool seekToFrame(AVAudioFramePosition frame) noexcept;
     bool supportsSeeking() const noexcept;
 
+  private:
+    bool performClampingSeekToFrame(DecoderState *_Nonnull decoderState, AVAudioFramePosition frame,
+                                    bool isRelative) noexcept;
+
+  public:
 #if !TARGET_OS_IPHONE
     // MARK: - Volume Control
 
