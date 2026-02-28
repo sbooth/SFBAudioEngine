@@ -46,7 +46,7 @@ extension PlaybackPosition {
     }
 }
 
-extension PlaybackPosition: Equatable {
+extension PlaybackPosition: @retroactive Equatable {
     public static func == (lhs: PlaybackPosition, rhs: PlaybackPosition) -> Bool {
         lhs.framePosition == rhs.framePosition && lhs.frameLength == rhs.frameLength
     }

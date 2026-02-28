@@ -46,7 +46,7 @@ extension PlaybackTime {
     }
 }
 
-extension PlaybackTime: Equatable {
+extension PlaybackTime: @retroactive Equatable {
     public static func == (lhs: PlaybackTime, rhs: PlaybackTime) -> Bool {
         lhs.currentTime == rhs.currentTime && lhs.totalTime == rhs.totalTime
     }
