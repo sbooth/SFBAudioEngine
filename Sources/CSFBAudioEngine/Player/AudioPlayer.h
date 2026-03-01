@@ -25,7 +25,9 @@
 #import <deque>
 #import <memory>
 #import <mutex>
+#if defined(__has_include) && __has_include(<stop_token>)
 #import <stop_token>
+#endif /* defined(__has_include) && __has_include(<stop_token>) */
 #import <thread>
 #import <vector>
 
@@ -67,12 +69,20 @@ class AudioPlayer final {
     mutable mtx::UnfairMutex queuedDecodersMutex_;
 
     /// Thread used for decoding
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
     std::jthread decodingThread_;
+#else
+    std::thread decodingThread_;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
     /// Dispatch semaphore used for communication with the decoding thread
     dsema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
     std::jthread eventThread_;
+#else
+    std::thread eventThread_;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
     /// Dispatch semaphore used for communication with the event processing thread
     dsema::Semaphore eventSemaphore_{0};
 
@@ -209,6 +219,12 @@ class AudioPlayer final {
         isMuted = 1u << 2,
         /// The ring buffer needs to be drained during the next render cycle
         drainRequired = 1u << 3,
+#if !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L)
+        /// The decoding thread should exit
+        stopDecodingThread = 1u << 4,
+        /// The event thread should exit
+        stopEventThread = 1u << 5,
+#endif /* !(defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L) */
     };
 
     // Enable bitmask operations for `Flags`
@@ -242,7 +258,11 @@ class AudioPlayer final {
 
     /// Dequeues and processes decoders from the decoder queue
     /// - note: This is the thread entry point for the decoding thread
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
     void processDecoders(std::stop_token stoken) noexcept;
+#else
+    void processDecoders() noexcept;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
     /// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
     void submitDecodingErrorEvent(NSError *error) noexcept;
@@ -277,7 +297,11 @@ class AudioPlayer final {
 
     /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
     /// - note: This is the thread entry point for the event processing thread
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
     void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+#else
+    void sequenceAndProcessEvents() noexcept;
+#endif /* defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L */
 
     /// Reads and processes an event payload from `decodingEvents_`
     bool processDecodingEvent(DecodingEventCommand command) noexcept;
