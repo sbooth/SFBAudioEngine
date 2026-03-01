@@ -382,7 +382,11 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 }
 
 - (AVAudioFramePosition)frameLength {
-    return mpg123_length(_mpg123);
+    off_t length = mpg123_length(_mpg123);
+    if (length == MPG123_ERR) {
+        return SFBUnknownFrameLength;
+    }
+    return length;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error {
