@@ -345,7 +345,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
 
-    if (mpg123_scan(_mpg123) != MPG123_OK) {
+    if (_inputSource.supportsSeeking && mpg123_scan(_mpg123) != MPG123_OK) {
         mpg123_close(_mpg123);
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
