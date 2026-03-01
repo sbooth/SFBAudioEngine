@@ -31,7 +31,7 @@ static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
     return 0;
 }
 
-static off_t lseek_callback(void *iohandle, off_t offset, int whence) {
+static int64_t lseek_callback(void *iohandle, int64_t offset, int whence) {
     NSCParameterAssert(iohandle != NULL);
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
@@ -259,7 +259,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     mpg123_param2(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
     mpg123_param2(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
 
-    if (mpg123_reader64(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
+    if (mpg123_reader64(_mpg123, read_callback, _inputSource.supportsSeeking ? lseek_callback : NULL, NULL) != MPG123_OK) {
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
 
@@ -382,7 +382,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 }
 
 - (AVAudioFramePosition)frameLength {
-    off_t length = mpg123_length(_mpg123);
+    int64_t length = mpg123_length64(_mpg123);
     if (length == MPG123_ERR) {
         return SFBUnknownFrameLength;
     }
