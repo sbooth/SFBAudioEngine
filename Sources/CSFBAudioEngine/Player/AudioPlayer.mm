@@ -393,11 +393,11 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     assert(bits::is_set(loadFlags(), Flags::seekPending));
 #endif /* DEBUG */
 
-    auto seekOffset = seekOffset_.load(std::memory_order_acquire);
-    os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
+    const auto requestedFrame = seekOffset_.load(std::memory_order_acquire);
+    os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", requestedFrame, decoder_);
 
-    if (NSError *seekError = nil; ![decoder_ seekToFrame:seekOffset error:&seekError]) {
-        os_log_error(log_, "Error seeking to frame %lld in %{public}@", seekOffset, decoder_);
+    if (NSError *seekError = nil; ![decoder_ seekToFrame:requestedFrame error:&seekError]) {
+        os_log_error(log_, "Error seeking to frame %lld in %{public}@", requestedFrame, decoder_);
         if (error != nullptr) {
             *error = seekError;
         }
@@ -407,24 +407,25 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     // Reset the converter to flush any buffers
     [converter_ reset];
 
-    const auto newFrame = decoder_.framePosition;
-    if (newFrame != seekOffset) {
-        os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
-        seekOffset = newFrame;
-    }
-
     // Clear the seek request
     clearFlags(Flags::seekPending);
 
-    // Update the frame counters accordingly
-    // A seek is handled in essentially the same way as initial playback
-    if (newFrame != SFBUnknownFramePosition) {
-        framesDecoded_.store(newFrame, std::memory_order_release);
-        framesConverted_.store(seekOffset, std::memory_order_release);
-        framesRendered_.store(seekOffset, std::memory_order_release);
+    const auto framePosition = decoder_.framePosition;
+    if (framePosition == SFBUnknownFramePosition) {
+        return false;
     }
 
-    return newFrame != SFBUnknownFramePosition;
+    if (framePosition != requestedFrame) {
+        os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", requestedFrame, framePosition);
+    }
+
+    // Update the frame counters accordingly
+    // A seek is handled in essentially the same way as initial playback
+    framesDecoded_.store(framePosition, std::memory_order_release);
+    framesConverted_.store(framePosition, std::memory_order_release);
+    framesRendered_.store(framePosition, std::memory_order_release);
+
+    return true;
 }
 
 } /* namespace sfb */
