@@ -407,25 +407,23 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     // Reset the converter to flush any buffers
     [converter_ reset];
 
+    const auto framePosition = decoder_.framePosition;
+    if (framePosition != SFBUnknownFramePosition) {
+        if (framePosition != requestedFrame) {
+            os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", requestedFrame, framePosition);
+        }
+
+        // Update the frame counters accordingly
+        // A seek is handled in essentially the same way as initial playback
+        framesDecoded_.store(framePosition, std::memory_order_release);
+        framesConverted_.store(framePosition, std::memory_order_release);
+        framesRendered_.store(framePosition, std::memory_order_release);
+    }
+
     // Clear the seek request
     clearFlags(Flags::seekPending);
 
-    const auto framePosition = decoder_.framePosition;
-    if (framePosition == SFBUnknownFramePosition) {
-        return false;
-    }
-
-    if (framePosition != requestedFrame) {
-        os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", requestedFrame, framePosition);
-    }
-
-    // Update the frame counters accordingly
-    // A seek is handled in essentially the same way as initial playback
-    framesDecoded_.store(framePosition, std::memory_order_release);
-    framesConverted_.store(framePosition, std::memory_order_release);
-    framesRendered_.store(framePosition, std::memory_order_release);
-
-    return true;
+    return framePosition != SFBUnknownFramePosition;
 }
 
 } /* namespace sfb */
