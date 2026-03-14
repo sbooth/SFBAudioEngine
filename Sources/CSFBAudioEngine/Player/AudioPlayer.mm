@@ -297,6 +297,11 @@ inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcep
 }
 
 inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity) noexcept {
+#if DEBUG
+    assert(converter_ == nil);
+    assert(decodeBuffer_ == nil);
+#endif /* DEBUG */
+
     auto format = decoder_.processingFormat;
     auto standardEquivalentFormat = format.standardEquivalent;
     if (standardEquivalentFormat == nil) {
@@ -321,7 +326,12 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         return false;
     }
 
-    if (const auto framePosition = decoder_.framePosition; framePosition != 0) {
+    const auto framePosition = decoder_.framePosition;
+    if (framePosition == SFBUnknownFramePosition) {
+        return false;
+    }
+
+    if (framePosition != 0) {
         framesDecoded_.store(framePosition, std::memory_order_release);
         framesConverted_.store(framePosition, std::memory_order_release);
         framesRendered_.store(framePosition, std::memory_order_release);
@@ -401,6 +411,7 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
         if (error != nullptr) {
             *error = seekError;
         }
+        clearFlags(Flags::seekPending);
         return false;
     }
 
