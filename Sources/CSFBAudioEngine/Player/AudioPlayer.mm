@@ -404,7 +404,6 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
 #endif /* DEBUG */
 
     const auto requestedFrame = seekOffset_.load(std::memory_order_acquire);
-    assert(requestedFrame != SFBUnknownFramePosition);
     os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", requestedFrame, decoder_);
 
     if (NSError *seekError = nil; ![decoder_ seekToFrame:requestedFrame error:&seekError]) {
