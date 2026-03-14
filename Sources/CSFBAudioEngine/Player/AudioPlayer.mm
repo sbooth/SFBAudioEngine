@@ -395,7 +395,7 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
 inline void AudioPlayer::DecoderState::requestSeekToFrame(AVAudioFramePosition frame) noexcept {
 #if DEBUG
     assert(frame != SFBUnknownFramePosition);
-    assert(frame > 0);
+    assert(frame >= 0);
 #endif /* DEBUG */
     requestedFrame_.store(frame, std::memory_order_release);
     setFlags(Flags::seekPending);
