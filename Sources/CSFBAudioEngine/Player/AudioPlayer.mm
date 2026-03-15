@@ -217,9 +217,9 @@ struct AudioPlayer::DecoderState final {
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
     /// The total number of audio frames
-    std::atomic_int64_t frameLength_{0};
-    /// The desired seek offset
-    std::atomic_int64_t seekOffset_{SFBUnknownFramePosition};
+    std::atomic_int64_t frameLength_{SFBUnknownFrameLength};
+    /// The requested frame
+    std::atomic_int64_t requestedFrame_{SFBUnknownFramePosition};
 
     static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
@@ -342,7 +342,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
     if (bits::is_set(loadFlags(), Flags::seekPending)) {
-        return seekOffset_.load(std::memory_order_acquire);
+        return requestedFrame_.load(std::memory_order_acquire);
     }
     return framesRendered_.load(std::memory_order_acquire);
 }
@@ -393,7 +393,11 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
 
 /// Sets the pending seek request to `frame`
 inline void AudioPlayer::DecoderState::requestSeekToFrame(AVAudioFramePosition frame) noexcept {
-    seekOffset_.store(frame, std::memory_order_release);
+#if DEBUG
+    assert(frame != SFBUnknownFramePosition);
+    assert(frame >= 0);
+#endif /* DEBUG */
+    requestedFrame_.store(frame, std::memory_order_release);
     setFlags(Flags::seekPending);
 }
 
@@ -403,7 +407,7 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     assert(bits::is_set(loadFlags(), Flags::seekPending));
 #endif /* DEBUG */
 
-    const auto requestedFrame = seekOffset_.load(std::memory_order_acquire);
+    const auto requestedFrame = requestedFrame_.load(std::memory_order_acquire);
     os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", requestedFrame, decoder_);
 
     if (NSError *seekError = nil; ![decoder_ seekToFrame:requestedFrame error:&seekError]) {
