@@ -1200,6 +1200,15 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     decoderState->setFlags(DecoderState::Flags::cancelRequested);
                     continue;
                 }
+
+                if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
+                    decodingEvents_.writeAll(DecodingEventCommand::seek, nextEventIdentificationNumber(),
+                                             decoderState->sequenceNumber_, frame)) {
+                    eventSemaphore_.signal();
+                } else {
+                    os_log_fault(log_, "Error writing decoder seek event");
+                }
+
                 ringBufferStale = true;
 
                 if (bits::is_set(flags, DecoderState::Flags::decodingComplete)) {
@@ -1672,6 +1681,9 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
     case DecodingEventCommand::complete:
         return processDecodingCompleteEvent();
 
+    case DecodingEventCommand::seek:
+        return processDecoderSeekEvent();
+
     case DecodingEventCommand::canceled:
         return processDecoderCanceledEvent();
 
@@ -1745,6 +1757,35 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
 
     if ([player_.delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)]) {
         [player_.delegate audioPlayer:player_ decodingComplete:decoder];
+    }
+
+    return true;
+}
+
+bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
+    uint64_t sequenceNumber;
+    int64_t frame;
+    if (!decodingEvents_.readAll(sequenceNumber, frame)) {
+        os_log_error(log_, "Missing decoder sequence number or frame position for decoder seek event");
+        return false;
+    }
+
+    Decoder decoder = nil;
+    {
+        std::lock_guard lock{activeDecodersMutex_};
+
+        if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
+            iter != activeDecoders_.cend()) {
+            decoder = (*iter)->decoder_;
+        } else {
+            os_log_error(log_, "Decoder state with sequence number %llu missing for decoder seek event",
+                         sequenceNumber);
+            return false;
+        }
+    }
+
+    if ([player_.delegate respondsToSelector:@selector(audioPlayer:didSeek:toFrame:)]) {
+        [player_.delegate audioPlayer:player_ didSeek:decoder toFrame:frame];
     }
 
     return true;

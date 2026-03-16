@@ -52,12 +52,13 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Now playing changed
 ///  8. Playback state changed
 ///  9. End of audio
-///  10. Decoder canceled by user
-///  11. Decoding aborted due to error
-///  12. Asynchronous error encountered
-///  13. Processing graph format change with custom nodes present
-///  14. `AVAudioEngineConfigurationChange` notification received
-///  15. `AVAudioSessionInterruption` notification received
+///  11. Seek complete
+///  12. Decoder canceled by user
+///  13. Decoding aborted due to error
+///  14. Asynchronous error encountered
+///  15. Processing graph format change with custom nodes present
+///  16. `AVAudioEngineConfigurationChange` notification received
+///  17. `AVAudioSessionInterruption` notification received
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer)
@@ -367,6 +368,14 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
+/// Called to notify the delegate after performing a user-initiated seek in a decoder
+/// - warning: Do not change any properties of `decoder`
+/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
+/// - parameter decoder: The decoder that performed the seek
+/// - parameter frame: The new frame position in `decoder`
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
+            didSeek:(id<SFBPCMDecoding>)decoder
+            toFrame:(AVAudioFramePosition)frame;
 /// Called to notify the delegate that the decoding and rendering processes for a decoder have been canceled by a
 /// user-initiated request
 /// - warning: Do not change any properties of `decoder`
