@@ -52,13 +52,13 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Now playing changed
 ///  8. Playback state changed
 ///  9. End of audio
-///  11. Seek complete
-///  12. Decoder canceled by user
-///  13. Decoding aborted due to error
-///  14. Asynchronous error encountered
-///  15. Processing graph format change with custom nodes present
-///  16. `AVAudioEngineConfigurationChange` notification received
-///  17. `AVAudioSessionInterruption` notification received
+///  10. Seek complete
+///  11. Decoder canceled by user
+///  12. Decoding aborted due to error
+///  13. Asynchronous error encountered
+///  14. Processing graph format change with custom nodes present
+///  15. `AVAudioEngineConfigurationChange` notification received
+///  16. `AVAudioSessionInterruption` notification received
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer)
