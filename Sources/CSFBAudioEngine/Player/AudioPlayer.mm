@@ -664,8 +664,8 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
         assert(!(didStartEngine && wasPlaying));
     }
 
-    if ((didStartEngine || !wasPlaying) && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                        playbackStateChanged:)]) {
+    if ((didStartEngine || !wasPlaying) &&
+        [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
         [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
     }
 
@@ -1824,8 +1824,8 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
     if (error == nil && [player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)]) {
         [player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
-    } else if (error != nil && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                            decodingAborted:error:framesRendered:)]) {
+    } else if (error != nil &&
+               [player_.delegate respondsToSelector:@selector(audioPlayer:decodingAborted:error:framesRendered:)]) {
         [player_.delegate audioPlayer:player_ decodingAborted:decoder error:error framesRendered:framesRendered];
     }
 
@@ -2145,9 +2145,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                 [player.delegate audioPlayerEndOfAudio:player];
             } else {
                 const auto didStopEngine = stopEngineIfRunning();
-                if (didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                  playbackStateChanged:)]) {
-                    [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+                if (didStopEngine &&
+                    [player.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+                    [player.delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
                 }
             }
         }
@@ -2285,8 +2285,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineIsRunning | Flags::isPlaying));
         }
 
-        if (preInterruptState_ != 0 && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                    playbackStateChanged:)]) {
+        if (preInterruptState_ != 0 &&
+            [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
             [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
         }
 
@@ -2338,7 +2338,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             assert(!bits::is_set_without(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
         }
 
-        if (preInterruptState_ && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+        if (preInterruptState_ != 0 &&
+            [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
             [player_.delegate audioPlayer:player_
                      playbackStateChanged:static_cast<SFBAudioPlayerPlaybackState>(preInterruptState_)];
         }
