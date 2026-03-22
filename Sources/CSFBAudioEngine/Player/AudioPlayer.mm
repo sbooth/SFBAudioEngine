@@ -2104,9 +2104,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                 [player.delegate audioPlayerEndOfAudio:player];
             } else {
                 const auto didStopEngine = stopEngineIfRunning();
-                if (didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                  playbackStateChanged:)]) {
-                    [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+                if (didStopEngine &&
+                    [player.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+                    [player.delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
                 }
             }
         }
