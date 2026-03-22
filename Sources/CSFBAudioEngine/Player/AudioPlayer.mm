@@ -217,9 +217,9 @@ struct AudioPlayer::DecoderState final {
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
     /// The total number of audio frames
-    std::atomic_int64_t frameLength_{0};
-    /// The desired seek offset
-    std::atomic_int64_t seekOffset_{SFBUnknownFramePosition};
+    std::atomic_int64_t frameLength_{SFBUnknownFrameLength};
+    /// The requested frame
+    std::atomic_int64_t requestedFrame_{SFBUnknownFramePosition};
 
     static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
@@ -297,6 +297,11 @@ inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcep
 }
 
 inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity) noexcept {
+#if DEBUG
+    assert(converter_ == nil);
+    assert(decodeBuffer_ == nil);
+#endif /* DEBUG */
+
     auto format = decoder_.processingFormat;
     auto standardEquivalentFormat = format.standardEquivalent;
     if (standardEquivalentFormat == nil) {
@@ -321,7 +326,12 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         return false;
     }
 
-    if (const auto framePosition = decoder_.framePosition; framePosition != 0) {
+    const auto framePosition = decoder_.framePosition;
+    if (framePosition == SFBUnknownFramePosition) {
+        return false;
+    }
+
+    if (framePosition != 0) {
         framesDecoded_.store(framePosition, std::memory_order_release);
         framesConverted_.store(framePosition, std::memory_order_release);
         framesRendered_.store(framePosition, std::memory_order_release);
@@ -332,7 +342,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
     if (bits::is_set(loadFlags(), Flags::seekPending)) {
-        return seekOffset_.load(std::memory_order_acquire);
+        return requestedFrame_.load(std::memory_order_acquire);
     }
     return framesRendered_.load(std::memory_order_acquire);
 }
@@ -383,7 +393,11 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
 
 /// Sets the pending seek request to `frame`
 inline void AudioPlayer::DecoderState::requestSeekToFrame(AVAudioFramePosition frame) noexcept {
-    seekOffset_.store(frame, std::memory_order_release);
+#if DEBUG
+    assert(frame != SFBUnknownFramePosition);
+    assert(frame >= 0);
+#endif /* DEBUG */
+    requestedFrame_.store(frame, std::memory_order_release);
     setFlags(Flags::seekPending);
 }
 
@@ -393,38 +407,38 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     assert(bits::is_set(loadFlags(), Flags::seekPending));
 #endif /* DEBUG */
 
-    auto seekOffset = seekOffset_.load(std::memory_order_acquire);
-    os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", seekOffset, decoder_);
+    const auto requestedFrame = requestedFrame_.load(std::memory_order_acquire);
+    os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", requestedFrame, decoder_);
 
-    if (NSError *seekError = nil; ![decoder_ seekToFrame:seekOffset error:&seekError]) {
-        os_log_error(log_, "Error seeking to frame %lld in %{public}@", seekOffset, decoder_);
+    if (NSError *seekError = nil; ![decoder_ seekToFrame:requestedFrame error:&seekError]) {
+        os_log_error(log_, "Error seeking to frame %lld in %{public}@", requestedFrame, decoder_);
         if (error != nullptr) {
             *error = seekError;
         }
+        clearFlags(Flags::seekPending);
         return false;
     }
 
     // Reset the converter to flush any buffers
     [converter_ reset];
 
-    const auto newFrame = decoder_.framePosition;
-    if (newFrame != seekOffset) {
-        os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
-        seekOffset = newFrame;
+    const auto framePosition = decoder_.framePosition;
+    if (framePosition != SFBUnknownFramePosition) {
+        if (framePosition != requestedFrame) {
+            os_log_info(log_, "Inaccurate seek to frame %lld, got %lld", requestedFrame, framePosition);
+        }
+
+        // Update the frame counters accordingly
+        // A seek is handled in essentially the same way as initial playback
+        framesDecoded_.store(framePosition, std::memory_order_release);
+        framesConverted_.store(framePosition, std::memory_order_release);
+        framesRendered_.store(framePosition, std::memory_order_release);
     }
 
     // Clear the seek request
     clearFlags(Flags::seekPending);
 
-    // Update the frame counters accordingly
-    // A seek is handled in essentially the same way as initial playback
-    if (newFrame != SFBUnknownFramePosition) {
-        framesDecoded_.store(newFrame, std::memory_order_release);
-        framesConverted_.store(seekOffset, std::memory_order_release);
-        framesRendered_.store(seekOffset, std::memory_order_release);
-    }
-
-    return newFrame != SFBUnknownFramePosition;
+    return framePosition != SFBUnknownFramePosition;
 }
 
 } /* namespace sfb */
@@ -650,8 +664,8 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
         assert(!(didStartEngine && wasPlaying));
     }
 
-    if ((didStartEngine || !wasPlaying) && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                        playbackStateChanged:)]) {
+    if ((didStartEngine || !wasPlaying) &&
+        [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
         [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
     }
 
@@ -1769,8 +1783,8 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
     if (error == nil && [player_.delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)]) {
         [player_.delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
-    } else if (error != nil && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                            decodingAborted:error:framesRendered:)]) {
+    } else if (error != nil &&
+               [player_.delegate respondsToSelector:@selector(audioPlayer:decodingAborted:error:framesRendered:)]) {
         [player_.delegate audioPlayer:player_ decodingAborted:decoder error:error framesRendered:framesRendered];
     }
 
@@ -2090,9 +2104,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                 [player.delegate audioPlayerEndOfAudio:player];
             } else {
                 const auto didStopEngine = stopEngineIfRunning();
-                if (didStopEngine && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                  playbackStateChanged:)]) {
-                    [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+                if (didStopEngine &&
+                    [player.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+                    [player.delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
                 }
             }
         }
@@ -2230,8 +2244,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineIsRunning | Flags::isPlaying));
         }
 
-        if (preInterruptState_ != 0 && [player_.delegate respondsToSelector:@selector(audioPlayer:
-                                                                                    playbackStateChanged:)]) {
+        if (preInterruptState_ != 0 &&
+            [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
             [player_.delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
         }
 
@@ -2283,7 +2297,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             assert(!bits::is_set_without(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
         }
 
-        if (preInterruptState_ && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+        if (preInterruptState_ != 0 &&
+            [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
             [player_.delegate audioPlayer:player_
                      playbackStateChanged:static_cast<SFBAudioPlayerPlaybackState>(preInterruptState_)];
         }
