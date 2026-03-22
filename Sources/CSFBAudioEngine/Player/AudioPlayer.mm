@@ -2297,7 +2297,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             assert(!bits::is_set_without(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
         }
 
-        if (preInterruptState_ && [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+        if (preInterruptState_ != 0 &&
+            [player_.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
             [player_.delegate audioPlayer:player_
                      playbackStateChanged:static_cast<SFBAudioPlayerPlaybackState>(preInterruptState_)];
         }
