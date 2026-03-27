@@ -2047,8 +2047,9 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
         that->setNowPlaying(decoder);
 
-        if ([player.delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)]) {
-            [player.delegate audioPlayer:player renderingStarted:decoder];
+        if (__strong id delegate = player.delegate;
+            delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)]) {
+            [delegate audioPlayer:player renderingStarted:decoder];
         }
     });
 
@@ -2105,7 +2106,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 #endif /* DEBUG */
 
         __strong id delegate = player.delegate;
-        if ([delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)]) {
+        if (delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)]) {
             [delegate audioPlayer:player renderingComplete:decoder];
         }
 
@@ -2122,11 +2123,12 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
             that->setNowPlaying(nil);
 
-            if ([delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
+            if (delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
                 [delegate audioPlayerEndOfAudio:player];
             } else {
                 const auto didStopEngine = stopEngineIfRunning();
-                if (didStopEngine && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+                if (didStopEngine && delegate != nil &&
+                    [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
                     [delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
                 }
             }
