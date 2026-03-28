@@ -664,7 +664,7 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
         assert(!(didStartEngine && wasPlaying));
     }
 
-    if ((didStartEngine || !wasPlaying)) {
+    if (didStartEngine || !wasPlaying) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
             [delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStatePlaying];
