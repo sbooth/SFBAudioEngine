@@ -2099,7 +2099,6 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 #endif /* DEBUG */
 
             that->setNowPlaying(nil);
-
             auto shouldStop = true;
 
             if ([player.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
