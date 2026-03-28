@@ -2100,9 +2100,13 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
             that->setNowPlaying(nil);
 
+            auto shouldStop = true;
+
             if ([player.delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
-                [player.delegate audioPlayerEndOfAudio:player];
-            } else {
+                shouldStop = [player.delegate audioPlayerEndOfAudio:player];
+            }
+
+            if (shouldStop) {
                 const auto didStopEngine = stopEngineIfRunning();
                 if (didStopEngine &&
                     [player.delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
