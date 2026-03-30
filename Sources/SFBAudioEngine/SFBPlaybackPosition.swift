@@ -46,7 +46,7 @@ extension PlaybackPosition {
     }
 }
 
-extension PlaybackPosition: @retroactive Equatable {
+extension CSFBAudioEngine.PlaybackPosition: Swift.Equatable {
     public static func == (lhs: PlaybackPosition, rhs: PlaybackPosition) -> Bool {
         lhs.framePosition == rhs.framePosition && lhs.frameLength == rhs.frameLength
     }
