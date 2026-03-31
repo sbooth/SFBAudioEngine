@@ -46,7 +46,7 @@ extension PlaybackTime {
     }
 }
 
-extension SFBAudioEngine.PlaybackTime: Swift.Equatable {
+extension CSFBAudioEngine.PlaybackTime: Swift.Equatable {
     public static func == (lhs: PlaybackTime, rhs: PlaybackTime) -> Bool {
         lhs.currentTime == rhs.currentTime && lhs.totalTime == rhs.totalTime
     }
