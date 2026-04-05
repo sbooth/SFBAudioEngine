@@ -24,26 +24,26 @@ let package = Package(
             ]),
     ],
     dependencies: [
-        .package(url: "https://github.com/sbooth/AVFAudioExtensions", .upToNextMinor(from: "0.5.0")),
-        .package(url: "https://github.com/sbooth/CXXAudioRingBuffer", .upToNextMinor(from: "0.1.0")),
-        .package(url: "https://github.com/sbooth/CXXDispatchSemaphore", .upToNextMinor(from: "0.4.0")),
-        .package(url: "https://github.com/sbooth/CXXRingBuffer", .upToNextMinor(from: "0.6.0")),
-        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/sbooth/AVFAudioExtensions", .upToNextMinor(from: "0.5.1")),
+        .package(url: "https://github.com/sbooth/CXXAudioRingBuffer", .upToNextMinor(from: "0.1.1")),
+        .package(url: "https://github.com/sbooth/CXXDispatchSemaphore", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/sbooth/CXXRingBuffer", .upToNextMinor(from: "0.6.1")),
+        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.3.1")),
 
         // Standalone dependencies from source
         .package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
-        .package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "11.82.0"),
+        .package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "12.13.0"),
         .package(url: "https://github.com/sbooth/CXXTagLib", from: "2.1.1"),
 
         // Standalone dependencies not easily packaged using SPM
-        .package(url: "https://github.com/sbooth/wavpack-binary-xcframework", .upToNextMinor(from: "0.1.2")),
+        .package(url: "https://github.com/sbooth/wavpack-binary-xcframework", .upToNextMinor(from: "0.2.0")),
 
         // Xiph ecosystem
         .package(url: "https://github.com/sbooth/ogg-binary-xcframework", .upToNextMinor(from: "0.1.3")),
         // flac-binary-xcframework requires ogg-binary-xcframework
         .package(url: "https://github.com/sbooth/flac-binary-xcframework", .upToNextMinor(from: "0.2.0")),
         // opus-binary-xcframework requires ogg-binary-xcframework
-        .package(url: "https://github.com/sbooth/opus-binary-xcframework", .upToNextMinor(from: "0.2.2")),
+        .package(url: "https://github.com/sbooth/opus-binary-xcframework", .upToNextMinor(from: "0.3.0")),
         // vorbis-binary-xcframework requires ogg-binary-xcframework
         .package(url: "https://github.com/sbooth/vorbis-binary-xcframework", .upToNextMinor(from: "0.1.2")),
         // libspeex does not depend on libogg
@@ -53,7 +53,7 @@ let package = Package(
         .package(url: "https://github.com/sbooth/lame-binary-xcframework", .upToNextMinor(from: "0.1.2")),
         // Technically only the musepack *encoder* is LGPL'd but for now the decoder and encoder are packaged together
         .package(url: "https://github.com/sbooth/mpc-binary-xcframework", .upToNextMinor(from: "0.1.2")),
-        .package(url: "https://github.com/sbooth/mpg123-binary-xcframework", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/sbooth/mpg123-binary-xcframework", .upToNextMinor(from: "0.3.1")),
         // sndfile-binary-xcframework requires ogg-binary-xcframework, flac-binary-xcframework, opus-binary-xcframework, and vorbis-binary-xcframework
         .package(url: "https://github.com/sbooth/sndfile-binary-xcframework", .upToNextMinor(from: "0.1.2")),
         .package(url: "https://github.com/sbooth/tta-cpp-binary-xcframework", .upToNextMinor(from: "0.1.2")),

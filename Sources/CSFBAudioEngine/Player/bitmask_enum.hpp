@@ -45,7 +45,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr E operator^(E lhs, E rhs) noexc
     return static_cast<E>(to_underlying(lhs) ^ to_underlying(rhs));
 }
 
-/// Returns true if all non-zero bits in mask are set in value
+/// Returns true if all non-zero bits in mask are set in value or if mask is empty
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all(E value, E mask) noexcept {
     return (to_underlying(value) & to_underlying(mask)) == to_underlying(mask);
 }
@@ -55,7 +55,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any(E value, E mask) n
     return (to_underlying(value) & to_underlying(mask)) != 0;
 }
 
-/// Returns true if all non-zero bits in mask are clear in value
+/// Returns true if all non-zero bits in mask are clear in value or if mask is empty
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_none(E value, E mask) noexcept {
     return !has_any(value, mask);
 }
