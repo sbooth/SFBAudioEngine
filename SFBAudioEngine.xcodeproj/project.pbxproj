@@ -1427,7 +1427,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXDispatchSemaphore";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.0;
+				minimumVersion = 0.4.1;
 			};
 		};
 		321091E22F3179A60024A44F /* XCRemoteSwiftPackageReference "CXXAudioRingBuffer" */ = {
@@ -1435,7 +1435,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXAudioRingBuffer";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.1.0;
+				minimumVersion = 0.1.1;
 			};
 		};
 		321C18AF2CF7886000670824 /* XCRemoteSwiftPackageReference "vorbis-binary-xcframework" */ = {
@@ -1539,7 +1539,7 @@
 			repositoryURL = "https://github.com/sbooth/AVFAudioExtensions";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.0;
+				minimumVersion = 0.5.1;
 			};
 		};
 		3241D7CE2EDCA8830078AB9F /* XCRemoteSwiftPackageReference "CXXRingBuffer" */ = {
@@ -1547,7 +1547,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXRingBuffer";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.6.0;
+				minimumVersion = 0.6.1;
 			};
 		};
 		3241D7D12EDCA88F0078AB9F /* XCRemoteSwiftPackageReference "CXXUnfairLock" */ = {
@@ -1555,7 +1555,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXUnfairLock";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.0;
+				minimumVersion = 0.3.1;
 			};
 		};
 		328E81622CF7890700BFCEB2 /* XCRemoteSwiftPackageReference "sndfile-binary-xcframework" */ = {
