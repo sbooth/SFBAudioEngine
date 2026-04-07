@@ -2126,15 +2126,21 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 #endif /* DEBUG */
 
             that->setNowPlaying(nil);
+            auto shouldStop = true;
 
             if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
                 delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
                 [delegate audioPlayerEndOfAudio:player];
-            } else {
+                shouldStop = false;
+            }
+
+            if (shouldStop) {
                 const auto didStopEngine = stopEngineIfRunning();
-                if (didStopEngine && delegate != nil &&
-                    [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
-                    [delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+                if (didStopEngine) {
+                    if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
+                        delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+                        [delegate audioPlayer:player playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+                    }
                 }
             }
         }
