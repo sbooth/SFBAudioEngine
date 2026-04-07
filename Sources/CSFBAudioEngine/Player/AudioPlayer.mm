@@ -1797,11 +1797,14 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     objc_setAssociatedObject(decoder, &decoderIsCanceledKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate; delegate != nil) {
-        if (error == nil && [delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)]) {
-            [delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
-        } else if (error != nil &&
-                   [delegate respondsToSelector:@selector(audioPlayer:decodingAborted:error:framesRendered:)]) {
-            [delegate audioPlayer:player_ decodingAborted:decoder error:error framesRendered:framesRendered];
+        if (error == nil) {
+            if ([delegate respondsToSelector:@selector(audioPlayer:decoderCanceled:framesRendered:)]) {
+                [delegate audioPlayer:player_ decoderCanceled:decoder framesRendered:framesRendered];
+            }
+        } else {
+            if ([delegate respondsToSelector:@selector(audioPlayer:decodingAborted:error:framesRendered:)]) {
+                [delegate audioPlayer:player_ decodingAborted:decoder error:error framesRendered:framesRendered];
+            }
         }
     }
 
