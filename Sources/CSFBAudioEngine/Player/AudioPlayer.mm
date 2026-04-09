@@ -2281,14 +2281,16 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineIsRunning | Flags::isPlaying));
         }
 
-        if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate; delegate != nil) {
-            if (preInterruptState_ != 0 && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+        if (preInterruptState_ != 0) {
+            if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
+                delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
                 [delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
             }
+        }
 
-            if ([delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
-                [delegate audioPlayer:player_ audioSessionInterruption:userInfo];
-            }
+        if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
+            delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
+            [delegate audioPlayer:player_ audioSessionInterruption:userInfo];
         }
 
         break;
