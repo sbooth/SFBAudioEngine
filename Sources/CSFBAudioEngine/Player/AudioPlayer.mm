@@ -1696,7 +1696,10 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
         return processDecodingErrorEvent();
 
     default:
-        os_log_error(log_, "Unknown decoding event command: %u", command);
+#if DEBUG
+        assert(false && "Unknown DecodingEventCommand");
+#endif /* DEBUG */
+        os_log_error(log_, "Unknown decoding event command: %u", static_cast<uint32_t>(command));
         return false;
     }
 }
@@ -1869,7 +1872,10 @@ bool sfb::AudioPlayer::processRenderingEvent(RenderingEventCommand command) noex
         return processFramesRenderedEvent();
 
     default:
-        os_log_error(log_, "Unknown rendering event command: %u", command);
+#if DEBUG
+        assert(false && "Unknown RenderingEventCommand");
+#endif /* DEBUG */
+        os_log_error(log_, "Unknown rendering event command: %u", static_cast<uint32_t>(command));
         return false;
     }
 }
@@ -1999,6 +2005,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             handleRenderingWillCompleteEvent(event.decoder_, event.time_);
             break;
         default:
+#if DEBUG
+            assert(false && "Unknown RenderingEventDetails::Type");
+#endif /* DEBUG */
             os_log_error(log_, "Unknown rendering event details type: %d", static_cast<int>(event.type_));
             break;
         }
