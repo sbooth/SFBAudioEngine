@@ -1999,7 +1999,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             handleRenderingWillCompleteEvent(event.decoder_, event.time_);
             break;
         default:
-            os_log_error(log_, "Unknown rendering event details type: %u", event.type_);
+            os_log_error(log_, "Unknown rendering event details type: %d", static_cast<int>(event.type_));
             break;
         }
     }
