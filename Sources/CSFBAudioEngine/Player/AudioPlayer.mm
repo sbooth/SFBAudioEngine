@@ -310,13 +310,6 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         return false;
     }
 
-    // The logic in this class assumes no SRC is performed
-    if (format.sampleRate != standardEquivalentFormat.sampleRate) {
-        os_log_error(log_, "Sample rate mismatch between %{public}@ and standard equivalent %{public}@",
-                     stringDescribingAVAudioFormat(format), stringDescribingAVAudioFormat(standardEquivalentFormat));
-        return false;
-    }
-
     // Convert to deinterleaved native-endian float, preserving the channel count and order
     converter_ = [[AVAudioConverter alloc] initFromFormat:format toFormat:standardEquivalentFormat];
     if (converter_ == nil) {
@@ -324,10 +317,6 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
                      stringDescribingAVAudioFormat(format), stringDescribingAVAudioFormat(standardEquivalentFormat));
         return false;
     }
-
-#if DEBUG
-    assert(converter_.inputFormat.sampleRate == converter_.outputFormat.sampleRate);
-#endif /* DEBUG */
 
     decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
     if (decodeBuffer_ == nil) {
