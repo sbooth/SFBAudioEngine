@@ -1774,6 +1774,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     }
 
     Decoder decoder = nil;
+    Decoder nextDecoder = nil;
     NSError *error = nil;
     AVAudioFramePosition framesRendered = 0;
     {
@@ -1792,6 +1793,10 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
                          sequenceNumber);
             return false;
         }
+
+        if (const auto *decoderState = firstActiveDecoderState(); decoderState != nullptr) {
+            nextDecoder = decoderState->decoder_;
+        }
     }
 
     // Mark the decoder as canceled for any scheduled render notifications
@@ -1809,19 +1814,25 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         }
     }
 
-    const auto hasNoDecoders = [&] {
-        std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
-        return queuedDecoders_.empty() && activeDecoders_.empty();
-    }();
+    if (nextDecoder != nil) {
+        if (bits::is_clear(loadFlags(), Flags::isPlaying)) {
+            setNowPlaying(nextDecoder);
+        }
+    } else {
+        const auto hasNoDecoders = [&] {
+            std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
+            return queuedDecoders_.empty() && activeDecoders_.empty();
+        }();
 
-    if (hasNoDecoders) {
-        setNowPlaying(nil);
+        if (hasNoDecoders) {
+            setNowPlaying(nil);
 
-        const auto didStopEngine = stopEngineIfRunning();
-        if (didStopEngine) {
-            if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
-                delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
-                [delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+            const auto didStopEngine = stopEngineIfRunning();
+            if (didStopEngine) {
+                if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
+                    delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
+                    [delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
+                }
             }
         }
     }
