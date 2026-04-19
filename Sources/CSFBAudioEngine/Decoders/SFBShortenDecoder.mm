@@ -142,8 +142,12 @@ class VariableLengthInput {
 
     bool getRiceGolombCode(int32_t &i32, int k) noexcept {
 #if DEBUG
-        assert(k < 32);
+        assert(k >= 0 && k < 32);
 #endif /* DEBUG */
+        if (k < 0 || k > 31) {
+            return false;
+        }
+
         if (bitsAvailable_ == 0 && !refillBitBuffer()) {
             return false;
         }
