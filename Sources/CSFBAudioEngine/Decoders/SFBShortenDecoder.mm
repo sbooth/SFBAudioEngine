@@ -144,6 +144,10 @@ class VariableLengthInput {
 #if DEBUG
         assert(k < 32);
 #endif /* DEBUG */
+        if (k < 0 || k > 31) {
+            return false;
+        }
+
         if (bitsAvailable_ == 0 && !refillBitBuffer()) {
             return false;
         }
