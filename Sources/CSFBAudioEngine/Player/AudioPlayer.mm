@@ -318,9 +318,6 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         return false;
     }
 
-    // The logic in this class assumes no SRC is performed by converter_
-    assert(converter_.inputFormat.sampleRate == converter_.outputFormat.sampleRate);
-
     decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
     if (decodeBuffer_ == nil) {
         return false;
@@ -661,7 +658,9 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
 
         const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
         wasPlaying = bits::is_set(prevFlags, Flags::isPlaying);
+#if DEBUG
         assert(!(didStartEngine && wasPlaying));
+#endif /* DEBUG */
     }
 
     if (didStartEngine || !wasPlaying) {
@@ -747,7 +746,9 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
             }
 
             const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
+#if DEBUG
             assert(bits::is_clear(prevFlags, Flags::isPlaying));
+#endif /* DEBUG */
 
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         } else {
@@ -1092,8 +1093,6 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
 
     assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode &&
            "Illegal AVAudioEngine configuration");
-    assert(engine_.isRunning == bits::is_set(loadFlags(), Flags::engineIsRunning) &&
-           "AVAudioEngine may not be started or stopped outside of AudioPlayer");
 }
 
 // MARK: - Debugging
@@ -1692,8 +1691,10 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
         return processDecodingErrorEvent();
 
     default:
-        //        assert(false && "Unknown decoding event command");
-        os_log_error(log_, "Unknown decoding event command: %u", command);
+#if DEBUG
+        assert(false && "Unknown DecodingEventCommand");
+#endif /* DEBUG */
+        os_log_error(log_, "Unknown decoding event command: %u", static_cast<uint32_t>(command));
         return false;
     }
 }
@@ -1866,8 +1867,10 @@ bool sfb::AudioPlayer::processRenderingEvent(RenderingEventCommand command) noex
         return processFramesRenderedEvent();
 
     default:
-        //        assert(false && "Unknown rendering event command");
-        os_log_error(log_, "Unknown rendering event command: %u", command);
+#if DEBUG
+        assert(false && "Unknown RenderingEventCommand");
+#endif /* DEBUG */
+        os_log_error(log_, "Unknown rendering event command: %u", static_cast<uint32_t>(command));
         return false;
     }
 }
@@ -1997,7 +2000,11 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             handleRenderingWillCompleteEvent(event.decoder_, event.time_);
             break;
         default:
+#if DEBUG
             assert(false && "Unknown RenderingEventDetails::Type");
+#endif /* DEBUG */
+            os_log_error(log_, "Unknown rendering event details type: %d", static_cast<int>(event.type_));
+            break;
         }
     }
 
@@ -2337,7 +2344,9 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             }
 
             const auto prevFlags = setFlags(preInterruptState);
+#if DEBUG
             assert(!bits::is_set_without(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
+#endif /* DEBUG */
         }
 
         if (preInterruptState_ != 0) {
