@@ -5,4 +5,6 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#if canImport(CSFBAudioEngine)
 @_exported import CSFBAudioEngine
+#endif
