@@ -2244,17 +2244,49 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
                          stringDescribingAVAudioFormat(outputNodeOutputFormat));
 #endif /* DEBUG */
 
-            [engine_ disconnectNodeInput:outputNode bus:0];
+            // The "AVAudioEngine stops itself when a configuration change occurs"
+            // assumption above does not hold universally on iOS 26.4.x — the
+            // notification can be delivered while engine_.isRunning is still true.
+            // Disconnecting the output node in that state raises NSException
+            // ("required condition is false: !IsRunning()"), which propagates
+            // through this noexcept C++ frame to std::terminate.
+            //
+            // Defense: pause the engine before reconfiguring, and wrap the AVFAudio
+            // calls in @try/@catch so any future precondition violations bail out
+            // gracefully rather than crashing the host app.
+            @try {
+                if (engine_.isRunning) {
+                    [engine_ pause];
+                }
 
-            // Reconnect the mixer and output nodes using the output node's output format
-            [engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
+                [engine_ disconnectNodeInput:outputNode bus:0];
 
-            [engine_ prepare];
+                // Reconnect the mixer and output nodes using the output node's output format
+                [engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
+
+                [engine_ prepare];
+            } @catch (NSException *exception) {
+                os_log_error(log_,
+                             "AVAudioEngine raised NSException during configuration-change graph rebuild: "
+                             "%{public}@. Bailing out; the next play() will rebuild the graph.",
+                             exception);
+                return;
+            }
         }
 
         // Restart AVAudioEngine if previously running
         if (bits::is_set(prevState, Flags::engineIsRunning)) {
-            if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+            NSError *startError = nil;
+            BOOL started = NO;
+            @try {
+                started = [engine_ startAndReturnError:&startError];
+            } @catch (NSException *exception) {
+                os_log_error(log_,
+                             "AVAudioEngine raised NSException during configuration-change restart: %{public}@",
+                             exception);
+                return;
+            }
+            if (!started) {
                 os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                 lock.unlock();
                 if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
