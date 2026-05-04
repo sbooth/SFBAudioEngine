@@ -2211,7 +2211,18 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
     {
         std::unique_lock lock{engineMutex_};
 
-        // AVAudioEngine stops itself when a configuration change occurs
+        // According to Apple's documentation AVAudioEngine stops itself when a configuration change occurs
+        // However, there have been reports that this is not necessarily true in iOS 26.4
+#if DEBUG
+        if (engine_.isRunning) {
+            os_log_error(log_, "AVAudioEngine is unexpectedly running in AVAudioEngineConfigurationChangeNotification");
+        }
+#endif /* DEBUG */
+
+        // Disconnecting the main mixer node from the output node when the engine is running causes an exception
+        // Ensure the engine is actually stopped to avoid the error
+        [engine_ stop];
+
         // Flags::engineIsRunning indicates if the engine was running before the interruption
         const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
         const auto prevState = prevFlags & (Flags::engineIsRunning | Flags::isPlaying);
