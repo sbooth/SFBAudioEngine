@@ -2250,7 +2250,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             // so ensure the engine is stopped before updating the bus format.
             if (engine_.isRunning) {
 #if DEBUG
-                assert(bits::is_set(prevFlags, Flags::engineIsRunning));
+                assert(bits::is_set(prevState, Flags::engineIsRunning));
 #endif /* DEBUG */
                 [engine_ stop];
             }
