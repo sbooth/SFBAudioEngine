@@ -2211,19 +2211,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
     {
         std::unique_lock lock{engineMutex_};
 
-        // According to Apple's documentation AVAudioEngine stops itself when a configuration change occurs
-        // However, there have been reports that this is not necessarily true in iOS 26.4
-#if DEBUG
-        if (engine_.isRunning) {
-            os_log_error(log_, "AVAudioEngine is unexpectedly running in AVAudioEngineConfigurationChangeNotification");
-        }
-#endif /* DEBUG */
-
-        // Disconnecting the main mixer node from the output node when the engine is running causes an exception
-        // Ensure the engine is actually stopped to avoid the error
-        [engine_ stop];
-
-        // Flags::engineIsRunning indicates if the engine was running before the interruption
+        // Flags::engineIsRunning indicates if the engine was running before the configuration change
         const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
         const auto prevState = prevFlags & (Flags::engineIsRunning | Flags::isPlaying);
 
@@ -2254,6 +2242,17 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             os_log_debug(log_, "Setting main mixer → output node connection format to %{public}@",
                          stringDescribingAVAudioFormat(outputNodeOutputFormat));
 #endif /* DEBUG */
+
+            // AVAudioEngine stops itself when a configuration change occurs but it could have been restarted
+            // before the notification was delivered or the lock was acquired.
+            // Disconnecting the main mixer node from the output node when the engine is running causes an exception
+            // so ensure the engine is stopped before updating the bus format.
+            if (engine_.isRunning) {
+#if DEBUG
+                assert(bits::is_set(prevFlags, Flags::engineIsRunning));
+#endif /* DEBUG */
+                [engine_ stop];
+            }
 
             [engine_ disconnectNodeInput:outputNode bus:0];
 
