@@ -318,9 +318,6 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         return false;
     }
 
-    // The logic in this class assumes no SRC is performed by converter_
-    assert(converter_.inputFormat.sampleRate == converter_.outputFormat.sampleRate);
-
     decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
     if (decodeBuffer_ == nil) {
         return false;
@@ -661,7 +658,9 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
 
         const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
         wasPlaying = bits::is_set(prevFlags, Flags::isPlaying);
+#if DEBUG
         assert(!(didStartEngine && wasPlaying));
+#endif /* DEBUG */
     }
 
     if (didStartEngine || !wasPlaying) {
@@ -747,7 +746,9 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
             }
 
             const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
+#if DEBUG
             assert(bits::is_clear(prevFlags, Flags::isPlaying));
+#endif /* DEBUG */
 
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         } else {
@@ -1092,8 +1093,6 @@ void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine
 
     assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == engine_.mainMixerNode &&
            "Illegal AVAudioEngine configuration");
-    assert(engine_.isRunning == bits::is_set(loadFlags(), Flags::engineIsRunning) &&
-           "AVAudioEngine may not be started or stopped outside of AudioPlayer");
 }
 
 // MARK: - Debugging
@@ -1692,8 +1691,10 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
         return processDecodingErrorEvent();
 
     default:
-        //        assert(false && "Unknown decoding event command");
-        os_log_error(log_, "Unknown decoding event command: %u", command);
+#if DEBUG
+        assert(false && "Unknown DecodingEventCommand");
+#endif /* DEBUG */
+        os_log_error(log_, "Unknown decoding event command: %u", static_cast<uint32_t>(command));
         return false;
     }
 }
@@ -1866,8 +1867,10 @@ bool sfb::AudioPlayer::processRenderingEvent(RenderingEventCommand command) noex
         return processFramesRenderedEvent();
 
     default:
-        //        assert(false && "Unknown rendering event command");
-        os_log_error(log_, "Unknown rendering event command: %u", command);
+#if DEBUG
+        assert(false && "Unknown RenderingEventCommand");
+#endif /* DEBUG */
+        os_log_error(log_, "Unknown rendering event command: %u", static_cast<uint32_t>(command));
         return false;
     }
 }
@@ -1997,7 +2000,11 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             handleRenderingWillCompleteEvent(event.decoder_, event.time_);
             break;
         default:
+#if DEBUG
             assert(false && "Unknown RenderingEventDetails::Type");
+#endif /* DEBUG */
+            os_log_error(log_, "Unknown rendering event details type: %d", static_cast<int>(event.type_));
+            break;
         }
     }
 
@@ -2204,7 +2211,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         std::unique_lock lock{engineMutex_};
 
         // AVAudioEngine stops itself when a configuration change occurs
-        // Flags::engineIsRunning indicates if the engine was running before the interruption
+        // Flags::engineIsRunning indicates if the engine was running before the configuration change
         const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
         const auto prevState = prevFlags & (Flags::engineIsRunning | Flags::isPlaying);
 
@@ -2235,6 +2242,17 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             os_log_debug(log_, "Setting main mixer → output node connection format to %{public}@",
                          stringDescribingAVAudioFormat(outputNodeOutputFormat));
 #endif /* DEBUG */
+
+            // AVAudioEngine stops itself when a configuration change occurs but it could have been restarted
+            // before the notification was delivered or the lock was acquired.
+            // Disconnecting the main mixer node from the output node when the engine is running causes an exception
+            // so ensure the engine is stopped before updating the bus format.
+            if (engine_.isRunning) {
+#if DEBUG
+                assert(bits::is_set(prevState, Flags::engineIsRunning));
+#endif /* DEBUG */
+                [engine_ stop];
+            }
 
             [engine_ disconnectNodeInput:outputNode bus:0];
 
@@ -2336,7 +2354,9 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             }
 
             const auto prevFlags = setFlags(preInterruptState);
+#if DEBUG
             assert(!bits::is_set_without(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
+#endif /* DEBUG */
         }
 
         if (preInterruptState_ != 0) {
