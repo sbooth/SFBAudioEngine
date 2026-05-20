@@ -24,16 +24,16 @@ let package = Package(
             ]),
     ],
     dependencies: [
-        .package(url: "https://github.com/sbooth/AVFAudioExtensions", .upToNextMinor(from: "0.5.0")),
+        .package(url: "https://github.com/sbooth/AVFAudioExtensions", .upToNextMinor(from: "0.5.1")),
         .package(url: "https://github.com/sbooth/CXXAudioRingBuffer", .upToNextMinor(from: "0.1.1")),
-        .package(url: "https://github.com/sbooth/CXXDispatchSemaphore", .upToNextMinor(from: "0.4.0")),
-        .package(url: "https://github.com/sbooth/CXXRingBuffer", .upToNextMinor(from: "0.6.0")),
-        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/sbooth/CXXDispatchSemaphore", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/sbooth/CXXRingBuffer", .upToNextMinor(from: "0.6.1")),
+        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.3.1")),
 
         // Standalone dependencies from source
         .package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
         .package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "12.13.0"),
-        .package(url: "https://github.com/sbooth/CXXTagLib", from: "2.1.1"),
+        .package(url: "https://github.com/sbooth/CXXTagLib", from: "2.3.0"),
 
         // Standalone dependencies not easily packaged using SPM
         .package(url: "https://github.com/sbooth/wavpack-binary-xcframework", .upToNextMinor(from: "0.2.0")),
