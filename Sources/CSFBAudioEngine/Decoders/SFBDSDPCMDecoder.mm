@@ -324,7 +324,7 @@ class DXD {
         return NO;
     }
 
-    if (asbd->mSampleRate != kSFBSampleRateDSD64) {
+    if (asbd->mSampleRate != static_cast<Float64>(kSFBSampleRateDSD64)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
         if (error != nullptr) {
             NSMutableDictionary *userInfo = [NSMutableDictionary
