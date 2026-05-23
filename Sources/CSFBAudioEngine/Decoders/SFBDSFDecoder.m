@@ -42,8 +42,8 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
         for (NSInteger c = 0; c < columns; c += MATRIX_TRANPOSE_BLOCK_SIZE) {
             NSInteger r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
             NSInteger c_end = MIN(c + MATRIX_TRANPOSE_BLOCK_SIZE, columns);
-            for (int i = r; i < r_end; ++i) {
-                for (int j = c; j < c_end; ++j) {
+            for (NSInteger i = r; i < r_end; ++i) {
+                for (NSInteger j = c; j < c_end; ++j) {
                     B[(j * rows) + i] = A[(i * columns) + j];
                 }
             }
