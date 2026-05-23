@@ -18,9 +18,10 @@
 SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecoder.DSF";
 
 #define DSF_BLOCK_SIZE_BYTES_PER_CHANNEL 4096
+#define MATRIX_TRANPOSE_BLOCK_SIZE 16
 
 // Read a four byte chunk ID as a uint32_t
-static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
+static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     NSCParameterAssert(chunkID != NULL);
 
     unsigned char chunkIDBytes[4];
@@ -35,12 +36,16 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     return YES;
 }
 
-// For the size of matrices this class deals with the naive approach is adequate
-static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char *restrict B, NSInteger rows,
-                                 NSInteger columns) {
-    for (NSInteger i = 0; i < rows; ++i) {
-        for (NSInteger j = 0; j < columns; ++j) {
-            B[(j * rows) + i] = A[(i * columns) + j];
+static void matrixTranspose(const unsigned char *restrict A, unsigned char *restrict B, NSInteger rows, NSInteger columns) {
+    for (NSInteger r = 0; r < rows; r += MATRIX_TRANPOSE_BLOCK_SIZE) {
+        for (NSInteger c = 0; c < columns; c += MATRIX_TRANPOSE_BLOCK_SIZE) {
+            NSInteger r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
+            NSInteger c_end = MIN(c + MATRIX_TRANPOSE_BLOCK_SIZE, columns);
+            for (int i = r; i < r_end; ++i) {
+                for (int j = c; j < c_end; ++j) {
+                    B[(j * rows) + i] = A[(i * columns) + j];
+                }
+            }
         }
     }
 }
@@ -104,7 +109,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
 
     // Read the 'DSD ' chunk
     uint32_t chunkID;
-    if (!ReadChunkID(_inputSource, &chunkID) || chunkID != 'DSD ') {
+    if (!readChunkID(_inputSource, &chunkID) || chunkID != 'DSD ') {
         os_log_error(gSFBDSDDecoderLog, "Unable to read 'DSD ' chunk");
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
@@ -141,7 +146,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     }
 
     // Read the 'fmt ' chunk
-    if (!ReadChunkID(_inputSource, &chunkID) || chunkID != 'fmt ') {
+    if (!readChunkID(_inputSource, &chunkID) || chunkID != 'fmt ') {
         os_log_error(gSFBDSDDecoderLog, "Unable to read 'fmt ' chunk");
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
@@ -242,7 +247,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     }
 
     // Read the 'data' chunk
-    if (!ReadChunkID(_inputSource, &chunkID) || chunkID != 'data') {
+    if (!readChunkID(_inputSource, &chunkID) || chunkID != 'data') {
         os_log_error(gSFBDSDDecoderLog, "Unable to read 'data' chunk");
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"DSD Stream", @"")];
@@ -496,7 +501,7 @@ static void MatrixTransposeNaive(const unsigned char *restrict A, unsigned char 
     AVAudioChannelCount channelCount = _processingFormat.channelCount;
     assert(channelCount != 0);
     unsigned char tmp[bufsize];
-    MatrixTransposeNaive(buf, tmp, channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);
+    matrixTranspose(buf, tmp, channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);
     memcpy(buf, tmp, bufsize);
 
     _buffer.packetCount = (AVAudioPacketCount)(bytesRead / (kSFBBytesPerDSDPacketPerChannel * channelCount));
