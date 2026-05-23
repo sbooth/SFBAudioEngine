@@ -312,7 +312,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 
     _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                          sampleRate:rate
-                                                        interleaved:NO
+                                                        interleaved:YES
                                                       channelLayout:channelLayout];
 
     size_t bufferSizeBytes = mpg123_outblock(_mpg123);
@@ -435,22 +435,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
             return NO;
         }
 
-        // Deinterleave the samples
-        AVAudioFrameCount framesDecoded =
-                (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
-
-        float *const *floatChannelData = _buffer.floatChannelData;
-        AVAudioChannelCount channelCount = _buffer.format.channelCount;
-        for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-            const float *input = (float *)audioData + channel;
-            float *output = floatChannelData[channel];
-            for (AVAudioFrameCount frame = 0; frame < framesDecoded; ++frame) {
-                *output++ = *input;
-                input += channelCount;
-            }
-        }
-
-        _buffer.frameLength = framesDecoded;
+        memcpy(_buffer.audioBufferList->mBuffers[0].mData, audioData, bytesDecoded);
+        _buffer.frameLength = bytesDecoded / _buffer.stride;
     }
 
     _framePosition += framesProcessed;
