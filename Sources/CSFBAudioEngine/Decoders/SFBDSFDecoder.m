@@ -36,7 +36,8 @@ static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     return YES;
 }
 
-static void matrixTranspose(const unsigned char *restrict A, unsigned char *restrict B, NSInteger rows, NSInteger columns) {
+static void matrixTranspose(const unsigned char *restrict A, unsigned char *restrict B, NSInteger rows,
+                            NSInteger columns) {
     for (NSInteger r = 0; r < rows; r += MATRIX_TRANPOSE_BLOCK_SIZE) {
         for (NSInteger c = 0; c < columns; c += MATRIX_TRANPOSE_BLOCK_SIZE) {
             NSInteger r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
