@@ -346,6 +346,8 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     }
 
     _framePosition = frame;
+    _buffer.frameLength = 0;
+
     return YES;
 }
 

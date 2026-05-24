@@ -504,6 +504,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     }
 
     _framePosition = frame;
+    _frameBuffer.frameLength = 0;
+
     return YES;
 }
 

@@ -457,6 +457,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     }
 
     _framePosition = offset;
+    _buffer.frameLength = 0;
+
     return offset >= 0;
 }
 
