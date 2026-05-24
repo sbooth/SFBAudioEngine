@@ -436,7 +436,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         }
 
         memcpy(_buffer.audioBufferList->mBuffers[0].mData, audioData, bytesDecoded);
-        _buffer.frameLength = bytesDecoded / _buffer.stride;
+        _buffer.frameLength = (AVAudioFrameCount)(bytesDecoded / (_buffer.stride * sizeof(float)));
     }
 
     _framePosition += framesProcessed;
