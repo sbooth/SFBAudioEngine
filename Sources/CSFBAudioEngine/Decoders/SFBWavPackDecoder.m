@@ -328,13 +328,13 @@ static int can_seek_callback(void *id) {
 
     // Floating-point and lossy files will be handed off in the canonical Core Audio format
     int mode = WavpackGetMode(_wpc);
-    //int qmode = WavpackGetQualifyMode(_wpc);
+    // int qmode = WavpackGetQualifyMode(_wpc);
     if (MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
         _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                              sampleRate:WavpackGetSampleRate(_wpc)
                                                             interleaved:YES
                                                           channelLayout:channelLayout];
-    //} else if(qmode & QMODE_DSD_AUDIO) {
+        //} else if(qmode & QMODE_DSD_AUDIO) {
     } else {
         AudioStreamBasicDescription processingStreamDescription = {0};
 
@@ -464,10 +464,11 @@ static int can_seek_callback(void *id) {
 
         // The samples returned are handled differently based on the file's mode
         int mode = WavpackGetMode(_wpc);
-        //int qmode = WavpackGetQualifyMode(_wpc);
+        // int qmode = WavpackGetQualifyMode(_wpc);
 
         if (mode & MODE_FLOAT) {
-            memcpy((unsigned char *)buffer.audioBufferList->mBuffers[0].mData + buffer.audioBufferList->mBuffers[0].mDataByteSize,
+            memcpy((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                           buffer.audioBufferList->mBuffers[0].mDataByteSize,
                    _buffer, samplesRead * WavpackGetNumChannels(_wpc) * sizeof(float));
         } else if (mode & MODE_LOSSLESS) {
             // For lossless files WavPack produces 32-bit signed integers with the samples low-aligned
@@ -477,7 +478,8 @@ static int can_seek_callback(void *id) {
                 int shift = 32 - bitsPerSample;
 
                 uint32_t count = WavpackGetNumChannels(_wpc) * samplesRead;
-                uint32_t *dst = (uint32_t *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData + buffer.audioBufferList->mBuffers[0].mDataByteSize);
+                uint32_t *dst = (uint32_t *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                                             buffer.audioBufferList->mBuffers[0].mDataByteSize);
 
                 uint32_t i = 0;
                 uint32_t simd_vector_size = 16;
@@ -493,18 +495,20 @@ static int can_seek_callback(void *id) {
                     dst[i] = (uint32_t)_buffer[i] << shift;
                 }
             } else {
-                memcpy((unsigned char *)buffer.audioBufferList->mBuffers[0].mData + buffer.audioBufferList->mBuffers[0].mDataByteSize,
+                memcpy((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                               buffer.audioBufferList->mBuffers[0].mDataByteSize,
                        _buffer, samplesRead * WavpackGetNumChannels(_wpc) * sizeof(int32_t));
             }
         } else {
             // Convert lossy files to float
-            float *dst = (float *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData + buffer.audioBufferList->mBuffers[0].mDataByteSize);
+            float *dst = (float *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                                   buffer.audioBufferList->mBuffers[0].mDataByteSize);
             vDSP_Length count = WavpackGetNumChannels(_wpc) * samplesRead;
 
             vDSP_vflt32(_buffer, 1, dst, 1, count);
 
             float scaleFactor = 1.f / (float)(1 << (WavpackGetBitsPerSample(_wpc) - 1));
-            //float scaleFactor = ldexpf(1.0f, -(WavpackGetBitsPerSample(_wpc) - 1));
+            // float scaleFactor = ldexpf(1.0f, -(WavpackGetBitsPerSample(_wpc) - 1));
             vDSP_vsmul(dst, 1, &scaleFactor, dst, 1, count);
         }
 
