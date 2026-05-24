@@ -507,7 +507,7 @@ static int can_seek_callback(void *id) {
 
             vDSP_vflt32(_buffer, 1, dst, 1, count);
 
-            float scaleFactor = 1.f / (float)(1 << (WavpackGetBitsPerSample(_wpc) - 1));
+            float scaleFactor = 1.f / (float)((uint32_t)1 << (WavpackGetBitsPerSample(_wpc) - 1));
             // float scaleFactor = ldexpf(1.0f, -(WavpackGetBitsPerSample(_wpc) - 1));
             vDSP_vsmul(dst, 1, &scaleFactor, dst, 1, count);
         }
