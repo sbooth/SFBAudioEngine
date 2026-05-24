@@ -296,8 +296,12 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
     processingStreamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger |
-                                               kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsAlignedHigh;
+                                               kAudioFormatFlagIsNonInterleaved;
+    if (_streamInfo.bits_per_sample != 32) {
+        processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+    }
 #pragma clang diagnostic pop
+
 
     processingStreamDescription.mSampleRate = _streamInfo.sample_rate;
     processingStreamDescription.mChannelsPerFrame = _streamInfo.channels;
