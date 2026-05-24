@@ -18,7 +18,7 @@
 SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecoder.DSF";
 
 #define DSF_BLOCK_SIZE_BYTES_PER_CHANNEL 4096
-#define MATRIX_TRANPOSE_BLOCK_SIZE 16
+#define MATRIX_TRANPOSE_BLOCK_SIZE 64
 
 // Read a four byte chunk ID as a uint32_t
 static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
@@ -36,14 +36,14 @@ static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
     return YES;
 }
 
-static void matrixTranspose(const unsigned char *restrict A, unsigned char *restrict B, NSInteger rows,
-                            NSInteger columns) {
-    for (NSInteger r = 0; r < rows; r += MATRIX_TRANPOSE_BLOCK_SIZE) {
-        for (NSInteger c = 0; c < columns; c += MATRIX_TRANPOSE_BLOCK_SIZE) {
-            NSInteger r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
-            NSInteger c_end = MIN(c + MATRIX_TRANPOSE_BLOCK_SIZE, columns);
-            for (NSInteger i = r; i < r_end; ++i) {
-                for (NSInteger j = c; j < c_end; ++j) {
+static void matrixTranspose(const unsigned char *restrict A, unsigned char *restrict B, size_t rows,
+                            size_t columns) {
+    for (size_t r = 0; r < rows; r += MATRIX_TRANPOSE_BLOCK_SIZE) {
+        for (size_t c = 0; c < columns; c += MATRIX_TRANPOSE_BLOCK_SIZE) {
+            size_t r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
+            size_t c_end = MIN(c + MATRIX_TRANPOSE_BLOCK_SIZE, columns);
+            for (size_t i = r; i < r_end; ++i) {
+                for (size_t j = c; j < c_end; ++j) {
                     B[(j * rows) + i] = A[(i * columns) + j];
                 }
             }
