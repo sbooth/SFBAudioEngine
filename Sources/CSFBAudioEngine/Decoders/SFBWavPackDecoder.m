@@ -326,7 +326,6 @@ static int can_seek_callback(void *id) {
         channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:channelCount];
     }
 
-    // Floating-point and lossy files will be handed off in the canonical Core Audio format
     int mode = WavpackGetMode(_wpc);
     // int qmode = WavpackGetQualifyMode(_wpc);
     if (MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
