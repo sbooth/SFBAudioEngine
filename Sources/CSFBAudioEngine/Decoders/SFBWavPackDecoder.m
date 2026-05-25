@@ -502,12 +502,11 @@ static int can_seek_callback(void *id) {
             // Convert lossy files to float
             float *dst = (float *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
                                    buffer.audioBufferList->mBuffers[0].mDataByteSize);
-            vDSP_Length count = WavpackGetNumChannels(_wpc) * samplesRead;
 
+            vDSP_Length count = WavpackGetNumChannels(_wpc) * samplesRead;
             vDSP_vflt32(_buffer, 1, dst, 1, count);
 
-            float scaleFactor = 1.f / (float)((uint32_t)1 << (WavpackGetBitsPerSample(_wpc) - 1));
-            // float scaleFactor = ldexpf(1.0f, -(WavpackGetBitsPerSample(_wpc) - 1));
+            float scaleFactor = 1.f / (float)((uint32_t)1 << (8 * WavpackGetBytesPerSample(_wpc) - 1));
             vDSP_vsmul(dst, 1, &scaleFactor, dst, 1, count);
         }
 
