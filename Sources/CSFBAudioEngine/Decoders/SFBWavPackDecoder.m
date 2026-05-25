@@ -13,9 +13,12 @@
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <wavpack/wavpack.h>
 
+#import <Accelerate/Accelerate.h>
 #import <AudioToolbox/AudioToolbox.h>
 
 #import <os/log.h>
+
+#import <simd/simd.h>
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
 
@@ -323,21 +326,19 @@ static int can_seek_callback(void *id) {
         channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:labels count:channelCount];
     }
 
-    // Floating-point and lossy files will be handed off in the canonical Core Audio format
     int mode = WavpackGetMode(_wpc);
-    //    int qmode = WavpackGetQualifyMode(_wpc);
+    // int qmode = WavpackGetQualifyMode(_wpc);
     if (MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
         _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                              sampleRate:WavpackGetSampleRate(_wpc)
-                                                            interleaved:NO
+                                                            interleaved:YES
                                                           channelLayout:channelLayout];
-        //    } else if(qmode & QMODE_DSD_AUDIO) {
+        //} else if(qmode & QMODE_DSD_AUDIO) {
     } else {
         AudioStreamBasicDescription processingStreamDescription = {0};
 
         processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
-        processingStreamDescription.mFormatFlags =
-                kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+        processingStreamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 
         // Align high because Apple's AudioConverter doesn't handle low alignment
         if (WavpackGetBitsPerSample(_wpc) != 32) {
@@ -348,7 +349,7 @@ static int can_seek_callback(void *id) {
         processingStreamDescription.mChannelsPerFrame = (UInt32)WavpackGetNumChannels(_wpc);
         processingStreamDescription.mBitsPerChannel = (UInt32)WavpackGetBitsPerSample(_wpc);
 
-        processingStreamDescription.mBytesPerPacket = 4;
+        processingStreamDescription.mBytesPerPacket = 4 * processingStreamDescription.mChannelsPerFrame;
         processingStreamDescription.mFramesPerPacket = 1;
         processingStreamDescription.mBytesPerFrame =
                 processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
@@ -462,74 +463,55 @@ static int can_seek_callback(void *id) {
 
         // The samples returned are handled differently based on the file's mode
         int mode = WavpackGetMode(_wpc);
-        //        int qmode = WavpackGetQualifyMode(_wpc);
+        // int qmode = WavpackGetQualifyMode(_wpc);
 
-        // Floating point files require no special handling other than deinterleaving
         if (mode & MODE_FLOAT) {
-            float *const *floatChannelData = buffer.floatChannelData;
-            AVAudioChannelCount channelCount = buffer.format.channelCount;
-            for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-                const float *input = (float *)_buffer + channel;
-                float *output = floatChannelData[channel] + buffer.frameLength;
-                for (uint32_t sample = 0; sample < samplesRead; ++sample) {
-                    *output++ = *input;
-                    input += channelCount;
-                }
-            }
+            memcpy((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                           buffer.audioBufferList->mBuffers[0].mDataByteSize,
+                   _buffer, samplesRead * WavpackGetNumChannels(_wpc) * sizeof(float));
+        } else if (mode & MODE_LOSSLESS) {
+            // For lossless files WavPack produces 32-bit signed integers with the samples low-aligned
+            int bitsPerSample = WavpackGetBitsPerSample(_wpc);
+            if (bitsPerSample != 32) {
+                // Shift the samples to high alignment
+                int shift = 32 - bitsPerSample;
 
-            buffer.frameLength += samplesRead;
-        }
-        // Lossless files will be handed off as integers
-        else if (mode & MODE_LOSSLESS) {
-            // WavPack hands us 32-bit signed integers with the samples low-aligned
-            int shift = 8 * (4 - WavpackGetBytesPerSample(_wpc));
+                uint32_t count = WavpackGetNumChannels(_wpc) * samplesRead;
+                uint32_t *dst = (uint32_t *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                                             buffer.audioBufferList->mBuffers[0].mDataByteSize);
 
-            int32_t *const *int32ChannelData = buffer.int32ChannelData;
-            AVAudioChannelCount channelCount = buffer.format.channelCount;
-
-            // Deinterleave the 32-bit samples, shifting to high alignment
-            if (shift) {
-                for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-                    const int32_t *input = _buffer + channel;
-                    int32_t *output = int32ChannelData[channel] + buffer.frameLength;
-                    for (uint32_t sample = 0; sample < samplesRead; ++sample) {
-                        *output++ = (int32_t)((uint32_t)*input << shift);
-                        input += channelCount;
+                uint32_t i = 0;
+                uint32_t simd_vector_size = 16;
+                if (count > simd_vector_size) {
+                    for (; i <= count - simd_vector_size; i += simd_vector_size) {
+                        simd_uint16 v = *(simd_packed_uint16 *)(&_buffer[i]);
+                        v <<= shift;
+                        *(simd_packed_uint16 *)(&dst[i]) = v;
                     }
                 }
-            }
-            // Just deinterleave the 32-bit samples
-            else {
-                for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-                    const int32_t *input = _buffer + channel;
-                    int32_t *output = int32ChannelData[channel] + buffer.frameLength;
-                    for (uint32_t sample = 0; sample < samplesRead; ++sample) {
-                        *output++ = *input;
-                        input += channelCount;
-                    }
+
+                for (; i < count; ++i) {
+                    dst[i] = (uint32_t)_buffer[i] << shift;
                 }
+            } else {
+                memcpy((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                               buffer.audioBufferList->mBuffers[0].mDataByteSize,
+                       _buffer, samplesRead * WavpackGetNumChannels(_wpc) * sizeof(int32_t));
             }
+        } else {
+            // Convert lossy files to float
+            float *dst = (float *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
+                                   buffer.audioBufferList->mBuffers[0].mDataByteSize);
+            vDSP_Length count = WavpackGetNumChannels(_wpc) * samplesRead;
 
-            buffer.frameLength += samplesRead;
+            vDSP_vflt32(_buffer, 1, dst, 1, count);
+
+            float scaleFactor = 1.f / (float)((uint32_t)1 << (WavpackGetBitsPerSample(_wpc) - 1));
+            // float scaleFactor = ldexpf(1.0f, -(WavpackGetBitsPerSample(_wpc) - 1));
+            vDSP_vsmul(dst, 1, &scaleFactor, dst, 1, count);
         }
-        // Convert lossy files to float
-        else {
-            float scaleFactor = ((uint32_t)1 << ((WavpackGetBytesPerSample(_wpc) * 8) - 1));
 
-            // Deinterleave the 32-bit samples and convert to float
-            float *const *floatChannelData = buffer.floatChannelData;
-            AVAudioChannelCount channelCount = buffer.format.channelCount;
-            for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-                const int32_t *input = _buffer + channel;
-                float *output = floatChannelData[channel] + buffer.frameLength;
-                for (uint32_t sample = 0; sample < samplesRead; ++sample) {
-                    *output++ = *input / scaleFactor;
-                    input += channelCount;
-                }
-            }
-
-            buffer.frameLength += samplesRead;
-        }
+        buffer.frameLength += samplesRead;
 
         framesRemaining -= samplesRead;
         _framePosition += samplesRead;

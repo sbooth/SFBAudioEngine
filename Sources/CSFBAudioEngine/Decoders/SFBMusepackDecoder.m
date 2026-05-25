@@ -192,7 +192,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 
     _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                          sampleRate:streaminfo.sample_freq
-                                                        interleaved:NO
+                                                        interleaved:YES
                                                       channelLayout:channelLayout];
 
     // Set up the source format
@@ -324,18 +324,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         AVAudioChannelCount channelCount = _buffer.format.channelCount;
         vDSP_vclip((float *)frame.buffer, 1, &minValue, &maxValue, (float *)frame.buffer, 1,
                    frame.samples * channelCount);
-
-        // Deinterleave the normalized samples
-        float *const *floatChannelData = _buffer.floatChannelData;
-        for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-            const float *input = (float *)frame.buffer + channel;
-            float *output = floatChannelData[channel] + _buffer.frameLength;
-            for (uint32_t sample = 0; sample < frame.samples; ++sample) {
-                *output++ = *input;
-                input += channelCount;
-            }
-        }
-
+        memcpy(_buffer.audioBufferList->mBuffers[0].mData, frame.buffer, frame.samples * channelCount * sizeof(float));
         _buffer.frameLength = frame.samples;
 #endif /* MPC_FIXED_POINT */
     }
@@ -357,6 +346,8 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     }
 
     _framePosition = frame;
+    _buffer.frameLength = 0;
+
     return YES;
 }
 

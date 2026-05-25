@@ -295,8 +295,11 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     processingStreamDescription.mFormatID = kAudioFormatLinearPCM;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
-    processingStreamDescription.mFormatFlags = kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger |
-                                               kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsAlignedHigh;
+    processingStreamDescription.mFormatFlags =
+            kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+    if (_streamInfo.bits_per_sample != 32) {
+        processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+    }
 #pragma clang diagnostic pop
 
     processingStreamDescription.mSampleRate = _streamInfo.sample_rate;
@@ -512,6 +515,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     _framePosition = frame;
     _frameBuffer.frameLength = 0;
+
     return YES;
 }
 
