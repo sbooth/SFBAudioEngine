@@ -470,11 +470,11 @@ static int can_seek_callback(void *id) {
                            buffer.audioBufferList->mBuffers[0].mDataByteSize,
                    _buffer, samplesRead * WavpackGetNumChannels(_wpc) * sizeof(float));
         } else if (mode & MODE_LOSSLESS) {
-            // For lossless files WavPack produces 32-bit signed integers with the samples low-aligned
-            int bitsPerSample = WavpackGetBitsPerSample(_wpc);
-            if (bitsPerSample != 32) {
+            // For lossless files WavPack produces 32-bit signed integers with the samples low-aligned in each
+            // four byte buffer entry but high-aligned within the number of bytes used for the original data
+            if (WavpackGetBitsPerSample(_wpc) != 32) {
                 // Shift the samples to high alignment
-                int shift = 32 - bitsPerSample;
+                int shift = 32 - (8 * WavpackGetBytesPerSample(_wpc));
 
                 uint32_t count = WavpackGetNumChannels(_wpc) * samplesRead;
                 uint32_t *dst = (uint32_t *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
