@@ -1800,8 +1800,9 @@ bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
         }
     }
 
-    if ([player_.delegate respondsToSelector:@selector(audioPlayer:didSeek:toFrame:)]) {
-        [player_.delegate audioPlayer:player_ didSeek:decoder toFrame:frame];
+    if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
+        delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:didSeek:toFrame:)]) {
+        [delegate audioPlayer:player_ didSeek:decoder toFrame:frame];
     }
 
     return true;
