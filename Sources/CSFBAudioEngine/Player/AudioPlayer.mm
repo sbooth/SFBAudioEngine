@@ -289,8 +289,7 @@ struct AudioPlayer::DecoderState final {
 
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
 
-inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept
-    : decoder_{decoder} {
+inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept : decoder_{decoder} {
 #if DEBUG
     assert(decoder != nil);
 #endif /* DEBUG */
@@ -347,9 +346,7 @@ inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noe
     return framesRendered_.load(std::memory_order_acquire);
 }
 
-inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept {
-    return frameLength_;
-}
+inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept { return frameLength_; }
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
 #if DEBUG
@@ -1327,7 +1324,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
             if (decoderState != nullptr) {
                 // Open the decoder if necessary
-                if (NSError *error = nil; !decoderState->decoder_.isOpen && ![decoderState->decoder_ openReturningError:&error]) {
+                if (NSError *error = nil;
+                    !decoderState->decoder_.isOpen && ![decoderState->decoder_ openReturningError:&error]) {
                     os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
                     decoderState->error_ = error;
                     decoderState->setFlags(DecoderState::Flags::cancelRequested);
