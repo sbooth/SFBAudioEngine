@@ -204,7 +204,9 @@ struct AudioPlayer::DecoderState final {
     const Decoder decoder_{nil};
 
     /// The sample rate of the audio converter's output format
-    const double sampleRate_{0};
+    double sampleRate_{0};
+    /// The total number of audio frames
+    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
 
     /// Flags
     std::atomic_uint flags_{0};
@@ -216,8 +218,6 @@ struct AudioPlayer::DecoderState final {
     std::atomic_int64_t framesConverted_{0};
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
-    /// The total number of audio frames
-    std::atomic_int64_t frameLength_{SFBUnknownFrameLength};
     /// The requested frame
     std::atomic_int64_t requestedFrame_{SFBUnknownFramePosition};
 
@@ -290,7 +290,7 @@ struct AudioPlayer::DecoderState final {
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
 
 inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept
-    : decoder_{decoder}, sampleRate_{decoder.processingFormat.sampleRate}, frameLength_{decoder.frameLength} {
+    : decoder_{decoder} {
 #if DEBUG
     assert(decoder != nil);
 #endif /* DEBUG */
@@ -334,6 +334,9 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         framesRendered_.store(framePosition, std::memory_order_release);
     }
 
+    frameLength_ = decoder_.frameLength;
+    sampleRate_ = format.sampleRate;
+
     return true;
 }
 
@@ -345,7 +348,7 @@ inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noe
 }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept {
-    return frameLength_.load(std::memory_order_acquire);
+    return frameLength_;
 }
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
@@ -592,11 +595,6 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
 #if DEBUG
     assert(decoder != nil);
 #endif /* DEBUG */
-
-    // Open the decoder if necessary
-    if (!decoder.isOpen && ![decoder openReturningError:error]) {
-        return false;
-    }
 
     // Ensure only one decoder can be enqueued at a time
     std::lock_guard lock{queuedDecodersMutex_};
@@ -1328,6 +1326,14 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             }
 
             if (decoderState != nullptr) {
+                // Open the decoder if necessary
+                if (NSError *error = nil; !decoderState->decoder_.isOpen && ![decoderState->decoder_ openReturningError:&error]) {
+                    os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
+                    decoderState->error_ = error;
+                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                    continue;
+                }
+
                 // Allocate decoder state internals
                 if (!decoderState->allocate(ringBufferChunkSize)) {
                     os_log_error(log_,
