@@ -1290,7 +1290,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             });
 
             if (iter != activeDecoders_.cend()) {
-                decoderState = (*iter).get();
+                decoderState = iter->get();
             } else {
                 decoderState = nullptr;
             }
