@@ -212,8 +212,6 @@ struct AudioPlayer::DecoderState final {
 
     /// The number of frames decoded
     std::atomic_int64_t framesDecoded_{0};
-    /// The number of frames converted
-    std::atomic_int64_t framesConverted_{0};
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
     /// The total number of audio frames
@@ -330,7 +328,6 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
     if (framePosition != 0) {
         framesDecoded_.store(framePosition, std::memory_order_release);
-        framesConverted_.store(framePosition, std::memory_order_release);
         framesRendered_.store(framePosition, std::memory_order_release);
     }
 
@@ -358,7 +355,8 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
         return false;
     }
 
-    if (decodeBuffer_.frameLength == 0) {
+    const auto framesDecoded = decodeBuffer_.frameLength;
+    if (framesDecoded == 0) {
         setFlags(Flags::decodingComplete);
 
 #if false
@@ -371,13 +369,15 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
         return true;
     }
 
-    this->framesDecoded_.fetch_add(decodeBuffer_.frameLength, std::memory_order_acq_rel);
+    this->framesDecoded_.fetch_add(framesDecoded, std::memory_order_acq_rel);
 
     // Only PCM to PCM conversions are performed
     if (![converter_ convertToBuffer:buffer fromBuffer:decodeBuffer_ error:error]) {
         return false;
     }
-    framesConverted_.fetch_add(buffer.frameLength, std::memory_order_acq_rel);
+#if DEBUG
+    assert(framesDecoded == buffer.frameLength);
+#endif /* DEBUG */
 
     // If `buffer` is not full but -decodeIntoBuffer:frameLength:error: returned `YES`
     // decoding is complete
@@ -428,7 +428,6 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
         // Update the frame counters accordingly
         // A seek is handled in essentially the same way as initial playback
         framesDecoded_.store(framePosition, std::memory_order_release);
-        framesConverted_.store(framePosition, std::memory_order_release);
         framesRendered_.store(framePosition, std::memory_order_release);
     }
 
@@ -1928,9 +1927,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             //
             // In the case of a seek the frames from that event are not valid and should be discarded.
 
-            const auto decoderFramesConverted = (*iter)->framesConverted_.load(std::memory_order_acquire);
+            const auto decoderFramesDecoded = (*iter)->framesDecoded_.load(std::memory_order_acquire);
             const auto decoderFramesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
-            const auto decoderFramesRemaining = decoderFramesConverted - decoderFramesRendered;
+            const auto decoderFramesRemaining = decoderFramesDecoded - decoderFramesRendered;
 
             if (decoderFramesRemaining == 0) {
 #if DEBUG
