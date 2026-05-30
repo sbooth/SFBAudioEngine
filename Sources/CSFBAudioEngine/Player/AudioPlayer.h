@@ -209,6 +209,8 @@ class AudioPlayer final {
         isMuted = 1u << 2,
         /// The ring buffer needs to be drained during the next render cycle
         drainRequired = 1u << 3,
+        /// A decoder has been dequeued but not yet added as active
+        decoderDequeued = 1u << 4,
     };
 
     // Enable bitmask operations for `Flags`
