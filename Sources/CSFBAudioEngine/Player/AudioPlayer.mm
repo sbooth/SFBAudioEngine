@@ -2116,7 +2116,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         }();
 
         // End of audio
-        if (hasNoDecoders && bits::is_clear(loadFlags(), Flags::decoderDequeued)) {
+        if (hasNoDecoders && bits::is_clear(that->loadFlags(), Flags::decoderDequeued)) {
 #if DEBUG
             os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
