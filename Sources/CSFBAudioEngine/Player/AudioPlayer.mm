@@ -1324,8 +1324,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     decoderState = activeDecoders_.back().get();
                     os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
                 } catch (const std::exception &e) {
-                    os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder,
-                                 e.what());
+                    os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder, e.what());
                     submitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                  code:SFBAudioPlayerErrorCodeInternalError
                                                              userInfo:nil]);
