@@ -273,7 +273,7 @@ struct AudioPlayer::DecoderState final {
     }
 
     DecoderState(Decoder _Nonnull decoder) noexcept;
-    bool allocate(AVAudioFrameCount frameCapacity, NSError **error) noexcept;
+    bool allocate(AVAudioFrameCount frameCapacity) noexcept;
 
     double sampleRate() const noexcept;
 
@@ -297,32 +297,13 @@ inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcep
 #endif /* DEBUG */
 }
 
-inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity, NSError **error) noexcept {
+inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity) noexcept {
 #if DEBUG
     assert(converter_ == nil);
     assert(decodeBuffer_ == nil);
     assert(frameCapacity != 0);
     assert(bits::is_set(loadFlags(), Flags::needsInitialization));
 #endif /* DEBUG */
-
-    if (decoder_ == nil) {
-        os_log_error(log_, "Decoder may not be nil");
-        return false;
-    }
-
-    if (frameCapacity == 0) {
-        os_log_error(log_, "Frame capacity may not be zero");
-        return false;
-    }
-
-    // Open the decoder if necessary
-    if (NSError *err = nil; !decoder_.isOpen && ![decoder_ openReturningError:&err]) {
-        os_log_error(log_, "Error opening %{public}@: %{public}@", decoder_, err);
-        if (error != nullptr) {
-            *error = err;
-        }
-        return false;
-    }
 
     auto format = decoder_.processingFormat;
 #if DEBUG
@@ -1365,12 +1346,21 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             }
 
             if (decoderState != nullptr) {
+                // Open the decoder if necessary
+                if (NSError *error = nil;
+                    !decoderState->decoder_.isOpen && ![decoderState->decoder_ openReturningError:&error]) {
+                    os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
+                    decoderState->error_ = error;
+                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                    continue;
+                }
+
                 // Allocate decoder state internals
-                if (NSError *error = nil; !decoderState->allocate(ringBufferChunkSize, &error)) {
+                if (!decoderState->allocate(ringBufferChunkSize)) {
                     os_log_error(log_,
                                  "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
-                                 "capacity %d: %{public}@",
-                                 ringBufferChunkSize, error);
+                                 "capacity %d",
+                                 ringBufferChunkSize);
                     decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                code:SFBAudioPlayerErrorCodeInternalError
                                                            userInfo:nil];
