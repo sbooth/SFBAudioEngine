@@ -366,7 +366,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity,
     }
 
     sampleRate_.store(format.sampleRate, std::memory_order_release);
-    frameLength_.store(decoder_.frameLength);
+    frameLength_.store(decoder_.frameLength, std::memory_order_release);
 
     clearFlags(Flags::needsInitialization);
 
