@@ -353,9 +353,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
     return true;
 }
 
-inline double AudioPlayer::DecoderState::sampleRate() const noexcept {
-    return sampleRate_;
-}
+inline double AudioPlayer::DecoderState::sampleRate() const noexcept { return sampleRate_; }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
     if (bits::is_set(loadFlags(), Flags::seekPending)) {
@@ -364,9 +362,7 @@ inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noe
     return framesRendered_.load(std::memory_order_acquire);
 }
 
-inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept {
-    return frameLength_;
-}
+inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept { return frameLength_; }
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
 #if DEBUG
