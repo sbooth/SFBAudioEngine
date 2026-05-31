@@ -247,7 +247,7 @@ struct AudioPlayer::DecoderState final {
         cancelRequested = 1u << 6,
         /// Decoder canceled
         isCanceled = 1u << 7,
-        /// Decoder not initialized
+        /// Decoder state not initialized
         needsInitialization = 1u << 8,
     };
 
