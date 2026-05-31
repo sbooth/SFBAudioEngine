@@ -204,7 +204,7 @@ struct AudioPlayer::DecoderState final {
     const Decoder decoder_{nil};
 
     /// The sample rate of the audio converter's output format
-    std::atomic<double> sampleRate_{0};
+    double sampleRate_{0};
 
     /// Flags
     std::atomic_uint flags_{0};
@@ -215,7 +215,7 @@ struct AudioPlayer::DecoderState final {
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
     /// The total number of audio frames
-    std::atomic_int64_t frameLength_{SFBUnknownFrameLength};
+    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
     /// The requested frame
     std::atomic_int64_t requestedFrame_{SFBUnknownFramePosition};
 
@@ -343,8 +343,10 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
         framesRendered_.store(framePosition, std::memory_order_release);
     }
 
-    sampleRate_.store(format.sampleRate, std::memory_order_release);
-    frameLength_.store(decoder_.frameLength, std::memory_order_release);
+    // The sample rate and frame length do not need to be individually atomic because they are written only once
+    // and access is guarded behind the atomic flag `Flags::needsInitialization`
+    sampleRate_ = format.sampleRate;
+    frameLength_ = decoder_.frameLength;
 
     clearFlags(Flags::needsInitialization);
 
@@ -352,7 +354,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 }
 
 inline double AudioPlayer::DecoderState::sampleRate() const noexcept {
-    return sampleRate_.load(std::memory_order_acquire);
+    return sampleRate_;
 }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
@@ -363,7 +365,7 @@ inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noe
 }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept {
-    return frameLength_.load(std::memory_order_acquire);
+    return frameLength_;
 }
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
