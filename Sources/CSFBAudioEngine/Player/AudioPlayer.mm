@@ -300,20 +300,17 @@ inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcep
 
 inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity) noexcept {
 #if DEBUG
+    assert(decoder_.isOpen);
     assert(converter_ == nil);
     assert(decodeBuffer_ == nil);
-    assert(frameCapacity != 0);
     assert(bits::is_set(loadFlags(), Flags::needsInitialization));
+    assert(frameCapacity != 0);
 #endif /* DEBUG */
 
     auto format = decoder_.processingFormat;
 #if DEBUG
     assert(format.streamDescription->mFormatID == kAudioFormatLinearPCM);
 #endif /* DEBUG */
-    if (format == nil || format.streamDescription->mFormatID != kAudioFormatLinearPCM) {
-        os_log_error(log_, "Decoder processing format must be PCM");
-        return false;
-    }
 
     auto standardEquivalentFormat = format.standardEquivalent;
     if (standardEquivalentFormat == nil) {
