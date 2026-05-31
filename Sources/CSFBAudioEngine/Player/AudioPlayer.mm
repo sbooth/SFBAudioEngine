@@ -311,7 +311,6 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 #if DEBUG
     assert(format.streamDescription->mFormatID == kAudioFormatLinearPCM);
 #endif /* DEBUG */
-
     auto standardEquivalentFormat = format.standardEquivalent;
     if (standardEquivalentFormat == nil) {
         os_log_error(log_, "Error converting %{public}@ to standard equivalent format",
