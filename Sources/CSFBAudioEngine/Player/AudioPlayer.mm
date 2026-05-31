@@ -26,7 +26,6 @@
 #import <concepts>
 #import <limits>
 #import <ranges>
-#import <stdexcept>
 
 namespace {
 
