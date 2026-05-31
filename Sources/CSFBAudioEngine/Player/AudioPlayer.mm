@@ -273,6 +273,7 @@ struct AudioPlayer::DecoderState final {
     }
 
     DecoderState(Decoder _Nonnull decoder) noexcept;
+
     bool allocate(AVAudioFrameCount frameCapacity) noexcept;
 
     double sampleRate() const noexcept;
