@@ -1590,22 +1590,24 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
                                   AudioBufferList *outputData) noexcept {
     const auto flags = loadFlags();
 
+    const auto zeroABL = [](AudioBufferList *abl) noexcept {
+        for (UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
+            std::memset(abl->mBuffers[i].mData, 0, abl->mBuffers[i].mDataByteSize);
+        }
+    };
+
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
     if (bits::is_set(flags, Flags::drainRequired)) {
         audioRingBuffer_.drain();
         clearFlags(Flags::drainRequired);
-        for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-            std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
-        }
+        zeroABL(outputData);
         isSilence = YES;
         return noErr;
     }
 
     // Output silence if not playing or muted
     if (!bits::is_set_without(flags, Flags::isPlaying, Flags::isMuted)) {
-        for (UInt32 i = 0; i < outputData->mNumberBuffers; ++i) {
-            std::memset(outputData->mBuffers[i].mData, 0, outputData->mBuffers[i].mDataByteSize);
-        }
+        zeroABL(outputData);
         isSilence = YES;
         return noErr;
     }
