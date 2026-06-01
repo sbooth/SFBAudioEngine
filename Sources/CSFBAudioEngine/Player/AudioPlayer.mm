@@ -328,7 +328,8 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
     decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
     if (decodeBuffer_ == nil) {
-        os_log_error(log_, "Error allocating AVAudioPCMBuffer with format %{public}@ and frame capacity %d", stringDescribingAVAudioFormat(converter_.inputFormat), frameCapacity);
+        os_log_error(log_, "Error allocating AVAudioPCMBuffer with format %{public}@ and frame capacity %d",
+                     stringDescribingAVAudioFormat(converter_.inputFormat), frameCapacity);
         return false;
     }
 
