@@ -1590,6 +1590,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
                                   AudioBufferList *outputData) noexcept {
     const auto flags = loadFlags();
 
+    /// Sets the buffers in an AudioBufferList struct to zero.
     const auto zeroABL = [](AudioBufferList *abl) noexcept {
         for (UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
             std::memset(abl->mBuffers[i].mData, 0, abl->mBuffers[i].mDataByteSize);
