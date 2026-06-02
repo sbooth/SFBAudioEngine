@@ -921,7 +921,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
         return true;
     }
 
-    const auto framesToSkip = secondsToSkip * decoderState->sampleRate_;
+    const auto framesToSkip = secondsToSkip * decoderState->sampleRate();
     if (framesToSkip >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max()) ||
         framesToSkip <= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::min())) {
         return false;
@@ -942,7 +942,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
         return false;
     }
 
-    const auto requestedFrame = timeInSeconds * decoderState->sampleRate_;
+    const auto requestedFrame = timeInSeconds * decoderState->sampleRate();
     if (requestedFrame >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max())) {
         return false;
     }
@@ -1977,7 +1977,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                 (*iter)->setFlags(DecoderState::Flags::renderingStarted);
 
                 const auto frameOffset = framesRendered - framesRemainingToDistribute;
-                const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
+                const double deltaSeconds = frameOffset / (*iter)->sampleRate();
                 uint64_t eventTime =
                         hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(deltaSeconds * rateScalar * 1e9));
 
@@ -1998,7 +1998,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             if (bits::is_set_without(flags, DecoderState::Flags::decodingComplete, DecoderState::Flags::isCanceled) &&
                 framesFromThisDecoder == decoderFramesRemaining) {
                 const auto frameOffset = framesRendered - framesRemainingToDistribute;
-                const double deltaSeconds = frameOffset / (*iter)->sampleRate_;
+                const double deltaSeconds = frameOffset / (*iter)->sampleRate();
                 uint64_t eventTime =
                         hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(deltaSeconds * rateScalar * 1e9));
 
