@@ -1343,12 +1343,18 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
             if (decoderState != nullptr) {
                 // Open the decoder if necessary
-                if (NSError *error = nil;
-                    !decoderState->decoder_.isOpen && ![decoderState->decoder_ openReturningError:&error]) {
-                    os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
-                    decoderState->error_ = error;
-                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                    continue;
+                if (!decoderState->decoder_.isOpen) {
+                    if (NSError *error = nil; ![decoderState->decoder_ openReturningError:&error]) {
+                        os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
+                        decoderState->error_ = error;
+                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                        continue;
+                    }
+
+                    // Short-circuit processing if the decoder was canceled during open
+                    if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::cancelRequested)) {
+                        continue;
+                    }
                 }
 
                 // Allocate decoder state internals
