@@ -1949,6 +1949,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         while (iter != activeDecoders_.cend()) {
             const auto flags = (*iter)->loadFlags();
 
+            // Skip unitialized decoders
+            if (bits::is_set(flags, DecoderState::Flags::needsInitialization)) {
+                ++iter;
+                continue;
+            }
+
             // If a frames rendered event was posted it means valid frames were rendered
             // during that render cycle.
             //
