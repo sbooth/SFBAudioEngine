@@ -1346,8 +1346,11 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 if (!decoderState->decoder_.isOpen) {
                     if (NSError *error = nil; ![decoderState->decoder_ openReturningError:&error]) {
                         os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                        {
+                            std::lock_guard lock{activeDecodersMutex_};
+                            activeDecoders_.pop_back();
+                        }
+                        submitDecodingErrorEvent(error);
                         continue;
                     }
 
@@ -1363,10 +1366,13 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                  "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
                                  "capacity %d",
                                  ringBufferChunkSize);
-                    decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                               code:SFBAudioPlayerErrorCodeInternalError
-                                                           userInfo:nil];
-                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                    submitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                                 code:SFBAudioPlayerErrorCodeInternalError
+                                                             userInfo:nil]);
+                    {
+                        std::lock_guard lock{activeDecodersMutex_};
+                        activeDecoders_.pop_back();
+                    }
                     continue;
                 }
 
