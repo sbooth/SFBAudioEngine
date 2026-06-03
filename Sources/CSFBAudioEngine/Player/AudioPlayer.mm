@@ -1955,7 +1955,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         while (iter != activeDecoders_.cend()) {
             const auto flags = (*iter)->loadFlags();
 
-            // Skip unitialized decoders
+            // Skip uninitialized decoders
             if (bits::is_set(flags, DecoderState::Flags::needsInitialization)) {
                 ++iter;
                 continue;
