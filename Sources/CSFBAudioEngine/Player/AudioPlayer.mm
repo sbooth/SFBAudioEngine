@@ -291,8 +291,7 @@ struct AudioPlayer::DecoderState final {
 
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
 
-inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept
-    : decoder_{decoder} {
+inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept : decoder_{decoder} {
 #if DEBUG
     assert(decoder != nil);
 #endif /* DEBUG */
