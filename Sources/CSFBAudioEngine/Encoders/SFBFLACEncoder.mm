@@ -273,7 +273,7 @@ void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMeta
                 return NO;
             }
         } else {
-            os_log_info(gSFBAudioEncoderLog, "Ignoring invalid FLAC compression level: %d", value);
+            os_log_info(gSFBAudioEncoderLog, "Ignoring invalid FLAC compression level: %u", value);
         }
     }
 
