@@ -1346,11 +1346,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 if (!decoderState->decoder_.isOpen) {
                     if (NSError *error = nil; ![decoderState->decoder_ openReturningError:&error]) {
                         os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
-                        {
-                            std::lock_guard lock{activeDecodersMutex_};
-                            activeDecoders_.pop_back();
-                        }
-                        submitDecodingErrorEvent(error);
+                        decoderState->error_ = error;
+                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
                         continue;
                     }
 
@@ -1366,13 +1363,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                  "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
                                  "capacity %d",
                                  ringBufferChunkSize);
-                    submitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                                 code:SFBAudioPlayerErrorCodeInternalError
-                                                             userInfo:nil]);
-                    {
-                        std::lock_guard lock{activeDecodersMutex_};
-                        activeDecoders_.pop_back();
-                    }
+                    decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                               code:SFBAudioPlayerErrorCodeInternalError
+                                                           userInfo:nil];
+                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
                     continue;
                 }
 
@@ -1821,7 +1815,9 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             iter != activeDecoders_.cend()) {
             decoder = (*iter)->decoder_;
             error = (*iter)->error_;
-            framesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
+            if (bits::is_clear((*iter)->loadFlags(), DecoderState::Flags::needsInitialization)) {
+                framesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
+            }
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
