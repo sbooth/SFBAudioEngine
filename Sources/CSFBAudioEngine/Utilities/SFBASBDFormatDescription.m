@@ -225,9 +225,9 @@ NSString *SFBASBDFormatDescription(const AudioStreamBasicDescription *streamDesc
         const UInt32 fractionalBits = (streamDescription->mFormatFlags & kLinearPCMFormatFlagsSampleFractionMask) >>
                                       kLinearPCMFormatFlagsSampleFractionShift;
         if (fractionalBits > 0) {
-            [result appendFormat:@"%d.%d-bit", streamDescription->mBitsPerChannel - fractionalBits, fractionalBits];
+            [result appendFormat:@"%u.%u-bit", streamDescription->mBitsPerChannel - fractionalBits, fractionalBits];
         } else {
-            [result appendFormat:@"%d-bit", streamDescription->mBitsPerChannel];
+            [result appendFormat:@"%u-bit", streamDescription->mBitsPerChannel];
         }
 
         const UInt32 interleavedChannelCount =
@@ -279,7 +279,7 @@ NSString *SFBASBDFormatDescription(const AudioStreamBasicDescription *streamDesc
                 }
             }
 
-            [result appendFormat:@" in %d bytes", sampleWordSize];
+            [result appendFormat:@" in %u bytes", sampleWordSize];
         }
 
         if ((streamDescription->mFormatFlags & kAudioFormatFlagIsNonInterleaved) == kAudioFormatFlagIsNonInterleaved) {
@@ -317,12 +317,12 @@ NSString *SFBASBDFormatDescription(const AudioStreamBasicDescription *streamDesc
         }
 
         if (sourceBitDepth != 0) {
-            [result appendFormat:@"from %d-bit source, ", sourceBitDepth];
+            [result appendFormat:@"from %u-bit source, ", sourceBitDepth];
         } else {
             [result appendString:@"from UNKNOWN source bit depth, "];
         }
 
-        [result appendFormat:@"%d frames/packet", streamDescription->mFramesPerPacket];
+        [result appendFormat:@"%u frames/packet", streamDescription->mFramesPerPacket];
     } else {
         NSString *formatIDString = formatIDName(streamDescription->mFormatID);
         if (formatIDString) {

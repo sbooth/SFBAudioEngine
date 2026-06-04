@@ -1360,7 +1360,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 if (!decoderState->allocate(ringBufferChunkSize)) {
                     os_log_error(log_,
                                  "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
-                                 "capacity %d",
+                                 "capacity %u",
                                  ringBufferChunkSize);
                     decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                code:SFBAudioPlayerErrorCodeInternalError
@@ -1488,7 +1488,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     if (framesWritten != buffer.frameLength) {
                         os_log_fault(
                                 log_,
-                                "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed for %d frames",
+                                "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed for %u frames",
                                 buffer.frameLength);
                     }
 
@@ -2273,8 +2273,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             }
             if (outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount) {
                 os_log_debug(log_,
-                             "Mismatch between main mixer → output node connection channel count (%d) and hardware "
-                             "channel count (%d)",
+                             "Mismatch between main mixer → output node connection channel count (%u) and hardware "
+                             "channel count (%u)",
                              mixerNodeOutputFormat.channelCount, outputNodeOutputFormat.channelCount);
             }
             os_log_debug(log_, "Setting main mixer → output node connection format to %{public}@",
