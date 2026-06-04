@@ -541,7 +541,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // Changes in channel count or sample rate mid-stream are not supported
     if (const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
         if (frame->header.channels != _previousFrameHeader.channels) {
-            os_log_error(gSFBAudioDecoderLog, "Change in channel count from %d to %d detected",
+            os_log_error(gSFBAudioDecoderLog, "Change in channel count from %u to %u detected",
                          _previousFrameHeader.channels, frame->header.channels);
 
             _writeError = [self
@@ -566,7 +566,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         }
 
         if (frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample) {
-            os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %d to %d detected",
+            os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %u to %u detected",
                          _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
         }
     }
