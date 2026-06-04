@@ -33,7 +33,7 @@ let package = Package(
         // Standalone dependencies from source
         .package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
         .package(url: "https://github.com/sbooth/CXXMonkeysAudio", from: "12.13.0"),
-        .package(url: "https://github.com/sbooth/CXXTagLib", from: "2.1.1"),
+        .package(url: "https://github.com/sbooth/CXXTagLib", from: "2.3.0"),
 
         // Standalone dependencies not easily packaged using SPM
         .package(url: "https://github.com/sbooth/wavpack-binary-xcframework", .upToNextMinor(from: "0.2.0")),

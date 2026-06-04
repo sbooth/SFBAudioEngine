@@ -597,7 +597,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                             [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
                     break;
                 default:
-                    os_log_info(gSFBAudioEncoderLog, "Ignoring unknown AudioConverterPropertyID: %d '%{public}.4s'",
+                    os_log_info(gSFBAudioEncoderLog, "Ignoring unknown AudioConverterPropertyID: %u '%{public}.4s'",
                                 propertyID, SFBCStringForOSType(propertyID));
                     break;
                 }
