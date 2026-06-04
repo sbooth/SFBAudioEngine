@@ -203,32 +203,6 @@ struct AudioPlayer::DecoderState final {
     /// Decodes audio from the source representation to PCM
     const Decoder decoder_{nil};
 
-    /// The sample rate of the audio converter's output format
-    double sampleRate_{0};
-
-    /// Flags
-    std::atomic_uint flags_{0};
-    static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
-
-    /// The number of frames decoded
-    std::atomic_int64_t framesDecoded_{0};
-    /// The number of frames rendered
-    std::atomic_int64_t framesRendered_{0};
-    /// The total number of audio frames
-    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
-    /// The requested frame
-    std::atomic_int64_t requestedFrame_{SFBUnknownFramePosition};
-
-    static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
-
-    /// Converts audio from the decoder's processing format to the equivalent standard format
-    AVAudioConverter *converter_{nil};
-    /// Buffer used internally for buffering during conversion
-    AVAudioPCMBuffer *decodeBuffer_{nil};
-
-    /// The error that caused decoding to abort, if any
-    NSError *error_{nil};
-
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
         /// Decoding started
@@ -250,6 +224,32 @@ struct AudioPlayer::DecoderState final {
         /// Decoder state not initialized
         needsInitialization = 1u << 8,
     };
+
+    /// Flags
+    std::atomic_uint flags_{bits::to_underlying(Flags::needsInitialization)};
+    static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
+
+    /// The number of frames decoded
+    std::atomic_int64_t framesDecoded_{0};
+    /// The number of frames rendered
+    std::atomic_int64_t framesRendered_{0};
+    /// The total number of audio frames
+    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
+    /// The requested frame
+    std::atomic_int64_t requestedFrame_{SFBUnknownFramePosition};
+
+    static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
+
+    /// Converts audio from the decoder's processing format to the equivalent standard format
+    AVAudioConverter *converter_{nil};
+    /// Buffer used internally for buffering during conversion
+    AVAudioPCMBuffer *decodeBuffer_{nil};
+
+    /// The sample rate of the audio converter's output format
+    double sampleRate_{0};
+
+    /// The error that caused decoding to abort, if any
+    NSError *error_{nil};
 
     // Enable bitmask operations for `Flags`
     friend constexpr void is_bitmask_enum(Flags);
@@ -292,7 +292,7 @@ struct AudioPlayer::DecoderState final {
 uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
 
 inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept
-    : decoder_{decoder}, flags_{bits::to_underlying(Flags::needsInitialization)} {
+    : decoder_{decoder} {
 #if DEBUG
     assert(decoder != nil);
 #endif /* DEBUG */
@@ -1815,9 +1815,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             iter != activeDecoders_.cend()) {
             decoder = (*iter)->decoder_;
             error = (*iter)->error_;
-            if (bits::is_clear((*iter)->loadFlags(), DecoderState::Flags::needsInitialization)) {
-                framesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
-            }
+            framesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
