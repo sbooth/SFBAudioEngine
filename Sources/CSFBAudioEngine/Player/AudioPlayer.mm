@@ -327,7 +327,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
     decodeBuffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter_.inputFormat frameCapacity:frameCapacity];
     if (decodeBuffer_ == nil) {
-        os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d",
+        os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
                      stringDescribingAVAudioFormat(converter_.inputFormat), frameCapacity);
         return false;
     }
@@ -1387,7 +1387,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                                frameCapacity:ringBufferChunkSize];
                         if (buffer == nil) {
                             os_log_error(log_,
-                                         "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d",
+                                         "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
                                          stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
                             decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                        code:SFBAudioPlayerErrorCodeInternalError
@@ -1432,7 +1432,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                                frameCapacity:ringBufferChunkSize];
                         if (buffer == nil) {
                             os_log_error(log_,
-                                         "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %d",
+                                         "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
                                          stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
                             decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
                                                                        code:SFBAudioPlayerErrorCodeInternalError
