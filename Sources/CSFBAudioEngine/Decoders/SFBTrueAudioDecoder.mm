@@ -121,7 +121,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _decoder = std::make_unique<tta::tta_decoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
         _decoder->init_get_info(&streamInfo, 0);
     } catch (const tta::tta_exception &e) {
-        os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", e.code());
+        os_log_error(gSFBAudioDecoderLog, "Error creating True Audio decoder: %d", static_cast<int>(e.code()));
         if (error != nullptr) {
             *error = [self genericInternalError];
         }
@@ -278,7 +278,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
         return YES;
     } catch (const tta::tta_exception &e) {
-        os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", e.code());
+        os_log_error(gSFBAudioDecoderLog, "True Audio decoding error: %d", static_cast<int>(e.code()));
         if (error != nullptr) {
             *error = [self genericDecodingError];
         }
@@ -295,7 +295,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         _decoder->set_position(seconds, &frame_start);
     } catch (const tta::tta_exception &e) {
-        os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", e.code());
+        os_log_error(gSFBAudioDecoderLog, "True Audio seek error: %d", static_cast<int>(e.code()));
         if (error != nullptr) {
             *error = [self genericSeekError];
         }
