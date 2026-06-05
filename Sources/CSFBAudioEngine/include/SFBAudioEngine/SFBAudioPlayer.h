@@ -107,8 +107,8 @@ NS_SWIFT_NAME(AudioPlayer)
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued
 /// decoders
-/// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for
-/// `decoder.processingFormat` if necessary
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
 /// before enqueuing

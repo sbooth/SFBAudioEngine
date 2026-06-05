@@ -700,7 +700,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     entry = std::prev(entry);
 
 #if DEBUG
-    os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %d to seek to frame %lld",
+    os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %u to seek to frame %lld",
                  std::ranges::distance(_seekTableEntries.cbegin(), entry), entry->frameNumber_, frame);
 #endif
 
@@ -1562,7 +1562,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 
     // Validate seek table version
     if (header.version_ != seekTableRevision) {
-        os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %d", header.version_);
+        os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %u", header.version_);
         if (![_inputSource seekToOffset:startOffset error:error]) {
             return false;
         }
@@ -1659,7 +1659,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     if (startOffset != entries[0].byteOffsetInFile_) {
         os_log_error(
                 gSFBAudioDecoderLog,
-                "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)",
+                "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%u)",
                 (long)startOffset, entries[0].byteOffsetInFile_);
         return false;
     }
