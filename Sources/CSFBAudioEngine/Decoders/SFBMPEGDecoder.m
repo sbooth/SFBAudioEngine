@@ -358,7 +358,6 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     }
 
     _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:framesPerMPEGFrame];
-    _buffer.frameLength = 0;
 
     return YES;
 }
