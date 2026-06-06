@@ -571,11 +571,11 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         }
     }
 
-    const auto *abl = _frameBuffer.audioBufferList;
-    assert(abl->mNumberBuffers == frame->header.channels);
+    assert(_streamInfo.channels == frame->header.channels);
+    assert(_streamInfo.max_blocksize >= frame->header.blocksize);
 
     // FLAC hands us 32-bit signed integers with the samples low-aligned
-    if (frame->header.bits_per_sample != 32) [[likely]] {
+    if (const auto *abl = _frameBuffer.audioBufferList; frame->header.bits_per_sample != 32) [[likely]] {
         // Shift the samples to high alignment
         const auto shift = 32 - frame->header.bits_per_sample;
         const auto channels = frame->header.channels;
