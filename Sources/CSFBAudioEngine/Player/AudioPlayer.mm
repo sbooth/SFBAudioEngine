@@ -1198,7 +1198,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
                 }
 
-                // Don't drain the ring buffer if cancelation occurred before decoding start
+                // Drain the ring buffer if the decoder could have contributed any stale frames
                 if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
                     ringBufferStale = true;
                 }
