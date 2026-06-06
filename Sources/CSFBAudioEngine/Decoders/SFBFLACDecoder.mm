@@ -551,8 +551,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between STREAMINFO (%u) and frame header (%u)",
                      _streamInfo->channels, frame->header.channels);
 
-        _writeError = [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
-                                recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and frame header.", @"")];
+        _writeError = [self
+                unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                    recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and frame header.",
+                                                         @"")];
 
         _frameBuffer.frameLength = 0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
