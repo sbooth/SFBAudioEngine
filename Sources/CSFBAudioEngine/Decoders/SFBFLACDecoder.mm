@@ -546,20 +546,6 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(frame != nullptr);
 #endif /* DEBUG */
 
-    // Validate STREAMINFO channel count since the processing format is fixed
-    if (_streamInfo->channels != frame->header.channels) {
-        os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between STREAMINFO (%u) and frame header (%u)",
-                     _streamInfo->channels, frame->header.channels);
-
-        _writeError = [self
-                unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
-                    recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and frame header.",
-                                                         @"")];
-
-        _frameBuffer.frameLength = 0;
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    }
-
     // Ensure adequate buffer size
     if (frame->header.blocksize > _streamInfo->max_blocksize && _frameBuffer.frameCapacity < frame->header.blocksize) {
         os_log_error(gSFBAudioDecoderLog,
@@ -602,6 +588,17 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %u to %u detected",
                          _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
         }
+    } else if (_streamInfo->channels != frame->header.channels) {
+        os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between STREAMINFO (%u) and first frame header (%u)",
+                     _streamInfo->channels, frame->header.channels);
+
+        _writeError = [self
+                       unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                       recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and first frame header.",
+                                                            @"")];
+
+        _frameBuffer.frameLength = 0;
+        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
 
     // FLAC hands us 32-bit signed integers with the samples low-aligned
