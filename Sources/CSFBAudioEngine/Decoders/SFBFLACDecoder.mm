@@ -540,8 +540,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     // Validate STREAMINFO channel count since the processing format is fixed
     if (_streamInfo.channels != frame->header.channels) {
-        os_log_error(gSFBAudioDecoderLog, "Incorrect channel count in STREAMINFO (%u), frame has %u", _streamInfo.channels,
-                     frame->header.channels);
+        os_log_error(gSFBAudioDecoderLog, "Incorrect channel count in STREAMINFO (%u), frame has %u",
+                     _streamInfo.channels, frame->header.channels);
 
         _writeError = [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
                                 recoverySuggestion:NSLocalizedString(@"STREAMINFO has incorrect channel count.", @"")];
@@ -552,7 +552,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     // Ensure adequate buffer size
     if (frame->header.blocksize > _streamInfo.max_blocksize && _frameBuffer.frameCapacity < frame->header.blocksize) {
-        os_log_error(gSFBAudioDecoderLog, "Incorrect maximum block size in STREAMINFO (%u), frame header block size is %u",
+        os_log_error(gSFBAudioDecoderLog,
+                     "Incorrect maximum block size in STREAMINFO (%u), frame header block size is %u",
                      _streamInfo.max_blocksize, frame->header.blocksize);
 
         // Reallocate the frame buffer
