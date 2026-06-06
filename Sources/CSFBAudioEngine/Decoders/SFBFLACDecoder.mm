@@ -538,6 +538,28 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(frame != nullptr);
 #endif /* DEBUG */
 
+    // Validate STREAMINFO channel count since the processing format is fixed
+    if (_streamInfo.channels != frame->header.channels) {
+        os_log_error(gSFBAudioDecoderLog, "Incorrect channel count in STREAMINFO (%u), frame has %u", _streamInfo.channels,
+                     frame->header.channels);
+
+        _writeError = [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                                recoverySuggestion:NSLocalizedString(@"STREAMINFO has incorrect channel count.", @"")];
+
+        _frameBuffer.frameLength = 0;
+        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+    }
+
+    // Ensure adequate buffer size
+    if (frame->header.blocksize > _streamInfo.max_blocksize && _frameBuffer.frameCapacity < frame->header.blocksize) {
+        os_log_error(gSFBAudioDecoderLog, "Incorrect maximum block size in STREAMINFO (%u), frame header block size is %u",
+                     _streamInfo.max_blocksize, frame->header.blocksize);
+
+        // Reallocate the frame buffer
+        _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
+                                                     frameCapacity:frame->header.blocksize];
+    }
+
     // Changes in channel count or sample rate mid-stream are not supported
     if (const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
         if (frame->header.channels != _previousFrameHeader.channels) {
@@ -570,9 +592,6 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                          _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
         }
     }
-
-    assert(_streamInfo.channels == frame->header.channels);
-    assert(_streamInfo.max_blocksize >= frame->header.blocksize);
 
     // FLAC hands us 32-bit signed integers with the samples low-aligned
     if (const auto *abl = _frameBuffer.audioBufferList; frame->header.bits_per_sample != 32) [[likely]] {
