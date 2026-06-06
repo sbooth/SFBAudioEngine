@@ -314,7 +314,6 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
     _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
                                             frameCapacity:(AVAudioFrameCount)speexFrameSize];
-    _buffer.frameLength = 0;
 
     return YES;
 }
