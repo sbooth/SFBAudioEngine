@@ -84,7 +84,7 @@ AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) 
     std::optional<FLAC__StreamMetadata_StreamInfo> _streamInfo;
     uint32_t _channelMask; /* from WAVEFORMATEXTENSIBLE_CHANNEL_MASK */
     AVAudioFramePosition _framePosition;
-    FLAC__FrameHeader _previousFrameHeader;
+    std::optional<FLAC__FrameHeader> _previousFrameHeader;
     AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
     NSError *_writeError;
 }
@@ -426,6 +426,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     _frameBuffer = nil;
     _streamInfo.reset();
     _channelMask = 0;
+    _previousFrameHeader.reset();
 
     return [super closeReturningError:error];
 }
@@ -513,6 +514,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     _framePosition = frame;
     _frameBuffer.frameLength = 0;
+    _previousFrameHeader.reset();
 
     return YES;
 }
@@ -558,10 +560,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     }
 
     // Changes in channel count or sample rate mid-stream are not supported
-    if (const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
-        if (frame->header.channels != _previousFrameHeader.channels) {
+    if (_previousFrameHeader) {
+        if (frame->header.channels != _previousFrameHeader->channels) {
             os_log_error(gSFBAudioDecoderLog, "Change in channel count from %u to %u detected",
-                         _previousFrameHeader.channels, frame->header.channels);
+                         _previousFrameHeader->channels, frame->header.channels);
 
             _writeError = [self
                     unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
@@ -571,9 +573,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
         }
 
-        if (frame->header.sample_rate != _previousFrameHeader.sample_rate) {
+        if (frame->header.sample_rate != _previousFrameHeader->sample_rate) {
             os_log_error(gSFBAudioDecoderLog, "Change in sample rate from %g kHz to %g kHz detected",
-                         static_cast<double>(_previousFrameHeader.sample_rate) / 1000.0,
+                         static_cast<double>(_previousFrameHeader->sample_rate) / 1000.0,
                          static_cast<double>(frame->header.sample_rate) / 1000.0);
 
             _writeError =
@@ -584,19 +586,18 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
         }
 
-        if (frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample) {
+        if (frame->header.bits_per_sample != _previousFrameHeader->bits_per_sample) {
             os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %u to %u detected",
-                         _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
+                         _previousFrameHeader->bits_per_sample, frame->header.bits_per_sample);
         }
     } else if (_streamInfo->channels != frame->header.channels) {
-        os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between STREAMINFO (%u) and first frame header (%u)",
+        os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between STREAMINFO (%u) and frame header (%u)",
                      _streamInfo->channels, frame->header.channels);
 
         _writeError = [self
                 unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
-                    recoverySuggestion:NSLocalizedString(
-                                               @"Channel count mismatch between STREAMINFO and first frame header.",
-                                               @"")];
+                    recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and frame header.",
+                                                         @"")];
 
         _frameBuffer.frameLength = 0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
