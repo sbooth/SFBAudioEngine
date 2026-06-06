@@ -593,9 +593,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                      _streamInfo->channels, frame->header.channels);
 
         _writeError = [self
-                       unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
-                       recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and first frame header.",
-                                                            @"")];
+                unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                    recoverySuggestion:NSLocalizedString(
+                                               @"Channel count mismatch between STREAMINFO and first frame header.",
+                                               @"")];
 
         _frameBuffer.frameLength = 0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
