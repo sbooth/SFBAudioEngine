@@ -43,7 +43,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamDecoder` objects
 struct flac__stream_decoder_deleter {
-    void operator()(FLAC__StreamDecoder *decoder) { FLAC__stream_decoder_delete(decoder); }
+    void operator()(FLAC__StreamDecoder *decoder) noexcept { FLAC__stream_decoder_delete(decoder); }
 };
 
 using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
