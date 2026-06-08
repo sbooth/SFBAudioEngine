@@ -577,7 +577,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     // Register a stop callback for the decoding thread
     std::stop_callback decodingThreadStopCallback(decodingThread_.get_stop_token(),
-                                                  [this] { decodingSemaphore_.signal(); });
+                                                  [this]() noexcept { decodingSemaphore_.signal(); });
 
     // Issue a stop request to the decoding thread and wait for it to exit
     decodingThread_.request_stop();
@@ -588,7 +588,8 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     }
 
     // Register a stop callback for the event processing thread
-    std::stop_callback eventThreadStopCallback(eventThread_.get_stop_token(), [this] { eventSemaphore_.signal(); });
+    std::stop_callback eventThreadStopCallback(eventThread_.get_stop_token(),
+                                               [this]() noexcept { eventSemaphore_.signal(); });
 
     // Issue a stop request to the event processing thread and wait for it to exit
     eventThread_.request_stop();
@@ -1413,7 +1414,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
             if (formatMismatch) {
                 // Wait until all other decoders complete processing before reconfiguring the graph
-                const auto okToReconfigure = [&] {
+                const auto okToReconfigure = [&]() noexcept {
                     std::lock_guard lock{activeDecodersMutex_};
                     return activeDecoders_.size() == 1;
                 }();
@@ -1846,7 +1847,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         }
     }
 
-    const auto hasNoDecoders = [&] {
+    const auto hasNoDecoders = [&]() noexcept {
         std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
         return queuedDecoders_.empty() && activeDecoders_.empty();
     }();
@@ -2164,7 +2165,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             [delegate audioPlayer:player renderingComplete:decoder];
         }
 
-        const auto hasNoDecoders = [&] {
+        const auto hasNoDecoders = [&]() noexcept {
             std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
             return that->queuedDecoders_.empty() && that->activeDecoders_.empty();
         }();
