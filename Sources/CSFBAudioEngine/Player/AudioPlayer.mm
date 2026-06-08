@@ -1304,7 +1304,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         {
             std::lock_guard lock{activeDecodersMutex_};
 
-            const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) {
+            const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
                 const auto flags = decoderState->loadFlags();
                 return bits::has_none(flags, DecoderState::Flags::isCanceled | DecoderState::Flags::decodingComplete);
             });
@@ -2228,7 +2228,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() cons
     activeDecodersMutex_.assertIsOwner();
 #endif /* DEBUG */
 
-    const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) {
+    const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
         const auto flags = decoderState->loadFlags();
         return bits::has_none(flags, DecoderState::Flags::needsInitialization | DecoderState::Flags::isCanceled);
     });
