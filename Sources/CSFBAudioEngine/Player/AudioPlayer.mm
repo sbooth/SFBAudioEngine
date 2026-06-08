@@ -1186,7 +1186,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // Process cancellations
             auto signal = false;
             for (const auto &decoderState : activeDecoders_) {
-                if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::cancelRequested)) {
+                const auto flags = decoderState->loadFlags();
+                if (bits::is_clear(flags, DecoderState::Flags::cancelRequested) ||
+                    bits::is_set(flags, DecoderState::Flags::isCanceled)) {
                     continue;
                 }
 
@@ -1196,8 +1198,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
                 }
 
+                // Drain the ring buffer if the decoder could have contributed any stale frames
+                if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
+                    ringBufferStale = true;
+                }
+
                 decoderState->setFlags(DecoderState::Flags::isCanceled);
-                ringBufferStale = true;
 
                 // Submit the decoder canceled event
                 if (decodingEvents_.writeAll(DecodingEventCommand::canceled, nextEventIdentificationNumber(),

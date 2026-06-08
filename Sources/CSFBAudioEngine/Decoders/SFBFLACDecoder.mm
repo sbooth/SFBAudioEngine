@@ -22,6 +22,7 @@
 #import <cstdlib>
 #import <cstring>
 #import <memory>
+#import <optional>
 
 #import <simd/simd.h>
 
@@ -42,7 +43,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamDecoder` objects
 struct flac__stream_decoder_deleter {
-    void operator()(FLAC__StreamDecoder *decoder) { FLAC__stream_decoder_delete(decoder); }
+    void operator()(FLAC__StreamDecoder *decoder) noexcept { FLAC__stream_decoder_delete(decoder); }
 };
 
 using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
@@ -80,10 +81,10 @@ AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) 
 @interface SFBFLACDecoder () {
   @private
     flac__stream_decoder_unique_ptr _flac;
-    FLAC__StreamMetadata_StreamInfo _streamInfo;
+    std::optional<FLAC__StreamMetadata_StreamInfo> _streamInfo;
     uint32_t _channelMask; /* from WAVEFORMATEXTENSIBLE_CHANNEL_MASK */
     AVAudioFramePosition _framePosition;
-    FLAC__FrameHeader _previousFrameHeader;
+    std::optional<FLAC__FrameHeader> _previousFrameHeader;
     AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
     NSError *_writeError;
 }
@@ -278,9 +279,17 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         return NO;
     }
 
+    if (!_streamInfo.has_value()) {
+        os_log_error(gSFBAudioDecoderLog, "Missing STREAMINFO block");
+        if (error != nullptr) {
+            *error = [self invalidFormatError:NSLocalizedString(@"FLAC", @"")];
+        }
+        return NO;
+    }
+
     // FLAC supports from 4 to 32 bits per sample; this check is likely unnecessary
-    if (_streamInfo.bits_per_sample < 4 || _streamInfo.bits_per_sample > 32) {
-        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
+    if (_streamInfo->bits_per_sample < 4 || _streamInfo->bits_per_sample > 32) {
+        os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo->bits_per_sample);
         if (error != nullptr) {
             *error = [self unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
                                recoverySuggestion:NSLocalizedString(@"The audio bit depth is not supported.", @"")];
@@ -297,14 +306,14 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
     processingStreamDescription.mFormatFlags =
             kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
-    if (_streamInfo.bits_per_sample != 32) {
+    if (_streamInfo->bits_per_sample != 32) {
         processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
     }
 #pragma clang diagnostic pop
 
-    processingStreamDescription.mSampleRate = _streamInfo.sample_rate;
-    processingStreamDescription.mChannelsPerFrame = _streamInfo.channels;
-    processingStreamDescription.mBitsPerChannel = _streamInfo.bits_per_sample;
+    processingStreamDescription.mSampleRate = _streamInfo->sample_rate;
+    processingStreamDescription.mChannelsPerFrame = _streamInfo->channels;
+    processingStreamDescription.mBitsPerChannel = _streamInfo->bits_per_sample;
 
     processingStreamDescription.mBytesPerPacket = 4;
     processingStreamDescription.mFramesPerPacket = 1;
@@ -316,16 +325,16 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     AVAudioChannelLayout *channelLayout = nil;
 
     if (_channelMask != 0) {
-        if (static_cast<uint32_t>(__builtin_popcount(_channelMask)) == _streamInfo.channels) {
+        if (static_cast<uint32_t>(__builtin_popcount(_channelMask)) == _streamInfo->channels) {
             channelLayout = channelLayoutFromWAVEMask(_channelMask);
         } else {
             os_log_error(gSFBAudioDecoderLog, "Ignoring invalid channel mask 0x%x (%d channels) for %u-channel stream",
-                         _channelMask, __builtin_popcount(_channelMask), _streamInfo.channels);
+                         _channelMask, __builtin_popcount(_channelMask), _streamInfo->channels);
         }
     }
 
     if (channelLayout == nil) {
-        switch (_streamInfo.channels) {
+        switch (_streamInfo->channels) {
         case 1:
             channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];
             break;
@@ -361,12 +370,12 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     sourceStreamDescription.mFormatID = kAudioFormatFLAC;
 
-    sourceStreamDescription.mSampleRate = _streamInfo.sample_rate;
-    sourceStreamDescription.mChannelsPerFrame = _streamInfo.channels;
+    sourceStreamDescription.mSampleRate = _streamInfo->sample_rate;
+    sourceStreamDescription.mChannelsPerFrame = _streamInfo->channels;
     // Apple uses kAppleLosslessFormatFlag_XXBitSourceData to indicate FLAC bit depth in the Core Audio FLAC decoder
     // Since the number of flags is limited the source bit depth is also stored in mBitsPerChannel
-    sourceStreamDescription.mBitsPerChannel = _streamInfo.bits_per_sample;
-    switch (_streamInfo.bits_per_sample) {
+    sourceStreamDescription.mBitsPerChannel = _streamInfo->bits_per_sample;
+    switch (_streamInfo->bits_per_sample) {
     case 16:
         sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
         break;
@@ -381,28 +390,27 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         break;
     }
 
-    sourceStreamDescription.mFramesPerPacket = _streamInfo.max_blocksize;
+    sourceStreamDescription.mFramesPerPacket = _streamInfo->max_blocksize;
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
 
     // Populate codec properties
     _properties = @{
-        SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize : @(_streamInfo.min_blocksize),
-        SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize : @(_streamInfo.max_blocksize),
-        SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize : @(_streamInfo.min_framesize),
-        SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize : @(_streamInfo.max_framesize),
-        SFBAudioDecodingPropertiesKeyFLACSampleRate : @(_streamInfo.sample_rate),
-        SFBAudioDecodingPropertiesKeyFLACChannels : @(_streamInfo.channels),
-        SFBAudioDecodingPropertiesKeyFLACBitsPerSample : @(_streamInfo.bits_per_sample),
-        SFBAudioDecodingPropertiesKeyFLACTotalSamples : @(_streamInfo.total_samples),
-        SFBAudioDecodingPropertiesKeyFLACMD5Sum : [[NSData alloc] initWithBytes:_streamInfo.md5sum length:16],
+        SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize : @(_streamInfo->min_blocksize),
+        SFBAudioDecodingPropertiesKeyFLACMaximumBlockSize : @(_streamInfo->max_blocksize),
+        SFBAudioDecodingPropertiesKeyFLACMinimumFrameSize : @(_streamInfo->min_framesize),
+        SFBAudioDecodingPropertiesKeyFLACMaximumFrameSize : @(_streamInfo->max_framesize),
+        SFBAudioDecodingPropertiesKeyFLACSampleRate : @(_streamInfo->sample_rate),
+        SFBAudioDecodingPropertiesKeyFLACChannels : @(_streamInfo->channels),
+        SFBAudioDecodingPropertiesKeyFLACBitsPerSample : @(_streamInfo->bits_per_sample),
+        SFBAudioDecodingPropertiesKeyFLACTotalSamples : @(_streamInfo->total_samples),
+        SFBAudioDecodingPropertiesKeyFLACMD5Sum : [[NSData alloc] initWithBytes:_streamInfo->md5sum length:16],
     };
 
     // Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
     _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
-                                                 frameCapacity:_streamInfo.max_blocksize];
-    _frameBuffer.frameLength = 0;
+                                                 frameCapacity:_streamInfo->max_blocksize];
 
     return YES;
 }
@@ -416,8 +424,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     _flac.reset();
 
     _frameBuffer = nil;
-    memset(&_streamInfo, 0, sizeof(_streamInfo));
+    _streamInfo.reset();
     _channelMask = 0;
+    _previousFrameHeader.reset();
 
     return [super closeReturningError:error];
 }
@@ -431,10 +440,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (AVAudioFramePosition)frameLength {
-    if (_streamInfo.total_samples == 0) {
+    if (_streamInfo->total_samples == 0) {
         return SFBUnknownFrameLength;
     }
-    return static_cast<AVAudioFramePosition>(_streamInfo.total_samples);
+    return static_cast<AVAudioFramePosition>(_streamInfo->total_samples);
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error {
@@ -505,6 +514,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     _framePosition = frame;
     _frameBuffer.frameLength = 0;
+    _previousFrameHeader.reset();
 
     return YES;
 }
@@ -538,11 +548,22 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(frame != nullptr);
 #endif /* DEBUG */
 
+    // Ensure adequate buffer size
+    if (frame->header.blocksize > _streamInfo->max_blocksize && _frameBuffer.frameCapacity < frame->header.blocksize) {
+        os_log_error(gSFBAudioDecoderLog,
+                     "Incorrect maximum block size in STREAMINFO (%u), frame header block size is %u",
+                     _streamInfo->max_blocksize, frame->header.blocksize);
+
+        // Reallocate the frame buffer
+        _frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
+                                                     frameCapacity:frame->header.blocksize];
+    }
+
     // Changes in channel count or sample rate mid-stream are not supported
-    if (const auto firstFrame = frame->header.number.sample_number == 0; !firstFrame) {
-        if (frame->header.channels != _previousFrameHeader.channels) {
+    if (_previousFrameHeader) {
+        if (frame->header.channels != _previousFrameHeader->channels) {
             os_log_error(gSFBAudioDecoderLog, "Change in channel count from %u to %u detected",
-                         _previousFrameHeader.channels, frame->header.channels);
+                         _previousFrameHeader->channels, frame->header.channels);
 
             _writeError = [self
                     unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
@@ -552,9 +573,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
         }
 
-        if (frame->header.sample_rate != _previousFrameHeader.sample_rate) {
+        if (frame->header.sample_rate != _previousFrameHeader->sample_rate) {
             os_log_error(gSFBAudioDecoderLog, "Change in sample rate from %g kHz to %g kHz detected",
-                         static_cast<double>(_previousFrameHeader.sample_rate) / 1000.0,
+                         static_cast<double>(_previousFrameHeader->sample_rate) / 1000.0,
                          static_cast<double>(frame->header.sample_rate) / 1000.0);
 
             _writeError =
@@ -565,17 +586,25 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
         }
 
-        if (frame->header.bits_per_sample != _previousFrameHeader.bits_per_sample) {
+        if (frame->header.bits_per_sample != _previousFrameHeader->bits_per_sample) {
             os_log_debug(gSFBAudioDecoderLog, "Change in audio bit depth from %u to %u detected",
-                         _previousFrameHeader.bits_per_sample, frame->header.bits_per_sample);
+                         _previousFrameHeader->bits_per_sample, frame->header.bits_per_sample);
         }
+    } else if (_streamInfo->channels != frame->header.channels) {
+        os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between STREAMINFO (%u) and frame header (%u)",
+                     _streamInfo->channels, frame->header.channels);
+
+        _writeError = [self
+                unsupportedFormatError:NSLocalizedString(@"FLAC", @"")
+                    recoverySuggestion:NSLocalizedString(@"Channel count mismatch between STREAMINFO and frame header.",
+                                                         @"")];
+
+        _frameBuffer.frameLength = 0;
+        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
 
-    const auto *abl = _frameBuffer.audioBufferList;
-    assert(abl->mNumberBuffers == frame->header.channels);
-
     // FLAC hands us 32-bit signed integers with the samples low-aligned
-    if (frame->header.bits_per_sample != 32) [[likely]] {
+    if (const auto *abl = _frameBuffer.audioBufferList; frame->header.bits_per_sample != 32) [[likely]] {
         // Shift the samples to high alignment
         const auto shift = 32 - frame->header.bits_per_sample;
         const auto channels = frame->header.channels;
@@ -619,7 +648,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(metadata != nullptr);
 
     if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
-        memcpy(&_streamInfo, &metadata->data.stream_info, sizeof(metadata->data.stream_info));
+        _streamInfo = metadata->data.stream_info;
     } else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
         for (FLAC__uint32 i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
             // Look for a channel mask; see https://www.ietf.org/rfc/rfc9639.html#channel-mask
