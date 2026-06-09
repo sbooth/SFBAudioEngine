@@ -19,32 +19,28 @@
 
 namespace SFB {
 
-const os_log_t InputSource::sLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
+const os_log_t InputSource::log_ = os_log_create("org.sbooth.AudioEngine", "InputSource");
 
 } /* namespace SFB */
 
-SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, FileReadMode mode)
-{
-	switch(mode) {
+SFB::InputSource::unique_ptr SFB::InputSource::createForURL(CFURLRef url, FileReadMode mode) {
+    switch(mode) {
 		case FileReadMode::normal: 			return std::make_unique<FileInput>(url);
 		case FileReadMode::memoryMap: 		return std::make_unique<MemoryMappedFileInput>(url);
 		case FileReadMode::loadInMemory: 	return std::make_unique<FileContentsInput>(url);
 	}
 }
 
-SFB::InputSource::unique_ptr SFB::InputSource::CreateWithData(CFDataRef data)
-{
-	return std::make_unique<DataInput>(data);
+SFB::InputSource::unique_ptr SFB::InputSource::createWithData(CFDataRef data) {
+    return std::make_unique<DataInput>(data);
 }
 
-SFB::InputSource::unique_ptr SFB::InputSource::CreateWithBytes(const void *buf, int64_t len)
-{
-	return std::make_unique<BufferInput>(buf, len, BufferInput::BufferAdoption::copy);
+SFB::InputSource::unique_ptr SFB::InputSource::createWithBytes(const void *buf, int64_t len) {
+    return std::make_unique<BufferInput>(buf, len, BufferInput::BufferAdoption::copy);
 }
 
-SFB::InputSource::unique_ptr SFB::InputSource::CreateWithBytesNoCopy(const void *buf, int64_t len, bool free)
-{
-	return std::make_unique<BufferInput>(buf, len, free ? BufferInput::BufferAdoption::noCopyAndFree : BufferInput::BufferAdoption::noCopy);
+SFB::InputSource::unique_ptr SFB::InputSource::createWithBytesNoCopy(const void *buf, int64_t len, bool free) {
+    return std::make_unique<BufferInput>(buf, len, free ? BufferInput::BufferAdoption::noCopyAndFree : BufferInput::BufferAdoption::noCopy);
 }
 
 SFB::InputSource::~InputSource() noexcept
@@ -53,53 +49,49 @@ SFB::InputSource::~InputSource() noexcept
 		CFRelease(url_);
 }
 
-void SFB::InputSource::Open()
-{
-	if(IsOpen()) {
-		os_log_debug(sLog, "Open() called on <InputSource: %p> that is already open", this);
-		return;
-	}
+void SFB::InputSource::open() {
+    if (isOpen()) {
+        os_log_debug(log_, "Open() called on <InputSource: %p> that is already open", this);
+        return;
+    }
 
-	_Open();
-	isOpen_ = true;
+    _open();
+    isOpen_ = true;
 }
 
-void SFB::InputSource::Close()
-{
-	if(!IsOpen()) {
-		os_log_debug(sLog, "Close() called on <InputSource: %p> that hasn't been opened", this);
-		return;
-	}
+void SFB::InputSource::close() {
+    if (!isOpen()) {
+        os_log_debug(log_, "Close() called on <InputSource: %p> that hasn't been opened", this);
+        return;
+    }
 
-	const auto defer = scope_exit{[this]() noexcept { isOpen_ = false; }};
-	_Close();
+    const auto defer = scope_exit{[this]() noexcept { isOpen_ = false; }};
+    _close();
 }
 
-int64_t SFB::InputSource::Read(void *buffer, int64_t count)
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "Read() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
+int64_t SFB::InputSource::read(void *buffer, int64_t count) {
+    if (!isOpen()) {
+        os_log_error(log_, "Read() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
+
+    if(!buffer || count < 0) {
+        os_log_error(log_, "Read() called on <InputSource: %p> with null buffer or invalid count", this);
+        throw std::invalid_argument("Null buffer or negative count");
 	}
 
-	if(!buffer || count < 0) {
-		os_log_error(sLog, "Read() called on <InputSource: %p> with null buffer or invalid count", this);
-		throw std::invalid_argument("Null buffer or negative count");
-	}
-
-	return _Read(buffer, count);
+    return _read(buffer, count);
 }
 
-CFDataRef SFB::InputSource::CopyData(int64_t count)
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "CopyData() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+CFDataRef SFB::InputSource::copyData(int64_t count) {
+    if (!isOpen()) {
+        os_log_error(log_, "CopyData() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	if(count < 0 || count > std::numeric_limits<CFIndex>::max()) {
-		os_log_error(sLog, "CopyData() called on <InputSource: %p> with invalid count", this);
-		throw std::invalid_argument("Invalid count");
+    if(count < 0 || count > std::numeric_limits<CFIndex>::max()) {
+        os_log_error(log_, "CopyData() called on <InputSource: %p> with invalid count", this);
+        throw std::invalid_argument("Invalid count");
 	}
 
 	if(count == 0)
@@ -110,8 +102,8 @@ CFDataRef SFB::InputSource::CopyData(int64_t count)
 		throw std::bad_alloc();
 
 	try {
-		const auto read = _Read(buf, count);
-		auto data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, static_cast<UInt8 *>(buf), read, kCFAllocatorMalloc);
+        const auto read = _read(buf, count);
+        auto data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, static_cast<UInt8 *>(buf), read, kCFAllocatorMalloc);
 		if(!data)
 			std::free(buf);
 		return data;
@@ -121,84 +113,78 @@ CFDataRef SFB::InputSource::CopyData(int64_t count)
 	}
 }
 
-std::vector<uint8_t> SFB::InputSource::ReadBlock(std::vector<uint8_t>::size_type count)
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "ReadBlock() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+std::vector<uint8_t> SFB::InputSource::readBlock(std::vector<uint8_t>::size_type count) {
+    if (!isOpen()) {
+        os_log_error(log_, "ReadBlock() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	if(count == 0)
+    if(count == 0)
 		return {};
 
 	std::vector<uint8_t> vec;
 	vec.reserve(count);
-	vec.resize(_Read(vec.data(), vec.capacity()));
-	return vec;
+    vec.resize(_read(vec.data(), vec.capacity()));
+    return vec;
 }
 
-bool SFB::InputSource::AtEOF() const
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "AtEOF() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+bool SFB::InputSource::atEOF() const {
+    if (!isOpen()) {
+        os_log_error(log_, "AtEOF() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	return _AtEOF();
+    return _atEOF();
 }
 
-int64_t SFB::InputSource::Position() const
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "Position() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+int64_t SFB::InputSource::position() const {
+    if (!isOpen()) {
+        os_log_error(log_, "Position() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	return _Position();
+    return _position();
 }
 
-int64_t SFB::InputSource::Length() const
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "Length() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+int64_t SFB::InputSource::length() const {
+    if (!isOpen()) {
+        os_log_error(log_, "Length() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	return _Length();
+    return _length();
 }
 
-bool SFB::InputSource::SupportsSeeking() const
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "SupportsSeeking() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+bool SFB::InputSource::supportsSeeking() const {
+    if (!isOpen()) {
+        os_log_error(log_, "SupportsSeeking() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	return _SupportsSeeking();
+    return _supportsSeeking();
 }
 
-void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
-{
-	if(!IsOpen()) {
-		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> that hasn't been opened", this);
-		throw std::logic_error("Input source not open");
-	}
+void SFB::InputSource::seekToOffset(int64_t offset, SeekAnchor whence) {
+    if (!isOpen()) {
+        os_log_error(log_, "SeekToOffset() called on <InputSource: %p> that hasn't been opened", this);
+        throw std::logic_error("Input source not open");
+    }
 
-	if(!_SupportsSeeking()) {
-		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> that doesn't support seeking", this);
-		throw std::logic_error("Seeking not supported");
-	}
+    if (!_supportsSeeking()) {
+        os_log_error(log_, "SeekToOffset() called on <InputSource: %p> that doesn't support seeking", this);
+        throw std::logic_error("Seeking not supported");
+    }
 
-	const auto len = _Length();
+    const auto len = _length();
 
-	switch(whence) {
+    switch(whence) {
 		case SeekAnchor::start:
 			/* unchanged */
 			break;
 
 		case SeekAnchor::current:
-			offset += _Position();
-			break;
+            offset += _position();
+            break;
 
 		case SeekAnchor::end:
 			offset += len;
@@ -206,14 +192,11 @@ void SFB::InputSource::SeekToOffset(int64_t offset, SeekAnchor whence)
 	}
 
 	if(offset < 0 || offset > len) {
-		os_log_error(sLog, "SeekToOffset() called on <InputSource: %p> with invalid position %lld", this, offset);
-		throw std::out_of_range("Invalid seek position");
+        os_log_error(log_, "SeekToOffset() called on <InputSource: %p> with invalid position %lld", this, offset);
+        throw std::out_of_range("Invalid seek position");
 	}
 
-	return _SeekToPosition(offset);
+    return _seekToPosition(offset);
 }
 
-CFStringRef SFB::InputSource::CopyDescription() const noexcept
-{
-	return _CopyDescription();
-}
+CFStringRef SFB::InputSource::copyDescription() const noexcept { return _copyDescription(); }

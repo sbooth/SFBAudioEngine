@@ -26,9 +26,9 @@ public:
 	FileContentsInput& operator=(FileContentsInput&&) = delete;
 
 private:
-	void _Open() override;
-	void _Close() noexcept override;
-	CFStringRef _Nonnull _CopyDescription() const noexcept override;
+  void _open() override;
+  void _close() noexcept override;
+  CFStringRef _Nonnull _copyDescription() const noexcept override;
 };
 
 } /* namespace SFB */

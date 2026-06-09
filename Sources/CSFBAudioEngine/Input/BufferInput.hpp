@@ -40,16 +40,16 @@ protected:
 	int64_t pos_ {0};
 
 private:
-	void _Open() override 								{ pos_ = 0; }
-	void _Close() override 								{}
-	bool _AtEOF() const noexcept override  				{ return len_ == pos_; }
-	int64_t _Position() const noexcept override 		{ return pos_; }
-	int64_t _Length() const noexcept override 			{ return len_; }
-	bool _SupportsSeeking() const noexcept override 	{ return true; }
-	void _SeekToPosition(int64_t position) override 	{ pos_ = position; }
+  void _open() override { pos_ = 0; }
+  void _close() override {}
+  bool _atEOF() const noexcept override { return len_ == pos_; }
+  int64_t _position() const noexcept override { return pos_; }
+  int64_t _length() const noexcept override { return len_; }
+  bool _supportsSeeking() const noexcept override { return true; }
+  void _seekToPosition(int64_t position) override { pos_ = position; }
 
-	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	CFStringRef _Nonnull _CopyDescription() const noexcept override;
+  int64_t _read(void *_Nonnull buffer, int64_t count) override;
+  CFStringRef _Nonnull _copyDescription() const noexcept override;
 };
 
 } /* namespace SFB */

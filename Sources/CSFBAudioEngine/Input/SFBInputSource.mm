@@ -135,14 +135,14 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (NSURL *)url
 {
-	return (__bridge NSURL *)_input->GetURL();
+    return (__bridge NSURL *)_input->getURL();
 }
 
 - (BOOL)openReturningError:(NSError **)error
 {
 	try {
-		_input->Open();
-		return YES;
+        _input->open();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -153,8 +153,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)closeReturningError:(NSError **)error
 {
 	try {
-		_input->Close();
-		return YES;
+        _input->close();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -164,7 +164,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (BOOL)isOpen
 {
-	return _input->IsOpen();
+    return _input->isOpen();
 }
 
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
@@ -172,8 +172,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(bytesRead != nullptr);
 
 	try {
-		*bytesRead = _input->Read(buffer, length);
-		return YES;
+        *bytesRead = _input->read(buffer, length);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -184,8 +184,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)atEOF
 {
 	try {
-		return _input->AtEOF();
-	} catch(const std::exception& e) {
+        return _input->atEOF();
+    } catch(const std::exception& e) {
 		// FIXME: Is `NO` the best error return?
 		return NO;
 	}
@@ -196,8 +196,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(offset != nullptr);
 
 	try {
-		*offset = _input->Position();
-		return YES;
+        *offset = _input->position();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -210,8 +210,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 	NSParameterAssert(length != nullptr);
 
 	try {
-		*length = _input->Length();
-		return YES;
+        *length = _input->length();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -222,8 +222,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)supportsSeeking
 {
 	try {
-		return _input->SupportsSeeking();
-	} catch(...) {
+        return _input->supportsSeeking();
+    } catch(...) {
 		return NO;
 	}
 }
@@ -231,8 +231,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
 	try {
-		_input->SeekToOffset(offset);
-		return YES;
+        _input->seekToOffset(offset);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -242,7 +242,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 
 - (NSString *)description
 {
-	return (__bridge_transfer NSString *)_input->CopyDescription();
+    return (__bridge_transfer NSString *)_input->copyDescription();
 }
 
 @end
@@ -259,8 +259,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui8 != nil);
 	try {
-		*ui8 = _input->ReadValue<uint8_t>();
-		return YES;
+        *ui8 = _input->readValue<uint8_t>();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -272,8 +272,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui16 != nil);
 	try {
-		*ui16 = _input->ReadUnsigned<uint16_t>();
-		return YES;
+        *ui16 = _input->readUnsigned<uint16_t>();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -285,8 +285,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui32 != nil);
 	try {
-		*ui32 = _input->ReadUnsigned<uint32_t>();
-		return YES;
+        *ui32 = _input->readUnsigned<uint32_t>();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -298,8 +298,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui64 != nil);
 	try {
-		*ui64 = _input->ReadUnsigned<uint64_t>();
-		return YES;
+        *ui64 = _input->readUnsigned<uint64_t>();
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -315,8 +315,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui16 != nil);
 	try {
-		*ui16 = _input->ReadUnsigned<uint16_t>(SFB::InputSource::ByteOrder::big);
-		return YES;
+        *ui16 = _input->readUnsigned<uint16_t>(SFB::InputSource::ByteOrder::big);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -328,8 +328,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui32 != nil);
 	try {
-		*ui32 = _input->ReadUnsigned<uint32_t>(SFB::InputSource::ByteOrder::big);
-		return YES;
+        *ui32 = _input->readUnsigned<uint32_t>(SFB::InputSource::ByteOrder::big);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -341,8 +341,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui64 != nil);
 	try {
-		*ui64 = _input->ReadUnsigned<uint64_t>(SFB::InputSource::ByteOrder::big);
-		return YES;
+        *ui64 = _input->readUnsigned<uint64_t>(SFB::InputSource::ByteOrder::big);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -358,8 +358,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui16 != nil);
 	try {
-		*ui16 = _input->ReadUnsigned<uint16_t>(SFB::InputSource::ByteOrder::little);
-		return YES;
+        *ui16 = _input->readUnsigned<uint16_t>(SFB::InputSource::ByteOrder::little);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -371,8 +371,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui32 != nil);
 	try {
-		*ui32 = _input->ReadUnsigned<uint32_t>(SFB::InputSource::ByteOrder::little);
-		return YES;
+        *ui32 = _input->readUnsigned<uint32_t>(SFB::InputSource::ByteOrder::little);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -384,8 +384,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(ui64 != nil);
 	try {
-		*ui64 = _input->ReadUnsigned<uint64_t>(SFB::InputSource::ByteOrder::little);
-		return YES;
+        *ui64 = _input->readUnsigned<uint64_t>(SFB::InputSource::ByteOrder::little);
+        return YES;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
@@ -400,8 +400,8 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (NSData *)readDataOfLength:(NSUInteger)length error:(NSError **)error
 {
 	try {
-		return (__bridge_transfer NSData *)_input->CopyData(length);
-	} catch(const std::exception& e) {
+        return (__bridge_transfer NSData *)_input->copyData(length);
+    } catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);
 		return nil;
@@ -416,37 +416,37 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 {
 	NSParameterAssert(length > 0);
 
-	if(!_input->SupportsSeeking()) {
-		if(error)
+    if (!_input->supportsSeeking()) {
+        if(error)
 			*error = [NSError errorWithDomain:SFBInputSourceErrorDomain code:SFBInputSourceErrorCodeNotSeekable userInfo:nil];
 		return nil;
-	}
+    }
 
-	try {
-		const auto originalOffset = _input->Position();
-		_input->SeekToOffset(0);
+    try {
+        const auto originalOffset = _input->position();
+        _input->seekToOffset(0);
 
-		if(skipID3v2Tag) {
+        if(skipID3v2Tag) {
 			int64_t offset = 0;
 
 			// Attempt to detect and minimally parse an ID3v2 tag header
-			NSData *data = (__bridge_transfer NSData *)_input->CopyData(SFBID3v2HeaderSize);
-			if([data isID3v2Header])
+            NSData *data = (__bridge_transfer NSData *)_input->copyData(SFBID3v2HeaderSize);
+            if([data isID3v2Header])
 				offset = [data id3v2TagTotalSize];
 
-			_input->SeekToOffset(offset);
-		}
+            _input->seekToOffset(offset);
+        }
 
-		NSData *data = (__bridge_transfer NSData *)_input->CopyData(length);
-		if(data.length < length) {
+        NSData *data = (__bridge_transfer NSData *)_input->copyData(length);
+        if(data.length < length) {
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:@{ NSURLErrorKey: self.url }];
 			return nil;
 		}
 
-		_input->SeekToOffset(originalOffset);
+        _input->seekToOffset(originalOffset);
 
-		return data;
+        return data;
 	} catch(const std::exception& e) {
 		if(error)
 			*error = NSErrorFromInputSourceException(&e);

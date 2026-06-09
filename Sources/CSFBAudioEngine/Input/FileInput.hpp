@@ -29,20 +29,24 @@ public:
 	FileInput& operator=(FileInput&&) = delete;
 
 private:
-	bool _AtEOF() const noexcept override 				{ return std::feof(file_) != 0; }
-	int64_t _Length() const noexcept override 			{ return len_; }
-	bool _SupportsSeeking() const noexcept override 	{ return seekable_; }
-	void _SeekToPosition(int64_t position) override 	{ if(::fseeko(file_, static_cast<off_t>(position), SEEK_SET)) throw std::system_error{errno, std::generic_category()}; }
+  bool _atEOF() const noexcept override { return std::feof(file_) != 0; }
+  int64_t _length() const noexcept override { return len_; }
+  bool _supportsSeeking() const noexcept override { return seekable_; }
+  void _seekToPosition(int64_t position) override {
+      if (::fseeko(file_, static_cast<off_t>(position), SEEK_SET)) {
+          throw std::system_error{errno, std::generic_category()};
+      }
+  }
 
-	void _Open() override;
-	void _Close() override;
-	int64_t _Read(void * _Nonnull buffer, int64_t count) override;
-	int64_t _Position() const override;
-	CFStringRef _Nonnull _CopyDescription() const noexcept override;
+  void _open() override;
+  void _close() override;
+  int64_t _read(void *_Nonnull buffer, int64_t count) override;
+  int64_t _position() const override;
+  CFStringRef _Nonnull _copyDescription() const noexcept override;
 
-	FILE * _Nullable file_ {nullptr};
-	int64_t len_ {0};
-	bool seekable_{false};
+  FILE *_Nullable file_{nullptr};
+  int64_t len_{0};
+  bool seekable_{false};
 };
 
 } /* namespace SFB */

@@ -17,16 +17,15 @@
 SFB::FileContentsInput::FileContentsInput(CFURLRef url)
 {
 	if(!url) {
-		os_log_error(sLog, "Cannot create FileContentsInput with null URL");
-		throw std::invalid_argument("Null URL");
+        os_log_error(log_, "Cannot create FileContentsInput with null URL");
+        throw std::invalid_argument("Null URL");
 	}
 	url_ = static_cast<CFURLRef>(CFRetain(url));
 	free_ = true;
 }
 
-void SFB::FileContentsInput::_Open()
-{
-	UInt8 path [PATH_MAX];
+void SFB::FileContentsInput::_open() {
+    UInt8 path [PATH_MAX];
 	auto success = CFURLGetFileSystemRepresentation(url_, FALSE, path, PATH_MAX);
 	if(!success)
 		throw std::runtime_error("Unable to get URL file system representation");
@@ -56,15 +55,13 @@ void SFB::FileContentsInput::_Open()
 	pos_ = 0;
 }
 
-void SFB::FileContentsInput::_Close() noexcept
-{
-	std::free(buf_);
+void SFB::FileContentsInput::_close() noexcept {
+    std::free(buf_);
 	buf_ = nullptr;
 }
 
-CFStringRef SFB::FileContentsInput::_CopyDescription() const noexcept
-{
-	CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
+CFStringRef SFB::FileContentsInput::_copyDescription() const noexcept {
+    CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
 	const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileContentsInput %p: %lld bytes copied to %p from \"%@\">"), this, len_, buf_, lastPathComponent);
 }

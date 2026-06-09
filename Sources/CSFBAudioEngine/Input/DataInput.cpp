@@ -13,8 +13,8 @@
 SFB::DataInput::DataInput(CFDataRef data)
 {
 	if(!data) {
-		os_log_error(sLog, "Cannot create DataInput with null data");
-		throw std::invalid_argument("Null data");
+        os_log_error(log_, "Cannot create DataInput with null data");
+        throw std::invalid_argument("Null data");
 	}
 	data_ = static_cast<CFDataRef>(CFRetain(data));
 }
@@ -24,11 +24,10 @@ SFB::DataInput::~DataInput() noexcept
 	CFRelease(data_);
 }
 
-int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
-{
-	if(count > std::numeric_limits<CFIndex>::max()) {
-		os_log_error(sLog, "_Read() called on <DataInput: %p> with count greater than maximum allowable value", this);
-		throw std::invalid_argument("Count greater than maximum allowable value");
+int64_t SFB::DataInput::_read(void *buffer, int64_t count) {
+    if(count > std::numeric_limits<CFIndex>::max()) {
+        os_log_error(log_, "_Read() called on <DataInput: %p> with count greater than maximum allowable value", this);
+        throw std::invalid_argument("Count greater than maximum allowable value");
 	}
 	const int64_t remaining = CFDataGetLength(data_) - pos_;
 	count = std::min(count, remaining);
@@ -38,7 +37,6 @@ int64_t SFB::DataInput::_Read(void *buffer, int64_t count)
 	return count;
 }
 
-CFStringRef SFB::DataInput::_CopyDescription() const noexcept
-{
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<DataInput %p: %@>"), this, data_);
+CFStringRef SFB::DataInput::_copyDescription() const noexcept {
+    return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<DataInput %p: %@>"), this, data_);
 }
