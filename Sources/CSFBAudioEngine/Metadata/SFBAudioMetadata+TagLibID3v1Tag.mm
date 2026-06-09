@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2021 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
@@ -9,20 +10,18 @@
 
 @implementation SFBAudioMetadata (TagLibID3v1Tag)
 
-- (void)addMetadataFromTagLibID3v1Tag:(const TagLib::ID3v1::Tag *)tag
-{
-	NSParameterAssert(tag != nil);
+- (void)addMetadataFromTagLibID3v1Tag:(const TagLib::ID3v1::Tag *)tag {
+    NSParameterAssert(tag != nil);
 
-	// ID3v1 tags are only supposed to contain characters in ISO 8859-1 format, but that isn't always the case
-	// AddTagToDictionary assumes UTF-8, so everything should work properly
-	// Currently TagLib::ID3v1::Tag doesn't implement any more functionality than TagLib::Tag
-	[self addMetadataFromTagLibTag:tag];
+    // ID3v1 tags are only supposed to contain characters in ISO 8859-1 format, but that isn't always the case
+    // AddTagToDictionary assumes UTF-8, so everything should work properly
+    // Currently TagLib::ID3v1::Tag doesn't implement any more functionality than TagLib::Tag
+    [self addMetadataFromTagLibTag:tag];
 }
 
 @end
 
-void SFB::Audio::SetID3v1TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v1::Tag *tag)
-{
-	// TagLib::ID3v1::Tag has no additonal functionality over TagLib::Tag
-	SetTagFromMetadata(metadata, tag);
+void sfb::setID3v1TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v1::Tag *tag) {
+    // TagLib::ID3v1::Tag has no additonal functionality over TagLib::Tag
+    setTagFromMetadata(metadata, tag);
 }

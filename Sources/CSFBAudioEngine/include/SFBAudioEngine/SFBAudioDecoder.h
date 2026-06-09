@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2006-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2006 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #import <SFBAudioEngine/SFBPCMDecoding.h>
@@ -9,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Constant type for decoder names
-typedef NSString * SFBAudioDecoderName NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecoder.Name);
+typedef NSString *SFBAudioDecoderName NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecoder.Name);
 
 /// FLAC
 extern SFBAudioDecoderName const SFBAudioDecoderNameFLAC;
@@ -41,15 +42,16 @@ extern SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio;
 extern SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile;
 
 /// A decoder providing audio as PCM
-NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecoding>
+NS_SWIFT_NAME(AudioDecoder)
+@interface SFBAudioDecoder : NSObject <SFBPCMDecoding>
 
-#pragma mark - File Format Support
+// MARK: - File Format Support
 
-/// Returns a set containing the supported path extensions
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
+/// A set containing the supported path extensions
+@property(class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/// Returns a set containing the supported MIME types
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
+/// A set containing the supported MIME types
+@property(class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
 + (BOOL)handlesPathsWithExtension:(NSString *)extension;
@@ -57,7 +59,7 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
-#pragma mark - Creation
+// MARK: - Creation
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -82,19 +84,25 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// - parameter mimeTypeHint: A MIME type hint for `url`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+- (nullable instancetype)initWithURL:(NSURL *)url
+                        mimeTypeHint:(nullable NSString *)mimeTypeHint
+                               error:(NSError **)error;
 /// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter detectContentType: Whether to attempt to determine the content type of `url`
 /// - parameter mimeTypeHint: A MIME type hint for `url`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url detectContentType:(BOOL)detectContentType mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+- (nullable instancetype)initWithURL:(NSURL *)url
+                   detectContentType:(BOOL)detectContentType
+                        mimeTypeHint:(nullable NSString *)mimeTypeHint
+                               error:(NSError **)error;
 
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+        NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -106,13 +114,17 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// - parameter detectContentType: Whether to attempt to determine the content type of `inputSource`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource detectContentType:(BOOL)detectContentType error:(NSError **)error;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                           detectContentType:(BOOL)detectContentType
+                                       error:(NSError **)error;
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter mimeTypeHint: The MIME type of `inputSource` or `nil`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                                mimeTypeHint:(nullable NSString *)mimeTypeHint
+                                       error:(NSError **)error;
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - important: If `detectContentType` is `YES` the input source must support seeking and will be opened for reading
 /// - parameter inputSource: The input source
@@ -120,13 +132,18 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// - parameter mimeTypeHint: A MIME type hint for `inputSource`
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource detectContentType:(BOOL)detectContentType mimeTypeHint:(nullable NSString *)mimeTypeHint error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                           detectContentType:(BOOL)detectContentType
+                                mimeTypeHint:(nullable NSString *)mimeTypeHint
+                                       error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter decoderName: The name of the decoder to use
 /// - returns: An initialized `SFBAudioDecoder` object for the specified URL, or `nil` on failure
-- (nullable instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
+- (nullable instancetype)initWithURL:(NSURL *)url
+                         decoderName:(SFBAudioDecoderName)decoderName
+        NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
 /// Returns an initialized `SFBAudioDecoder` object for the given URL or `nil` on failure
 /// - parameter url: The URL
 /// - parameter decoderName: The name of the decoder to use
@@ -138,13 +155,17 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// - parameter inputSource: The input source
 /// - parameter decoderName: The name of the decoder to use
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                                 decoderName:(SFBAudioDecoderName)decoderName
+        NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
 /// Returns an initialized `SFBAudioDecoder` object for the given input source or `nil` on failure
 /// - parameter inputSource: The input source
 /// - parameter decoderName: The name of the decoder to use
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: An initialized `SFBAudioDecoder` object for the specified input source, or `nil` on failure
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource
+                                 decoderName:(SFBAudioDecoderName)decoderName
+                                       error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// Opens the decoder
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
@@ -157,22 +178,28 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 
 @end
 
-#pragma mark - Error Information
+// MARK: - Error Information
 
 /// The `NSErrorDomain` used by `SFBAudioDecoder` and subclasses
 extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
 
 /// Possible `NSError` error codes used by `SFBAudioDecoder`
-typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
-	/// Internal decoder error
-	SFBAudioDecoderErrorCodeInternalError	= 0,
-	/// Unknown decoder name
-	SFBAudioDecoderErrorCodeUnknownDecoder	= 1,
-	/// Invalid, unknown, or unsupported format
-	SFBAudioDecoderErrorCodeInvalidFormat	= 2,
-} NS_SWIFT_NAME(AudioDecoder.ErrorCode);
+typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode){
+    /// Unknown decoder name
+    SFBAudioDecoderErrorCodeUnknownDecoder = 0,
+    /// Invalid or unknown format
+    SFBAudioDecoderErrorCodeInvalidFormat = 1,
+    /// Unsupported format
+    SFBAudioDecoderErrorCodeUnsupportedFormat = 2,
+    /// Internal decoder error
+    SFBAudioDecoderErrorCodeInternalError = 3,
+    /// Decoding error
+    SFBAudioDecoderErrorCodeDecodingError = 4,
+    /// Seek error
+    SFBAudioDecoderErrorCodeSeekError = 5,
+} NS_SWIFT_NAME(AudioDecoder.Error);
 
-#pragma mark - FLAC and Ogg FLAC Decoder Properties
+// MARK: - FLAC and Ogg FLAC Decoder Properties
 
 /// FLAC minimum block size (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMinimumBlockSize;
@@ -193,7 +220,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACTota
 /// FLAC MD5 sum (`NSData`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum;
 
-#pragma mark - Monkey's Audio Decoder Properties
+// MARK: - Monkey's Audio Decoder Properties
 
 /// Monkey's Audio file version * 1000 (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioFileVersion;
@@ -224,7 +251,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysA
 /// Monkey's Audio data byte count of the decompressed WAV (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVDataBytes;
 /// Monkey's Audio total byte count of the decompressed WAV (`NSNumber`)
-extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes ;
+extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioWAVTotalBytes;
 /// Monkey's Audio total byte count of the API file (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPETotalBytes;
 /// Monkey's Audio total blocks of audio data (`NSNumber`)
@@ -238,7 +265,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysA
 /// Monkey's Audio `YES` if this is an APL file (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMonkeysAudioAPL;
 
-#pragma mark - Musepack Decoder Properties
+// MARK: - Musepack Decoder Properties
 
 /// Musepack sample frequency in Hz (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackSampleFrequency;
@@ -293,7 +320,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepack
 /// Musepack total file length in bytes (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength;
 
-#pragma mark - Ogg Opus Decoder Properties
+// MARK: - Ogg Opus Decoder Properties
 
 /// Ogg Opus format version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusVersion;
@@ -314,7 +341,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusC
 /// Ogg Opus mapping from coded stream channels to output channels (`NSData`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping;
 
-#pragma mark - Ogg Speex Decoder Properties
+// MARK: - Ogg Speex Decoder Properties
 
 /// Ogg Speex Speex string, always `"Speex   "`  (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexSpeexString;
@@ -343,7 +370,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeex
 /// Ogg Speex number of additional headers after the comments (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHeaders;
 
-#pragma mark - Ogg Vorbis Decoder Properties
+// MARK: - Ogg Vorbis Decoder Properties
 
 /// Ogg Vorbis version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisVersion;
@@ -360,7 +387,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbi
 /// Ogg Vorbis bitrate window (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow;
 
-#pragma mark - Shorten Decoder Properties
+// MARK: - Shorten Decoder Properties
 
 /// Shorten version (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenVersion;
@@ -377,7 +404,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenB
 /// Shorten big endian (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyShortenBigEndian;
 
-#pragma mark - True Audio Decoder Properties
+// MARK: - True Audio Decoder Properties
 
 /// True Audio format (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioFormat;
@@ -390,7 +417,7 @@ extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudi
 /// True Audio number of samples (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyTrueAudioSamples;
 
-#pragma mark - WavPack Decoder Properties
+// MARK: - WavPack Decoder Properties
 
 /// WavPack mode (`NSNumber`)
 extern SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackMode;

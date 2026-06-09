@@ -1,12 +1,13 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
-#import <taglib/mp4tag.h>
-
 #import "SFBAudioMetadata.h"
+
+#import <taglib/mp4tag.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,13 +16,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibMP4Tag:(const TagLib::MP4::Tag *)tag;
 @end
 
-namespace SFB {
-namespace Audio {
+namespace sfb {
 
 /// Sets values in `tag` using `metadata`
-void SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt = true);
+void setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt = true);
 
-} /* namespace Audio */
-} /* namespace SFB */
+} /* namespace sfb */
 
 NS_ASSUME_NONNULL_END

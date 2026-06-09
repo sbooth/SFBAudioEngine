@@ -1,12 +1,13 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
-#import <taglib/apetag.h>
-
 #import "SFBAudioMetadata.h"
+
+#import <taglib/apetag.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,13 +16,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag;
 @end
 
-namespace SFB {
-namespace Audio {
+namespace sfb {
 
 /// Sets values in `tag` using `metadata`
-void SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt = true);
+void setAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt = true);
 
-} /* namespace Audio */
-} /* namespace SFB */
+} /* namespace sfb */
 
 NS_ASSUME_NONNULL_END

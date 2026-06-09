@@ -1,7 +1,10 @@
 //
-// Copyright (c) 2011-2024 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2011 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
-#define SFBCStringForOSType(osType) (const char[]){ *(((char *)&osType) + 3), *(((char *)&osType) + 2), *(((char *)&osType) + 1), *(((char *)&osType) + 0), 0 }
+#define SFBCStringForOSType(osType)                                                                                    \
+    (const char[]){*(((char *)&osType) + 3), *(((char *)&osType) + 2), *(((char *)&osType) + 1),                       \
+                   *(((char *)&osType) + 0), 0}

@@ -1,14 +1,15 @@
 //
-// Copyright (c) 2020-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2020 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
-#import "SFBOutputSource+Internal.h"
+#import "SFBOutputTarget+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBBufferOutputSource : SFBOutputSource
+@interface SFBBufferOutputTarget : SFBOutputTarget
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithURL:(nullable NSURL *)url NS_UNAVAILABLE;

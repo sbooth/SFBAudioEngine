@@ -1,7 +1,8 @@
 //
-// Copyright (c) 2010-2025 Stephen F. Booth <me@sbooth.org>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-License-Identifier: MIT
+//
 // Part of https://github.com/sbooth/SFBAudioEngine
-// MIT license
 //
 
 #pragma once
@@ -12,13 +13,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-namespace SFB {
-namespace Audio {
+namespace sfb {
 
 /// Adds `properties` to `dictionary`
-void AddAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary);
+void addAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary);
 
-} /* namespace Audio */
-} /* namespace SFB */
+} /* namespace sfb */
 
 NS_ASSUME_NONNULL_END
