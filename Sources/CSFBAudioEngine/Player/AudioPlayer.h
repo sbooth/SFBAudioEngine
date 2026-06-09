@@ -359,7 +359,9 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
+#if DEBUG
     assert(!bits::is_set_without(state, Flags::isPlaying, Flags::engineIsRunning));
+#endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 

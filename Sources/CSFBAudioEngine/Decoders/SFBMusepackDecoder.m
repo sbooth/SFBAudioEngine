@@ -241,7 +241,6 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     };
 
     _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:MPC_FRAME_LENGTH];
-    _buffer.frameLength = 0;
 
     return YES;
 }

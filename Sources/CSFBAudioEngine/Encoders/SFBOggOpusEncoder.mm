@@ -46,12 +46,12 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `OggOpusEnc` objects
 struct ogg_opus_enc_deleter {
-    void operator()(OggOpusEnc *enc) { ope_encoder_destroy(enc); }
+    void operator()(OggOpusEnc *enc) noexcept { ope_encoder_destroy(enc); }
 };
 
 /// A `std::unique_ptr` deleter for `OggOpusComments` objects
 struct ogg_opus_comments_deleter {
-    void operator()(OggOpusComments *comments) { ope_comments_destroy(comments); }
+    void operator()(OggOpusComments *comments) noexcept { ope_comments_destroy(comments); }
 };
 
 using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
