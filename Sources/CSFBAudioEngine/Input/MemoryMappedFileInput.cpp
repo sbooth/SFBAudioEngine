@@ -16,7 +16,7 @@
 #import <sys/mman.h>
 #import <sys/stat.h>
 
-SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url) {
+sfb::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url) {
     if (!url) {
         os_log_error(log_, "Cannot create MemoryMappedFileInput with null URL");
         throw std::invalid_argument("Null URL");
@@ -25,13 +25,13 @@ SFB::MemoryMappedFileInput::MemoryMappedFileInput(CFURLRef url) {
     free_ = false;
 }
 
-SFB::MemoryMappedFileInput::~MemoryMappedFileInput() noexcept {
+sfb::MemoryMappedFileInput::~MemoryMappedFileInput() noexcept {
     if (buf_) {
         munmap(buf_, len_);
     }
 }
 
-void SFB::MemoryMappedFileInput::_open() {
+void sfb::MemoryMappedFileInput::_open() {
     UInt8 path[PATH_MAX];
     auto success = CFURLGetFileSystemRepresentation(url_, FALSE, path, PATH_MAX);
     if (!success) {
@@ -69,14 +69,14 @@ void SFB::MemoryMappedFileInput::_open() {
     pos_ = 0;
 }
 
-void SFB::MemoryMappedFileInput::_close() {
+void sfb::MemoryMappedFileInput::_close() {
     const auto defer = scope_exit{[this]() noexcept { buf_ = nullptr; }};
     if (munmap(buf_, len_)) {
         throw std::system_error{errno, std::generic_category()};
     }
 }
 
-CFStringRef SFB::MemoryMappedFileInput::_copyDescription() const noexcept {
+CFStringRef sfb::MemoryMappedFileInput::_copyDescription() const noexcept {
     CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
     const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
     return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,

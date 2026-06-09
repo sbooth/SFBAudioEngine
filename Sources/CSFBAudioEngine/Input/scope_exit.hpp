@@ -7,7 +7,7 @@
 
 #import <type_traits>
 
-namespace SFB {
+namespace sfb {
 
 template <typename F>
     requires std::is_nothrow_invocable_v<F>
@@ -28,4 +28,4 @@ class scope_exit final {
     F exit_func_;
 };
 
-} /* namespace SFB */
+} /* namespace sfb */

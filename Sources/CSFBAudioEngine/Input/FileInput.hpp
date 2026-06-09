@@ -12,7 +12,7 @@
 #import <cstdio>
 #import <system_error>
 
-namespace SFB {
+namespace sfb {
 
 class FileInput : public InputSource {
   public:
@@ -48,4 +48,4 @@ class FileInput : public InputSource {
     bool seekable_{false};
 };
 
-} /* namespace SFB */
+} /* namespace sfb */

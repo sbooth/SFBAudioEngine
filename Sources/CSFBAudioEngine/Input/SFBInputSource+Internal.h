@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBInputSource () {
   @package
-    SFB::InputSource::unique_ptr _input;
+    sfb::InputSource::unique_ptr _input;
 }
 @end
 

@@ -10,7 +10,7 @@
 #import <algorithm>
 #import <limits>
 
-SFB::DataInput::DataInput(CFDataRef data) {
+sfb::DataInput::DataInput(CFDataRef data) {
     if (!data) {
         os_log_error(log_, "Cannot create DataInput with null data");
         throw std::invalid_argument("Null data");
@@ -18,9 +18,9 @@ SFB::DataInput::DataInput(CFDataRef data) {
     data_ = static_cast<CFDataRef>(CFRetain(data));
 }
 
-SFB::DataInput::~DataInput() noexcept { CFRelease(data_); }
+sfb::DataInput::~DataInput() noexcept { CFRelease(data_); }
 
-int64_t SFB::DataInput::_read(void *buffer, int64_t count) {
+int64_t sfb::DataInput::_read(void *buffer, int64_t count) {
     if (count > std::numeric_limits<CFIndex>::max()) {
         os_log_error(log_, "_Read() called on <DataInput: %p> with count greater than maximum allowable value", this);
         throw std::invalid_argument("Count greater than maximum allowable value");
@@ -33,6 +33,6 @@ int64_t SFB::DataInput::_read(void *buffer, int64_t count) {
     return count;
 }
 
-CFStringRef SFB::DataInput::_copyDescription() const noexcept {
+CFStringRef sfb::DataInput::_copyDescription() const noexcept {
     return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<DataInput %p: %@>"), this, data_);
 }

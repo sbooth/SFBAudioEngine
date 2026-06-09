@@ -11,7 +11,7 @@
 #import <cstdio>
 #import <cstdlib>
 
-SFB::BufferInput::BufferInput(const void *buf, int64_t len, BufferAdoption behavior)
+sfb::BufferInput::BufferInput(const void *buf, int64_t len, BufferAdoption behavior)
     : buf_{const_cast<void *>(buf)},
       free_{behavior == BufferAdoption::copy || behavior == BufferAdoption::noCopyAndFree}, len_{len} {
     if (!buf || len < 0) {
@@ -28,13 +28,13 @@ SFB::BufferInput::BufferInput(const void *buf, int64_t len, BufferAdoption behav
     }
 }
 
-SFB::BufferInput::~BufferInput() noexcept {
+sfb::BufferInput::~BufferInput() noexcept {
     if (free_) {
         std::free(buf_);
     }
 }
 
-int64_t SFB::BufferInput::_read(void *buffer, int64_t count) {
+int64_t sfb::BufferInput::_read(void *buffer, int64_t count) {
     const auto remaining = len_ - pos_;
     count = std::min(count, remaining);
     memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
@@ -42,7 +42,7 @@ int64_t SFB::BufferInput::_read(void *buffer, int64_t count) {
     return count;
 }
 
-CFStringRef SFB::BufferInput::_copyDescription() const noexcept {
+CFStringRef sfb::BufferInput::_copyDescription() const noexcept {
     return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<BufferInput %p: %lld bytes at %p>"), this,
                                     len_, buf_);
 }

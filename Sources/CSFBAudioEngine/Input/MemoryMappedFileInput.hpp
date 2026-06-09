@@ -9,7 +9,7 @@
 
 #import "BufferInput.hpp"
 
-namespace SFB {
+namespace sfb {
 
 class MemoryMappedFileInput : public BufferInput {
   public:
@@ -30,4 +30,4 @@ class MemoryMappedFileInput : public BufferInput {
     CFStringRef _Nonnull _copyDescription() const noexcept override;
 };
 
-} /* namespace SFB */
+} /* namespace sfb */

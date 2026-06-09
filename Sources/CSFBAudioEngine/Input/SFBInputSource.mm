@@ -89,11 +89,11 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
         SFBInputSource *inputSource = [[SFBInputSource alloc] init];
         if (inputSource) {
             if (flags & SFBInputSourceFlagsMemoryMapFiles) {
-                inputSource->_input = std::make_unique<SFB::MemoryMappedFileInput>((__bridge CFURLRef)url);
+                inputSource->_input = std::make_unique<sfb::MemoryMappedFileInput>((__bridge CFURLRef)url);
             } else if (flags & SFBInputSourceFlagsLoadFilesInMemory) {
-                inputSource->_input = std::make_unique<SFB::FileContentsInput>((__bridge CFURLRef)url);
+                inputSource->_input = std::make_unique<sfb::FileContentsInput>((__bridge CFURLRef)url);
             } else {
-                inputSource->_input = std::make_unique<SFB::FileInput>((__bridge CFURLRef)url);
+                inputSource->_input = std::make_unique<sfb::FileInput>((__bridge CFURLRef)url);
             }
         }
         return inputSource;
@@ -111,7 +111,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
     try {
         SFBInputSource *inputSource = [[SFBInputSource alloc] init];
         if (inputSource) {
-            inputSource->_input = std::make_unique<SFB::DataInput>((__bridge CFDataRef)data);
+            inputSource->_input = std::make_unique<sfb::DataInput>((__bridge CFDataRef)data);
         }
         return inputSource;
     } catch (const std::exception &e) {
@@ -126,7 +126,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
     try {
         SFBInputSource *inputSource = [[SFBInputSource alloc] init];
         if (inputSource) {
-            inputSource->_input = std::make_unique<SFB::BufferInput>(bytes, length);
+            inputSource->_input = std::make_unique<sfb::BufferInput>(bytes, length);
         }
         return inputSource;
     } catch (const std::exception &e) {
@@ -142,9 +142,9 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
         SFBInputSource *inputSource = [[SFBInputSource alloc] init];
         if (inputSource) {
             inputSource->_input =
-                    std::make_unique<SFB::BufferInput>(bytes, length,
-                                                       freeWhenDone ? SFB::BufferInput::BufferAdoption::noCopyAndFree
-                                                                    : SFB::BufferInput::BufferAdoption::noCopy);
+                    std::make_unique<sfb::BufferInput>(bytes, length,
+                                                       freeWhenDone ? sfb::BufferInput::BufferAdoption::noCopyAndFree
+                                                                    : sfb::BufferInput::BufferAdoption::noCopy);
         }
         return inputSource;
     } catch (const std::exception &e) {
@@ -336,7 +336,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error {
     NSParameterAssert(ui16 != nil);
     try {
-        *ui16 = _input->readUnsigned<uint16_t>(SFB::InputSource::ByteOrder::big);
+        *ui16 = _input->readUnsigned<uint16_t>(sfb::InputSource::ByteOrder::big);
         return YES;
     } catch (const std::exception &e) {
         if (error) {
@@ -349,7 +349,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error {
     NSParameterAssert(ui32 != nil);
     try {
-        *ui32 = _input->readUnsigned<uint32_t>(SFB::InputSource::ByteOrder::big);
+        *ui32 = _input->readUnsigned<uint32_t>(sfb::InputSource::ByteOrder::big);
         return YES;
     } catch (const std::exception &e) {
         if (error) {
@@ -362,7 +362,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error {
     NSParameterAssert(ui64 != nil);
     try {
-        *ui64 = _input->readUnsigned<uint64_t>(SFB::InputSource::ByteOrder::big);
+        *ui64 = _input->readUnsigned<uint64_t>(sfb::InputSource::ByteOrder::big);
         return YES;
     } catch (const std::exception &e) {
         if (error) {
@@ -379,7 +379,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error {
     NSParameterAssert(ui16 != nil);
     try {
-        *ui16 = _input->readUnsigned<uint16_t>(SFB::InputSource::ByteOrder::little);
+        *ui16 = _input->readUnsigned<uint16_t>(sfb::InputSource::ByteOrder::little);
         return YES;
     } catch (const std::exception &e) {
         if (error) {
@@ -392,7 +392,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error {
     NSParameterAssert(ui32 != nil);
     try {
-        *ui32 = _input->readUnsigned<uint32_t>(SFB::InputSource::ByteOrder::little);
+        *ui32 = _input->readUnsigned<uint32_t>(sfb::InputSource::ByteOrder::little);
         return YES;
     } catch (const std::exception &e) {
         if (error) {
@@ -405,7 +405,7 @@ NSErrorDomain const SFBInputSourceErrorDomain = @"org.sbooth.AudioEngine.InputSo
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error {
     NSParameterAssert(ui64 != nil);
     try {
-        *ui64 = _input->readUnsigned<uint64_t>(SFB::InputSource::ByteOrder::little);
+        *ui64 = _input->readUnsigned<uint64_t>(sfb::InputSource::ByteOrder::little);
         return YES;
     } catch (const std::exception &e) {
         if (error) {

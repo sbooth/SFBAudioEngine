@@ -9,7 +9,7 @@
 
 #import "InputSource.hpp"
 
-namespace SFB {
+namespace sfb {
 
 class DataInput : public InputSource {
   public:
@@ -40,4 +40,4 @@ class DataInput : public InputSource {
     CFIndex pos_{0};
 };
 
-} /* namespace SFB */
+} /* namespace sfb */

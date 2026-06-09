@@ -17,7 +17,7 @@
 #import <type_traits>
 #import <vector>
 
-namespace SFB {
+namespace sfb {
 
 /// An input source.
 class InputSource {
@@ -219,4 +219,4 @@ class InputSource {
     bool isOpen_{false};
 };
 
-} /* namespace SFB */
+} /* namespace sfb */

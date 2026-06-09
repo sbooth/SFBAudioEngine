@@ -11,7 +11,7 @@
 
 #import <sys/stat.h>
 
-SFB::FileInput::FileInput(CFURLRef url) {
+sfb::FileInput::FileInput(CFURLRef url) {
     if (!url) {
         os_log_error(log_, "Cannot create FileInput with null URL");
         throw std::invalid_argument("Null URL");
@@ -19,13 +19,13 @@ SFB::FileInput::FileInput(CFURLRef url) {
     url_ = static_cast<CFURLRef>(CFRetain(url));
 }
 
-SFB::FileInput::~FileInput() noexcept {
+sfb::FileInput::~FileInput() noexcept {
     if (file_) {
         std::fclose(file_);
     }
 }
 
-void SFB::FileInput::_open() {
+void sfb::FileInput::_open() {
     UInt8 path[PATH_MAX];
     auto success = CFURLGetFileSystemRepresentation(url_, FALSE, path, PATH_MAX);
     if (!success) {
@@ -56,14 +56,14 @@ void SFB::FileInput::_open() {
     }
 }
 
-void SFB::FileInput::_close() {
+void sfb::FileInput::_close() {
     const auto defer = scope_exit{[this]() noexcept { file_ = nullptr; }};
     if (std::fclose(file_)) {
         throw std::system_error{errno, std::generic_category()};
     }
 }
 
-int64_t SFB::FileInput::_read(void *buffer, int64_t count) {
+int64_t sfb::FileInput::_read(void *buffer, int64_t count) {
     const auto nitems = std::fread(buffer, 1, count, file_);
     if (nitems != count && std::ferror(file_)) {
         throw std::system_error{errno, std::generic_category()};
@@ -71,7 +71,7 @@ int64_t SFB::FileInput::_read(void *buffer, int64_t count) {
     return nitems;
 }
 
-int64_t SFB::FileInput::_position() const {
+int64_t sfb::FileInput::_position() const {
     const auto offset = ::ftello(file_);
     if (offset == -1) {
         throw std::system_error{errno, std::generic_category()};
@@ -79,7 +79,7 @@ int64_t SFB::FileInput::_position() const {
     return offset;
 }
 
-CFStringRef SFB::FileInput::_copyDescription() const noexcept {
+CFStringRef sfb::FileInput::_copyDescription() const noexcept {
     CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
     const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
     return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<FileInput %p: \"%@\">"), this,

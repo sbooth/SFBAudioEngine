@@ -15,7 +15,7 @@
 
 #import <sys/stat.h>
 
-SFB::FileContentsInput::FileContentsInput(CFURLRef url) {
+sfb::FileContentsInput::FileContentsInput(CFURLRef url) {
     if (!url) {
         os_log_error(log_, "Cannot create FileContentsInput with null URL");
         throw std::invalid_argument("Null URL");
@@ -24,7 +24,7 @@ SFB::FileContentsInput::FileContentsInput(CFURLRef url) {
     free_ = true;
 }
 
-void SFB::FileContentsInput::_open() {
+void sfb::FileContentsInput::_open() {
     UInt8 path[PATH_MAX];
     auto success = CFURLGetFileSystemRepresentation(url_, FALSE, path, PATH_MAX);
     if (!success) {
@@ -60,12 +60,12 @@ void SFB::FileContentsInput::_open() {
     pos_ = 0;
 }
 
-void SFB::FileContentsInput::_close() noexcept {
+void sfb::FileContentsInput::_close() noexcept {
     std::free(buf_);
     buf_ = nullptr;
 }
 
-CFStringRef SFB::FileContentsInput::_copyDescription() const noexcept {
+CFStringRef sfb::FileContentsInput::_copyDescription() const noexcept {
     CFStringRef lastPathComponent = CFURLCopyLastPathComponent(url_);
     const auto guard = scope_exit{[&lastPathComponent]() noexcept { CFRelease(lastPathComponent); }};
     return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,

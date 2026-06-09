@@ -9,7 +9,7 @@
 
 #import "InputSource.hpp"
 
-namespace SFB {
+namespace sfb {
 
 class BufferInput : public InputSource {
   public:
@@ -51,4 +51,4 @@ class BufferInput : public InputSource {
     CFStringRef _Nonnull _copyDescription() const noexcept override;
 };
 
-} /* namespace SFB */
+} /* namespace sfb */
