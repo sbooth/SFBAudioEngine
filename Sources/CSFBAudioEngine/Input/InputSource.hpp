@@ -7,25 +7,28 @@
 
 #pragma once
 
+#import <CoreFoundation/CoreFoundation.h>
+
+#import <libkern/OSByteOrder.h>
+#import <os/log.h>
+
 #import <memory>
 #import <stdexcept>
 #import <type_traits>
 #import <vector>
 
-#import <libkern/OSByteOrder.h>
-#import <os/log.h>
-
-#import <CoreFoundation/CoreFoundation.h>
-
 namespace SFB {
 
 /// An input source.
-class InputSource
-{
-public:
-	using unique_ptr = std::unique_ptr<InputSource>;
+class InputSource {
+  public:
+    using unique_ptr = std::unique_ptr<InputSource>;
 
-	enum class FileReadMode { normal, memoryMap, loadInMemory, };
+    enum class FileReadMode {
+        normal,
+        memoryMap,
+        loadInMemory,
+    };
     static unique_ptr createForURL(CFURLRef _Nonnull url, FileReadMode mode = FileReadMode::normal);
     static unique_ptr createWithData(CFDataRef _Nonnull data);
     static unique_ptr createWithBytes(const void *_Nonnull buf, int64_t len);
@@ -33,20 +36,20 @@ public:
 
     virtual ~InputSource() noexcept;
 
-	// This class is non-copyable.
-	InputSource(const InputSource&) = delete;
-	InputSource(InputSource&&) = delete;
+    // This class is non-copyable.
+    InputSource(const InputSource &) = delete;
+    InputSource(InputSource &&) = delete;
 
-	// This class is non-assignable.
-	InputSource& operator=(const InputSource&) = delete;
-	InputSource& operator=(InputSource&&) = delete;
+    // This class is non-assignable.
+    InputSource &operator=(const InputSource &) = delete;
+    InputSource &operator=(InputSource &&) = delete;
 
-	/// Returns the URL, if any, of the input source.
+    /// Returns the URL, if any, of the input source.
     [[nodiscard]] CFURLRef _Nullable getURL() const noexcept { return url_; }
 
     // MARK: Opening and Closing
 
-	/// Opens the input source.
+    /// Opens the input source.
     void open();
 
     /// Closes the input source.
@@ -57,7 +60,7 @@ public:
 
     // MARK: Reading
 
-	/// Reads up to `count` bytes from the input source into `buffer` and returns the number of bytes read.
+    /// Reads up to `count` bytes from the input source into `buffer` and returns the number of bytes read.
     int64_t read(void *_Nonnull buffer, int64_t count);
 
     /// Reads and returns up to `count` bytes from the input source in a `CFData` object.
@@ -68,7 +71,7 @@ public:
 
     // MARK: Position
 
-	/// Returns `true` if the input source is at the end of input.
+    /// Returns `true` if the input source is at the end of input.
     [[nodiscard]] bool atEOF() const;
 
     /// Returns the current read position of the input source in bytes.
@@ -79,18 +82,22 @@ public:
 
     // MARK: Seeking
 
-	/// Returns `true` if the input source is seekable.
+    /// Returns `true` if the input source is seekable.
     [[nodiscard]] bool supportsSeeking() const;
 
     /// Possible seek anchor points.
-	enum class SeekAnchor { start, current, end, };
+    enum class SeekAnchor {
+        start,
+        current,
+        end,
+    };
 
-	/// Seeks to `offset` bytes relative to `whence`.
+    /// Seeks to `offset` bytes relative to `whence`.
     void seekToOffset(int64_t offset, SeekAnchor whence = SeekAnchor::start);
 
     // MARK: Helpers
 
-	/// Reads and returns a value from the input source.
+    /// Reads and returns a value from the input source.
     template <typename V, typename = std::enable_if_t<std::is_trivially_copyable_v<V> &&
                                                       std::is_trivially_default_constructible_v<V>>>
     [[nodiscard]] V readValue() {
@@ -107,9 +114,14 @@ public:
     }
 
     /// Possible byte orders.
-	enum class ByteOrder { little, big, host, swapped, };
+    enum class ByteOrder {
+        little,
+        big,
+        host,
+        swapped,
+    };
 
-	/// Reads and returns an unsigned integer value in the specified byte order.
+    /// Reads and returns an unsigned integer value in the specified byte order.
     template <typename U,
               typename = std::enable_if_t<std::is_same_v<U, std::uint16_t> || std::is_same_v<U, std::uint32_t> ||
                                           std::is_same_v<U, std::uint64_t>>>
@@ -125,28 +137,41 @@ public:
         }
 
         if constexpr (std::is_same_v<U, std::uint16_t>) {
-			switch(order) {
-				case ByteOrder::little: 	return OSSwapLittleToHostInt16(value);
-				case ByteOrder::big: 		return OSSwapBigToHostInt16(value);
-				case ByteOrder::host: 		return value;
-				case ByteOrder::swapped: 	return OSSwapInt16(value);
-			}
-		} else if constexpr (std::is_same_v<U, std::uint32_t>) {
-			switch(order) {
-				case ByteOrder::little: 	return OSSwapLittleToHostInt32(value);
-				case ByteOrder::big: 		return OSSwapBigToHostInt32(value);
-				case ByteOrder::host: 		return value;
-				case ByteOrder::swapped: 	return OSSwapInt32(value);
-			}
-		} else if constexpr (std::is_same_v<U, std::uint64_t>) {
-			switch(order) {
-				case ByteOrder::little: 	return OSSwapLittleToHostInt64(value);
-				case ByteOrder::big: 		return OSSwapBigToHostInt64(value);
-				case ByteOrder::host: 		return value;
-				case ByteOrder::swapped: 	return OSSwapInt64(value);
-			}
-		} else
-			static_assert(false, "Unsupported unsigned integer type");
+            switch (order) {
+            case ByteOrder::little:
+                return OSSwapLittleToHostInt16(value);
+            case ByteOrder::big:
+                return OSSwapBigToHostInt16(value);
+            case ByteOrder::host:
+                return value;
+            case ByteOrder::swapped:
+                return OSSwapInt16(value);
+            }
+        } else if constexpr (std::is_same_v<U, std::uint32_t>) {
+            switch (order) {
+            case ByteOrder::little:
+                return OSSwapLittleToHostInt32(value);
+            case ByteOrder::big:
+                return OSSwapBigToHostInt32(value);
+            case ByteOrder::host:
+                return value;
+            case ByteOrder::swapped:
+                return OSSwapInt32(value);
+            }
+        } else if constexpr (std::is_same_v<U, std::uint64_t>) {
+            switch (order) {
+            case ByteOrder::little:
+                return OSSwapLittleToHostInt64(value);
+            case ByteOrder::big:
+                return OSSwapBigToHostInt64(value);
+            case ByteOrder::host:
+                return value;
+            case ByteOrder::swapped:
+                return OSSwapInt64(value);
+            }
+        } else {
+            static_assert(false, "Unsupported unsigned integer type");
+        }
     }
 
     /// Reads and returns a signed integer value in the specified byte order.
@@ -159,39 +184,39 @@ public:
 
     // MARK: Debugging
 
-	/// Returns a description of the input source.
+    /// Returns a description of the input source.
     [[nodiscard]] CFStringRef _Nonnull copyDescription() const noexcept CF_RETURNS_RETAINED;
 
   protected:
-	/// The shared log for all `InputSource` instances.
+    /// The shared log for all `InputSource` instances.
     static const os_log_t _Nonnull log_;
 
     explicit InputSource() noexcept = default;
 
-	/// The location of the input.
-	CFURLRef _Nullable url_ {nullptr};
+    /// The location of the input.
+    CFURLRef _Nullable url_{nullptr};
 
-private:
-	// Subclasses must implement the following methods
-  virtual void _open() = 0;
-  virtual void _close() = 0;
-  virtual int64_t _read(void *_Nonnull buffer, int64_t count) = 0;
-  virtual bool _atEOF() const = 0;
-  virtual int64_t _position() const = 0;
-  virtual int64_t _length() const = 0;
+  private:
+    // Subclasses must implement the following methods
+    virtual void _open() = 0;
+    virtual void _close() = 0;
+    virtual int64_t _read(void *_Nonnull buffer, int64_t count) = 0;
+    virtual bool _atEOF() const = 0;
+    virtual int64_t _position() const = 0;
+    virtual int64_t _length() const = 0;
 
-  // Optional seeking support
-  virtual bool _supportsSeeking() const { return false; }
+    // Optional seeking support
+    virtual bool _supportsSeeking() const { return false; }
 
-  virtual void _seekToPosition(int64_t position) { throw std::logic_error("Seeking not supported"); }
+    virtual void _seekToPosition(int64_t position) { throw std::logic_error("Seeking not supported"); }
 
-  // Optional description
-  virtual CFStringRef _Nonnull _copyDescription() const noexcept {
-      return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this);
-  }
+    // Optional description
+    virtual CFStringRef _Nonnull _copyDescription() const noexcept {
+        return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<InputSource: %p>"), this);
+    }
 
     /// `true` if the input source is open.
-	bool isOpen_ {false};
+    bool isOpen_{false};
 };
 
 } /* namespace SFB */

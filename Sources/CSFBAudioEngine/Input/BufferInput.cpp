@@ -5,42 +5,44 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import "BufferInput.hpp"
+
 #import <algorithm>
 #import <cstdio>
 #import <cstdlib>
 
-#import "BufferInput.hpp"
-
 SFB::BufferInput::BufferInput(const void *buf, int64_t len, BufferAdoption behavior)
-: buf_{const_cast<void *>(buf)}, free_{behavior == BufferAdoption::copy || behavior == BufferAdoption::noCopyAndFree}, len_{len}
-{
-	if(!buf || len < 0) {
+    : buf_{const_cast<void *>(buf)},
+      free_{behavior == BufferAdoption::copy || behavior == BufferAdoption::noCopyAndFree}, len_{len} {
+    if (!buf || len < 0) {
         os_log_error(log_, "Cannot create BufferInput with null buffer or negative length");
         throw std::invalid_argument("Null buffer or negative length");
-	}
+    }
 
-	if(behavior == BufferAdoption::copy) {
-		buf_ = std::malloc(len_);
-		if(!buf_)
-			throw std::bad_alloc();
-		std::memcpy(buf_, buf, len_);
-	}
+    if (behavior == BufferAdoption::copy) {
+        buf_ = std::malloc(len_);
+        if (!buf_) {
+            throw std::bad_alloc();
+        }
+        std::memcpy(buf_, buf, len_);
+    }
 }
 
-SFB::BufferInput::~BufferInput() noexcept
-{
-	if(free_)
-		std::free(buf_);
+SFB::BufferInput::~BufferInput() noexcept {
+    if (free_) {
+        std::free(buf_);
+    }
 }
 
 int64_t SFB::BufferInput::_read(void *buffer, int64_t count) {
     const auto remaining = len_ - pos_;
-	count = std::min(count, remaining);
-	memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
-	pos_ += count;
-	return count;
+    count = std::min(count, remaining);
+    memcpy(buffer, reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(buf_) + pos_), count);
+    pos_ += count;
+    return count;
 }
 
 CFStringRef SFB::BufferInput::_copyDescription() const noexcept {
-    return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<BufferInput %p: %lld bytes at %p>"), this, len_, buf_);
+    return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("<BufferInput %p: %lld bytes at %p>"), this,
+                                    len_, buf_);
 }

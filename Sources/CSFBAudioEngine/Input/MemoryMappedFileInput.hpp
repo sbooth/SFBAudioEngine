@@ -11,24 +11,23 @@
 
 namespace SFB {
 
-class MemoryMappedFileInput: public BufferInput
-{
-public:
-	explicit MemoryMappedFileInput(CFURLRef _Nonnull url);
-	~MemoryMappedFileInput() noexcept;
+class MemoryMappedFileInput : public BufferInput {
+  public:
+    explicit MemoryMappedFileInput(CFURLRef _Nonnull url);
+    ~MemoryMappedFileInput() noexcept;
 
-	// This class is non-copyable.
-	MemoryMappedFileInput(const MemoryMappedFileInput&) = delete;
-	MemoryMappedFileInput(MemoryMappedFileInput&&) = delete;
+    // This class is non-copyable.
+    MemoryMappedFileInput(const MemoryMappedFileInput &) = delete;
+    MemoryMappedFileInput(MemoryMappedFileInput &&) = delete;
 
-	// This class is non-assignable.
-	MemoryMappedFileInput& operator=(const MemoryMappedFileInput&) = delete;
-	MemoryMappedFileInput& operator=(MemoryMappedFileInput&&) = delete;
+    // This class is non-assignable.
+    MemoryMappedFileInput &operator=(const MemoryMappedFileInput &) = delete;
+    MemoryMappedFileInput &operator=(MemoryMappedFileInput &&) = delete;
 
-private:
-  void _open() override;
-  void _close() override;
-  CFStringRef _Nonnull _copyDescription() const noexcept override;
+  private:
+    void _open() override;
+    void _close() override;
+    CFStringRef _Nonnull _copyDescription() const noexcept override;
 };
 
 } /* namespace SFB */

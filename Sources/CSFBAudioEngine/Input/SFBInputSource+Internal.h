@@ -5,15 +5,14 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBInputSource.h"
 #import "InputSource.hpp"
+#import "SFBInputSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBInputSource ()
-{
-@package
-	SFB::InputSource::unique_ptr _input;
+@interface SFBInputSource () {
+  @package
+    SFB::InputSource::unique_ptr _input;
 }
 @end
 
