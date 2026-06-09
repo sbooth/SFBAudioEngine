@@ -577,7 +577,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     // Register a stop callback for the decoding thread
     std::stop_callback decodingThreadStopCallback(decodingThread_.get_stop_token(),
-                                                  [this] { decodingSemaphore_.signal(); });
+                                                  [this]() noexcept { decodingSemaphore_.signal(); });
 
     // Issue a stop request to the decoding thread and wait for it to exit
     decodingThread_.request_stop();
@@ -588,7 +588,8 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     }
 
     // Register a stop callback for the event processing thread
-    std::stop_callback eventThreadStopCallback(eventThread_.get_stop_token(), [this] { eventSemaphore_.signal(); });
+    std::stop_callback eventThreadStopCallback(eventThread_.get_stop_token(),
+                                               [this]() noexcept { eventSemaphore_.signal(); });
 
     // Issue a stop request to the event processing thread and wait for it to exit
     eventThread_.request_stop();
@@ -1231,6 +1232,15 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     decoderState->setFlags(DecoderState::Flags::cancelRequested);
                     continue;
                 }
+
+                if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
+                    decodingEvents_.writeAll(DecodingEventCommand::seek, nextEventIdentificationNumber(),
+                                             decoderState->sequenceNumber_, frame)) {
+                    eventSemaphore_.signal();
+                } else {
+                    os_log_fault(log_, "Error writing decoder seek event");
+                }
+
                 ringBufferStale = true;
 
                 if (bits::is_set(flags, DecoderState::Flags::decodingComplete)) {
@@ -1303,7 +1313,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         {
             std::lock_guard lock{activeDecodersMutex_};
 
-            const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) {
+            const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
                 const auto flags = decoderState->loadFlags();
                 return bits::has_none(flags, DecoderState::Flags::isCanceled | DecoderState::Flags::decodingComplete);
             });
@@ -1413,7 +1423,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
             if (formatMismatch) {
                 // Wait until all other decoders complete processing before reconfiguring the graph
-                const auto okToReconfigure = [&] {
+                const auto okToReconfigure = [&]() noexcept {
                     std::lock_guard lock{activeDecodersMutex_};
                     return activeDecoders_.size() == 1;
                 }();
@@ -1721,6 +1731,9 @@ bool sfb::AudioPlayer::processDecodingEvent(DecodingEventCommand command) noexce
     case DecodingEventCommand::complete:
         return processDecodingCompleteEvent();
 
+    case DecodingEventCommand::seek:
+        return processDecoderSeekEvent();
+
     case DecodingEventCommand::canceled:
         return processDecoderCanceledEvent();
 
@@ -1803,6 +1816,36 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
     return true;
 }
 
+bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
+    uint64_t sequenceNumber;
+    int64_t frame;
+    if (!decodingEvents_.readAll(sequenceNumber, frame)) {
+        os_log_error(log_, "Missing decoder sequence number or frame position for decoder seek event");
+        return false;
+    }
+
+    Decoder decoder = nil;
+    {
+        std::lock_guard lock{activeDecodersMutex_};
+
+        if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
+            iter != activeDecoders_.cend()) {
+            decoder = (*iter)->decoder_;
+        } else {
+            os_log_error(log_, "Decoder state with sequence number %llu missing for decoder seek event",
+                         sequenceNumber);
+            return false;
+        }
+    }
+
+    if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
+        delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:didSeek:toFrame:)]) {
+        [delegate audioPlayer:player_ didSeek:decoder toFrame:frame];
+    }
+
+    return true;
+}
+
 bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     uint64_t sequenceNumber;
     if (!decodingEvents_.read(sequenceNumber)) {
@@ -1846,7 +1889,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         }
     }
 
-    const auto hasNoDecoders = [&] {
+    const auto hasNoDecoders = [&]() noexcept {
         std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
         return queuedDecoders_.empty() && activeDecoders_.empty();
     }();
@@ -2164,7 +2207,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             [delegate audioPlayer:player renderingComplete:decoder];
         }
 
-        const auto hasNoDecoders = [&] {
+        const auto hasNoDecoders = [&]() noexcept {
             std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
             return that->queuedDecoders_.empty() && that->activeDecoders_.empty();
         }();
@@ -2226,7 +2269,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() cons
     activeDecodersMutex_.assertIsOwner();
 #endif /* DEBUG */
 
-    const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) {
+    const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
         const auto flags = decoderState->loadFlags();
         return bits::has_none(flags, DecoderState::Flags::needsInitialization | DecoderState::Flags::isCanceled);
     });
