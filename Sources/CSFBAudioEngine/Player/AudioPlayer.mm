@@ -871,10 +871,6 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
 
 bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition,
                                                   SFBPlaybackTime *playbackTime) const noexcept {
-    if (playbackPosition == nullptr && playbackTime == nullptr) [[unlikely]] {
-        return true;
-    }
-
     std::lock_guard lock{activeDecodersMutex_};
 
     const auto *decoderState = firstActiveDecoderState();
