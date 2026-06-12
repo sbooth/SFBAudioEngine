@@ -346,6 +346,9 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
     // The sample rate and frame length do not need to be individually atomic because they are written only once
     // and access is guarded behind the atomic flag `Flags::needsInitialization`
     sampleRate_ = format.sampleRate;
+#if DEBUG
+    assert(sampleRate_ > 0);
+#endif /* DEBUG */
     frameLength_ = decoder_.frameLength;
 
     clearFlags(Flags::needsInitialization);
@@ -849,18 +852,18 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
         return SFBInvalidPlaybackTime;
     }
 
+    const auto sampleRate = decoderState->sampleRate();
+    if (sampleRate <= 0) [[unlikely]] {
+        return SFBInvalidPlaybackTime;
+    }
+
     SFBPlaybackTime playbackTime = SFBInvalidPlaybackTime;
 
-    const auto framePosition = decoderState->framePosition();
-    const auto frameLength = decoderState->frameLength();
-
-    if (const auto sampleRate = decoderState->sampleRate(); sampleRate > 0) {
-        if (framePosition != SFBUnknownFramePosition) {
-            playbackTime.currentTime = framePosition / sampleRate;
-        }
-        if (frameLength != SFBUnknownFrameLength) {
-            playbackTime.totalTime = frameLength / sampleRate;
-        }
+    if (const auto framePosition = decoderState->framePosition(); framePosition != SFBUnknownFramePosition) {
+        playbackTime.currentTime = framePosition / sampleRate;
+    }
+    if (const auto frameLength = decoderState->frameLength(); frameLength != SFBUnknownFrameLength) {
+        playbackTime.totalTime = frameLength / sampleRate;
     }
 
     return playbackTime;
@@ -868,6 +871,10 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
 
 bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackPosition,
                                                   SFBPlaybackTime *playbackTime) const noexcept {
+    if (playbackPosition == nullptr && playbackTime == nullptr) [[unlikely]] {
+        return true;
+    }
+
     std::lock_guard lock{activeDecodersMutex_};
 
     const auto *decoderState = firstActiveDecoderState();
