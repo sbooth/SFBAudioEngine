@@ -307,9 +307,22 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 #endif /* DEBUG */
 
     auto format = decoder_.processingFormat;
-#if DEBUG
-    assert(format.streamDescription->mFormatID == kAudioFormatLinearPCM);
-#endif /* DEBUG */
+    if (format == nil) {
+        os_log_error(log_, "Decoder processing format is nil");
+        return false;
+    }
+
+    if (const auto formatID = format.streamDescription->mFormatID; formatID != kAudioFormatLinearPCM) {
+        os_log_error(log_, "Unsupported non-PCM processing format '%{public}.4s'", SFBCStringForOSType(formatID));
+        return false;
+    }
+
+    const auto sampleRate = format.sampleRate;
+    if (sampleRate <= 0 || !std::isfinite(sampleRate)) {
+        os_log_error(log_, "Invalid sample rate %g", sampleRate);
+        return false;
+    }
+
     auto standardEquivalentFormat = format.standardEquivalent;
     if (standardEquivalentFormat == nil) {
         os_log_error(log_, "Error converting %{public}@ to standard equivalent format",
@@ -345,7 +358,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
     // The sample rate and frame length do not need to be individually atomic because they are written only once
     // and access is guarded behind the atomic flag `Flags::needsInitialization`
-    sampleRate_ = format.sampleRate;
+    sampleRate_ = sampleRate;
     frameLength_ = decoder_.frameLength;
 
     clearFlags(Flags::needsInitialization);
@@ -854,13 +867,12 @@ SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
     const auto framePosition = decoderState->framePosition();
     const auto frameLength = decoderState->frameLength();
 
-    if (const auto sampleRate = decoderState->sampleRate(); sampleRate > 0) {
-        if (framePosition != SFBUnknownFramePosition) {
-            playbackTime.currentTime = framePosition / sampleRate;
-        }
-        if (frameLength != SFBUnknownFrameLength) {
-            playbackTime.totalTime = frameLength / sampleRate;
-        }
+    const auto sampleRate = decoderState->sampleRate();
+    if (framePosition != SFBUnknownFramePosition) {
+        playbackTime.currentTime = framePosition / sampleRate;
+    }
+    if (frameLength != SFBUnknownFrameLength) {
+        playbackTime.totalTime = frameLength / sampleRate;
     }
 
     return playbackTime;
@@ -889,13 +901,12 @@ bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
 
     if (playbackTime != nullptr) {
         SFBPlaybackTime currentPlaybackTime = SFBInvalidPlaybackTime;
-        if (const auto sampleRate = decoderState->sampleRate(); sampleRate > 0) {
-            if (currentPlaybackPosition.framePosition != SFBUnknownFramePosition) {
-                currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
-            }
-            if (currentPlaybackPosition.frameLength != SFBUnknownFrameLength) {
-                currentPlaybackTime.totalTime = currentPlaybackPosition.frameLength / sampleRate;
-            }
+        const auto sampleRate = decoderState->sampleRate();
+        if (currentPlaybackPosition.framePosition != SFBUnknownFramePosition) {
+            currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
+        }
+        if (currentPlaybackPosition.frameLength != SFBUnknownFrameLength) {
+            currentPlaybackTime.totalTime = currentPlaybackPosition.frameLength / sampleRate;
         }
         *playbackTime = currentPlaybackTime;
     }
