@@ -884,6 +884,10 @@ bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *playbackP
         return false;
     }
 
+    if (playbackPosition == nullptr && playbackTime == nullptr) [[unlikely]] {
+        return true;
+    }
+
     SFBPlaybackPosition currentPlaybackPosition = {.framePosition = decoderState->framePosition(),
                                                    .frameLength = decoderState->frameLength()};
     if (playbackPosition != nullptr) {
