@@ -437,9 +437,9 @@ inline bool AudioPlayer::DecoderState::isSeekRequested() const noexcept {
 /// Performs the pending seek request
 inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     const auto requestedFrame = requestedFrame_.exchange(SFBUnknownFramePosition, std::memory_order_acq_rel);
-    if (requestedFrame == SFBUnknownFramePosition) {
-        return true;
-    }
+#if DEBUG
+    assert(requestedFrame != SFBUnknownFramePosition);
+#endif /* DEBUG */
 
     os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", requestedFrame, decoder_);
 
