@@ -205,24 +205,22 @@ struct AudioPlayer::DecoderState final {
 
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
+        /// Decoder state not initialized
+        needsInitialization = 1u << 0,
         /// Decoding started
-        decodingStarted = 1u << 0,
+        decodingStarted = 1u << 1,
         /// Decoding complete
-        decodingComplete = 1u << 1,
+        decodingComplete = 1u << 2,
         /// Decoding was resumed after completion
-        decodingResumed = 1u << 2,
+        decodingResumed = 1u << 3,
         /// Decoding was suspended after starting
-        decodingSuspended = 1u << 3,
+        decodingSuspended = 1u << 4,
         /// Rendering started
-        renderingStarted = 1u << 4,
-        /// A seek has been requested
-        seekPending = 1u << 5,
+        renderingStarted = 1u << 5,
         /// Decoder cancelation requested
         cancelRequested = 1u << 6,
         /// Decoder canceled
         isCanceled = 1u << 7,
-        /// Decoder state not initialized
-        needsInitialization = 1u << 8,
     };
 
     /// Flags
@@ -285,6 +283,8 @@ struct AudioPlayer::DecoderState final {
 
     /// Sets the pending seek request to `frame`
     void requestSeekToFrame(AVAudioFramePosition frame) noexcept;
+    /// Returns `true` if a seek is pending
+    bool isSeekRequested() const noexcept;
     /// Performs the pending seek request
     bool performSeek(NSError **error) noexcept;
 };
@@ -369,8 +369,9 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 inline double AudioPlayer::DecoderState::sampleRate() const noexcept { return sampleRate_; }
 
 inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
-    if (bits::is_set(loadFlags(), Flags::seekPending)) {
-        return requestedFrame_.load(std::memory_order_acquire);
+    if (const auto requestedFrame = requestedFrame_.load(std::memory_order_acquire);
+        requestedFrame != SFBUnknownFramePosition) {
+        return requestedFrame;
     }
     return framesRendered_.load(std::memory_order_acquire);
 }
@@ -427,24 +428,34 @@ inline void AudioPlayer::DecoderState::requestSeekToFrame(AVAudioFramePosition f
     assert(frame >= 0);
 #endif /* DEBUG */
     requestedFrame_.store(frame, std::memory_order_release);
-    setFlags(Flags::seekPending);
+}
+
+inline bool AudioPlayer::DecoderState::isSeekRequested() const noexcept {
+    return requestedFrame_.load(std::memory_order_acquire) != SFBUnknownFramePosition;
 }
 
 /// Performs the pending seek request
 inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
+    const auto requestedFrame = requestedFrame_.load(std::memory_order_acquire);
 #if DEBUG
-    assert(bits::is_set(loadFlags(), Flags::seekPending));
+    assert(requestedFrame != SFBUnknownFramePosition);
 #endif /* DEBUG */
 
-    const auto requestedFrame = requestedFrame_.load(std::memory_order_acquire);
-    os_log_debug(log_, "Seeking to frame %lld in %{public}@ ", requestedFrame, decoder_);
+    os_log_debug(log_, "Seeking to frame %lld in %{public}@", requestedFrame, decoder_);
+
+    const auto clearSeekRequest = [&]() noexcept {
+        // Don't overwrite a newer seek request
+        auto previousRequestedFrame = requestedFrame;
+        requestedFrame_.compare_exchange_strong(previousRequestedFrame, SFBUnknownFramePosition,
+                                                std::memory_order_acq_rel, std::memory_order_relaxed);
+    };
 
     if (NSError *seekError = nil; ![decoder_ seekToFrame:requestedFrame error:&seekError]) {
         os_log_error(log_, "Error seeking to frame %lld in %{public}@", requestedFrame, decoder_);
         if (error != nullptr) {
             *error = seekError;
         }
-        clearFlags(Flags::seekPending);
+        clearSeekRequest();
         return false;
     }
 
@@ -464,7 +475,7 @@ inline bool AudioPlayer::DecoderState::performSeek(NSError **error) noexcept {
     }
 
     // Clear the seek request
-    clearFlags(Flags::seekPending);
+    clearSeekRequest();
 
     return framePosition != SFBUnknownFramePosition;
 }
@@ -1236,78 +1247,76 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         // Process pending seeks
-        if (decoderState != nullptr) {
-            if (const auto flags = decoderState->loadFlags(); bits::is_set(flags, DecoderState::Flags::seekPending)) {
-                if (NSError *seekError = nil; !decoderState->performSeek(&seekError)) {
-                    decoderState->error_ = seekError;
-                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                    continue;
-                }
+        if (decoderState != nullptr && decoderState->isSeekRequested()) {
+            if (NSError *seekError = nil; !decoderState->performSeek(&seekError)) {
+                decoderState->error_ = seekError;
+                decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                continue;
+            }
 
-                if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
-                    decodingEvents_.writeAll(DecodingEventCommand::seek, nextEventIdentificationNumber(),
-                                             decoderState->sequenceNumber_, frame)) {
-                    eventSemaphore_.signal();
-                } else {
-                    os_log_fault(log_, "Error writing decoder seek event");
-                }
+            if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
+                decodingEvents_.writeAll(DecodingEventCommand::seek, nextEventIdentificationNumber(),
+                                         decoderState->sequenceNumber_, frame)) {
+                eventSemaphore_.signal();
+            } else {
+                os_log_fault(log_, "Error writing decoder seek event");
+            }
 
-                ringBufferStale = true;
+            ringBufferStale = true;
 
-                if (bits::is_set(flags, DecoderState::Flags::decodingComplete)) {
-                    os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
+            if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
+                os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
 
-                    // The decoder has not completed rendering so the ring buffer format and the decoder's format still
-                    // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
-                    // decoding completes.
-                    formatMismatch = false;
+                // The decoder has not completed rendering so the ring buffer format and the decoder's format still
+                // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
+                // decoding completes.
+                formatMismatch = false;
 
-                    fetchUpdate(
-                            decoderState->flags_,
-                            [](auto val) noexcept {
-                                return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
-                                       bits::to_underlying(DecoderState::Flags::decodingResumed);
-                            },
-                            std::memory_order_acq_rel);
+                fetchUpdate(
+                        decoderState->flags_,
+                        [](auto val) noexcept {
+                            return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
+                                   bits::to_underlying(DecoderState::Flags::decodingResumed);
+                        },
+                        std::memory_order_acq_rel);
 
-                    {
-                        std::lock_guard lock{activeDecodersMutex_};
+                {
+                    std::lock_guard lock{activeDecodersMutex_};
 
-                        // Rewind ensuing decoder states if possible to avoid discarding frames
-                        for (const auto &nextDecoderState : activeDecoders_) {
-                            if (nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_) {
-                                continue;
-                            }
+                    // Rewind ensuing decoder states if possible to avoid discarding frames
+                    for (const auto &nextDecoderState : activeDecoders_) {
+                        if (nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_) {
+                            continue;
+                        }
 
-                            const auto flags = nextDecoderState->loadFlags();
-                            if (bits::is_set(flags, DecoderState::Flags::isCanceled)) {
-                                continue;
-                            }
-                            if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
-                                os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+                        const auto flags = nextDecoderState->loadFlags();
+                        if (bits::is_set(flags, DecoderState::Flags::isCanceled)) {
+                            continue;
+                        }
+                        if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
+                            os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
-                                // TODO: Investigate a per-state buffer to mitigate frame loss
-                                if (nextDecoderState->decoder_.supportsSeeking) {
-                                    nextDecoderState->requestSeekToFrame(0);
-                                    if (NSError *seekError = nil; !nextDecoderState->performSeek(&seekError)) {
-                                        nextDecoderState->error_ = seekError;
-                                        nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
-                                        continue;
-                                    }
-                                } else {
-                                    os_log_error(log_, "Discarding %lld frames from %{public}@",
-                                                 nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
-                                                 nextDecoderState->decoder_);
+                            // TODO: Investigate a per-state buffer to mitigate frame loss
+                            if (nextDecoderState->decoder_.supportsSeeking) {
+                                nextDecoderState->requestSeekToFrame(0);
+                                if (NSError *seekError = nil; !nextDecoderState->performSeek(&seekError)) {
+                                    nextDecoderState->error_ = seekError;
+                                    nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
+                                    continue;
                                 }
-
-                                fetchUpdate(
-                                        nextDecoderState->flags_,
-                                        [](auto val) noexcept {
-                                            return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
-                                                   bits::to_underlying(DecoderState::Flags::decodingSuspended);
-                                        },
-                                        std::memory_order_acq_rel);
+                            } else {
+                                os_log_error(log_, "Discarding %lld frames from %{public}@",
+                                             nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
+                                             nextDecoderState->decoder_);
                             }
+
+                            fetchUpdate(
+                                    nextDecoderState->flags_,
+                                    [](auto val) noexcept {
+                                        return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
+                                               bits::to_underlying(DecoderState::Flags::decodingSuspended);
+                                    },
+                                    std::memory_order_acq_rel);
                         }
                     }
                 }
