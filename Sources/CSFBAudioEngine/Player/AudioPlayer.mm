@@ -1210,8 +1210,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             auto signal = false;
             for (const auto &decoderState : activeDecoders_) {
                 const auto flags = decoderState->loadFlags();
-                if (bits::is_clear(flags, DecoderState::Flags::cancelRequested) ||
-                    bits::is_set(flags, DecoderState::Flags::isCanceled)) {
+                if (bits::is_set_or_clear(flags, DecoderState::Flags::isCanceled,
+                                          DecoderState::Flags::cancelRequested)) {
                     continue;
                 }
 

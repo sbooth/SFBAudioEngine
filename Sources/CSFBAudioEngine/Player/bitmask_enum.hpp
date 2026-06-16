@@ -77,6 +77,15 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, 
     return (to_underlying(value) & (to_underlying(required) | to_underlying(forbidden))) == to_underlying(required);
 }
 
+/// Returns true if any of the non-zero bits from allowed are set in value and the non-zero bits from forbidden are
+/// clear in value
+template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_or_none(E value, E allowed, E forbidden) noexcept {
+#if DEBUG
+    assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
+#endif /* DEBUG */
+    return (to_underlying(value) & (to_underlying(allowed) | to_underlying(forbidden))) != to_underlying(forbidden);
+}
+
 /// Returns true if the non-zero bit in flag is set in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool is_set(E value, E flag) noexcept {
 #if DEBUG
@@ -101,6 +110,16 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool is_set_without(E value, E 
     assert(is_single_bit(forbidden));
 #endif /* DEBUG */
     return has_all_and_none(value, required, forbidden);
+}
+
+/// Returns true if the non-zero bit from required is set in value or the non-zero bit from forbidden is clear in
+/// value
+template <BitmaskEnum E> [[nodiscard]] constexpr bool is_set_or_clear(E value, E allowed, E forbidden) noexcept {
+#if DEBUG
+    assert(is_single_bit(allowed));
+    assert(is_single_bit(forbidden));
+#endif /* DEBUG */
+    return has_any_or_none(value, allowed, forbidden);
 }
 
 } /* namespace bits */
