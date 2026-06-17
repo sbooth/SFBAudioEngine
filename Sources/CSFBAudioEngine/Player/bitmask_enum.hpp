@@ -68,7 +68,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool is_single_bit(E value) noe
     return std::has_single_bit(to_underlying(value));
 }
 
-/// Returns true if the non-zero bits from required are set in value and the non-zero bits from forbidden are clear in
+/// Returns true if all non-zero bits from required are set in value and all non-zero bits from forbidden are clear in
 /// value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, E required, E forbidden) noexcept {
 #if DEBUG
@@ -77,7 +77,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, 
     return has_all(value, required) && has_none(value, forbidden);
 }
 
-/// Returns true if the non-zero bits from required are set in value or the non-zero bits from forbidden are clear in
+/// Returns true if all non-zero bits from required are set in value or all non-zero bits from forbidden are clear in
 /// value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_or_none(E value, E required, E forbidden) noexcept {
 #if DEBUG
@@ -86,7 +86,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_or_none(E value, E
     return has_all(value, required) || has_none(value, forbidden);
 }
 
-/// Returns true if any of the non-zero bits from allowed are set in value and the non-zero bits from forbidden are
+/// Returns true if any non-zero bits from allowed are set in value and all non-zero bits from forbidden are
 /// clear in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_and_none(E value, E allowed, E forbidden) noexcept {
 #if DEBUG
@@ -95,7 +95,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_and_none(E value, 
     return has_any(value, allowed) && has_none(value, forbidden);
 }
 
-/// Returns true if any of the non-zero bits from allowed are set in value or the non-zero bits from forbidden are
+/// Returns true if any non-zero bits from allowed are set in value or all non-zero bits from forbidden are
 /// clear in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_or_none(E value, E allowed, E forbidden) noexcept {
 #if DEBUG
