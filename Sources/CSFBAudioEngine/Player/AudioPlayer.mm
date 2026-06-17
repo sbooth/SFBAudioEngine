@@ -1669,7 +1669,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     // Output silence if not playing or muted
-    if (!bits::is_set_without(flags, Flags::isPlaying, Flags::isMuted)) {
+    if (!bits::is_set_and_is_clear(flags, Flags::isPlaying, Flags::isMuted)) {
         zeroABL(outputData);
         isSilence = YES;
         return noErr;
@@ -2069,7 +2069,8 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             framesRemainingToDistribute -= framesFromThisDecoder;
 
             // Rendering is complete
-            if (bits::is_set_without(flags, DecoderState::Flags::decodingComplete, DecoderState::Flags::isCanceled) &&
+            if (bits::is_set_and_is_clear(flags, DecoderState::Flags::decodingComplete,
+                                          DecoderState::Flags::isCanceled) &&
                 framesFromThisDecoder == decoderFramesRemaining) {
                 const auto frameOffset = framesRendered - framesRemainingToDistribute;
                 const double deltaSeconds = frameOffset / (*iter)->sampleRate();

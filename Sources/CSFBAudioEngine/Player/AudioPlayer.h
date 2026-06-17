@@ -360,7 +360,7 @@ inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
 #if DEBUG
-    assert(!bits::is_set_without(state, Flags::isPlaying, Flags::engineIsRunning));
+    assert(!bits::is_set_and_is_clear(state, Flags::isPlaying, Flags::engineIsRunning));
 #endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
@@ -372,7 +372,7 @@ inline bool AudioPlayer::isPlaying() const noexcept {
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_set_without(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::is_set_and_is_clear(flags, Flags::engineIsRunning, Flags::isPlaying);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
