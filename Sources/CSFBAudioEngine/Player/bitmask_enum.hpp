@@ -113,44 +113,24 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool none_set(E value) noexcept
 /// Returns true if all non-zero bits from required are set in value and all non-zero bits from forbidden are clear in
 /// value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_has_none(E value, E required, E forbidden) noexcept {
-#if DEBUG
-    assert(!none_set(required));
-    assert(!none_set(forbidden));
-    assert((to_underlying(required) & to_underlying(forbidden)) == 0);
-#endif /* DEBUG */
     return has_all(value, required) && has_none(value, forbidden);
 }
 
 /// Returns true if all non-zero bits from required are set in value or all non-zero bits from forbidden are clear in
 /// value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_or_has_none(E value, E required, E forbidden) noexcept {
-#if DEBUG
-    assert(!none_set(required));
-    assert(!none_set(forbidden));
-    assert((to_underlying(required) & to_underlying(forbidden)) == 0);
-#endif /* DEBUG */
     return has_all(value, required) || has_none(value, forbidden);
 }
 
-/// Returns true if any non-zero bits from allowed are set in value and all non-zero bits from forbidden are
+/// Returns true if at least one non-zero bit from allowed is set in value and all non-zero bits from forbidden are
 /// clear in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_and_has_none(E value, E allowed, E forbidden) noexcept {
-#if DEBUG
-    assert(!none_set(allowed));
-    assert(!none_set(forbidden));
-    assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
-#endif /* DEBUG */
     return has_any(value, allowed) && has_none(value, forbidden);
 }
 
-/// Returns true if any non-zero bits from allowed are set in value or all non-zero bits from forbidden are
+/// Returns true if at least one non-zero bit from allowed is set in value or all non-zero bits from forbidden are
 /// clear in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_or_has_none(E value, E allowed, E forbidden) noexcept {
-#if DEBUG
-    assert(!none_set(allowed));
-    assert(!none_set(forbidden));
-    assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
-#endif /* DEBUG */
     return has_any(value, allowed) || has_none(value, forbidden);
 }
 
