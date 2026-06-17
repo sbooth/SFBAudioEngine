@@ -72,6 +72,8 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool is_single_bit(E value) noe
 /// value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, E required, E forbidden) noexcept {
 #if DEBUG
+    assert(!none_set(required));
+    assert(!none_set(forbidden));
     assert((to_underlying(required) & to_underlying(forbidden)) == 0);
 #endif /* DEBUG */
     return has_all(value, required) && has_none(value, forbidden);
@@ -81,6 +83,8 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, 
 /// value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_or_none(E value, E required, E forbidden) noexcept {
 #if DEBUG
+    assert(!none_set(required));
+    assert(!none_set(forbidden));
     assert((to_underlying(required) & to_underlying(forbidden)) == 0);
 #endif /* DEBUG */
     return has_all(value, required) || has_none(value, forbidden);
@@ -90,6 +94,8 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_or_none(E value, E
 /// clear in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_and_none(E value, E allowed, E forbidden) noexcept {
 #if DEBUG
+    assert(!none_set(allowed));
+    assert(!none_set(forbidden));
     assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
 #endif /* DEBUG */
     return has_any(value, allowed) && has_none(value, forbidden);
@@ -99,6 +105,8 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_and_none(E value, 
 /// clear in value
 template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_or_none(E value, E allowed, E forbidden) noexcept {
 #if DEBUG
+    assert(!none_set(allowed));
+    assert(!none_set(forbidden));
     assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
 #endif /* DEBUG */
     return has_any(value, allowed) || has_none(value, forbidden);
