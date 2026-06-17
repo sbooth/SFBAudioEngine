@@ -137,7 +137,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool is_set_or_clear(E value, E
     assert(is_single_bit(allowed));
     assert(is_single_bit(forbidden));
 #endif /* DEBUG */
-    return has_any_or_none(value, allowed, forbidden);
+    return has_all_or_none(value, allowed, forbidden);
 }
 
 } /* namespace bits */
