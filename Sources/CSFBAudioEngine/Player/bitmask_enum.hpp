@@ -87,7 +87,7 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool is_set_or_is_clear(E value
     assert(is_single_bit(forbidden));
     assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
 #endif /* DEBUG */
-    return is_set(value, allowed) || is_clear(value, forbidden);
+    return (to_underlying(value) & (to_underlying(allowed) | to_underlying(forbidden))) != to_underlying(forbidden);
 }
 
 // MARK: Multi-Bit Tests
