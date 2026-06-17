@@ -74,7 +74,16 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_all_and_none(E value, 
 #if DEBUG
     assert((to_underlying(required) & to_underlying(forbidden)) == 0);
 #endif /* DEBUG */
-    return (to_underlying(value) & (to_underlying(required) | to_underlying(forbidden))) == to_underlying(required);
+    return has_all(value, required) && has_none(value, forbidden);
+}
+
+/// Returns true if any of the non-zero bits from allowed are set in value or the non-zero bits from forbidden are
+/// clear in value
+template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_or_none(E value, E allowed, E forbidden) noexcept {
+#if DEBUG
+    assert((to_underlying(allowed) & to_underlying(forbidden)) == 0);
+#endif /* DEBUG */
+    return has_any(value, allowed) || has_none(value, forbidden);
 }
 
 /// Returns true if the non-zero bit in flag is set in value
