@@ -1210,8 +1210,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             auto signal = false;
             for (const auto &decoderState : activeDecoders_) {
                 const auto flags = decoderState->loadFlags();
-                if (bits::is_clear(flags, DecoderState::Flags::cancelRequested) ||
-                    bits::is_set(flags, DecoderState::Flags::isCanceled)) {
+                if (bits::is_set_or_is_clear(flags, DecoderState::Flags::isCanceled, DecoderState::Flags::cancelRequested)) {
                     continue;
                 }
 
@@ -1668,8 +1667,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         return noErr;
     }
 
-    // Output silence if not playing or muted
-    if (!bits::is_set_and_is_clear(flags, Flags::isPlaying, Flags::isMuted)) {
+    // Output silence if muted or not playing
+    if (bits::is_set_or_is_clear(flags, Flags::isMuted, Flags::isPlaying)) {
         zeroABL(outputData);
         isSilence = YES;
         return noErr;
