@@ -2463,7 +2463,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
             const auto prevFlags = setFlags(preInterruptState);
 #if DEBUG
-            assert(!bits::is_set_and_is_clear(prevFlags, Flags::isPlaying, Flags::engineIsRunning));
+            assert(bits::is_set_or_is_clear(prevFlags, Flags::engineIsRunning, Flags::isPlaying));
 #endif /* DEBUG */
         }
 
