@@ -360,7 +360,7 @@ inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
 #if DEBUG
-    assert(!bits::is_set_and_is_clear(state, Flags::isPlaying, Flags::engineIsRunning));
+    assert(bits::is_set_or_is_clear(state, Flags::engineIsRunning, Flags::isPlaying));
 #endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
