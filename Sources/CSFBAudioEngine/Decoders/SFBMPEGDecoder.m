@@ -108,9 +108,10 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     NSCParameterAssert(len >= 3);
 
     const unsigned char *loc = buf;
-    for (;;) {
+    const unsigned char *end = buf + len - 2;
+    while (loc < end) {
         // Search for first byte of MP3 sync word
-        loc = (const unsigned char *)memchr(loc, 0xff, len - (loc - buf) - 2);
+        loc = (const unsigned char *)memchr(loc, 0xff, end - loc);
         if (!loc) {
             break;
         }
@@ -358,7 +359,6 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     }
 
     _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:framesPerMPEGFrame];
-    _buffer.frameLength = 0;
 
     return YES;
 }

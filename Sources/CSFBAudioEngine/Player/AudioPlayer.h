@@ -261,10 +261,12 @@ class AudioPlayer final {
         started = 1,
         /// Decoding complete
         complete = 2,
+        /// Seek
+        seek = 3,
         /// Decoder canceled by user or aborted due to error
-        canceled = 3,
+        canceled = 4,
         /// Decoding error
-        error = 4,
+        error = 5,
     };
 
     /// Render block events
@@ -287,6 +289,9 @@ class AudioPlayer final {
 
     /// Reads and processes a decoding complete event from `decodingEvents_`
     bool processDecodingCompleteEvent() noexcept;
+
+    /// Reads and processes a decoder seek event from `decodingEvents_`
+    bool processDecoderSeekEvent() noexcept;
 
     /// Reads and processes a decoder canceled event from `decodingEvents_`
     bool processDecoderCanceledEvent() noexcept;
@@ -354,7 +359,9 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
-    assert(!bits::is_set_without(state, Flags::isPlaying, Flags::engineIsRunning));
+#if DEBUG
+    assert(bits::is_set_or_is_clear(state, Flags::engineIsRunning, Flags::isPlaying));
+#endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
@@ -365,7 +372,7 @@ inline bool AudioPlayer::isPlaying() const noexcept {
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_set_without(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::is_set_and_is_clear(flags, Flags::engineIsRunning, Flags::isPlaying);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {

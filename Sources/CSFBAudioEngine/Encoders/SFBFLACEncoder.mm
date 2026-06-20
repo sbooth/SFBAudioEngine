@@ -27,12 +27,12 @@ constexpr uint32_t kDefaultPaddingSize = 8192;
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamEncoder` objects
 struct flac__stream_encoder_deleter {
-    void operator()(FLAC__StreamEncoder *encoder) { FLAC__stream_encoder_delete(encoder); }
+    void operator()(FLAC__StreamEncoder *encoder) noexcept { FLAC__stream_encoder_delete(encoder); }
 };
 
 /// A `std::unique_ptr` deleter for `FLAC__StreamMetadata` objects
 struct flac__stream_metadata_deleter {
-    void operator()(FLAC__StreamMetadata *metadata) { FLAC__metadata_object_delete(metadata); }
+    void operator()(FLAC__StreamMetadata *metadata) noexcept { FLAC__metadata_object_delete(metadata); }
 };
 
 using flac__stream_encoder_unique_ptr = std::unique_ptr<FLAC__StreamEncoder, flac__stream_encoder_deleter>;
