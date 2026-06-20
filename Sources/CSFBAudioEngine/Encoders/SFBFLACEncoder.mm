@@ -56,9 +56,8 @@ using flac__stream_metadata_unique_ptr = std::unique_ptr<FLAC__StreamMetadata, f
 
 namespace {
 
-FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, FLAC__byte buffer[], size_t *bytes,
-                                           void *client_data) noexcept {
-#pragma unused(encoder)
+FLAC__StreamEncoderReadStatus readCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder, FLAC__byte buffer[],
+                                           size_t *bytes, void *client_data) noexcept {
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
@@ -78,10 +77,9 @@ FLAC__StreamEncoderReadStatus readCallback(const FLAC__StreamEncoder *encoder, F
     return FLAC__STREAM_ENCODER_READ_STATUS_CONTINUE;
 }
 
-FLAC__StreamEncoderWriteStatus writeCallback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[],
-                                             size_t bytes, uint32_t samples, uint32_t current_frame,
-                                             void *client_data) noexcept {
-#pragma unused(encoder)
+FLAC__StreamEncoderWriteStatus writeCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
+                                             const FLAC__byte buffer[], size_t bytes, uint32_t samples,
+                                             uint32_t current_frame, void *client_data) noexcept {
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
@@ -103,9 +101,8 @@ FLAC__StreamEncoderWriteStatus writeCallback(const FLAC__StreamEncoder *encoder,
     return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
 
-FLAC__StreamEncoderSeekStatus seekCallback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset,
-                                           void *client_data) noexcept {
-#pragma unused(encoder)
+FLAC__StreamEncoderSeekStatus seekCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
+                                           FLAC__uint64 absolute_byte_offset, void *client_data) noexcept {
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
@@ -122,9 +119,8 @@ FLAC__StreamEncoderSeekStatus seekCallback(const FLAC__StreamEncoder *encoder, F
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
-FLAC__StreamEncoderTellStatus tellCallback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset,
-                                           void *client_data) noexcept {
-#pragma unused(encoder)
+FLAC__StreamEncoderTellStatus tellCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
+                                           FLAC__uint64 *absolute_byte_offset, void *client_data) noexcept {
     NSCParameterAssert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
@@ -140,12 +136,9 @@ FLAC__StreamEncoderTellStatus tellCallback(const FLAC__StreamEncoder *encoder, F
     return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
 }
 
-void metadataCallback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata,
-                      void *client_data) noexcept {
-#pragma unused(encoder)
-#pragma unused(metadata)
-#pragma unused(client_data)
-}
+void metadataCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
+                      [[maybe_unused]] const FLAC__StreamMetadata *metadata,
+                      [[maybe_unused]] void *client_data) noexcept {}
 
 } /* namespace */
 
