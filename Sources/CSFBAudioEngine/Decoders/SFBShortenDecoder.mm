@@ -647,7 +647,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
                                              readingFromOffset:0
                                                    frameLength:framesToCopy];
-            const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
+            [[maybe_unused]] const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 #if DEBUG
             assert(framesTrimmed == framesCopied);
 #endif /* DEBUG */
