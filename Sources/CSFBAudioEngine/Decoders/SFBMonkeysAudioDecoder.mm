@@ -72,7 +72,6 @@ class APEIOInterface final : public APE::IAPEIO {
     explicit APEIOInterface(SFBInputSource *inputSource) : inputSource_(inputSource) {}
 
     int Open([[maybe_unused]] const wchar_t *pName, [[maybe_unused]] bool bOpenReadOnly) override {
-
         return ERROR_INVALID_INPUT_FILE;
     }
 
