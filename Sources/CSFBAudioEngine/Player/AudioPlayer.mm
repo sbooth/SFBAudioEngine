@@ -783,7 +783,7 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
                 return false;
             }
 
-            const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
+            [[maybe_unused]] const auto prevFlags = setFlags(Flags::engineIsRunning | Flags::isPlaying);
 #if DEBUG
             assert(bits::is_clear(prevFlags, Flags::isPlaying));
 #endif /* DEBUG */
