@@ -1475,7 +1475,7 @@
 			repositoryURL = "https://github.com/sbooth/mpg123-binary-xcframework";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.0;
+				minimumVersion = 0.3.1;
 			};
 		};
 		322CE3422CF787630070996C /* XCRemoteSwiftPackageReference "CDUMB" */ = {
@@ -1499,7 +1499,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXTagLib";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.1.1;
+				minimumVersion = 2.3.0;
 			};
 		};
 		322CE34B2CF788020070996C /* XCRemoteSwiftPackageReference "wavpack-binary-xcframework" */ = {
