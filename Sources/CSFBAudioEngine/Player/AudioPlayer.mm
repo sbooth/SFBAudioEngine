@@ -47,22 +47,17 @@ constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
 
-void audioEngineConfigurationChangeNotificationCallback(CFNotificationCenterRef center, void *observer,
-                                                        CFNotificationName name, const void *object,
+void audioEngineConfigurationChangeNotificationCallback([[maybe_unused]] CFNotificationCenterRef center, void *observer,
+                                                        [[maybe_unused]] CFNotificationName name, const void *object,
                                                         CFDictionaryRef userInfo) {
-#pragma unused(center)
-#pragma unused(name)
     auto *that = static_cast<sfb::AudioPlayer *>(observer);
     that->handleAudioEngineConfigurationChange((__bridge AVAudioEngine *)object, (__bridge NSDictionary *)userInfo);
 }
 
 #if TARGET_OS_IPHONE
-void audioSessionInterruptionNotificationCallback(CFNotificationCenterRef center, void *observer,
-                                                  CFNotificationName name, const void *object,
-                                                  CFDictionaryRef userInfo) {
-#pragma unused(center)
-#pragma unused(name)
-#pragma unused(object)
+void audioSessionInterruptionNotificationCallback([[maybe_unused]] CFNotificationCenterRef center, void *observer,
+                                                  [[maybe_unused]] CFNotificationName name,
+                                                  [[maybe_unused]] const void *object, CFDictionaryRef userInfo) {
     auto that = static_cast<sfb::AudioPlayer *>(observer);
     that->handleAudioSessionInterruption((__bridge NSDictionary *)userInfo);
 }
@@ -2314,8 +2309,8 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() cons
 
 // MARK: - AVAudioEngine Notification Handling
 
-void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engine, NSDictionary *userInfo) noexcept {
-#pragma unused(userInfo)
+void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engine,
+                                                            [[maybe_unused]] NSDictionary *userInfo) noexcept {
     if (engine != engine_) {
         os_log_error(log_,
                      "AVAudioEngineConfigurationChangeNotification received for incorrect AVAudioEngine instance");
