@@ -10,7 +10,7 @@
 #include <AudioToolbox/AudioFormat.h>
 
 /// Returns the string representation of an AudioChannelLayoutTag.
-NSString *_Nullable channelLayoutTagName(AudioChannelLayoutTag layoutTag) {
+static NSString *_Nullable channelLayoutTagName(AudioChannelLayoutTag layoutTag) {
     switch (layoutTag) {
     case kAudioChannelLayoutTag_UseChannelDescriptions:
         return @"Use Channel Descriptions";
