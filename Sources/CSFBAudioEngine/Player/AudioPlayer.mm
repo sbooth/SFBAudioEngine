@@ -39,6 +39,11 @@ constexpr std::size_t decodingEventRingBufferCapacity = 2048;
 /// The default rendering event ring buffer capacity
 constexpr std::size_t renderingEventRingBufferCapacity = 4096;
 
+/// The number of nanoseconds in one second
+constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
+/// The number of nanoseconds in one millisecond
+constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
+
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
 
@@ -1490,7 +1495,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     // Decoding started
                     if (const auto flags = decoderState->loadFlags();
                         bits::is_clear(flags, DecoderState::Flags::decodingStarted)) {
-                        const bool suspended = bits::is_set(flags, DecoderState::Flags::decodingSuspended);
+                        const auto suspended = bits::is_set(flags, DecoderState::Flags::decodingSuspended);
 
                         if (!suspended) {
                             os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
@@ -1531,7 +1536,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     // Decoding complete
                     if (const auto flags = decoderState->loadFlags();
                         bits::is_set(flags, DecoderState::Flags::decodingComplete)) {
-                        const bool resumed = bits::is_set(flags, DecoderState::Flags::decodingResumed);
+                        const auto resumed = bits::is_set(flags, DecoderState::Flags::decodingResumed);
 
                         // Submit the decoding complete event for the first completion only
                         if (!resumed) {
@@ -2051,9 +2056,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                 (*iter)->setFlags(DecoderState::Flags::renderingStarted);
 
                 const auto frameOffset = framesRendered - framesRemainingToDistribute;
-                const double deltaSeconds = frameOffset / (*iter)->sampleRate();
-                uint64_t eventTime =
-                        hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(deltaSeconds * rateScalar * 1e9));
+                const auto deltaSeconds = frameOffset / (*iter)->sampleRate();
+                const auto eventTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
+                                                          deltaSeconds * rateScalar * nanosecondsPerSecond));
 
                 try {
                     queuedEvents.push_back({RenderingEventDetails::Type::willStart, (*iter)->decoder_, eventTime});
@@ -2073,9 +2078,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                                           DecoderState::Flags::isCanceled) &&
                 framesFromThisDecoder == decoderFramesRemaining) {
                 const auto frameOffset = framesRendered - framesRemainingToDistribute;
-                const double deltaSeconds = frameOffset / (*iter)->sampleRate();
-                uint64_t eventTime =
-                        hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(deltaSeconds * rateScalar * 1e9));
+                const auto deltaSeconds = frameOffset / (*iter)->sampleRate();
+                const auto eventTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
+                                                          deltaSeconds * rateScalar * nanosecondsPerSecond));
 
                 try {
                     queuedEvents.push_back({RenderingEventDetails::Type::willComplete, (*iter)->decoder_, eventTime});
@@ -2122,11 +2127,13 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
     const auto now = host_time::current();
     if (now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(now - hostTime)) / 1e6, decoder);
+                     static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
+                     decoder);
     } else {
 #if DEBUG
         os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(hostTime - now)) / 1e6, decoder);
+                     static_cast<double>(host_time::toNanoseconds(hostTime - now)) / nanosecondsPerMillisecond,
+                     decoder);
 #endif /* DEBUG */
     }
 
@@ -2156,10 +2163,11 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 #if DEBUG
         const auto now = host_time::current();
         const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
-        const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
+        const auto tolerance =
+                static_cast<uint64_t>(nanosecondsPerSecond / [that->sourceNode_ outputFormatForBus:0].sampleRate);
         if (delta > tolerance) {
-            os_log_debug(log_, "Rendering started notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6,
-                         now > hostTime ? "late" : "early");
+            os_log_debug(log_, "Rendering started notification arrived %.2f msec %s",
+                         static_cast<double>(delta) / nanosecondsPerMillisecond, now > hostTime ? "late" : "early");
         }
 #endif /* DEBUG */
 
@@ -2181,11 +2189,13 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
     const auto now = host_time::current();
     if (now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(now - hostTime)) / 1e6, decoder);
+                     static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
+                     decoder);
     } else {
 #if DEBUG
         os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(hostTime - now)) / 1e6, decoder);
+                     static_cast<double>(host_time::toNanoseconds(hostTime - now)) / nanosecondsPerMillisecond,
+                     decoder);
 #endif /* DEBUG */
     }
 
@@ -2216,10 +2226,11 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 #if DEBUG
         const auto now = host_time::current();
         const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
-        const auto tolerance = static_cast<uint64_t>(1e9 / [that->sourceNode_ outputFormatForBus:0].sampleRate);
+        const auto tolerance =
+                static_cast<uint64_t>(nanosecondsPerSecond / [that->sourceNode_ outputFormatForBus:0].sampleRate);
         if (delta > tolerance) {
-            os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s", static_cast<double>(delta) / 1e6,
-                         now > hostTime ? "late" : "early");
+            os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s",
+                         static_cast<double>(delta) / nanosecondsPerMillisecond, now > hostTime ? "late" : "early");
         }
 #endif /* DEBUG */
 
