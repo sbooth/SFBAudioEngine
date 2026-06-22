@@ -275,6 +275,8 @@ class AudioPlayer final {
     enum class RenderingEventCommand : uint32_t {
         /// Audio frames rendered from ring buffer
         framesRendered = 1,
+        /// The ring buffer contained fewer than requested audio frames
+        bufferUnderrun = 2,
     };
 
     // MARK: - Event Processing
@@ -306,6 +308,9 @@ class AudioPlayer final {
 
     /// Reads and processes a frames rendered event from `renderingEvents_`
     bool processFramesRenderedEvent() noexcept;
+
+    /// Reads and processes a buffer underrun event from `renderingEvents_`
+    bool processBufferUnderrunEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
