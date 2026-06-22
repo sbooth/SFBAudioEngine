@@ -1248,7 +1248,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Process pending seeks
         if (decoderState != nullptr && decoderState->isSeekRequested()) {
-            // Mute until the seek is complete and the ring buffer is full
+            // Mute until the seek is complete and the ring buffer is refilled
             setFlags(Flags::isMuted);
 
             if (NSError *seekError = nil; !decoderState->performSeek(&seekError)) {
