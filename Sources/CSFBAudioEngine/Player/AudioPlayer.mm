@@ -2145,7 +2145,7 @@ bool sfb::AudioPlayer::processBufferUnderrunEvent() noexcept {
         return false;
     }
 
-    os_log_error(log_, "Audio ring buffer underrun: %u/%u frames rendered for host time %lu", framesRendered,
+    os_log_error(log_, "Audio ring buffer underrun: %u/%u frames rendered for host time %llu", framesRendered,
                  framesRequested, hostTime);
 
     return true;
