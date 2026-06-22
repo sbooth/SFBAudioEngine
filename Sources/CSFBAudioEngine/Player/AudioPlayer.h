@@ -209,6 +209,8 @@ class AudioPlayer final {
         isMuted = 1u << 2,
         /// The ring buffer needs to be drained during the next render cycle
         drainRequired = 1u << 3,
+        /// The render event ring buffer had insufficient space to record an event
+        renderEventDropped = 1u << 4,
     };
 
     // Enable bitmask operations for `Flags`
