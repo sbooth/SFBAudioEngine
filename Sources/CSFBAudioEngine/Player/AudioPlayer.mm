@@ -1685,7 +1685,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 #endif /* DEBUG */
         if (!renderingEvents_.writeAll(RenderingEventCommand::framesRendered, nextEventIdentificationNumber(),
                                        timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead))) {
-            os_log_fault(log_, "Error writing frames rendered event");
+            setFlags(Flags::renderEventDropped);
         }
     } else {
         isSilence = YES;
@@ -1721,6 +1721,11 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
                 processRenderingEvent(renderingEventCommand);
                 gotRenderingEvent = renderingEvents_.readAll(renderingEventCommand, renderingEventIdentificationNumber);
             }
+        }
+
+        if (bits::is_set(loadFlags(), Flags::renderEventDropped)) {
+            os_log_fault(log_, "Missing rendering event(s): rendering event ring buffer overrun");
+            clearFlags(Flags::renderEventDropped);
         }
 
         int64_t deltaNanos;
