@@ -1723,9 +1723,8 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
             }
         }
 
-        if (bits::is_set(loadFlags(), Flags::renderEventDropped)) {
+        if (bits::is_set(clearFlags(Flags::renderEventDropped), Flags::renderEventDropped)) {
             os_log_fault(log_, "Missing rendering event(s): rendering event ring buffer overrun");
-            clearFlags(Flags::renderEventDropped);
         }
 
         int64_t deltaNanos;
