@@ -1692,7 +1692,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 
     if (framesRead != frameCount) {
         if (!renderingEvents_.writeAll(RenderingEventCommand::bufferUnderrun, nextEventIdentificationNumber(),
-                                       timestamp.mHostTime, static_cast<uint32_t>(framesRead), static_cast<uint32_t>(frameCount))) {
+                                       timestamp.mHostTime, static_cast<uint32_t>(framesRead),
+                                       static_cast<uint32_t>(frameCount))) {
             setFlags(Flags::renderEventDropped);
         }
     }
@@ -2144,7 +2145,8 @@ bool sfb::AudioPlayer::processBufferUnderrunEvent() noexcept {
         return false;
     }
 
-    os_log_error(log_, "Audio ring buffer underrun: %u/%u frames rendered for host time %lu", framesRendered, framesRequested, hostTime);
+    os_log_error(log_, "Audio ring buffer underrun: %u/%u frames rendered for host time %lu", framesRendered,
+                 framesRequested, hostTime);
 
     return true;
 }
