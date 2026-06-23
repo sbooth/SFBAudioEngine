@@ -275,7 +275,7 @@ class AudioPlayer final {
     enum class RenderingEventCommand : uint32_t {
         /// Audio frames rendered from ring buffer
         framesRendered = 1,
-        /// The ring buffer contained fewer than requested audio frames
+        /// The ring buffer contained fewer audio frames than requested
         bufferUnderrun = 2,
     };
 
