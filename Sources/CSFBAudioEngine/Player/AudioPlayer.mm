@@ -1679,19 +1679,23 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     // Read audio from the ring buffer
-    if (const auto framesRead = audioRingBuffer_.read(outputData, frameCount); framesRead > 0) {
-#if DEBUG
-        if (framesRead != frameCount) {
-            os_log_debug(log_, "Insufficient audio in ring buffer: %zu frames available, %u requested", framesRead,
-                         frameCount);
-        }
-#endif /* DEBUG */
+    const auto framesRead = audioRingBuffer_.read(outputData, frameCount);
+
+    if (framesRead > 0) {
         if (!renderingEvents_.writeAll(RenderingEventCommand::framesRendered, nextEventIdentificationNumber(),
                                        timestamp.mHostTime, timestamp.mRateScalar, static_cast<uint32_t>(framesRead))) {
             setFlags(Flags::renderEventDropped);
         }
     } else {
         isSilence = YES;
+    }
+
+    if (framesRead != frameCount) {
+        if (!renderingEvents_.writeAll(RenderingEventCommand::bufferUnderrun, nextEventIdentificationNumber(),
+                                       timestamp.mHostTime, static_cast<uint32_t>(framesRead),
+                                       static_cast<uint32_t>(frameCount))) {
+            setFlags(Flags::renderEventDropped);
+        }
     }
 
     return noErr;
@@ -1974,6 +1978,9 @@ bool sfb::AudioPlayer::processRenderingEvent(RenderingEventCommand command) noex
     case RenderingEventCommand::framesRendered:
         return processFramesRenderedEvent();
 
+    case RenderingEventCommand::bufferUnderrun:
+        return processBufferUnderrunEvent();
+
     default:
 #if DEBUG
         assert(false && "Unknown RenderingEventCommand");
@@ -2122,6 +2129,24 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             break;
         }
     }
+
+    return true;
+}
+
+bool sfb::AudioPlayer::processBufferUnderrunEvent() noexcept {
+    // The host time from the render cycle's timestamp
+    uint64_t hostTime;
+    // The number of valid frames rendered
+    uint32_t framesRendered;
+    // The number of frames that were requested by the IOProc
+    uint32_t framesRequested;
+    if (!renderingEvents_.readAll(hostTime, framesRendered, framesRequested)) {
+        os_log_error(log_, "Missing host time or frame count for buffer underrun event");
+        return false;
+    }
+
+    os_log_error(log_, "Audio ring buffer underrun: %u/%u frames rendered for host time %llu", framesRendered,
+                 framesRequested, hostTime);
 
     return true;
 }
