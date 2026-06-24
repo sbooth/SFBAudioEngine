@@ -365,9 +365,11 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter playbackState: The current playback state
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
-/// Called to notify the delegate when rendering is complete for all available decoders
+/// Called to query the delegate whether playback should stop when rendering is complete for all available decoders
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
-- (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
+/// - returns: `YES` if the player should stop playback, `NO` to continue rendering silence
+- (BOOL)audioPlayerShouldStopAtEndOfAudio:(SFBAudioPlayer *)audioPlayer
+        NS_SWIFT_NAME(audioPlayerShouldStopAtEndOfAudio(_:));
 /// Called to notify the delegate after performing a user-initiated seek in a decoder
 /// - warning: Do not change any properties of `decoder`
 /// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
