@@ -12,9 +12,9 @@
 #import "bitmask_enum.hpp"
 
 #import <dsema/Semaphore.hpp>
+#import <mpsc/RingBuffer.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
-#import <spsc/RingBuffer.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -76,10 +76,8 @@ class AudioPlayer final {
     /// Dispatch semaphore used for communication with the event processing thread
     dsema::Semaphore eventSemaphore_{0};
 
-    /// Ring buffer communicating events from the decoding thread to the event processing thread
-    spsc::RingBuffer decodingEvents_;
-    /// Ring buffer communicating events from the render block to the event processing thread
-    spsc::RingBuffer renderingEvents_;
+    /// Ring buffer communicating events to the event processing thread
+    mpsc::RingBuffer<32> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
@@ -257,54 +255,44 @@ class AudioPlayer final {
 
     // MARK: - Events
 
-    /// Decoding thread events
-    enum class DecodingEventCommand : uint32_t {
+    /// Events commands
+    enum class EventCommand : uint32_t {
         /// Decoding started
-        started = 1,
+        decodingStarted = 1,
         /// Decoding complete
-        complete = 2,
+        decodingComplete = 2,
         /// Seek
         seek = 3,
         /// Decoder canceled by user or aborted due to error
-        canceled = 4,
+        decoderCanceled = 4,
         /// Decoding error
-        error = 5,
-    };
-
-    /// Render block events
-    enum class RenderingEventCommand : uint32_t {
+        decodingError = 5,
         /// Audio frames rendered from ring buffer
-        framesRendered = 1,
+        framesRendered = 6,
     };
 
     // MARK: - Event Processing
 
-    /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
+    /// Reads and identifies events from `events_` for processing
     /// - note: This is the thread entry point for the event processing thread
     void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-    /// Reads and processes an event payload from `decodingEvents_`
-    bool processDecodingEvent(DecodingEventCommand command) noexcept;
-
-    /// Reads and processes a decoding started event from `decodingEvents_`
+    /// Reads and processes a decoding started event from `events_`
     bool processDecodingStartedEvent() noexcept;
 
-    /// Reads and processes a decoding complete event from `decodingEvents_`
+    /// Reads and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
 
-    /// Reads and processes a decoder seek event from `decodingEvents_`
+    /// Reads and processes a decoder seek event from `events_`
     bool processDecoderSeekEvent() noexcept;
 
-    /// Reads and processes a decoder canceled event from `decodingEvents_`
+    /// Reads and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
 
-    /// Reads and processes a decoding error event from `decodingEvents_`
+    /// Reads and processes a decoding error event from `events_`
     bool processDecodingErrorEvent() noexcept;
 
-    /// Reads and processes an event payload from `renderingEvents_`
-    bool processRenderingEvent(RenderingEventCommand command) noexcept;
-
-    /// Reads and processes a frames rendered event from `renderingEvents_`
+    /// Reads and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
