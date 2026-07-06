@@ -244,9 +244,6 @@ class AudioPlayer final {
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
-    /// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
-    void submitDecodingErrorEvent(NSError *error) noexcept;
-
     // MARK: - Rendering
 
     /// Render block implementation
@@ -265,8 +262,8 @@ class AudioPlayer final {
         seek = 3,
         /// Decoder canceled by user or aborted due to error
         decoderCanceled = 4,
-        /// Decoding error
-        decodingError = 5,
+        /// Allocation failure
+        allocationFailure = 5,
         /// Audio frames rendered from ring buffer
         framesRendered = 6,
     };
@@ -289,8 +286,8 @@ class AudioPlayer final {
     /// Reads and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
 
-    /// Reads and processes a decoding error event from `events_`
-    bool processDecodingErrorEvent() noexcept;
+    /// Reads and processes an allocation failure event from `events_`
+    bool processAllocationFailureEvent() noexcept;
 
     /// Reads and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;

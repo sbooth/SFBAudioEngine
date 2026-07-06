@@ -1348,11 +1348,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 #endif /* DEBUG */
                         decoderState = activeDecoders_.back().get();
                     } catch (const std::exception &e) {
-                        os_log_error(log_, "Error creating decoder state for %{public}@: %{public}s", decoder,
-                                     e.what());
-                        submitDecodingErrorEvent([NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                                     code:SFBAudioPlayerErrorCodeInternalError
-                                                                 userInfo:nil]);
+                        os_log_error(log_, "Error allocating decoder state for %{public}@", decoder);
+                        if (events_.writeValues(EventCommand::allocationFailure)) {
+                            eventSemaphore_.signal();
+                        } else {
+                            os_log_fault(log_, "Error writing allocation failure event");
+                        }
                         continue;
                     }
                 }
@@ -1574,58 +1575,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
 }
 
-void sfb::AudioPlayer::submitDecodingErrorEvent(NSError *error) noexcept {
-#if DEBUG
-    assert(error != nil);
-#endif /* DEBUG */
-#if false
-    NSError *err = nil;
-    NSData *errorData = [NSKeyedArchiver archivedDataWithRootObject:error requiringSecureCoding:YES error:&err];
-    if (errorData == nil) {
-        os_log_error(log_, "Error archiving NSError for decoding error event: %{public}@", err);
-        return;
-    }
-
-    auto [front, back] = decodingEvents_.writeVector();
-
-    const auto frontSize = front.size();
-    const auto spaceNeeded = sizeof(DecodingEventCommand) + sizeof(uint64_t) + sizeof(uint32_t) + errorData.length;
-
-    if (frontSize + back.size() < spaceNeeded) {
-        os_log_fault(log_, "Insufficient space to write decoding error event");
-        return;
-    }
-
-    std::size_t cursor = 0;
-    const auto writeArg = [&](const void *arg, std::size_t len) noexcept {
-        const auto *src = static_cast<const unsigned char *>(arg);
-        if (cursor + len <= frontSize) {
-            std::memcpy(front.data() + cursor, src, len);
-        } else if (cursor >= frontSize) {
-            std::memcpy(back.data() + (cursor - frontSize), src, len);
-        } else {
-            const size_t toFront = frontSize - cursor;
-            std::memcpy(front.data() + cursor, src, toFront);
-            std::memcpy(back.data(), src + toFront, len - toFront);
-        }
-        cursor += len;
-    };
-
-    // Event header and payload
-    const auto command = DecodingEventCommand::error;
-    const auto identificationNumber = nextEventIdentificationNumber();
-    const auto dataSize = static_cast<uint32_t>(errorData.length);
-
-    writeArg(&command, sizeof command);
-    writeArg(&identificationNumber, sizeof identificationNumber);
-    writeArg(&dataSize, sizeof dataSize);
-    writeArg(errorData.bytes, errorData.length);
-
-    decodingEvents_.commitWrite(cursor);
-    eventSemaphore_.signal();
-#endif
-}
-
 // MARK: - Rendering
 
 OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
@@ -1700,8 +1649,8 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
             case EventCommand::decoderCanceled:
                 processDecoderCanceledEvent();
                 break;
-            case EventCommand::decodingError:
-                processDecodingErrorEvent();
+            case EventCommand::allocationFailure:
+                processAllocationFailureEvent();
                 break;
             case EventCommand::framesRendered:
                 processFramesRenderedEvent();
@@ -1905,36 +1854,24 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     return true;
 }
 
-bool sfb::AudioPlayer::processDecodingErrorEvent() noexcept {
-#if false
-    // The size in bytes of the archived NSError data
-    uint32_t dataSize;
-    if (!decodingEvents_.read(dataSize)) {
-        os_log_error(log_, "Missing data size for decoding error event");
+bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
+    EventCommand command;
+    if (!events_.readValues(command)) {
+        os_log_error(log_, "Missing command for allocation failure event");
         return false;
     }
 
-    // The archived NSError data
-    NSMutableData *data = [NSMutableData dataWithLength:dataSize];
-    if (decodingEvents_.read(data.mutableBytes, 1, dataSize, false) != dataSize) {
-        os_log_error(log_, "Missing or incomplete archived NSError for decoding error event");
-        return false;
-    }
-
-    NSError *err = nil;
-    NSError *error = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSError class] fromData:data error:&err];
-    if (error == nil) {
-        os_log_error(log_, "Error unarchiving NSError for decoding error event: %{public}@", err);
-        return false;
-    }
+#if DEBUG
+    assert(command == EventCommand::allocationFailure);
+#endif /* DEBUG */
 
     if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
         delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
-        [delegate audioPlayer:player_ encounteredError:error];
+        [delegate audioPlayer:player_
+                encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
     }
 
     return true;
-#endif
 }
 
 // MARK: Rendering Events
