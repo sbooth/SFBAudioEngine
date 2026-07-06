@@ -1633,7 +1633,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
 
     while (!stoken.stop_requested()) {
 
-        // Process pending decoding and rendering events
+        // Process pending events
         EventCommand eventCommand;
         while (events_.peekValues(eventCommand)) {
             switch (eventCommand) {
@@ -1698,6 +1698,10 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
         return false;
     }
 
+#if DEBUG
+    assert(command == EventCommand::decodingStarted);
+#endif /* DEBUG */
+
     Decoder decoder = nil;
     Decoder currentDecoder = nil;
     {
@@ -1737,6 +1741,10 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
         return false;
     }
 
+#if DEBUG
+    assert(command == EventCommand::decodingComplete);
+#endif /* DEBUG */
+
     Decoder decoder = nil;
     {
         std::lock_guard lock{activeDecodersMutex_};
@@ -1768,6 +1776,10 @@ bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
         return false;
     }
 
+#if DEBUG
+    assert(command == EventCommand::seek);
+#endif /* DEBUG */
+
     Decoder decoder = nil;
     {
         std::lock_guard lock{activeDecodersMutex_};
@@ -1797,6 +1809,10 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
         return false;
     }
+
+#if DEBUG
+    assert(command == EventCommand::decoderCanceled);
+#endif /* DEBUG */
 
     Decoder decoder = nil;
     NSError *error = nil;
@@ -1889,6 +1905,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     }
 
 #if DEBUG
+    assert(command == EventCommand::framesRendered);
     assert(framesRendered > 0);
 #endif /* DEBUG */
 
