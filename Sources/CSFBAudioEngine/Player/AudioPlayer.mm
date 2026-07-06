@@ -510,16 +510,17 @@ sfb::AudioPlayer::AudioPlayer() {
     // The decoding event ring buffer is written to by the decoding thread and read from by the event queue
     if (!decodingEvents_.allocate(decodingEventRingBufferCapacity)) {
         os_log_error(log_,
-                     "Unable to create decoding event ring buffer: sfb::RingBuffer::allocate failed with capacity %zu",
+                     "Unable to create decoding event ring buffer: spsc::RingBuffer::allocate failed with capacity %zu",
                      decodingEventRingBufferCapacity);
         throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
     // The rendering event ring buffer is written to by the render block and read from by the event queue
     if (!renderingEvents_.allocate(renderingEventRingBufferCapacity)) {
-        os_log_error(log_,
-                     "Unable to create rendering event ring buffer: sfb::RingBuffer::allocate failed with capacity %zu",
-                     renderingEventRingBufferCapacity);
+        os_log_error(
+                log_,
+                "Unable to create rendering event ring buffer: spsc::RingBuffer::allocate failed with capacity %zu",
+                renderingEventRingBufferCapacity);
         throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
