@@ -12,7 +12,7 @@
 #import "bitmask_enum.hpp"
 
 #import <dsema/Semaphore.hpp>
-#import <mpsc/RingBuffer.hpp>
+#import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
 
@@ -76,8 +76,8 @@ class AudioPlayer final {
     /// Dispatch semaphore used for communication with the event processing thread
     dsema::Semaphore eventSemaphore_{0};
 
-    /// Ring buffer communicating events to the event processing thread
-    mpsc::RingBuffer<32> events_;
+    /// Message queue communicating events to the event processing thread
+    mpsc::MessageQueue<256, 32> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
