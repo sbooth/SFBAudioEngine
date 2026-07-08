@@ -1200,7 +1200,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 decoderState->setFlags(DecoderState::Flags::isCanceled);
 
                 // Submit the decoder canceled event
-                if (events_.enqueueValues(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) {
+                if (events_.enqueue(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) {
                     signal = true;
                 } else {
                     os_log_fault(log_, "Error writing decoder canceled event");
@@ -1228,7 +1228,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             }
 
             if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
-                events_.enqueueValues(EventCommand::seek, decoderState->sequenceNumber_, frame)) {
+                events_.enqueue(EventCommand::seek, decoderState->sequenceNumber_, frame)) {
                 eventSemaphore_.signal();
             } else {
                 os_log_fault(log_, "Error writing decoder seek event");
@@ -1339,7 +1339,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         decoderState = activeDecoders_.back().get();
                     } catch (const std::exception &e) {
                         os_log_error(log_, "Error allocating decoder state for %{public}@", decoder);
-                        if (events_.enqueueValues(EventCommand::allocationFailure)) {
+                        if (events_.enqueue(EventCommand::allocationFailure)) {
                             eventSemaphore_.signal();
                         } else {
                             os_log_fault(log_, "Error writing allocation failure event");
@@ -1476,7 +1476,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                         // Submit the decoding started event for the initial start only
                         if (!suspended) {
-                            if (events_.enqueueValues(EventCommand::decodingStarted, decoderState->sequenceNumber_)) {
+                            if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) {
                                 eventSemaphore_.signal();
                             } else {
                                 os_log_fault(log_, "Error writing decoding started event");
@@ -1507,7 +1507,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                         // Submit the decoding complete event for the first completion only
                         if (!resumed) {
-                            if (events_.enqueueValues(EventCommand::decodingComplete, decoderState->sequenceNumber_)) {
+                            if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) {
                                 eventSemaphore_.signal();
                             } else {
                                 os_log_fault(log_, "Error writing decoding complete event");
@@ -1602,8 +1602,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
                          frameCount);
         }
 #endif /* DEBUG */
-        if (!events_.enqueueValues(EventCommand::framesRendered, timestamp.mHostTime, timestamp.mRateScalar,
-                                   static_cast<uint32_t>(framesRead))) {
+        if (!events_.enqueue(EventCommand::framesRendered, timestamp.mHostTime, timestamp.mRateScalar,
+                             static_cast<uint32_t>(framesRead))) {
             setFlags(Flags::renderEventDropped);
         }
     } else {
@@ -1625,7 +1625,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
 
         // Process pending events
         EventCommand eventCommand;
-        while (events_.peekValues(eventCommand)) {
+        while (events_.peek(eventCommand)) {
             switch (eventCommand) {
             case EventCommand::decodingStarted:
                 processDecodingStartedEvent();
@@ -1683,7 +1683,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
 bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
-    if (!events_.dequeueValues(command, sequenceNumber)) {
+    if (!events_.dequeue(command, sequenceNumber)) {
         os_log_error(log_, "Missing decoder sequence number for decoding started event");
         return false;
     }
@@ -1726,7 +1726,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
 bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
-    if (!events_.dequeueValues(command, sequenceNumber)) {
+    if (!events_.dequeue(command, sequenceNumber)) {
         os_log_error(log_, "Missing decoder sequence number for decoding complete event");
         return false;
     }
@@ -1761,7 +1761,7 @@ bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
     int64_t frame;
-    if (!events_.dequeueValues(command, sequenceNumber, frame)) {
+    if (!events_.dequeue(command, sequenceNumber, frame)) {
         os_log_error(log_, "Missing decoder sequence number or frame position for decoder seek event");
         return false;
     }
@@ -1795,7 +1795,7 @@ bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
 bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
-    if (!events_.dequeueValues(command, sequenceNumber)) {
+    if (!events_.dequeue(command, sequenceNumber)) {
         os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
         return false;
     }
@@ -1862,7 +1862,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
 bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
     EventCommand command;
-    if (!events_.dequeueValues(command)) {
+    if (!events_.dequeue(command)) {
         os_log_error(log_, "Missing command for allocation failure event");
         return false;
     }
@@ -1889,7 +1889,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     double rateScalar;
     // The number of valid frames rendered
     uint32_t framesRendered;
-    if (!events_.dequeueValues(command, hostTime, rateScalar, framesRendered)) {
+    if (!events_.dequeue(command, hostTime, rateScalar, framesRendered)) {
         os_log_error(log_, "Missing timestamp or frames rendered for frames rendered event");
         return false;
     }
