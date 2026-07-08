@@ -252,7 +252,7 @@ class AudioPlayer final {
 
     // MARK: - Events
 
-    /// Events commands
+    /// Event commands
     enum class EventCommand : uint32_t {
         /// Decoding started
         decodingStarted = 1,
