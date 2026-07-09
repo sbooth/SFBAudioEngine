@@ -1338,7 +1338,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 #endif /* DEBUG */
                         decoderState = activeDecoders_.back().get();
                     } catch (const std::exception &e) {
-                        os_log_error(log_, "Error allocating decoder state for %{public}@", decoder);
+                        os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder,
+                                     e.what());
                         if (events_.enqueue(EventCommand::allocationFailure)) {
                             eventSemaphore_.signal();
                         } else {
@@ -1873,8 +1874,11 @@ bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
 
     if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
         delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
-        [delegate audioPlayer:player_
-                encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
+        NSError *underlying = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+        NSError *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                             code:SFBAudioPlayerErrorCodeInternalError
+                                         userInfo:@{NSUnderlyingErrorKey : underlying}];
+        [delegate audioPlayer:player_ encounteredError:error];
     }
 
     return true;
