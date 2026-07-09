@@ -46,21 +46,21 @@
       }
     },
     {
+      "identity" : "cxxmessagequeue",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXMessageQueue",
+      "state" : {
+        "revision" : "8eb072269679103ee90f0c927615b377bb5b1799",
+        "version" : "0.1.0"
+      }
+    },
+    {
       "identity" : "cxxmonkeysaudio",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMonkeysAudio",
       "state" : {
         "revision" : "79cafc4dfccff8b9d3065cbf198f6e171a9409c3",
         "version" : "12.13.0"
-      }
-    },
-    {
-      "identity" : "cxxringbuffer",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXRingBuffer",
-      "state" : {
-        "revision" : "8d859aa73d115273afcebe754b22bf50d3ea0621",
-        "version" : "0.6.1"
       }
     },
     {
