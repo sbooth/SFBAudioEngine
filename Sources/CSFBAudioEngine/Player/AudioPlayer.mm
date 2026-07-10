@@ -1648,6 +1648,9 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
             case EventCommand::framesRendered:
                 processFramesRenderedEvent();
                 break;
+            case EventCommand::renderBufferUnderrun:
+                processRenderBufferUnderrunEvent();
+                break;
 
             default:
 #if DEBUG
