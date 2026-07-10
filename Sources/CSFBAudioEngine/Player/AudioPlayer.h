@@ -12,9 +12,9 @@
 #import "bitmask_enum.hpp"
 
 #import <dsema/Semaphore.hpp>
+#import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
-#import <spsc/RingBuffer.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -76,10 +76,8 @@ class AudioPlayer final {
     /// Dispatch semaphore used for communication with the event processing thread
     dsema::Semaphore eventSemaphore_{0};
 
-    /// Ring buffer communicating events from the decoding thread to the event processing thread
-    spsc::RingBuffer decodingEvents_;
-    /// Ring buffer communicating events from the render block to the event processing thread
-    spsc::RingBuffer renderingEvents_;
+    /// Message queue communicating events to the event processing thread
+    mpsc::MessageQueue<256, 32> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
@@ -246,9 +244,6 @@ class AudioPlayer final {
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
-    /// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
-    void submitDecodingErrorEvent(NSError *error) noexcept;
-
     // MARK: - Rendering
 
     /// Render block implementation
@@ -257,60 +252,50 @@ class AudioPlayer final {
 
     // MARK: - Events
 
-    /// Decoding thread events
-    enum class DecodingEventCommand : uint32_t {
+    /// Event commands
+    enum class EventCommand : uint32_t {
         /// Decoding started
-        started = 1,
+        decodingStarted = 1,
         /// Decoding complete
-        complete = 2,
+        decodingComplete = 2,
         /// Seek
         seek = 3,
         /// Decoder canceled by user or aborted due to error
-        canceled = 4,
-        /// Decoding error
-        error = 5,
-    };
-
-    /// Render block events
-    enum class RenderingEventCommand : uint32_t {
+        decoderCanceled = 4,
+        /// Allocation failure
+        allocationFailure = 5,
         /// Audio frames rendered from ring buffer
-        framesRendered = 1,
+        framesRendered = 6,
         /// The ring buffer contained fewer audio frames than requested
-        bufferUnderrun = 2,
+        renderBufferUnderrun = 7,
     };
 
     // MARK: - Event Processing
 
-    /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
+    /// Peeks and identifies event commands in `events_` for processing
     /// - note: This is the thread entry point for the event processing thread
     void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-    /// Reads and processes an event payload from `decodingEvents_`
-    bool processDecodingEvent(DecodingEventCommand command) noexcept;
-
-    /// Reads and processes a decoding started event from `decodingEvents_`
+    /// Dequeues and processes a decoding started event from `events_`
     bool processDecodingStartedEvent() noexcept;
 
-    /// Reads and processes a decoding complete event from `decodingEvents_`
+    /// Dequeues and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
 
-    /// Reads and processes a decoder seek event from `decodingEvents_`
+    /// Dequeues and processes a decoder seek event from `events_`
     bool processDecoderSeekEvent() noexcept;
 
-    /// Reads and processes a decoder canceled event from `decodingEvents_`
+    /// Dequeues and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
 
-    /// Reads and processes a decoding error event from `decodingEvents_`
-    bool processDecodingErrorEvent() noexcept;
+    /// Dequeues and processes an allocation failure event from `events_`
+    bool processAllocationFailureEvent() noexcept;
 
-    /// Reads and processes an event payload from `renderingEvents_`
-    bool processRenderingEvent(RenderingEventCommand command) noexcept;
-
-    /// Reads and processes a frames rendered event from `renderingEvents_`
+    /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
 
-    /// Reads and processes a buffer underrun event from `renderingEvents_`
-    bool processBufferUnderrunEvent() noexcept;
+    /// Reads and processes a render buffer underrun event from `events_`
+    bool processRenderBufferUnderrunEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
