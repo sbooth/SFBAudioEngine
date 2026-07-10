@@ -270,26 +270,26 @@ class AudioPlayer final {
 
     // MARK: - Event Processing
 
-    /// Reads and identifies events from `events_` for processing
+    /// Peeks and identifies events from `events_` for processing
     /// - note: This is the thread entry point for the event processing thread
     void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
 
-    /// Reads and processes a decoding started event from `events_`
+    /// Dequeues and processes a decoding started event from `events_`
     bool processDecodingStartedEvent() noexcept;
 
-    /// Reads and processes a decoding complete event from `events_`
+    /// Dequeues and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
 
-    /// Reads and processes a decoder seek event from `events_`
+    /// Dequeues and processes a decoder seek event from `events_`
     bool processDecoderSeekEvent() noexcept;
 
-    /// Reads and processes a decoder canceled event from `events_`
+    /// Dequeues and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
 
-    /// Reads and processes an allocation failure event from `events_`
+    /// Dequeues and processes an allocation failure event from `events_`
     bool processAllocationFailureEvent() noexcept;
 
-    /// Reads and processes a frames rendered event from `events_`
+    /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
