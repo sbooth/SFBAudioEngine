@@ -1887,8 +1887,8 @@ bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
 // MARK: Rendering Events
 
 bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
-    // The host time and rate scalar from the render cycle's timestamp
     EventCommand command;
+    // The host time and rate scalar from the render cycle's timestamp
     uint64_t hostTime;
     double rateScalar;
     // The number of valid frames rendered
