@@ -266,7 +266,7 @@ class AudioPlayer final {
         allocationFailure = 5,
         /// Audio frames rendered from ring buffer
         framesRendered = 6,
-        /// The ring buffer contained fewer audio frames than requested
+        /// Ring buffer contained fewer audio frames than requested
         renderBufferUnderrun = 7,
     };
 
