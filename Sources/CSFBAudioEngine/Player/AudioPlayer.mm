@@ -1607,9 +1607,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     if (framesRead != frameCount) {
-        if (!events_.enqueue(EventCommand::renderBufferUnderrun,
-                                       timestamp.mHostTime, static_cast<uint32_t>(framesRead),
-                                       static_cast<uint32_t>(frameCount))) {
+        if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, static_cast<uint32_t>(framesRead),
+                             static_cast<uint32_t>(frameCount))) {
             setFlags(Flags::renderEventDropped);
         }
     }
