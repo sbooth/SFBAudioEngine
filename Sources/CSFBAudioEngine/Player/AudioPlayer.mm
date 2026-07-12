@@ -1663,7 +1663,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
 
         if (const auto prevFlags = clearFlags(Flags::renderEventDropped);
             bits::is_set(prevFlags, Flags::renderEventDropped)) {
-            os_log_fault(log_, "Missing rendering event(s): rendering event ring buffer overrun");
+            os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
         int64_t deltaNanos;
