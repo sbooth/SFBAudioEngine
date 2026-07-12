@@ -266,6 +266,8 @@ class AudioPlayer final {
         allocationFailure = 5,
         /// Audio frames rendered from ring buffer
         framesRendered = 6,
+        /// Ring buffer contained fewer audio frames than requested
+        renderBufferUnderrun = 7,
     };
 
     // MARK: - Event Processing
@@ -291,6 +293,9 @@ class AudioPlayer final {
 
     /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
+
+    /// Reads and processes a render buffer underrun event from `events_`
+    bool processRenderBufferUnderrunEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
