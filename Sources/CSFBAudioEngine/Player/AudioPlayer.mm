@@ -1416,6 +1416,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
             // If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
             if (formatMismatch) {
+                setFlags(Flags::pendingFormatChange);
+
                 // Wait until all other decoders complete processing before reconfiguring the graph
                 const auto okToReconfigure = [&]() noexcept {
                     std::lock_guard lock{activeDecodersMutex_};
@@ -1455,7 +1457,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         }
                     }
                 } else {
-                    setFlags(Flags::pendingFormatChange);
                     decoderState = nullptr;
                 }
             }
