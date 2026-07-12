@@ -1423,13 +1423,16 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }();
 
                 if (okToReconfigure) {
-                    clearFlags(Flags::drainRequired);
-                    formatMismatch = false;
-
                     os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
                     auto renderFormat = decoderState->converter_.outputFormat;
-                    if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
+                    NSError *error = nil;
+                    const auto reconfigured = configureProcessingGraphAndRingBufferForFormat(renderFormat, &error);
+
+                    clearFlags(Flags::drainRequired | Flags::pendingFormatChange);
+                    formatMismatch = false;
+
+                    if (!reconfigured) {
                         decoderState->error_ = error;
                         decoderState->setFlags(DecoderState::Flags::cancelRequested);
                         continue;
@@ -1452,6 +1455,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         }
                     }
                 } else {
+                    setFlags(Flags::pendingFormatChange);
                     decoderState = nullptr;
                 }
             }
@@ -1606,7 +1610,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         isSilence = YES;
     }
 
-    if (framesRead != frameCount) {
+    // A short frame count without a pending format change is unexpected
+    if (framesRead != frameCount && bits::is_clear(flags, Flags::pendingFormatChange)) {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, static_cast<uint32_t>(framesRead),
                              static_cast<uint32_t>(frameCount))) {
             setFlags(Flags::renderEventDropped);
