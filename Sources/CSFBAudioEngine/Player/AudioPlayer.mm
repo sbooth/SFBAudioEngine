@@ -1611,7 +1611,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         isSilence = YES;
     }
 
-    // A short frame count without a pending format change is unexpected
+    // A short frame count without a pending format change is generally unexpected
     if (framesRead != frameCount && bits::is_clear(flags, Flags::pendingFormatChange)) {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, static_cast<uint32_t>(framesRead),
                              static_cast<uint32_t>(frameCount))) {
