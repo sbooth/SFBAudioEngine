@@ -182,10 +182,10 @@ const os_log_t AudioPlayer::log_ = os_log_create("org.sbooth.AudioEngine", "Audi
 /// State for tracking/syncing decoding progress
 struct AudioPlayer::DecoderState final {
     /// Next sequence number to use
-    static uint64_t sequenceCounter_;
+    static std::atomic<uint64_t> sequenceCounter_;
 
     /// Monotonically increasing instance counter
-    const uint64_t sequenceNumber_{sequenceCounter_++};
+    const uint64_t sequenceNumber_{sequenceCounter_.fetch_add(1, std::memory_order_relaxed)};
 
     /// Decodes audio from the source representation to PCM
     const Decoder decoder_{nil};
@@ -276,7 +276,7 @@ struct AudioPlayer::DecoderState final {
     bool performSeek(NSError **error) noexcept;
 };
 
-uint64_t AudioPlayer::DecoderState::sequenceCounter_ = 1;
+std::atomic<uint64_t> AudioPlayer::DecoderState::sequenceCounter_{1};
 
 inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept : decoder_{decoder} {
 #if DEBUG
@@ -1550,10 +1550,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
             if (freeSpace > targetMaxFreeSpace) {
                 // Minimal timeout if the ring buffer has more free space than desired
-                deltaNanos = 2.5 * NSEC_PER_MSEC;
+                deltaNanos = static_cast<int64_t>(2.5 * NSEC_PER_MSEC);
             } else {
                 const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.format().mSampleRate;
-                deltaNanos = duration * NSEC_PER_SEC;
+                deltaNanos = static_cast<int64_t>(duration * NSEC_PER_SEC);
             }
         }
 
@@ -1670,7 +1670,7 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
         {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = 7.5 * NSEC_PER_MSEC;
+                deltaNanos = static_cast<int64_t>(7.5 * NSEC_PER_MSEC);
             } else {
                 // Use a longer timeout when idle
                 deltaNanos = NSEC_PER_SEC / 2;
