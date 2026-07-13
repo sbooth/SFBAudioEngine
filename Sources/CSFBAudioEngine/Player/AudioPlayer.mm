@@ -2488,7 +2488,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     // have been inserted between the source and mixer nodes. In this case allow the delegate
     // to make any necessary adjustments based on the format change if desired.
     if (AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
-        sourceNodeOutputConnectionPoint && sourceNodeOutputConnectionPoint.node != mixerNode) {
+        sourceNodeOutputConnectionPoint != nil && sourceNodeOutputConnectionPoint.node != mixerNode) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
             delegate != nil &&
             [delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:withFormat:)]) {
