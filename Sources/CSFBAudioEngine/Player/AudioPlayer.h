@@ -208,7 +208,7 @@ class AudioPlayer final {
         /// The ring buffer needs to be drained during the next render cycle
         drainRequired = 1u << 3,
         /// A ring buffer format change is pending
-        pendingFormatChange = 1u << 4,
+        formatChangePending = 1u << 4,
         /// The event message queue had insufficient space to record a render event
         renderEventDropped = 1u << 5,
     };
