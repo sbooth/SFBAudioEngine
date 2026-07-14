@@ -1179,6 +1179,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
             // Process cancellations
             auto signal = false;
+            auto anyCanceled = false;
             for (const auto &decoderState : activeDecoders_) {
                 const auto flags = decoderState->loadFlags();
                 if (bits::is_set_or_is_clear(flags, DecoderState::Flags::isCanceled,
@@ -1198,6 +1199,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }
 
                 decoderState->setFlags(DecoderState::Flags::isCanceled);
+                anyCanceled = true;
 
                 // Submit the decoder canceled event
                 if (events_.enqueue(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) {
@@ -1210,6 +1212,11 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // Signal the event thread if any decoders were canceled
             if (signal) {
                 eventSemaphore_.signal();
+            }
+
+            // Clear the format mismatch flag if any decoders were canceled
+            if (anyCanceled && formatMismatch) {
+                formatMismatch = false;
             }
 
             // Get the earliest decoder state that has not completed rendering
