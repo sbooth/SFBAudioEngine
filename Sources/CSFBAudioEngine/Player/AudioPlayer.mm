@@ -2461,6 +2461,21 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
     os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", stringDescribingAVAudioFormat(format));
 
+    // Allocate a temporary ring buffer for the new format before touching the engine or graph
+    spsc::AudioRingBuffer ringBuffer;
+    if (!ringBuffer.allocate(*(format.streamDescription), ringBufferCapacity)) {
+        os_log_error(log_,
+                     "Unable to create audio ring buffer: spsc::AudioRingBuffer::allocate failed with format "
+                     "%{public}@ and capacity %zu",
+                     SFBASBDFormatDescription(format.streamDescription), ringBufferCapacity);
+        if (error != nullptr) {
+            *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                         code:SFBAudioPlayerErrorCodeInternalError
+                                     userInfo:nil];
+        }
+        return false;
+    }
+
     std::lock_guard lock{engineMutex_};
 
     // Even if the engine isn't running, call -stop to force release of any render resources
@@ -2476,19 +2491,9 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
                                                                                             outputBus:0] firstObject];
     [engine_ disconnectNodeOutput:sourceNode_];
 
-    // Allocate the ring buffer for the new format
-    if (!audioRingBuffer_.allocate(*(format.streamDescription), ringBufferCapacity)) {
-        os_log_error(log_,
-                     "Unable to create audio ring buffer: spsc::AudioRingBuffer::allocate failed with format "
-                     "%{public}@ and capacity %zu",
-                     SFBASBDFormatDescription(format.streamDescription), ringBufferCapacity);
-        if (error != nullptr) {
-            *error = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                         code:SFBAudioPlayerErrorCodeInternalError
-                                     userInfo:nil];
-        }
-        return false;
-    }
+    // Adopt the new ring buffer
+    // The move is not thread-safe but the engine is stopped
+    audioRingBuffer_ = std::move(ringBuffer);
 
     // Reconnect the source node to the next node in the processing chain
     // This is the mixer node in the default configuration, but additional nodes may
@@ -2522,12 +2527,10 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     if (bits::is_set(prevState, Flags::engineIsRunning)) {
         if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
             os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-            // TODO: Re-evaluate whether failure to start AVAudioEngine during reconfiguration
-            //       should be treated as a fatal error or handled as a recoverable condition,
-            //       and document the chosen and tested behavior.
             if (error != nullptr) {
                 *error = startError;
             }
+            // Engine failed to (re)start
             return false;
         }
 
