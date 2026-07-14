@@ -1217,6 +1217,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // Clear the format mismatch flag if any decoders were canceled
             if (anyCanceled && formatMismatch) {
                 formatMismatch = false;
+                clearFlags(Flags::formatChangePending);
             }
 
             // Get the earliest decoder state that has not completed rendering
@@ -1250,6 +1251,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
                 // decoding completes.
                 formatMismatch = false;
+                clearFlags(Flags::formatChangePending);
 
                 fetchUpdate(
                         decoderState->flags_,
@@ -1418,6 +1420,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     // decoding can't start until the processing graph is reconfigured which occurs after
                     // all active decoders complete
                     formatMismatch = true;
+
+                    // Ring buffer underruns are expected while waiting for the format change to complete;
+                    // suppress underrun notifications until the processing graph is reconfigured
+                    setFlags(Flags::formatChangePending);
                 }
             }
 
@@ -1430,13 +1436,16 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }();
 
                 if (okToReconfigure) {
-                    clearFlags(Flags::drainRequired);
-                    formatMismatch = false;
-
                     os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
                     auto renderFormat = decoderState->converter_.outputFormat;
-                    if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
+                    NSError *error = nil;
+                    const auto reconfigured = configureProcessingGraphAndRingBufferForFormat(renderFormat, &error);
+
+                    formatMismatch = false;
+                    clearFlags(Flags::drainRequired | Flags::formatChangePending);
+
+                    if (!reconfigured) {
                         decoderState->error_ = error;
                         decoderState->setFlags(DecoderState::Flags::cancelRequested);
                         continue;
@@ -1613,7 +1622,9 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         isSilence = YES;
     }
 
-    if (framesRead != frameCount) {
+    // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
+    // is expected to run dry while the decoding thread waits to reconfigure the processing graph
+    if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, static_cast<uint32_t>(framesRead),
                              static_cast<uint32_t>(frameCount))) {
             setFlags(Flags::renderEventDropped);
