@@ -250,7 +250,7 @@ class AudioPlayer final {
     /// Processes the pending seek for `decoderState`
     bool processPendingSeek(DecoderState *_Nonnull decoderState, bool &formatMismatch, bool &ringBufferStale) noexcept;
 
-    /// Returns the first decoder state in `activeDecoders_` that has started decoding and has not been canceled
+    /// Returns the first decoder state in `activeDecoders_` that is eligible for decoding
     DecoderState *_Nullable firstIncompleteDecoderState() const noexcept;
 
     /// Rewinds ensuing decoders following a seek in `decoderState` if needed
