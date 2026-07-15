@@ -244,6 +244,39 @@ class AudioPlayer final {
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
+    /// Processes decoder cancellations and returns the first active decoder state
+    DecoderState *_Nullable processDecoderCancellations(bool &formatMismatch, bool &ringBufferStale) noexcept;
+
+    /// Processes the pending seek for `decoderState`
+    bool processPendingSeek(DecoderState *_Nonnull decoderState, bool &formatMismatch, bool &ringBufferStale) noexcept;
+
+    /// Returns the first decoder state in `activeDecoders_` that has started decoding and has not been canceled
+    DecoderState *_Nullable firstIncompleteDecoderState() const noexcept;
+
+    /// Rewinds ensuing decoders following a seek in `decoderState` if needed
+    void rewindEnsuingDecoders(DecoderState *_Nonnull decoderState) noexcept;
+
+    /// Dequeues and returns the next decoder or nullptr if none
+    DecoderState *_Nullable dequeueNextDecoder() noexcept;
+
+    /// Prepares `decoderState` for decoding
+    bool prepareDequeuedDecoder(DecoderState *_Nonnull decoderState) noexcept;
+
+    /// Allocates the buffer that is the intermediary between the decoder state and the ring buffer if needed
+    bool allocateDecodeBufferIfNeeded(AVAudioPCMBuffer *_Nullable __strong &buffer,
+                                      AVAudioFormat *_Nonnull renderFormat,
+                                      DecoderState *_Nonnull decoderState) noexcept;
+
+    /// Configures the processing graph for `decoderState` if able
+    bool configureForDecoder(DecoderState *_Nonnull &decoderState, AVAudioPCMBuffer *_Nullable __strong &buffer,
+                             bool &formatMismatch) noexcept;
+
+    /// Decodes audio from `decoderState` into the ring buffer
+    bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
+
+    /// Returns the appropriate decoding semaphore timeout
+    int64_t decodingTimeout(DecoderState *_Nullable decoderState, bool formatMismatch) const noexcept;
+
     // MARK: - Rendering
 
     /// Render block implementation
