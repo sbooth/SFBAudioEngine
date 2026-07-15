@@ -1176,10 +1176,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         auto *decoderState = processDecoderCancellations(formatMismatch, ringBufferStale);
 
         // Process pending seeks
-        if (decoderState != nullptr && decoderState->isSeekRequested()) {
-            if (!processPendingSeek(decoderState, formatMismatch, ringBufferStale)) {
-                continue;
-            }
+        if (decoderState != nullptr && decoderState->isSeekRequested() &&
+            !processPendingSeek(decoderState, formatMismatch, ringBufferStale)) {
+            continue;
         }
 
         // Request a drain of the ring buffer during the next render cycle to prevent audible artifacts from
