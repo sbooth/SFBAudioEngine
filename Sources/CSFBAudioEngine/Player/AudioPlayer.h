@@ -268,7 +268,7 @@ class AudioPlayer final {
                                       DecoderState *_Nonnull decoderState) noexcept;
 
     /// Configures the processing graph for `decoderState` if able
-    bool configureForDecoder(DecoderState *_Nonnull &decoderState, AVAudioPCMBuffer *_Nullable __strong &buffer,
+    bool configureForDecoder(DecoderState *_Nullable &decoderState, AVAudioPCMBuffer *_Nullable __strong &buffer,
                              bool &formatMismatch) noexcept;
 
     /// Decodes audio from `decoderState` into the ring buffer
