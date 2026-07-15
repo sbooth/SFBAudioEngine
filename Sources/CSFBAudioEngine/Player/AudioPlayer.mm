@@ -1170,407 +1170,462 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     auto formatMismatch = false;
 
     while (!stoken.stop_requested()) {
-        // The decoder state being processed
-        DecoderState *decoderState = nullptr;
         auto ringBufferStale = false;
 
-        {
-            std::lock_guard lock{activeDecodersMutex_};
-
-            // Process cancellations
-            auto signal = false;
-            auto anyCanceled = false;
-            for (const auto &decoderState : activeDecoders_) {
-                const auto flags = decoderState->loadFlags();
-                if (bits::is_set_or_is_clear(flags, DecoderState::Flags::isCanceled,
-                                             DecoderState::Flags::cancelRequested)) {
-                    continue;
-                }
-
-                if (decoderState->error_ == nil) {
-                    os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
-                } else {
-                    os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
-                }
-
-                // Drain the ring buffer if the decoder could have contributed any stale frames
-                if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
-                    ringBufferStale = true;
-                }
-
-                decoderState->setFlags(DecoderState::Flags::isCanceled);
-                anyCanceled = true;
-
-                // Submit the decoder canceled event
-                if (events_.enqueue(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) {
-                    signal = true;
-                } else {
-                    os_log_fault(log_, "Error writing decoder canceled event");
-                }
-            }
-
-            // Signal the event thread if any decoders were canceled
-            if (signal) {
-                eventSemaphore_.signal();
-            }
-
-            // Clear the format mismatch flag if any decoders were canceled
-            if (anyCanceled && formatMismatch) {
-                formatMismatch = false;
-            }
-
-            // Get the earliest decoder state that has not completed rendering
-            decoderState = firstActiveDecoderState();
-        }
+        // Process cancellations and retrieve the first active decoder state
+        auto *decoderState = processDecoderCancellations(formatMismatch, ringBufferStale);
 
         // Process pending seeks
-        if (decoderState != nullptr && decoderState->isSeekRequested()) {
-            // Mute until the seek is complete and the ring buffer is refilled
-            setFlags(Flags::isMuted);
-
-            if (NSError *seekError = nil; !decoderState->performSeek(&seekError)) {
-                decoderState->error_ = seekError;
-                decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                continue;
-            }
-
-            if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
-                events_.enqueue(EventCommand::seek, decoderState->sequenceNumber_, frame)) {
-                eventSemaphore_.signal();
-            } else {
-                os_log_fault(log_, "Error writing decoder seek event");
-            }
-
-            ringBufferStale = true;
-
-            if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
-                os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
-
-                // The decoder has not completed rendering so the ring buffer format and the decoder's format still
-                // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
-                // decoding completes.
-                formatMismatch = false;
-
-                fetchUpdate(
-                        decoderState->flags_,
-                        [](auto val) noexcept {
-                            return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
-                                   bits::to_underlying(DecoderState::Flags::decodingResumed);
-                        },
-                        std::memory_order_acq_rel);
-
-                {
-                    std::lock_guard lock{activeDecodersMutex_};
-
-                    // Rewind ensuing decoder states if possible to avoid discarding frames
-                    for (const auto &nextDecoderState : activeDecoders_) {
-                        if (nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_) {
-                            continue;
-                        }
-
-                        const auto flags = nextDecoderState->loadFlags();
-                        if (bits::is_set(flags, DecoderState::Flags::isCanceled)) {
-                            continue;
-                        }
-                        if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
-                            os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
-
-                            // TODO: Investigate a per-state buffer to mitigate frame loss
-                            if (nextDecoderState->decoder_.supportsSeeking) {
-                                nextDecoderState->requestSeekToFrame(0);
-                                if (NSError *seekError = nil; !nextDecoderState->performSeek(&seekError)) {
-                                    nextDecoderState->error_ = seekError;
-                                    nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
-                                    continue;
-                                }
-                            } else {
-                                os_log_error(log_, "Discarding %lld frames from %{public}@",
-                                             nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
-                                             nextDecoderState->decoder_);
-                            }
-
-                            fetchUpdate(
-                                    nextDecoderState->flags_,
-                                    [](auto val) noexcept {
-                                        return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
-                                               bits::to_underlying(DecoderState::Flags::decodingSuspended);
-                                    },
-                                    std::memory_order_acq_rel);
-                        }
-                    }
-                }
-            }
+        if (decoderState != nullptr && decoderState->isSeekRequested() &&
+            !processPendingSeek(decoderState, formatMismatch, ringBufferStale)) {
+            continue;
         }
 
-        // Request a drain of the ring buffer during the next render cycle to prevent audible artifacts from seeking or
-        // cancellation
+        // Request a drain of the ring buffer during the next render cycle to prevent audible artifacts from
+        // seeking or cancellation
         if (ringBufferStale) {
             setFlags(Flags::drainRequired);
         }
 
         // Get the earliest decoder state that has not completed decoding
-        {
-            std::lock_guard lock{activeDecodersMutex_};
-
-            const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
-                const auto flags = decoderState->loadFlags();
-                return bits::has_none(flags, DecoderState::Flags::isCanceled | DecoderState::Flags::decodingComplete);
-            });
-
-            if (iter != activeDecoders_.cend()) {
-                decoderState = iter->get();
-            } else {
-                decoderState = nullptr;
-            }
-        }
+        decoderState = firstIncompleteDecoderState();
 
         // Dequeue the next decoder if there are no decoders that haven't completed decoding
         if (decoderState == nullptr) {
-            {
-                // Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
-                // when transitioning from queued to active
-                std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
-
-                if (!queuedDecoders_.empty()) {
-                    // Remove the first decoder from the decoder queue
-                    auto decoder = queuedDecoders_.front();
-                    queuedDecoders_.pop_front();
-
-                    // Create the decoder state and add it to the list of active decoders
-                    try {
-                        activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
-#if DEBUG
-                        assert(std::ranges::is_sorted(activeDecoders_, std::ranges::less{},
-                                                      &DecoderState::sequenceNumber_));
-#endif /* DEBUG */
-                        decoderState = activeDecoders_.back().get();
-                    } catch (const std::exception &e) {
-                        os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder,
-                                     e.what());
-                        if (events_.enqueue(EventCommand::allocationFailure)) {
-                            eventSemaphore_.signal();
-                        } else {
-                            os_log_fault(log_, "Error writing allocation failure event");
-                        }
-                        continue;
-                    }
-                }
-            }
-
-            if (decoderState != nullptr) {
-                // Open the decoder if necessary
-                if (!decoderState->decoder_.isOpen) {
-                    if (NSError *error = nil; ![decoderState->decoder_ openReturningError:&error]) {
-                        os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                        continue;
-                    }
-
-                    // Short-circuit processing if the decoder was canceled during open
-                    if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::cancelRequested)) {
-                        continue;
-                    }
-                }
-
-                // Allocate decoder state internals
-                if (!decoderState->allocate(ringBufferChunkSize)) {
-                    os_log_error(log_,
-                                 "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
-                                 "capacity %u",
-                                 ringBufferChunkSize);
-                    decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                               code:SFBAudioPlayerErrorCodeInternalError
-                                                           userInfo:nil];
-                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                    continue;
-                }
-
-                os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
-            }
+            decoderState = dequeueNextDecoder();
         }
 
-        if (decoderState != nullptr) {
-            // Before decoding starts determine the decoder and ring buffer format compatibility
-            if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::decodingStarted)) {
-                // Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel
-                // layout)
-                if (auto renderFormat = decoderState->converter_.outputFormat;
-                    [renderFormat isEqual:[sourceNode_ outputFormatForBus:0]]) {
-                    // Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-                    if (auto format = buffer.format; format.channelCount != renderFormat.channelCount ||
-                                                     format.sampleRate != renderFormat.sampleRate) {
-                        buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat
-                                                               frameCapacity:ringBufferChunkSize];
-                        if (buffer == nil) {
-                            os_log_error(log_,
-                                         "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
-                                         stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
-                            decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                                       code:SFBAudioPlayerErrorCodeInternalError
-                                                                   userInfo:nil];
-                            decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                            continue;
-                        }
-                    }
-                } else {
-                    // If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
-                    // decoding can't start until the processing graph is reconfigured which occurs after
-                    // all active decoders complete
-                    formatMismatch = true;
-                }
-            }
-
-            // If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
-            if (formatMismatch) {
-                // Wait until all other decoders complete processing before reconfiguring the graph
-                const auto okToReconfigure = [&]() noexcept {
-                    std::lock_guard lock{activeDecodersMutex_};
-                    return activeDecoders_.size() == 1;
-                }();
-
-                if (okToReconfigure) {
-                    clearFlags(Flags::drainRequired);
-                    formatMismatch = false;
-
-                    os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
-
-                    auto renderFormat = decoderState->converter_.outputFormat;
-                    if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                        continue;
-                    }
-
-                    // Allocate the buffer that is the intermediary between the decoder state and the ring buffer
-                    if (auto format = buffer.format; format.channelCount != renderFormat.channelCount ||
-                                                     format.sampleRate != renderFormat.sampleRate) {
-                        buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat
-                                                               frameCapacity:ringBufferChunkSize];
-                        if (buffer == nil) {
-                            os_log_error(log_,
-                                         "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
-                                         stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
-                            decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                                       code:SFBAudioPlayerErrorCodeInternalError
-                                                                   userInfo:nil];
-                            decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                            continue;
-                        }
-                    }
-                } else {
-                    decoderState = nullptr;
-                }
-            }
+        // Open the decoder if needed and allocate decoder state internals
+        if (decoderState != nullptr && !prepareDequeuedDecoder(decoderState)) {
+            continue;
         }
 
-        if (decoderState != nullptr) {
-            if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::drainRequired)) {
-                // Decode and write chunks to the ring buffer
-                while (audioRingBuffer_.freeSpace() >= ringBufferChunkSize) {
-                    // Decoding started
-                    if (const auto flags = decoderState->loadFlags();
-                        bits::is_clear(flags, DecoderState::Flags::decodingStarted)) {
-                        const auto suspended = bits::is_set(flags, DecoderState::Flags::decodingSuspended);
-
-                        if (!suspended) {
-                            os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
-                        } else {
-                            os_log_debug(log_, "Decoding starting after suspension for %{public}@",
-                                         decoderState->decoder_);
-                        }
-
-                        decoderState->setFlags(DecoderState::Flags::decodingStarted);
-
-                        // Submit the decoding started event for the initial start only
-                        if (!suspended) {
-                            if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) {
-                                eventSemaphore_.signal();
-                            } else {
-                                os_log_fault(log_, "Error writing decoding started event");
-                            }
-                        }
-                    }
-
-                    // Decode audio into the buffer, converting to the rendering format in the process
-                    if (NSError *error = nil; !decoderState->decodeAudio(buffer, &error)) {
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
-                        goto next_outer_iteration;
-                    }
-
-                    // Write the decoded audio to the ring buffer for rendering
-                    const auto framesWritten = audioRingBuffer_.write(buffer.audioBufferList, buffer.frameLength);
-                    if (framesWritten != buffer.frameLength) {
-                        os_log_fault(
-                                log_,
-                                "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed for %u frames",
-                                buffer.frameLength);
-                    }
-
-                    // Decoding complete
-                    if (const auto flags = decoderState->loadFlags();
-                        bits::is_set(flags, DecoderState::Flags::decodingComplete)) {
-                        const auto resumed = bits::is_set(flags, DecoderState::Flags::decodingResumed);
-
-                        // Submit the decoding complete event for the first completion only
-                        if (!resumed) {
-                            if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) {
-                                eventSemaphore_.signal();
-                            } else {
-                                os_log_fault(log_, "Error writing decoding complete event");
-                            }
-                        }
-
-                        if (!resumed) {
-                            os_log_debug(log_, "Decoding complete for %{public}@", decoderState->decoder_);
-                        } else {
-                            os_log_debug(log_, "Decoding complete after resuming for %{public}@",
-                                         decoderState->decoder_);
-                        }
-
-                        break;
-                    }
-                }
-
-                // Clear the mute flag if needed now that the ring buffer is full
-                if (bits::is_set(flags, Flags::isMuted)) {
-                    clearFlags(Flags::isMuted);
-                }
-            }
+        // Determine format compatibility, possibly reconfiguring the processing graph
+        if (decoderState != nullptr && !configureForDecoder(decoderState, buffer, formatMismatch)) {
+            continue;
         }
 
-        int64_t deltaNanos;
-        if (decoderState == nullptr) {
-            if (formatMismatch) {
-                // Shorter timeout if waiting on a decoder to complete rendering for a pending format change
-                deltaNanos = 25 * NSEC_PER_MSEC;
-            } else {
-                // Idling
-                deltaNanos = NSEC_PER_SEC / 2;
-            }
-        } else {
-            // Determine timeout based on ring buffer free space
-            // Attempt to keep the ring buffer 75% full
-            const auto targetMaxFreeSpace = audioRingBuffer_.capacity() / 4;
-            const auto freeSpace = audioRingBuffer_.freeSpace();
-
-            if (freeSpace > targetMaxFreeSpace) {
-                // Minimal timeout if the ring buffer has more free space than desired
-                deltaNanos = static_cast<int64_t>(2.5 * NSEC_PER_MSEC);
-            } else {
-                const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.format().mSampleRate;
-                deltaNanos = static_cast<int64_t>(duration * NSEC_PER_SEC);
-            }
+        // Decode and write chunks to the ring buffer
+        if (decoderState != nullptr && !decodeIntoRingBuffer(decoderState, buffer)) {
+            continue;
         }
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
-        decodingSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
-
-    next_outer_iteration:;
+        const auto timeout = decodingTimeout(decoderState, formatMismatch);
+        decodingSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, timeout));
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
+}
+
+sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bool &formatMismatch,
+                                                                              bool &ringBufferStale) noexcept {
+    std::lock_guard lock{activeDecodersMutex_};
+
+    auto signal = false;
+    auto anyCanceled = false;
+    for (const auto &decoderState : activeDecoders_) {
+        const auto flags = decoderState->loadFlags();
+        if (bits::is_set_or_is_clear(flags, DecoderState::Flags::isCanceled, DecoderState::Flags::cancelRequested)) {
+            continue;
+        }
+
+        if (decoderState->error_ == nil) {
+            os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
+        } else {
+            os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
+        }
+
+        // Drain the ring buffer if the decoder could have contributed any stale frames
+        if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
+            ringBufferStale = true;
+        }
+
+        decoderState->setFlags(DecoderState::Flags::isCanceled);
+        anyCanceled = true;
+
+        // Submit the decoder canceled event
+        if (events_.enqueue(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) {
+            signal = true;
+        } else {
+            os_log_fault(log_, "Error writing decoder canceled event");
+        }
+    }
+
+    // Signal the event thread if any decoders were canceled
+    if (signal) {
+        eventSemaphore_.signal();
+    }
+
+    // Clear the format mismatch flag if any decoders were canceled
+    if (anyCanceled && formatMismatch) {
+        formatMismatch = false;
+    }
+
+    // Return the earliest decoder state that has not completed rendering
+    return firstActiveDecoderState();
+}
+
+bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &formatMismatch,
+                                          bool &ringBufferStale) noexcept {
+#if DEBUG
+    assert(decoderState != nullptr);
+    assert(decoderState->isSeekRequested());
+#endif /* DEBUG */
+
+    // Mute until the seek is complete and the ring buffer is refilled
+    setFlags(Flags::isMuted);
+
+    if (NSError *seekError = nil; !decoderState->performSeek(&seekError)) {
+        decoderState->error_ = seekError;
+        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+        return false;
+    }
+
+    if (const auto frame = decoderState->framesDecoded_.load(std::memory_order_acquire);
+        events_.enqueue(EventCommand::seek, decoderState->sequenceNumber_, frame)) {
+        eventSemaphore_.signal();
+    } else {
+        os_log_fault(log_, "Error writing decoder seek event");
+    }
+
+    ringBufferStale = true;
+
+    if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
+        os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
+
+        // The decoder has not completed rendering so the ring buffer format and the decoder's format still
+        // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
+        // decoding completes.
+        formatMismatch = false;
+
+        fetchUpdate(
+                decoderState->flags_,
+                [](auto val) noexcept {
+                    return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
+                           bits::to_underlying(DecoderState::Flags::decodingResumed);
+                },
+                std::memory_order_acq_rel);
+
+        // Rewind ensuing decoder states if possible to avoid discarding frames
+        rewindEnsuingDecoders(decoderState);
+    }
+
+    return true;
+}
+
+sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstIncompleteDecoderState() const noexcept {
+    std::lock_guard lock{activeDecodersMutex_};
+
+    const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
+        const auto flags = decoderState->loadFlags();
+        return bits::has_none(flags, DecoderState::Flags::needsInitialization | DecoderState::Flags::isCanceled |
+                                             DecoderState::Flags::decodingComplete);
+    });
+    return iter != activeDecoders_.cend() ? iter->get() : nullptr;
+}
+
+void sfb::AudioPlayer::rewindEnsuingDecoders(DecoderState *decoderState) noexcept {
+#if DEBUG
+    assert(decoderState != nullptr);
+#endif /* DEBUG */
+
+    std::lock_guard lock{activeDecodersMutex_};
+
+    // Rewind ensuing decoder states if possible to avoid discarding frames
+    for (const auto &nextDecoderState : activeDecoders_) {
+        if (nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_) {
+            continue;
+        }
+
+        const auto flags = nextDecoderState->loadFlags();
+        if (bits::is_set(flags, DecoderState::Flags::isCanceled)) {
+            continue;
+        }
+        if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
+            os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+
+            // TODO: Investigate a per-state buffer to mitigate frame loss
+            if (nextDecoderState->decoder_.supportsSeeking) {
+                nextDecoderState->requestSeekToFrame(0);
+                if (NSError *seekError = nil; !nextDecoderState->performSeek(&seekError)) {
+                    nextDecoderState->error_ = seekError;
+                    nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
+                    continue;
+                }
+            } else {
+                os_log_error(log_, "Discarding %lld frames from %{public}@",
+                             nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
+                             nextDecoderState->decoder_);
+            }
+
+            fetchUpdate(
+                    nextDecoderState->flags_,
+                    [](auto val) noexcept {
+                        return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
+                               bits::to_underlying(DecoderState::Flags::decodingSuspended);
+                    },
+                    std::memory_order_acq_rel);
+        }
+    }
+}
+
+sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept {
+    DecoderState *decoderState = nullptr;
+
+    // Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
+    // when transitioning from queued to active
+    std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
+
+    if (queuedDecoders_.empty()) {
+        return nullptr;
+    }
+
+    // Remove the first decoder from the decoder queue
+    auto decoder = queuedDecoders_.front();
+    queuedDecoders_.pop_front();
+
+    // Create the decoder state and add it to the list of active decoders
+    try {
+        activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
+#if DEBUG
+        assert(std::ranges::is_sorted(activeDecoders_, std::ranges::less{}, &DecoderState::sequenceNumber_));
+#endif /* DEBUG */
+        decoderState = activeDecoders_.back().get();
+    } catch (const std::exception &e) {
+        os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder, e.what());
+        if (events_.enqueue(EventCommand::allocationFailure)) {
+            eventSemaphore_.signal();
+        } else {
+            os_log_fault(log_, "Error writing allocation failure event");
+        }
+        return nullptr;
+    }
+
+    return decoderState;
+}
+
+bool sfb::AudioPlayer::prepareDequeuedDecoder(DecoderState *decoderState) noexcept {
+#if DEBUG
+    assert(decoderState != nullptr);
+#endif /* DEBUG */
+
+    // Open the decoder if necessary
+    if (!decoderState->decoder_.isOpen) {
+        if (NSError *error = nil; ![decoderState->decoder_ openReturningError:&error]) {
+            os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
+            decoderState->error_ = error;
+            decoderState->setFlags(DecoderState::Flags::cancelRequested);
+            return false;
+        }
+
+        // Short-circuit processing if the decoder was canceled during open
+        if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::cancelRequested)) {
+            return false;
+        }
+    }
+
+    // Allocate decoder state internals
+    if (!decoderState->allocate(ringBufferChunkSize)) {
+        os_log_error(log_,
+                     "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
+                     "capacity %u",
+                     ringBufferChunkSize);
+        decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                   code:SFBAudioPlayerErrorCodeInternalError
+                                               userInfo:nil];
+        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+        return false;
+    }
+
+    os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
+
+    return true;
+}
+
+bool sfb::AudioPlayer::allocateDecodeBufferIfNeeded(AVAudioPCMBuffer *__strong &buffer, AVAudioFormat *renderFormat,
+                                                    DecoderState *decoderState) noexcept {
+#if DEBUG
+    assert(renderFormat != nil);
+    assert(decoderState != nullptr);
+#endif /* DEBUG */
+
+    if (buffer != nil) {
+        auto format = buffer.format;
+        if (format.channelCount == renderFormat.channelCount && format.sampleRate == renderFormat.sampleRate) {
+            return true;
+        }
+    }
+
+    buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:renderFormat frameCapacity:ringBufferChunkSize];
+    if (buffer == nil) {
+        os_log_error(log_, "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
+                     stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
+        decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                   code:SFBAudioPlayerErrorCodeInternalError
+                                               userInfo:nil];
+        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+        return false;
+    }
+
+    return true;
+}
+
+bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioPCMBuffer *__strong &buffer,
+                                           bool &formatMismatch) noexcept {
+#if DEBUG
+    assert(decoderState != nullptr);
+#endif /* DEBUG */
+
+    // Before decoding starts determine the decoder and ring buffer format compatibility
+    if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::decodingStarted)) {
+        // Start decoding immediately if the join will be gapless (same sample rate, channel count, and channel
+        // layout)
+        if (auto renderFormat = decoderState->converter_.outputFormat;
+            [renderFormat isEqual:[sourceNode_ outputFormatForBus:0]]) {
+            if (!allocateDecodeBufferIfNeeded(buffer, renderFormat, decoderState)) {
+                return false;
+            }
+        } else {
+            // If the next decoder cannot be gaplessly joined set the mismatch flag and wait;
+            // decoding can't start until the processing graph is reconfigured which occurs after
+            // all active decoders complete
+            formatMismatch = true;
+        }
+    }
+
+    // If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
+    if (formatMismatch) {
+        // Wait until all other decoders complete processing before reconfiguring the graph
+        const auto okToReconfigure = [&]() noexcept {
+            std::lock_guard lock{activeDecodersMutex_};
+            return activeDecoders_.size() == 1;
+        }();
+
+        if (!okToReconfigure) {
+            decoderState = nullptr;
+            return true;
+        }
+
+        clearFlags(Flags::drainRequired);
+        formatMismatch = false;
+
+        os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
+
+        auto renderFormat = decoderState->converter_.outputFormat;
+        if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
+            decoderState->error_ = error;
+            decoderState->setFlags(DecoderState::Flags::cancelRequested);
+            return false;
+        }
+
+        if (!allocateDecodeBufferIfNeeded(buffer, renderFormat, decoderState)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept {
+#if DEBUG
+    assert(decoderState != nullptr);
+    assert(buffer != nil);
+#endif /* DEBUG */
+
+    const auto flags = loadFlags();
+    if (bits::is_set(flags, Flags::drainRequired)) {
+        return true;
+    }
+
+    // Decode and write chunks to the ring buffer
+    while (audioRingBuffer_.freeSpace() >= ringBufferChunkSize) {
+        // Decoding started
+        if (const auto flags = decoderState->loadFlags(); bits::is_clear(flags, DecoderState::Flags::decodingStarted)) {
+            const auto suspended = bits::is_set(flags, DecoderState::Flags::decodingSuspended);
+
+            if (!suspended) {
+                os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
+            } else {
+                os_log_debug(log_, "Decoding starting after suspension for %{public}@", decoderState->decoder_);
+            }
+
+            decoderState->setFlags(DecoderState::Flags::decodingStarted);
+
+            // Submit the decoding started event for the initial start only
+            if (!suspended) {
+                if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) {
+                    eventSemaphore_.signal();
+                } else {
+                    os_log_fault(log_, "Error writing decoding started event");
+                }
+            }
+        }
+
+        // Decode audio into the buffer, converting to the rendering format in the process
+        if (NSError *error = nil; !decoderState->decodeAudio(buffer, &error)) {
+            decoderState->error_ = error;
+            decoderState->setFlags(DecoderState::Flags::cancelRequested);
+            return false;
+        }
+
+        // Write the decoded audio to the ring buffer for rendering
+        const auto framesWritten = audioRingBuffer_.write(buffer.audioBufferList, buffer.frameLength);
+        if (framesWritten != buffer.frameLength) {
+            os_log_fault(log_, "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed for %u frames",
+                         buffer.frameLength);
+        }
+
+        // Decoding complete
+        if (const auto flags = decoderState->loadFlags(); bits::is_set(flags, DecoderState::Flags::decodingComplete)) {
+            const auto resumed = bits::is_set(flags, DecoderState::Flags::decodingResumed);
+
+            // Submit the decoding complete event for the first completion only
+            if (!resumed) {
+                if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) {
+                    eventSemaphore_.signal();
+                } else {
+                    os_log_fault(log_, "Error writing decoding complete event");
+                }
+            }
+
+            if (!resumed) {
+                os_log_debug(log_, "Decoding complete for %{public}@", decoderState->decoder_);
+            } else {
+                os_log_debug(log_, "Decoding complete after resuming for %{public}@", decoderState->decoder_);
+            }
+
+            break;
+        }
+    }
+
+    // Clear the mute flag if needed now that the ring buffer is full
+    if (bits::is_set(flags, Flags::isMuted)) {
+        clearFlags(Flags::isMuted);
+    }
+
+    return true;
+}
+
+int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState, bool formatMismatch) const noexcept {
+    if (decoderState == nullptr) {
+        // Shorter timeout if waiting on a decoder to complete rendering for a pending format change;
+        // otherwise idling
+        return formatMismatch ? (25 * NSEC_PER_MSEC) : (NSEC_PER_SEC / 2);
+    }
+
+    // Determine timeout based on ring buffer free space
+    // Attempt to keep the ring buffer 75% full
+    const auto targetMaxFreeSpace = audioRingBuffer_.capacity() / 4;
+    const auto freeSpace = audioRingBuffer_.freeSpace();
+
+    if (freeSpace > targetMaxFreeSpace) {
+        // Minimal timeout if the ring buffer has more free space than desired
+        return static_cast<int64_t>(2.5 * NSEC_PER_MSEC);
+    }
+
+    const auto duration = (targetMaxFreeSpace - freeSpace) / audioRingBuffer_.format().mSampleRate;
+    return static_cast<int64_t>(duration * NSEC_PER_SEC);
 }
 
 // MARK: - Rendering
@@ -1955,7 +2010,8 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             //   - A decoder may have been canceled
             //   - A seek can occur
             //
-            // Bookkeeping is handled no differently for canceled decoders but rendering notifications are suppressed
+            // Bookkeeping is handled no differently for canceled decoders but rendering notifications are
+            // suppressed
             //
             // In the case of a seek the frames from that event are not valid and should be discarded.
 
@@ -2090,8 +2146,8 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_,
-                         "Audio player deallocated between rendering will start and rendering started notifications");
+            os_log_debug(log_, "Audio player deallocated between rendering will start and rendering started "
+                               "notifications");
             return;
         }
 
@@ -2152,9 +2208,8 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(
-                    log_,
-                    "Audio player deallocated between rendering will complete and rendering complete notifications");
+            os_log_debug(log_, "Audio player deallocated between rendering will complete and rendering "
+                               "complete notifications");
             return;
         }
 
@@ -2307,8 +2362,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 
             // AVAudioEngine stops itself when a configuration change occurs but it could have been restarted
             // before the notification was delivered or the lock was acquired.
-            // Disconnecting the main mixer node from the output node when the engine is running causes an exception
-            // so ensure the engine is stopped before updating the bus format.
+            // Disconnecting the main mixer node from the output node when the engine is running causes an
+            // exception so ensure the engine is stopped before updating the bus format.
             if (engine_.isRunning) {
 #if DEBUG
                 assert(bits::is_set(prevState, Flags::engineIsRunning));
