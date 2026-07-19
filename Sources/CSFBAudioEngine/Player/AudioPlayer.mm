@@ -1448,10 +1448,16 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }();
 
                 if (okToReconfigure) {
-                    // clearFlags(Flags::drainRequired);
-                    formatMismatch = false;
-
                     os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
+
+                    formatMismatch = false;
+                    fetchUpdate(
+                            flags_,
+                            [](auto val) noexcept {
+                                return (val & ~bits::to_underlying(Flags::drainRequired)) |
+                                       bits::to_underlying(Flags::isMuted);
+                            },
+                            std::memory_order_acq_rel);
 
                     auto renderFormat = decoderState->converter_.outputFormat;
                     if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
