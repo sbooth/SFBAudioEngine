@@ -1486,7 +1486,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::drainRequired)) {
                 // Decode and write chunks and metadata to the ring buffers
                 while (audioBuffer_.freeSpace() >= ringBufferChunkSize &&
-                       audioMetadata_.freeSpace() > sizeof(detail::DecodedChunkDescriptor)) {
+                       audioMetadata_.freeSpace() >= sizeof(detail::DecodedChunkDescriptor)) {
 
                     // The chunk descriptor for the chunk to be decoded
                     detail::DecodedChunkDescriptor descriptor{};
