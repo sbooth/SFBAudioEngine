@@ -1177,6 +1177,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     // Whether there is a mismatch between the rendering format and the next decoder's processing format
     auto formatMismatch = false;
 
+    /// Sets the decoder state's error and cancellation request flag
+    const auto setErrorAndRequestCancel = [](DecoderState *_Nonnull decoderState, NSError *_Nonnull error) noexcept {
+        decoderState->error_ = error;
+        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+    };
+
     while (!stoken.stop_requested()) {
         // The decoder state being processed
         DecoderState *decoderState = nullptr;
@@ -1239,8 +1245,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             NSError *seekError = nil;
             const auto framePosition = decoderState->performSeek(&seekError);
             if (!framePosition.has_value()) {
-                decoderState->error_ = seekError;
-                decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                setErrorAndRequestCancel(decoderState, seekError);
                 continue;
             }
 
@@ -1297,8 +1302,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                 NSError *seekError = nil;
                                 const auto framePosition = nextDecoderState->performSeek(&seekError);
                                 if (!framePosition.has_value()) {
-                                    nextDecoderState->error_ = seekError;
-                                    nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
+                                    setErrorAndRequestCancel(decoderState, seekError);
                                     continue;
                                 }
 
@@ -1380,8 +1384,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 if (!decoderState->decoder_.isOpen) {
                     if (NSError *error = nil; ![decoderState->decoder_ openReturningError:&error]) {
                         os_log_error(log_, "Error opening %{public}@: %{public}@", decoderState->decoder_, error);
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                        setErrorAndRequestCancel(decoderState, error);
                         continue;
                     }
 
@@ -1397,10 +1400,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                  "Error allocating decoder state data: DecoderStateData::allocate failed with frame "
                                  "capacity %u",
                                  ringBufferChunkSize);
-                    decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                               code:SFBAudioPlayerErrorCodeInternalError
-                                                           userInfo:nil];
-                    decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                    setErrorAndRequestCancel(decoderState, [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                                               code:SFBAudioPlayerErrorCodeInternalError
+                                                                           userInfo:nil]);
                     continue;
                 }
 
@@ -1424,10 +1426,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             os_log_error(log_,
                                          "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
                                          stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
-                            decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                                       code:SFBAudioPlayerErrorCodeInternalError
-                                                                   userInfo:nil];
-                            decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                            setErrorAndRequestCancel(decoderState,
+                                                     [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                                         code:SFBAudioPlayerErrorCodeInternalError
+                                                                     userInfo:nil]);
                             continue;
                         }
                     }
@@ -1452,8 +1454,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                     auto renderFormat = decoderState->converter_.outputFormat;
                     if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                        setErrorAndRequestCancel(decoderState, error);
                         continue;
                     }
 
@@ -1469,10 +1470,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             os_log_error(log_,
                                          "Error creating AVAudioPCMBuffer with format %{public}@ and frame capacity %u",
                                          stringDescribingAVAudioFormat(renderFormat), ringBufferChunkSize);
-                            decoderState->error_ = [NSError errorWithDomain:SFBAudioPlayerErrorDomain
-                                                                       code:SFBAudioPlayerErrorCodeInternalError
-                                                                   userInfo:nil];
-                            decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                            setErrorAndRequestCancel(decoderState,
+                                                     [NSError errorWithDomain:SFBAudioPlayerErrorDomain
+                                                                         code:SFBAudioPlayerErrorCodeInternalError
+                                                                     userInfo:nil]);
                             continue;
                         }
                     }
@@ -1521,8 +1522,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                     // Decode audio into the buffer, converting to the rendering format in the process
                     if (NSError *error = nil; !decoderState->decodeAudio(buffer, &error)) {
-                        decoderState->error_ = error;
-                        decoderState->setFlags(DecoderState::Flags::cancelRequested);
+                        setErrorAndRequestCancel(decoderState, error);
                         goto next_outer_iteration;
                     }
 
