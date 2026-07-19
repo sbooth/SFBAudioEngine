@@ -1450,21 +1450,15 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 if (okToReconfigure) {
                     os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
 
-                    formatMismatch = false;
-                    fetchUpdate(
-                            flags_,
-                            [](auto val) noexcept {
-                                return (val & ~bits::to_underlying(Flags::drainRequired)) |
-                                       bits::to_underlying(Flags::isMuted);
-                            },
-                            std::memory_order_acq_rel);
-
                     auto renderFormat = decoderState->converter_.outputFormat;
                     if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
                         decoderState->error_ = error;
                         decoderState->setFlags(DecoderState::Flags::cancelRequested);
                         continue;
                     }
+
+                    clearFlags(Flags::drainRequired);
+                    formatMismatch = false;
 
                     // Allocate the buffer that is the intermediary between the decoder state and the ring buffer
                     if (auto format = buffer.format; format.channelCount != renderFormat.channelCount ||
@@ -1632,7 +1626,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     if (bits::is_set(flags, Flags::drainRequired)) {
         audioBuffer_.drain();
         audioMetadata_.drain();
-        std::memset(&renderingChunk_, 0, sizeof renderingChunk_);
+        renderingChunk_ = {};
         clearFlags(Flags::drainRequired);
         zeroABL(outputData);
         isSilence = YES;
@@ -2538,9 +2532,11 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
                                                                                             outputBus:0] firstObject];
     [engine_ disconnectNodeOutput:sourceNode_];
 
-    // Adopt the new ring buffer
-    // The move is not thread-safe but the engine is stopped
+    // Adopt the new ring buffer and reset the render state
+    // These operations are not thread-safe but the engine is stopped
     audioBuffer_ = std::move(ringBuffer);
+    audioMetadata_.drain();
+    renderingChunk_ = {};
 
     // Reconnect the source node to the next node in the processing chain
     // This is the mixer node in the default configuration, but additional nodes may
