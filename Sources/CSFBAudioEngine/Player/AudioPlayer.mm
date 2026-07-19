@@ -1189,8 +1189,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             auto anyCanceled = false;
 
             for (const auto &decoderState : activeDecoders_) {
-                const auto flags = decoderState->loadFlags();
-                if (bits::is_set_or_is_clear(flags, DecoderState::Flags::isCanceled,
+                const auto decoderFlags = decoderState->loadFlags();
+                if (bits::is_set_or_is_clear(decoderFlags, DecoderState::Flags::isCanceled,
                                              DecoderState::Flags::cancelRequested)) {
                     continue;
                 }
@@ -1201,7 +1201,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
                 }
 
-                if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
+                if (bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted)) {
                     // Drain the ring buffer since the decoder could have contributed stale frames
                     setFlags(Flags::drainRequired);
 
@@ -1282,12 +1282,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                             continue;
                         }
 
-                        const auto flags = nextDecoderState->loadFlags();
-                        if (bits::is_set(flags, DecoderState::Flags::isCanceled)) {
+                        const auto nextDecoderFlags = nextDecoderState->loadFlags();
+                        if (bits::is_set(nextDecoderFlags, DecoderState::Flags::isCanceled)) {
                             continue;
                         }
 
-                        if (bits::is_set(flags, DecoderState::Flags::decodingStarted)) {
+                        if (bits::is_set(nextDecoderFlags, DecoderState::Flags::decodingStarted)) {
                             os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
                             // TODO: Investigate a per-state buffer to mitigate frame loss
@@ -1334,15 +1334,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             std::lock_guard lock{activeDecodersMutex_};
 
             const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
-                const auto flags = decoderState->loadFlags();
-                return bits::has_none(flags, DecoderState::Flags::isCanceled | DecoderState::Flags::decodingComplete);
+                const auto decoderFlags = decoderState->loadFlags();
+                return bits::has_none(decoderFlags,
+                                      DecoderState::Flags::isCanceled | DecoderState::Flags::decodingComplete);
             });
 
-            if (iter != activeDecoders_.cend()) {
-                decoderState = iter->get();
-            } else {
-                decoderState = nullptr;
-            }
+            decoderState = iter != activeDecoders_.cend() ? iter->get() : nullptr;
         }
 
         // Dequeue the next decoder if there are no decoders that haven't completed decoding
@@ -2022,10 +2019,10 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
-            const auto flags = (*iter)->loadFlags();
+            const auto decoderFlags = (*iter)->loadFlags();
 
             // Rendering is starting
-            if (bits::is_clear(flags, DecoderState::Flags::renderingStarted)) {
+            if (bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted)) {
                 (*iter)->setFlags(DecoderState::Flags::renderingStarted);
 
                 try {
@@ -2044,7 +2041,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 #endif /* DEBUG */
 
             // Rendering is complete
-            if (bits::is_set(flags, DecoderState::Flags::decodingComplete) && frameCount == framesRemaining) {
+            if (bits::is_set(decoderFlags, DecoderState::Flags::decodingComplete) && frameCount == framesRemaining) {
                 try {
                     queuedEvents.push_back({RenderingEventDetails::Type::willComplete, (*iter)->decoder_, eventTime});
                 } catch (const std::exception &e) {
@@ -2285,8 +2282,8 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() cons
     activeDecodersMutex_.assertIsOwner();
 #endif /* DEBUG */
     const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
-        const auto flags = decoderState->loadFlags();
-        return bits::has_none(flags, DecoderState::Flags::needsInitialization | DecoderState::Flags::isCanceled);
+        const auto decoderFlags = decoderState->loadFlags();
+        return bits::has_none(decoderFlags, DecoderState::Flags::needsInitialization | DecoderState::Flags::isCanceled);
     });
     return iter != activeDecoders_.cend() ? iter->get() : nullptr;
 }
