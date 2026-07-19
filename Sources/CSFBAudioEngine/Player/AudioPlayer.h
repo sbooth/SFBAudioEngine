@@ -15,6 +15,7 @@
 #import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
+#import <spsc/RingBuffer.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -33,6 +34,35 @@
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 
 namespace sfb {
+
+namespace detail {
+
+/// A descriptor for a decoded chunk of audio.
+struct DecodedChunkDescriptor final {
+    /// The playback generation at the time this chunk was decoded
+    uint64_t playbackGeneration_{0};
+    /// Decoder sequence number that produced the audio.
+    uint64_t sequenceNumber_{0};
+    /// Decoder frame position for the first audio frame in the chunk.
+    int64_t framePosition_{0};
+    /// Number of audio frames in the chunk.
+    uint32_t frameLength_{0};
+};
+
+/// A descriptor for a rendering chunk of audio.
+struct RenderingChunkDescriptor final {
+    /// The decoded chunk descriptor.
+    DecodedChunkDescriptor descriptor_{};
+    /// The number of frames consumed from `descriptor_`
+    uint32_t framesConsumed_{0};
+
+    /// Returns the number of frames remaining in this chunk
+    [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
+    /// Returns the frame position of the next frame in this chunk
+    [[nodiscard]] int64_t framePosition() const noexcept { return descriptor_.framePosition_ + framesConsumed_; }
+};
+
+} /* namespace detail */
 
 // MARK: - AudioPlayer
 
@@ -54,7 +84,12 @@ class AudioPlayer final {
     using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
     /// Ring buffer transferring audio between the decoding thread and the render block
-    spsc::AudioRingBuffer audioRingBuffer_;
+    spsc::AudioRingBuffer audioBuffer_;
+    /// Ring buffer transferring audio metadata between the decoding thread and the render block
+    spsc::RingBuffer audioMetadata_;
+    /// The current transport epoch
+    std::atomic<uint64_t> playbackGeneration_{1};
+    static_assert(std::atomic<uint64_t>::is_always_lock_free, "Lock-free std::atomic<uint64_t> required");
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -249,6 +284,8 @@ class AudioPlayer final {
     /// Render block implementation
     OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                     AudioBufferList *_Nonnull outputData) noexcept;
+    /// The current rendering chunk descriptor
+    detail::RenderingChunkDescriptor renderingChunk_{};
 
     // MARK: - Events
 
@@ -310,6 +347,9 @@ class AudioPlayer final {
 
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
     DecoderState *_Nullable firstActiveDecoderState() const noexcept;
+
+    /// Returns the decoder state in `activeDecoders_` with the specified sequence number
+    DecoderState *_Nullable decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept;
 
   public:
     // MARK: - AVAudioEngine Notification Handling

@@ -64,6 +64,15 @@
       }
     },
     {
+      "identity" : "cxxringbuffer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXRingBuffer",
+      "state" : {
+        "revision" : "8d859aa73d115273afcebe754b22bf50d3ea0621",
+        "version" : "0.6.1"
+      }
+    },
+    {
       "identity" : "cxxtaglib",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
