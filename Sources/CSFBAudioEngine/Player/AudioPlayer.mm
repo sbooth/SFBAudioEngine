@@ -457,7 +457,8 @@ inline std::optional<AVAudioFramePosition> AudioPlayer::DecoderState::performSee
 
     const auto framePosition = decoder_.framePosition;
     if (framePosition == SFBUnknownFramePosition) {
-        os_log_error(log_, "Unknown frame position in %{public}@ after seeking to frame %lld", decoder_, requestedFrame);
+        os_log_error(log_, "Unknown frame position in %{public}@ after seeking to frame %lld", decoder_,
+                     requestedFrame);
         return std::nullopt;
     }
     if (framePosition != requestedFrame) {
@@ -1301,8 +1302,10 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                     continue;
                                 }
 
-                                nextDecoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
-                                if (events_.enqueue(EventCommand::seek, nextDecoderState->sequenceNumber_, framePosition.value())) {
+                                nextDecoderState->framesDecoded_.store(framePosition.value(),
+                                                                       std::memory_order_release);
+                                if (events_.enqueue(EventCommand::seek, nextDecoderState->sequenceNumber_,
+                                                    framePosition.value())) {
                                     eventSemaphore_.signal();
                                 } else {
                                     os_log_fault(log_, "Error writing decoder seek event");
