@@ -15,7 +15,7 @@
 #import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
-#import <spsc/RingBuffer.hpp>
+#import <spsc/Queue.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -85,8 +85,8 @@ class AudioPlayer final {
 
     /// Ring buffer transferring audio between the decoding thread and the render block
     spsc::AudioRingBuffer audioBuffer_;
-    /// Ring buffer transferring audio metadata between the decoding thread and the render block
-    spsc::RingBuffer audioMetadata_;
+    /// Queue transferring audio metadata between the decoding thread and the render block
+    spsc::Queue<detail::DecodedChunkDescriptor, 32> audioMetadata_;
     /// The current transport epoch
     std::atomic<uint64_t> playbackGeneration_{1};
     static_assert(std::atomic<uint64_t>::is_always_lock_free, "Lock-free std::atomic<uint64_t> required");

@@ -32,8 +32,6 @@ namespace {
 
 /// The default audio ring buffer capacity in frames
 constexpr std::size_t audioBufferCapacity = 16384;
-/// The default audio metadata buffer capacity in bytes
-constexpr std::size_t metadataBufferCapacity = 2048;
 /// The minimum number of frames to write to the audio ring buffer
 constexpr AVAudioFrameCount ringBufferChunkSize = 2048;
 
@@ -490,13 +488,6 @@ sfb::AudioPlayer::AudioPlayer() {
                      "%{public}@ and capacity %zu",
                      SFBASBDFormatDescription(format.streamDescription), audioBufferCapacity);
         throw std::runtime_error("spsc::AudioRingBuffer::allocate failed");
-    }
-
-    // Allocate the metadata buffer carrying decoded chunk descriptors from the decoder thread to the render block
-    if (!audioMetadata_.allocate(metadataBufferCapacity)) {
-        os_log_error(log_, "Unable to create metadata buffer: spsc::RingBuffer::allocate failed with capacity %zu",
-                     metadataBufferCapacity);
-        throw std::runtime_error("spsc::RingBuffer::allocate failed");
     }
 
     // ========================================
@@ -1486,8 +1477,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         if (decoderState != nullptr) {
             if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::drainRequired)) {
                 // Decode and write chunks and metadata to the ring buffers
-                while (audioBuffer_.freeSpace() >= ringBufferChunkSize &&
-                       audioMetadata_.freeSpace() >= sizeof(detail::DecodedChunkDescriptor)) {
+                while (audioBuffer_.freeSpace() >= ringBufferChunkSize && !audioMetadata_.isFull()) {
 
                     // The chunk descriptor for the chunk to be decoded
                     detail::DecodedChunkDescriptor descriptor{};
@@ -1529,19 +1519,15 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     descriptor.frameLength_ = buffer.frameLength;
 
                     // Write the decoded chunk descriptor to the metadata buffer
-                    if (!audioMetadata_.write(descriptor)) {
-                        os_log_fault(
-                                log_,
-                                "Error writing audio chunk descriptor to ring buffer: spsc::RingBuffer::write failed");
+                    if (!audioMetadata_.push(descriptor)) {
+                        os_log_fault(log_, "Error writing chunk descriptor: spsc::Queue::push failed");
                     }
 
                     // Write the decoded audio to the audio buffer for rendering
                     const auto framesWritten = audioBuffer_.write(buffer.audioBufferList, buffer.frameLength);
                     if (framesWritten != buffer.frameLength) {
-                        os_log_fault(
-                                log_,
-                                "Error writing audio to ring buffer: spsc::AudioRingBuffer::write failed for %u frames",
-                                buffer.frameLength);
+                        os_log_fault(log_, "Error writing audio: spsc::AudioRingBuffer::write failed for %u frames",
+                                     buffer.frameLength);
                     }
 
                     // Decoding complete
@@ -1656,7 +1642,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         do {
             // Read the next chunk descriptor if needed
             if (renderingChunk_.framesRemaining() == 0) {
-                if (!audioMetadata_.read(renderingChunk_.descriptor_)) {
+                if (!audioMetadata_.pop(renderingChunk_.descriptor_)) {
                     setFlags(Flags::renderEventDropped);
                     break;
                 }

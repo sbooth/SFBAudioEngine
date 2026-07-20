@@ -64,12 +64,12 @@
       }
     },
     {
-      "identity" : "cxxringbuffer",
+      "identity" : "cxxqueue",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXRingBuffer",
+      "location" : "https://github.com/sbooth/CXXQueue",
       "state" : {
-        "revision" : "8d859aa73d115273afcebe754b22bf50d3ea0621",
-        "version" : "0.6.1"
+        "branch" : "main",
+        "revision" : "cd1a618382176d8724b82025b7caab611ae39607"
       }
     },
     {
