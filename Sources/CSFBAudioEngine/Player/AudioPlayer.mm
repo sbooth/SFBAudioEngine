@@ -1243,10 +1243,17 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // Mute until the seek is complete and the ring buffer is drained and refilled
             setFlags(Flags::isMuted | Flags::drainRequired);
 
-            // Increment the playback epoch to expire any inflight events
-            playbackGeneration_.fetch_add(1, std::memory_order_release);
+            {
+                // Ensure the playback epoch increment and frame counter updates occur together
+                std::lock_guard lock{activeDecodersMutex_};
 
-            decoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
+                // Increment the playback epoch to expire any inflight events
+                playbackGeneration_.fetch_add(1, std::memory_order_release);
+
+                decoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
+                decoderState->framesRendered_.store(framePosition.value(), std::memory_order_release);
+            }
+
             if (events_.enqueue(EventCommand::seek, decoderState->sequenceNumber_, framePosition.value())) {
                 eventSemaphore_.signal();
             } else {
@@ -1299,6 +1306,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                                 nextDecoderState->framesDecoded_.store(framePosition.value(),
                                                                        std::memory_order_release);
+                                nextDecoderState->framesRendered_.store(framePosition.value(),
+                                                                        std::memory_order_release);
+
                                 if (events_.enqueue(EventCommand::seek, nextDecoderState->sequenceNumber_,
                                                     framePosition.value())) {
                                     eventSemaphore_.signal();
@@ -1839,10 +1849,6 @@ bool sfb::AudioPlayer::processDecoderSeekEvent() noexcept {
         std::lock_guard lock{activeDecodersMutex_};
 
         if (auto *decoderState = decoderStateWithSequenceNumber(sequenceNumber); decoderState != nullptr) {
-            decoderState->framesRendered_.store(frame, std::memory_order_release);
-            if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::renderingStarted)) {
-                return true;
-            }
             decoder = decoderState->decoder_;
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder seek event",
@@ -1981,11 +1987,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     //
     // This is indicated by an increment in the transport epoch/playback generation.
     //
-    // Discard stale events from previous playback generations.
-    if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
-        os_log_debug(log_, "Discarding stale frames rendered event");
-        return true;
-    }
+    // NB: The generation check must happen under activeDecodersMutex_, together with the frame
+    // counter reads below. A seek on the decoding thread bumps playbackGeneration_ and resets a
+    // decoder state's framesDecoded_/framesRendered_ under the same mutex (see the seek handling
+    // in the decoding loop). Checking the generation before taking the lock leaves a window in
+    // which the seek's reset can land between the check and the reads below, making a stale
+    // event's frame count get applied to post-seek counters.
 
     struct RenderingEventDetails {
         enum class Type {
@@ -2002,6 +2009,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
     {
         std::lock_guard lock{activeDecodersMutex_};
+
+        // Discard stale events from previous playback generations
+        if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
+            os_log_debug(log_, "Discarding stale frames rendered event");
+            return true;
+        }
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
@@ -2020,7 +2033,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             }
 
             const auto framesDecoded = (*iter)->framesDecoded_.load(std::memory_order_acquire);
-            const auto framesRendered = (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_release);
+            const auto framesRendered = (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_acq_rel);
             const auto framesRemaining = framesDecoded - framesRendered;
 #if DEBUG
             assert(framesRemaining >= frameCount);
