@@ -390,7 +390,7 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
         return true;
     }
 
-    this->framesDecoded_.fetch_add(framesDecoded, std::memory_order_acq_rel);
+    this->framesDecoded_.fetch_add(framesDecoded, std::memory_order_release);
 
     // Only PCM to PCM conversions are performed
     if (![converter_ convertToBuffer:buffer fromBuffer:decodeBuffer_ error:error]) {
@@ -1203,7 +1203,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     setFlags(Flags::drainRequired);
 
                     // Increment the playback epoch to expire any inflight events
-                    playbackGeneration_.fetch_add(1, std::memory_order_acq_rel);
+                    playbackGeneration_.fetch_add(1, std::memory_order_release);
                 }
 
                 decoderState->setFlags(DecoderState::Flags::isCanceled);
@@ -1244,7 +1244,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             setFlags(Flags::isMuted | Flags::drainRequired);
 
             // Increment the playback epoch to expire any inflight events
-            playbackGeneration_.fetch_add(1, std::memory_order_acq_rel);
+            playbackGeneration_.fetch_add(1, std::memory_order_release);
 
             decoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
             if (events_.enqueue(EventCommand::seek, decoderState->sequenceNumber_, framePosition.value())) {
@@ -2020,7 +2020,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             }
 
             const auto framesDecoded = (*iter)->framesDecoded_.load(std::memory_order_acquire);
-            const auto framesRendered = (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_acq_rel);
+            const auto framesRendered = (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_release);
             const auto framesRemaining = framesDecoded - framesRendered;
 #if DEBUG
             assert(framesRemaining >= frameCount);
