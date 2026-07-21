@@ -58,8 +58,6 @@ struct RenderingChunkDescriptor final {
 
     /// Returns the number of frames remaining in this chunk
     [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
-    /// Returns the frame position of the next frame in this chunk
-    [[nodiscard]] int64_t framePosition() const noexcept { return descriptor_.framePosition_ + framesConsumed_; }
 };
 
 } /* namespace detail */
