@@ -1300,7 +1300,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                 NSError *seekError = nil;
                                 const auto framePosition = nextDecoderState->performSeek(&seekError);
                                 if (!framePosition.has_value()) {
-                                    setErrorAndRequestCancel(decoderState, seekError);
+                                    setErrorAndRequestCancel(nextDecoderState.get(), seekError);
                                     continue;
                                 }
 
