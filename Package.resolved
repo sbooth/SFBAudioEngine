@@ -64,6 +64,15 @@
       }
     },
     {
+      "identity" : "cxxqueue",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXQueue",
+      "state" : {
+        "revision" : "7e4e21a78c4bde49d6b4f4ec4220dfbf81e8e1c5",
+        "version" : "0.1.0"
+      }
+    },
+    {
       "identity" : "cxxtaglib",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
