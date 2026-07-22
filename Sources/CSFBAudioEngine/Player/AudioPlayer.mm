@@ -1621,7 +1621,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
     if (bits::is_set(flags, Flags::drainRequired)) {
         audioBuffer_.drain();
-        audioMetadata_.drain();
+        audioMetadata_.discardAll();
         renderingChunk_ = {};
         clearFlags(Flags::drainRequired);
         zeroABL(outputData);
@@ -2534,7 +2534,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     // Adopt the new ring buffer and reset the render state
     // These operations are not thread-safe but the engine is stopped
     audioBuffer_ = std::move(ringBuffer);
-    audioMetadata_.drain();
+    audioMetadata_.discardAll();
     renderingChunk_ = {};
 
     // Reconnect the source node to the next node in the processing chain
