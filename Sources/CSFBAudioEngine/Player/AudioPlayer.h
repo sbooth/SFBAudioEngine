@@ -233,13 +233,13 @@ class AudioPlayer final {
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
         /// Cached value of `engine_.isRunning`
-        engineIsRunning = 1u << 0,
+        engineRunning = 1u << 0,
         /// The render block should output audio
-        isPlaying = 1u << 1,
+        playing = 1u << 1,
         /// The render block should output silence
-        isMuted = 1u << 2,
-        /// The ring buffer needs to be drained during the next render cycle
-        drainRequired = 1u << 3,
+        muted = 1u << 2,
+        /// The ring buffer contains stale audio and needs to be emptied during the next render cycle
+        audioStale = 1u << 3,
         /// The event message queue had insufficient space to record a render event
         renderEventDropped = 1u << 4,
     };
@@ -281,7 +281,7 @@ class AudioPlayer final {
 
     /// Render block implementation
     OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
-                    AudioBufferList *_Nonnull outputData) noexcept;
+                    AudioBufferList &outputData) noexcept;
     /// The current rendering chunk descriptor
     detail::RenderingChunkDescriptor renderingChunk_{};
 
@@ -388,26 +388,26 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
-    const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
+    const auto state = flags & (Flags::engineRunning | Flags::playing);
 #if DEBUG
-    assert(bits::is_set_or_is_clear(state, Flags::engineIsRunning, Flags::isPlaying));
+    assert(bits::is_set_or_is_clear(state, Flags::engineRunning, Flags::playing));
 #endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
 inline bool AudioPlayer::isPlaying() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_all(flags, Flags::engineIsRunning | Flags::isPlaying);
+    return bits::has_all(flags, Flags::engineRunning | Flags::playing);
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_set_and_is_clear(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::is_set_and_is_clear(flags, Flags::engineRunning, Flags::playing);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_clear(flags, Flags::engineIsRunning);
+    return bits::is_clear(flags, Flags::engineRunning);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {

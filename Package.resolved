@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioRingBuffer",
       "state" : {
-        "revision" : "95052b6bd4ccf192e2f0983d401224e7a4921e39",
-        "version" : "0.1.1"
+        "revision" : "266fb309d074f7843c9f125435b5921075c957b5",
+        "version" : "0.2.0"
       }
     },
     {
