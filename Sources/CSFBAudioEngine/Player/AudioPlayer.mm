@@ -527,9 +527,6 @@ sfb::AudioPlayer::AudioPlayer() {
     sourceNode_ = [[AVAudioSourceNode alloc]
             initWithRenderBlock:^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp,
                                           AVAudioFrameCount frameCount, AudioBufferList *outputData) {
-#if DEBUG
-                assert(outputData != nullptr);
-#endif
                 return render(*isSilence, *timestamp, frameCount, *outputData);
             }];
     if (sourceNode_ == nil) {
@@ -1616,9 +1613,6 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     /// Sets the buffers in an AudioBufferList struct to zero.
     const auto zeroABL = [](AudioBufferList &abl) noexcept {
         for (UInt32 i = 0; i < abl.mNumberBuffers; ++i) {
-#if DEBUG
-            assert(abl.mBuffers[i].mData != nullptr);
-#endif
             std::memset(abl.mBuffers[i].mData, 0, abl.mBuffers[i].mDataByteSize);
         }
     };
