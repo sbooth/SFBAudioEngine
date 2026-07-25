@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXQueue",
       "state" : {
-        "revision" : "7e4e21a78c4bde49d6b4f4ec4220dfbf81e8e1c5",
-        "version" : "0.1.0"
+        "revision" : "b3b39f38e81d1fc5294ae99c81e019e1fe3b8582",
+        "version" : "0.1.1"
       }
     },
     {
