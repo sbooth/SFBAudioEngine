@@ -1490,7 +1490,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 while (audioBuffer_.availableToWrite() >= ringBufferChunkSize && !audioMetadata_.isFull()) {
                     // The chunk descriptor for the chunk to be decoded
                     detail::DecodedChunkDescriptor descriptor{};
-                    descriptor.playbackGeneration_ = playbackGeneration_.load(std::memory_order_acquire);
+                    descriptor.playbackGeneration_ = playbackGeneration_.load(std::memory_order_relaxed);
                     descriptor.sequenceNumber_ = decoderState->sequenceNumber_;
 
                     // Decoding started
