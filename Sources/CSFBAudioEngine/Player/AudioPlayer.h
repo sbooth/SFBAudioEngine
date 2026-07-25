@@ -15,6 +15,7 @@
 #import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
+#import <spsc/Queue.hpp>
 
 #import <AVFAudio/AVFAudio.h>
 
@@ -33,6 +34,33 @@
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 
 namespace sfb {
+
+namespace detail {
+
+/// A descriptor for a decoded chunk of audio.
+struct DecodedChunkDescriptor final {
+    /// The playback generation at the time this chunk was decoded
+    uint64_t playbackGeneration_{0};
+    /// Decoder sequence number that produced the audio.
+    uint64_t sequenceNumber_{0};
+    /// Decoder frame position for the first audio frame in the chunk.
+    int64_t framePosition_{0};
+    /// Number of audio frames in the chunk.
+    uint32_t frameLength_{0};
+};
+
+/// A descriptor for a rendering chunk of audio.
+struct RenderingChunkDescriptor final {
+    /// The decoded chunk descriptor.
+    DecodedChunkDescriptor descriptor_{};
+    /// The number of frames consumed from `descriptor_`
+    uint32_t framesConsumed_{0};
+
+    /// Returns the number of frames remaining in this chunk
+    [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
+};
+
+} /* namespace detail */
 
 // MARK: - AudioPlayer
 
@@ -54,7 +82,12 @@ class AudioPlayer final {
     using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
     /// Ring buffer transferring audio between the decoding thread and the render block
-    spsc::AudioRingBuffer audioRingBuffer_;
+    spsc::AudioRingBuffer audioBuffer_;
+    /// Queue transferring audio metadata between the decoding thread and the render block
+    spsc::Queue<detail::DecodedChunkDescriptor, 32> audioMetadata_;
+    /// The current transport epoch
+    std::atomic<uint64_t> playbackGeneration_{1};
+    static_assert(std::atomic<uint64_t>::is_always_lock_free, "Lock-free std::atomic<uint64_t> required");
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -200,13 +233,13 @@ class AudioPlayer final {
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
         /// Cached value of `engine_.isRunning`
-        engineIsRunning = 1u << 0,
+        engineRunning = 1u << 0,
         /// The render block should output audio
-        isPlaying = 1u << 1,
+        playing = 1u << 1,
         /// The render block should output silence
-        isMuted = 1u << 2,
-        /// The ring buffer needs to be drained during the next render cycle
-        drainRequired = 1u << 3,
+        muted = 1u << 2,
+        /// The ring buffer contains stale audio and needs to be emptied during the next render cycle
+        audioStale = 1u << 3,
         /// The event message queue had insufficient space to record a render event
         renderEventDropped = 1u << 4,
     };
@@ -248,7 +281,9 @@ class AudioPlayer final {
 
     /// Render block implementation
     OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
-                    AudioBufferList *_Nonnull outputData) noexcept;
+                    AudioBufferList &outputData) noexcept;
+    /// The current rendering chunk descriptor
+    detail::RenderingChunkDescriptor renderingChunk_{};
 
     // MARK: - Events
 
@@ -311,6 +346,9 @@ class AudioPlayer final {
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
     DecoderState *_Nullable firstActiveDecoderState() const noexcept;
 
+    /// Returns the decoder state in `activeDecoders_` with the specified sequence number
+    DecoderState *_Nullable decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept;
+
   public:
     // MARK: - AVAudioEngine Notification Handling
 
@@ -350,26 +388,26 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
 
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
-    const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
+    const auto state = flags & (Flags::engineRunning | Flags::playing);
 #if DEBUG
-    assert(bits::is_set_or_is_clear(state, Flags::engineIsRunning, Flags::isPlaying));
+    assert(bits::is_set_or_is_clear(state, Flags::engineRunning, Flags::playing));
 #endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
 inline bool AudioPlayer::isPlaying() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_all(flags, Flags::engineIsRunning | Flags::isPlaying);
+    return bits::has_all(flags, Flags::engineRunning | Flags::playing);
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_set_and_is_clear(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::is_set_and_is_clear(flags, Flags::engineRunning, Flags::playing);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_clear(flags, Flags::engineIsRunning);
+    return bits::is_clear(flags, Flags::engineRunning);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
