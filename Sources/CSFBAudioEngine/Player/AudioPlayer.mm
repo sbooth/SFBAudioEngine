@@ -174,17 +174,16 @@ constexpr T absoluteDifference(T a, T b) noexcept {
 
 /// Hints to the CPU that the current thread is in a spin-wait loop.
 ///
-/// On hardware that supports it, it tells the core to deprioritize the current
-/// hardware thread for a few cycles.
+/// On supported architectures this emits the processor's spin-wait hint
+/// instruction (e.g. PAUSE on x86 or YIELD on ARM), which may reduce power
+/// consumption and improve performance of simultaneous multithreading.
 inline void cpuPause() noexcept {
 #if defined(__x86_64__) || defined(__i386__)
     __builtin_ia32_pause();
-#elif defined(__aarch64__)
-    // ISB forces a pipeline flush which as an incidental side effect introduces a multi-cycle stall
-    __builtin_arm_isb(0xF);
-#elif defined(__arm__)
+#elif defined(__aarch64__) || defined(__arm__)
     __builtin_arm_yield();
 #else
+    // Fallback for other architectures; yield the OS thread timeslice
     std::this_thread::yield();
 #endif
 }
