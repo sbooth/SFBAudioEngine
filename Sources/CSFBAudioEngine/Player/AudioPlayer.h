@@ -483,7 +483,7 @@ inline SFBPlaybackPosition detail::TransportSnapshot::playbackPosition() const n
 }
 
 inline SFBPlaybackTime detail::TransportSnapshot::playbackTime() const noexcept {
-    SFBPlaybackTime playbackTime = SFBInvalidPlaybackTime;
+    auto playbackTime = SFBInvalidPlaybackTime;
     if (isValid_ && sampleRate_ > 0) [[likely]] {
         if (framePosition_ != SFBUnknownFramePosition) {
             playbackTime.currentTime = framePosition_ / sampleRate_;
