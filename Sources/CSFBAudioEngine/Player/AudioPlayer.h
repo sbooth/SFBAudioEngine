@@ -64,14 +64,14 @@ struct RenderingChunkDescriptor final {
 struct TransportSnapshot {
     /// Decoder sequence number for the snapshot.
     uint64_t sequenceNumber_{0};
-    /// Whether the decoder supports seeking.
-    bool supportsSeeking_{false};
     /// Decoder frame position.
     AVAudioFramePosition framePosition_{SFBUnknownFramePosition};
     /// Decoder frame length.
     AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
     /// Decoder sample rate in Hz.
     double sampleRate_{0};
+    /// Whether the decoder supports seeking.
+    bool supportsSeeking_{false};
     /// Whether this snapshot contains valid data.
     bool isValid_{false};
 
