@@ -467,6 +467,21 @@ inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
     return nowPlaying_;
 }
 
+inline SFBPlaybackPosition AudioPlayer::playbackPosition() const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    return snapshot.playbackPosition();
+}
+
+inline SFBPlaybackTime AudioPlayer::playbackTime() const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    return snapshot.playbackTime();
+}
+
+inline bool AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position, SFBPlaybackTime *time) const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    return snapshot.getPlaybackPositionAndTime(position, time);
+}
+
 inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { return sourceNode_; }
 
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }

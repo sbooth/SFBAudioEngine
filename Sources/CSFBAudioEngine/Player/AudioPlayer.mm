@@ -842,23 +842,6 @@ void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
     }
 }
 
-// MARK: - Playback Properties
-
-SFBPlaybackPosition sfb::AudioPlayer::playbackPosition() const noexcept {
-    const auto snapshot = loadTransportSnapshot();
-    return snapshot.playbackPosition();
-}
-
-SFBPlaybackTime sfb::AudioPlayer::playbackTime() const noexcept {
-    const auto snapshot = loadTransportSnapshot();
-    return snapshot.playbackTime();
-}
-
-bool sfb::AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position, SFBPlaybackTime *time) const noexcept {
-    const auto snapshot = loadTransportSnapshot();
-    return snapshot.getPlaybackPositionAndTime(position, time);
-}
-
 // MARK: - Seeking
 
 bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
@@ -2277,7 +2260,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
     }
 }
 
-// MARK: - Playback Snapshots
+// MARK: - Transport Snapshots
 
 void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
 #if DEBUG
