@@ -477,7 +477,8 @@ inline SFBPlaybackTime AudioPlayer::playbackTime() const noexcept {
     return snapshot.playbackTime();
 }
 
-inline bool AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position, SFBPlaybackTime *time) const noexcept {
+inline bool AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
+                                                    SFBPlaybackTime *time) const noexcept {
     const auto snapshot = loadTransportSnapshot();
     return snapshot.getPlaybackPositionAndTime(position, time);
 }
