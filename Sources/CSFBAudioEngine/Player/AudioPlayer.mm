@@ -2069,8 +2069,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
-                publishTransportSnapshot();
             }
+
+            publishTransportSnapshot();
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for frames rendered event",
                          sequenceNumber);
