@@ -172,6 +172,26 @@ constexpr T absoluteDifference(T a, T b) noexcept {
     return (a >= b) ? (a - b) : (b - a);
 }
 
+/// Hints to the CPU that the current thread is in a spin-wait loop.
+///
+/// This is not a scheduling yield: it does not give up the thread's timeslice.
+/// On hardware that supports it, it tells the core to deprioritize the current
+/// hardware thread for a few cycles.
+inline void cpuPause() noexcept {
+#if defined(__x86_64__) || defined(__i386__)
+    __builtin_ia32_pause();
+#elif defined(__aarch64__)
+    // Repurpose ISB: ISB forces a pipeline flush, which, as an incidental side
+    // effect, introduces a real multi-cycle stall
+    // This leans on empirically observed Apple Silicon behavior, not documentation
+    __builtin_arm_isb(0xF);
+#elif defined(__arm__)
+    __builtin_arm_yield();
+#else
+    std::this_thread::yield();
+#endif
+}
+
 } /* namespace */
 
 namespace sfb {
@@ -2288,38 +2308,17 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
 }
 
 auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::TransportSnapshot {
-
-    detail::TransportSnapshot snapshot;
-    uint64_t seq;
-    do {
-        // Acquire load ensures we don't read snapshot fields before loading the sequence number
-        seq = snapshotSequence_.load(std::memory_order_acquire);
-
-        while (seq & 1) {
-            std::this_thread::yield(); // Or pause instruction
-            seq = snapshotSequence_.load(std::memory_order_acquire);
-        }
-
-        snapshot = currentSnapshot_;
-
-        // Acquire fence prevents reads of snapshot from leaking past the second sequence load
-        std::atomic_thread_fence(std::memory_order_acquire);
-    } while (snapshotSequence_.load(std::memory_order_relaxed) != seq);
-
-    return snapshot;
-
     for (;;) {
         // Acquire load ensures we don't read snapshot fields before loading the sequence number
         const auto seq = snapshotSequence_.load(std::memory_order_acquire);
 
-        // If seq is odd, a writer is currently updating the snapshot—spin/retry
-        if ((seq & 1) != 0) {
+        // If seq is odd, a writer is currently updating the snapshot
+        if ((seq & 1) != 0) [[unlikely]] {
+#if DEBUG
             os_log_debug(log_, "Unable to load playback snapshot: write in progress");
-
+#endif /* DEBUG */
+            cpuPause();
             continue;
-
-            //            std::this_thread::yield();
-            //            seq = snapshotSequence_.load(std::memory_order_acquire);
         }
 
         detail::TransportSnapshot result = currentSnapshot_;
@@ -2327,6 +2326,7 @@ auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::Transpo
         // Acquire fence prevents reads of snapshot from leaking past the second sequence load
         std::atomic_thread_fence(std::memory_order_acquire);
 
+        // Verify no write occurred while reading
         if (snapshotSequence_.load(std::memory_order_relaxed) == seq) {
             return result;
         }
