@@ -1237,6 +1237,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                 {
                     std::lock_guard lock{activeDecodersMutex_};
+                    auto republishSnapshot = false;
 
                     // Rewind ensuing decoder states if possible to avoid discarding frames
                     for (const auto &nextDecoderState : activeDecoders_) {
@@ -1267,6 +1268,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                                        std::memory_order_release);
                                 nextDecoderState->framesRendered_.store(framePosition.value(),
                                                                         std::memory_order_release);
+                                republishSnapshot = true;
 
                                 if (events_.enqueue(EventCommand::seekComplete, nextDecoderState->sequenceNumber_,
                                                     framePosition.value())) {
@@ -1290,7 +1292,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         }
                     }
 
-                    publishTransportSnapshot();
+                    if (republishSnapshot) {
+                        publishTransportSnapshot();
+                    }
                 }
             }
         }
@@ -1338,9 +1342,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         }
                         continue;
                     }
-                }
 
-                publishTransportSnapshot();
+                    publishTransportSnapshot();
+                }
             }
 
             if (decoderState != nullptr) {
@@ -1829,6 +1833,7 @@ bool sfb::AudioPlayer::processSeekRequestEvent() noexcept {
             }
 
             decoderState->requestSeekToFrame(frame);
+            publishTransportSnapshot();
             signal = true;
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for seek request event",
@@ -1904,13 +1909,12 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
+            publishTransportSnapshot();
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event",
                          sequenceNumber);
             return false;
         }
-
-        publishTransportSnapshot();
     }
 
     // Mark the decoder as canceled for any scheduled render notifications
@@ -2065,14 +2069,13 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
+                publishTransportSnapshot();
             }
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for frames rendered event",
                          sequenceNumber);
             return false;
         }
-
-        publishTransportSnapshot();
     }
 
     // Call functions that notify the delegate after unlocking the lock
