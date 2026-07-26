@@ -2268,13 +2268,24 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
 
     /// Publishes a playback snapshot.
     const auto publishSnapshot = [&](const detail::TransportSnapshot &snapshot) noexcept {
-        // Strictly speaking reading/writing currentSnapshot_ as a non-atomic struct guarded only by fences on an
-        // unrelated atomic is UB: Boehm "seqlocks vs. the C++ memory model" situation
-        // https://dl.acm.org/doi/abs/10.1145/2247684.2247688
+        // Fetch current sequence and mark write in progress (odd sequence number)
         const auto seq = snapshotSequence_.load(std::memory_order_relaxed);
-        snapshotSequence_.store(seq + 1, std::memory_order_release); // odd == write in progress
-        currentSnapshot_ = snapshot;                                 // plain store; readers gate on sequence_
-        snapshotSequence_.store(seq + 2, std::memory_order_release); // even == write complete
+        snapshotSequence_.store(seq + 1, std::memory_order_release);
+
+        // See Boehm's "Can seqlocks get along with programming language memory models?":
+        // "https://dl.acm.org/doi/abs/10.1145/2247684.2247688
+
+        // Perform atomic stores on individual scalar fields via atomic_ref
+        // Relaxed ordering is fine here because sequence release/acquire handles visibility
+        std::atomic_ref{currentSnapshot_.sequenceNumber_}.store(snapshot.sequenceNumber_, std::memory_order_relaxed);
+        std::atomic_ref{currentSnapshot_.framePosition_}.store(snapshot.framePosition_, std::memory_order_relaxed);
+        std::atomic_ref{currentSnapshot_.frameLength_}.store(snapshot.frameLength_, std::memory_order_relaxed);
+        std::atomic_ref{currentSnapshot_.sampleRate_}.store(snapshot.sampleRate_, std::memory_order_relaxed);
+        std::atomic_ref{currentSnapshot_.supportsSeeking_}.store(snapshot.supportsSeeking_, std::memory_order_relaxed);
+        std::atomic_ref{currentSnapshot_.isValid_}.store(snapshot.isValid_, std::memory_order_relaxed);
+
+        // 3. Mark write complete (even sequence number)
+        snapshotSequence_.store(seq + 2, std::memory_order_release);
     };
 
     const auto *decoderState = firstActiveDecoderState();
@@ -2293,10 +2304,10 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
 
 auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::TransportSnapshot {
     for (;;) {
-        // Acquire load ensures we don't read snapshot fields before loading the sequence number
+        // Acquire load ensures we don't read snapshot fields before checking sequence
         const auto seq = snapshotSequence_.load(std::memory_order_acquire);
 
-        // If seq is odd, a writer is currently updating the snapshot
+        // Retry immediately if a write is currently in progress
         if ((seq & 1) != 0) [[unlikely]] {
 #if DEBUG
             os_log_debug(log_, "Unable to load playback snapshot: write in progress");
@@ -2305,7 +2316,14 @@ auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::Transpo
             continue;
         }
 
-        detail::TransportSnapshot result = currentSnapshot_;
+        // Atomically load individual fields into a local copy
+        detail::TransportSnapshot result{
+                .sequenceNumber_ = std::atomic_ref{currentSnapshot_.sequenceNumber_}.load(std::memory_order_relaxed),
+                .framePosition_ = std::atomic_ref{currentSnapshot_.framePosition_}.load(std::memory_order_relaxed),
+                .frameLength_ = std::atomic_ref{currentSnapshot_.frameLength_}.load(std::memory_order_relaxed),
+                .sampleRate_ = std::atomic_ref{currentSnapshot_.sampleRate_}.load(std::memory_order_relaxed),
+                .supportsSeeking_ = std::atomic_ref{currentSnapshot_.supportsSeeking_}.load(std::memory_order_relaxed),
+                .isValid_ = std::atomic_ref{currentSnapshot_.isValid_}.load(std::memory_order_relaxed)};
 
         // Acquire fence prevents reads of snapshot from leaking past the second sequence load
         std::atomic_thread_fence(std::memory_order_acquire);

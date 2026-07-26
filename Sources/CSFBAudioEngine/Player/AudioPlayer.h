@@ -151,7 +151,7 @@ class AudioPlayer final {
     /// The seqlock protecting the current playback snapshot
     std::atomic<uint64_t> snapshotSequence_{0};
     /// The current playback snapshot
-    detail::TransportSnapshot currentSnapshot_{};
+    mutable detail::TransportSnapshot currentSnapshot_{};
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
