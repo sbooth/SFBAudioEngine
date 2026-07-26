@@ -2282,7 +2282,7 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
         static_assert(std::atomic_ref<bool>::is_always_lock_free);
 
         // Perform atomic stores on individual scalar fields via atomic_ref
-        // Relaxed ordering is fine here because sequence release/acquire handles visibility
+        // Relaxed ordering is fine because sequence release/acquire handles visibility
         std::atomic_ref{currentSnapshot_.sequenceNumber_}.store(snapshot.sequenceNumber_, std::memory_order_relaxed);
         std::atomic_ref{currentSnapshot_.framePosition_}.store(snapshot.framePosition_, std::memory_order_relaxed);
         std::atomic_ref{currentSnapshot_.frameLength_}.store(snapshot.frameLength_, std::memory_order_relaxed);
@@ -2290,7 +2290,7 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
         std::atomic_ref{currentSnapshot_.supportsSeeking_}.store(snapshot.supportsSeeking_, std::memory_order_relaxed);
         std::atomic_ref{currentSnapshot_.isValid_}.store(snapshot.isValid_, std::memory_order_relaxed);
 
-        // 3. Mark write complete (even sequence number)
+        // Mark write complete (even sequence number)
         snapshotSequence_.store(seq + 2, std::memory_order_release);
     };
 
