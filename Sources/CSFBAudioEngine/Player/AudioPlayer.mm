@@ -2276,6 +2276,11 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
         // See Boehm's "Can seqlocks get along with programming language memory models?":
         // "https://dl.acm.org/doi/abs/10.1145/2247684.2247688
 
+        static_assert(std::atomic_ref<uint64_t>::is_always_lock_free);
+        static_assert(std::atomic_ref<int64_t>::is_always_lock_free);
+        static_assert(std::atomic_ref<double>::is_always_lock_free);
+        static_assert(std::atomic_ref<bool>::is_always_lock_free);
+
         // Perform atomic stores on individual scalar fields via atomic_ref
         // Relaxed ordering is fine here because sequence release/acquire handles visibility
         std::atomic_ref{currentSnapshot_.sequenceNumber_}.store(snapshot.sequenceNumber_, std::memory_order_relaxed);
