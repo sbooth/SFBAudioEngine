@@ -60,6 +60,35 @@ struct RenderingChunkDescriptor final {
     [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
 };
 
+/// A snapshot encapsulating a consistent view of playback state.
+struct TransportSnapshot {
+    /// Decoder sequence number for the snapshot.
+    uint64_t sequenceNumber_{0};
+    /// Whether the decoder supports seeking.
+    bool supportsSeeking_{false};
+    /// Decoder frame position.
+    AVAudioFramePosition framePosition_{SFBUnknownFramePosition};
+    /// Decoder frame length.
+    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
+    /// Decoder sample rate in Hz.
+    double sampleRate_{0};
+    /// Whether this snapshot contains valid data.
+    bool valid_{false};
+
+    /// Returns the playback position for this snapshot.
+    [[nodiscard]] SFBPlaybackPosition playbackPosition() const noexcept;
+
+    /// Returns the playback time for this snapshot.
+    [[nodiscard]] SFBPlaybackTime playbackTime() const noexcept;
+
+    /// Gets the playback position time for this snapshot.
+    /// @param position An optional pointer to receive the playback position
+    /// @param time An optional pointer to receive the playback time
+    /// @return false if the snapshot is not valid
+    [[nodiscard]] bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                                  SFBPlaybackTime *_Nullable time) const noexcept;
+};
+
 } /* namespace detail */
 
 // MARK: - AudioPlayer
@@ -118,6 +147,11 @@ class AudioPlayer final {
     AVAudioSourceNode *sourceNode_{nil};
     /// Mutex protecting playback state and processing graph configuration changes
     mutable mtx::UnfairMutex engineMutex_;
+
+    /// The seqlock protecting the current playback snapshot
+    std::atomic<uint64_t> snapshotSequence_{0};
+    /// The current playback snapshot
+    detail::TransportSnapshot currentSnapshot_{};
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
@@ -189,8 +223,8 @@ class AudioPlayer final {
 
     SFBPlaybackPosition playbackPosition() const noexcept;
     SFBPlaybackTime playbackTime() const noexcept;
-    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable playbackPosition,
-                                    SFBPlaybackTime *_Nullable playbackTime) const noexcept;
+    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                    SFBPlaybackTime *_Nullable time) const noexcept;
 
     // MARK: - Seeking
 
@@ -201,7 +235,7 @@ class AudioPlayer final {
     bool supportsSeeking() const noexcept;
 
   private:
-    bool performClampingSeekToFrame(DecoderState *_Nonnull decoderState, AVAudioFramePosition frame,
+    bool performClampingSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
                                     bool isRelative) noexcept;
 
   public:
@@ -293,16 +327,18 @@ class AudioPlayer final {
         decodingStarted = 1,
         /// Decoding complete
         decodingComplete = 2,
-        /// Seek
-        seek = 3,
+        /// Seek request
+        seekRequest = 3,
+        /// Seek complete
+        seekComplete = 4,
         /// Decoder canceled by user or aborted due to error
-        decoderCanceled = 4,
+        decoderCanceled = 5,
         /// Allocation failure
-        allocationFailure = 5,
+        allocationFailure = 6,
         /// Audio frames rendered from ring buffer
-        framesRendered = 6,
+        framesRendered = 7,
         /// Ring buffer contained fewer audio frames than requested
-        renderBufferUnderrun = 7,
+        renderBufferUnderrun = 8,
     };
 
     // MARK: - Event Processing
@@ -317,8 +353,11 @@ class AudioPlayer final {
     /// Dequeues and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
 
-    /// Dequeues and processes a decoder seek event from `events_`
-    bool processDecoderSeekEvent() noexcept;
+    /// Dequeues and processes a seek request event from `events_`
+    bool processDecoderSeekRequestEvent() noexcept;
+
+    /// Dequeues and processes a decoder seek complete event from `events_`
+    bool processDecoderSeekCompleteEvent() noexcept;
 
     /// Dequeues and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
@@ -337,6 +376,14 @@ class AudioPlayer final {
 
     /// Called when the final audio frame from a decoder will render.
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+
+    // MARK: - Transport Snapshots
+
+    /// Recomputes and publishes the current playback snapshot.
+    void publishTransportSnapshot() noexcept;
+
+    /// Reads the most recently published playback snapshot without blocking.
+    [[nodiscard]] detail::TransportSnapshot loadTransportSnapshot() const noexcept;
 
     // MARK: - Active Decoder Management
 
@@ -425,6 +472,44 @@ inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { re
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
 inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
+
+// MARK: Transport Snapshot
+
+inline SFBPlaybackPosition detail::TransportSnapshot::playbackPosition() const noexcept {
+    if (!valid_) [[unlikely]] {
+        return SFBInvalidPlaybackPosition;
+    }
+    return {.framePosition = framePosition_, .frameLength = frameLength_};
+}
+
+inline SFBPlaybackTime detail::TransportSnapshot::playbackTime() const noexcept {
+    SFBPlaybackTime playbackTime = SFBInvalidPlaybackTime;
+    if (valid_ && sampleRate_ > 0) [[likely]] {
+        if (framePosition_ != SFBUnknownFramePosition) {
+            playbackTime.currentTime = framePosition_ / sampleRate_;
+        }
+        if (frameLength_ != SFBUnknownFrameLength) {
+            playbackTime.totalTime = frameLength_ / sampleRate_;
+        }
+    }
+    return playbackTime;
+}
+
+inline bool detail::TransportSnapshot::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
+                                                                  SFBPlaybackTime *time) const noexcept {
+#if DEBUG
+    assert(position != nullptr || time != nullptr);
+#endif /* DEBUG */
+
+    if (position != nullptr) {
+        *position = playbackPosition();
+    }
+    if (time != nullptr) {
+        *time = playbackTime();
+    }
+
+    return valid_;
+}
 
 } /* namespace sfb */
 
