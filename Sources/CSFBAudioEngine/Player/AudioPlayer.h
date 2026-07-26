@@ -354,10 +354,10 @@ class AudioPlayer final {
     bool processDecodingCompleteEvent() noexcept;
 
     /// Dequeues and processes a seek request event from `events_`
-    bool processDecoderSeekRequestEvent() noexcept;
+    bool processSeekRequestEvent() noexcept;
 
-    /// Dequeues and processes a decoder seek complete event from `events_`
-    bool processDecoderSeekCompleteEvent() noexcept;
+    /// Dequeues and processes a seek complete event from `events_`
+    bool processSeekCompleteEvent() noexcept;
 
     /// Dequeues and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;

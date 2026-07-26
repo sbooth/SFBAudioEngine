@@ -1651,10 +1651,10 @@ void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept
                 processDecodingCompleteEvent();
                 break;
             case EventCommand::seekRequest:
-                processDecoderSeekRequestEvent();
+                processSeekRequestEvent();
                 break;
             case EventCommand::seekComplete:
-                processDecoderSeekCompleteEvent();
+                processSeekCompleteEvent();
                 break;
             case EventCommand::decoderCanceled:
                 processDecoderCanceledEvent();
@@ -1778,12 +1778,12 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
     return true;
 }
 
-bool sfb::AudioPlayer::processDecoderSeekRequestEvent() noexcept {
+bool sfb::AudioPlayer::processSeekRequestEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
     int64_t frame;
     if (!events_.dequeue(command, sequenceNumber, frame)) {
-        os_log_error(log_, "Missing decoder sequence number or frame position for decoder seek request event");
+        os_log_error(log_, "Missing decoder sequence number or frame position for seek request event");
         return false;
     }
 
@@ -1806,14 +1806,14 @@ bool sfb::AudioPlayer::processDecoderSeekRequestEvent() noexcept {
             if (const auto *activeDecoderState = firstActiveDecoderState();
                 activeDecoderState == nullptr ||
                 (decoderState->sequenceNumber_ != activeDecoderState->sequenceNumber_)) {
-                os_log_debug(log_, "Discarding stale decoder seek request event");
+                os_log_debug(log_, "Discarding stale seek request event");
                 return true;
             }
 
             decoderState->requestSeekToFrame(frame);
             signal = true;
         } else {
-            os_log_error(log_, "Decoder state with sequence number %llu missing for decoder seek request event",
+            os_log_error(log_, "Decoder state with sequence number %llu missing for seek request event",
                          sequenceNumber);
             return false;
         }
@@ -1826,12 +1826,12 @@ bool sfb::AudioPlayer::processDecoderSeekRequestEvent() noexcept {
     return true;
 }
 
-bool sfb::AudioPlayer::processDecoderSeekCompleteEvent() noexcept {
+bool sfb::AudioPlayer::processSeekCompleteEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
     int64_t frame;
     if (!events_.dequeue(command, sequenceNumber, frame)) {
-        os_log_error(log_, "Missing decoder sequence number or frame position for decoder seek complete event");
+        os_log_error(log_, "Missing decoder sequence number or frame position for seek complete event");
         return false;
     }
 
@@ -1846,7 +1846,7 @@ bool sfb::AudioPlayer::processDecoderSeekCompleteEvent() noexcept {
         if (auto *decoderState = decoderStateWithSequenceNumber(sequenceNumber); decoderState != nullptr) {
             decoder = decoderState->decoder_;
         } else {
-            os_log_error(log_, "Decoder state with sequence number %llu missing for decoder seek complete event",
+            os_log_error(log_, "Decoder state with sequence number %llu missing for seek complete event",
                          sequenceNumber);
             return false;
         }
