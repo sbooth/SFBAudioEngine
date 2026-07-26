@@ -174,7 +174,6 @@ constexpr T absoluteDifference(T a, T b) noexcept {
 
 /// Hints to the CPU that the current thread is in a spin-wait loop.
 ///
-/// This is not a scheduling yield: it does not give up the thread's timeslice.
 /// On hardware that supports it, it tells the core to deprioritize the current
 /// hardware thread for a few cycles.
 inline void cpuPause() noexcept {
