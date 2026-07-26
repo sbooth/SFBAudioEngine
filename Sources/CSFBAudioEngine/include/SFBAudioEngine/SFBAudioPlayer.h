@@ -181,25 +181,25 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Properties
 
-/// The frame position in the current decoder or `SFBUnknownFramePosition` if unknown or the current playback snapshot
+/// The frame position from the current decoder or `SFBUnknownFramePosition` if unknown or the current playback snapshot
 /// is invalid
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
-/// The frame length in the current decoder or `SFBUnknownFrameLength` if unknown or the current playback snapshot is
+/// The frame length from the current decoder or `SFBUnknownFrameLength` if unknown or the current playback snapshot is
 /// invalid
 @property(nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current playback
+/// The playback position from the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current playback
 /// snapshot is invalid
 @property(nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
-/// The current time in the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
+/// The current time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
-/// The total time in the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
+/// The total time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot is
+/// The playback time from the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot is
 /// invalid
 @property(nonatomic, readonly) SFBPlaybackTime playbackTime;
 
-/// Retrieves the playback position and time in the current decoder
+/// Retrieves the playback position and time from the current decoder
 /// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position
 /// information
 /// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
