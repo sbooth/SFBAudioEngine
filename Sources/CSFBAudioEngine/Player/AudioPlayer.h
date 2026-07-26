@@ -81,7 +81,7 @@ struct TransportSnapshot {
     /// Returns the playback time for this snapshot.
     [[nodiscard]] SFBPlaybackTime playbackTime() const noexcept;
 
-    /// Gets the playback position time for this snapshot.
+    /// Gets the playback position and time for this snapshot.
     /// @param position An optional pointer to receive the playback position
     /// @param time An optional pointer to receive the playback time
     /// @return false if the snapshot is not valid
