@@ -869,7 +869,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
     }
 
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.valid_ || !snapshot.supportsSeeking_) {
+    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
         return false;
     }
 
@@ -892,7 +892,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
     }
 
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.valid_ || !snapshot.supportsSeeking_) {
+    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
         return false;
     }
 
@@ -910,7 +910,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     }
 
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.valid_ || !snapshot.supportsSeeking_) {
+    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
         return false;
     }
 
@@ -933,7 +933,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.valid_ || !snapshot.supportsSeeking_) {
+    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
         return false;
     }
 
@@ -942,13 +942,13 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
     const auto snapshot = loadTransportSnapshot();
-    return snapshot.valid_ && snapshot.supportsSeeking_;
+    return snapshot.isValid_ && snapshot.supportsSeeking_;
 }
 
 bool sfb::AudioPlayer::performClampingSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
                                                   bool isRelative) noexcept {
 #if DEBUG
-    assert(snapshot.valid_);
+    assert(snapshot.isValid_);
     assert(snapshot.supportsSeeking_);
 #endif /* DEBUG */
 
@@ -2304,7 +2304,7 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
                      .framePosition_ = decoderState->framePosition(),
                      .frameLength_ = decoderState->frameLength(),
                      .sampleRate_ = decoderState->sampleRate(),
-                     .valid_ = true});
+                     .isValid_ = true});
 }
 
 auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::TransportSnapshot {

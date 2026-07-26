@@ -73,7 +73,7 @@ struct TransportSnapshot {
     /// Decoder sample rate in Hz.
     double sampleRate_{0};
     /// Whether this snapshot contains valid data.
-    bool valid_{false};
+    bool isValid_{false};
 
     /// Returns the playback position for this snapshot.
     [[nodiscard]] SFBPlaybackPosition playbackPosition() const noexcept;
@@ -476,7 +476,7 @@ inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { re
 // MARK: Transport Snapshot
 
 inline SFBPlaybackPosition detail::TransportSnapshot::playbackPosition() const noexcept {
-    if (!valid_) [[unlikely]] {
+    if (!isValid_) [[unlikely]] {
         return SFBInvalidPlaybackPosition;
     }
     return {.framePosition = framePosition_, .frameLength = frameLength_};
@@ -484,7 +484,7 @@ inline SFBPlaybackPosition detail::TransportSnapshot::playbackPosition() const n
 
 inline SFBPlaybackTime detail::TransportSnapshot::playbackTime() const noexcept {
     SFBPlaybackTime playbackTime = SFBInvalidPlaybackTime;
-    if (valid_ && sampleRate_ > 0) [[likely]] {
+    if (isValid_ && sampleRate_ > 0) [[likely]] {
         if (framePosition_ != SFBUnknownFramePosition) {
             playbackTime.currentTime = framePosition_ / sampleRate_;
         }
@@ -508,7 +508,7 @@ inline bool detail::TransportSnapshot::getPlaybackPositionAndTime(SFBPlaybackPos
         *time = playbackTime();
     }
 
-    return valid_;
+    return isValid_;
 }
 
 } /* namespace sfb */
