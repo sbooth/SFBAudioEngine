@@ -2271,6 +2271,8 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
         // Fetch current sequence and mark write in progress (odd sequence number)
         const auto seq = snapshotSequence_.load(std::memory_order_relaxed);
         snapshotSequence_.store(seq + 1, std::memory_order_release);
+        // Formally required but no current processor requires it
+        // std::atomic_thread_fence(std::memory_order_release);
 
         // See Boehm's "Can seqlocks get along with programming language memory models?":
         // "https://dl.acm.org/doi/abs/10.1145/2247684.2247688
