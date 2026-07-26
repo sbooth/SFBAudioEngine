@@ -195,8 +195,8 @@ NS_SWIFT_NAME(AudioPlayer)
 @property(nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
 /// The total time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// The playback time from the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot is
-/// invalid
+/// The playback time from the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) SFBPlaybackTime playbackTime;
 
 /// Retrieves the playback position and time from the current decoder
