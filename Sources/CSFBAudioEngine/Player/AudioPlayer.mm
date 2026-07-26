@@ -181,9 +181,7 @@ inline void cpuPause() noexcept {
 #if defined(__x86_64__) || defined(__i386__)
     __builtin_ia32_pause();
 #elif defined(__aarch64__)
-    // Repurpose ISB: ISB forces a pipeline flush, which, as an incidental side
-    // effect, introduces a real multi-cycle stall
-    // This leans on empirically observed Apple Silicon behavior, not documentation
+    // ISB forces a pipeline flush which as an incidental side effect introduces a multi-cycle stall
     __builtin_arm_isb(0xF);
 #elif defined(__arm__)
     __builtin_arm_yield();
