@@ -61,7 +61,7 @@ struct RenderingChunkDescriptor final {
 };
 
 /// A snapshot encapsulating a consistent view of playback state.
-struct TransportSnapshot {
+struct TransportSnapshot final {
     /// Decoder sequence number for the snapshot.
     uint64_t sequenceNumber_{0};
     /// Decoder frame position.
@@ -87,6 +87,14 @@ struct TransportSnapshot {
     /// @return false if the snapshot is not valid
     [[nodiscard]] bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
                                                   SFBPlaybackTime *_Nullable time) const noexcept;
+};
+
+/// A seek request.
+struct SeekRequest final {
+    /// Decoder sequence number for the request.
+    uint64_t sequenceNumber_{0};
+    /// Requested frame position.
+    int64_t frame_{-1};
 };
 
 } /* namespace detail */
@@ -152,6 +160,10 @@ class AudioPlayer final {
     std::atomic<uint64_t> snapshotSequence_{0};
     /// The current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
+    /// The pending seek request
+    std::atomic<detail::SeekRequest> pendingSeek_{};
+    static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,
+                  "Lock-free std::atomic_ref<SeekRequest> required");
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};

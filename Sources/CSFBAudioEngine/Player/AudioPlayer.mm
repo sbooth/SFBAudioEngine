@@ -276,13 +276,22 @@ struct AudioPlayer::DecoderState final {
 
     DecoderState(Decoder _Nonnull decoder) noexcept;
 
+    /// Allocates the internal decode buffer and audio converter
     bool allocate(AVAudioFrameCount frameCapacity) noexcept;
 
+    /// Returns the sample rate of the audio converter's output format
     double sampleRate() const noexcept;
 
-    AVAudioFramePosition framePosition() const noexcept;
+    /// Returns the total number of audio frames
     AVAudioFramePosition frameLength() const noexcept;
 
+    /// Returns the number of frames decoded
+    int64_t framesDecoded() const noexcept;
+
+    /// Returns the number of frames rendered
+    int64_t framesRendered() const noexcept;
+
+    /// Decodes audio into buffer, converting to the standard format
     bool decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept;
 
     /// Sets the pending seek request to `frame`
@@ -372,15 +381,15 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
 
 inline double AudioPlayer::DecoderState::sampleRate() const noexcept { return sampleRate_; }
 
-inline AVAudioFramePosition AudioPlayer::DecoderState::framePosition() const noexcept {
-    if (const auto requestedFrame = requestedFrame_.load(std::memory_order_acquire);
-        requestedFrame != SFBUnknownFramePosition) {
-        return requestedFrame;
-    }
-    return framesRendered_.load(std::memory_order_acquire);
+inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept { return frameLength_; }
+
+inline int64_t AudioPlayer::DecoderState::framesDecoded() const noexcept {
+    return framesDecoded_.load(std::memory_order_acquire);
 }
 
-inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept { return frameLength_; }
+inline int64_t AudioPlayer::DecoderState::framesRendered() const noexcept {
+    return framesRendered_.load(std::memory_order_acquire);
+}
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
 #if DEBUG
@@ -901,6 +910,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
     const auto targetFrame = static_cast<int64_t>(frameLength * position);
 
+    pendingSeek_.store({snapshot.sequenceNumber_, targetFrame}, std::memory_order_release);
     if (!events_.enqueue(EventCommand::seekRequest, snapshot.sequenceNumber_, targetFrame)) {
         os_log_fault(log_, "Error writing seek request event");
         return false;
@@ -957,6 +967,7 @@ bool sfb::AudioPlayer::performClampingSeekToFrame(const detail::TransportSnapsho
     frame = std::clamp(frame, 0LL, frameLength - 1);
 
     if (framePosition != frame) {
+        pendingSeek_.store({snapshot.sequenceNumber_, frame}, std::memory_order_release);
         if (!events_.enqueue(EventCommand::seekRequest, snapshot.sequenceNumber_, frame)) {
             os_log_fault(log_, "Error writing seek request event");
             return false;
@@ -1176,6 +1187,13 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (!framePosition.has_value()) {
                 setErrorAndRequestCancel(decoderState, seekError);
                 continue;
+            }
+
+            // Clear the pending seek if it hasn't been replaced by a newer seek request
+            if (auto pendingSeek = pendingSeek_.load(std::memory_order_acquire);
+                pendingSeek.sequenceNumber_ == decoderState->sequenceNumber_) {
+                pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel,
+                                                     std::memory_order_relaxed);
             }
 
             // Mute until the seek is complete and the ring buffer is emptied and refilled
@@ -1813,6 +1831,7 @@ bool sfb::AudioPlayer::processSeekRequestEvent() noexcept {
                 return true;
             }
 
+            // Perform the seek
             decoderState->requestSeekToFrame(frame);
             publishTransportSnapshot();
             signal = true;
@@ -2302,7 +2321,7 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
 
     publishSnapshot({.sequenceNumber_ = decoderState->sequenceNumber_,
                      .supportsSeeking_ = decoderState->decoder_.supportsSeeking != 0,
-                     .framePosition_ = decoderState->framePosition(),
+                     .framePosition_ = decoderState->framesRendered(),
                      .frameLength_ = decoderState->frameLength(),
                      .sampleRate_ = decoderState->sampleRate(),
                      .isValid_ = true});
@@ -2336,6 +2355,11 @@ auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::Transpo
 
         // Verify no write occurred while reading
         if (snapshotSequence_.load(std::memory_order_relaxed) == seq) {
+            // If a seek is pending for this decoder override the reported position
+            if (const auto pendingSeek = pendingSeek_.load(std::memory_order_acquire);
+                pendingSeek.sequenceNumber_ == result.sequenceNumber_ && pendingSeek.frame_ != -1) {
+                result.framePosition_ = pendingSeek.frame_;
+            }
             return result;
         }
     }
