@@ -1215,7 +1215,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition.value())) {
                 eventSemaphore_.signal();
             } else {
-                os_log_fault(log_, "Error writing decoder seek event");
+                os_log_fault(log_, "Error writing seek complete event");
             }
 
             if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
@@ -1273,7 +1273,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                     framePosition.value())) {
                                     eventSemaphore_.signal();
                                 } else {
-                                    os_log_fault(log_, "Error writing decoder seek event");
+                                    os_log_fault(log_, "Error writing seek complete event");
                                 }
                             } else {
                                 os_log_error(log_, "Discarding %lld frames from %{public}@",
