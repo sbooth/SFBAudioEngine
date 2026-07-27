@@ -910,13 +910,14 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
     const auto targetFrame = static_cast<int64_t>(frameLength * position);
 
-    pendingSeek_.store({snapshot.sequenceNumber_, targetFrame}, std::memory_order_release);
     if (!events_.enqueue(EventCommand::seekRequest, snapshot.sequenceNumber_, targetFrame)) {
         os_log_fault(log_, "Error writing seek request event");
         return false;
     }
 
+    pendingSeek_.store({snapshot.sequenceNumber_, targetFrame}, std::memory_order_release);
     eventSemaphore_.signal();
+
     return true;
 }
 
@@ -967,11 +968,12 @@ bool sfb::AudioPlayer::performClampingSeekToFrame(const detail::TransportSnapsho
     frame = std::clamp(frame, 0LL, frameLength - 1);
 
     if (framePosition != frame) {
-        pendingSeek_.store({snapshot.sequenceNumber_, frame}, std::memory_order_release);
         if (!events_.enqueue(EventCommand::seekRequest, snapshot.sequenceNumber_, frame)) {
             os_log_fault(log_, "Error writing seek request event");
             return false;
         }
+
+        pendingSeek_.store({snapshot.sequenceNumber_, frame}, std::memory_order_release);
         eventSemaphore_.signal();
     }
 
