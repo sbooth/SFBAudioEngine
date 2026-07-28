@@ -2507,8 +2507,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
         {
             std::lock_guard lock{engineMutex_};
-            const auto prevFlags = clearFlags(Flags::engineIsRunning | Flags::isPlaying);
-            preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineIsRunning | Flags::isPlaying));
+            const auto prevFlags = clearFlags(Flags::engineRunning | Flags::playing);
+            preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineRunning | Flags::playing));
         }
 
         if (preInterruptState_ != 0) {
@@ -2554,7 +2554,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         {
             std::unique_lock lock{engineMutex_};
 
-            if (bits::is_set(preInterruptState, Flags::engineIsRunning)) {
+            if (bits::is_set(preInterruptState, Flags::engineRunning)) {
                 if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                     os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                     lock.unlock();
@@ -2568,7 +2568,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
             const auto prevFlags = setFlags(preInterruptState);
 #if DEBUG
-            assert(bits::is_set_or_is_clear(prevFlags, Flags::engineIsRunning, Flags::isPlaying));
+            assert(bits::is_set_or_is_clear(prevFlags, Flags::engineRunning, Flags::playing));
 #endif /* DEBUG */
         }
 
