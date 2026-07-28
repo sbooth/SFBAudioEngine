@@ -339,18 +339,16 @@ class AudioPlayer final {
         decodingStarted = 1,
         /// Decoding complete
         decodingComplete = 2,
-        /// Seek request
-        seekRequest = 3,
         /// Seek complete
-        seekComplete = 4,
+        seekComplete = 3,
         /// Decoder canceled by user or aborted due to error
-        decoderCanceled = 5,
+        decoderCanceled = 4,
         /// Allocation failure
-        allocationFailure = 6,
+        allocationFailure = 5,
         /// Audio frames rendered from ring buffer
-        framesRendered = 7,
+        framesRendered = 6,
         /// Ring buffer contained fewer audio frames than requested
-        renderBufferUnderrun = 8,
+        renderBufferUnderrun = 7,
     };
 
     // MARK: - Event Processing
@@ -364,9 +362,6 @@ class AudioPlayer final {
 
     /// Dequeues and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
-
-    /// Dequeues and processes a seek request event from `events_`
-    bool processSeekRequestEvent() noexcept;
 
     /// Dequeues and processes a seek complete event from `events_`
     bool processSeekCompleteEvent() noexcept;
