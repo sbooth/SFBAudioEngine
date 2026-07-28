@@ -2322,10 +2322,10 @@ void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
     }
 
     publishSnapshot({.sequenceNumber_ = decoderState->sequenceNumber_,
-                     .supportsSeeking_ = decoderState->decoder_.supportsSeeking != 0,
                      .framePosition_ = decoderState->framesRendered(),
                      .frameLength_ = decoderState->frameLength(),
                      .sampleRate_ = decoderState->sampleRate(),
+                     .supportsSeeking_ = decoderState->decoder_.supportsSeeking != 0,
                      .isValid_ = true});
 }
 
