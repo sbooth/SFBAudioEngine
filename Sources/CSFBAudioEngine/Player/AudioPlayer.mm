@@ -1833,9 +1833,8 @@ bool sfb::AudioPlayer::processSeekRequestEvent() noexcept {
                 return true;
             }
 
-            // Perform the seek
+            // Request the seek
             decoderState->requestSeekToFrame(frame);
-            publishTransportSnapshot();
             signal = true;
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for seek request event",
