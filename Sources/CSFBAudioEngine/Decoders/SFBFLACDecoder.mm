@@ -504,6 +504,11 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         return NO;
     }
 
+    // Manually set frame position if no audio was produced during the seek
+    if (_frameBuffer.frameLength == 0) {
+        _framePosition = frame;
+    }
+
     return YES;
 }
 
