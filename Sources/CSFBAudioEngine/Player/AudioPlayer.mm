@@ -389,6 +389,9 @@ inline int64_t AudioPlayer::DecoderState::framesRendered() const noexcept {
 }
 
 inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noexcept {
+#if DEBUG
+    bits::is_clear(loadFlags(), Flags::needsInitialization);
+#endif /* DEBUG */
     return {.sequenceNumber_ = sequenceNumber_,
             .framePosition_ = framesRendered(),
             .frameLength_ = frameLength(),
@@ -1345,8 +1348,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     continue;
                 }
 
-                publishTransportSnapshot(decoderState->snapshot());
-
                 os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
             }
         }
@@ -1441,7 +1442,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         if (!suspended) {
                             os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
                         } else {
-                            os_log_debug(log_, "Decoding starting after suspension for %{public}@",
+                            os_log_debug(log_, "Decoding restarting after suspension for %{public}@",
                                          decoderState->decoder_);
                         }
 
