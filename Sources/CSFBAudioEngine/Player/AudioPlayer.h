@@ -357,7 +357,7 @@ class AudioPlayer final {
 
     /// Peeks and identifies event commands in `events_` for processing
     /// - note: This is the thread entry point for the event processing thread
-    void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+    void processEvents(std::stop_token stoken) noexcept;
 
     /// Dequeues and processes a decoding started event from `events_`
     bool processDecodingStartedEvent() noexcept;

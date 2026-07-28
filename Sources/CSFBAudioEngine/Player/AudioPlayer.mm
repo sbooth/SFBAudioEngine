@@ -534,7 +534,7 @@ sfb::AudioPlayer::AudioPlayer() {
     // Launch the decoding and event processing threads
     try {
         decodingThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::processDecoders, this));
-        eventThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::sequenceAndProcessEvents, this));
+        eventThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::processEvents, this));
     } catch (const std::exception &e) {
         os_log_error(log_, "Unable to create thread: %{public}s", e.what());
         throw;
@@ -1655,7 +1655,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 
 // MARK: - Event Processing
 
-void sfb::AudioPlayer::sequenceAndProcessEvents(std::stop_token stoken) noexcept {
+void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     pthread_setname_np("AudioPlayer.Events");
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
