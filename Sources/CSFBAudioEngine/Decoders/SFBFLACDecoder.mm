@@ -481,9 +481,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     NSParameterAssert(frame >= 0);
     //    NSParameterAssert(frame <= _totalFrames);
 
-    // FLAC__stream_decoder_seek_absolute() may call the write callback with a partial frame
-    // if the seek is within the last block. To prevent losing audio clear the buffers
-    // before the seek request, not after.
+    // FLAC__stream_decoder_seek_absolute() may call the write callback with a partial frame.
+    // To prevent losing audio clear the buffers before the seek request, not after.
     _frameBuffer.frameLength = 0;
     _previousFrameHeader.reset();
 
