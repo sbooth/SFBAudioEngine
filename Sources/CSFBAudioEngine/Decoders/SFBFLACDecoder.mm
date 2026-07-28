@@ -450,20 +450,28 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 
     auto framesRemaining = std::min(frameLength, buffer.frameCapacity);
     while (framesRemaining > 0) {
-        const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
-                                         readingFromOffset:0
-                                               frameLength:framesRemaining];
-        [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
+        // Copy as much as possible from the internal frame buffer
+        if (_frameBuffer.frameLength > 0) {
+            const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
+                                             readingFromOffset:0
+                                                   frameLength:framesRemaining];
+            [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
-        framesRemaining -= framesCopied;
-        _framePosition += framesCopied;
+            framesRemaining -= framesCopied;
+            _framePosition += framesCopied;
 
-        // All requested frames were read or EOS reached
-        if (framesRemaining == 0 || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
+            // All requested frames read
+            if (framesRemaining == 0) {
+                break;
+            }
+        }
+
+        // EOS reached
+        if (FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
             break;
         }
 
-        // Grab the next FLAC frame
+        // Decode the next FLAC frame
         if (!FLAC__stream_decoder_process_single(_flac.get())) {
             os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s",
                          FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
