@@ -448,22 +448,20 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    frameLength = std::min(frameLength, buffer.frameCapacity);
-    while (frameLength > 0) {
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer
-                                                readingFromOffset:0
-                                                      frameLength:frameLength];
+    auto remaining = std::min(frameLength, buffer.frameCapacity);
+    while (remaining > 0) {
+        const auto framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:remaining];
         [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
-        frameLength -= framesCopied;
+        remaining -= framesCopied;
         _framePosition += framesCopied;
 
         // All requested frames were read or EOS reached
-        if (frameLength == 0 || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
+        if (remaining == 0 || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
             break;
         }
 
-        // Grab the next frame
+        // Grab the next FLAC frame
         if (!FLAC__stream_decoder_process_single(_flac.get())) {
             os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s",
                          FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
