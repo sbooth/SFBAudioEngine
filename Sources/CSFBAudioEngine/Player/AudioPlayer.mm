@@ -289,6 +289,9 @@ struct AudioPlayer::DecoderState final {
     /// Returns the number of frames rendered
     int64_t framesRendered() const noexcept;
 
+    /// Returns a snapshot of the current progress
+    detail::TransportSnapshot snapshot() const noexcept;
+
     /// Decodes audio into buffer, converting to the standard format
     bool decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept;
 
@@ -383,6 +386,15 @@ inline int64_t AudioPlayer::DecoderState::framesDecoded() const noexcept {
 
 inline int64_t AudioPlayer::DecoderState::framesRendered() const noexcept {
     return framesRendered_.load(std::memory_order_acquire);
+}
+
+inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noexcept {
+    return {.sequenceNumber_ = sequenceNumber_,
+            .framePosition_ = framesRendered(),
+            .frameLength_ = frameLength(),
+            .sampleRate_ = sampleRate(),
+            .supportsSeeking_ = decoder_.supportsSeeking != 0,
+            .isValid_ = true};
 }
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
@@ -1127,23 +1139,33 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }
             }
 
-            // Signal the event thread if any decoders were canceled
+            // Signal the event thread if necessary
             if (signal) {
                 eventSemaphore_.signal();
             }
 
-            // Clear the format mismatch flag if any decoders were canceled
-            if (anyCanceled && formatMismatch) {
-                formatMismatch = false;
-            }
-
             // Get the earliest decoder state that has not completed rendering
             decoderState = firstActiveDecoderState();
+
+            if (anyCanceled) {
+                // Republish the playback snapshot
+                if (decoderState != nullptr) {
+                    publishTransportSnapshot(decoderState->snapshot());
+                } else {
+                    publishTransportSnapshot({});
+                }
+
+                // Clear the format mismatch flag
+                if (formatMismatch) {
+                    formatMismatch = false;
+                }
+            }
         }
 
         // Process pending seek requests
         if (decoderState != nullptr) {
-            if (auto pendingSeek = pendingSeek_.load(std::memory_order_acquire); pendingSeek.sequenceNumber_ == decoderState->sequenceNumber_) {
+            if (auto pendingSeek = pendingSeek_.load(std::memory_order_acquire);
+                pendingSeek.sequenceNumber_ == decoderState->sequenceNumber_) {
                 NSError *seekError = nil;
                 const auto framePosition = decoderState->seekToFrame(pendingSeek.frame_, &seekError);
                 if (!framePosition.has_value()) {
@@ -1152,7 +1174,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                 }
 
                 // Clear the pending seek if it hasn't been replaced by a newer seek request
-                pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
+                pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel,
+                                                     std::memory_order_relaxed);
 
                 // Mute until the seek is complete and the ring buffer is emptied and refilled
                 setFlags(Flags::muted | Flags::audioStale);
@@ -1167,7 +1190,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     decoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
                     decoderState->framesRendered_.store(framePosition.value(), std::memory_order_release);
 
-                    publishTransportSnapshot();
+                    publishTransportSnapshot(decoderState->snapshot());
                 }
 
                 if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition.value())) {
@@ -1185,16 +1208,15 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     formatMismatch = false;
 
                     fetchUpdate(
-                                decoderState->flags_,
-                                [](auto val) noexcept {
-                                    return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
-                                    bits::to_underlying(DecoderState::Flags::decodingResumed);
-                                },
-                                std::memory_order_acq_rel);
+                            decoderState->flags_,
+                            [](auto val) noexcept {
+                                return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
+                                       bits::to_underlying(DecoderState::Flags::decodingResumed);
+                            },
+                            std::memory_order_acq_rel);
 
                     {
                         std::lock_guard lock{activeDecodersMutex_};
-                        auto republishSnapshot = false;
 
                         // Rewind ensuing decoder states if possible to avoid discarding frames
                         for (const auto &nextDecoderState : activeDecoders_) {
@@ -1223,7 +1245,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                                            std::memory_order_release);
                                     nextDecoderState->framesRendered_.store(framePosition.value(),
                                                                             std::memory_order_release);
-                                    republishSnapshot = true;
 
                                     if (events_.enqueue(EventCommand::seekComplete, nextDecoderState->sequenceNumber_,
                                                         framePosition.value())) {
@@ -1238,17 +1259,13 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                 }
 
                                 fetchUpdate(
-                                            nextDecoderState->flags_,
-                                            [](auto val) noexcept {
-                                                return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
-                                                bits::to_underlying(DecoderState::Flags::decodingSuspended);
-                                            },
-                                            std::memory_order_acq_rel);
+                                        nextDecoderState->flags_,
+                                        [](auto val) noexcept {
+                                            return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
+                                                   bits::to_underlying(DecoderState::Flags::decodingSuspended);
+                                        },
+                                        std::memory_order_acq_rel);
                             }
-                        }
-
-                        if (republishSnapshot) {
-                            publishTransportSnapshot();
                         }
                     }
                 }
@@ -1298,8 +1315,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         }
                         continue;
                     }
-
-                    publishTransportSnapshot();
                 }
             }
 
@@ -1329,6 +1344,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                                                            userInfo:nil]);
                     continue;
                 }
+
+                publishTransportSnapshot(decoderState->snapshot());
 
                 os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
             }
@@ -1813,7 +1830,6 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
-            publishTransportSnapshot();
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event",
                          sequenceNumber);
@@ -1973,9 +1989,10 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
+                publishTransportSnapshot({});
+            } else {
+                publishTransportSnapshot((*iter)->snapshot());
             }
-
-            publishTransportSnapshot();
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for frames rendered event",
                          sequenceNumber);
@@ -2183,52 +2200,32 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
 // MARK: - Transport Snapshots
 
-void sfb::AudioPlayer::publishTransportSnapshot() noexcept {
-#if DEBUG
-    activeDecodersMutex_.assertIsOwner();
-#endif /* DEBUG */
+void sfb::AudioPlayer::publishTransportSnapshot(const detail::TransportSnapshot &snapshot) noexcept {
+    // Fetch current sequence and mark write in progress (odd sequence number)
+    const auto seq = snapshotSequence_.load(std::memory_order_relaxed);
+    snapshotSequence_.store(seq + 1, std::memory_order_release);
+    // Formally required but no current processor requires it
+    // std::atomic_thread_fence(std::memory_order_release);
 
-    /// Publishes a playback snapshot.
-    const auto publishSnapshot = [&](const detail::TransportSnapshot &snapshot) noexcept {
-        // Fetch current sequence and mark write in progress (odd sequence number)
-        const auto seq = snapshotSequence_.load(std::memory_order_relaxed);
-        snapshotSequence_.store(seq + 1, std::memory_order_release);
-        // Formally required but no current processor requires it
-        // std::atomic_thread_fence(std::memory_order_release);
+    // See Boehm's "Can seqlocks get along with programming language memory models?":
+    // "https://dl.acm.org/doi/abs/10.1145/2247684.2247688
 
-        // See Boehm's "Can seqlocks get along with programming language memory models?":
-        // "https://dl.acm.org/doi/abs/10.1145/2247684.2247688
+    static_assert(std::atomic_ref<uint64_t>::is_always_lock_free);
+    static_assert(std::atomic_ref<int64_t>::is_always_lock_free);
+    static_assert(std::atomic_ref<double>::is_always_lock_free);
+    static_assert(std::atomic_ref<bool>::is_always_lock_free);
 
-        static_assert(std::atomic_ref<uint64_t>::is_always_lock_free);
-        static_assert(std::atomic_ref<int64_t>::is_always_lock_free);
-        static_assert(std::atomic_ref<double>::is_always_lock_free);
-        static_assert(std::atomic_ref<bool>::is_always_lock_free);
+    // Perform atomic stores on individual scalar fields via atomic_ref
+    // Relaxed ordering is fine because sequence release/acquire handles visibility
+    std::atomic_ref{currentSnapshot_.sequenceNumber_}.store(snapshot.sequenceNumber_, std::memory_order_relaxed);
+    std::atomic_ref{currentSnapshot_.framePosition_}.store(snapshot.framePosition_, std::memory_order_relaxed);
+    std::atomic_ref{currentSnapshot_.frameLength_}.store(snapshot.frameLength_, std::memory_order_relaxed);
+    std::atomic_ref{currentSnapshot_.sampleRate_}.store(snapshot.sampleRate_, std::memory_order_relaxed);
+    std::atomic_ref{currentSnapshot_.supportsSeeking_}.store(snapshot.supportsSeeking_, std::memory_order_relaxed);
+    std::atomic_ref{currentSnapshot_.isValid_}.store(snapshot.isValid_, std::memory_order_relaxed);
 
-        // Perform atomic stores on individual scalar fields via atomic_ref
-        // Relaxed ordering is fine because sequence release/acquire handles visibility
-        std::atomic_ref{currentSnapshot_.sequenceNumber_}.store(snapshot.sequenceNumber_, std::memory_order_relaxed);
-        std::atomic_ref{currentSnapshot_.framePosition_}.store(snapshot.framePosition_, std::memory_order_relaxed);
-        std::atomic_ref{currentSnapshot_.frameLength_}.store(snapshot.frameLength_, std::memory_order_relaxed);
-        std::atomic_ref{currentSnapshot_.sampleRate_}.store(snapshot.sampleRate_, std::memory_order_relaxed);
-        std::atomic_ref{currentSnapshot_.supportsSeeking_}.store(snapshot.supportsSeeking_, std::memory_order_relaxed);
-        std::atomic_ref{currentSnapshot_.isValid_}.store(snapshot.isValid_, std::memory_order_relaxed);
-
-        // Mark write complete (even sequence number)
-        snapshotSequence_.store(seq + 2, std::memory_order_release);
-    };
-
-    const auto *decoderState = firstActiveDecoderState();
-    if (decoderState == nullptr) {
-        publishSnapshot({});
-        return;
-    }
-
-    publishSnapshot({.sequenceNumber_ = decoderState->sequenceNumber_,
-                     .framePosition_ = decoderState->framesRendered(),
-                     .frameLength_ = decoderState->frameLength(),
-                     .sampleRate_ = decoderState->sampleRate(),
-                     .supportsSeeking_ = decoderState->decoder_.supportsSeeking != 0,
-                     .isValid_ = true});
+    // Mark write complete (even sequence number)
+    snapshotSequence_.store(seq + 2, std::memory_order_release);
 }
 
 auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::TransportSnapshot {

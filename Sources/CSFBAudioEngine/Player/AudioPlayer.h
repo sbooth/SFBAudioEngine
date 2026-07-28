@@ -386,10 +386,10 @@ class AudioPlayer final {
 
     // MARK: - Transport Snapshots
 
-    /// Recomputes and publishes the current playback snapshot.
-    void publishTransportSnapshot() noexcept;
+    /// Publishes a playback snapshot.
+    void publishTransportSnapshot(const detail::TransportSnapshot &snapshot) noexcept;
 
-    /// Reads the most recently published playback snapshot without blocking.
+    /// Reads the most recently published playback snapshot.
     [[nodiscard]] detail::TransportSnapshot loadTransportSnapshot() const noexcept;
 
     // MARK: - Active Decoder Management
