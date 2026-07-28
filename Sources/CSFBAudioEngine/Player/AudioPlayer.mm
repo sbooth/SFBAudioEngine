@@ -390,7 +390,7 @@ inline int64_t AudioPlayer::DecoderState::framesRendered() const noexcept {
 
 inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noexcept {
 #if DEBUG
-    bits::is_clear(loadFlags(), Flags::needsInitialization);
+    assert(bits::is_clear(loadFlags(), Flags::needsInitialization));
 #endif /* DEBUG */
     return {.sequenceNumber_ = sequenceNumber_,
             .framePosition_ = framesRendered(),
