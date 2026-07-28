@@ -448,16 +448,18 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    auto remaining = std::min(frameLength, buffer.frameCapacity);
-    while (remaining > 0) {
-        const auto framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:remaining];
+    auto framesRemaining = std::min(frameLength, buffer.frameCapacity);
+    while (framesRemaining > 0) {
+        const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
+                                         readingFromOffset:0
+                                               frameLength:framesRemaining];
         [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
-        remaining -= framesCopied;
+        framesRemaining -= framesCopied;
         _framePosition += framesCopied;
 
         // All requested frames were read or EOS reached
-        if (remaining == 0 || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
+        if (framesRemaining == 0 || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
             break;
         }
 
