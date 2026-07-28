@@ -453,6 +453,16 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         return YES;
     }
 
+    if (_streamInfo.total_samples > 0) {
+        if (_framePosition >= static_cast<AVAudioFramePosition>(_streamInfo.total_samples)) {
+            return YES;
+        }
+        const auto framesRemaining = _streamInfo.total_samples - static_cast<uint64_t>(_framePosition);
+        if (framesRemaining < frameLength) {
+            frameLength = static_cast<AVAudioFrameCount>(framesRemaining);
+        }
+    }
+
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
