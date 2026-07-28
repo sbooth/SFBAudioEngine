@@ -163,7 +163,7 @@ class AudioPlayer final {
     /// The pending seek request
     std::atomic<detail::SeekRequest> pendingSeek_{};
     static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,
-                  "Lock-free std::atomic_ref<SeekRequest> required");
+                  "Lock-free std::atomic<detail::SeekRequest> required");
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
