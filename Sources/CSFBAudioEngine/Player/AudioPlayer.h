@@ -160,6 +160,7 @@ class AudioPlayer final {
     mutable detail::TransportSnapshot currentSnapshot_{};
     /// Seqlock protecting `currentSnapshot_`
     std::atomic_uint64_t snapshotSequence_{0};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
     /// Pending seek request
     std::atomic<detail::SeekRequest> pendingSeek_{};
     static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,
