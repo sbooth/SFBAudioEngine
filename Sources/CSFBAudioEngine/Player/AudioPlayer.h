@@ -123,8 +123,8 @@ class AudioPlayer final {
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 32> audioMetadata_;
     /// The current transport epoch
-    std::atomic<uint64_t> playbackGeneration_{1};
-    static_assert(std::atomic<uint64_t>::is_always_lock_free, "Lock-free std::atomic<uint64_t> required");
+    std::atomic_uint64_t playbackGeneration_{1};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -159,7 +159,7 @@ class AudioPlayer final {
     /// Current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
     /// Seqlock protecting `currentSnapshot_`
-    std::atomic<uint64_t> snapshotSequence_{0};
+    std::atomic_uint64_t snapshotSequence_{0};
     /// Pending seek request
     std::atomic<detail::SeekRequest> pendingSeek_{};
     static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,

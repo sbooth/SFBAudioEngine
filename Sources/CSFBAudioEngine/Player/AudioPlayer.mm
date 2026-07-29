@@ -199,7 +199,7 @@ const os_log_t AudioPlayer::log_ = os_log_create("org.sbooth.AudioEngine", "Audi
 /// State for tracking/syncing decoding progress
 struct AudioPlayer::DecoderState final {
     /// Next sequence number to use
-    static std::atomic<uint64_t> sequenceCounter_;
+    static std::atomic_uint64_t sequenceCounter_;
 
     /// Monotonically increasing instance counter
     const uint64_t sequenceNumber_{sequenceCounter_.fetch_add(1, std::memory_order_relaxed)};
@@ -299,7 +299,7 @@ struct AudioPlayer::DecoderState final {
     std::optional<AVAudioFramePosition> seekToFrame(AVAudioFramePosition frame, NSError **error) noexcept;
 };
 
-std::atomic<uint64_t> AudioPlayer::DecoderState::sequenceCounter_{1};
+std::atomic_uint64_t AudioPlayer::DecoderState::sequenceCounter_{1};
 
 inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept : decoder_{decoder} {
 #if DEBUG
