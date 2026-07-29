@@ -895,7 +895,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
     const auto targetFrame = static_cast<int64_t>(frameLength * position);
 
-    pendingSeek_.store({snapshot.sequenceNumber_, targetFrame}, std::memory_order_release);
+    pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = targetFrame}, std::memory_order_release);
     decodingSemaphore_.signal();
 
     return true;
@@ -948,7 +948,7 @@ bool sfb::AudioPlayer::clampAndRequestSeekToFrame(const detail::TransportSnapsho
     frame = std::clamp(frame, 0LL, frameLength - 1);
 
     if (framePosition != frame) {
-        pendingSeek_.store({snapshot.sequenceNumber_, frame}, std::memory_order_release);
+        pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = frame}, std::memory_order_release);
         decodingSemaphore_.signal();
     }
 
