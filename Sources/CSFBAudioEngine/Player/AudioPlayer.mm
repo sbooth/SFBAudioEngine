@@ -459,6 +459,7 @@ inline std::optional<AVAudioFramePosition> AudioPlayer::DecoderState::seekToFram
 #if DEBUG
     assert(frame >= 0);
     assert(frame != SFBUnknownFramePosition);
+    assert(supportsSeeking_);
 #endif /* DEBUG */
 
     os_log_debug(log_, "Seeking to frame %lld in %{public}@", frame, decoder_);
