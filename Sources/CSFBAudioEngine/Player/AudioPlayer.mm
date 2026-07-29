@@ -238,8 +238,6 @@ struct AudioPlayer::DecoderState final {
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
     static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
-    /// The total number of audio frames
-    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
 
     /// Converts audio from the decoder's processing format to the equivalent standard format
     AVAudioConverter *converter_{nil};
@@ -248,6 +246,12 @@ struct AudioPlayer::DecoderState final {
 
     /// The sample rate of the audio converter's output format
     double sampleRate_{0};
+
+    /// The total number of audio frames
+    AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
+
+    /// Whether the decoder supports seeking.
+    bool supportsSeeking_{false};
 
     /// The error that caused decoding to abort, if any
     NSError *error_{nil};
@@ -278,17 +282,20 @@ struct AudioPlayer::DecoderState final {
     /// Allocates the internal decode buffer and audio converter
     bool allocate(AVAudioFrameCount frameCapacity) noexcept;
 
+    /// Returns the number of frames decoded
+    int64_t framesDecoded() const noexcept;
+
+    /// Returns the number of frames rendered
+    int64_t framesRendered() const noexcept;
+
     /// Returns the sample rate of the audio converter's output format
     double sampleRate() const noexcept;
 
     /// Returns the total number of audio frames
     AVAudioFramePosition frameLength() const noexcept;
 
-    /// Returns the number of frames decoded
-    int64_t framesDecoded() const noexcept;
-
-    /// Returns the number of frames rendered
-    int64_t framesRendered() const noexcept;
+    /// Returns true if the decoder supports seeking
+    bool supportsSeeking() const noexcept;
 
     /// Returns a snapshot of the current progress
     detail::TransportSnapshot snapshot() const noexcept;
@@ -371,15 +378,12 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
     // and access is guarded behind the atomic flag `Flags::needsInitialization`
     sampleRate_ = sampleRate;
     frameLength_ = decoder_.frameLength;
+    supportsSeeking_ = decoder_.supportsSeeking != 0;
 
     clearFlags(Flags::needsInitialization);
 
     return true;
 }
-
-inline double AudioPlayer::DecoderState::sampleRate() const noexcept { return sampleRate_; }
-
-inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept { return frameLength_; }
 
 inline int64_t AudioPlayer::DecoderState::framesDecoded() const noexcept {
     return framesDecoded_.load(std::memory_order_acquire);
@@ -389,6 +393,12 @@ inline int64_t AudioPlayer::DecoderState::framesRendered() const noexcept {
     return framesRendered_.load(std::memory_order_acquire);
 }
 
+inline double AudioPlayer::DecoderState::sampleRate() const noexcept { return sampleRate_; }
+
+inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexcept { return frameLength_; }
+
+inline bool AudioPlayer::DecoderState::supportsSeeking() const noexcept { return supportsSeeking_; }
+
 inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noexcept {
 #if DEBUG
     assert(bits::is_clear(loadFlags(), Flags::needsInitialization));
@@ -397,7 +407,7 @@ inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noe
             .framePosition_ = framesRendered(),
             .frameLength_ = frameLength(),
             .sampleRate_ = sampleRate(),
-            .supportsSeeking_ = decoder_.supportsSeeking != 0,
+            .supportsSeeking_ = supportsSeeking(),
             .isValid_ = true};
 }
 
