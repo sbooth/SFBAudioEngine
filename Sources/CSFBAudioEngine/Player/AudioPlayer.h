@@ -156,11 +156,11 @@ class AudioPlayer final {
     /// Mutex protecting playback state and processing graph configuration changes
     mutable mtx::UnfairMutex engineMutex_;
 
-    /// The seqlock protecting the current playback snapshot
-    std::atomic<uint64_t> snapshotSequence_{0};
-    /// The current playback snapshot
+    /// Current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
-    /// The pending seek request
+    /// Seqlock protecting `currentSnapshot_`
+    std::atomic<uint64_t> snapshotSequence_{0};
+    /// Pending seek request
     std::atomic<detail::SeekRequest> pendingSeek_{};
     static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,
                   "Lock-free std::atomic<detail::SeekRequest> required");
@@ -247,7 +247,7 @@ class AudioPlayer final {
     bool supportsSeeking() const noexcept;
 
   private:
-    bool performClampingSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
+    bool clampAndRequestSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
                                     bool isRelative) noexcept;
 
   public:

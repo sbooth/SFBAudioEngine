@@ -855,7 +855,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
         return false;
     }
 
-    return performClampingSeekToFrame(snapshot, static_cast<AVAudioFramePosition>(framesToSkip), true);
+    return clampAndRequestSeekToFrame(snapshot, static_cast<AVAudioFramePosition>(framesToSkip), true);
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
@@ -873,7 +873,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
         return false;
     }
 
-    return performClampingSeekToFrame(snapshot, static_cast<AVAudioFramePosition>(requestedFrame), false);
+    return clampAndRequestSeekToFrame(snapshot, static_cast<AVAudioFramePosition>(requestedFrame), false);
 }
 
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
@@ -906,7 +906,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
         return false;
     }
 
-    return performClampingSeekToFrame(snapshot, frame, false);
+    return clampAndRequestSeekToFrame(snapshot, frame, false);
 }
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
@@ -914,7 +914,7 @@ bool sfb::AudioPlayer::supportsSeeking() const noexcept {
     return snapshot.isValid_ && snapshot.supportsSeeking_;
 }
 
-bool sfb::AudioPlayer::performClampingSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
+bool sfb::AudioPlayer::clampAndRequestSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
                                                   bool isRelative) noexcept {
 #if DEBUG
     assert(snapshot.isValid_);
