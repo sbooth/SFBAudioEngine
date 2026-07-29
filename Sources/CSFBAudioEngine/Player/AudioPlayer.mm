@@ -200,6 +200,7 @@ const os_log_t AudioPlayer::log_ = os_log_create("org.sbooth.AudioEngine", "Audi
 struct AudioPlayer::DecoderState final {
     /// Next sequence number to use
     static std::atomic_uint64_t sequenceCounter_;
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
     /// Monotonically increasing instance counter
     const uint64_t sequenceNumber_{sequenceCounter_.fetch_add(1, std::memory_order_relaxed)};
@@ -233,12 +234,12 @@ struct AudioPlayer::DecoderState final {
 
     /// The number of frames decoded
     std::atomic_int64_t framesDecoded_{0};
+    static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
+    static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
     /// The total number of audio frames
     AVAudioFramePosition frameLength_{SFBUnknownFrameLength};
-
-    static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
 
     /// Converts audio from the decoder's processing format to the equivalent standard format
     AVAudioConverter *converter_{nil};
