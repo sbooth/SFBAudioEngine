@@ -45,6 +45,15 @@ template <BitmaskEnum E> [[nodiscard]] constexpr E operator^(E lhs, E rhs) noexc
     return static_cast<E>(to_underlying(lhs) ^ to_underlying(rhs));
 }
 
+/// Returns the bitwise OR assignment of lhs and rhs
+template <BitmaskEnum E> constexpr E &operator|=(E &lhs, E rhs) noexcept { return lhs = lhs | rhs; }
+
+/// Returns the bitwise AND assignment of lhs and rhs
+template <BitmaskEnum E> constexpr E &operator&=(E &lhs, E rhs) noexcept { return lhs = lhs & rhs; }
+
+/// Returns the bitwise XOR assignment of lhs and rhs
+template <BitmaskEnum E> constexpr E &operator^=(E &lhs, E rhs) noexcept { return lhs = lhs ^ rhs; }
+
 // MARK: Single-Bit Tests
 
 /// Returns true if only one bit is set in value
