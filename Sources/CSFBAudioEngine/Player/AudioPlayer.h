@@ -26,6 +26,7 @@
 #import <deque>
 #import <memory>
 #import <mutex>
+#import <optional>
 #import <stop_token>
 #import <thread>
 #import <vector>
@@ -41,23 +42,51 @@ namespace detail {
 struct DecodedChunkDescriptor final {
     /// The playback generation at the time this chunk was decoded
     uint64_t playbackGeneration_{0};
-    /// Decoder sequence number that produced the audio.
+    /// Decoder sequence number that produced the audio
     uint64_t sequenceNumber_{0};
-    /// Decoder frame position for the first audio frame in the chunk.
+    /// Decoder frame position for the first audio frame in the chunk
     int64_t framePosition_{0};
-    /// Number of audio frames in the chunk.
+    /// Number of audio frames in the chunk
     uint32_t frameLength_{0};
+
+    /// Possible bits in `flags_`
+    enum class Flags : uint16_t {
+        /// Clear
+        none = 0,
+        /// First chunk from the decoder
+        first = 1u << 0,
+        /// Last chunk from the decoder
+        last = 1u << 1,
+    };
+
+    /// Flags for this chunk
+    Flags flags_{Flags::none};
+
+    /// Returns true if this is the first chunk from decoder
+    [[nodiscard]] bool isFirst() const noexcept { return bits::is_set(flags_, Flags::first); }
+
+    /// Returns true if this is the last chunk from decoder
+    [[nodiscard]] bool isLast() const noexcept { return bits::is_set(flags_, Flags::last); }
+
+    /// Returns true if this chunk contains zero frames
+    [[nodiscard]] bool isEmpty() const noexcept { return frameLength_ == 0; }
+
+  private:
+    friend constexpr void is_bitmask_enum(Flags);
 };
 
 /// A descriptor for a rendering chunk of audio.
 struct RenderingChunkDescriptor final {
-    /// The decoded chunk descriptor.
+    /// The decoded chunk descriptor
     DecodedChunkDescriptor descriptor_{};
     /// The number of frames consumed from `descriptor_`
     uint32_t framesConsumed_{0};
 
     /// Returns the number of frames remaining in this chunk
     [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
+
+    /// Returns true if all frames from the decoded chunk descriptor have been consumed
+    [[nodiscard]] bool allFramesConsumed() const noexcept { return framesConsumed_ == descriptor_.frameLength_; }
 };
 
 } /* namespace detail */
@@ -232,6 +261,8 @@ class AudioPlayer final {
   private:
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
+        /// Clear
+        none = 0,
         /// Cached value of `engine_.isRunning`
         engineRunning = 1u << 0,
         /// The render block should output audio
@@ -244,7 +275,6 @@ class AudioPlayer final {
         renderEventDropped = 1u << 4,
     };
 
-    // Enable bitmask operations for `Flags`
     friend constexpr void is_bitmask_enum(Flags);
 
     /// Atomically loads the value of `flags_` using the specified memory order and returns the result
@@ -279,12 +309,12 @@ class AudioPlayer final {
     OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                     AudioBufferList &outputData) noexcept;
     /// The current rendering chunk descriptor
-    detail::RenderingChunkDescriptor renderingChunk_{};
+    std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
     // MARK: - Events
 
     /// Event commands
-    enum class EventCommand : uint32_t {
+    enum class EventCommand : uint16_t {
         /// Decoding started
         decodingStarted = 1,
         /// Decoding complete
