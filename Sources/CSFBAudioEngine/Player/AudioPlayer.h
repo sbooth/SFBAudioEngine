@@ -85,7 +85,7 @@ struct RenderingChunkDescriptor final {
     /// Returns the number of frames remaining in this chunk
     [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
 
-    /// Returns true if all frames from the decoded chunk descriptor have been conusmed
+    /// Returns true if all frames from the decoded chunk descriptor have been consumed
     [[nodiscard]] bool allFramesConsumed() const noexcept { return framesConsumed_ == descriptor_.frameLength_; }
 };
 
