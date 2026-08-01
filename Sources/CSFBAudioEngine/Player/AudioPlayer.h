@@ -72,7 +72,6 @@ struct DecodedChunkDescriptor final {
 
   private:
     friend constexpr void is_bitmask_enum(Flags);
-    friend constexpr auto &operator|=(Flags &l, Flags r) noexcept { return bits::operator|=(l, r); }
 };
 
 /// A descriptor for a rendering chunk of audio.
@@ -276,8 +275,6 @@ class AudioPlayer final {
     };
 
     friend constexpr void is_bitmask_enum(Flags);
-    friend constexpr auto operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
-    friend constexpr auto operator&(Flags l, Flags r) noexcept { return bits::operator&(l, r); }
 
     /// Atomically loads the value of `flags_` using the specified memory order and returns the result
     [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {

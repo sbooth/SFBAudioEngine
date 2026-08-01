@@ -182,9 +182,6 @@ enum class FramesRenderedEventFlags : uint16_t {
 };
 
 constexpr void is_bitmask_enum(FramesRenderedEventFlags);
-constexpr auto operator|(FramesRenderedEventFlags l, FramesRenderedEventFlags r) noexcept {
-    return bits::operator|(l, r);
-}
 
 } /* namespace */
 
@@ -288,7 +285,6 @@ struct AudioPlayer::DecoderState final {
 
   private:
     friend constexpr void is_bitmask_enum(Flags);
-    friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
 };
 
 std::atomic<uint64_t> AudioPlayer::DecoderState::sequenceCounter_{1};
