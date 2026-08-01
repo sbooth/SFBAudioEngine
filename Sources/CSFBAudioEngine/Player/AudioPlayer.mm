@@ -200,10 +200,7 @@ void cpuPause() noexcept {
 }
 
 /// Returns true if u is odd
-template <std::unsigned_integral T>
-constexpr bool isOdd(T u) noexcept {
-    return (u & T{1}) != 0;
-}
+template <std::unsigned_integral T> constexpr bool isOdd(T u) noexcept { return (u & T{1}) != 0; }
 
 } /* namespace */
 
