@@ -188,7 +188,7 @@ constexpr void is_bitmask_enum(FramesRenderedEventFlags);
 /// On supported architectures this emits the processor's spin-wait hint
 /// instruction (e.g. PAUSE on x86 or YIELD on ARM), which may reduce power
 /// consumption and improve performance of simultaneous multithreading.
-inline void cpuPause() noexcept {
+void cpuPause() noexcept {
 #if defined(__x86_64__) || defined(__i386__)
     __builtin_ia32_pause();
 #elif defined(__aarch64__) || defined(__arm__)
