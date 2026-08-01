@@ -175,9 +175,9 @@ constexpr T absoluteDifference(T a, T b) noexcept {
 enum class FramesRenderedEventFlags : uint16_t {
     /// Clear
     none = 0,
-    /// Rendering is starting
+    /// Rendering starting
     starting = 1u << 0,
-    /// Rendering is complete
+    /// Rendering complete
     complete = 1u << 1,
 };
 
