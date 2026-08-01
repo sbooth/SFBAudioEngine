@@ -172,12 +172,19 @@ constexpr T absoluteDifference(T a, T b) noexcept {
 }
 
 /// Possible flag bits for a frames rendered event
-enum FramesRenderedEventFlags : uint16_t {
+enum class FramesRenderedEventFlags : uint16_t {
+    /// Clear
+    none = 0,
     /// Rendering is starting
     starting = 1u << 0,
     /// Rendering is complete
     complete = 1u << 1,
 };
+
+constexpr void is_bitmask_enum(FramesRenderedEventFlags);
+constexpr auto operator|(FramesRenderedEventFlags l, FramesRenderedEventFlags r) noexcept {
+    return bits::operator|(l, r);
+}
 
 } /* namespace */
 
@@ -1671,8 +1678,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
             const auto eventTime = eventTimeForFrameOffset(framesRead - framesRemaining);
             const auto isStart = renderingChunk_->descriptor_.isFirst() && renderingChunk_->framesConsumed_ == 0;
             const auto isEnd = renderingChunk_->descriptor_.isLast() && framesFromChunk == chunkFramesRemaining;
-            const uint16_t eventFlags = (isStart ? FramesRenderedEventFlags::starting : 0) |
-                                        (isEnd ? FramesRenderedEventFlags::complete : 0);
+            const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
+                                    (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
             if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
                                  framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_, eventFlags)) {
                 setFlags(Flags::renderEventDropped);
@@ -1702,8 +1709,9 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
             audioMetadata_.discard();
             // Submit the empty frames rendered event
             const auto eventTime = eventTimeForFrameOffset(0);
-            const uint16_t eventFlags = (chunkDescriptor.isFirst() ? FramesRenderedEventFlags::starting : 0) |
-                                        FramesRenderedEventFlags::complete;
+            const auto eventFlags =
+                    (chunkDescriptor.isFirst() ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
+                    FramesRenderedEventFlags::complete;
             if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkDescriptor.sequenceNumber_,
                                  static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) {
                 setFlags(Flags::renderEventDropped);
@@ -2003,7 +2011,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     // The playback generation of the chunk containing the frames
     uint64_t playbackGeneration;
     // Event flags
-    uint16_t eventFlags;
+    FramesRenderedEventFlags eventFlags;
     if (!events_.dequeue(command, eventTime, sequenceNumber, frameCount, playbackGeneration, eventFlags)) {
         os_log_error(log_, "Missing event time, decoder sequence number, frame count, playback generation, or flags "
                            "for frames rendered event");
@@ -2039,8 +2047,8 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         uint64_t time_;
     };
 
-    const auto isStarting = (eventFlags & FramesRenderedEventFlags::starting) != 0;
-    const auto isComplete = (eventFlags & FramesRenderedEventFlags::complete) != 0;
+    const auto isStarting = bits::is_set(eventFlags, FramesRenderedEventFlags::starting);
+    const auto isComplete = bits::is_set(eventFlags, FramesRenderedEventFlags::complete);
 
     // Queued events to be dispatched once the lock is released
     std::vector<RenderingEventDetails> queuedEvents;
