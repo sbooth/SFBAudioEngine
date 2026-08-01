@@ -1702,7 +1702,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
             audioMetadata_.discard();
             // Submit the empty frames rendered event
             const auto eventTime = eventTimeForFrameOffset(0);
-            const uint16_t eventFlags = FramesRenderedEventFlags::complete;
+            const uint16_t eventFlags = (chunkDescriptor.isFirst() ? FramesRenderedEventFlags::starting : 0) |
+                                        FramesRenderedEventFlags::complete;
             if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkDescriptor.sequenceNumber_,
                                  static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) {
                 setFlags(Flags::renderEventDropped);
