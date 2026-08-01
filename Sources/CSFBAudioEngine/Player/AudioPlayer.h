@@ -51,6 +51,7 @@ struct DecodedChunkDescriptor final {
 
     /// Possible bits in `flags_`
     enum class Flags : uint16_t {
+        /// Clear
         none = 0,
         /// First chunk from the decoder
         first = 1u << 0,
