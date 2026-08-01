@@ -912,7 +912,7 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
-    if (frame == SFBUnknownFramePosition) [[unlikely]] {
+    if (frame < 0) [[unlikely]] {
         return false;
     }
 
