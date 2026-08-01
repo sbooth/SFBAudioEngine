@@ -1996,9 +1996,6 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         uint64_t time_;
     };
 
-    const auto isStarting = bits::is_set(eventFlags, FramesRenderedEventFlags::starting);
-    const auto isComplete = bits::is_set(eventFlags, FramesRenderedEventFlags::complete);
-
     // Queued events to be dispatched once the lock is released
     std::vector<RenderingEventDetails> queuedEvents;
 
@@ -2016,7 +2013,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             const auto decoderFlags = (*iter)->loadFlags();
 
             // Rendering is starting
-            if (isStarting) {
+            if (bits::is_set(eventFlags, FramesRenderedEventFlags::starting)) {
 #if DEBUG
                 assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
 #endif /* DEBUG */
@@ -2035,7 +2032,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             }
 
             // Rendering is complete
-            if (isComplete) {
+            if (bits::is_set(eventFlags, FramesRenderedEventFlags::complete)) {
 #if DEBUG
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
