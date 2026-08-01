@@ -199,6 +199,12 @@ void cpuPause() noexcept {
 #endif
 }
 
+/// Returns true if u is odd
+template <std::unsigned_integral T>
+constexpr bool isOdd(T u) noexcept {
+    return (u & T{1}) != 0;
+}
+
 } /* namespace */
 
 namespace sfb {
@@ -2262,6 +2268,9 @@ void sfb::AudioPlayer::publishTransportSnapshot(const detail::TransportSnapshot 
     // Fetch current sequence and mark write in progress (odd sequence number)
     const auto seq = snapshotSequence_.load(std::memory_order_relaxed);
     snapshotSequence_.store(seq + 1, std::memory_order_release);
+#if DEBUG
+    assert(isOdd(snapshotSequence_.load(std::memory_order_relaxed)));
+#endif /* DEBUG */
     // Formally required but no current processor requires it
     // std::atomic_thread_fence(std::memory_order_release);
 
@@ -2292,7 +2301,7 @@ auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::Transpo
         const auto seq = snapshotSequence_.load(std::memory_order_acquire);
 
         // Retry immediately if a write is currently in progress
-        if ((seq & 1) != 0) [[unlikely]] {
+        if (isOdd(seq)) [[unlikely]] {
 #if DEBUG
             os_log_debug(log_, "Unable to load playback snapshot: write in progress");
 #endif /* DEBUG */
