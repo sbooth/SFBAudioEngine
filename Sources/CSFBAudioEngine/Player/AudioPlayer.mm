@@ -847,7 +847,7 @@ void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
 // MARK: - Seeking
 
 bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
-    if (!std::isfinite(secondsToSkip)) {
+    if (!std::isfinite(secondsToSkip)) [[unlikely]] {
         return false;
     }
 
@@ -870,7 +870,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
-    if (timeInSeconds < 0 || !std::isfinite(timeInSeconds)) {
+    if (timeInSeconds < 0 || !std::isfinite(timeInSeconds)) [[unlikely]] {
         return false;
     }
 
@@ -888,7 +888,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
-    if (!std::isfinite(position)) {
+    if (!std::isfinite(position)) [[unlikely]] {
         return false;
     }
 
@@ -912,6 +912,10 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
+    if (frame == SFBUnknownFramePosition) [[unlikely]] {
+        return false;
+    }
+
     const auto snapshot = loadTransportSnapshot();
     if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
         return false;
