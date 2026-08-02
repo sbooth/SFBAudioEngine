@@ -277,8 +277,7 @@ class AudioPlayer final {
     bool supportsSeeking() const noexcept;
 
   private:
-    bool clampAndRequestSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
-                                    bool isRelative) noexcept;
+    bool seekToFrameInSnapshot(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame) noexcept;
 
   public:
 #if !TARGET_OS_IPHONE

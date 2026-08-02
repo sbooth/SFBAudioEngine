@@ -165,9 +165,7 @@ T fetchUpdate(std::atomic<T> &atom, Func &&func,
 }
 
 /// Returns the absolute difference between a and b
-template <typename T>
-    requires std::unsigned_integral<T>
-constexpr T absoluteDifference(T a, T b) noexcept {
+template <std::unsigned_integral T> constexpr T absoluteDifference(T a, T b) noexcept {
     return (a >= b) ? (a - b) : (b - a);
 }
 
@@ -201,6 +199,20 @@ void cpuPause() noexcept {
 
 /// Returns true if u is odd
 template <std::unsigned_integral T> constexpr bool isOdd(T u) noexcept { return (u & T{1}) != 0; }
+
+/// Returns true if f is representable as type T
+template <std::floating_point F, std::integral T> constexpr bool isRepresentable(F f) noexcept {
+#if DEBUG
+    assert(std::isfinite(f));
+#endif /* DEBUG */
+    constexpr auto min = static_cast<F>(std::numeric_limits<T>::min());
+    constexpr auto max = static_cast<F>(std::numeric_limits<T>::max());
+    // return f >= min && f <= max;
+    if (f < min || f > max) {
+        return false;
+    }
+    return true;
+}
 
 } /* namespace */
 
@@ -856,17 +868,29 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
         return false;
     }
 
+    const auto framePosition = snapshot.framePosition_;
+    if (framePosition == SFBUnknownFramePosition) {
+        return false;
+    }
+
     if (secondsToSkip == 0) {
         return true;
     }
 
-    const auto framesToSkip = secondsToSkip * snapshot.sampleRate_;
-    if (framesToSkip >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max()) ||
-        framesToSkip <= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::min())) {
+    const auto delta = secondsToSkip * snapshot.sampleRate_;
+    if (!isRepresentable<double, int64_t>(delta)) {
         return false;
     }
 
-    return clampAndRequestSeekToFrame(snapshot, static_cast<AVAudioFramePosition>(framesToSkip), true);
+    if (delta > 0 && framePosition > std::numeric_limits<int64_t>::max() - delta) {
+        return false;
+    }
+    if (delta < 0 && framePosition < std::numeric_limits<int64_t>::min() - delta) {
+        return false;
+    }
+
+    const auto targetFrame = framePosition + static_cast<int64_t>(delta);
+    return seekToFrameInSnapshot(snapshot, targetFrame);
 }
 
 bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
@@ -880,11 +904,11 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
     }
 
     const auto requestedFrame = timeInSeconds * snapshot.sampleRate_;
-    if (requestedFrame >= static_cast<double>(std::numeric_limits<AVAudioFramePosition>::max())) {
+    if (!isRepresentable<double, int64_t>(requestedFrame)) {
         return false;
     }
 
-    return clampAndRequestSeekToFrame(snapshot, static_cast<AVAudioFramePosition>(requestedFrame), false);
+    return seekToFrameInSnapshot(snapshot, static_cast<int64_t>(requestedFrame));
 }
 
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
@@ -902,13 +926,10 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
         return false;
     }
 
-    position = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
-    const auto targetFrame = static_cast<int64_t>(frameLength * position);
+    const auto clampedPosition = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
+    const auto targetFrame = static_cast<int64_t>(static_cast<double>(frameLength) * clampedPosition);
 
-    pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = targetFrame}, std::memory_order_release);
-    decodingSemaphore_.signal();
-
-    return true;
+    return seekToFrameInSnapshot(snapshot, targetFrame);
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
@@ -921,7 +942,7 @@ bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
         return false;
     }
 
-    return clampAndRequestSeekToFrame(snapshot, frame, false);
+    return seekToFrameInSnapshot(snapshot, frame);
 }
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
@@ -929,39 +950,31 @@ bool sfb::AudioPlayer::supportsSeeking() const noexcept {
     return snapshot.isValid_ && snapshot.supportsSeeking_;
 }
 
-bool sfb::AudioPlayer::clampAndRequestSeekToFrame(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame,
-                                                  bool isRelative) noexcept {
+bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &snapshot, int64_t frame) noexcept {
 #if DEBUG
     assert(snapshot.isValid_);
     assert(snapshot.supportsSeeking_);
 #endif /* DEBUG */
+
+    if (frame < 0) {
+        return false;
+    }
 
     const auto framePosition = snapshot.framePosition_;
     if (framePosition == SFBUnknownFramePosition) {
         return false;
     }
 
-    // Require a valid frame length even though not strictly required for seeking in general
     const auto frameLength = snapshot.frameLength_;
     if (frameLength == SFBUnknownFrameLength || frameLength < 1) {
         return false;
     }
 
-    if (isRelative) {
-        if (frame > 0 && framePosition > std::numeric_limits<AVAudioFramePosition>::max() - frame) {
-            return false;
-        }
-
-        if (frame < 0 && framePosition < std::numeric_limits<AVAudioFramePosition>::min() - frame) {
-            return false;
-        }
-
-        frame += framePosition;
+    if (frame >= frameLength) {
+        return false;
     }
 
-    frame = std::clamp(frame, 0LL, frameLength - 1);
-
-    if (framePosition != frame) {
+    if (frame != framePosition) {
         pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = frame}, std::memory_order_release);
         decodingSemaphore_.signal();
     }
