@@ -181,58 +181,68 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Properties
 
-/// The frame position in the current decoder or `SFBUnknownFramePosition` if unknown or the current decoder is `nil`
+/// The frame position from the current decoder or `SFBUnknownFramePosition` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
-/// The frame length of the current decoder or `SFBUnknownFrameLength` if unknown or the current decoder is `nil`
+/// The frame length from the current decoder or `SFBUnknownFrameLength` if unknown or the current playback snapshot is
+/// invalid
 @property(nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current decoder is
-/// `nil`
+/// The playback position from the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current playback
+/// snapshot is invalid
 @property(nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
-/// The current time in the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
+/// The current time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
-/// The total time of the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
+/// The total time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if unknown or the current decoder is `nil`
+/// The playback time from the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) SFBPlaybackTime playbackTime;
 
-/// Retrieves the playback position and time
+/// Retrieves the playback position and time from the current decoder
 /// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position
 /// information
 /// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the current playback snapshot is invalid
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition
                     andTime:(nullable SFBPlaybackTime *)playbackTime;
 
 // MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekForward;
 /// Seeks backward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekBackward;
 
 /// Seeks forward in the current decoder by the specified number of seconds
 /// - parameter secondsToSkip: The number of seconds to skip forward
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(forward:));
 /// Seeks backward in the current decoder by the specified number of seconds
 /// - parameter secondsToSkip: The number of seconds to skip backward
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(backward:));
 
 /// Seeks to the specified time in the current decoder
 /// - parameter timeInSeconds: The desired time in seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified position in the current decoder
 /// - parameter position: The desired position in the interval `[0, 1)`
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
 /// - parameter frame: The desired audio frame
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
+/// seeking
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame NS_SWIFT_NAME(seek(frame:));
 
 /// Returns `YES` if the current decoder supports seeking
