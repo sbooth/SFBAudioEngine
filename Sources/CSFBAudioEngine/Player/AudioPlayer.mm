@@ -942,9 +942,9 @@ bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &sn
 #if DEBUG
     assert(snapshot.isValid_);
     assert(snapshot.supportsSeeking_);
-    assert(snapshot.supportsSeeking_);
-    assert(snapshot.frameLength_ != SFBUnknownFrameLength);
     assert(snapshot.framePosition_ != SFBUnknownFramePosition);
+    assert(snapshot.frameLength_ != SFBUnknownFrameLength);
+    assert(snapshot.framePosition_ < snapshot.frameLength_);
 #endif /* DEBUG */
 
     if (frame < 0 || frame >= snapshot.frameLength_) {
