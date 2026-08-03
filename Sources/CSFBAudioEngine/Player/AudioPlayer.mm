@@ -200,12 +200,9 @@ constexpr bool isOdd(uint64_t u) noexcept { return (u & 1) != 0; }
 
 /// Returns true if d is within the range of int64_t
 constexpr bool fitsInInt64(double d) noexcept {
-#if DEBUG
-    assert(std::isfinite(d));
-#endif                                /* DEBUG */
     constexpr double lower = -0x1p63; // -2^63
     constexpr double upper = 0x1p63;  //  2^63
-    return /*std::isfinite(d) &&*/ d >= lower && d < upper;
+    return std::isfinite(d) && d >= lower && d < upper;
 }
 
 } /* namespace */
