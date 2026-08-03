@@ -1155,18 +1155,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             // Get the earliest decoder state that has not completed rendering
             decoderState = firstActiveDecoderState();
 
+            // Clear the format mismatch flag if any decoders were canceled
             if (anyCanceled) {
-                // Republish the playback snapshot
-                if (decoderState != nullptr) {
-                    publishTransportSnapshot(decoderState->snapshot());
-                } else {
-                    publishTransportSnapshot({});
-                }
-
-                // Clear the format mismatch flag
-                if (formatMismatch) {
-                    formatMismatch = false;
-                }
+                formatMismatch = false;
             }
         }
 
@@ -1197,8 +1188,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
                     decoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
                     decoderState->framesRendered_.store(framePosition.value(), std::memory_order_release);
-
-                    publishTransportSnapshot(decoderState->snapshot());
                 }
 
                 if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition.value())) {
@@ -1254,12 +1243,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                     nextDecoderState->framesRendered_.store(framePosition.value(),
                                                                             std::memory_order_release);
 
-                                    if (events_.enqueue(EventCommand::seekComplete, nextDecoderState->sequenceNumber_,
-                                                        framePosition.value())) {
-                                        eventSemaphore_.signal();
-                                    } else {
-                                        os_log_fault(log_, "Error writing seek complete event");
-                                    }
+                                    // Do not enqueue EventCommand::seekComplete here; this is an internal rewind,
+                                    // not a user-initiated seek. Enqueuing this event pollutes the transport
+                                    // snapshot and fires false 'didSeek:' delegate notifications.
                                 } else {
                                     os_log_error(log_, "Discarding %lld frames from %{public}@",
                                                  nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
@@ -1836,17 +1822,24 @@ bool sfb::AudioPlayer::processSeekCompleteEvent() noexcept {
 #endif /* DEBUG */
 
     Decoder decoder = nil;
+    detail::TransportSnapshot snapshot{};
     {
         std::lock_guard lock{activeDecodersMutex_};
 
         if (auto *decoderState = decoderStateWithSequenceNumber(sequenceNumber); decoderState != nullptr) {
             decoder = decoderState->decoder_;
+            snapshot = decoderState->snapshot();
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for seek complete event",
                          sequenceNumber);
             return false;
         }
     }
+
+#if DEBUG
+    assert(snapshot.isValid_);
+#endif /* DEBUG */
+    publishTransportSnapshot(snapshot);
 
     if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
         delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:didSeek:toFrame:)]) {
@@ -1886,6 +1879,13 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event",
                          sequenceNumber);
             return false;
+        }
+
+        // Publish snapshot reflecting the new active decoder state
+        if (const auto *nextDecoderState = firstActiveDecoderState(); nextDecoderState != nullptr) {
+            publishTransportSnapshot(nextDecoderState->snapshot());
+        } else {
+            publishTransportSnapshot({});
         }
     }
 
@@ -2048,6 +2048,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
 
+                // Publish snapshot reflecting the new active decoder state
                 if (const auto *nextDecoderState = firstActiveDecoderState(); nextDecoderState != nullptr) {
                     publishTransportSnapshot(nextDecoderState->snapshot());
                 } else {
