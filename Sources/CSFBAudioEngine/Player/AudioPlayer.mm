@@ -165,9 +165,7 @@ T fetchUpdate(std::atomic<T> &atom, Func &&func,
 }
 
 /// Returns the absolute difference between a and b
-template <std::unsigned_integral T> constexpr T absoluteDifference(T a, T b) noexcept {
-    return (a >= b) ? (a - b) : (b - a);
-}
+constexpr uint64_t absoluteDifference(uint64_t a, uint64_t b) noexcept { return (a >= b) ? (a - b) : (b - a); }
 
 /// Possible flag bits for a frames rendered event
 enum class FramesRenderedEventFlags : uint16_t {
@@ -198,15 +196,15 @@ void cpuPause() noexcept {
 }
 
 /// Returns true if u is odd
-template <std::unsigned_integral T> constexpr bool isOdd(T u) noexcept { return (u & T{1}) != 0; }
+constexpr bool isOdd(uint64_t u) noexcept { return (u & 1) != 0; }
 
 /// Returns true if d is within the range of int64_t
 constexpr bool fitsInInt64(double d) noexcept {
 #if DEBUG
     assert(std::isfinite(d));
-#endif /* DEBUG */
+#endif                                /* DEBUG */
     constexpr double lower = -0x1p63; // -2^63
-    constexpr double upper =  0x1p63; //  2^63
+    constexpr double upper = 0x1p63;  //  2^63
     return /*std::isfinite(d) &&*/ d >= lower && d < upper;
 }
 
