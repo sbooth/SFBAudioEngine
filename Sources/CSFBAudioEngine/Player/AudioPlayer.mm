@@ -1758,6 +1758,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
 
     Decoder decoder = nil;
     Decoder currentDecoder = nil;
+    detail::TransportSnapshot currentSnapshot{};
     {
         std::lock_guard lock{activeDecodersMutex_};
 
@@ -1771,6 +1772,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
 
         if (const auto *decoderState = firstActiveDecoderState(); decoderState != nullptr) {
             currentDecoder = decoderState->decoder_;
+            currentSnapshot = decoderState->snapshot();
         }
     }
 
@@ -1780,6 +1782,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     }
 
     if (bits::is_clear(loadFlags(), Flags::playing) && decoder == currentDecoder) {
+        publishTransportSnapshot(currentSnapshot);
         setNowPlaying(decoder);
     }
 
@@ -2044,7 +2047,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
-                publishTransportSnapshot({});
+
+                if (const auto *nextDecoderState = firstActiveDecoderState(); nextDecoderState != nullptr) {
+                    publishTransportSnapshot(nextDecoderState->snapshot());
+                } else {
+                    publishTransportSnapshot({});
+                }
             } else {
                 publishTransportSnapshot((*iter)->snapshot());
             }
