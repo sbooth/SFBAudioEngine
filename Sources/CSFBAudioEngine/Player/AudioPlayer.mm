@@ -2266,7 +2266,7 @@ void sfb::AudioPlayer::publishTransportSnapshot(const detail::TransportSnapshot 
     // std::atomic_thread_fence(std::memory_order_release);
 
     // See Boehm's "Can seqlocks get along with programming language memory models?":
-    // "https://dl.acm.org/doi/abs/10.1145/2247684.2247688
+    // https://dl.acm.org/doi/abs/10.1145/2247684.2247688
 
     static_assert(std::atomic_ref<uint64_t>::is_always_lock_free);
     static_assert(std::atomic_ref<int64_t>::is_always_lock_free);
