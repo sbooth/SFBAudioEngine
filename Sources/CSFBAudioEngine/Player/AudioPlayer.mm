@@ -200,18 +200,14 @@ void cpuPause() noexcept {
 /// Returns true if u is odd
 template <std::unsigned_integral T> constexpr bool isOdd(T u) noexcept { return (u & T{1}) != 0; }
 
-/// Returns true if f is representable as type T
-template <std::floating_point F, std::integral T> constexpr bool isRepresentable(F f) noexcept {
+/// Returns true if d is within the range of int64_t
+constexpr bool fitsInInt64(double d) noexcept {
 #if DEBUG
-    assert(std::isfinite(f));
+    assert(std::isfinite(d));
 #endif /* DEBUG */
-    constexpr auto min = static_cast<F>(std::numeric_limits<T>::min());
-    constexpr auto max = static_cast<F>(std::numeric_limits<T>::max());
-    // return f >= min && f <= max;
-    if (f < min || f > max) {
-        return false;
-    }
-    return true;
+    constexpr double lower = -0x1p63; // -2^63
+    constexpr double upper =  0x1p63; //  2^63
+    return /*std::isfinite(d) &&*/ d >= lower && d < upper;
 }
 
 } /* namespace */
@@ -878,7 +874,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
     }
 
     const auto delta = secondsToSkip * snapshot.sampleRate_;
-    if (!isRepresentable<double, int64_t>(delta)) {
+    if (!fitsInInt64(delta)) {
         return false;
     }
 
@@ -904,7 +900,7 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
     }
 
     const auto requestedFrame = timeInSeconds * snapshot.sampleRate_;
-    if (!isRepresentable<double, int64_t>(requestedFrame)) {
+    if (!fitsInInt64(requestedFrame)) {
         return false;
     }
 
