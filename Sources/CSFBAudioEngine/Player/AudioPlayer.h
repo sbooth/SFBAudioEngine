@@ -104,18 +104,12 @@ struct TransportSnapshot final {
     /// Whether this snapshot contains valid data.
     bool isValid_{false};
 
-    /// Returns the playback position for this snapshot.
-    [[nodiscard]] SFBPlaybackPosition playbackPosition() const noexcept;
-
-    /// Returns the playback time for this snapshot.
-    [[nodiscard]] SFBPlaybackTime playbackTime() const noexcept;
-
     /// Gets the playback position and time for this snapshot.
     /// @param position An optional pointer to receive the playback position
     /// @param time An optional pointer to receive the playback time
     /// @return false if the snapshot is not valid
-    [[nodiscard]] bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
-                                                  SFBPlaybackTime *_Nullable time) const noexcept;
+    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                    SFBPlaybackTime *_Nullable time) const noexcept;
 };
 
 /// A seek request.
@@ -502,12 +496,16 @@ inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
 
 inline SFBPlaybackPosition AudioPlayer::playbackPosition() const noexcept {
     const auto snapshot = loadTransportSnapshot();
-    return snapshot.playbackPosition();
+    SFBPlaybackPosition position;
+    snapshot.getPlaybackPositionAndTime(&position, nullptr);
+    return position;
 }
 
 inline SFBPlaybackTime AudioPlayer::playbackTime() const noexcept {
     const auto snapshot = loadTransportSnapshot();
-    return snapshot.playbackTime();
+    SFBPlaybackTime time;
+    snapshot.getPlaybackPositionAndTime(nullptr, &time);
+    return time;
 }
 
 inline bool AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
@@ -524,37 +522,27 @@ inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { re
 
 // MARK: Transport Snapshot
 
-inline SFBPlaybackPosition detail::TransportSnapshot::playbackPosition() const noexcept {
-    if (!isValid_) [[unlikely]] {
-        return SFBInvalidPlaybackPosition;
-    }
-    return {.framePosition = framePosition_, .frameLength = frameLength_};
-}
-
-inline SFBPlaybackTime detail::TransportSnapshot::playbackTime() const noexcept {
-    auto playbackTime = SFBInvalidPlaybackTime;
-    if (isValid_ && sampleRate_ > 0) [[likely]] {
-        if (framePosition_ != SFBUnknownFramePosition) {
-            playbackTime.currentTime = framePosition_ / sampleRate_;
-        }
-        if (frameLength_ != SFBUnknownFrameLength) {
-            playbackTime.totalTime = frameLength_ / sampleRate_;
-        }
-    }
-    return playbackTime;
-}
-
 inline bool detail::TransportSnapshot::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
                                                                   SFBPlaybackTime *time) const noexcept {
-#if DEBUG
-    assert(position != nullptr || time != nullptr);
-#endif /* DEBUG */
-
     if (position != nullptr) {
-        *position = playbackPosition();
+        if (!isValid_) {
+            *position = SFBInvalidPlaybackPosition;
+        } else {
+            *position = {.framePosition = framePosition_, .frameLength = frameLength_};
+        }
     }
+
     if (time != nullptr) {
-        *time = playbackTime();
+        auto playbackTime = SFBInvalidPlaybackTime;
+        if (isValid_ && sampleRate_ > 0) {
+            if (framePosition_ != SFBUnknownFramePosition) {
+                playbackTime.currentTime = framePosition_ / sampleRate_;
+            }
+            if (frameLength_ != SFBUnknownFrameLength) {
+                playbackTime.totalTime = frameLength_ / sampleRate_;
+            }
+        }
+        *time = playbackTime;
     }
 
     return isValid_;
