@@ -29,6 +29,8 @@
 
 namespace {
 
+// MARK: - Constants
+
 /// The default audio ring buffer capacity in frames
 constexpr std::size_t audioBufferCapacity = 16384;
 /// The minimum number of frames to write to the audio ring buffer
@@ -41,6 +43,8 @@ constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
+
+// MARK: - Local Functions
 
 void audioEngineConfigurationChangeNotificationCallback([[maybe_unused]] CFNotificationCenterRef center, void *observer,
                                                         [[maybe_unused]] CFNotificationName name, const void *object,
@@ -203,6 +207,15 @@ constexpr bool fitsInInt64(double d) noexcept {
     constexpr double lower = -0x1p63; // -2^63
     constexpr double upper = 0x1p63;  //  2^63
     return std::isfinite(d) && d >= lower && d < upper;
+}
+
+/// Returns true if snapshot is valid, supports seeking, and has a known frame position and length
+bool isSnapshotSeekable(const sfb::detail::TransportSnapshot &snapshot) noexcept {
+    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
+        return false;
+    }
+    return snapshot.framePosition_ != SFBUnknownFramePosition && snapshot.frameLength_ != SFBUnknownFrameLength &&
+           snapshot.frameLength_ >= 1;
 }
 
 } /* namespace */
@@ -855,12 +868,7 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
     }
 
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
-        return false;
-    }
-
-    const auto framePosition = snapshot.framePosition_;
-    if (framePosition == SFBUnknownFramePosition) {
+    if (!isSnapshotSeekable(snapshot)) {
         return false;
     }
 
@@ -873,14 +881,13 @@ bool sfb::AudioPlayer::seekInTime(NSTimeInterval secondsToSkip) noexcept {
         return false;
     }
 
-    if (delta > 0 && framePosition > std::numeric_limits<int64_t>::max() - delta) {
-        return false;
-    }
-    if (delta < 0 && framePosition < std::numeric_limits<int64_t>::min() - delta) {
+    const auto deltaFrames = static_cast<int64_t>(delta);
+
+    int64_t targetFrame;
+    if (__builtin_add_overflow(snapshot.framePosition_, deltaFrames, &targetFrame)) {
         return false;
     }
 
-    const auto targetFrame = framePosition + static_cast<int64_t>(delta);
     return seekToFrameInSnapshot(snapshot, targetFrame);
 }
 
@@ -890,16 +897,16 @@ bool sfb::AudioPlayer::seekToTime(NSTimeInterval timeInSeconds) noexcept {
     }
 
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
+    if (!isSnapshotSeekable(snapshot)) {
         return false;
     }
 
-    const auto requestedFrame = timeInSeconds * snapshot.sampleRate_;
-    if (!fitsInInt64(requestedFrame)) {
+    const auto requested = timeInSeconds * snapshot.sampleRate_;
+    if (!fitsInInt64(requested)) {
         return false;
     }
 
-    return seekToFrameInSnapshot(snapshot, static_cast<int64_t>(requestedFrame));
+    return seekToFrameInSnapshot(snapshot, static_cast<int64_t>(requested));
 }
 
 bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
@@ -908,64 +915,43 @@ bool sfb::AudioPlayer::seekToPosition(double position) noexcept {
     }
 
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
-        return false;
-    }
-
-    const auto frameLength = snapshot.frameLength_;
-    if (frameLength == SFBUnknownFrameLength || frameLength < 1) {
+    if (!isSnapshotSeekable(snapshot)) {
         return false;
     }
 
     const auto clampedPosition = std::clamp(position, 0.0, std::nextafter(1.0, 0.0));
-    const auto targetFrame = static_cast<int64_t>(static_cast<double>(frameLength) * clampedPosition);
+    const auto target = static_cast<double>(snapshot.frameLength_) * clampedPosition;
 
-    return seekToFrameInSnapshot(snapshot, targetFrame);
+    return seekToFrameInSnapshot(snapshot, static_cast<int64_t>(target));
 }
 
 bool sfb::AudioPlayer::seekToFrame(AVAudioFramePosition frame) noexcept {
-    if (frame < 0) [[unlikely]] {
-        return false;
-    }
-
     const auto snapshot = loadTransportSnapshot();
-    if (!snapshot.isValid_ || !snapshot.supportsSeeking_) {
+    if (!isSnapshotSeekable(snapshot)) {
         return false;
     }
-
     return seekToFrameInSnapshot(snapshot, frame);
 }
 
 bool sfb::AudioPlayer::supportsSeeking() const noexcept {
     const auto snapshot = loadTransportSnapshot();
-    return snapshot.isValid_ && snapshot.supportsSeeking_;
+    return isSnapshotSeekable(snapshot);
 }
 
 bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &snapshot, int64_t frame) noexcept {
 #if DEBUG
     assert(snapshot.isValid_);
     assert(snapshot.supportsSeeking_);
+    assert(snapshot.supportsSeeking_);
+    assert(snapshot.frameLength_ != SFBUnknownFrameLength);
+    assert(snapshot.framePosition_ != SFBUnknownFramePosition);
 #endif /* DEBUG */
 
-    if (frame < 0) {
+    if (frame < 0 || frame >= snapshot.frameLength_) {
         return false;
     }
 
-    const auto framePosition = snapshot.framePosition_;
-    if (framePosition == SFBUnknownFramePosition) {
-        return false;
-    }
-
-    const auto frameLength = snapshot.frameLength_;
-    if (frameLength == SFBUnknownFrameLength || frameLength < 1) {
-        return false;
-    }
-
-    if (frame >= frameLength) {
-        return false;
-    }
-
-    if (frame != framePosition) {
+    if (frame != snapshot.framePosition_) {
         pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = frame}, std::memory_order_release);
         decodingSemaphore_.signal();
     }
