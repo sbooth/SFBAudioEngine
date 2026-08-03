@@ -1243,12 +1243,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                     nextDecoderState->framesRendered_.store(framePosition.value(),
                                                                             std::memory_order_release);
 
-                                    if (events_.enqueue(EventCommand::seekComplete, nextDecoderState->sequenceNumber_,
-                                                        framePosition.value())) {
-                                        eventSemaphore_.signal();
-                                    } else {
-                                        os_log_fault(log_, "Error writing seek complete event");
-                                    }
+                                    // Do not enqueue EventCommand::seekComplete here; this is an internal rewind,
+                                    // not a user-initiated seek. Enqueuing this event pollutes the transport
+                                    // snapshot and fires false 'didSeek:' delegate notifications.
                                 } else {
                                     os_log_error(log_, "Discarding %lld frames from %{public}@",
                                                  nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
