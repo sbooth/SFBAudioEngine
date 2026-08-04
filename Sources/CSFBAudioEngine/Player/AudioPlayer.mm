@@ -1238,12 +1238,12 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
         formatMismatch = false;
 
         fetchUpdate(
-                    decoderState->flags_,
-                    [](auto val) noexcept {
-                        return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
-                        bits::to_underlying(DecoderState::Flags::decodingResumed);
-                    },
-                    std::memory_order_acq_rel);
+                decoderState->flags_,
+                [](auto val) noexcept {
+                    return (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
+                           bits::to_underlying(DecoderState::Flags::decodingResumed);
+                },
+                std::memory_order_acq_rel);
 
         // Rewind ensuing decoder states if possible to avoid discarding frames
         rewindEnsuingDecoders(decoderState);
@@ -1307,12 +1307,12 @@ void sfb::AudioPlayer::rewindEnsuingDecoders(DecoderState *decoderState) noexcep
             }
 
             fetchUpdate(
-                        nextDecoderState->flags_,
-                        [](auto val) noexcept {
-                            return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
-                            bits::to_underlying(DecoderState::Flags::decodingSuspended);
-                        },
-                        std::memory_order_acq_rel);
+                    nextDecoderState->flags_,
+                    [](auto val) noexcept {
+                        return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
+                               bits::to_underlying(DecoderState::Flags::decodingSuspended);
+                    },
+                    std::memory_order_acq_rel);
         }
     }
 }
@@ -1504,8 +1504,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
             if (!suspended) {
                 os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
             } else {
-                os_log_debug(log_, "Decoding restarting after suspension for %{public}@",
-                             decoderState->decoder_);
+                os_log_debug(log_, "Decoding restarting after suspension for %{public}@", decoderState->decoder_);
             }
 
             // Submit the decoding started event for the initial start only
@@ -1546,8 +1545,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         // Write the decoded audio to the audio buffer for rendering
         const auto framesWritten = audioBuffer_.write(*(buffer.audioBufferList), framesDecoded);
         if (framesWritten != framesDecoded) {
-            os_log_fault(log_, "Error writing audio: spsc::AudioRingBuffer::write failed for %u frames",
-                         framesDecoded);
+            os_log_fault(log_, "Error writing audio: spsc::AudioRingBuffer::write failed for %u frames", framesDecoded);
         }
 
         // Decoding complete
