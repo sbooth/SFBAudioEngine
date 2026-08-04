@@ -834,7 +834,7 @@ bool sfb::AudioPlayer::engineIsRunning() const noexcept {
     return isRunning;
 }
 
-sfb::AudioPlayer::Decoder sfb::AudioPlayer::currentDecoder() const noexcept {
+auto sfb::AudioPlayer::currentDecoder() const noexcept -> Decoder {
     std::lock_guard lock{activeDecodersMutex_};
     const auto *decoderState = firstActiveDecoderState();
     if (decoderState == nullptr) {
@@ -2405,7 +2405,7 @@ void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
     }
 }
 
-sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstActiveDecoderState() const noexcept {
+auto sfb::AudioPlayer::firstActiveDecoderState() const noexcept -> DecoderState * {
 #if DEBUG
     activeDecodersMutex_.assertIsOwner();
 #endif /* DEBUG */
