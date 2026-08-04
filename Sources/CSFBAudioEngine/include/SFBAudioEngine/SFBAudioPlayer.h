@@ -210,39 +210,39 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - note: Out-of-range seek requests are clamped to valid frame positions
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekForward;
 /// Seeks backward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - note: Out-of-range seek requests are clamped to valid frame positions
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekBackward;
 
 /// Seeks forward in the current decoder by the specified number of seconds
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter secondsToSkip: The number of seconds to skip forward
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(forward:));
 /// Seeks backward in the current decoder by the specified number of seconds
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter secondsToSkip: The number of seconds to skip backward
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(backward:));
 
 /// Seeks to the specified time in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter timeInSeconds: The desired time in seconds
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified position in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter position: The desired position in the interval `[0, 1)`
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter frame: The desired audio frame
-/// - returns: `NO` if the seek is invalid, the current playback snapshot is invalid, or the decoder doesn't support
-/// seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame NS_SWIFT_NAME(seek(frame:));
 
 /// Returns `YES` if the current decoder supports seeking
