@@ -265,8 +265,7 @@ struct AudioPlayer::DecoderState final {
     static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
     /// The number of frames decoded
-    std::atomic_int64_t framesDecoded_{0};
-    static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
+    int64_t framesDecoded_{0};
     /// The number of frames rendered
     std::atomic_int64_t framesRendered_{0};
     static_assert(std::atomic_int64_t::is_always_lock_free, "Lock-free std::atomic_int64_t required");
@@ -399,7 +398,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
     }
 
     if (framePosition != 0) {
-        framesDecoded_.store(framePosition, std::memory_order_release);
+        framesDecoded_ = framePosition;
         framesRendered_.store(framePosition, std::memory_order_release);
     }
 
@@ -414,9 +413,7 @@ inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity)
     return true;
 }
 
-inline int64_t AudioPlayer::DecoderState::framesDecoded() const noexcept {
-    return framesDecoded_.load(std::memory_order_acquire);
-}
+inline int64_t AudioPlayer::DecoderState::framesDecoded() const noexcept { return framesDecoded_; }
 
 inline int64_t AudioPlayer::DecoderState::framesRendered() const noexcept {
     return framesRendered_.load(std::memory_order_acquire);
@@ -456,7 +453,7 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
         return true;
     }
 
-    this->framesDecoded_.fetch_add(framesDecoded, std::memory_order_release);
+    framesDecoded_ += framesDecoded;
 
     // Only PCM to PCM conversions are performed
     if (![converter_ convertToBuffer:buffer fromBuffer:decodeBuffer_ error:error]) {
@@ -1185,7 +1182,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     // Increment the playback epoch to expire any inflight events
                     playbackGeneration_.fetch_add(1, std::memory_order_release);
 
-                    decoderState->framesDecoded_.store(framePosition.value(), std::memory_order_release);
+                    decoderState->framesDecoded_ = framePosition.value();
                     decoderState->framesRendered_.store(framePosition.value(), std::memory_order_release);
                 }
 
@@ -1237,8 +1234,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                         continue;
                                     }
 
-                                    nextDecoderState->framesDecoded_.store(framePosition.value(),
-                                                                           std::memory_order_release);
+                                    nextDecoderState->framesDecoded_ = framePosition.value();
                                     nextDecoderState->framesRendered_.store(framePosition.value(),
                                                                             std::memory_order_release);
 
@@ -1247,8 +1243,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                     // snapshot and fires false 'didSeek:' delegate notifications.
                                 } else {
                                     os_log_error(log_, "Discarding %lld frames from %{public}@",
-                                                 nextDecoderState->framesDecoded_.load(std::memory_order_acquire),
-                                                 nextDecoderState->decoder_);
+                                                 nextDecoderState->framesDecoded(), nextDecoderState->decoder_);
                                 }
 
                                 fetchUpdate(
@@ -1451,7 +1446,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     }
 
                     // Decode audio into the buffer, converting to the rendering format in the process
-                    const auto initialFramePosition = decoderState->framesDecoded_.load(std::memory_order_acquire);
+                    const auto initialFramePosition = decoderState->framesDecoded();
                     if (NSError *error = nil; !decoderState->decodeAudio(buffer, &error)) {
                         setErrorAndRequestCancel(decoderState, error);
                         goto next_outer_iteration;
@@ -1978,12 +1973,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     //
     // This is indicated by an increment in the transport epoch/playback generation.
     //
-    // NB: The generation check must happen under activeDecodersMutex_, together with the frame
-    // counter reads below. A seek on the decoding thread bumps playbackGeneration_ and resets a
-    // decoder state's framesDecoded_/framesRendered_ under the same mutex (see the seek handling
-    // in the decoding loop). Checking the generation before taking the lock leaves a window in
-    // which the seek's reset can land between the check and the reads below, making a stale
-    // event's frame count get applied to post-seek counters.
+    // NB: The generation check and frames rendered load below must happen under
+    // activeDecodersMutex_. A seek on the decoding thread bumps playbackGeneration_ and resets
+    // a decoder state's framesRendered_ under the same mutex (see the seek handling  in the
+    // decoding loop). Checking the generation before taking the lock leaves a window in which
+    // the seek's reset can land between the check and the read below, making a stale event's
+    // frame count get applied to post-seek counters.
 
     struct RenderingEventDetails {
         enum class Type {
