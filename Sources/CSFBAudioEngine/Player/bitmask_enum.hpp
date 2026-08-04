@@ -30,21 +30,6 @@ template <typename T>
 concept BitmaskEnum =
         std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>> && requires(T t) { is_bitmask_enum(t); };
 
-/// Returns the bitwise OR of lhs and rhs
-template <BitmaskEnum E> [[nodiscard]] constexpr E operator|(E lhs, E rhs) noexcept {
-    return static_cast<E>(to_underlying(lhs) | to_underlying(rhs));
-}
-
-/// Returns the bitwise AND of lhs and rhs
-template <BitmaskEnum E> [[nodiscard]] constexpr E operator&(E lhs, E rhs) noexcept {
-    return static_cast<E>(to_underlying(lhs) & to_underlying(rhs));
-}
-
-/// Returns the bitwise XOR of lhs and rhs
-template <BitmaskEnum E> [[nodiscard]] constexpr E operator^(E lhs, E rhs) noexcept {
-    return static_cast<E>(to_underlying(lhs) ^ to_underlying(rhs));
-}
-
 // MARK: Single-Bit Tests
 
 /// Returns true if only one bit is set in value
@@ -135,3 +120,29 @@ template <BitmaskEnum E> [[nodiscard]] constexpr bool has_any_or_has_none(E valu
 }
 
 } /* namespace bits */
+
+// MARK: Operators
+
+/// Returns the bitwise OR of lhs and rhs
+template <bits::BitmaskEnum E> [[nodiscard]] constexpr E operator|(E lhs, E rhs) noexcept {
+    return static_cast<E>(bits::to_underlying(lhs) | bits::to_underlying(rhs));
+}
+
+/// Returns the bitwise AND of lhs and rhs
+template <bits::BitmaskEnum E> [[nodiscard]] constexpr E operator&(E lhs, E rhs) noexcept {
+    return static_cast<E>(bits::to_underlying(lhs) & bits::to_underlying(rhs));
+}
+
+/// Returns the bitwise XOR of lhs and rhs
+template <bits::BitmaskEnum E> [[nodiscard]] constexpr E operator^(E lhs, E rhs) noexcept {
+    return static_cast<E>(bits::to_underlying(lhs) ^ bits::to_underlying(rhs));
+}
+
+/// Returns the bitwise OR assignment of lhs and rhs
+template <bits::BitmaskEnum E> constexpr E &operator|=(E &lhs, E rhs) noexcept { return lhs = lhs | rhs; }
+
+/// Returns the bitwise AND assignment of lhs and rhs
+template <bits::BitmaskEnum E> constexpr E &operator&=(E &lhs, E rhs) noexcept { return lhs = lhs & rhs; }
+
+/// Returns the bitwise XOR assignment of lhs and rhs
+template <bits::BitmaskEnum E> constexpr E &operator^=(E &lhs, E rhs) noexcept { return lhs = lhs ^ rhs; }
