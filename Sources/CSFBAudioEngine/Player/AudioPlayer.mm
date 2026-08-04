@@ -1395,8 +1395,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         continue;
                     }
 
-                    formatMismatch = false;
                     clearFlags(Flags::audioStale | Flags::formatChangePending);
+                    formatMismatch = false;
 
                     // Allocate the buffer that is the intermediary between the decoder state and the ring buffer
                     if (auto format = buffer.format; format.channelCount != renderFormat.channelCount ||
