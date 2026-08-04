@@ -1257,8 +1257,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstIncompleteDecoderState() 
 
     const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
         const auto decoderFlags = decoderState->loadFlags();
-        return bits::has_none(decoderFlags, DecoderState::Flags::needsInitialization | DecoderState::Flags::canceled |
-                                                    DecoderState::Flags::decodingComplete);
+        return bits::has_none(decoderFlags, DecoderState::Flags::canceled | DecoderState::Flags::decodingComplete);
     });
     return iter != activeDecoders_.cend() ? iter->get() : nullptr;
 }
