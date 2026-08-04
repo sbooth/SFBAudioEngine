@@ -945,7 +945,7 @@ bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &sn
     assert(snapshot.framePosition_ != SFBUnknownFramePosition);
     assert(snapshot.frameLength_ != SFBUnknownFrameLength);
     assert(snapshot.framePosition_ < snapshot.frameLength_);
-    assert(snapshot.frameLength_ > 1);
+    assert(snapshot.frameLength_ >= 1);
 #endif /* DEBUG */
 
     const auto clampedFrame = std::clamp(frame, 0LL, snapshot.frameLength_ - 1);
