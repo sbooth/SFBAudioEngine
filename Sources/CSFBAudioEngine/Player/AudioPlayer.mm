@@ -945,14 +945,13 @@ bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &sn
     assert(snapshot.framePosition_ != SFBUnknownFramePosition);
     assert(snapshot.frameLength_ != SFBUnknownFrameLength);
     assert(snapshot.framePosition_ < snapshot.frameLength_);
+    assert(snapshot.frameLength_ > 1);
 #endif /* DEBUG */
 
-    if (frame < 0 || frame >= snapshot.frameLength_) {
-        return false;
-    }
-
-    if (frame != snapshot.framePosition_) {
-        pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = frame}, std::memory_order_release);
+    const auto clampedFrame = std::clamp(frame, 0LL, snapshot.frameLength_ - 1);
+    if (clampedFrame != snapshot.framePosition_) {
+        pendingSeek_.store({.sequenceNumber_ = snapshot.sequenceNumber_, .frame_ = clampedFrame},
+                           std::memory_order_release);
         decodingSemaphore_.signal();
     }
 
