@@ -1229,7 +1229,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                                 os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
                                 // TODO: Investigate a per-state buffer to mitigate frame loss
-                                if (nextDecoderState->decoder_.supportsSeeking) {
+                                if (nextDecoderState->supportsSeeking()) {
                                     NSError *seekError = nil;
                                     const auto framePosition = nextDecoderState->seekToFrame(0, &seekError);
                                     if (!framePosition) {
