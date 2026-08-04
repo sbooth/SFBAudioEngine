@@ -448,29 +448,30 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     // Reset output buffer data size
     buffer.frameLength = 0;
 
-    frameLength = std::min(frameLength, buffer.frameCapacity);
-    if (frameLength == 0) {
-        return YES;
-    }
+    auto framesRemaining = std::min(frameLength, buffer.frameCapacity);
+    while (framesRemaining > 0) {
+        // Copy as much as possible from the internal frame buffer
+        if (_frameBuffer.frameLength > 0) {
+            const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
+                                             readingFromOffset:0
+                                                   frameLength:framesRemaining];
+            [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
-    AVAudioFrameCount framesProcessed = 0;
+            framesRemaining -= framesCopied;
+            _framePosition += framesCopied;
 
-    for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer
-                                                readingFromOffset:0
-                                                      frameLength:framesRemaining];
-        [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
+            // All requested frames read
+            if (framesRemaining == 0) {
+                break;
+            }
+        }
 
-        framesProcessed += framesCopied;
-
-        // All requested frames were read or EOS reached
-        if (framesProcessed == frameLength ||
-            FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
+        // EOS reached
+        if (FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM) {
             break;
         }
 
-        // Grab the next frame
+        // Decode the next FLAC frame
         if (!FLAC__stream_decoder_process_single(_flac.get())) {
             os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s",
                          FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
@@ -481,14 +482,17 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         }
     }
 
-    _framePosition += framesProcessed;
-
     return YES;
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
     //    NSParameterAssert(frame <= _totalFrames);
+
+    // FLAC__stream_decoder_seek_absolute() may call the write callback with a partial frame.
+    // To prevent losing audio clear the buffers before the seek request, not after.
+    _frameBuffer.frameLength = 0;
+    _previousFrameHeader.reset();
 
     auto result = FLAC__stream_decoder_seek_absolute(_flac.get(), static_cast<FLAC__uint64>(frame));
 
@@ -507,9 +511,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         return NO;
     }
 
-    _framePosition = frame;
-    _frameBuffer.frameLength = 0;
-    _previousFrameHeader.reset();
+    // Manually set frame position if no audio was produced during the seek
+    if (_frameBuffer.frameLength == 0) {
+        _framePosition = frame;
+    }
 
     return YES;
 }
@@ -597,6 +602,12 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         _frameBuffer.frameLength = 0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
+
+#if DEBUG
+    // libFLAC always sets FLAC__FRAME_NUMBER_TYPE_SAMPLE_NUMBER
+    assert(frame->header.number_type == FLAC__FRAME_NUMBER_TYPE_SAMPLE_NUMBER);
+#endif /* DEBUG */
+    _framePosition = frame->header.number.sample_number;
 
     // FLAC hands us 32-bit signed integers with the samples low-aligned
     if (const auto *abl = _frameBuffer.audioBufferList; frame->header.bits_per_sample != 32) [[likely]] {

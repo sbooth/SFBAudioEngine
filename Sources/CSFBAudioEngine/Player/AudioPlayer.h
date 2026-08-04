@@ -26,6 +26,7 @@
 #import <deque>
 #import <memory>
 #import <mutex>
+#import <optional>
 #import <stop_token>
 #import <thread>
 #import <vector>
@@ -41,23 +42,82 @@ namespace detail {
 struct DecodedChunkDescriptor final {
     /// The playback generation at the time this chunk was decoded
     uint64_t playbackGeneration_{0};
-    /// Decoder sequence number that produced the audio.
+    /// Decoder sequence number that produced the audio
     uint64_t sequenceNumber_{0};
-    /// Decoder frame position for the first audio frame in the chunk.
+    /// Decoder frame position for the first audio frame in the chunk
     int64_t framePosition_{0};
-    /// Number of audio frames in the chunk.
+    /// Number of audio frames in the chunk
     uint32_t frameLength_{0};
+
+    /// Possible bits in `flags_`
+    enum class Flags : uint16_t {
+        /// Clear
+        none = 0,
+        /// First chunk from the decoder
+        first = 1u << 0,
+        /// Last chunk from the decoder
+        last = 1u << 1,
+    };
+
+    /// Flags for this chunk
+    Flags flags_{Flags::none};
+
+    /// Returns true if this is the first chunk from decoder
+    [[nodiscard]] bool isFirst() const noexcept { return bits::is_set(flags_, Flags::first); }
+
+    /// Returns true if this is the last chunk from decoder
+    [[nodiscard]] bool isLast() const noexcept { return bits::is_set(flags_, Flags::last); }
+
+    /// Returns true if this chunk contains zero frames
+    [[nodiscard]] bool isEmpty() const noexcept { return frameLength_ == 0; }
+
+  private:
+    friend constexpr void is_bitmask_enum(Flags);
 };
 
 /// A descriptor for a rendering chunk of audio.
 struct RenderingChunkDescriptor final {
-    /// The decoded chunk descriptor.
+    /// The decoded chunk descriptor
     DecodedChunkDescriptor descriptor_{};
     /// The number of frames consumed from `descriptor_`
     uint32_t framesConsumed_{0};
 
     /// Returns the number of frames remaining in this chunk
     [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
+
+    /// Returns true if all frames from the decoded chunk descriptor have been consumed
+    [[nodiscard]] bool allFramesConsumed() const noexcept { return framesConsumed_ == descriptor_.frameLength_; }
+};
+
+/// A snapshot encapsulating a consistent view of playback state.
+struct TransportSnapshot final {
+    /// Decoder sequence number for the snapshot.
+    uint64_t sequenceNumber_{0};
+    /// Decoder frame position.
+    int64_t framePosition_{SFBUnknownFramePosition};
+    /// Decoder frame length.
+    int64_t frameLength_{SFBUnknownFrameLength};
+    /// Decoder sample rate in Hz.
+    double sampleRate_{0};
+    /// Whether the decoder supports seeking.
+    bool supportsSeeking_{false};
+    /// Whether this snapshot contains valid data.
+    bool isValid_{false};
+
+    /// Gets the playback position and time for this snapshot.
+    /// @param position An optional pointer to receive the playback position
+    /// @param time An optional pointer to receive the playback time
+    /// @return false if the snapshot is not valid
+    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                    SFBPlaybackTime *_Nullable time) const noexcept;
+};
+
+/// A seek request.
+struct SeekRequest final {
+    /// Decoder sequence number for the request.
+    uint64_t sequenceNumber_{0};
+    /// Requested frame position.
+    int64_t frame_{-1};
 };
 
 } /* namespace detail */
@@ -86,8 +146,8 @@ class AudioPlayer final {
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 32> audioMetadata_;
     /// The current transport epoch
-    std::atomic<uint64_t> playbackGeneration_{1};
-    static_assert(std::atomic<uint64_t>::is_always_lock_free, "Lock-free std::atomic<uint64_t> required");
+    std::atomic_uint64_t playbackGeneration_{1};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -118,6 +178,16 @@ class AudioPlayer final {
     AVAudioSourceNode *sourceNode_{nil};
     /// Mutex protecting playback state and processing graph configuration changes
     mutable mtx::UnfairMutex engineMutex_;
+
+    /// Current playback snapshot
+    mutable detail::TransportSnapshot currentSnapshot_{};
+    /// Seqlock protecting `currentSnapshot_`
+    std::atomic_uint64_t snapshotSequence_{0};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
+    /// Pending seek request
+    std::atomic<detail::SeekRequest> pendingSeek_{};
+    static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,
+                  "Lock-free std::atomic<detail::SeekRequest> required");
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
@@ -189,8 +259,8 @@ class AudioPlayer final {
 
     SFBPlaybackPosition playbackPosition() const noexcept;
     SFBPlaybackTime playbackTime() const noexcept;
-    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable playbackPosition,
-                                    SFBPlaybackTime *_Nullable playbackTime) const noexcept;
+    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                    SFBPlaybackTime *_Nullable time) const noexcept;
 
     // MARK: - Seeking
 
@@ -201,8 +271,7 @@ class AudioPlayer final {
     bool supportsSeeking() const noexcept;
 
   private:
-    bool performClampingSeekToFrame(DecoderState *_Nonnull decoderState, AVAudioFramePosition frame,
-                                    bool isRelative) noexcept;
+    bool seekToFrameInSnapshot(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame) noexcept;
 
   public:
 #if !TARGET_OS_IPHONE
@@ -232,6 +301,8 @@ class AudioPlayer final {
   private:
     /// Possible bits in `flags_`
     enum class Flags : unsigned int {
+        /// Clear
+        none = 0,
         /// Cached value of `engine_.isRunning`
         engineRunning = 1u << 0,
         /// The render block should output audio
@@ -246,12 +317,7 @@ class AudioPlayer final {
         renderEventDropped = 1u << 5,
     };
 
-    // Enable bitmask operations for `Flags`
     friend constexpr void is_bitmask_enum(Flags);
-
-    // Hidden friends
-    friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
-    friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::operator&(l, r); }
 
     /// Atomically loads the value of `flags_` using the specified memory order and returns the result
     [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
@@ -285,18 +351,18 @@ class AudioPlayer final {
     OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                     AudioBufferList &outputData) noexcept;
     /// The current rendering chunk descriptor
-    detail::RenderingChunkDescriptor renderingChunk_{};
+    std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
     // MARK: - Events
 
     /// Event commands
-    enum class EventCommand : uint32_t {
+    enum class EventCommand : uint16_t {
         /// Decoding started
         decodingStarted = 1,
         /// Decoding complete
         decodingComplete = 2,
-        /// Seek
-        seek = 3,
+        /// Seek complete
+        seekComplete = 3,
         /// Decoder canceled by user or aborted due to error
         decoderCanceled = 4,
         /// Allocation failure
@@ -311,7 +377,7 @@ class AudioPlayer final {
 
     /// Peeks and identifies event commands in `events_` for processing
     /// - note: This is the thread entry point for the event processing thread
-    void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+    void processEvents(std::stop_token stoken) noexcept;
 
     /// Dequeues and processes a decoding started event from `events_`
     bool processDecodingStartedEvent() noexcept;
@@ -319,8 +385,8 @@ class AudioPlayer final {
     /// Dequeues and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
 
-    /// Dequeues and processes a decoder seek event from `events_`
-    bool processDecoderSeekEvent() noexcept;
+    /// Dequeues and processes a seek complete event from `events_`
+    bool processSeekCompleteEvent() noexcept;
 
     /// Dequeues and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
@@ -339,6 +405,14 @@ class AudioPlayer final {
 
     /// Called when the final audio frame from a decoder will render.
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+
+    // MARK: - Transport Snapshots
+
+    /// Publishes a playback snapshot.
+    void publishTransportSnapshot(const detail::TransportSnapshot &snapshot) noexcept;
+
+    /// Reads the most recently published playback snapshot.
+    [[nodiscard]] detail::TransportSnapshot loadTransportSnapshot() const noexcept;
 
     // MARK: - Active Decoder Management
 
@@ -422,11 +496,59 @@ inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
     return nowPlaying_;
 }
 
+inline SFBPlaybackPosition AudioPlayer::playbackPosition() const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    SFBPlaybackPosition position;
+    snapshot.getPlaybackPositionAndTime(&position, nullptr);
+    return position;
+}
+
+inline SFBPlaybackTime AudioPlayer::playbackTime() const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    SFBPlaybackTime time;
+    snapshot.getPlaybackPositionAndTime(nullptr, &time);
+    return time;
+}
+
+inline bool AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
+                                                    SFBPlaybackTime *time) const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    return snapshot.getPlaybackPositionAndTime(position, time);
+}
+
 inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { return sourceNode_; }
 
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
 inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
+
+// MARK: Transport Snapshot
+
+inline bool detail::TransportSnapshot::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
+                                                                  SFBPlaybackTime *time) const noexcept {
+    if (position != nullptr) {
+        if (!isValid_) {
+            *position = SFBInvalidPlaybackPosition;
+        } else {
+            *position = {.framePosition = framePosition_, .frameLength = frameLength_};
+        }
+    }
+
+    if (time != nullptr) {
+        auto playbackTime = SFBInvalidPlaybackTime;
+        if (isValid_ && sampleRate_ > 0) {
+            if (framePosition_ != SFBUnknownFramePosition) {
+                playbackTime.currentTime = framePosition_ / sampleRate_;
+            }
+            if (frameLength_ != SFBUnknownFrameLength) {
+                playbackTime.totalTime = frameLength_ / sampleRate_;
+            }
+        }
+        *time = playbackTime;
+    }
+
+    return isValid_;
+}
 
 } /* namespace sfb */
 
