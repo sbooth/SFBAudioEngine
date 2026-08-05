@@ -1871,8 +1871,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             activeDecoders_.erase(iter);
 
             // Wake the decoding thread if a format change is pending
-            if (const auto flags = loadFlags();
-                bits::is_set(flags, Flags::formatChangePending) && activeDecoders_.size() == 1) {
+            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
                 decodingSemaphore_.signal();
             }
         } else {
@@ -2049,8 +2048,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                 activeDecoders_.erase(iter);
 
                 // Wake the decoding thread if a format change is pending
-                if (const auto flags = loadFlags();
-                    bits::is_set(flags, Flags::formatChangePending) && activeDecoders_.size() == 1) {
+                if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
                     decodingSemaphore_.signal();
                 }
 
