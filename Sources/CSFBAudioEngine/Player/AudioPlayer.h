@@ -311,8 +311,10 @@ class AudioPlayer final {
         muted = 1u << 2,
         /// The ring buffer contains stale audio and needs to be emptied during the next render cycle
         audioStale = 1u << 3,
+        /// A ring buffer format change is pending
+        formatChangePending = 1u << 4,
         /// The event message queue had insufficient space to record a render event
-        renderEventDropped = 1u << 4,
+        renderEventDropped = 1u << 5,
     };
 
     friend constexpr void is_bitmask_enum(Flags);
