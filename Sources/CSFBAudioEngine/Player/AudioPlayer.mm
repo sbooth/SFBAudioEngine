@@ -1973,7 +1973,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     //
     // NB: The generation check and frames rendered load below must happen under
     // activeDecodersMutex_. A seek on the decoding thread bumps playbackGeneration_ and resets
-    // a decoder state's framesRendered_ under the same mutex (see the seek handling  in the
+    // a decoder state's framesRendered_ under the same mutex (see the seek handling in the
     // decoding loop). Checking the generation before taking the lock leaves a window in which
     // the seek's reset can land between the check and the read below, making a stale event's
     // frame count get applied to post-seek counters.
