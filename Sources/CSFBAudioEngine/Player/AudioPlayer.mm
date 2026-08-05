@@ -1514,13 +1514,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         int64_t deltaNanos;
         if (decoderState == nullptr) {
-            if (formatMismatch) {
-                // Shorter timeout if waiting on a decoder to complete rendering for a pending format change
-                deltaNanos = 25 * NSEC_PER_MSEC;
-            } else {
-                // Idling
-                deltaNanos = NSEC_PER_SEC / 2;
-            }
+            // Idling or waiting on a decoder to complete rendering for a pending format change
+            deltaNanos = NSEC_PER_SEC / 2;
         } else {
             // Determine timeout based on ring buffer free space
             // Attempt to keep the ring buffer 75% full
@@ -1874,6 +1869,12 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
+
+            // Wake the decoding thread if a format change is pending
+            if (const auto flags = loadFlags();
+                bits::is_set(flags, Flags::formatChangePending) && activeDecoders_.size() == 1) {
+                decodingSemaphore_.signal();
+            }
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event",
                          sequenceNumber);
@@ -2046,6 +2047,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
+
+                // Wake the decoding thread if a format change is pending
+                if (const auto flags = loadFlags();
+                    bits::is_set(flags, Flags::formatChangePending) && activeDecoders_.size() == 1) {
+                    decodingSemaphore_.signal();
+                }
 
                 // Publish snapshot reflecting the new active decoder state
                 if (const auto *nextDecoderState = firstActiveDecoderState(); nextDecoderState != nullptr) {
