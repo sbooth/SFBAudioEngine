@@ -1182,6 +1182,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bo
     // Clear the format mismatch flag if any decoders were canceled
     if (anyCanceled) {
         formatMismatch = false;
+        clearFlags(Flags::formatChangePending);
     }
 
     // Return the earliest decoder state that has not completed rendering
@@ -1432,6 +1433,11 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
             // decoding can't start until the processing graph is reconfigured which occurs after
             // all active decoders complete
             formatMismatch = true;
+
+            // Ring buffer underruns are expected while waiting for the format change to complete;
+            // suppress underrun notifications until the processing graph is reconfigured and the
+            // ring buffer is refilled
+            setFlags(Flags::formatChangePending);
         }
     }
 
@@ -1567,9 +1573,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         }
     }
 
-    // Clear the mute flag if needed now that the ring buffer is full
-    if (bits::is_set(flags, Flags::muted)) {
-        clearFlags(Flags::muted);
+    // Clear the mute and pending format change flags if needed now that the ring buffer is full
+    if (bits::has_any(flags, Flags::muted | Flags::formatChangePending)) {
+        clearFlags(Flags::muted | Flags::formatChangePending);
     }
 
     return true;
@@ -1577,9 +1583,8 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 
 int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState, bool formatMismatch) const noexcept {
     if (decoderState == nullptr) {
-        // Shorter timeout if waiting on a decoder to complete rendering for a pending format change;
-        // otherwise idling
-        return formatMismatch ? (25 * NSEC_PER_MSEC) : (NSEC_PER_SEC / 2);
+        // Idling or waiting on a decoder to complete rendering for a pending format change
+        return NSEC_PER_SEC / 2;
     }
 
     // Determine timeout based on ring buffer free space
@@ -1699,7 +1704,10 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         }
     }
 
-    if (framesRead != frameCount) {
+    // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
+    // is expected to run dry while the decoding thread waits to reconfigure the processing graph and
+    // refill the ring buffer
+    if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount)) {
             setFlags(Flags::renderEventDropped);
         }
@@ -1923,6 +1931,11 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
+
+            // Wake the decoding thread if a format change is pending
+            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
+                decodingSemaphore_.signal();
+            }
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event",
                          sequenceNumber);
@@ -2095,6 +2108,11 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
+
+                // Wake the decoding thread if a format change is pending
+                if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
+                    decodingSemaphore_.signal();
+                }
 
                 // Publish snapshot reflecting the new active decoder state
                 if (const auto *nextDecoderState = firstActiveDecoderState(); nextDecoderState != nullptr) {
