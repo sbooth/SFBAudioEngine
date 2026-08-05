@@ -1154,7 +1154,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             decoderState = firstActiveDecoderState();
 
             // Clear the format mismatch flag if any decoders were canceled
-            if (anyCanceled && formatMismatch) {
+            if (anyCanceled) {
                 formatMismatch = false;
                 clearFlags(Flags::formatChangePending);
             }
@@ -1366,7 +1366,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     formatMismatch = true;
 
                     // Ring buffer underruns are expected while waiting for the format change to complete;
-                    // suppress underrun notifications until the processing graph is reconfigured
+                    // suppress underrun notifications until the processing graph is reconfigured and the
+                    // ring buffer is refilled
                     setFlags(Flags::formatChangePending);
                 }
             }
@@ -1644,7 +1645,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
-    // is expected to run dry while the decoding thread waits to reconfigure the processing graph
+    // is expected to run dry while the decoding thread waits to reconfigure the processing graph and
+    // refill the ring buffer
     if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount)) {
             setFlags(Flags::renderEventDropped);
