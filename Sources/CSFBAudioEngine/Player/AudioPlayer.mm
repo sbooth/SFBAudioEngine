@@ -1129,7 +1129,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
-        const auto timeout = decodingTimeout(decoderState, formatMismatch);
+        const auto timeout = decodingTimeout(decoderState);
         decodingSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, timeout));
     }
 
@@ -1581,7 +1581,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
     return true;
 }
 
-int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState, bool formatMismatch) const noexcept {
+int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
         return NSEC_PER_SEC / 2;

@@ -376,7 +376,7 @@ class AudioPlayer final {
     bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
     /// Returns the appropriate decoding semaphore timeout
-    int64_t decodingTimeout(DecoderState *_Nullable decoderState, bool formatMismatch) const noexcept;
+    int64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
     // MARK: - Rendering
 
