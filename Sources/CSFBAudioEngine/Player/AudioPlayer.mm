@@ -1198,8 +1198,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
         return true;
     }
 
-    NSError *seekError = nil;
-    if (!decoderState->seekToFrame(pendingSeek.frame_, &seekError)) {
+    if (NSError *seekError = nil; !decoderState->seekToFrame(pendingSeek.frame_, &seekError)) {
         decoderState->error_ = seekError;
         decoderState->setFlags(DecoderState::Flags::cancelRequested);
         return false;
@@ -1297,8 +1296,7 @@ void sfb::AudioPlayer::rewindEnsuingDecoders(DecoderState *decoderState) noexcep
                 // not a user-initiated seek. Enqueuing this event pollutes the transport
                 // snapshot and fires false 'didSeek:' delegate notifications.
             } else {
-                os_log_error(log_, "Discarding %lld frames from %{public}@",
-                             nextDecoderState->framesDecoded(),
+                os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded(),
                              nextDecoderState->decoder_);
             }
 
