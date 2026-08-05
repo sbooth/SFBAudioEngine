@@ -1388,7 +1388,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                         continue;
                     }
 
-                    clearFlags(Flags::audioStale | Flags::formatChangePending);
+                    clearFlags(Flags::audioStale);
                     formatMismatch = false;
 
                     // Allocate the buffer that is the intermediary between the decoder state and the ring buffer
@@ -1505,9 +1505,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
                     }
                 }
 
-                // Clear the mute flag if needed now that the ring buffer is full
-                if (bits::is_set(flags, Flags::muted)) {
-                    clearFlags(Flags::muted);
+                // Clear the mute and pending format change flags if needed now that the ring buffer is full
+                if (bits::has_any(flags, Flags::muted | Flags::formatChangePending)) {
+                    clearFlags(Flags::muted | Flags::formatChangePending);
                 }
             }
         }
