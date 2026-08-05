@@ -1235,6 +1235,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
         // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
         // decoding completes.
         formatMismatch = false;
+        clearFlags(Flags::formatChangePending);
 
         fetchUpdate(
                 decoderState->flags_,
