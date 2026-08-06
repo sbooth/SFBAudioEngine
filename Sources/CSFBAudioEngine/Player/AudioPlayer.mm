@@ -26,6 +26,7 @@
 #import <concepts>
 #import <limits>
 #import <ranges>
+#import <span>
 
 namespace {
 
@@ -216,6 +217,18 @@ bool isSnapshotSeekable(const sfb::detail::TransportSnapshot &snapshot) noexcept
     }
     return snapshot.framePosition_ != SFBUnknownFramePosition && snapshot.frameLength_ != SFBUnknownFrameLength &&
            snapshot.frameLength_ >= 1;
+}
+
+/// Computes the host time for a given frame offset relative to `timestamp` at `sampleRate`
+uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &timestamp, double sampleRate) noexcept {
+#if DEBUG
+    assert((timestamp.mFlags & kAudioTimeStampHostTimeValid) != 0);
+    assert((timestamp.mFlags & kAudioTimeStampRateScalarValid) != 0);
+#endif /* DEBUG */
+    const auto deltaSeconds = static_cast<double>(frameOffset) / sampleRate;
+    const auto scaledNanos =
+            static_cast<uint64_t>(deltaSeconds * timestamp.mRateScalar * static_cast<double>(nanosecondsPerSecond));
+    return timestamp.mHostTime + host_time::fromNanoseconds(scaledNanos);
 }
 
 } /* namespace */
@@ -1547,114 +1560,108 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                                   AudioBufferList &outputData) noexcept {
     const auto flags = loadFlags();
-
-    /// Sets the buffers in an AudioBufferList struct to zero.
-    const auto zeroABL = [](AudioBufferList &abl) noexcept {
-        for (UInt32 i = 0; i < abl.mNumberBuffers; ++i) {
-            std::memset(abl.mBuffers[i].mData, 0, abl.mBuffers[i].mDataByteSize);
-        }
-    };
+    const auto isStale = bits::is_set(flags, Flags::audioStale);
 
     // Discard any stale frames in the ring buffer from a seek or decoder cancelation
-    if (bits::is_set(flags, Flags::audioStale)) {
+    if (isStale) [[unlikely]] {
         audioBuffer_.discardAll();
         audioMetadata_.discardAll();
         renderingChunk_ = {};
         clearFlags(Flags::audioStale);
-        zeroABL(outputData);
-        isSilence = YES;
-        return noErr;
     }
 
-    // Output silence if muted or not playing
-    if (bits::is_set_or_is_clear(flags, Flags::muted, Flags::playing)) {
-        zeroABL(outputData);
+    // Output silence if muted, not playing, or the ring buffer was just emptied
+    if (bits::is_set_or_is_clear(flags, Flags::muted, Flags::playing) || isStale) {
         isSilence = YES;
+        for (AudioBuffer &buffer : std::span{outputData.mBuffers, outputData.mNumberBuffers}) {
+            std::memset(buffer.mData, 0, buffer.mDataByteSize);
+        }
         return noErr;
     }
-
-    /// Computes the event time for a given frame offset
-    const auto eventTimeForFrameOffset = [&](uint32_t frameOffset) noexcept -> uint64_t {
-        const auto deltaSeconds = frameOffset / audioBuffer_.format().mSampleRate;
-        const auto scaledNanos = static_cast<uint64_t>(deltaSeconds * timestamp.mRateScalar * nanosecondsPerSecond);
-        return timestamp.mHostTime + host_time::fromNanoseconds(scaledNanos);
-    };
 
     // Read audio from the ring buffer
     const auto framesRead = static_cast<uint32_t>(audioBuffer_.read(outputData, frameCount));
 
-    // Read and process chunk descriptors for the rendered audio
-    if (framesRead > 0) {
-        auto framesRemaining = framesRead;
-        do {
-            // Read the next chunk descriptor if needed
-            if (!renderingChunk_) {
-                detail::DecodedChunkDescriptor chunkDescriptor{};
-                if (!audioMetadata_.pop(chunkDescriptor)) {
-                    setFlags(Flags::renderEventDropped);
-                    break;
-                }
-                renderingChunk_.emplace(chunkDescriptor);
-            }
-
-            const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
-            const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
-
-            // Submit the frames rendered event
-            const auto eventTime = eventTimeForFrameOffset(framesRead - framesRemaining);
-            const auto isStart = renderingChunk_->descriptor_.isFirst() && renderingChunk_->framesConsumed_ == 0;
-            const auto isEnd = renderingChunk_->descriptor_.isLast() && framesFromChunk == chunkFramesRemaining;
-            const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
-                                    (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
-            if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
-                                 framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_, eventFlags)) {
-                setFlags(Flags::renderEventDropped);
-                break;
-            }
-
-            // Accounting
-            renderingChunk_->framesConsumed_ += framesFromChunk;
-            framesRemaining -= framesFromChunk;
-
-            // Chunk processing complete
-            if (renderingChunk_->allFramesConsumed()) {
-                renderingChunk_.reset();
-            }
-        } while (framesRemaining > 0);
+    // Enqueue frames rendered event(s)
+    if (framesRead > 0) [[likely]] {
+        enqueueFramesRenderedEvents(framesRead, timestamp);
     } else {
         isSilence = YES;
-
-#if DEBUG
-        assert(!renderingChunk_);
-#endif /* DEBUG */
-
-        // Check for an empty decoded chunk descriptor, and if found submit an empty frames rendered event to signify
-        // rendering complete
-        if (detail::DecodedChunkDescriptor chunkDescriptor{};
-            audioMetadata_.peek(chunkDescriptor) && chunkDescriptor.isEmpty()) {
-            audioMetadata_.discard();
-            // Submit the empty frames rendered event
-            const auto eventTime = eventTimeForFrameOffset(0);
-            const auto eventFlags =
-                    (chunkDescriptor.isFirst() ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
-                    FramesRenderedEventFlags::complete;
-            if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkDescriptor.sequenceNumber_,
-                                 static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) {
-                setFlags(Flags::renderEventDropped);
-            }
-        }
+        enqueueEmptyFramesRenderedEvent(timestamp);
     }
 
     // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
     // is expected to run dry while the decoding thread waits to reconfigure the processing graph and
     // refill the ring buffer
-    if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) {
+    if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) [[unlikely]] {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount)) {
             setFlags(Flags::renderEventDropped);
         }
     }
 
     return noErr;
+}
+
+void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
+    auto framesRemaining = framesRead;
+    do {
+        // Read the next chunk descriptor if needed
+        if (!renderingChunk_) {
+            detail::DecodedChunkDescriptor chunkDescriptor{};
+            if (!audioMetadata_.pop(chunkDescriptor)) {
+                setFlags(Flags::renderEventDropped);
+                break;
+            }
+            renderingChunk_.emplace(chunkDescriptor);
+        }
+
+        const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
+        const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
+
+        // Submit the frames rendered event
+        const auto eventTime =
+                hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
+        const auto isStart = renderingChunk_->descriptor_.isFirst() && renderingChunk_->framesConsumed_ == 0;
+        const auto isEnd = renderingChunk_->descriptor_.isLast() && framesFromChunk == chunkFramesRemaining;
+        const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
+                                (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
+        if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
+                             framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_, eventFlags)) {
+            setFlags(Flags::renderEventDropped);
+            break;
+        }
+
+        // Accounting
+        renderingChunk_->framesConsumed_ += framesFromChunk;
+        framesRemaining -= framesFromChunk;
+
+        // Chunk processing complete
+        if (renderingChunk_->allFramesConsumed()) {
+            renderingChunk_.reset();
+        }
+    } while (framesRemaining > 0);
+}
+
+void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept {
+#if DEBUG
+    assert(!renderingChunk_);
+#endif /* DEBUG */
+
+    // Check for an empty decoded chunk descriptor, and if found submit an empty frames rendered event to signify
+    // rendering complete
+    if (detail::DecodedChunkDescriptor chunkDescriptor{};
+        audioMetadata_.peek(chunkDescriptor) && chunkDescriptor.isEmpty()) {
+        audioMetadata_.discard();
+        // Submit the empty frames rendered event
+        const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
+        const auto eventFlags =
+                (chunkDescriptor.isFirst() ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
+                FramesRenderedEventFlags::complete;
+        if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkDescriptor.sequenceNumber_,
+                             static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) {
+            setFlags(Flags::renderEventDropped);
+        }
+    }
 }
 
 // MARK: - Event Processing
