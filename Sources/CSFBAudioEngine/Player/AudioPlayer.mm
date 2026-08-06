@@ -1604,7 +1604,7 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
         return shortTimeout;
     }
 
-    // Calculate timeout based on ring buffer free space
+    // Calculate the time until the free space reaches the target threshold
     const auto durationSeconds =
             static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
     return static_cast<int64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
