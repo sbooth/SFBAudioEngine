@@ -1587,23 +1587,26 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 }
 
 int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+    constexpr auto longTimeout = static_cast<int64_t>(nanosecondsPerSecond / 2);
+    constexpr auto shortTimeout = static_cast<int64_t>((nanosecondsPerMillisecond * 5) / 2);
+
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return static_cast<int64_t>(nanosecondsPerSecond / 2);
+        return longTimeout;
     }
 
-    // Determine timeout based on ring buffer free space
     // Attempt to keep the ring buffer 75% full
     const auto targetMaxFreeSpace = audioBuffer_.capacity() / 4;
     const auto freeSpace = audioBuffer_.availableToWrite();
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return static_cast<int64_t>(2.5 * static_cast<double>(nanosecondsPerMillisecond));
+        return shortTimeout;
     }
 
+    // Calculate timeout based on ring buffer free space
     const auto duration = static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<int64_t>(duration * static_cast<double>(nanosecondsPerMillisecond));
+    return static_cast<int64_t>(duration * static_cast<double>(nanosecondsPerSecond));
 }
 
 // MARK: - Rendering
@@ -1767,14 +1770,17 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
+        constexpr auto longTimeout = static_cast<int64_t>(nanosecondsPerSecond / 2);
+        constexpr auto shortTimeout = static_cast<int64_t>((nanosecondsPerMillisecond * 15) / 2);
+
         int64_t deltaNanos;
         {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = static_cast<int64_t>(7.5 * static_cast<double>(nanosecondsPerMillisecond));
+                deltaNanos = shortTimeout;
             } else {
                 // Use a longer timeout when idle
-                deltaNanos = static_cast<int64_t>(nanosecondsPerSecond / 2);
+                deltaNanos = longTimeout;
             }
         }
 
