@@ -221,6 +221,10 @@ bool isSnapshotSeekable(const sfb::detail::TransportSnapshot &snapshot) noexcept
 
 /// Computes the host time for a given frame offset relative to `timestamp` at `sampleRate`
 uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &timestamp, double sampleRate) noexcept {
+#if DEBUG
+    assert((timestamp.mFlags & kAudioTimeStampHostTimeValid) != 0);
+    assert((timestamp.mFlags & kAudioTimeStampRateScalarValid) != 0);
+#endif /* DEBUG */
     const auto deltaSeconds = static_cast<double>(frameOffset) / sampleRate;
     const auto scaledNanos =
             static_cast<uint64_t>(deltaSeconds * timestamp.mRateScalar * static_cast<double>(nanosecondsPerSecond));
