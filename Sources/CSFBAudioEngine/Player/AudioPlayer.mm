@@ -1111,7 +1111,6 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         // Dequeue the next decoder if there are no decoders that haven't completed decoding
         if (decoderState == nullptr) {
             decoderState = dequeueNextDecoder();
-
             // Open the decoder if needed and allocate decoder state internals
             if (decoderState != nullptr && !prepareDequeuedDecoder(decoderState)) {
                 continue;
