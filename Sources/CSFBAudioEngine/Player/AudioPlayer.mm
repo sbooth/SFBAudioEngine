@@ -1179,7 +1179,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bo
         anyCanceled = true;
 
         // Submit the decoder canceled event
-        if (events_.enqueue(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) {
+        if (events_.enqueue(EventCommand::decoderCanceled, decoderState->sequenceNumber_)) [[likely]] {
             signal = true;
         } else {
             os_log_fault(log_, "Error writing decoder canceled event");
@@ -1236,7 +1236,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
         decoderState->framesRendered_.store(framePosition, std::memory_order_release);
     }
 
-    if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition)) {
+    if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition)) [[likely]] {
         eventSemaphore_.signal();
     } else {
         os_log_fault(log_, "Error writing seek complete event");
@@ -1343,7 +1343,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
         return activeDecoders_.back().get();
     } catch (const std::exception &e) {
         os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder, e.what());
-        if (events_.enqueue(EventCommand::allocationFailure)) {
+        if (events_.enqueue(EventCommand::allocationFailure)) [[likely]] {
             eventSemaphore_.signal();
         } else {
             os_log_fault(log_, "Error writing allocation failure event");
@@ -1514,7 +1514,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 
             // Submit the decoding started event for the initial start only
             if (!suspended) {
-                if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) {
+                if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) [[likely]] {
                     eventSemaphore_.signal();
                 } else {
                     os_log_fault(log_, "Error writing decoding started event");
@@ -1561,7 +1561,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 
             // Submit the decoding complete event for the first completion only
             if (!resumed) {
-                if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) {
+                if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) [[likely]] {
                     eventSemaphore_.signal();
                 } else {
                     os_log_fault(log_, "Error writing decoding complete event");
@@ -1645,7 +1645,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // is expected to run dry while the decoding thread waits to reconfigure the processing graph and
     // refill the ring buffer
     if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) [[unlikely]] {
-        if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount)) {
+        if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
+                [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
     }
@@ -1677,7 +1678,8 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
-                             framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_, eventFlags)) {
+                             framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_, eventFlags))
+                [[unlikely]] {
             setFlags(Flags::renderEventDropped);
             break;
         }
@@ -1709,7 +1711,7 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
                 (chunkDescriptor.isFirst() ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                 FramesRenderedEventFlags::complete;
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkDescriptor.sequenceNumber_,
-                             static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) {
+                             static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
     }
