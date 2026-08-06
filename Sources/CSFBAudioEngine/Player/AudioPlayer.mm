@@ -26,6 +26,7 @@
 #import <concepts>
 #import <limits>
 #import <ranges>
+#import <span>
 
 namespace {
 
@@ -1568,8 +1569,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // Output silence if muted, not playing, or the ring buffer was just emptied
     if (bits::is_set_or_is_clear(flags, Flags::muted, Flags::playing) || isStale) {
         isSilence = YES;
-        for (UInt32 i = 0; i < outputData.mNumberBuffers; ++i) {
-            std::memset(outputData.mBuffers[i].mData, 0, outputData.mBuffers[i].mDataByteSize);
+        for (AudioBuffer &buffer : std::span{outputData.mBuffers, outputData.mNumberBuffers}) {
+            std::memset(buffer.mData, 0, buffer.mDataByteSize);
         }
         return noErr;
     }
