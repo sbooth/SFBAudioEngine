@@ -1142,9 +1142,13 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             continue;
         }
 
-        // Decode and write chunks to the ring buffer
-        if (decoderState != nullptr && !decodeIntoRingBuffer(decoderState, buffer)) {
-            continue;
+        if (decoderState != nullptr) {
+            // Reset the render state
+            resetRenderStateIfEngineNotRunning();
+            // Decode and write chunks to the ring buffer
+            if (!decodeIntoRingBuffer(decoderState, buffer)) {
+                continue;
+            }
         }
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
@@ -1486,6 +1490,26 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
     return true;
 }
 
+void sfb::AudioPlayer::resetRenderStateIfEngineNotRunning() noexcept {
+    if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::audioStale)) {
+        return;
+    }
+
+    std::lock_guard lock{engineMutex_};
+
+    // Only perform non-thread safe operations if the engine is not running
+    if (engine_.isRunning) {
+        return;
+    }
+
+    // Reset the render state
+    audioBuffer_.discardAll();
+    audioMetadata_.discardAll();
+    renderingChunk_ = {};
+
+    clearFlags(Flags::audioStale);
+}
+
 bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept {
 #if DEBUG
     assert(decoderState != nullptr);
@@ -1594,9 +1618,12 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 }
 
 int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+    constexpr auto longDurationTimeout = static_cast<int64_t>(nanosecondsPerSecond / 2);
+    constexpr auto shortDurationTimeout = static_cast<int64_t>((nanosecondsPerMillisecond * 5) / 2);
+
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return static_cast<int64_t>(nanosecondsPerSecond / 2);
+        return longDurationTimeout;
     }
 
     // Determine timeout based on ring buffer free space
@@ -1606,7 +1633,7 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return static_cast<int64_t>(2.5 * static_cast<double>(nanosecondsPerMillisecond));
+        return shortDurationTimeout;
     }
 
     const auto duration = static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
