@@ -777,7 +777,6 @@ void sfb::AudioPlayer::stop() noexcept {
     clearDecoderQueue();
     cancelActiveDecoders();
 
-    // Discard any leftover audio during the next render cycle
     setFlags(Flags::audioStale);
 
     if (didStopEngine) {
@@ -838,7 +837,6 @@ void sfb::AudioPlayer::reset() noexcept {
     clearDecoderQueue();
     cancelActiveDecoders();
 
-    // Discard any leftover audio during the next render cycle
     setFlags(Flags::audioStale);
 }
 
@@ -1491,7 +1489,7 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
 }
 
 void sfb::AudioPlayer::resetRenderStateIfEngineNotRunning() noexcept {
-    if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::audioStale)) {
+    if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::audioStale)) [[likely]] {
         return;
     }
 
@@ -1517,7 +1515,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 #endif /* DEBUG */
 
     const auto flags = loadFlags();
-    if (bits::is_set(flags, Flags::audioStale)) {
+    if (bits::is_set(flags, Flags::audioStale)) [[unlikely]] {
         return true;
     }
 
