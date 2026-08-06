@@ -1605,8 +1605,9 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
     }
 
     // Calculate timeout based on ring buffer free space
-    const auto duration = static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<int64_t>(duration * static_cast<double>(nanosecondsPerSecond));
+    const auto durationSeconds =
+            static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
+    return static_cast<int64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
 }
 
 // MARK: - Rendering
