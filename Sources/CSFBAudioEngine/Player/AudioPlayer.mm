@@ -42,6 +42,13 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
+/// 0.5 second dispatch timeout, in nanoseconds
+constexpr int64_t halfSecondTimeout = nanosecondsPerSecond / 2;
+/// 2.5 millisecond dispatch timeout, in nanoseconds
+constexpr int64_t twoPointFiveMillisecondTimeout = (nanosecondsPerMillisecond * 5) / 2;
+/// 7.5 millisecond dispatch timeout, in nanoseconds
+constexpr int64_t sevenPointFiveMillisecondTimeout = (nanosecondsPerMillisecond * 15) / 2;
+
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
 
@@ -1587,12 +1594,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 }
 
 int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
-    constexpr auto longTimeout = static_cast<int64_t>(nanosecondsPerSecond / 2);
-    constexpr auto shortTimeout = static_cast<int64_t>((nanosecondsPerMillisecond * 5) / 2);
-
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return longTimeout;
+        return halfSecondTimeout;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1601,7 +1605,7 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return shortTimeout;
+        return twoPointFiveMillisecondTimeout;
     }
 
     // Calculate the time until the free space reaches the target threshold
@@ -1771,17 +1775,14 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        constexpr auto longTimeout = static_cast<int64_t>(nanosecondsPerSecond / 2);
-        constexpr auto shortTimeout = static_cast<int64_t>((nanosecondsPerMillisecond * 15) / 2);
-
         int64_t deltaNanos;
         {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = shortTimeout;
+                deltaNanos = sevenPointFiveMillisecondTimeout;
             } else {
                 // Use a longer timeout when idle
-                deltaNanos = longTimeout;
+                deltaNanos = halfSecondTimeout;
             }
         }
 
