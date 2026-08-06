@@ -354,8 +354,8 @@ class AudioPlayer final {
     /// Returns the first decoder state in `activeDecoders_` that is eligible for decoding
     DecoderState *_Nullable firstIncompleteDecoderState() const noexcept;
 
-    /// Rewinds ensuing decoders following a seek in `decoderState` if needed
-    void rewindEnsuingDecoders(DecoderState *_Nonnull decoderState) noexcept;
+    /// Suspnds and rewinds decoders following a seek in the decoder state with `sequenceNumber` if needed
+    void suspendAndRewindDecodersFollowing(uint64_t sequenceNumber) noexcept;
 
     /// Dequeues and returns the next decoder or nullptr if none
     DecoderState *_Nullable dequeueNextDecoder() noexcept;

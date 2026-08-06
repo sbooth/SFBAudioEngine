@@ -1207,6 +1207,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
 
     // Clear the pending seek if it hasn't been replaced by a newer seek request
     pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
+
     // Mute until the seek is complete and the ring buffer is emptied and refilled
     setFlags(Flags::muted | Flags::audioStale);
 
@@ -1218,6 +1219,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
 
         // Increment the playback epoch to expire any inflight events
         playbackGeneration_.fetch_add(1, std::memory_order_release);
+
         // Sync frames rendered with frames decoded
         decoderState->framesRendered_.store(framePosition, std::memory_order_release);
     }
@@ -1246,7 +1248,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
                 std::memory_order_acq_rel);
 
         // Rewind ensuing decoder states if possible to avoid discarding frames
-        rewindEnsuingDecoders(decoderState);
+        suspendAndRewindDecodersFollowing(decoderState->sequenceNumber_);
     }
 
     return true;
@@ -1262,60 +1264,52 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::firstIncompleteDecoderState() 
     return iter != activeDecoders_.cend() ? iter->get() : nullptr;
 }
 
-void sfb::AudioPlayer::rewindEnsuingDecoders(DecoderState *decoderState) noexcept {
-#if DEBUG
-    assert(decoderState != nullptr);
-#endif /* DEBUG */
-
+void sfb::AudioPlayer::suspendAndRewindDecodersFollowing(uint64_t sequenceNumber) noexcept {
     std::lock_guard lock{activeDecodersMutex_};
 
     // Rewind ensuing decoder states if possible to avoid discarding frames
     for (const auto &nextDecoderState : activeDecoders_) {
-        if (nextDecoderState->sequenceNumber_ <= decoderState->sequenceNumber_) {
+        if (nextDecoderState->sequenceNumber_ <= sequenceNumber) {
             continue;
         }
 
-        const auto nextDecoderFlags = nextDecoderState->loadFlags();
-        if (bits::is_set(nextDecoderFlags, DecoderState::Flags::canceled)) {
+        if (const auto nextDecoderFlags = nextDecoderState->loadFlags(); bits::is_set_or_is_clear(
+                    nextDecoderFlags, DecoderState::Flags::canceled, DecoderState::Flags::decodingStarted)) {
             continue;
         }
 
-        if (bits::is_set(nextDecoderFlags, DecoderState::Flags::decodingStarted)) {
-            os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+        os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
 
-            // TODO: Investigate a per-state buffer to mitigate frame loss
-            if (nextDecoderState->supportsSeeking()) {
-                if (NSError *seekError = nil; !nextDecoderState->seekToFrame(0, &seekError)) {
-                    nextDecoderState->error_ = seekError;
-                    nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
-                    continue;
-                }
-
-                const auto framePosition = nextDecoderState->framesDecoded();
-                nextDecoderState->framesRendered_.store(framePosition, std::memory_order_release);
-
-                // Do not enqueue EventCommand::seekComplete here; this is an internal rewind,
-                // not a user-initiated seek. Enqueuing this event pollutes the transport
-                // snapshot and fires false 'didSeek:' delegate notifications.
-            } else {
-                os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded(),
-                             nextDecoderState->decoder_);
+        // TODO: Investigate a per-state buffer to mitigate frame loss
+        if (nextDecoderState->supportsSeeking()) {
+            if (NSError *seekError = nil; !nextDecoderState->seekToFrame(0, &seekError)) {
+                nextDecoderState->error_ = seekError;
+                nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
+                continue;
             }
 
-            fetchUpdate(
-                    nextDecoderState->flags_,
-                    [](auto val) noexcept {
-                        return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
-                               bits::to_underlying(DecoderState::Flags::decodingSuspended);
-                    },
-                    std::memory_order_acq_rel);
+            const auto framePosition = nextDecoderState->framesDecoded();
+            nextDecoderState->framesRendered_.store(framePosition, std::memory_order_release);
+
+            // Do not enqueue EventCommand::seekComplete here; this is an internal rewind,
+            // not a user-initiated seek. Enqueuing this event pollutes the transport
+            // snapshot and fires false 'didSeek:' delegate notifications.
+        } else {
+            os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded(),
+                         nextDecoderState->decoder_);
         }
+
+        fetchUpdate(
+                nextDecoderState->flags_,
+                [](auto val) noexcept {
+                    return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
+                           bits::to_underlying(DecoderState::Flags::decodingSuspended);
+                },
+                std::memory_order_acq_rel);
     }
 }
 
 sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept {
-    DecoderState *decoderState = nullptr;
-
     // Lock both mutexes to ensure a decoder doesn't momentarily "disappear"
     // when transitioning from queued to active
     std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
@@ -1334,7 +1328,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
 #if DEBUG
         assert(std::ranges::is_sorted(activeDecoders_, std::ranges::less{}, &DecoderState::sequenceNumber_));
 #endif /* DEBUG */
-        decoderState = activeDecoders_.back().get();
+        return activeDecoders_.back().get();
     } catch (const std::exception &e) {
         os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder, e.what());
         if (events_.enqueue(EventCommand::allocationFailure)) {
@@ -1344,8 +1338,6 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
         }
         return nullptr;
     }
-
-    return decoderState;
 }
 
 bool sfb::AudioPlayer::prepareDequeuedDecoder(DecoderState *decoderState) noexcept {
