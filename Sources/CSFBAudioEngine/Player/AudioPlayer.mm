@@ -1577,7 +1577,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // Read audio from the ring buffer
     const auto framesRead = static_cast<uint32_t>(audioBuffer_.read(outputData, frameCount));
 
-    // Read and process chunk descriptors for the rendered audio
+    // Enqueue frames rendered event(s)
     if (framesRead > 0) {
         enqueueFramesRenderedEvents(framesRead, timestamp);
     } else {
