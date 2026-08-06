@@ -225,7 +225,7 @@ uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &time
     const auto scaledNanos =
             static_cast<uint64_t>(deltaSeconds * timestamp.mRateScalar * static_cast<double>(nanosecondsPerSecond));
     return timestamp.mHostTime + host_time::fromNanoseconds(scaledNanos);
-};
+}
 
 } /* namespace */
 
@@ -1598,8 +1598,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     return noErr;
 }
 
-void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t frameCount, const AudioTimeStamp &timestamp) noexcept {
-    auto framesRemaining = frameCount;
+void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
+    auto framesRemaining = framesRead;
     do {
         // Read the next chunk descriptor if needed
         if (!renderingChunk_) {
@@ -1616,7 +1616,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t frameCount, const Au
 
         // Submit the frames rendered event
         const auto eventTime =
-                hostTimeForFrameOffset(frameCount - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
+                hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
         const auto isStart = renderingChunk_->descriptor_.isFirst() && renderingChunk_->framesConsumed_ == 0;
         const auto isEnd = renderingChunk_->descriptor_.isLast() && framesFromChunk == chunkFramesRemaining;
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |

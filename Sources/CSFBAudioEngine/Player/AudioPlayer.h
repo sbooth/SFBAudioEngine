@@ -352,7 +352,7 @@ class AudioPlayer final {
                     AudioBufferList &outputData) noexcept;
 
     /// Enqueues frames rendered event(s) for rendered audio
-    void enqueueFramesRenderedEvents(uint32_t frameCount, const AudioTimeStamp &timestamp) noexcept;
+    void enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
 
     /// Enqueues an empty frames rendered event if an empty decoded chunk descriptor is present
     void enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
