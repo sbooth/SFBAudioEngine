@@ -1589,7 +1589,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return NSEC_PER_SEC / 2;
+        return static_cast<int64_t>(nanosecondsPerSecond / 2);
     }
 
     // Determine timeout based on ring buffer free space
@@ -1599,11 +1599,11 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return static_cast<int64_t>(2.5 * static_cast<double>(NSEC_PER_MSEC));
+        return static_cast<int64_t>(2.5 * static_cast<double>(nanosecondsPerMillisecond));
     }
 
     const auto duration = static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<int64_t>(duration * static_cast<double>(NSEC_PER_MSEC));
+    return static_cast<int64_t>(duration * static_cast<double>(nanosecondsPerMillisecond));
 }
 
 // MARK: - Rendering
@@ -1771,10 +1771,10 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = static_cast<int64_t>(7.5 * static_cast<double>(NSEC_PER_MSEC));
+                deltaNanos = static_cast<int64_t>(7.5 * static_cast<double>(nanosecondsPerMillisecond));
             } else {
                 // Use a longer timeout when idle
-                deltaNanos = NSEC_PER_SEC / 2;
+                deltaNanos = static_cast<int64_t>(nanosecondsPerSecond / 2);
             }
         }
 
