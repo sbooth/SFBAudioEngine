@@ -777,6 +777,9 @@ void sfb::AudioPlayer::stop() noexcept {
     clearDecoderQueue();
     cancelActiveDecoders();
 
+    // Discard any leftover audio during the next render cycle
+    setFlags(Flags::audioStale);
+
     if (didStopEngine) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -831,8 +834,12 @@ void sfb::AudioPlayer::reset() noexcept {
         std::lock_guard lock{engineMutex_};
         [engine_ reset];
     }
+
     clearDecoderQueue();
     cancelActiveDecoders();
+
+    // Discard any leftover audio during the next render cycle
+    setFlags(Flags::audioStale);
 }
 
 // MARK: - Player State
