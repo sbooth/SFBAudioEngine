@@ -1579,7 +1579,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     const auto framesRead = static_cast<uint32_t>(audioBuffer_.read(outputData, frameCount));
 
     // Enqueue frames rendered event(s)
-    if (framesRead > 0) {
+    if (framesRead > 0) [[likely]] {
         enqueueFramesRenderedEvents(framesRead, timestamp);
     } else {
         isSilence = YES;
@@ -1589,7 +1589,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
     // is expected to run dry while the decoding thread waits to reconfigure the processing graph and
     // refill the ring buffer
-    if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) {
+    if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) [[unlikely]] {
         if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount)) {
             setFlags(Flags::renderEventDropped);
         }
