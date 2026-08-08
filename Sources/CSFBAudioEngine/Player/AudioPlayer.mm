@@ -42,6 +42,13 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
+/// 0.5 second dispatch time delta, expressed in nanoseconds
+constexpr int64_t halfSecondDispatchTimeDelta = 500'000'000;
+/// 2.5 millisecond dispatch time delta, expressed in nanoseconds
+constexpr int64_t twoPointFiveMillisecondDispatchTimeDelta = 2'500'000;
+/// 7.5 millisecond dispatch time delta, expressed in nanoseconds
+constexpr int64_t sevenPointFiveMillisecondDispatchTimeDelta = 7'500'000;
+
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
 
@@ -1616,26 +1623,24 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 }
 
 int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
-    constexpr auto longDurationTimeout = static_cast<int64_t>(nanosecondsPerSecond / 2);
-    constexpr auto shortDurationTimeout = static_cast<int64_t>((nanosecondsPerMillisecond * 5) / 2);
-
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return longDurationTimeout;
+        return halfSecondDispatchTimeDelta;
     }
 
-    // Determine timeout based on ring buffer free space
     // Attempt to keep the ring buffer 75% full
     const auto targetMaxFreeSpace = audioBuffer_.capacity() / 4;
     const auto freeSpace = audioBuffer_.availableToWrite();
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return shortDurationTimeout;
+        return twoPointFiveMillisecondDispatchTimeDelta;
     }
 
-    const auto duration = static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<int64_t>(duration * static_cast<double>(nanosecondsPerMillisecond));
+    // Calculate the time until the free space reaches the target threshold
+    const auto durationSeconds =
+            static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
+    return static_cast<int64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
 }
 
 // MARK: - Rendering
@@ -1803,10 +1808,10 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = static_cast<int64_t>(7.5 * static_cast<double>(nanosecondsPerMillisecond));
+                deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
             } else {
                 // Use a longer timeout when idle
-                deltaNanos = static_cast<int64_t>(nanosecondsPerSecond / 2);
+                deltaNanos = halfSecondDispatchTimeDelta;
             }
         }
 
