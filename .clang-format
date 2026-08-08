@@ -46,7 +46,7 @@ IncludeCategories:
     Priority: 1
   - Regex: '^<SFBAudioEngine/'
     Priority: 1
-  - Regex: '^<(dsema|mtx|spsc|AVFAudioExtensions)/'
+  - Regex: '^<(dsema|mpsc|mtx|spsc|AVFAudioExtensions)/'
     Priority: 2
   - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
     Priority: 2

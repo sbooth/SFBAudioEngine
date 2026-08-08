@@ -20,7 +20,7 @@ namespace detail {
 // On Apple Silicon it is 125/3.
 
 /// A fraction used to convert host ticks to nanoseconds.
-inline const auto timebase = [] noexcept {
+inline const auto timebase = []() noexcept {
     // If `mach_timebase_info()` doesn't succeed there is no way to convert to/from host times.
     // Luckily the function seems to only return `KERN_SUCCESS`:
     // https://github.com/apple-oss-distributions/xnu/blob/main/libsyscall/wrappers/mach_timebase_info.c#L29

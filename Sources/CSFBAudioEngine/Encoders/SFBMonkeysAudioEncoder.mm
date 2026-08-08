@@ -44,10 +44,7 @@ class APEIOInterface final : public APE::IAPEIO {
   public:
     explicit APEIOInterface(SFBOutputTarget *outputTarget) : outputTarget_(outputTarget) {}
 
-    int Open(const wchar_t *pName, bool bOpenReadOnly) override {
-#pragma unused(pName)
-#pragma unused(bOpenReadOnly)
-
+    int Open([[maybe_unused]] const wchar_t *pName, [[maybe_unused]] bool bOpenReadOnly) override {
         return ERROR_INVALID_INPUT_FILE;
     }
 
@@ -105,19 +102,13 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_SUCCESS;
     }
 
-    int Create(const wchar_t *pName) override {
-#pragma unused(pName)
-        return ERROR_IO_WRITE;
-    }
+    int Create([[maybe_unused]] const wchar_t *pName) override { return ERROR_IO_WRITE; }
 
     int Delete() override { return ERROR_IO_WRITE; }
 
     int SetEOF() override { return ERROR_IO_WRITE; }
 
-    unsigned char *GetBuffer(int *pnBufferBytes) override {
-#pragma unused(pnBufferBytes)
-        return nullptr;
-    }
+    unsigned char *GetBuffer([[maybe_unused]] int *pnBufferBytes) override { return nullptr; }
 
     APE::int64 GetPosition() override {
         NSInteger offset;
@@ -135,10 +126,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return length;
     }
 
-    int GetName(wchar_t *pBuffer) override {
-#pragma unused(pBuffer)
-        return ERROR_SUCCESS;
-    }
+    int GetName([[maybe_unused]] wchar_t *pBuffer) override { return ERROR_SUCCESS; }
 
   private:
     SFBOutputTarget *outputTarget_;
