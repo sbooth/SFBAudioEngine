@@ -161,8 +161,8 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 - (BOOL)openReturningError:(NSError **)error {
     //    NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
     //    NSAssert(_processingFormat.sampleRate >= 6000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
-    //    NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
-    //    NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %u", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %u", _processingFormat.channelCount);
 
     if (![super openReturningError:error]) {
         return NO;

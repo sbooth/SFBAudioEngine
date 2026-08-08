@@ -71,10 +71,7 @@ class APEIOInterface final : public APE::IAPEIO {
   public:
     explicit APEIOInterface(SFBInputSource *inputSource) : inputSource_(inputSource) {}
 
-    int Open(const wchar_t *pName, bool bOpenReadOnly) override {
-#pragma unused(pName)
-#pragma unused(bOpenReadOnly)
-
+    int Open([[maybe_unused]] const wchar_t *pName, [[maybe_unused]] bool bOpenReadOnly) override {
         return ERROR_INVALID_INPUT_FILE;
     }
 
@@ -91,11 +88,8 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_SUCCESS;
     }
 
-    int Write(const void *pBuffer, unsigned int nBytesToWrite, unsigned int *pBytesWritten) override {
-#pragma unused(pBuffer)
-#pragma unused(nBytesToWrite)
-#pragma unused(pBytesWritten)
-
+    int Write([[maybe_unused]] const void *pBuffer, [[maybe_unused]] unsigned int nBytesToWrite,
+              [[maybe_unused]] unsigned int *pBytesWritten) override {
         return ERROR_IO_WRITE;
     }
 
@@ -128,19 +122,13 @@ class APEIOInterface final : public APE::IAPEIO {
         return ERROR_SUCCESS;
     }
 
-    int Create(const wchar_t *pName) override {
-#pragma unused(pName)
-        return ERROR_IO_WRITE;
-    }
+    int Create([[maybe_unused]] const wchar_t *pName) override { return ERROR_IO_WRITE; }
 
     int Delete() override { return ERROR_IO_WRITE; }
 
     int SetEOF() override { return ERROR_IO_WRITE; }
 
-    unsigned char *GetBuffer(int *pnBufferBytes) override {
-#pragma unused(pnBufferBytes)
-        return nullptr;
-    }
+    unsigned char *GetBuffer([[maybe_unused]] int *pnBufferBytes) override { return nullptr; }
 
     APE::int64 GetPosition() override {
         NSInteger offset;
@@ -158,10 +146,7 @@ class APEIOInterface final : public APE::IAPEIO {
         return length;
     }
 
-    int GetName(wchar_t *pBuffer) override {
-#pragma unused(pBuffer)
-        return ERROR_SUCCESS;
-    }
+    int GetName([[maybe_unused]] wchar_t *pBuffer) override { return ERROR_SUCCESS; }
 
   private:
     SFBInputSource *inputSource_;

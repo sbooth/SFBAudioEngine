@@ -176,7 +176,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
     // Write stream headers
     result = vorbis_analysis_headerout(&_vd, &vc, &op, &op_comm, &op_code);
     if (result != 0) {
-        os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
+        os_log_error(gSFBAudioEncoderLog, "vorbis_analysis_headerout failed: %d", result);
         vorbis_comment_clear(&vc);
         vorbis_block_clear(&_vb);
         vorbis_dsp_clear(&_vd);

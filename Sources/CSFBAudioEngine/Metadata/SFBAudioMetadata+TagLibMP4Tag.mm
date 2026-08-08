@@ -21,7 +21,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) noexcept { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -247,7 +247,7 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
 
     SetMP4Item(tag, "\251nam", metadata.title);
     SetMP4Item(tag, "\251ART", metadata.artist);
-    SetMP4Item(tag, "\251ALB", metadata.albumTitle);
+    SetMP4Item(tag, "\251alb", metadata.albumTitle);
     SetMP4Item(tag, "aART", metadata.albumArtist);
     SetMP4Item(tag, "\251gen", metadata.genre);
     SetMP4Item(tag, "\251wrt", metadata.composer);

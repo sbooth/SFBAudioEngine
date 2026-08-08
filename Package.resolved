@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioRingBuffer",
       "state" : {
-        "revision" : "95052b6bd4ccf192e2f0983d401224e7a4921e39",
-        "version" : "0.1.1"
+        "revision" : "266fb309d074f7843c9f125435b5921075c957b5",
+        "version" : "0.2.0"
       }
     },
     {
@@ -46,6 +46,15 @@
       }
     },
     {
+      "identity" : "cxxmessagequeue",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXMessageQueue",
+      "state" : {
+        "revision" : "8d52853fcf604ff518dfe0257aad687c13151716",
+        "version" : "0.2.0"
+      }
+    },
+    {
       "identity" : "cxxmonkeysaudio",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMonkeysAudio",
@@ -55,12 +64,12 @@
       }
     },
     {
-      "identity" : "cxxringbuffer",
+      "identity" : "cxxqueue",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXRingBuffer",
+      "location" : "https://github.com/sbooth/CXXQueue",
       "state" : {
-        "revision" : "8d859aa73d115273afcebe754b22bf50d3ea0621",
-        "version" : "0.6.1"
+        "revision" : "b3b39f38e81d1fc5294ae99c81e019e1fe3b8582",
+        "version" : "0.1.1"
       }
     },
     {

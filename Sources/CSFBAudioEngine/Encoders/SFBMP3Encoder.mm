@@ -34,7 +34,7 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `lame_global_flags` objects
 struct lame_global_flags_deleter {
-    void operator()(lame_global_flags *gfp) { lame_close(gfp); }
+    void operator()(lame_global_flags *gfp) noexcept { lame_close(gfp); }
 };
 
 using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_global_flags_deleter>;

@@ -52,12 +52,13 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Now playing changed
 ///  8. Playback state changed
 ///  9. End of audio
-///  10. Decoder canceled by user
-///  11. Decoding aborted due to error
-///  12. Asynchronous error encountered
-///  13. Processing graph format change with custom nodes present
-///  14. `AVAudioEngineConfigurationChange` notification received
-///  15. `AVAudioSessionInterruption` notification received
+///  10. Seek complete
+///  11. Decoder canceled by user
+///  12. Decoding aborted due to error
+///  13. Asynchronous error encountered
+///  14. Processing graph format change with custom nodes present
+///  15. `AVAudioEngineConfigurationChange` notification received
+///  16. `AVAudioSessionInterruption` notification received
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer)
@@ -106,8 +107,8 @@ NS_SWIFT_NAME(AudioPlayer)
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued
 /// decoders
-/// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for
-/// `decoder.processingFormat` if necessary
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
 /// before enqueuing
@@ -180,58 +181,68 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Properties
 
-/// The frame position in the current decoder or `SFBUnknownFramePosition` if unknown or the current decoder is `nil`
+/// The frame position from the current decoder or `SFBUnknownFramePosition` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
-/// The frame length of the current decoder or `SFBUnknownFrameLength` if unknown or the current decoder is `nil`
+/// The frame length from the current decoder or `SFBUnknownFrameLength` if unknown or the current playback snapshot is
+/// invalid
 @property(nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current decoder is
-/// `nil`
+/// The playback position from the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current playback
+/// snapshot is invalid
 @property(nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
-/// The current time in the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
+/// The current time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
-/// The total time of the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
+/// The total time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if unknown or the current decoder is `nil`
+/// The playback time from the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) SFBPlaybackTime playbackTime;
 
-/// Retrieves the playback position and time
+/// Retrieves the playback position and time from the current decoder
 /// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position
 /// information
 /// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the current playback snapshot is invalid
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition
                     andTime:(nullable SFBPlaybackTime *)playbackTime;
 
 // MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - note: Out-of-range seek requests are clamped to valid frame positions
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekForward;
 /// Seeks backward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - note: Out-of-range seek requests are clamped to valid frame positions
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekBackward;
 
 /// Seeks forward in the current decoder by the specified number of seconds
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter secondsToSkip: The number of seconds to skip forward
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(forward:));
 /// Seeks backward in the current decoder by the specified number of seconds
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter secondsToSkip: The number of seconds to skip backward
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(backward:));
 
 /// Seeks to the specified time in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter timeInSeconds: The desired time in seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified position in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter position: The desired position in the interval `[0, 1)`
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter frame: The desired audio frame
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame NS_SWIFT_NAME(seek(frame:));
 
 /// Returns `YES` if the current decoder supports seeking
@@ -367,6 +378,14 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
+/// Called to notify the delegate after performing a user-initiated seek in a decoder
+/// - warning: Do not change any properties of `decoder`
+/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
+/// - parameter decoder: The decoder that performed the seek
+/// - parameter frame: The new frame position in `decoder`
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
+            didSeek:(id<SFBPCMDecoding>)decoder
+            toFrame:(AVAudioFramePosition)frame;
 /// Called to notify the delegate that the decoding and rendering processes for a decoder have been canceled by a
 /// user-initiated request
 /// - warning: Do not change any properties of `decoder`
