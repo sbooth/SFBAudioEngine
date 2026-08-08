@@ -2265,11 +2265,23 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         AVAudioFormat *outputNodeOutputFormat = [outputNode outputFormatForBus:0];
         AVAudioFormat *mixerNodeOutputFormat = [mixerNode outputFormatForBus:0];
 
+        // During a route change, audio interruption, or media services reset the output hardware
+        // can transiently report an invalid (0 Hz / 0 channel) format. Connecting a node using such
+        // a format fails the AVAudioEngine precondition IsFormatSampleRateAndChannelCountValid(),
+        // which raises an Objective-C exception; because this handler is noexcept the exception
+        // terminates the process. Only reconfigure the main mixer → output connection while the
+        // output node reports a usable format. AVAudioEngine posts another configuration change
+        // notification once valid output hardware becomes available, at which point the connection
+        // is updated.
+        const BOOL outputNodeOutputFormatIsValid =
+            outputNodeOutputFormat.sampleRate > 0 && outputNodeOutputFormat.channelCount > 0;
+
         // The output node's output format tracks the hardware sample rate and channel count
         // To avoid format conversion in both the source-mixer and mixer-output connections,
         // set the format for the mixer-output connection to the output node's output format
-        if (outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate ||
-            outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount) {
+        if (outputNodeOutputFormatIsValid &&
+            (outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate ||
+             outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount)) {
 #if DEBUG
             if (outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate) {
                 os_log_debug(log_,
@@ -2304,6 +2316,12 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             [engine_ connect:mixerNode to:outputNode format:outputNodeOutputFormat];
 
             [engine_ prepare];
+        }
+        else if (!outputNodeOutputFormatIsValid) {
+            os_log_error(log_,
+                         "Skipping main mixer → output node reconfiguration: the output node "
+                         "reported an invalid format (%g Hz, %u channels)",
+                         outputNodeOutputFormat.sampleRate, outputNodeOutputFormat.channelCount);
         }
 
         // Restart AVAudioEngine if previously running
