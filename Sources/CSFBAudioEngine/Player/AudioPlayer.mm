@@ -43,11 +43,11 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
 /// 0.5 second dispatch timeout, in nanoseconds
-constexpr int64_t halfSecondTimeout = nanosecondsPerSecond / 2;
+constexpr int64_t halfSecondTimeout = 500'000'000;;
 /// 2.5 millisecond dispatch timeout, in nanoseconds
-constexpr int64_t twoPointFiveMillisecondTimeout = (nanosecondsPerMillisecond * 5) / 2;
+constexpr int64_t twoPointFiveMillisecondTimeout = 2'500'000;
 /// 7.5 millisecond dispatch timeout, in nanoseconds
-constexpr int64_t sevenPointFiveMillisecondTimeout = (nanosecondsPerMillisecond * 15) / 2;
+constexpr int64_t sevenPointFiveMillisecondTimeout = 7'500'000;
 
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
