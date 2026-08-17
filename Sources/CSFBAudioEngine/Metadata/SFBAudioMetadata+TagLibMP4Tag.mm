@@ -102,7 +102,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("\251grp")) {
-        self.lyrics = [NSString stringWithUTF8String:tag->item("\251grp").toStringList().toString().toCString(true)];
+        self.grouping = [NSString stringWithUTF8String:tag->item("\251grp").toStringList().toString().toCString(true)];
     }
 
     // Album art
