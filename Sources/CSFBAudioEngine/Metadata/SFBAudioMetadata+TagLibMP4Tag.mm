@@ -115,57 +115,57 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // MusicBrainz
-    if (tag->contains("---:com.apple.iTunes:MusicBrainz Album Id")) {
+    if (tag->contains("----:com.apple.iTunes:MusicBrainz Album Id")) {
         self.musicBrainzReleaseID =
-                [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Album Id")
+                [NSString stringWithUTF8String:tag->item("----:com.apple.iTunes:MusicBrainz Album Id")
                                                        .toStringList()
                                                        .toString()
                                                        .toCString(true)];
     }
 
-    if (tag->contains("---:com.apple.iTunes:MusicBrainz Track Id")) {
+    if (tag->contains("----:com.apple.iTunes:MusicBrainz Track Id")) {
         self.musicBrainzRecordingID =
-                [NSString stringWithUTF8String:tag->item("---:com.apple.iTunes:MusicBrainz Track Id")
+                [NSString stringWithUTF8String:tag->item("----:com.apple.iTunes:MusicBrainz Track Id")
                                                        .toStringList()
                                                        .toString()
                                                        .toCString(true)];
     }
 
     // ReplayGain
-    if (tag->contains("---:com.apple.iTunes:replaygain_reference_loudness")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
+    if (tag->contains("----:com.apple.iTunes:replaygain_reference_loudness")) {
+        auto s = tag->item("----:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainReferenceLoudness = @(f);
         }
     }
 
-    if (tag->contains("---:com.apple.iTunes:replaygain_track_gain")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
+    if (tag->contains("----:com.apple.iTunes:replaygain_track_gain")) {
+        auto s = tag->item("----:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackGain = @(f);
         }
     }
 
-    if (tag->contains("---:com.apple.iTunes:replaygain_track_peak")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
+    if (tag->contains("----:com.apple.iTunes:replaygain_track_peak")) {
+        auto s = tag->item("----:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackPeak = @(f);
         }
     }
 
-    if (tag->contains("---:com.apple.iTunes:replaygain_album_gain")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
+    if (tag->contains("----:com.apple.iTunes:replaygain_album_gain")) {
+        auto s = tag->item("----:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumGain = @(f);
         }
     }
 
-    if (tag->contains("---:com.apple.iTunes:replaygain_album_peak")) {
-        auto s = tag->item("---:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
+    if (tag->contains("----:com.apple.iTunes:replaygain_album_peak")) {
+        auto s = tag->item("----:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumPeak = @(f);
@@ -273,19 +273,19 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
     SetMP4Item(tag, "\251grp", metadata.grouping);
 
     // MusicBrainz
-    SetMP4Item(tag, "---:com.apple.iTunes:MusicBrainz Album Id", metadata.musicBrainzReleaseID);
-    SetMP4Item(tag, "---:com.apple.iTunes:MusicBrainz Track Id", metadata.musicBrainzRecordingID);
+    SetMP4Item(tag, "----:com.apple.iTunes:MusicBrainz Album Id", metadata.musicBrainzReleaseID);
+    SetMP4Item(tag, "----:com.apple.iTunes:MusicBrainz Track Id", metadata.musicBrainzRecordingID);
 
     // ReplayGain info
-    SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_reference_loudness",
+    SetMP4ItemDoubleWithFormat(tag, "----:com.apple.iTunes:replaygain_reference_loudness",
                                metadata.replayGainReferenceLoudness, @"%2.1f dB");
-    SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_gain", metadata.replayGainTrackGain,
+    SetMP4ItemDoubleWithFormat(tag, "----:com.apple.iTunes:replaygain_track_gain", metadata.replayGainTrackGain,
                                @"%2.2f dB");
-    SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_peak", metadata.replayGainTrackPeak,
+    SetMP4ItemDoubleWithFormat(tag, "----:com.apple.iTunes:replaygain_track_peak", metadata.replayGainTrackPeak,
                                @"%1.8f");
-    SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_gain", metadata.replayGainAlbumGain,
+    SetMP4ItemDoubleWithFormat(tag, "----:com.apple.iTunes:replaygain_album_gain", metadata.replayGainAlbumGain,
                                @"%2.2f dB");
-    SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_peak", metadata.replayGainAlbumPeak,
+    SetMP4ItemDoubleWithFormat(tag, "----:com.apple.iTunes:replaygain_album_peak", metadata.replayGainAlbumPeak,
                                @"%1.8f");
 
     if (setAlbumArt) {
