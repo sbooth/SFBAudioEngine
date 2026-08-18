@@ -250,11 +250,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // If nothing found check for RVA2 frame
     if (!foundReplayGain) {
-        const auto frameList = tag->frameListMap()["RVA2"];
-
-        for (auto *frameIterator : tag->frameListMap()["RVA2"]) {
+        for (const auto *frameIterator : tag->frameListMap()["RVA2"]) {
             const TagLib::ID3v2::RelativeVolumeFrame *relativeVolume =
-                    dynamic_cast<TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
+                    dynamic_cast<const TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
             if (relativeVolume == nullptr) {
                 continue;
             }
@@ -282,8 +280,9 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract album art if present
-    for (auto *it : tag->frameListMap()["APIC"]) {
-        const TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
+    for (const auto *it : tag->frameListMap()["APIC"]) {
+        const TagLib::ID3v2::AttachedPictureFrame *frame =
+                dynamic_cast<const TagLib::ID3v2::AttachedPictureFrame *>(it);
         if (frame != nullptr) {
             NSData *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
             NSString *description = nil;
