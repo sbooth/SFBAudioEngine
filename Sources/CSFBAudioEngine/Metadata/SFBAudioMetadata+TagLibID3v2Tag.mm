@@ -41,7 +41,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     [self addMetadataFromTagLibTag:tag];
 
     // Release date
-    if (const auto frameList = tag->frameListMap()["TDRC"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TDRC"]; !frameList.isEmpty()) {
         /*
          The timestamp fields are based on a subset of ISO 8601. When being as
          precise as possible the format of a time string is
@@ -60,17 +60,17 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract composer if present
-    if (const auto frameList = tag->frameListMap()["TCOM"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TCOM"]; !frameList.isEmpty()) {
         self.composer = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
     // Extract album artist
-    if (const auto frameList = tag->frameListMap()["TPE2"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TPE2"]; !frameList.isEmpty()) {
         self.albumArtist = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
     // BPM
-    if (const auto frameList = tag->frameListMap()["TBPM"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TBPM"]; !frameList.isEmpty()) {
         bool ok = false;
         const int BPM = frameList.front()->toString().toInt(&ok);
         if (ok) {
@@ -79,7 +79,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Rating
-    if (const auto frameList = tag->frameListMap()["POPM"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["POPM"]; !frameList.isEmpty()) {
         if (const auto *popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front());
             popularimeter != nullptr) {
             self.rating = @(popularimeter->rating());
@@ -87,7 +87,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract total tracks if present
-    if (const auto frameList = tag->frameListMap()["TRCK"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TRCK"]; !frameList.isEmpty()) {
         // Split the tracks at '/'
         TagLib::String s = frameList.front()->toString();
 
@@ -113,7 +113,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract disc number and total discs
-    if (const auto frameList = tag->frameListMap()["TPOS"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TPOS"]; !frameList.isEmpty()) {
         // Split the tracks at '/'
         const TagLib::String s = frameList.front()->toString();
 
@@ -139,17 +139,17 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Lyrics
-    if (const auto frameList = tag->frameListMap()["USLT"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["USLT"]; !frameList.isEmpty()) {
         self.lyrics = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
     // Extract compilation if present (iTunes TCMP tag)
-    if (const auto frameList = tag->frameListMap()["TCMP"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TCMP"]; !frameList.isEmpty()) {
         // It seems that the presence of this frame indicates a compilation
         self.compilation = @(YES);
     }
 
-    if (const auto frameList = tag->frameListMap()["TSRC"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TSRC"]; !frameList.isEmpty()) {
         self.isrc = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
@@ -169,27 +169,27 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Sorting and grouping
-    if (const auto frameList = tag->frameListMap()["TSOT"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TSOT"]; !frameList.isEmpty()) {
         self.titleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (const auto frameList = tag->frameListMap()["TSOA"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TSOA"]; !frameList.isEmpty()) {
         self.albumTitleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (const auto frameList = tag->frameListMap()["TSOP"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TSOP"]; !frameList.isEmpty()) {
         self.artistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (const auto frameList = tag->frameListMap()["TSO2"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TSO2"]; !frameList.isEmpty()) {
         self.albumArtistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (const auto frameList = tag->frameListMap()["TSOC"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TSOC"]; !frameList.isEmpty()) {
         self.composerSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (const auto frameList = tag->frameListMap()["TIT1"]; !frameList.isEmpty()) {
+    if (const auto &frameList = tag->frameListMap()["TIT1"]; !frameList.isEmpty()) {
         self.grouping = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
