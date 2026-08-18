@@ -20,7 +20,7 @@
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 
     for (auto iterator : tag->itemListMap()) {
-        auto item = iterator.second;
+        const auto item = iterator.second;
 
         if (item.isEmpty()) {
             continue;

@@ -48,7 +48,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("trkn")) {
-        auto [trackNumber, trackTotal] = tag->item("trkn").toIntPair();
+        const auto [trackNumber, trackTotal] = tag->item("trkn").toIntPair();
         if (trackNumber != 0) {
             self.trackNumber = @(trackNumber);
         }
@@ -57,7 +57,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
         }
     }
     if (tag->contains("disk")) {
-        auto [discNumber, discTotal] = tag->item("disk").toIntPair();
+        const auto [discNumber, discTotal] = tag->item("disk").toIntPair();
         if (discNumber != 0) {
             self.discNumber = @(discNumber);
         }
@@ -107,7 +107,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // Album art
     if (tag->contains("covr")) {
-        auto art = tag->item("covr").toCoverArtList();
+        const auto art = tag->item("covr").toCoverArtList();
         for (auto iter : art) {
             NSData *data = [NSData dataWithBytes:iter.data().data() length:iter.data().size()];
             [self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:data]];
@@ -133,7 +133,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // ReplayGain
     if (tag->contains("----:com.apple.iTunes:replaygain_reference_loudness")) {
-        auto s = tag->item("----:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
+        const auto s = tag->item("----:com.apple.iTunes:replaygain_reference_loudness").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainReferenceLoudness = @(f);
@@ -141,7 +141,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("----:com.apple.iTunes:replaygain_track_gain")) {
-        auto s = tag->item("----:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
+        const auto s = tag->item("----:com.apple.iTunes:replaygain_track_gain").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackGain = @(f);
@@ -149,7 +149,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("----:com.apple.iTunes:replaygain_track_peak")) {
-        auto s = tag->item("----:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
+        const auto s = tag->item("----:com.apple.iTunes:replaygain_track_peak").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainTrackPeak = @(f);
@@ -157,7 +157,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("----:com.apple.iTunes:replaygain_album_gain")) {
-        auto s = tag->item("----:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
+        const auto s = tag->item("----:com.apple.iTunes:replaygain_album_gain").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumGain = @(f);
@@ -165,7 +165,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     if (tag->contains("----:com.apple.iTunes:replaygain_album_peak")) {
-        auto s = tag->item("----:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
+        const auto s = tag->item("----:com.apple.iTunes:replaygain_album_peak").toStringList().toString();
         float f;
         if (std::sscanf(s.toCString(), "%f", &f) == 1) {
             self.replayGainAlbumPeak = @(f);
@@ -231,7 +231,7 @@ void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber
     if (value == nil) {
         SetMP4Item(tag, key, nil);
     } else {
-        if (!format) {
+        if (format == nil) {
             SetMP4Item(tag, key, [NSString stringWithFormat:@"%f", value.doubleValue]);
         } else {
             SetMP4Item(tag, key, [NSString stringWithFormat:format, value.doubleValue]);
@@ -313,7 +313,7 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
                 }
             }
 
-            auto picture = TagLib::MP4::CoverArt(
+            const auto picture = TagLib::MP4::CoverArt(
                     type, TagLib::ByteVector(static_cast<const char *>(attachedPicture.imageData.bytes),
                                              static_cast<unsigned int>(attachedPicture.imageData.length)));
             list.append(picture);

@@ -41,7 +41,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     [self addMetadataFromTagLibTag:tag];
 
     // Release date
-    if (auto frameList = tag->frameListMap()["TDRC"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TDRC"]; !frameList.isEmpty()) {
         /*
          The timestamp fields are based on a subset of ISO 8601. When being as
          precise as possible the format of a time string is
@@ -60,39 +60,39 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract composer if present
-    if (auto frameList = tag->frameListMap()["TCOM"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TCOM"]; !frameList.isEmpty()) {
         self.composer = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
     // Extract album artist
-    if (auto frameList = tag->frameListMap()["TPE2"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TPE2"]; !frameList.isEmpty()) {
         self.albumArtist = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
     // BPM
-    if (auto frameList = tag->frameListMap()["TBPM"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TBPM"]; !frameList.isEmpty()) {
         bool ok = false;
-        int BPM = frameList.front()->toString().toInt(&ok);
+        const int BPM = frameList.front()->toString().toInt(&ok);
         if (ok) {
             self.bpm = @(BPM);
         }
     }
 
     // Rating
-    if (auto frameList = tag->frameListMap()["POPM"]; !frameList.isEmpty()) {
-        if (auto *popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front());
+    if (const auto frameList = tag->frameListMap()["POPM"]; !frameList.isEmpty()) {
+        if (const auto *popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front());
             popularimeter != nullptr) {
             self.rating = @(popularimeter->rating());
         }
     }
 
     // Extract total tracks if present
-    if (auto frameList = tag->frameListMap()["TRCK"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TRCK"]; !frameList.isEmpty()) {
         // Split the tracks at '/'
         TagLib::String s = frameList.front()->toString();
 
         bool ok;
-        auto pos = s.find("/", 0);
+        const auto pos = s.find("/", 0);
         if (pos != -1) {
             auto upos = static_cast<unsigned int>(pos);
             int trackNum = s.substr(0, upos).toInt(&ok);
@@ -113,25 +113,25 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Extract disc number and total discs
-    if (auto frameList = tag->frameListMap()["TPOS"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TPOS"]; !frameList.isEmpty()) {
         // Split the tracks at '/'
-        TagLib::String s = frameList.front()->toString();
+        const TagLib::String s = frameList.front()->toString();
 
         bool ok;
-        auto pos = s.find("/", 0);
+        const auto pos = s.find("/", 0);
         if (pos != -1) {
-            auto upos = static_cast<unsigned int>(pos);
-            int discNum = s.substr(0, upos).toInt(&ok);
+            const auto upos = static_cast<unsigned int>(pos);
+            const int discNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.discNumber = @(discNum);
             }
 
-            int discTotal = s.substr(upos + 1).toInt(&ok);
+            const int discTotal = s.substr(upos + 1).toInt(&ok);
             if (ok) {
                 self.discTotal = @(discTotal);
             }
         } else if (s.length() > 0) {
-            int discNum = s.toInt(&ok);
+            const int discNum = s.toInt(&ok);
             if (ok) {
                 self.discNumber = @(discNum);
             }
@@ -139,17 +139,17 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Lyrics
-    if (auto frameList = tag->frameListMap()["USLT"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["USLT"]; !frameList.isEmpty()) {
         self.lyrics = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
     // Extract compilation if present (iTunes TCMP tag)
-    if (auto frameList = tag->frameListMap()["TCMP"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TCMP"]; !frameList.isEmpty()) {
         // It seems that the presence of this frame indicates a compilation
         self.compilation = @(YES);
     }
 
-    if (auto frameList = tag->frameListMap()["TSRC"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TSRC"]; !frameList.isEmpty()) {
         self.isrc = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
@@ -169,27 +169,27 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Sorting and grouping
-    if (auto frameList = tag->frameListMap()["TSOT"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TSOT"]; !frameList.isEmpty()) {
         self.titleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (auto frameList = tag->frameListMap()["TSOA"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TSOA"]; !frameList.isEmpty()) {
         self.albumTitleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (auto frameList = tag->frameListMap()["TSOP"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TSOP"]; !frameList.isEmpty()) {
         self.artistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (auto frameList = tag->frameListMap()["TSO2"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TSO2"]; !frameList.isEmpty()) {
         self.albumArtistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (auto frameList = tag->frameListMap()["TSOC"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TSOC"]; !frameList.isEmpty()) {
         self.composerSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
-    if (auto frameList = tag->frameListMap()["TIT1"]; !frameList.isEmpty()) {
+    if (const auto frameList = tag->frameListMap()["TIT1"]; !frameList.isEmpty()) {
         self.grouping = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
     }
 
@@ -197,14 +197,14 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     auto foundReplayGain = false;
 
     // Preference is TXXX frames, RVA2 frame, then LAME header
-    auto *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                            "REPLAYGAIN_TRACK_GAIN");
-    auto *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                            "REPLAYGAIN_TRACK_PEAK");
-    auto *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                            "REPLAYGAIN_ALBUM_GAIN");
-    auto *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
-                                                                            "REPLAYGAIN_ALBUM_PEAK");
+    const auto *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                                  "REPLAYGAIN_TRACK_GAIN");
+    const auto *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                                  "REPLAYGAIN_TRACK_PEAK");
+    const auto *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                                  "REPLAYGAIN_ALBUM_GAIN");
+    const auto *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
+                                                                                  "REPLAYGAIN_ALBUM_PEAK");
 
     if (trackGainFrame == nullptr) {
         trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag),
@@ -250,17 +250,17 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // If nothing found check for RVA2 frame
     if (!foundReplayGain) {
-        auto frameList = tag->frameListMap()["RVA2"];
+        const auto frameList = tag->frameListMap()["RVA2"];
 
         for (auto *frameIterator : tag->frameListMap()["RVA2"]) {
-            TagLib::ID3v2::RelativeVolumeFrame *relativeVolume =
+            const TagLib::ID3v2::RelativeVolumeFrame *relativeVolume =
                     dynamic_cast<TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
             if (relativeVolume == nullptr) {
                 continue;
             }
 
             // Attempt to use the master volume if present
-            auto channels = relativeVolume->channels();
+            const auto channels = relativeVolume->channels();
             auto channelType = TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
 
             // Fall back on whatever else exists in the frame
@@ -268,7 +268,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
                 channelType = channels.front();
             }
 
-            if (float volumeAdjustment = relativeVolume->volumeAdjustment(channelType); volumeAdjustment != 0.f) {
+            if (const float volumeAdjustment = relativeVolume->volumeAdjustment(channelType); volumeAdjustment != 0.f) {
                 if (auto identification = relativeVolume->identification(); identification == "track") {
                     self.replayGainTrackGain = @(volumeAdjustment);
                 } else if (identification == "album") {
@@ -283,7 +283,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     // Extract album art if present
     for (auto *it : tag->frameListMap()["APIC"]) {
-        TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
+        const TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
         if (frame != nullptr) {
             NSData *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
             NSString *description = nil;
@@ -353,8 +353,8 @@ void sfb::setID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v2::Tag
         NSISO8601DateFormatter *formatter = [[NSISO8601DateFormatter alloc] init];
         NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
         NSDate *date = [formatter dateFromString:releaseDate];
-        if (date) {
-            tag->setYear((unsigned int)[gregorianCalendar component:NSCalendarUnitYear fromDate:date]);
+        if (date != nil) {
+            tag->setYear(static_cast<unsigned int>([gregorianCalendar component:NSCalendarUnitYear fromDate:date]));
 
             auto *frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
             frame->setText(TagLib::StringFromNSString(releaseDate));
