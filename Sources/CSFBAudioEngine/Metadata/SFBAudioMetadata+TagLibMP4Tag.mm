@@ -108,7 +108,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     // Album art
     if (tag->contains("covr")) {
         const auto art = tag->item("covr").toCoverArtList();
-        for (auto iter : art) {
+        for (const auto &iter : art) {
             NSData *data = [NSData dataWithBytes:iter.data().data() length:iter.data().size()];
             [self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:data]];
         }

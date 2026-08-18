@@ -31,7 +31,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 
-    for (const auto it : tag->fieldListMap()) {
+    for (const auto &it : tag->fieldListMap()) {
         // According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is
         // a safer choice
         NSString *key = [NSString stringWithUTF8String:it.first.toCString(true)];
