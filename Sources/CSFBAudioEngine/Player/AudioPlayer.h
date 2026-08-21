@@ -372,6 +372,9 @@ class AudioPlayer final {
     bool configureForDecoder(DecoderState *_Nullable &decoderState, AVAudioPCMBuffer *_Nullable __strong &buffer,
                              bool &formatMismatch) noexcept;
 
+    /// Resets the render state and clears `Flags::audioStale` if the engine is not running
+    void resetRenderStateIfEngineNotRunning() noexcept;
+
     /// Decodes audio from `decoderState` into the ring buffer
     bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
