@@ -53,17 +53,12 @@ struct DecodedChunkDescriptor final {
     enum class Flags : uint16_t {
         /// Clear
         none = 0,
-        /// First chunk from the decoder
-        first = 1u << 0,
         /// Last chunk from the decoder
         last = 1u << 1,
     };
 
     /// Flags for this chunk
     Flags flags_{Flags::none};
-
-    /// Returns true if this is the first chunk from decoder
-    [[nodiscard]] bool isFirst() const noexcept { return bits::is_set(flags_, Flags::first); }
 
     /// Returns true if this is the last chunk from decoder
     [[nodiscard]] bool isLast() const noexcept { return bits::is_set(flags_, Flags::last); }
@@ -392,6 +387,9 @@ class AudioPlayer final {
 
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
+
+    /// The sequence number of the decoder that most recently rendered
+    uint64_t lastRenderingSequenceNumber_{0};
 
     // MARK: - Events
 
