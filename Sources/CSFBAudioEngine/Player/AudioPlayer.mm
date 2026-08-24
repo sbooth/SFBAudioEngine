@@ -1688,9 +1688,9 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         }
 
         // Accounting
+        lastRenderingSequenceNumber_ = renderingChunk_->descriptor_.sequenceNumber_;
         renderingChunk_->framesConsumed_ += framesFromChunk;
         framesRemaining -= framesFromChunk;
-        lastRenderingSequenceNumber_ = renderingChunk_->descriptor_.sequenceNumber_;
 
         // Chunk processing complete
         if (renderingChunk_->allFramesConsumed()) {
