@@ -1543,10 +1543,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         // Write the decoded chunk descriptor to the metadata buffer
         descriptor.framePosition_ = initialFramePosition;
         descriptor.frameLength_ = framesDecoded;
-
-        if (decodingComplete) {
-            descriptor.flags_ = detail::DecodedChunkDescriptor::Flags::last;
-        }
+        descriptor.isLast_ = decodingComplete;
         if (!audioMetadata_.push(descriptor)) [[unlikely]] {
             os_log_fault(log_, "Error writing chunk descriptor: spsc::Queue::push failed");
         }
@@ -1680,7 +1677,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
                 hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
         const auto isStart = renderingChunk_->framesConsumed_ == 0 &&
                              renderingChunk_->descriptor_.sequenceNumber_ != lastRenderingSequenceNumber_;
-        const auto isEnd = renderingChunk_->descriptor_.isLast() && framesFromChunk == chunkFramesRemaining;
+        const auto isEnd = renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining;
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,

@@ -48,26 +48,11 @@ struct DecodedChunkDescriptor final {
     int64_t framePosition_{0};
     /// Number of audio frames in the chunk
     uint32_t frameLength_{0};
-
-    /// Possible bits in `flags_`
-    enum class Flags : uint16_t {
-        /// Clear
-        none = 0,
-        /// Last chunk from the decoder
-        last = 1u << 1,
-    };
-
-    /// Flags for this chunk
-    Flags flags_{Flags::none};
-
-    /// Returns true if this is the last chunk from decoder
-    [[nodiscard]] bool isLast() const noexcept { return bits::is_set(flags_, Flags::last); }
+    /// Whether this is the last chunk from the decoder
+    bool isLast_{false};
 
     /// Returns true if this chunk contains zero frames
     [[nodiscard]] bool isEmpty() const noexcept { return frameLength_ == 0; }
-
-  private:
-    friend constexpr void is_bitmask_enum(Flags);
 };
 
 /// A descriptor for a rendering chunk of audio.
