@@ -1547,7 +1547,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         if (decodingComplete) {
             descriptor.flags_ = detail::DecodedChunkDescriptor::Flags::last;
         }
-        if (!audioMetadata_.push(descriptor)) {
+        if (!audioMetadata_.push(descriptor)) [[unlikely]] {
             os_log_fault(log_, "Error writing chunk descriptor: spsc::Queue::push failed");
         }
 
@@ -1835,6 +1835,9 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     }
 
     if (bits::is_clear(loadFlags(), Flags::playing) && decoder == currentDecoder) {
+#if DEBUG
+        assert(currentSnapshot.isValid_);
+#endif /* DEBUG */
         publishTransportSnapshot(currentSnapshot);
         setNowPlaying(decoder);
     }
