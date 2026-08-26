@@ -1671,20 +1671,18 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
 
         const auto chunkFramesConsumed = renderingChunk_->framesConsumed_;
-        const auto chunkPlaybackGeneration = renderingChunk_->descriptor_.playbackGeneration_;
         const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
-        const auto chunkIsLast = renderingChunk_->descriptor_.isLast_;
 
         const auto eventTime =
                 hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
         const auto isStart = chunkFramesConsumed == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_;
-        const auto isEnd = chunkIsLast && framesFromChunk == chunkFramesRemaining;
+        const auto isEnd = renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining;
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
 
         // Enqueue the frames rendered event
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkSequenceNumber, framesFromChunk,
-                             chunkPlaybackGeneration, eventFlags)) [[unlikely]] {
+                             renderingChunk_->descriptor_.playbackGeneration_, eventFlags)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
 
