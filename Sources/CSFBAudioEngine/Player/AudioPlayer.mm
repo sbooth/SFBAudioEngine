@@ -1707,6 +1707,9 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
     // rendering complete
     if (detail::DecodedChunkDescriptor chunkDescriptor{};
         audioMetadata_.peek(chunkDescriptor) && chunkDescriptor.isEmpty()) {
+#if DEBUG
+        assert(chunkDescriptor.isLast_);
+#endif /* DEBUG */
         const auto chunkSequenceNumber = chunkDescriptor.sequenceNumber_;
 
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
