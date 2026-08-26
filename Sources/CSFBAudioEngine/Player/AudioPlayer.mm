@@ -1710,9 +1710,9 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
         const auto chunkSequenceNumber = chunkDescriptor.sequenceNumber_;
 
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
-        const auto isStart = chunkSequenceNumber != lastRenderedSequenceNumber_;
-        const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
-                                FramesRenderedEventFlags::complete;
+        const auto eventFlags = chunkSequenceNumber != lastRenderedSequenceNumber_
+                                        ? (FramesRenderedEventFlags::starting | FramesRenderedEventFlags::complete)
+                                        : FramesRenderedEventFlags::complete;
 
         // Enqueue the empty frames rendered event
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkSequenceNumber, static_cast<uint32_t>(0),
