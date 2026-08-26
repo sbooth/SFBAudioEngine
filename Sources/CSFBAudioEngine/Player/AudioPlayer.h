@@ -44,8 +44,6 @@ struct DecodedChunkDescriptor final {
     uint64_t playbackGeneration_{0};
     /// Decoder sequence number that produced the audio
     uint64_t sequenceNumber_{0};
-    /// Decoder frame position for the first audio frame in the chunk
-    int64_t framePosition_{0};
     /// Number of audio frames in the chunk
     uint32_t frameLength_{0};
     /// Whether this is the last chunk from the decoder
