@@ -1676,7 +1676,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto eventTime =
                 hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
         const auto isStart = renderingChunk_->framesConsumed_ == 0 &&
-                             renderingChunk_->descriptor_.sequenceNumber_ != lastRenderingSequenceNumber_;
+                             renderingChunk_->descriptor_.sequenceNumber_ != lastRenderedSequenceNumber_;
         const auto isEnd = renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining;
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
@@ -1688,7 +1688,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         }
 
         // Accounting
-        lastRenderingSequenceNumber_ = renderingChunk_->descriptor_.sequenceNumber_;
+        lastRenderedSequenceNumber_ = renderingChunk_->descriptor_.sequenceNumber_;
         renderingChunk_->framesConsumed_ += framesFromChunk;
         framesRemaining -= framesFromChunk;
 
@@ -1712,7 +1712,7 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
 
         // Submit the empty frames rendered event
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
-        const auto isStart = chunkDescriptor.sequenceNumber_ != lastRenderingSequenceNumber_;
+        const auto isStart = chunkDescriptor.sequenceNumber_ != lastRenderedSequenceNumber_;
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 FramesRenderedEventFlags::complete;
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkDescriptor.sequenceNumber_,
@@ -1720,7 +1720,7 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
             setFlags(Flags::renderEventDropped);
         }
 
-        lastRenderingSequenceNumber_ = chunkDescriptor.sequenceNumber_;
+        lastRenderedSequenceNumber_ = chunkDescriptor.sequenceNumber_;
     }
 }
 

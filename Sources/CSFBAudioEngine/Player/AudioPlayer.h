@@ -374,7 +374,7 @@ class AudioPlayer final {
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
     /// The sequence number of the decoder that most recently rendered
-    uint64_t lastRenderingSequenceNumber_{0};
+    uint64_t lastRenderedSequenceNumber_{0};
 
     // MARK: - Events
 
