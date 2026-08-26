@@ -1667,15 +1667,15 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
             renderingChunk_.emplace(chunkDescriptor);
         }
 
+        const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
+
         const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
         const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
 
-        const auto chunkFramesConsumed = renderingChunk_->framesConsumed_;
-        const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
-
         const auto eventTime =
                 hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
-        const auto isStart = chunkFramesConsumed == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_;
+        const auto isStart =
+                renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_;
         const auto isEnd = renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining;
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
@@ -1721,7 +1721,7 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
         }
 
         // Accounting
-        lastRenderedSequenceNumber_ = chunkDescriptor.sequenceNumber_;
+        lastRenderedSequenceNumber_ = chunkSequenceNumber;
 
         // Chunk processing complete
         audioMetadata_.discard();
