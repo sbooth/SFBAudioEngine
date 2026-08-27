@@ -67,30 +67,33 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Playlist Management
 
 /// Cancels the current decoder, clears any queued decoders, creates and enqueues a decoder, and starts playback
-/// - note: This is equivalent to ``-enqueueURL:forImmediatePlayback:error:`` with `YES` for `forImmediatePlayback`
-/// followed by ``-playReturningError:``
+/// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
+/// during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued and playback started successfully
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
 /// Cancels the current decoder, clears any queued decoders, enqueues a decoder, and starts playback
-/// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `YES` for `forImmediatePlayback`
-/// followed by ``-playReturningError:``
+/// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
+/// successful enqueue operation is undefined.
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued and playback started successfully
 - (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
-/// - note: This is equivalent to ``-enqueueURL:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
+/// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
+/// during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Creates and enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any
 /// queued decoders
-/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to
-/// ``-enqueueDecoder:forImmediatePlayback:error:``
+/// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
+/// during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
 /// before enqueuing
@@ -100,13 +103,18 @@ NS_SWIFT_NAME(AudioPlayer)
         forImmediatePlayback:(BOOL)forImmediatePlayback
                        error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 /// Enqueues a decoder for subsequent playback
-/// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
+/// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
+/// successful enqueue operation is undefined.
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued
 /// decoders
+/// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
+/// successful enqueue operation is undefined.
 /// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
 /// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
