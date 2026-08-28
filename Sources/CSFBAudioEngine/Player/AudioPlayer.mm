@@ -1493,10 +1493,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         descriptor.sequenceNumber_ = decoderState->sequenceNumber_;
 
         const auto decoderFlags = decoderState->loadFlags();
-        const auto decodingStarting = bits::is_clear(decoderFlags, DecoderState::Flags::decodingStarted);
 
         // Decoding started
-        if (decodingStarting) {
+        if (bits::is_clear(decoderFlags, DecoderState::Flags::decodingStarted)) {
             decoderState->setFlags(DecoderState::Flags::decodingStarted);
             if (bits::is_clear(decoderFlags, DecoderState::Flags::decodingSuspended)) {
                 os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
@@ -1512,7 +1511,6 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         }
 
         // Decode audio into the buffer, converting to the rendering format in the process
-        const auto initialFramePosition = decoderState->framesDecoded();
         if (NSError *error = nil; !decoderState->decodeAudio(buffer, &error)) {
             decoderState->error_ = error;
             decoderState->setFlags(DecoderState::Flags::cancelRequested);
@@ -1524,14 +1522,8 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         const auto decodingComplete = framesDecoded < buffer.frameCapacity;
 
         // Write the decoded chunk descriptor to the metadata buffer
-        descriptor.framePosition_ = initialFramePosition;
         descriptor.frameLength_ = framesDecoded;
-        if (decodingStarting) {
-            descriptor.flags_ |= detail::DecodedChunkDescriptor::Flags::first;
-        }
-        if (decodingComplete) {
-            descriptor.flags_ |= detail::DecodedChunkDescriptor::Flags::last;
-        }
+        descriptor.isLast_ = decodingComplete;
         if (!audioMetadata_.push(descriptor)) [[unlikely]] {
             os_log_fault(log_, "Error writing chunk descriptor: spsc::Queue::push failed");
         }
@@ -1657,11 +1649,13 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
             renderingChunk_.emplace(chunkDescriptor);
         }
 
+        const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
+
         const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
         const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
 
         // Rendering is starting
-        if (renderingChunk_->descriptor_.isFirst() && renderingChunk_->framesConsumed_ == 0) [[unlikely]] {
+        if (renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_) [[unlikely]] {
             const auto eventTime =
                     hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
             if (!events_.enqueue(EventCommand::renderingStarted, eventTime,
@@ -1678,11 +1672,10 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
                              framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
-            break;
         }
 
         // Rendering is complete
-        if (renderingChunk_->descriptor_.isLast() && framesFromChunk == chunkFramesRemaining) [[unlikely]] {
+        if (renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining) [[unlikely]] {
             const auto eventTime = hostTimeForFrameOffset(framesRead, timestamp, audioBuffer_.format().mSampleRate);
             if (!events_.enqueue(EventCommand::renderingComplete, eventTime,
                                  renderingChunk_->descriptor_.sequenceNumber_,
@@ -1693,6 +1686,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         }
 
         // Accounting
+        lastRenderedSequenceNumber_ = chunkSequenceNumber;
         renderingChunk_->framesConsumed_ += framesFromChunk;
         framesRemaining -= framesFromChunk;
 
@@ -1708,16 +1702,19 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
     assert(!renderingChunk_);
 #endif /* DEBUG */
 
-    // Check for an empty decoded chunk descriptor, and if found submit an empty frames rendered event to signify
+    // Check for an empty decoded chunk descriptor, and if found enqueue an empty frames rendered event to signify
     // rendering complete
     if (detail::DecodedChunkDescriptor chunkDescriptor{};
         audioMetadata_.peek(chunkDescriptor) && chunkDescriptor.isEmpty()) {
-        audioMetadata_.discard();
+#if DEBUG
+        assert(chunkDescriptor.isLast_);
+#endif /* DEBUG */
+        const auto chunkSequenceNumber = chunkDescriptor.sequenceNumber_;
 
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
 
         // Rendering is starting
-        if (chunkDescriptor.isFirst()) {
+        if (chunkSequenceNumber != lastRenderedSequenceNumber_) {
             if (!events_.enqueue(EventCommand::renderingStarted, eventTime, chunkDescriptor.sequenceNumber_,
                                  chunkDescriptor.playbackGeneration_)) [[unlikely]] {
                 setFlags(Flags::renderEventDropped);
@@ -1729,6 +1726,12 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
                              chunkDescriptor.playbackGeneration_)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
+
+        // Accounting
+        lastRenderedSequenceNumber_ = chunkSequenceNumber;
+
+        // Chunk processing complete
+        audioMetadata_.discard();
     }
 }
 
