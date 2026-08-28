@@ -407,7 +407,7 @@ class AudioPlayer final {
         decoderCanceled = 4,
         /// Allocation failure
         allocationFailure = 5,
-        /// Rendering starting
+        /// Rendering started
         renderingStarted = 6,
         /// Audio frames rendered from ring buffer
         framesRendered = 7,
