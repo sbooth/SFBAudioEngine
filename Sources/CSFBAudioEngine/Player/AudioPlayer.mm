@@ -1509,22 +1509,16 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         // Decoding started
         if (bits::is_clear(decoderFlags, DecoderState::Flags::decodingStarted)) {
             decoderState->setFlags(DecoderState::Flags::decodingStarted);
-
-            const auto suspended = bits::is_set(decoderFlags, DecoderState::Flags::decodingSuspended);
-
-            if (!suspended) {
+            if (bits::is_clear(decoderFlags, DecoderState::Flags::decodingSuspended)) {
                 os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
-            } else {
-                os_log_debug(log_, "Decoding restarting after suspension for %{public}@", decoderState->decoder_);
-            }
-
-            // Submit the decoding started event for the initial start only
-            if (!suspended) {
+                // Submit the decoding started event for the initial start only
                 if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) [[likely]] {
                     eventSemaphore_.signal();
                 } else {
                     os_log_fault(log_, "Error writing decoding started event");
                 }
+            } else {
+                os_log_debug(log_, "Decoding restarting after suspension for %{public}@", decoderState->decoder_);
             }
         }
 
