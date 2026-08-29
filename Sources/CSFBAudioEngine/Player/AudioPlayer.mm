@@ -2060,17 +2060,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     // frame count get applied to post-seek counters.
 
     struct RenderingEventDetails {
-        enum class Type {
-            willStart,
-            willComplete,
-        };
-        Type type_;
-        Decoder _Nonnull decoder_;
-        uint64_t time_;
+        Decoder decoder_{nil};
+        uint64_t time_{0};
     };
 
-    // Queued events to be dispatched once the lock is released
-    std::vector<RenderingEventDetails> queuedEvents;
+    std::optional<RenderingEventDetails> willStartEvent;
+    std::optional<RenderingEventDetails> willCompleteEvent;
 
     {
         std::lock_guard lock{activeDecodersMutex_};
@@ -2086,37 +2081,31 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             const auto decoderFlags = (*iter)->loadFlags();
 
             // Rendering is starting
-            if (bits::is_set(eventFlags, FramesRenderedEventFlags::starting)) {
+            if (bits::is_set(eventFlags, FramesRenderedEventFlags::starting)) [[unlikely]] {
 #if DEBUG
                 assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
 #endif /* DEBUG */
                 (*iter)->setFlags(DecoderState::Flags::renderingStarted);
-
-                try {
-                    queuedEvents.push_back({RenderingEventDetails::Type::willStart, (*iter)->decoder_, eventTime});
-                } catch (const std::exception &e) {
-                    os_log_error(log_, "Error queuing rendering will start event for %{public}@: %{public}s",
-                                 (*iter)->decoder_, e.what());
-                }
+                willStartEvent.emplace((*iter)->decoder_, eventTime);
             }
 
-            if (frameCount > 0) {
+            if (frameCount > 0) [[likely]] {
                 (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_acq_rel);
             }
 
             // Rendering is complete
-            if (bits::is_set(eventFlags, FramesRenderedEventFlags::complete)) {
+            if (bits::is_set(eventFlags, FramesRenderedEventFlags::complete)) [[unlikely]] {
 #if DEBUG
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingComplete));
 #endif /*DEBUG */
-                try {
-                    queuedEvents.push_back({RenderingEventDetails::Type::willComplete, (*iter)->decoder_, eventTime});
-                } catch (const std::exception &e) {
-                    os_log_error(log_, "Error queuing rendering will complete event for %{public}@: %{public}s",
-                                 (*iter)->decoder_, e.what());
-                }
+
+                const auto deltaSeconds = static_cast<double>(frameCount) / (*iter)->sampleRate();
+                const auto deltaNanoseconds =
+                        static_cast<uint64_t>(deltaSeconds * static_cast<double>(nanosecondsPerSecond));
+                const auto completeTime = eventTime + host_time::fromNanoseconds(deltaNanoseconds);
+                willCompleteEvent.emplace((*iter)->decoder_, completeTime);
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
@@ -2143,21 +2132,11 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     }
 
     // Call functions that notify the delegate after unlocking the lock
-    for (const auto &event : queuedEvents) {
-        switch (event.type_) {
-        case RenderingEventDetails::Type::willStart:
-            handleRenderingWillStartEvent(event.decoder_, event.time_);
-            break;
-        case RenderingEventDetails::Type::willComplete:
-            handleRenderingWillCompleteEvent(event.decoder_, event.time_);
-            break;
-        default:
-#if DEBUG
-            assert(false && "Unknown RenderingEventDetails::Type");
-#endif /* DEBUG */
-            os_log_error(log_, "Unknown rendering event details type: %d", static_cast<int>(event.type_));
-            break;
-        }
+    if (willStartEvent) [[unlikely]] {
+        handleRenderingWillStartEvent(willStartEvent->decoder_, willStartEvent->time_);
+    }
+    if (willCompleteEvent) [[unlikely]] {
+        handleRenderingWillCompleteEvent(willCompleteEvent->decoder_, willCompleteEvent->time_);
     }
 
     return true;
