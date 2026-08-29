@@ -1649,15 +1649,15 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
             renderingChunk_.emplace(chunkDescriptor);
         }
 
-        const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
+        const auto frameOffset = framesRead - framesRemaining;
 
+        const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
         const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
-        const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
+        const auto chunkFramesConsumed = std::min(chunkFramesRemaining, framesRemaining);
 
         // Rendering is starting
         if (renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_) [[unlikely]] {
-            const auto eventTime =
-                    hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
+            const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, audioBuffer_.format().mSampleRate);
             if (!events_.enqueue(EventCommand::renderingStarted, eventTime,
                                  renderingChunk_->descriptor_.sequenceNumber_,
                                  renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
@@ -1667,16 +1667,16 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         }
 
         // Submit the frames rendered event
-        const auto eventTime =
-                hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
+        const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, audioBuffer_.format().mSampleRate);
         if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
-                             framesFromChunk, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+                             chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
 
         // Rendering is complete
-        if (renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining) [[unlikely]] {
-            const auto eventTime = hostTimeForFrameOffset(framesRead, timestamp, audioBuffer_.format().mSampleRate);
+        if (renderingChunk_->descriptor_.isLast_ && chunkFramesConsumed == chunkFramesRemaining) [[unlikely]] {
+            const auto eventTime = hostTimeForFrameOffset(frameOffset + chunkFramesConsumed, timestamp,
+                                                          audioBuffer_.format().mSampleRate);
             if (!events_.enqueue(EventCommand::renderingComplete, eventTime,
                                  renderingChunk_->descriptor_.sequenceNumber_,
                                  renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
@@ -1687,8 +1687,8 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
 
         // Accounting
         lastRenderedSequenceNumber_ = chunkSequenceNumber;
-        renderingChunk_->framesConsumed_ += framesFromChunk;
-        framesRemaining -= framesFromChunk;
+        renderingChunk_->framesConsumed_ += chunkFramesConsumed;
+        framesRemaining -= chunkFramesConsumed;
 
         // Chunk processing complete
         if (renderingChunk_->allFramesConsumed()) {
