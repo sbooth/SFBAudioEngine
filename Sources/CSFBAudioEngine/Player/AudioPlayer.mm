@@ -784,6 +784,8 @@ void sfb::AudioPlayer::stop() noexcept {
     clearDecoderQueue();
     cancelActiveDecoders();
 
+    setFlags(Flags::audioStale);
+
     if (didStopEngine) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -838,8 +840,11 @@ void sfb::AudioPlayer::reset() noexcept {
         std::lock_guard lock{engineMutex_};
         [engine_ reset];
     }
+
     clearDecoderQueue();
     cancelActiveDecoders();
+
+    setFlags(Flags::audioStale);
 }
 
 // MARK: - Player State
@@ -1142,9 +1147,13 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
             continue;
         }
 
-        // Decode and write chunks to the ring buffer
-        if (decoderState != nullptr && !decodeIntoRingBuffer(decoderState, buffer)) {
-            continue;
+        if (decoderState != nullptr) {
+            // Reset the render state
+            resetRenderStateIfEngineNotRunning();
+            // Decode and write chunks to the ring buffer
+            if (!decodeIntoRingBuffer(decoderState, buffer)) {
+                continue;
+            }
         }
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
@@ -1486,6 +1495,26 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
     return true;
 }
 
+void sfb::AudioPlayer::resetRenderStateIfEngineNotRunning() noexcept {
+    if (const auto flags = loadFlags(); bits::is_clear(flags, Flags::audioStale)) [[likely]] {
+        return;
+    }
+
+    std::lock_guard lock{engineMutex_};
+
+    // Only perform non-thread safe operations if the engine is not running
+    if (engine_.isRunning) {
+        return;
+    }
+
+    // Reset the render state
+    audioBuffer_.discardAll();
+    audioMetadata_.discardAll();
+    renderingChunk_ = {};
+
+    clearFlags(Flags::audioStale);
+}
+
 bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept {
 #if DEBUG
     assert(decoderState != nullptr);
@@ -1493,7 +1522,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 #endif /* DEBUG */
 
     const auto flags = loadFlags();
-    if (bits::is_set(flags, Flags::audioStale)) {
+    if (bits::is_set(flags, Flags::audioStale)) [[unlikely]] {
         return true;
     }
 
