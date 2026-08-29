@@ -388,10 +388,14 @@ class AudioPlayer final {
         decoderCanceled = 4,
         /// Allocation failure
         allocationFailure = 5,
+        /// Rendering started
+        renderingStarted = 6,
         /// Audio frames rendered from ring buffer
-        framesRendered = 6,
+        framesRendered = 7,
+        /// Rendering complete
+        renderingComplete = 8,
         /// Ring buffer contained fewer audio frames than requested
-        renderBufferUnderrun = 7,
+        renderBufferUnderrun = 9,
     };
 
     // MARK: - Event Processing
@@ -415,8 +419,14 @@ class AudioPlayer final {
     /// Dequeues and processes an allocation failure event from `events_`
     bool processAllocationFailureEvent() noexcept;
 
+    /// Dequeues and processes a rendering started event from `events_`
+    bool processRenderingStartedEvent() noexcept;
+
     /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
+
+    /// Dequeues and processes a rendering complete event from `events_`
+    bool processRenderingCompleteEvent() noexcept;
 
     /// Reads and processes a render buffer underrun event from `events_`
     bool processRenderBufferUnderrunEvent() noexcept;
