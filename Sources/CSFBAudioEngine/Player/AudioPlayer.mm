@@ -2064,6 +2064,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         uint64_t time_{0};
     };
 
+    // Events to be dispatched once the lock is released
     std::optional<RenderingEventDetails> willStartEvent;
     std::optional<RenderingEventDetails> willCompleteEvent;
 
