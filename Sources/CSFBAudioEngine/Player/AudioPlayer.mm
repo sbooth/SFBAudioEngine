@@ -1662,20 +1662,24 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         }
 
         const auto chunkSequenceNumber = renderingChunk_->descriptor_.sequenceNumber_;
-
         const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
         const auto framesFromChunk = std::min(chunkFramesRemaining, framesRemaining);
 
-        const auto eventTime =
-                hostTimeForFrameOffset(framesRead - framesRemaining, timestamp, audioBuffer_.format().mSampleRate);
+        const auto frameOffset = framesRead - framesRemaining;
+        const auto sampleRate = audioBuffer_.format().mSampleRate;
+
         const auto isStart =
                 renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_;
+        const auto startTime = isStart ? hostTimeForFrameOffset(frameOffset, timestamp, sampleRate) : 0;
+
         const auto isEnd = renderingChunk_->descriptor_.isLast_ && framesFromChunk == chunkFramesRemaining;
+        const auto endTime = isEnd ? hostTimeForFrameOffset(frameOffset + framesFromChunk, timestamp, sampleRate) : 0;
+
         const auto eventFlags = (isStart ? FramesRenderedEventFlags::starting : FramesRenderedEventFlags::none) |
                                 (isEnd ? FramesRenderedEventFlags::complete : FramesRenderedEventFlags::none);
 
         // Enqueue the frames rendered event
-        if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkSequenceNumber, framesFromChunk,
+        if (!events_.enqueue(EventCommand::framesRendered, startTime, endTime, chunkSequenceNumber, framesFromChunk,
                              renderingChunk_->descriptor_.playbackGeneration_, eventFlags)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
@@ -1712,8 +1716,8 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
                                         : FramesRenderedEventFlags::complete;
 
         // Enqueue the empty frames rendered event
-        if (!events_.enqueue(EventCommand::framesRendered, eventTime, chunkSequenceNumber, static_cast<uint32_t>(0),
-                             chunkDescriptor.playbackGeneration_, eventFlags)) [[unlikely]] {
+        if (!events_.enqueue(EventCommand::framesRendered, eventTime, eventTime, chunkSequenceNumber,
+                             static_cast<uint32_t>(0), chunkDescriptor.playbackGeneration_, eventFlags)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
 
@@ -2024,8 +2028,9 @@ bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
 
 bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     EventCommand command;
-    // The event time calculated from the render cycle's host time and rate scalar
-    uint64_t eventTime;
+    // The starting and ending host time for the frames
+    uint64_t startTime;
+    uint64_t endTime;
     // The decoder sequence number for the decoder providing the frames
     uint64_t sequenceNumber;
     // The number of valid frames rendered
@@ -2034,9 +2039,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     uint64_t playbackGeneration;
     // Event flags
     FramesRenderedEventFlags eventFlags;
-    if (!events_.dequeue(command, eventTime, sequenceNumber, frameCount, playbackGeneration, eventFlags)) {
-        os_log_error(log_, "Missing event time, decoder sequence number, frame count, playback generation, or flags "
-                           "for frames rendered event");
+    if (!events_.dequeue(command, startTime, endTime, sequenceNumber, frameCount, playbackGeneration, eventFlags)) {
+        os_log_error(log_, "Missing start time, end time, decoder sequence number, frame count, playback generation, "
+                           "or flags for frames rendered event");
         return false;
     }
 
@@ -2087,7 +2092,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                 assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
 #endif /* DEBUG */
                 (*iter)->setFlags(DecoderState::Flags::renderingStarted);
-                willStartEvent.emplace((*iter)->decoder_, eventTime);
+                willStartEvent.emplace((*iter)->decoder_, startTime);
             }
 
             if (frameCount > 0) [[likely]] {
@@ -2101,12 +2106,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingComplete));
 #endif /*DEBUG */
-
-                const auto deltaSeconds = static_cast<double>(frameCount) / (*iter)->sampleRate();
-                const auto deltaNanoseconds =
-                        static_cast<uint64_t>(deltaSeconds * static_cast<double>(nanosecondsPerSecond));
-                const auto completeTime = eventTime + host_time::fromNanoseconds(deltaNanoseconds);
-                willCompleteEvent.emplace((*iter)->decoder_, completeTime);
+                willCompleteEvent.emplace((*iter)->decoder_, endTime);
 
                 os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
                 activeDecoders_.erase(iter);
