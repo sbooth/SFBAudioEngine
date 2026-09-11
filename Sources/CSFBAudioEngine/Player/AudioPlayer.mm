@@ -1637,6 +1637,10 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 }
 
 void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
+#if DEBUG
+    assert(framesRead > 0);
+#endif /* DEBUG */
+
     auto framesRemaining = framesRead;
     do {
         // Read the next chunk descriptor if needed
@@ -1655,6 +1659,10 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
         const auto chunkFramesConsumed = std::min(chunkFramesRemaining, framesRemaining);
 
+#if DEBUG
+        assert(chunkFramesConsumed > 0 || renderingChunk_->descriptor_.isLast_);
+#endif /* DEBUG */
+
         // Rendering is starting
         if (renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_) [[unlikely]] {
             const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, audioBuffer_.format().mSampleRate);
@@ -1665,10 +1673,12 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
             }
         }
 
-        // Submit the frames rendered event
-        if (!events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
-                             chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
-            setFlags(Flags::renderEventDropped);
+        // Submit the frames rendered event if any frames were rendered
+        if (chunkFramesConsumed > 0) [[likely]] {
+            if (!events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
+                                 chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+                setFlags(Flags::renderEventDropped);
+            }
         }
 
         // Rendering is complete
