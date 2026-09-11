@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMessageQueue",
       "state" : {
-        "revision" : "8d52853fcf604ff518dfe0257aad687c13151716",
-        "version" : "0.2.0"
+        "revision" : "a670512ac1c11f33c72017b8c5520fb912c0dc7f",
+        "version" : "0.2.1"
       }
     },
     {
@@ -77,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
       "state" : {
-        "revision" : "b570acead5e27006cb41ab5ff7443c8797b3b8e5",
-        "version" : "2.3.0"
+        "revision" : "9e499ea0a69d107791ac0a2fe9d6a59cf401c6f9",
+        "version" : "2.3.2"
       }
     },
     {
