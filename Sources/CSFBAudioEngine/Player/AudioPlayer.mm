@@ -2078,8 +2078,11 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
 #if DEBUG
-            assert(bits::is_clear((*iter)->loadFlags(), DecoderState::Flags::renderingStarted));
+            const auto decoderFlags = (*iter)->loadFlags();
+            assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
+            assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
 #endif /* DEBUG */
+
             (*iter)->setFlags(DecoderState::Flags::renderingStarted);
             publishTransportSnapshot((*iter)->snapshot());
             decoder = (*iter)->decoder_;
@@ -2144,7 +2147,11 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             iter != activeDecoders_.cend()) {
 #if DEBUG
             assert(frameCount > 0);
+            const auto decoderFlags = (*iter)->loadFlags();
+            assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
+            assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
 #endif /* DEBUG */
+
             (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_acq_rel);
             publishTransportSnapshot((*iter)->snapshot());
         } else {
