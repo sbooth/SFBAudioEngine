@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMessageQueue",
       "state" : {
-        "branch" : "main",
-        "revision" : "a670512ac1c11f33c72017b8c5520fb912c0dc7f"
+        "revision" : "a670512ac1c11f33c72017b8c5520fb912c0dc7f",
+        "version" : "0.2.1"
       }
     },
     {
