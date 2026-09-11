@@ -1662,7 +1662,6 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
                                  renderingChunk_->descriptor_.sequenceNumber_,
                                  renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
                 setFlags(Flags::renderEventDropped);
-                break;
             }
         }
 
@@ -1680,7 +1679,6 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
                                  renderingChunk_->descriptor_.sequenceNumber_,
                                  renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
                 setFlags(Flags::renderEventDropped);
-                break;
             }
         }
 
