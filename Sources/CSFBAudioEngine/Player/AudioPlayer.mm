@@ -1667,8 +1667,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         }
 
         // Submit the frames rendered event
-        const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, audioBuffer_.format().mSampleRate);
-        if (!events_.enqueue(EventCommand::framesRendered, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
+        if (!events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
                              chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
             setFlags(Flags::renderEventDropped);
         }
@@ -2093,17 +2092,15 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
 
 bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     EventCommand command;
-    // The event time calculated from the render cycle's host time and rate scalar
-    uint64_t eventTime;
     // The decoder sequence number for the decoder providing the frames
     uint64_t sequenceNumber;
     // The number of valid frames rendered
     uint32_t frameCount;
     // The playback generation of the chunk containing the frames
     uint64_t playbackGeneration;
-    if (!events_.dequeue(command, eventTime, sequenceNumber, frameCount, playbackGeneration)) {
-        os_log_error(log_, "Missing event time, decoder sequence number, frame count, or playback generation for "
-                           "frames rendered event");
+    if (!events_.dequeue(command, sequenceNumber, frameCount, playbackGeneration)) {
+        os_log_error(log_,
+                     "Missing decoder sequence number, frame count, or playback generation for frames rendered event");
         return false;
     }
 
