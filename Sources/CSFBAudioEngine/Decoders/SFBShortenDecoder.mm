@@ -62,7 +62,7 @@ constexpr auto functionZero = 8;
 constexpr auto functionVerbatim = 9;
 
 // Format limitations
-constexpr auto maxBlocksize = 65535;
+constexpr auto maxBlocksize = 65'535;
 constexpr auto verbatimChunkMaxSizeBytes = 256;
 
 // File types

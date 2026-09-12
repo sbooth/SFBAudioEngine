@@ -44,35 +44,13 @@ struct DecodedChunkDescriptor final {
     uint64_t playbackGeneration_{0};
     /// Decoder sequence number that produced the audio
     uint64_t sequenceNumber_{0};
-    /// Decoder frame position for the first audio frame in the chunk
-    int64_t framePosition_{0};
     /// Number of audio frames in the chunk
     uint32_t frameLength_{0};
-
-    /// Possible bits in `flags_`
-    enum class Flags : uint16_t {
-        /// Clear
-        none = 0,
-        /// First chunk from the decoder
-        first = 1u << 0,
-        /// Last chunk from the decoder
-        last = 1u << 1,
-    };
-
-    /// Flags for this chunk
-    Flags flags_{Flags::none};
-
-    /// Returns true if this is the first chunk from decoder
-    [[nodiscard]] bool isFirst() const noexcept { return bits::is_set(flags_, Flags::first); }
-
-    /// Returns true if this is the last chunk from decoder
-    [[nodiscard]] bool isLast() const noexcept { return bits::is_set(flags_, Flags::last); }
+    /// Whether this is the last chunk from the decoder
+    bool isLast_{false};
 
     /// Returns true if this chunk contains zero frames
     [[nodiscard]] bool isEmpty() const noexcept { return frameLength_ == 0; }
-
-  private:
-    friend constexpr void is_bitmask_enum(Flags);
 };
 
 /// A descriptor for a rendering chunk of audio.
@@ -396,6 +374,12 @@ class AudioPlayer final {
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
+    /// The sequence number of the decoder that produced the most recently rendered chunk
+    uint64_t lastRenderedSequenceNumber_{0};
+
+    /// The host time of the last ring buffer underrun
+    uint64_t lastUnderrunHostTime_{0};
+
     // MARK: - Events
 
     /// Event commands
@@ -410,10 +394,14 @@ class AudioPlayer final {
         decoderCanceled = 4,
         /// Allocation failure
         allocationFailure = 5,
+        /// Rendering started
+        renderingStarted = 6,
         /// Audio frames rendered from ring buffer
-        framesRendered = 6,
+        framesRendered = 7,
+        /// Rendering complete
+        renderingComplete = 8,
         /// Ring buffer contained fewer audio frames than requested
-        renderBufferUnderrun = 7,
+        renderBufferUnderrun = 9,
     };
 
     // MARK: - Event Processing
@@ -437,8 +425,14 @@ class AudioPlayer final {
     /// Dequeues and processes an allocation failure event from `events_`
     bool processAllocationFailureEvent() noexcept;
 
+    /// Dequeues and processes a rendering started event from `events_`
+    bool processRenderingStartedEvent() noexcept;
+
     /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
+
+    /// Dequeues and processes a rendering complete event from `events_`
+    bool processRenderingCompleteEvent() noexcept;
 
     /// Reads and processes a render buffer underrun event from `events_`
     bool processRenderBufferUnderrunEvent() noexcept;
