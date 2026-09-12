@@ -2567,20 +2567,35 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         // The output node's output format tracks the hardware sample rate and channel count
         // To avoid format conversion in both the source-mixer and mixer-output connections,
         // set the format for the mixer-output connection to the output node's output format
-        if (outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate ||
-            outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount) {
+
+        const auto outputNodeOutputFormatSampleRate = outputNodeOutputFormat.sampleRate;
+        const auto outputNodeOutputFormatChannelCount = outputNodeOutputFormat.channelCount;
+
+        // During a route change, audio interruption, or media services reset the output hardware
+        // may transiently report an invalid format
+        const auto outputNodeOutputFormatIsValid =
+                outputNodeOutputFormatSampleRate > 0 && outputNodeOutputFormatChannelCount > 0;
+
+        // Only reconfigure the mixer-output connection if the format is valid
+        if (!outputNodeOutputFormatIsValid) [[unlikely]] {
+            os_log_error(log_,
+                         "Skipping main mixer → output node connection reconfiguration: output node reported an "
+                         "invalid output format (%g Hz, %u channels)",
+                         outputNodeOutputFormatSampleRate, outputNodeOutputFormatChannelCount);
+        } else if (outputNodeOutputFormatSampleRate != mixerNodeOutputFormat.sampleRate ||
+                   outputNodeOutputFormatChannelCount != mixerNodeOutputFormat.channelCount) {
 #if DEBUG
-            if (outputNodeOutputFormat.sampleRate != mixerNodeOutputFormat.sampleRate) {
+            if (outputNodeOutputFormatSampleRate != mixerNodeOutputFormat.sampleRate) {
                 os_log_debug(log_,
                              "Mismatch between main mixer → output node connection sample rate (%g Hz) and hardware "
                              "sample rate (%g Hz)",
-                             mixerNodeOutputFormat.sampleRate, outputNodeOutputFormat.sampleRate);
+                             mixerNodeOutputFormat.sampleRate, outputNodeOutputFormatSampleRate);
             }
-            if (outputNodeOutputFormat.channelCount != mixerNodeOutputFormat.channelCount) {
+            if (outputNodeOutputFormatChannelCount != mixerNodeOutputFormat.channelCount) {
                 os_log_debug(log_,
                              "Mismatch between main mixer → output node connection channel count (%u) and hardware "
                              "channel count (%u)",
-                             mixerNodeOutputFormat.channelCount, outputNodeOutputFormat.channelCount);
+                             mixerNodeOutputFormat.channelCount, outputNodeOutputFormatChannelCount);
             }
             os_log_debug(log_, "Setting main mixer → output node connection format to %{public}@",
                          stringDescribingAVAudioFormat(outputNodeOutputFormat));
