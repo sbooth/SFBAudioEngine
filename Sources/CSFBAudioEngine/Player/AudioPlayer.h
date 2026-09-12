@@ -374,6 +374,9 @@ class AudioPlayer final {
     /// The sequence number of the decoder that produced the most recently rendered chunk
     uint64_t lastRenderedSequenceNumber_{0};
 
+    /// The host time of the last ring buffer underrun
+    uint64_t lastUnderrunHostTime_{0};
+
     // MARK: - Events
 
     /// Event commands

@@ -1639,9 +1639,14 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // is expected to run dry while the decoding thread waits to reconfigure the processing graph and
     // refill the ring buffer
     if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) [[unlikely]] {
-        if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
-                [[unlikely]] {
-            setFlags(Flags::renderEventDropped);
+        // Throttle underrun events to prevent saturating the event message queue
+        constexpr auto throttleInterval = 100 * nanosecondsPerMillisecond;
+        if (host_time::toNanoseconds(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
+            if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
+                    [[unlikely]] {
+                setFlags(Flags::renderEventDropped);
+            }
+            lastUnderrunHostTime_ = timestamp.mHostTime;
         }
     }
 
