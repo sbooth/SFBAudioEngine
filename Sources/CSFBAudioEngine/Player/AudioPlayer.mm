@@ -33,9 +33,9 @@ namespace {
 // MARK: - Constants
 
 /// The default audio ring buffer capacity in frames
-constexpr std::size_t audioBufferCapacity = 16384;
+constexpr std::size_t audioBufferCapacity = 16'384;
 /// The minimum number of frames to write to the audio ring buffer
-constexpr AVAudioFrameCount ringBufferChunkSize = 2048;
+constexpr AVAudioFrameCount ringBufferChunkSize = 2'048;
 
 /// The number of nanoseconds in one second
 constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
@@ -518,7 +518,7 @@ sfb::AudioPlayer::AudioPlayer() {
     // Rendering Setup
 
     // Start out with 44.1 kHz stereo
-    AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
+    AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44'100 channels:2];
     if (format == nil) {
         os_log_error(log_, "Unable to create AVAudioFormat for 44.1 kHz stereo");
         throw std::runtime_error("Unable to create AVAudioFormat");
