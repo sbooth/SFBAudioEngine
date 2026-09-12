@@ -1756,6 +1756,13 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
     while (!stoken.stop_requested()) {
+#if DEBUG
+        if (const auto occupancy =
+                    static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);
+            occupancy > 0.66) {
+            os_log_debug(log_, "Less than 1/3 headroom in event message queue: occupancy %.2f", occupancy);
+        }
+#endif /* DEBUG */
 
         // Process pending events
         EventCommand eventCommand;
