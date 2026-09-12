@@ -49,6 +49,9 @@ constexpr int64_t twoPointFiveMillisecondDispatchTimeDelta = 2'500'000;
 /// 7.5 millisecond dispatch time delta, expressed in nanoseconds
 constexpr int64_t sevenPointFiveMillisecondDispatchTimeDelta = 7'500'000;
 
+/// The closest double value to 2/3
+constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
+
 /// Objective-C associated object key indicating if a decoder has been canceled
 constexpr char decoderIsCanceledKey = '\0';
 
@@ -1756,6 +1759,13 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
     while (!stoken.stop_requested()) {
+#if DEBUG
+        if (const auto occupancy =
+                    static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);
+            occupancy > twoThirds) {
+            os_log_debug(log_, "Less than 1/3 headroom in event message queue: occupancy %.2f", occupancy);
+        }
+#endif /* DEBUG */
 
         // Process pending events
         EventCommand eventCommand;
