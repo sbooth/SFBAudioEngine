@@ -2571,7 +2571,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         const auto outputNodeOutputFormatSampleRate = outputNodeOutputFormat.sampleRate;
         const auto outputNodeOutputFormatChannelCount = outputNodeOutputFormat.channelCount;
 
-        // During a route change, audio interruption, or media services reset the output hardware
+        // During a route change, audio interruption, or media services reset, the output hardware
         // may transiently report an invalid format
         const auto outputNodeOutputFormatIsValid =
                 outputNodeOutputFormatSampleRate > 0 && outputNodeOutputFormatChannelCount > 0;
