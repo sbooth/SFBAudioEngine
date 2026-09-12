@@ -22,7 +22,7 @@
 namespace {
 
 constexpr int kDSDPacketsPerPCMFrame = 8 / kSFBPCMFramesPerDSDPacket;
-constexpr int kBufferSizePackets = 16384;
+constexpr int kBufferSizePackets = 16'384;
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 constexpr unsigned char sBitReverseTable256[256] = {
