@@ -1503,7 +1503,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXTagLib";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.3.0;
+				minimumVersion = 2.3.2;
 			};
 		};
 		322CE34B2CF788020070996C /* XCRemoteSwiftPackageReference "wavpack-binary-xcframework" */ = {
@@ -1583,7 +1583,7 @@
 			repositoryURL = "https://github.com/sbooth/CXXMessageQueue";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.0;
+				minimumVersion = 0.2.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
