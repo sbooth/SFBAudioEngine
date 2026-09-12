@@ -2579,8 +2579,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         // Only reconfigure the mixer-output connection if the format is valid
         if (!outputNodeOutputFormatIsValid) [[unlikely]] {
             os_log_error(log_,
-                         "Skipping main mixer → output node connection reconfiguration: output node reported an "
-                         "invalid output format (%g Hz, %u channels)",
+                         "Skipping main mixer → output node connection reconfiguration: output node has invalid output "
+                         "format (%g Hz, %u channels)",
                          outputNodeOutputFormatSampleRate, outputNodeOutputFormatChannelCount);
         } else if (outputNodeOutputFormatSampleRate != mixerNodeOutputFormat.sampleRate ||
                    outputNodeOutputFormatChannelCount != mixerNodeOutputFormat.channelCount) {
