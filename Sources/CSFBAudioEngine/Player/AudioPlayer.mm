@@ -1646,8 +1646,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
                     [[unlikely]] {
                 setFlags(Flags::renderEventDropped);
             }
+            lastUnderrunHostTime_ = timestamp.mHostTime;
         }
-        lastUnderrunHostTime_ = timestamp.mHostTime;
     }
 
     return noErr;
