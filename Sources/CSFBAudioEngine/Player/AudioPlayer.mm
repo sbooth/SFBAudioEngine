@@ -1332,9 +1332,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
     }
 
     if (activeDecoders_.size() >= maximumActiveDecoders) {
-#if DEBUG
         os_log_debug(log_, "Maximum number of active decoders reached");
-#endif /* DEBUG */
         return nullptr;
     }
 
