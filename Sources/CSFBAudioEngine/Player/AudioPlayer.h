@@ -122,7 +122,7 @@ class AudioPlayer final {
     /// Ring buffer transferring audio between the decoding thread and the render block
     spsc::AudioRingBuffer audioBuffer_;
     /// Queue transferring audio metadata between the decoding thread and the render block
-    spsc::Queue<detail::DecodedChunkDescriptor, 32> audioMetadata_;
+    spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
     /// The current transport epoch
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
