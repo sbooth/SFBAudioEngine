@@ -1990,10 +1990,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending
-            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
-                decodingSemaphore_.signal();
-            }
+            decodingSemaphore_.signal();
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for decoder canceled event",
                          sequenceNumber);
@@ -2232,10 +2229,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending
-            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
-                decodingSemaphore_.signal();
-            }
+            decodingSemaphore_.signal();
 
             // Publish snapshot reflecting the new active decoder state
             if (const auto *nextDecoderState = firstActiveDecoderState(); nextDecoderState != nullptr) {
