@@ -44,10 +44,12 @@ constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
 /// 0.5 second dispatch time delta, expressed in nanoseconds
 constexpr int64_t halfSecondDispatchTimeDelta = 500'000'000;
+/// 2 millisecond dispatch time delta, expressed in nanoseconds
+constexpr int64_t twoMillisecondDispatchTimeDelta = 2'000'000;
 /// 2.5 millisecond dispatch time delta, expressed in nanoseconds
 constexpr int64_t twoPointFiveMillisecondDispatchTimeDelta = 2'500'000;
-/// 7.5 millisecond dispatch time delta, expressed in nanoseconds
-constexpr int64_t sevenPointFiveMillisecondDispatchTimeDelta = 7'500'000;
+/// 10 millisecond dispatch time delta, expressed in nanoseconds
+constexpr int64_t tenMillisecondDispatchTimeDelta = 10'000'000;
 
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
@@ -1595,6 +1597,13 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
 
 OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                                   AudioBufferList &outputData) noexcept {
+    // Store the render buffer duration
+    if (frameCount > 0) [[likely]] {
+        const auto sampleRate = audioBuffer_.format().mSampleRate;
+        const auto duration = static_cast<double>(frameCount) / sampleRate;
+        lastRenderBufferDuration_.store(duration, std::memory_order_relaxed);
+    }
+
     const auto flags = loadFlags();
     const auto isStale = bits::is_set(flags, Flags::audioStale);
 
@@ -1817,7 +1826,12 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
+                // Poll at roughly the actual render callback period, clamped to sane bounds
+                const auto renderBufferDuration = lastRenderBufferDuration_.load(std::memory_order_relaxed);
+                const auto durationNanos =
+                        static_cast<int64_t>(renderBufferDuration * static_cast<double>(nanosecondsPerSecond));
+                deltaNanos =
+                        std::clamp(durationNanos, twoMillisecondDispatchTimeDelta, tenMillisecondDispatchTimeDelta);
             } else {
                 // Use a longer timeout when idle
                 deltaNanos = halfSecondDispatchTimeDelta;
