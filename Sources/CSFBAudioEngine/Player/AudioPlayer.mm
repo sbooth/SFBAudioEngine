@@ -37,6 +37,9 @@ constexpr std::size_t audioBufferCapacity = 16'384;
 /// The minimum number of frames to write to the audio ring buffer
 constexpr AVAudioFrameCount ringBufferChunkSize = 2'048;
 
+/// The maximum number of active decoders
+constexpr std::size_t maximumActiveDecoders = 8;
+
 /// The number of nanoseconds in one second
 constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
@@ -1325,6 +1328,13 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
     std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
 
     if (queuedDecoders_.empty()) {
+        return nullptr;
+    }
+
+    if (activeDecoders_.size() >= maximumActiveDecoders) {
+#if DEBUG
+        os_log_debug(log_, "Maximum number of active decoders reached");
+#endif /* DEBUG */
         return nullptr;
     }
 
