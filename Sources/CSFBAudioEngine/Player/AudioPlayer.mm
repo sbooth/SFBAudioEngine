@@ -1998,8 +1998,10 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending
-            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
+            // Wake the decoding thread if a format change is pending or the removal freed a slot that was blocked
+            if (const auto size = activeDecoders_.size();
+                (size == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) ||
+                (size == maximumActiveDecoders - 1)) {
                 decodingSemaphore_.signal();
             }
         } else {
@@ -2240,8 +2242,10 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending
-            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
+            // Wake the decoding thread if a format change is pending or the removal freed a slot that was blocked
+            if (const auto size = activeDecoders_.size();
+                (size == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) ||
+                (size == maximumActiveDecoders - 1)) {
                 decodingSemaphore_.signal();
             }
 
