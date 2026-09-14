@@ -1562,6 +1562,14 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         }
     }
 
+#if DEBUG
+    if (const auto occupancy = static_cast<double>(audioMetadata_.capacity - audioMetadata_.availableToWrite()) /
+                               static_cast<double>(audioMetadata_.capacity);
+        occupancy > twoThirds) {
+        os_log_debug(log_, "Less than 1/3 headroom in metadata queue: occupancy %.2f", occupancy);
+    }
+#endif /* DEBUG */
+
     // Clear the mute and pending format change flags if needed now that the ring buffer is full
     if (bits::has_any(flags, Flags::muted | Flags::formatChangePending)) {
         clearFlags(Flags::muted | Flags::formatChangePending);
