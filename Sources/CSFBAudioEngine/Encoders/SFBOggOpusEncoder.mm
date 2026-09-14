@@ -110,9 +110,9 @@ int closeCallback(void *user_data) noexcept {
         return nil;
     }
 
-    double sampleRate = 48000;
+    double sampleRate = 48'000;
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyOpusPreserveSampleRate] boolValue]) {
-        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000) {
+        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768'000) {
             return nil;
         }
         sampleRate = sourceFormat.sampleRate;
