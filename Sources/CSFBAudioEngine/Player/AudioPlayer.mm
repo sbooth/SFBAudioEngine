@@ -37,6 +37,9 @@ constexpr std::size_t audioBufferCapacity = 16'384;
 /// The minimum number of frames to write to the audio ring buffer
 constexpr AVAudioFrameCount ringBufferChunkSize = 2'048;
 
+/// The maximum number of active decoders
+constexpr std::size_t maximumActiveDecoders = 8;
+
 /// The number of nanoseconds in one second
 constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
@@ -1328,6 +1331,11 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
         return nullptr;
     }
 
+    if (activeDecoders_.size() >= maximumActiveDecoders) {
+        os_log_debug(log_, "Maximum number of active decoders reached");
+        return nullptr;
+    }
+
     // Remove the first decoder from the decoder queue
     auto decoder = queuedDecoders_.front();
     queuedDecoders_.pop_front();
@@ -1990,8 +1998,10 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending
-            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
+            // Wake the decoding thread if a format change is pending or the removal freed a slot that was blocked
+            if (const auto size = activeDecoders_.size();
+                (size == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) ||
+                (size == maximumActiveDecoders - 1)) {
                 decodingSemaphore_.signal();
             }
         } else {
@@ -2232,8 +2242,10 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending
-            if (activeDecoders_.size() == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) {
+            // Wake the decoding thread if a format change is pending or the removal freed a slot that was blocked
+            if (const auto size = activeDecoders_.size();
+                (size == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) ||
+                (size == maximumActiveDecoders - 1)) {
                 decodingSemaphore_.signal();
             }
 
