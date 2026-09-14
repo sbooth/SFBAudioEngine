@@ -2282,8 +2282,7 @@ bool sfb::AudioPlayer::processRenderBufferUnderrunEvent() noexcept {
 }
 
 void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept {
-    const auto now = host_time::current();
-    if (now > hostTime) {
+    if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
                      decoder);
@@ -2344,8 +2343,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 }
 
 void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime) noexcept {
-    const auto now = host_time::current();
-    if (now > hostTime) {
+    if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
                      decoder);
