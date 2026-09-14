@@ -1570,6 +1570,14 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         }
     }
 
+#if DEBUG
+    if (const auto occupancy = static_cast<double>(audioMetadata_.capacity - audioMetadata_.availableToWrite()) /
+                               static_cast<double>(audioMetadata_.capacity);
+        occupancy > twoThirds) {
+        os_log_debug(log_, "Less than 1/3 headroom in metadata queue: occupancy %.2f", occupancy);
+    }
+#endif /* DEBUG */
+
     // Clear the mute and pending format change flags if needed now that the ring buffer is full
     if (bits::has_any(flags, Flags::muted | Flags::formatChangePending)) {
         clearFlags(Flags::muted | Flags::formatChangePending);
@@ -2282,8 +2290,7 @@ bool sfb::AudioPlayer::processRenderBufferUnderrunEvent() noexcept {
 }
 
 void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept {
-    const auto now = host_time::current();
-    if (now > hostTime) {
+    if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
                      decoder);
@@ -2344,8 +2351,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 }
 
 void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime) noexcept {
-    const auto now = host_time::current();
-    if (now > hostTime) {
+    if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
                      decoder);
