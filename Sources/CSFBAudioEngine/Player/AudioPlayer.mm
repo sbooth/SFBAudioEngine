@@ -49,8 +49,6 @@ constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 constexpr int64_t halfSecondDispatchTimeDelta = 500'000'000;
 /// 2.5 millisecond dispatch time delta, expressed in nanoseconds
 constexpr int64_t twoPointFiveMillisecondDispatchTimeDelta = 2'500'000;
-/// 7.5 millisecond dispatch time delta, expressed in nanoseconds
-constexpr int64_t sevenPointFiveMillisecondDispatchTimeDelta = 7'500'000;
 
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
@@ -1657,6 +1655,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         }
     }
 
+    eventSemaphore_.signal();
+
     return noErr;
 }
 
@@ -1829,19 +1829,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        int64_t deltaNanos;
-        {
-            std::lock_guard lock{activeDecodersMutex_};
-            if (firstActiveDecoderState() != nullptr) {
-                deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
-            } else {
-                // Use a longer timeout when idle
-                deltaNanos = halfSecondDispatchTimeDelta;
-            }
-        }
-
-        // Decoding events will be signaled; render events are polled using the timeout
-        eventSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, deltaNanos));
+        // Wait for an event signal
+        eventSemaphore_.timedwait({0, 500'000'000});
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);

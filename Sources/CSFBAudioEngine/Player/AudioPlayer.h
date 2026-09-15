@@ -34,6 +34,60 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 
+#import <mach/mach.h>
+
+namespace msema {
+
+class Semaphore final {
+  public:
+    explicit Semaphore(int value);
+
+    Semaphore(const Semaphore &) noexcept = delete;
+    Semaphore &operator=(const Semaphore &) noexcept = delete;
+
+    Semaphore(Semaphore &&) = delete;
+    Semaphore &operator=(Semaphore &&) = delete;
+
+    ~Semaphore() noexcept;
+
+    bool wait() noexcept;
+    bool timedwait(mach_timespec_t wait_time) noexcept;
+
+    bool signal() noexcept;
+    bool signal_all() noexcept;
+
+  private:
+    semaphore_t semaphore_{0};
+    task_t task_{0};
+};
+
+inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
+    if (semaphore_create(task_, &semaphore_, SYNC_POLICY_FIFO, value) != KERN_SUCCESS) {
+        throw std::runtime_error("Unable to create mach semaphore");
+    }
+}
+
+inline Semaphore::~Semaphore() noexcept { (void)semaphore_destroy(task_, semaphore_); }
+
+inline bool Semaphore::wait() noexcept { return semaphore_wait(semaphore_) == KERN_SUCCESS; }
+
+inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
+    switch (semaphore_timedwait(semaphore_, wait_time)) {
+    case KERN_SUCCESS:
+        return true;
+    case KERN_OPERATION_TIMED_OUT:
+        return false;
+    default:
+        return false;
+    }
+}
+
+inline bool Semaphore::signal() noexcept { return semaphore_signal(semaphore_) == KERN_SUCCESS; }
+
+inline bool Semaphore::signal_all() noexcept { return semaphore_signal_all(semaphore_) == KERN_SUCCESS; }
+
+} /* namespace msema */
+
 namespace sfb {
 
 namespace detail {
@@ -145,7 +199,7 @@ class AudioPlayer final {
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Dispatch semaphore used for communication with the event processing thread
-    dsema::Semaphore eventSemaphore_{0};
+    msema::Semaphore eventSemaphore_{0};
 
     /// Message queue communicating events to the event processing thread
     mpsc::MessageQueue<256, 32> events_;
