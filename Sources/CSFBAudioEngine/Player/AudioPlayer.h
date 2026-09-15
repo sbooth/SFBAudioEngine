@@ -195,6 +195,11 @@ class AudioPlayer final {
 
     ~AudioPlayer() noexcept;
 
+    [[nodiscard]] bool ownsCurrentThread() const noexcept {
+        const auto tid = std::this_thread::get_id();
+        return tid == eventThread_.get_id() || tid == decodingThread_.get_id();
+    }
+
     // MARK: - Playlist Management
 
     bool enqueueDecoder(Decoder _Nonnull decoder, bool forImmediatePlayback, NSError **error) noexcept;

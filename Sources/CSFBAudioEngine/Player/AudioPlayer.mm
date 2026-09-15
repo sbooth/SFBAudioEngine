@@ -606,6 +606,9 @@ sfb::AudioPlayer::AudioPlayer() {
 }
 
 sfb::AudioPlayer::~AudioPlayer() noexcept {
+#if DEBUG
+    assert(!ownsCurrentThread() && "~AudioPlayer() called from decoding or event processing thread");
+#endif /* DEBUG */
     auto *notificationCenter = CFNotificationCenterGetLocalCenter();
     CFNotificationCenterRemoveEveryObserver(notificationCenter, this);
 
