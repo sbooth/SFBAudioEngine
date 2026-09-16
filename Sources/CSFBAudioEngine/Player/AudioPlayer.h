@@ -198,7 +198,7 @@ class AudioPlayer final {
 
     /// Thread used for event processing
     std::jthread eventThread_;
-    /// Dispatch semaphore used for communication with the event processing thread
+    /// Mach semaphore used for communication with the event processing thread
     msema::Semaphore eventSemaphore_{0};
 
     /// Message queue communicating events to the event processing thread
