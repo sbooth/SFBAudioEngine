@@ -144,13 +144,17 @@ inline bool Semaphore::wait() noexcept {
 }
 
 inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
+    if (wait_time.tv_sec == 0 && wait_time.tv_nsec == 0) {
+        return semaphore_timedwait(semaphore_, wait_time) == KERN_SUCCESS;
+    }
+
     const auto wait_nanos = detail::timespec_to_nanos(wait_time);
     const auto deadline = mach_absolute_time() + detail::nanos_to_ticks(wait_nanos);
 
     for (;;) {
         const auto now = mach_absolute_time();
         if (now >= deadline) {
-            return false;
+            return semaphore_timedwait(semaphore_, mach_timespec_t{0, 0}) == KERN_SUCCESS;
         }
 
         const auto remaining_nanos = detail::ticks_to_nanos(deadline - now);
