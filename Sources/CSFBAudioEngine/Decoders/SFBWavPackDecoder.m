@@ -7,16 +7,16 @@
 
 #import "SFBWavPackDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-#import <wavpack/wavpack.h>
+#import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-#import <os/log.h>
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+#import <wavpack/wavpack.h>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 #import <simd/simd.h>
 

@@ -7,10 +7,10 @@
 
 #import "SFBMusepackEncoder.h"
 
+#import <os/log.h>
+
 #import <mpc/libmpcenc.h>
 #import <mpc/stream_encoder.h>
-
-#import <os/log.h>
 
 SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine.Encoder.Musepack";
 

@@ -7,13 +7,13 @@
 
 #import "SFBFLACEncoder.h"
 
-#import <FLAC/metadata.h>
-#import <FLAC/stream_encoder.h>
-
 #import <os/log.h>
 
 #import <algorithm>
 #import <memory>
+
+#import <FLAC/metadata.h>
+#import <FLAC/stream_encoder.h>
 
 SFBAudioEncoderName const SFBAudioEncoderNameFLAC = @"org.sbooth.AudioEngine.Encoder.FLAC";
 SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC = @"org.sbooth.AudioEngine.Encoder.OggFLAC";

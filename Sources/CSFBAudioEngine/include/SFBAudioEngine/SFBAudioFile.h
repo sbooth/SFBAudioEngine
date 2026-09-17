@@ -5,10 +5,10 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <Foundation/Foundation.h>
+
 #import <SFBAudioEngine/SFBAudioMetadata.h>
 #import <SFBAudioEngine/SFBAudioProperties.h>
-
-#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

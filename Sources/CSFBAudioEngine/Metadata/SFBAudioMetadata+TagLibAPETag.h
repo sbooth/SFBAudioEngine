@@ -5,9 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBAudioMetadata.h"
-
 #import <taglib/apetag.h>
+
+#import "SFBAudioMetadata.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

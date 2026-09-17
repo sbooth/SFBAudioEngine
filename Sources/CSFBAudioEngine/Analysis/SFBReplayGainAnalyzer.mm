@@ -7,15 +7,15 @@
 
 #import "SFBReplayGainAnalyzer.h"
 
-#import "SFBAudioDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
-#import "SFBLocalizedNameForURL.h"
-#import "loudness_ebur128/ebur128_analyzer.h"
-
 #import <os/log.h>
 
 #import <memory>
 #import <vector>
+
+#import "SFBAudioDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
+#import "loudness_ebur128/ebur128_analyzer.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";

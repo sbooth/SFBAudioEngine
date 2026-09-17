@@ -7,14 +7,14 @@
 
 #import "SFBLibsndfileEncoder.h"
 
-#import "SFBLibsndfileUtilities.h"
+#import <os/log.h>
+
+#import <AudioToolbox/AudioToolbox.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <sndfile/sndfile.h>
 
-#import <AudioToolbox/AudioToolbox.h>
-
-#import <os/log.h>
+#import "SFBLibsndfileUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile = @"org.sbooth.AudioEngine.Encoder.Libsndfile";
 
