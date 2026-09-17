@@ -79,7 +79,13 @@ inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
 
 inline Semaphore::~Semaphore() noexcept { (void)semaphore_destroy(task_, semaphore_); }
 
-inline bool Semaphore::wait() noexcept { return semaphore_wait(semaphore_) == KERN_SUCCESS; }
+inline bool Semaphore::wait() noexcept {
+    kern_return_t kr;
+    do {
+        kr = semaphore_wait(semaphore_);
+    } while (__builtin_expect(kr == KERN_ABORTED, 0));
+    return kr == KERN_SUCCESS;
+}
 
 inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
     switch (semaphore_timedwait(semaphore_, wait_time)) {
