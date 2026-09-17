@@ -7,10 +7,11 @@
 
 #pragma once
 
+#import <mach/mach.h>
 #import <mach/mach_time.h>
-#import <mach/semaphore.h>
 
 #import <cassert>
+#import <limits>
 #import <stdexcept>
 
 namespace msema {
