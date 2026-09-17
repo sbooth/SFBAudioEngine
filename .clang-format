@@ -48,7 +48,7 @@ IncludeCategories:
     Priority: 3
   - Regex: '^<[^./>]+>$'
     Priority: 4
-  - Regex: '^<(dsema|mpsc|mtx|spsc|AVFAudioExtensions)/'
+  - Regex: '^<(mpsc|mtx|spsc|AVFAudioExtensions)/'
     Priority: 5
   - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
     Priority: 5
