@@ -80,16 +80,19 @@ namespace detail {
 inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
 
 /// A fraction used to convert host ticks to nanoseconds.
-inline const auto timebase = []() noexcept {
-    mach_timebase_info_data_t timebase_info;
-    [[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
-    assert(kr == KERN_SUCCESS);
+inline const mach_timebase_info_data_t &timebase_info() noexcept {
+    static const auto timebase_info = []() noexcept {
+        mach_timebase_info_data_t timebase_info;
+        [[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
+        assert(kr == KERN_SUCCESS);
+        return timebase_info;
+    }();
     return timebase_info;
-}();
+}
 
 /// Converts mach ticks to nanoseconds.
 [[nodiscard]] inline uint64_t ticks_to_nanos(uint64_t ticks) noexcept {
-    if (timebase.numer != timebase.denom) {
+    if (const auto &timebase = timebase_info(); timebase.numer != timebase.denom) {
         __uint128_t ns = ticks;
         ns *= timebase.numer;
         ns /= timebase.denom;
@@ -100,10 +103,10 @@ inline const auto timebase = []() noexcept {
 
 /// Converts nanoseconds to mach ticks.
 [[nodiscard]] inline uint64_t nanos_to_ticks(uint64_t ns) noexcept {
-    if (timebase.numer != timebase.denom) {
+    if (const auto &timebase = timebase_info(); timebase.numer != timebase.denom) {
         __uint128_t t = ns;
-        t *= detail::timebase.denom;
-        t /= detail::timebase.numer;
+        t *= timebase.denom;
+        t /= timebase.numer;
         return static_cast<uint64_t>(t);
     }
     return ns;
