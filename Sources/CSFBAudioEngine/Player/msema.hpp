@@ -51,7 +51,8 @@ class Semaphore final {
 
     /// Increments the semaphore count.
     ///
-    /// If the count goes non-negative (i.e. greater than or equal to 0) and a thread is blocked on the semaphore, then the waiting thread is scheduled to execute.
+    /// If the count goes non-negative (i.e. greater than or equal to 0) and a thread is blocked on the semaphore, then
+    /// the waiting thread is scheduled to execute.
     /// @return true if the semaphore was signalled, false otherwise.
     bool signal() noexcept;
 
