@@ -7,17 +7,17 @@
 
 #import "SFBCoreAudioEncoder.h"
 
+#import <os/log.h>
+
+#import <AudioToolbox/AudioToolbox.h>
+
+#import <algorithm>
+#import <vector>
+
 #import "AudioFileWrapper.hpp"
 #import "ExtAudioFileWrapper.hpp"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <AudioToolbox/AudioToolbox.h>
-
-#import <os/log.h>
-
-#import <algorithm>
-#import <vector>
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
 

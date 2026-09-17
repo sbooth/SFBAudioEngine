@@ -7,9 +7,9 @@
 
 #pragma once
 
-#import <taglib/audioproperties.h>
-
 #import <Foundation/Foundation.h>
+
+#import <taglib/audioproperties.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

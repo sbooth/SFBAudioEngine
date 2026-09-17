@@ -5,9 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import <SFBAudioEngine/SFBAttachedPicture.h>
-
 #import <Foundation/Foundation.h>
+
+#import <SFBAudioEngine/SFBAttachedPicture.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

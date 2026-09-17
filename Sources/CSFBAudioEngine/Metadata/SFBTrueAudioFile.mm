@@ -7,15 +7,15 @@
 
 #import "SFBTrueAudioFile.h"
 
+#import <taglib/tfilestream.h>
+#import <taglib/trueaudiofile.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/tfilestream.h>
-#import <taglib/trueaudiofile.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.AudioEngine.File.TrueAudio";
 

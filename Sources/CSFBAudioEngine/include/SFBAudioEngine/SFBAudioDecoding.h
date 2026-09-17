@@ -5,11 +5,11 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import <SFBAudioEngine/SFBAudioEngineTypes.h>
-#import <SFBAudioEngine/SFBInputSource.h>
-
 #import <AVFAudio/AVFAudio.h>
 #import <Foundation/Foundation.h>
+
+#import <SFBAudioEngine/SFBAudioEngineTypes.h>
+#import <SFBAudioEngine/SFBInputSource.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

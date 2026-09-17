@@ -7,12 +7,12 @@
 
 #import "SFBMPEGDecoder.h"
 
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <mpg123/mpg123.h>
 
-#import <os/log.h>
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
 

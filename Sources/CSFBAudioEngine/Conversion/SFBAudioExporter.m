@@ -7,13 +7,13 @@
 
 #import "SFBAudioExporter.h"
 
-#import "SFBAudioDecoder.h"
-#import "SFBErrorWithLocalizedDescription.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 
-#import <os/log.h>
+#import "SFBAudioDecoder.h"
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 // NSError domain for SFBAudioExporter
 NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.AudioExporter";
