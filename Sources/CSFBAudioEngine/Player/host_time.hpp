@@ -20,17 +20,20 @@ namespace detail {
 // On Apple Silicon it is 125/3.
 
 /// A fraction used to convert host ticks to nanoseconds.
-inline const auto timebase = []() noexcept {
+inline const mach_timebase_info_data_t &timebase_info() noexcept {
     // If `mach_timebase_info()` doesn't succeed there is no way to convert to/from host times.
     // Luckily the function seems to only return `KERN_SUCCESS`:
     // https://github.com/apple-oss-distributions/xnu/blob/main/libsyscall/wrappers/mach_timebase_info.c#L29
     // https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/clock.c#L407
 
-    mach_timebase_info_data_t timebase_info;
-    [[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
-    assert(kr == KERN_SUCCESS);
+    static const auto timebase_info = []() noexcept {
+        mach_timebase_info_data_t timebase_info;
+        [[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
+        assert(kr == KERN_SUCCESS);
+        return timebase_info;
+    }();
     return timebase_info;
-}();
+}
 
 } /* namespace detail */
 
@@ -54,13 +57,12 @@ inline const auto timebase = []() noexcept {
 ///
 /// This is equivalent to the macOS-only function ``AudioConvertHostTimeToNanos``.
 [[nodiscard]] inline uint64_t toNanoseconds(uint64_t t) noexcept {
-    if (detail::timebase.numer != detail::timebase.denom) {
+    if (const auto &timebase = detail::timebase_info(); timebase.numer != timebase.denom) {
         __uint128_t ns = t;
-        ns *= detail::timebase.numer;
-        ns /= detail::timebase.denom;
+        ns *= timebase.numer;
+        ns /= timebase.denom;
         return static_cast<uint64_t>(ns);
     }
-
     return t;
 }
 
@@ -68,13 +70,12 @@ inline const auto timebase = []() noexcept {
 ///
 /// This is equivalent to the macOS-only function ``AudioConvertNanosToHostTime``.
 [[nodiscard]] inline uint64_t fromNanoseconds(uint64_t ns) noexcept {
-    if (detail::timebase.numer != detail::timebase.denom) {
+    if (const auto &timebase = detail::timebase_info(); timebase.numer != timebase.denom) {
         __uint128_t t = ns;
-        t *= detail::timebase.denom;
-        t /= detail::timebase.numer;
+        t *= timebase.denom;
+        t /= timebase.numer;
         return static_cast<uint64_t>(t);
     }
-
     return ns;
 }
 
