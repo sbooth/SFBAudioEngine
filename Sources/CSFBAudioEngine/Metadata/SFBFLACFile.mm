@@ -7,6 +7,9 @@
 
 #import "SFBFLACFile.h"
 
+#import <taglib/flacfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
@@ -15,9 +18,6 @@
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "SFBLocalizedNameForURL.h"
 #import "TagLibStringUtilities.h"
-
-#import <taglib/flacfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameFLAC = @"org.sbooth.AudioEngine.File.FLAC";
 

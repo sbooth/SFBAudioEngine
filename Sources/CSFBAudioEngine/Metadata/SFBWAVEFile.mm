@@ -7,15 +7,15 @@
 
 #import "SFBWAVEFile.h"
 
+#import <taglib/tfilestream.h>
+#import <taglib/wavfile.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/tfilestream.h>
-#import <taglib/wavfile.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameWAVE = @"org.sbooth.AudioEngine.File.WAVE";
 

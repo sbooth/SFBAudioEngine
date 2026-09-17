@@ -7,18 +7,9 @@
 
 #import "AudioPlayer.h"
 
-#import "SFBACLDescription.h"
-#import "SFBASBDFormatDescription.h"
-#import "SFBAudioDecoder.h"
-#import "SFBAudioPlayer+Internal.h"
-#import "SFBCStringForOSType.h"
-#import "host_time.hpp"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
+#import <objc/runtime.h>
 
 #import <AudioToolbox/AudioFormat.h>
-
-#import <objc/runtime.h>
 
 #import <algorithm>
 #import <atomic>
@@ -27,6 +18,15 @@
 #import <limits>
 #import <ranges>
 #import <span>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+
+#import "SFBACLDescription.h"
+#import "SFBASBDFormatDescription.h"
+#import "SFBAudioDecoder.h"
+#import "SFBAudioPlayer+Internal.h"
+#import "SFBCStringForOSType.h"
+#import "host_time.hpp"
 
 namespace {
 

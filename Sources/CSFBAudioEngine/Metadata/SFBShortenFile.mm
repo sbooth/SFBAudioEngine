@@ -7,14 +7,14 @@
 
 #import "SFBShortenFile.h"
 
+#import <taglib/shortenfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/shortenfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameShorten = @"org.sbooth.AudioEngine.File.Shorten";
 

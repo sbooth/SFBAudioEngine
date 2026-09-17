@@ -7,6 +7,12 @@
 
 #import "SFBMP3File.h"
 
+#import <memory>
+
+#import <taglib/mpegfile.h>
+#import <taglib/tfilestream.h>
+#import <taglib/xingheader.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
@@ -14,12 +20,6 @@
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/mpegfile.h>
-#import <taglib/tfilestream.h>
-#import <taglib/xingheader.h>
-
-#import <memory>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameMP3 = @"org.sbooth.AudioEngine.File.MP3";
 

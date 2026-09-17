@@ -7,12 +7,12 @@
 
 #import "SFBModuleFile.h"
 
-#import "SFBErrorWithLocalizedDescription.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <dumb/dumb.h>
 
-#import <os/log.h>
+#import "SFBErrorWithLocalizedDescription.h"
+#import "SFBLocalizedNameForURL.h"
 
 #define DUMB_SAMPLE_RATE 65536
 #define DUMB_CHANNELS 2

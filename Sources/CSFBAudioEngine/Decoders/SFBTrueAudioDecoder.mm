@@ -7,13 +7,13 @@
 
 #import "SFBTrueAudioDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
-
 #import <os/log.h>
 
 #import <algorithm>
 #import <memory>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 #import <tta-cpp/libtta.h>
 
