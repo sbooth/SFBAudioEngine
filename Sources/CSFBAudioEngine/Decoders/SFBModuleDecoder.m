@@ -7,11 +7,11 @@
 
 #import "SFBModuleDecoder.h"
 
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <dumb/dumb.h>
 
-#import <os/log.h>
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameModule = @"org.sbooth.AudioEngine.Decoder.Module";
 

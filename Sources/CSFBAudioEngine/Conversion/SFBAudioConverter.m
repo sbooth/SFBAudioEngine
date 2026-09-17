@@ -7,13 +7,13 @@
 
 #import "SFBAudioConverter.h"
 
+#import <os/log.h>
+
 #import "SFBAudioDecoder.h"
 #import "SFBAudioEncoder.h"
 #import "SFBAudioFile.h"
 #import "SFBErrorWithLocalizedDescription.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <os/log.h>
 
 // NSError domain for SFBAudioConverter
 NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.AudioConverter";

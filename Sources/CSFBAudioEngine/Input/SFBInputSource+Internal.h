@@ -5,9 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBInputSource.h"
-
 #import <os/log.h>
+
+#import "SFBInputSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

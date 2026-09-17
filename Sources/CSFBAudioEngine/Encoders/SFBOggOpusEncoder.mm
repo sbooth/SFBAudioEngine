@@ -7,13 +7,13 @@
 
 #import "SFBOggOpusEncoder.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-#import <opus/opusenc.h>
-
 #import <os/log.h>
 
 #import <algorithm>
 #import <memory>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+#import <opus/opusenc.h>
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggOpus = @"org.sbooth.AudioEngine.Encoder.OggOpus";
 

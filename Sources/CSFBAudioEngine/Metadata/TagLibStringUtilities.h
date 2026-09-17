@@ -7,9 +7,9 @@
 
 #pragma once
 
-#import <taglib/tstring.h>
-
 #import <Foundation/Foundation.h>
+
+#import <taglib/tstring.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

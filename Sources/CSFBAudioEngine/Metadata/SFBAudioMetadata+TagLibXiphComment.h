@@ -5,11 +5,11 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBAudioMetadata.h"
+#import <memory>
 
 #import <taglib/xiphcomment.h>
 
-#import <memory>
+#import "SFBAudioMetadata.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

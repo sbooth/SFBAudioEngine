@@ -7,14 +7,14 @@
 
 #import "SFBLibsndfileDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLibsndfileUtilities.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <sndfile/sndfile.h>
 
-#import <os/log.h>
+#import "NSData+SFBExtensions.h"
+#import "SFBLibsndfileUtilities.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
 

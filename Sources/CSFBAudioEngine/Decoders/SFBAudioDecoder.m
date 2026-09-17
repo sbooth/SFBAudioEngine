@@ -7,10 +7,10 @@
 
 #import "SFBAudioDecoder.h"
 
+#import <os/log.h>
+
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <os/log.h>
 
 // NSError domain for AudioDecoder and subclasses
 NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
