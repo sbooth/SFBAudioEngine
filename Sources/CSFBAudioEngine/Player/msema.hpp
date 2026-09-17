@@ -7,8 +7,10 @@
 
 #pragma once
 
-#import <mach/mach.h>
+#import <mach/mach_time.h>
+#import <mach/semaphore.h>
 
+#import <cassert>
 #import <stdexcept>
 
 namespace msema {
@@ -71,6 +73,60 @@ class Semaphore final {
 
 // MARK: - Implementation -
 
+namespace detail {
+
+/// The number of nanoseconds in one second.
+inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
+
+/// A fraction used to convert host ticks to nanoseconds.
+inline const auto timebase = []() noexcept {
+    mach_timebase_info_data_t timebase_info;
+    [[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
+    assert(kr == KERN_SUCCESS);
+    return timebase_info;
+}();
+
+/// Converts mach ticks to nanoseconds.
+[[nodiscard]] inline uint64_t ticks_to_nanos(uint64_t ticks) noexcept {
+    if (timebase.numer != timebase.denom) {
+        __uint128_t ns = ticks;
+        ns *= timebase.numer;
+        ns /= timebase.denom;
+        return static_cast<uint64_t>(ns);
+    }
+    return ticks;
+}
+
+/// Converts nanoseconds to mach ticks.
+[[nodiscard]] inline uint64_t nanos_to_ticks(uint64_t ns) noexcept {
+    if (timebase.numer != timebase.denom) {
+        __uint128_t t = ns;
+        t *= detail::timebase.denom;
+        t /= detail::timebase.numer;
+        return static_cast<uint64_t>(t);
+    }
+    return ns;
+}
+
+/// Converts a mach_timespec_t to a nanosecond count.
+[[nodiscard]] inline uint64_t timespec_to_nanos(mach_timespec_t ts) noexcept {
+    return static_cast<uint64_t>(ts.tv_sec) * nsec_per_sec + static_cast<uint64_t>(ts.tv_nsec);
+}
+
+/// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
+[[nodiscard]] inline mach_timespec_t nanos_to_timespec(uint64_t nanos) noexcept {
+    constexpr uint64_t max_seconds = std::numeric_limits<unsigned int>::max();
+    uint64_t sec = nanos / nsec_per_sec;
+    uint64_t nsec = nanos % nsec_per_sec;
+    if (sec > max_seconds) {
+        sec = max_seconds;
+        nsec = nsec_per_sec - 1;
+    }
+    return mach_timespec_t{static_cast<unsigned int>(sec), static_cast<clock_res_t>(nsec)};
+}
+
+} /* namespace detail */
+
 inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
     if (semaphore_create(task_, &semaphore_, SYNC_POLICY_FIFO, value) != KERN_SUCCESS) {
         throw std::runtime_error("Unable to create mach semaphore");
@@ -88,13 +144,28 @@ inline bool Semaphore::wait() noexcept {
 }
 
 inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
-    switch (semaphore_timedwait(semaphore_, wait_time)) {
-    case KERN_SUCCESS:
-        return true;
-    case KERN_OPERATION_TIMED_OUT:
-        return false;
-    default:
-        return false;
+    const auto wait_nanos = detail::timespec_to_nanos(wait_time);
+    const auto deadline = mach_absolute_time() + detail::nanos_to_ticks(wait_nanos);
+
+    for (;;) {
+        const auto now = mach_absolute_time();
+        if (now >= deadline) {
+            return false;
+        }
+
+        const auto remaining_nanos = detail::ticks_to_nanos(deadline - now);
+        const auto current_wait = detail::nanos_to_timespec(remaining_nanos);
+
+        switch (semaphore_timedwait(semaphore_, current_wait)) {
+        case KERN_SUCCESS:
+            return true;
+        case KERN_OPERATION_TIMED_OUT:
+            return false;
+        case KERN_ABORTED:
+            continue;
+        default:
+            return false;
+        }
     }
 }
 
