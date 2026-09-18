@@ -7,8 +7,8 @@
 
 #pragma once
 
-#import <mach/mach.h>
 #import <mach/mach_time.h>
+#import <mach/semaphore.h>
 
 #import <cassert>
 #import <limits>
@@ -106,12 +106,12 @@ inline const auto timebase = []() noexcept {
 }
 
 /// Converts a mach_timespec_t to a nanosecond count.
-[[nodiscard]] inline uint64_t timespec_to_nanos(mach_timespec_t ts) noexcept {
+[[nodiscard]] constexpr uint64_t timespec_to_nanos(mach_timespec_t ts) noexcept {
     return static_cast<uint64_t>(ts.tv_sec) * nsec_per_sec + static_cast<uint64_t>(ts.tv_nsec);
 }
 
 /// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
-[[nodiscard]] inline mach_timespec_t nanos_to_timespec(uint64_t nanos) noexcept {
+[[nodiscard]] constexpr mach_timespec_t nanos_to_timespec(uint64_t nanos) noexcept {
     constexpr uint64_t max_seconds = std::numeric_limits<unsigned int>::max();
     uint64_t sec = nanos / nsec_per_sec;
     uint64_t nsec = nanos % nsec_per_sec;
