@@ -82,7 +82,7 @@ inline AudioFileWrapper::operator AudioFileID _Nullable() const noexcept { retur
 inline AudioFileID _Nullable AudioFileWrapper::get() const noexcept { return audioFile_; }
 
 inline void AudioFileWrapper::reset(AudioFileID _Nullable audioFile) noexcept {
-    if (auto old = std::exchange(audioFile_, audioFile); old) {
+    if (auto old = std::exchange(audioFile_, audioFile); old != nullptr) {
         AudioFileClose(old);
     }
 }

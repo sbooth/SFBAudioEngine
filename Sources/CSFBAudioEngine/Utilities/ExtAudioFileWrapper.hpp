@@ -87,8 +87,8 @@ inline ExtAudioFileWrapper::operator ExtAudioFileRef _Nullable() const noexcept 
 inline ExtAudioFileRef _Nullable ExtAudioFileWrapper::get() const noexcept { return extAudioFile_; }
 
 inline void ExtAudioFileWrapper::reset(ExtAudioFileRef _Nullable extAudioFile) noexcept {
-    if (auto oldExtAudioFile = std::exchange(extAudioFile_, extAudioFile); oldExtAudioFile) {
-        ExtAudioFileDispose(oldExtAudioFile);
+    if (auto old = std::exchange(extAudioFile_, extAudioFile); old != nullptr) {
+        ExtAudioFileDispose(old);
     }
 }
 
