@@ -19,10 +19,7 @@ class AudioFileWrapper final {
     /// Creates an empty audio file wrapper.
     AudioFileWrapper() noexcept = default;
 
-    // This class is non-copyable
     AudioFileWrapper(const AudioFileWrapper &) = delete;
-
-    // This class is non-assignable
     AudioFileWrapper &operator=(const AudioFileWrapper &) = delete;
 
     /// Move constructor.
