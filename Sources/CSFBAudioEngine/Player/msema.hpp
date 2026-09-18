@@ -19,8 +19,6 @@ namespace msema {
 /// A semaphore_t wrapper.
 class Semaphore final {
   public:
-    // MARK: Construction and Destruction
-
     /// Creates a new semaphore.
     ///
     /// The semaphore uses a first-in-first-out policy for scheduling thread wakeup.
@@ -36,8 +34,6 @@ class Semaphore final {
 
     /// Releases the underlying mach semaphore.
     ~Semaphore() noexcept;
-
-    // MARK: Primitives
 
     /// Decrements the semaphore count.
     ///
