@@ -84,7 +84,7 @@ inline const auto timebase = []() noexcept {
 }();
 
 /// Converts mach ticks to nanoseconds.
-[[nodiscard]] inline uint64_t ticks_to_nanos(uint64_t ticks) noexcept {
+[[nodiscard]] inline uint64_t ticks_to_nsec(uint64_t ticks) noexcept {
     if (timebase.numer != timebase.denom) {
         __uint128_t ns = ticks;
         ns *= timebase.numer;
@@ -95,7 +95,7 @@ inline const auto timebase = []() noexcept {
 }
 
 /// Converts nanoseconds to mach ticks.
-[[nodiscard]] inline uint64_t nanos_to_ticks(uint64_t ns) noexcept {
+[[nodiscard]] inline uint64_t nsec_to_ticks(uint64_t ns) noexcept {
     if (timebase.numer != timebase.denom) {
         __uint128_t t = ns;
         t *= detail::timebase.denom;
@@ -106,12 +106,12 @@ inline const auto timebase = []() noexcept {
 }
 
 /// Converts a mach_timespec_t to a nanosecond count.
-[[nodiscard]] constexpr uint64_t timespec_to_nanos(mach_timespec_t ts) noexcept {
+[[nodiscard]] constexpr uint64_t timespec_to_nsec(mach_timespec_t ts) noexcept {
     return static_cast<uint64_t>(ts.tv_sec) * nsec_per_sec + static_cast<uint64_t>(ts.tv_nsec);
 }
 
 /// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
-[[nodiscard]] constexpr mach_timespec_t nanos_to_timespec(uint64_t nanos) noexcept {
+[[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t nanos) noexcept {
     constexpr uint64_t max_seconds = std::numeric_limits<unsigned int>::max();
     uint64_t sec = nanos / nsec_per_sec;
     uint64_t nsec = nanos % nsec_per_sec;
@@ -145,8 +145,8 @@ inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
         return semaphore_timedwait(semaphore_, wait_time) == KERN_SUCCESS;
     }
 
-    const auto wait_nanos = detail::timespec_to_nanos(wait_time);
-    const auto deadline = mach_absolute_time() + detail::nanos_to_ticks(wait_nanos);
+    const auto wait_nsec = detail::timespec_to_nsec(wait_time);
+    const auto deadline = mach_absolute_time() + detail::nsec_to_ticks(wait_nsec);
 
     for (;;) {
         const auto now = mach_absolute_time();
@@ -154,8 +154,8 @@ inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
             return semaphore_timedwait(semaphore_, mach_timespec_t{0, 0}) == KERN_SUCCESS;
         }
 
-        const auto remaining_nanos = detail::ticks_to_nanos(deadline - now);
-        const auto current_wait = detail::nanos_to_timespec(remaining_nanos);
+        const auto remaining_nsec = detail::ticks_to_nsec(deadline - now);
+        const auto current_wait = detail::nsec_to_timespec(remaining_nsec);
 
         switch (semaphore_timedwait(semaphore_, current_wait)) {
         case KERN_SUCCESS:
