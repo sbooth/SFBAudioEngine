@@ -111,10 +111,10 @@ inline const auto timebase = []() noexcept {
 }
 
 /// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
-[[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t nanos) noexcept {
+[[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t ns) noexcept {
     constexpr uint64_t max_seconds = std::numeric_limits<unsigned int>::max();
-    uint64_t sec = nanos / nsec_per_sec;
-    uint64_t nsec = nanos % nsec_per_sec;
+    uint64_t sec = ns / nsec_per_sec;
+    uint64_t nsec = ns % nsec_per_sec;
     if (sec > max_seconds) {
         sec = max_seconds;
         nsec = nsec_per_sec - 1;
