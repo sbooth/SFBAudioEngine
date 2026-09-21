@@ -7,6 +7,7 @@
 
 #pragma once
 
+#import <mach/mach_error.h>
 #import <mach/mach_init.h>
 #import <mach/mach_time.h>
 #import <mach/semaphore.h>
@@ -127,12 +128,32 @@ inline const auto timebase = []() noexcept {
 /// A zero mach_timespec_t
 inline constexpr mach_timespec_t timespec_zero{0, 0};
 
+/// A std::error_category for mach return values
+class mach_error_category : public std::error_category {
+  public:
+    const char *name() const noexcept override { return "mach"; }
+    std::string message(int condition) const override {
+        return mach_error_string(static_cast<mach_error_t>(condition));
+    }
+};
+
+/// The shared mach_error_category instance
+inline const std::error_category &mach_category() {
+    static mach_error_category instance;
+    return instance;
+}
+
+/// Returns a std::error_code for the given kernel return value
+inline std::error_code mach_error_code(kern_return_t kr) {
+    return std::error_code(static_cast<int>(kr), mach_category());
+}
+
 } /* namespace detail */
 
 inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
     const auto kr = semaphore_create(task_, &semaphore_, SYNC_POLICY_FIFO, value);
     if (kr != KERN_SUCCESS) {
-        throw std::system_error(kr, std::system_category(), "Unable to create mach semaphore");
+        throw std::system_error(detail::mach_error_code(kr), "Unable to create mach semaphore");
     }
 }
 
