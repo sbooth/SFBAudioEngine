@@ -44,12 +44,22 @@ class Semaphore final {
     /// @return true if the semaphore wait operation was successful, false otherwise.
     bool wait() noexcept;
 
+    /// Possible results for a timed wait.
+    enum class timedwait_result {
+        /// The semaphore was acquired.
+        acquired,
+        /// The wait operation timed out.
+        timed_out,
+        /// An error occured.
+        error,
+    };
+
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
     /// @param wait_time How long to wait before a timeout occurs.
-    /// @return true if the semaphore wait operation was successful, false otherwise.
-    bool timedwait(mach_timespec_t wait_time) noexcept;
+    /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error occurred.
+    timedwait_result timedwait(mach_timespec_t wait_time) noexcept;
 
     /// Increments the semaphore count.
     ///
@@ -148,6 +158,18 @@ inline std::error_code mach_error_code(kern_return_t kr) {
     return std::error_code(static_cast<int>(kr), mach_category());
 }
 
+/// Converts a kernel return value to a timedwait_result
+[[nodiscard]] constexpr Semaphore::timedwait_result to_timedwait_result(kern_return_t kr) noexcept {
+    switch (kr) {
+    case KERN_SUCCESS:
+        return Semaphore::timedwait_result::acquired;
+    case KERN_OPERATION_TIMED_OUT:
+        return Semaphore::timedwait_result::timed_out;
+    default:
+        return Semaphore::timedwait_result::error;
+    }
+}
+
 } /* namespace detail */
 
 inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
@@ -167,9 +189,13 @@ inline bool Semaphore::wait() noexcept {
     return kr == KERN_SUCCESS;
 }
 
-inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
+inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwait_result {
+    if (BAD_MACH_TIMESPEC(&wait_time)) {
+        return timedwait_result::error;
+    }
+
     if (wait_time.tv_sec == 0 && wait_time.tv_nsec == 0) {
-        return semaphore_timedwait(semaphore_, detail::timespec_zero) == KERN_SUCCESS;
+        return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
     }
 
     const auto wait_nsec = detail::timespec_to_nsec(wait_time);
@@ -178,22 +204,17 @@ inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
     for (;;) {
         const auto now = mach_absolute_time();
         if (now >= deadline) {
-            return semaphore_timedwait(semaphore_, detail::timespec_zero) == KERN_SUCCESS;
+            return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
         }
 
         const auto remaining_nsec = detail::ticks_to_nsec(deadline - now);
         const auto current_wait = detail::nsec_to_timespec(remaining_nsec);
 
-        switch (semaphore_timedwait(semaphore_, current_wait)) {
-        case KERN_SUCCESS:
-            return true;
-        case KERN_OPERATION_TIMED_OUT:
-            return false;
-        case KERN_ABORTED:
+        const auto kr = semaphore_timedwait(semaphore_, current_wait);
+        if (kr == KERN_ABORTED) {
             continue;
-        default:
-            return false;
         }
+        return detail::to_timedwait_result(kr);
     }
 }
 
