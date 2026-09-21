@@ -14,7 +14,7 @@
 
 #import <cassert>
 #import <limits>
-#import <stdexcept>
+#import <system_error>
 
 namespace msema {
 
@@ -25,7 +25,7 @@ class Semaphore final {
     ///
     /// The semaphore uses a first-in-first-out policy for scheduling thread wakeup.
     /// @param value The starting value for the semaphore.
-    /// @throw std::runtime_error if the semaphore could not be created.
+    /// @throw std::system_error if the semaphore could not be created.
     explicit Semaphore(int value);
 
     Semaphore(const Semaphore &) noexcept = delete;
@@ -130,8 +130,9 @@ inline constexpr mach_timespec_t timespec_zero{0, 0};
 } /* namespace detail */
 
 inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
-    if (semaphore_create(task_, &semaphore_, SYNC_POLICY_FIFO, value) != KERN_SUCCESS) {
-        throw std::runtime_error("Unable to create mach semaphore");
+    const auto kr = semaphore_create(task_, &semaphore_, SYNC_POLICY_FIFO, value);
+    if (kr != KERN_SUCCESS) {
+        throw std::system_error(kr, std::system_category(), "Unable to create mach semaphore");
     }
 }
 
