@@ -58,7 +58,8 @@ class Semaphore final {
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
     /// @param wait_time How long to wait before a timeout occurs.
-    /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error occurred.
+    /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error
+    /// occurred.
     timedwait_result timedwait(mach_timespec_t wait_time) noexcept;
 
     /// Increments the semaphore count.
