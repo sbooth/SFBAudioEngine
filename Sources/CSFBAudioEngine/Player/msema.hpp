@@ -7,8 +7,10 @@
 
 #pragma once
 
+#import <mach/mach_init.h>
 #import <mach/mach_time.h>
 #import <mach/semaphore.h>
+#import <mach/task.h>
 
 #import <cassert>
 #import <limits>
@@ -63,9 +65,9 @@ class Semaphore final {
 
   private:
     /// The underlying mach semaphore.
-    semaphore_t semaphore_{0};
+    semaphore_t semaphore_{MACH_PORT_NULL};
     /// The mach task associated with the semaphore.
-    task_t task_{0};
+    task_t task_{MACH_PORT_NULL};
 };
 
 // MARK: - Implementation -
@@ -112,11 +114,11 @@ inline const auto timebase = []() noexcept {
 
 /// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
 [[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t ns) noexcept {
-    constexpr uint64_t max_seconds = std::numeric_limits<unsigned int>::max();
+    constexpr uint64_t max_sec = std::numeric_limits<unsigned int>::max();
     uint64_t sec = ns / nsec_per_sec;
     uint64_t nsec = ns % nsec_per_sec;
-    if (sec > max_seconds) {
-        sec = max_seconds;
+    if (sec > max_sec) {
+        sec = max_sec;
         nsec = nsec_per_sec - 1;
     }
     return mach_timespec_t{static_cast<unsigned int>(sec), static_cast<clock_res_t>(nsec)};
