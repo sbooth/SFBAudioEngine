@@ -21,7 +21,6 @@
 #import <thread>
 #import <vector>
 
-#import <dsema/Semaphore.hpp>
 #import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
@@ -30,6 +29,7 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 #import "bitmask_enum.hpp"
+#import "msema.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
@@ -139,13 +139,13 @@ class AudioPlayer final {
 
     /// Thread used for decoding
     std::jthread decodingThread_;
-    /// Dispatch semaphore used for communication with the decoding thread
-    dsema::Semaphore decodingSemaphore_{0};
+    /// Semaphore used for communication with the decoding thread
+    msema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
-    /// Dispatch semaphore used for communication with the event processing thread
-    dsema::Semaphore eventSemaphore_{0};
+    /// Semaphore used for communication with the event processing thread
+    msema::Semaphore eventSemaphore_{0};
 
     /// Message queue communicating events to the event processing thread
     mpsc::MessageQueue<256, 32> events_;
@@ -353,8 +353,8 @@ class AudioPlayer final {
     /// Decodes audio from `decoderState` into the ring buffer
     bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
-    /// Returns the appropriate decoding semaphore timeout
-    int64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
+    /// Returns the appropriate decoding semaphore timeout in nanoseconds
+    uint64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
     // MARK: - Rendering
 
