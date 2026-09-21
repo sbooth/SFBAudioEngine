@@ -65,9 +65,9 @@ class Semaphore final {
 
   private:
     /// The underlying mach semaphore.
-    semaphore_t semaphore_{MACH_PORT_NULL};
+    semaphore_t semaphore_{SEMAPHORE_NULL};
     /// The mach task associated with the semaphore.
-    task_t task_{MACH_PORT_NULL};
+    task_t task_{TASK_NULL};
 };
 
 // MARK: - Implementation -
