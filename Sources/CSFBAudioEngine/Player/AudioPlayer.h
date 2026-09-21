@@ -21,7 +21,6 @@
 #import <thread>
 #import <vector>
 
-#import <dsema/Semaphore.hpp>
 #import <mpsc/MessageQueue.hpp>
 #import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
@@ -141,7 +140,7 @@ class AudioPlayer final {
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Semaphore used for communication with the decoding thread
-    dsema::Semaphore decodingSemaphore_{0};
+    msema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
@@ -354,8 +353,8 @@ class AudioPlayer final {
     /// Decodes audio from `decoderState` into the ring buffer
     bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
-    /// Returns the appropriate decoding semaphore timeout
-    int64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
+    /// Returns the appropriate decoding semaphore timeout in nanoseconds
+    uint64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
     // MARK: - Rendering
 

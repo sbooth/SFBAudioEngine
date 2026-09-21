@@ -45,11 +45,6 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
-/// 0.5 second dispatch time delta, expressed in nanoseconds
-constexpr int64_t halfSecondDispatchTimeDelta = 500'000'000;
-/// 2.5 millisecond dispatch time delta, expressed in nanoseconds
-constexpr int64_t twoPointFiveMillisecondDispatchTimeDelta = 2'500'000;
-
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 
@@ -1141,7 +1136,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
-        decodingSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, timeout));
+        decodingSemaphore_.timedwait(msema::detail::nsec_to_timespec(timeout));
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
@@ -1584,10 +1579,13 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
     return true;
 }
 
-int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+uint64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+    constexpr uint64_t oneHalfSecond = 500'000'000;
+    constexpr uint64_t twoPointFiveMilliseconds = 2'500'000;
+
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return halfSecondDispatchTimeDelta;
+        return oneHalfSecond;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1596,13 +1594,13 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return twoPointFiveMillisecondDispatchTimeDelta;
+        return twoPointFiveMilliseconds;
     }
 
     // Calculate the time until the free space reaches the target threshold
     const auto durationSeconds =
             static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<int64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
+    return static_cast<uint64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
 }
 
 // MARK: - Rendering
@@ -1618,6 +1616,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         audioMetadata_.discardAll();
         renderingChunk_ = {};
         clearFlags(Flags::audioStale);
+        decodingSemaphore_.signal();
     }
 
     // Output silence if muted, not playing, or the ring buffer was just emptied
