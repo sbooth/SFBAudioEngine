@@ -124,6 +124,9 @@ inline const auto timebase = []() noexcept {
     return mach_timespec_t{static_cast<unsigned int>(sec), static_cast<clock_res_t>(nsec)};
 }
 
+/// A zero mach_timespec_t
+inline constexpr mach_timespec_t timespec_zero{0, 0};
+
 } /* namespace detail */
 
 inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
@@ -144,7 +147,7 @@ inline bool Semaphore::wait() noexcept {
 
 inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
     if (wait_time.tv_sec == 0 && wait_time.tv_nsec == 0) {
-        return semaphore_timedwait(semaphore_, wait_time) == KERN_SUCCESS;
+        return semaphore_timedwait(semaphore_, detail::timespec_zero) == KERN_SUCCESS;
     }
 
     const auto wait_nsec = detail::timespec_to_nsec(wait_time);
@@ -153,7 +156,7 @@ inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
     for (;;) {
         const auto now = mach_absolute_time();
         if (now >= deadline) {
-            return semaphore_timedwait(semaphore_, mach_timespec_t{0, 0}) == KERN_SUCCESS;
+            return semaphore_timedwait(semaphore_, detail::timespec_zero) == KERN_SUCCESS;
         }
 
         const auto remaining_nsec = detail::ticks_to_nsec(deadline - now);
