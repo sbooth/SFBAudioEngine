@@ -111,8 +111,8 @@ inline const auto timebase = []() noexcept {
 [[nodiscard]] inline uint64_t nsec_to_ticks(uint64_t ns) noexcept {
     if (timebase.numer != timebase.denom) {
         __uint128_t t = ns;
-        t *= detail::timebase.denom;
-        t /= detail::timebase.numer;
+        t *= timebase.denom;
+        t /= timebase.numer;
         return static_cast<uint64_t>(t);
     }
     return ns;
