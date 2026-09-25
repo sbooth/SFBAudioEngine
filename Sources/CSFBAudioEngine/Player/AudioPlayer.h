@@ -368,6 +368,10 @@ class AudioPlayer final {
     /// Enqueues an empty frames rendered event if an empty decoded chunk descriptor is present
     void enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
 
+    /// The duration of the last render buffer in seconds
+    std::atomic<double> lastRenderBufferDuration_{0.006};
+    static_assert(std::atomic<double>::is_always_lock_free, "Lock-free std::atomic<double> required");
+
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
