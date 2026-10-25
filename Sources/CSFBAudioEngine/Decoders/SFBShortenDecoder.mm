@@ -7,11 +7,6 @@
 
 #import "SFBShortenDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-
 #import <libkern/OSByteOrder.h>
 #import <os/log.h>
 
@@ -21,6 +16,11 @@
 #import <cstring>
 #import <ranges>
 #import <vector>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
@@ -62,7 +62,7 @@ constexpr auto functionZero = 8;
 constexpr auto functionVerbatim = 9;
 
 // Format limitations
-constexpr auto maxBlocksize = 65535;
+constexpr auto maxBlocksize = 65'535;
 constexpr auto verbatimChunkMaxSizeBytes = 256;
 
 // File types

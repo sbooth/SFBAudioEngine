@@ -42,19 +42,19 @@ Macros:
 
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '^".*"$'
-    Priority: 1
-  - Regex: '^<SFBAudioEngine/'
-    Priority: 1
-  - Regex: '^<(dsema|mpsc|mtx|spsc|AVFAudioExtensions)/'
-    Priority: 2
-  - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
+  - Regex: '^<(dispatch|libkern|mach|objc|os)/'
     Priority: 2
   - Regex: '^<(CoreFoundation|CoreAudioTypes|CoreAudio|AudioToolbox|Foundation|AVFAudio|Accelerate|CommonCrypto|ImageIO|UniformTypeIdentifiers)/'
     Priority: 3
-  - Regex: '^<(libkern|mach|objc|os)/'
-    Priority: 5
   - Regex: '^<[^./>]+>$'
+    Priority: 4
+  - Regex: '^<(dsema|mpsc|mtx|spsc|AVFAudioExtensions)/'
+    Priority: 5
+  - Regex: '^<(dumb|FLAC|mpg123|mpc|ogg|opus|sndfile|speex|taglib|vorbis|wavpack)/'
+    Priority: 5
+  - Regex: '^<SFBAudioEngine/'
     Priority: 10
+  - Regex: '^".*"$'
+    Priority: 15
   - Regex: '.*'
     Priority: 20

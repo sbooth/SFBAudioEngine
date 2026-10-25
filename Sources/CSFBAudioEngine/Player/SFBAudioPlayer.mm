@@ -5,9 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBAudioPlayer+Internal.h"
-
 #import <exception>
+
+#import "SFBAudioPlayer+Internal.h"
 
 NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPlayer";
 

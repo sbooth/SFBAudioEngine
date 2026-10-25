@@ -7,12 +7,6 @@
 
 #import "SFBDSDIFFDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBCStringForOSType.h"
-#import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-
 #import <os/log.h>
 
 #import <algorithm>
@@ -21,6 +15,12 @@
 #import <memory>
 #import <string>
 #import <vector>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBCStringForOSType.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDecoder.DSDIFF";
 
@@ -124,7 +124,7 @@ struct FormDSDChunk : public DSDIFFChunk {
 
 // 'FVER' in 'FRM8'
 struct FormatVersionChunk : public DSDIFFChunk {
-    static constexpr uint32_t kSupportedFormatVersion = 0x01050000;
+    static constexpr uint32_t kSupportedFormatVersion = 0x0105'0000;
     uint32_t formatVersion_;
 };
 

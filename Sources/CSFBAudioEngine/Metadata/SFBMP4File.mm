@@ -7,14 +7,14 @@
 
 #import "SFBMP4File.h"
 
+#import <taglib/mp4file.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/mp4file.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngine.File.MP4";
 

@@ -7,15 +7,15 @@
 
 #import "SFBWavPackFile.h"
 
+#import <taglib/tfilestream.h>
+#import <taglib/wavpackfile.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/tfilestream.h>
-#import <taglib/wavpackfile.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioEngine.File.WavPack";
 

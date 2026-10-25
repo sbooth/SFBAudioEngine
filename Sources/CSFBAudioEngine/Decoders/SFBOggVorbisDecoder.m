@@ -7,12 +7,12 @@
 
 #import "SFBOggVorbisDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <vorbis/vorbisfile.h>
 
-#import <os/log.h>
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
 

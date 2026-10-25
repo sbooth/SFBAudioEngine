@@ -7,14 +7,14 @@
 
 #import "SFBWavPackEncoder.h"
 
-#import "SFBCStringForOSType.h"
-
-#import <wavpack/wavpack.h>
+#import <os/log.h>
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <CommonCrypto/CommonCrypto.h>
 
-#import <os/log.h>
+#import <wavpack/wavpack.h>
+
+#import "SFBCStringForOSType.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.Encoder.WavPack";
 
