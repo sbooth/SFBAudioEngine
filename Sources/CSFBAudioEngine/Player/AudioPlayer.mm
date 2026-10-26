@@ -713,6 +713,9 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
             }
         }
 
+#if TARGET_OS_IPHONE
+        preInterruptState_ = 0;
+#endif /* TARGET_OS_IPHONE */
         const auto prevFlags = setFlags(Flags::engineRunning | Flags::playing);
         wasPlaying = bits::is_set(prevFlags, Flags::playing);
 #if DEBUG
@@ -734,6 +737,9 @@ bool sfb::AudioPlayer::pause() noexcept {
     auto wasPlaying = false;
     {
         std::lock_guard lock{engineMutex_};
+#if TARGET_OS_IPHONE
+        preInterruptState_ = 0;
+#endif /* TARGET_OS_IPHONE */
         if (!engine_.isRunning) {
             return false;
         }
@@ -758,6 +764,9 @@ bool sfb::AudioPlayer::resume() noexcept {
         if (!engine_.isRunning) {
             return false;
         }
+#if TARGET_OS_IPHONE
+        preInterruptState_ = 0;
+#endif /* TARGET_OS_IPHONE */
         const auto prevFlags = setFlags(Flags::playing);
         wasPaused = bits::is_clear(prevFlags, Flags::playing);
     }
@@ -773,7 +782,7 @@ bool sfb::AudioPlayer::resume() noexcept {
 }
 
 void sfb::AudioPlayer::stop() noexcept {
-    const auto didStopEngine = stopEngineIfRunning();
+    const auto didStopEngine = stopEngineIfRunning(InterruptionResume::cancel);
 
     clearDecoderQueue();
     cancelActiveDecoders();
@@ -790,7 +799,6 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
     SFBAudioPlayerPlaybackState playbackState;
     {
         std::lock_guard lock{engineMutex_};
-
         // Currently stopped, transition to playing
         if (!engine_.isRunning) {
             if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
@@ -817,6 +825,9 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
                 playbackState = SFBAudioPlayerPlaybackStatePlaying;
             }
         }
+#if TARGET_OS_IPHONE
+        preInterruptState_ = 0;
+#endif /* TARGET_OS_IPHONE */
     }
 
     if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
@@ -830,6 +841,9 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
 void sfb::AudioPlayer::reset() noexcept {
     {
         std::lock_guard lock{engineMutex_};
+#if TARGET_OS_IPHONE
+        preInterruptState_ = 0;
+#endif /* TARGET_OS_IPHONE */
         [engine_ reset];
     }
     clearDecoderQueue();
@@ -2668,13 +2682,15 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
     case AVAudioSessionInterruptionTypeBegan: {
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
 
+        auto didInterruptPlayback = false;
         {
             std::lock_guard lock{engineMutex_};
             const auto prevFlags = clearFlags(Flags::engineRunning | Flags::playing);
             preInterruptState_ = bits::to_underlying(prevFlags & (Flags::engineRunning | Flags::playing));
+            didInterruptPlayback = preInterruptState_ != 0;
         }
 
-        if (preInterruptState_ != 0) {
+        if (didInterruptPlayback) {
             if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
                 delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
                 [delegate audioPlayer:player_ playbackStateChanged:SFBAudioPlayerPlaybackStateStopped];
@@ -2712,12 +2728,14 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             return;
         }
 
-        const auto preInterruptState = static_cast<Flags>(preInterruptState_);
-
+        auto preInterruptState = 0u;
         {
             std::unique_lock lock{engineMutex_};
+            preInterruptState = preInterruptState_;
+            preInterruptState_ = 0;
+            const auto interruptedFlags = static_cast<Flags>(preInterruptState);
 
-            if (bits::is_set(preInterruptState, Flags::engineRunning)) {
+            if (bits::is_set(interruptedFlags, Flags::engineRunning)) {
                 if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
                     os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
                     lock.unlock();
@@ -2729,17 +2747,17 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
                 }
             }
 
-            const auto prevFlags = setFlags(preInterruptState);
+            const auto prevFlags = setFlags(interruptedFlags);
 #if DEBUG
             assert(bits::is_set_or_is_clear(prevFlags, Flags::engineRunning, Flags::playing));
 #endif /* DEBUG */
         }
 
-        if (preInterruptState_ != 0) {
+        if (preInterruptState != 0) {
             if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
                 delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
                 [delegate audioPlayer:player_
-                        playbackStateChanged:static_cast<SFBAudioPlayerPlaybackState>(preInterruptState_)];
+                        playbackStateChanged:static_cast<SFBAudioPlayerPlaybackState>(preInterruptState)];
             }
         }
 
@@ -2756,8 +2774,13 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
 // MARK: - Processing Graph Management
 
-bool sfb::AudioPlayer::stopEngineIfRunning() noexcept {
+bool sfb::AudioPlayer::stopEngineIfRunning([[maybe_unused]] InterruptionResume interruptionResume) noexcept {
     std::lock_guard lock{engineMutex_};
+#if TARGET_OS_IPHONE
+    if (interruptionResume == InterruptionResume::cancel) {
+        preInterruptState_ = 0;
+    }
+#endif /* TARGET_OS_IPHONE */
     if (!engine_.isRunning) {
         return false;
     }

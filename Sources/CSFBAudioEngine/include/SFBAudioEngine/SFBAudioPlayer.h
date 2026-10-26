@@ -450,7 +450,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 ///
 /// If the interruption began, this method is called after the playback state is saved and the player is stopped.
 /// If the interruption ended, this method is called before optionally attempting to activate the audio session and
-/// resume playback.
+/// resume playback. Explicit pause, stop, and reset cancel this automatic resume, including commands issued
+/// from this callback. Successful play, resume, and toggle commands also cancel it; failed attempts preserve it.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter userInfo: The `userInfo` object from the notification
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioSessionInterruption:(nullable NSDictionary *)userInfo;

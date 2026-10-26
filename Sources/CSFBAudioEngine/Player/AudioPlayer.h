@@ -180,7 +180,7 @@ class AudioPlayer final {
     static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 #if TARGET_OS_IPHONE
-    /// Playback state before audio session interruption
+    /// Playback state before audio session interruption, guarded by engineMutex_
     unsigned int preInterruptState_{0};
 #endif /* TARGET_OS_IPHONE */
 
@@ -475,7 +475,8 @@ class AudioPlayer final {
     // MARK: - Processing Graph Management
 
     /// Stops the AVAudioEngine if it is running and returns true if it was stopped
-    bool stopEngineIfRunning() noexcept;
+    enum class InterruptionResume { preserve, cancel };
+    bool stopEngineIfRunning(InterruptionResume interruptionResume = InterruptionResume::preserve) noexcept;
 
     /// Configures the player to render audio with `format`
     /// - parameter format: The desired audio format
