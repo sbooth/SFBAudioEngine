@@ -606,6 +606,9 @@ sfb::AudioPlayer::AudioPlayer() {
 }
 
 sfb::AudioPlayer::~AudioPlayer() noexcept {
+#if DEBUG
+    assert(!ownsCurrentThread() && "~AudioPlayer() called from decoding or event processing thread");
+#endif /* DEBUG */
     auto *notificationCenter = CFNotificationCenterGetLocalCenter();
     CFNotificationCenterRemoveEveryObserver(notificationCenter, this);
 
@@ -646,6 +649,11 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     activeDecoders_.clear();
 
     os_log_debug(log_, "<AudioPlayer: %p> destroyed", this);
+}
+
+bool sfb::AudioPlayer::ownsCurrentThread() const noexcept {
+    const auto currentThread = std::this_thread::get_id();
+    return currentThread == decodingThread_.get_id() || currentThread == eventThread_.get_id();
 }
 
 // MARK: - Playlist Management

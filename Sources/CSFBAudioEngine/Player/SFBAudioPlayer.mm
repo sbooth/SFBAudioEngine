@@ -61,6 +61,17 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     return self;
 }
 
+- (void)dealloc {
+    if (_player != nullptr && _player->ownsCurrentThread()) {
+        // A worker's temporary owner must not destroy and join that same worker.
+        os_log_debug(sfb::AudioPlayer::log_, "<AudioPlayer: %p> deferring destruction from owned thread", _player.get());
+        auto *player = _player.release();
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+            delete player;
+        });
+    }
+}
+
 // MARK: - Playlist Management
 
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error {
