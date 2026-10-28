@@ -150,7 +150,7 @@ NS_SWIFT_NAME(AudioPlayer)
 /// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)resume;
-/// Stops the `AVAudioEngine`
+/// Pauses audio rendering and stops the `AVAudioEngine`
 /// - note: If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
 /// Toggles the player between playing and paused states, starting playback if stopped
