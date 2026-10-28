@@ -7,22 +7,22 @@
 
 #import "SFBFLACDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-#import <FLAC/metadata.h>
-#import <FLAC/stream_decoder.h>
+#import <os/log.h>
 
 #import <AudioToolbox/AudioFormat.h>
-
-#import <os/log.h>
 
 #import <algorithm>
 #import <cstdlib>
 #import <cstring>
 #import <memory>
 #import <optional>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+#import <FLAC/metadata.h>
+#import <FLAC/stream_decoder.h>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 #import <simd/simd.h>
 

@@ -7,15 +7,15 @@
 
 #import "SFBMusepackFile.h"
 
+#import <taglib/mpcfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/mpcfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameMusepack = @"org.sbooth.AudioEngine.File.Musepack";
 

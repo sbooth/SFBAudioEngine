@@ -5,10 +5,10 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import <SFBAudioEngine/SFBPCMDecoding.h>
-
 #import <AVFAudio/AVFAudio.h>
 #import <Foundation/Foundation.h>
+
+#import <SFBAudioEngine/SFBPCMDecoding.h>
 
 #if !TARGET_OS_IPHONE
 #import <AudioToolbox/AudioToolbox.h>

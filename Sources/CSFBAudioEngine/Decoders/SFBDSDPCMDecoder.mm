@@ -7,17 +7,17 @@
 
 #import "SFBDSDPCMDecoder.h"
 
-#import "SFBAudioDecoder+Internal.h"
-#import "SFBDSDDecoder.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
-
-#import <os/log.h>
 
 #import <algorithm>
 #import <cstdint>
 #import <vector>
+
+#import "SFBAudioDecoder+Internal.h"
+#import "SFBDSDDecoder.h"
+#import "SFBLocalizedNameForURL.h"
 
 namespace {
 

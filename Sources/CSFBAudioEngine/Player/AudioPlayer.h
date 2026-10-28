@@ -7,19 +7,9 @@
 
 #pragma once
 
-#import "SFBAudioDecoder.h"
-#import "SFBAudioPlayer.h"
-#import "bitmask_enum.hpp"
-
-#import <dsema/Semaphore.hpp>
-#import <mpsc/MessageQueue.hpp>
-#import <mtx/UnfairMutex.hpp>
-#import <spsc/AudioRingBuffer.hpp>
-#import <spsc/Queue.hpp>
+#import <os/log.h>
 
 #import <AVFAudio/AVFAudio.h>
-
-#import <os/log.h>
 
 #import <atomic>
 #import <cassert>
@@ -30,6 +20,16 @@
 #import <stop_token>
 #import <thread>
 #import <vector>
+
+#import <dsema/Semaphore.hpp>
+#import <mpsc/MessageQueue.hpp>
+#import <mtx/UnfairMutex.hpp>
+#import <spsc/AudioRingBuffer.hpp>
+#import <spsc/Queue.hpp>
+
+#import "SFBAudioDecoder.h"
+#import "SFBAudioPlayer.h"
+#import "bitmask_enum.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"

@@ -7,11 +7,6 @@
 
 #import "SFBShortenDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-
 #import <libkern/OSByteOrder.h>
 #import <os/log.h>
 
@@ -21,6 +16,11 @@
 #import <cstring>
 #import <ranges>
 #import <vector>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 

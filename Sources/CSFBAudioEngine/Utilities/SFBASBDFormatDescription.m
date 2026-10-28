@@ -7,9 +7,9 @@
 
 #import "SFBASBDFormatDescription.h"
 
-#include <AudioToolbox/AudioFormat.h>
-
 #include <libkern/OSByteOrder.h>
+
+#include <AudioToolbox/AudioFormat.h>
 
 /// Common PCM audio formats.
 enum CommonPCMFormat {

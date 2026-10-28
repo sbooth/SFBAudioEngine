@@ -5,9 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import <AudioToolbox/AudioToolbox.h>
-
 #import <os/log.h>
+
+#import <AudioToolbox/AudioToolbox.h>
 
 #import <algorithm>
 #import <exception>
