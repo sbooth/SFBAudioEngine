@@ -151,7 +151,6 @@ NS_SWIFT_NAME(AudioPlayer)
 /// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
 - (BOOL)resume;
 /// Stops the `AVAudioEngine`
-/// - note: This method cancels the current decoder and clears any queued decoders
 /// - note: If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
 - (void)stop;
 /// Toggles the player between playing and paused states, starting playback if stopped

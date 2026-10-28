@@ -774,10 +774,6 @@ bool sfb::AudioPlayer::resume() noexcept {
 
 void sfb::AudioPlayer::stop() noexcept {
     const auto didStopEngine = stopEngineIfRunning();
-
-    clearDecoderQueue();
-    cancelActiveDecoders();
-
     if (didStopEngine) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player_.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
