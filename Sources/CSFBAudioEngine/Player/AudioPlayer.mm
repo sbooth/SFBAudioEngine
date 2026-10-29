@@ -2743,6 +2743,10 @@ void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool w
     engineMutex_.assertIsNotOwner();
 #endif
 
+    if (wasPlaying) {
+        notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
+    }
+
     if (error != nil) {
         if (__strong SFBAudioPlayer *player = player_; player != nil) {
             if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
@@ -2750,10 +2754,6 @@ void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool w
                 [delegate audioPlayer:player encounteredError:error];
             }
         }
-    }
-
-    if (wasPlaying) {
-        notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
     }
 }
 
