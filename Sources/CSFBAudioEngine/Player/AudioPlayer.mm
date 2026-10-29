@@ -2769,7 +2769,7 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
 
 void sfb::AudioPlayer::notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept {
 #if DEBUG
-    assert(this->playbackState() != playbackState);
+    assert(this->playbackState() == playbackState);
 #endif
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
