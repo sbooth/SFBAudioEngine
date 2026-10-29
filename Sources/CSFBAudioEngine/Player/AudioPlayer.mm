@@ -2835,7 +2835,8 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
                 [delegate respondsToSelector:@selector(audioPlayer:reconfigureProcessingGraph:withFormat:)]) {
                 AVAudioNode *node = [delegate audioPlayer:player reconfigureProcessingGraph:engine_ withFormat:format];
                 // Ensure the delegate returned a valid node
-                assert(node != nil && "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
+                assert(node != nil &&
+                       "nil AVAudioNode returned by -audioPlayer:reconfigureProcessingGraph:withFormat:");
                 assert([engine_ inputConnectionPointForNode:engine_.outputNode inputBus:0].node == mixerNode &&
                        "Illegal AVAudioEngine configuration");
                 [engine_ connect:sourceNode_ to:node format:format];
