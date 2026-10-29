@@ -2634,7 +2634,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         }
 
         if (wasPlaying) {
-            notifyPlaybackStateChanged(SFBAudioPlayerPlaybackStatePaused);
+            notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
         }
 
         if (__strong SFBAudioPlayer *player = player_; player != nil) {
@@ -2689,7 +2689,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
                 playingBeforeInterruption_ = false;
                 lock.unlock();
                 const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
-                reportEngineStartFailure(startError, wasPlaying);
+                notifyDelegateOfEngineStartFailure(startError, wasPlaying);
                 return;
             }
 
@@ -2702,7 +2702,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         }
 
         if (didResume) {
-            notifyPlaybackStateChanged(SFBAudioPlayerPlaybackStatePlaying);
+            notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePlaying);
         }
 
         break;
