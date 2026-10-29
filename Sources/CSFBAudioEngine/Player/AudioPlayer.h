@@ -182,7 +182,15 @@ class AudioPlayer final {
 
 #if TARGET_OS_IPHONE
     /// Whether the player was playing when an audio session interruption began
-    bool playingBeforeInterruption_{false};
+    /// - note: Protected by `engineMutex_`
+    bool wasPlayingBeforeInterruption_{false};
+    /// Whether an audio session interruption is in progress
+    ///
+    /// While set, the `AVAudioEngine` is not restarted automatically following processing graph reconfiguration or
+    /// hardware configuration changes. Explicit playback control still attempts to start the engine; a successful
+    /// start clears this flag since the system does not guarantee an interruption ended notification.
+    /// - note: Protected by `engineMutex_`
+    bool isInterrupted_{false};
 #endif /* TARGET_OS_IPHONE */
 
   public:
@@ -289,6 +297,7 @@ class AudioPlayer final {
         /// The player is active (i.e. not stopped, whether playing or paused)
         active = 1u << 0,
         /// The render block should output audio
+        /// - invariant: `playing` implies `active`
         playing = 1u << 1,
         /// The render block should output silence
         muted = 1u << 2,
@@ -301,6 +310,14 @@ class AudioPlayer final {
     };
 
     friend constexpr void is_bitmask_enum(Flags);
+
+    // `playbackState()` converts the player state flags directly to `SFBAudioPlayerPlaybackState`
+    static_assert(bits::to_underlying(Flags::none) == SFBAudioPlayerPlaybackStateStopped,
+                  "Flags::none must match SFBAudioPlayerPlaybackStateStopped");
+    static_assert(bits::to_underlying(Flags::active) == SFBAudioPlayerPlaybackStatePaused,
+                  "Flags::active must match SFBAudioPlayerPlaybackStatePaused");
+    static_assert(bits::to_underlying(Flags::active | Flags::playing) == SFBAudioPlayerPlaybackStatePlaying,
+                  "Flags::active | Flags::playing must match SFBAudioPlayerPlaybackStatePlaying");
 
     /// Atomically loads the value of `flags_` using the specified memory order and returns the result
     [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
