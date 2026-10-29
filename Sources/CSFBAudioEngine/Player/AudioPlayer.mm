@@ -2697,8 +2697,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             if (playingBeforeInterruption_) {
                 const auto prevFlags = setFlags(Flags::playing);
                 didResume = bits::is_clear(prevFlags, Flags::playing);
+                playingBeforeInterruption_ = false;
             }
-            playingBeforeInterruption_ = false;
         }
 
         if (didResume) {
