@@ -2529,7 +2529,7 @@ auto sfb::AudioPlayer::decoderStateWithSequenceNumber(uint64_t sequenceNumber) c
     return iter != activeDecoders_.cend() ? iter->get() : nullptr;
 }
 
-// MARK: - AVAudioEngine Notification Handling
+// MARK: - Notification Handling
 
 void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engine,
                                                             [[maybe_unused]] NSDictionary *userInfo) noexcept {

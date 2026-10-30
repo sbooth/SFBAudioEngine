@@ -507,7 +507,7 @@ class AudioPlayer final {
     DecoderState *_Nullable decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept;
 
   public:
-    // MARK: - AVAudioEngine Notification Handling
+    // MARK: - Notification Handling
 
     /// Called to process `AVAudioEngineConfigurationChangeNotification`
     void handleAudioEngineConfigurationChange(AVAudioEngine *_Nonnull engine,
