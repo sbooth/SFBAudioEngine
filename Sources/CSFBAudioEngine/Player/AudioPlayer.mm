@@ -725,7 +725,7 @@ bool sfb::AudioPlayer::pause() noexcept {
             return false;
         }
 #if TARGET_OS_IPHONE
-        // An explicit pause must not be overridden by a subsequent, possibly late, interruption ended notification
+        // An explicit pause should not be overridden by a subsequent, possibly late, interruption ended notification
         wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
         const auto prevFlags = clearFlags(Flags::playing);
