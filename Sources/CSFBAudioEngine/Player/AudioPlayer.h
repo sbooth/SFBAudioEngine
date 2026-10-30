@@ -157,6 +157,16 @@ class AudioPlayer final {
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
     mutable mtx::UnfairMutex engineMutex_;
+    /// Whether the player intends for the `AVAudioEngine` to be running
+    ///
+    /// This is not a cache of `engine_.isRunning`. It records whether the engine was running as a result of the
+    /// player's own actions, so that it can be restored after an internal stop (processing graph reconfiguration or
+    /// a hardware configuration change, both of which stop the engine). `startEngineIfNeeded()` sets it when the engine
+    /// is started or found running for an active player and clears it when a start fails. It is also cleared when the
+    /// player is deactivated and when an audio session interruption stops the engine.
+    /// - invariant: `engineShouldRun_` implies `Flags::active`
+    /// - note: Protected by `engineMutex_`
+    bool engineShouldRun_{false};
 
     /// Current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
@@ -184,13 +194,6 @@ class AudioPlayer final {
     /// Whether the player was playing when an audio session interruption began
     /// - note: Protected by `engineMutex_`
     bool wasPlayingBeforeInterruption_{false};
-    /// Whether an audio session interruption is in progress
-    ///
-    /// While set, the `AVAudioEngine` is not restarted automatically following processing graph reconfiguration or
-    /// hardware configuration changes. Explicit playback control still attempts to start the engine; a successful
-    /// start clears this flag since the system does not guarantee an interruption ended notification.
-    /// - note: Protected by `engineMutex_`
-    bool isInterrupted_{false};
 #endif /* TARGET_OS_IPHONE */
 
   public:
@@ -290,7 +293,8 @@ class AudioPlayer final {
     ///
     /// The player state is described by `active` and `playing` and is independent of whether the `AVAudioEngine` is
     /// running. The engine may be stopped and restarted internally (processing graph reconfiguration, hardware
-    /// configuration changes, audio session interruptions) without changing the player state.
+    /// configuration changes, audio session interruptions) without changing the player state. Following an internal
+    /// stop the engine is restarted automatically only if `engineShouldRun_` is set.
     enum class Flags : unsigned int {
         /// Clear
         none = 0,
@@ -342,6 +346,9 @@ class AudioPlayer final {
     // MARK: - Player State Management
 
     /// Starts the `AVAudioEngine` if the player is active and the engine is not running
+    ///
+    /// If the player is active, `engineShouldRun_` is set if the engine is running on return and cleared if the start
+    /// failed.
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the engine is running or does not need to run
     bool startEngineIfNeeded(NSError **error) noexcept;
@@ -516,9 +523,9 @@ class AudioPlayer final {
 
     /// Configures the player to render audio with `format`
     ///
-    /// The player state is preserved across the reconfiguration. If the `AVAudioEngine` cannot be restarted afterward
-    /// the player is paused and the error is reported to the delegate, but the reconfiguration is still considered
-    /// successful.
+    /// The player state is preserved across the reconfiguration. The `AVAudioEngine` is restarted afterward if
+    /// `engineShouldRun_` is set. If the engine cannot be restarted the player is paused and the error is reported to
+    /// the delegate, but the reconfiguration is still considered successful.
     /// - parameter format: The desired audio format
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the processing graph and ring buffer were successfully configured

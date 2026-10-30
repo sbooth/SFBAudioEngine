@@ -2542,8 +2542,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
     {
         std::unique_lock lock{engineMutex_};
 
-        // AVAudioEngine stops itself when a configuration change occurs.
-        // The player state is unaffected; the engine is restarted below if the player is active.
+        // AVAudioEngine stops itself when a configuration change occurs
+        // The player state is unaffected; the engine is restarted below if it was running before the change
 
         AVAudioOutputNode *outputNode = engine_.outputNode;
         AVAudioMixerNode *mixerNode = engine_.mainMixerNode;
@@ -2604,12 +2604,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             [engine_ prepare];
         }
 
-        // Restart AVAudioEngine if the player is active and the engine may be restarted
-        if (NSError *startError = nil;
-#if TARGET_OS_IPHONE
-            !isInterrupted_ &&
-#endif /* TARGET_OS_IPHONE */
-            !startEngineIfNeeded(&startError)) {
+        // Restart AVAudioEngine if it was running before the configuration change
+        if (NSError *startError = nil; engineShouldRun_ && !startEngineIfNeeded(&startError)) {
             const auto prevFlags = clearFlags(Flags::playing);
             lock.unlock();
             const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
@@ -2634,14 +2630,15 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
 
         // The system stops the AVAudioEngine when an interruption begins; the player is paused and
-        // active decoders are preserved
+        // active decoders are preserved. Clearing engineShouldRun_ prevents automatic restarts until
+        // playback is resumed.
         auto wasPlaying = false;
         {
             std::lock_guard lock{engineMutex_};
             const auto prevFlags = clearFlags(Flags::playing);
             wasPlaying = bits::is_set(prevFlags, Flags::playing);
             wasPlayingBeforeInterruption_ = wasPlaying;
-            isInterrupted_ = true;
+            engineShouldRun_ = false;
         }
 
         if (wasPlaying) {
@@ -2661,12 +2658,6 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
     case AVAudioSessionInterruptionTypeEnded: {
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
-        // The interruption is over regardless of whether playback resumes
-        {
-            std::lock_guard lock{engineMutex_};
-            isInterrupted_ = false;
-        }
-
         if (__strong SFBAudioPlayer *player = player_; player != nil) {
             if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
                 delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
@@ -2675,19 +2666,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         }
 
         if (const auto interruptionOption =
-                    [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
+            [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
             !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume)) {
-            return;
-        }
-
-        if (NSError *sessionError = nil; ![[AVAudioSession sharedInstance] setActive:YES error:&sessionError]) {
-            os_log_error(log_, "Error activating AVAudioSession: %{public}@", sessionError);
-            if (__strong SFBAudioPlayer *player = player_; player != nil) {
-                if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
-                    delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
-                    [delegate audioPlayer:player encounteredError:sessionError];
-                }
-            }
             return;
         }
 
@@ -2695,27 +2675,22 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         {
             std::unique_lock lock{engineMutex_};
 
-            // Nothing to do if the player was stopped during the interruption
-            if (bits::is_clear(loadFlags(), Flags::active)) {
-                wasPlayingBeforeInterruption_ = false;
+            const auto resume = wasPlayingBeforeInterruption_ && bits::is_set(loadFlags(), Flags::active);
+            wasPlayingBeforeInterruption_ = false;
+            if (!resume) {
                 return;
             }
 
             if (NSError *startError = nil; !startEngineIfNeeded(&startError)) {
                 const auto prevFlags = clearFlags(Flags::playing);
-                wasPlayingBeforeInterruption_ = false;
                 lock.unlock();
                 const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
                 notifyDelegateOfEngineStartFailure(startError, wasPlaying);
                 return;
             }
 
-            // Resume playback only if the player was playing when the interruption began
-            if (wasPlayingBeforeInterruption_) {
-                const auto prevFlags = setFlags(Flags::playing);
-                didResume = bits::is_clear(prevFlags, Flags::playing);
-                wasPlayingBeforeInterruption_ = false;
-            }
+            const auto prevFlags = setFlags(Flags::playing);
+            didResume = bits::is_clear(prevFlags, Flags::playing);
         }
 
         if (didResume) {
@@ -2740,22 +2715,24 @@ bool sfb::AudioPlayer::startEngineIfNeeded(NSError **error) noexcept {
     engineMutex_.assertIsOwner();
 #endif /* DEBUG */
 
-    if (bits::is_clear(loadFlags(), Flags::active) || engine_.isRunning) {
+    if (bits::is_clear(loadFlags(), Flags::active)) {
         return true;
     }
 
-    if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
-        os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
-        if (error != nullptr) {
-            *error = startError;
+    if (!engine_.isRunning) {
+        if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
+            os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
+            // Don't restart automatically after a failure; wait for an explicit -play or -resume
+            engineShouldRun_ = false;
+            if (error != nullptr) {
+                *error = startError;
+            }
+            return false;
         }
-        return false;
     }
 
-#if TARGET_OS_IPHONE
-    // A successful start means any interruption is over, even if no interruption ended notification was received
-    isInterrupted_ = false;
-#endif /* TARGET_OS_IPHONE */
+    // Set even if the engine was already running so the intent is restored in all cases
+    engineShouldRun_ = true;
 
     return true;
 }
@@ -2783,9 +2760,9 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     std::lock_guard lock{engineMutex_};
     const auto prevFlags = clearFlags(Flags::active | Flags::playing);
     [engine_ stop];
+    engineShouldRun_ = false;
 #if TARGET_OS_IPHONE
     wasPlayingBeforeInterruption_ = false;
-    isInterrupted_ = false;
 #endif /* TARGET_OS_IPHONE */
     return bits::is_set(prevFlags, Flags::active);
 }
@@ -2829,7 +2806,6 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
     // Even if the engine isn't running, call -stop to force release of any render resources
     // This is necessary when transitioning between formats with different channel counts
-    // The player state is not modified; the engine is restarted below if the player is active
     [engine_ stop];
 
     // Reconfigure the processing graph
@@ -2876,14 +2852,10 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
     [engine_ prepare];
 
-    // Restart AVAudioEngine if the player is active and no audio session interruption is in progress
+    // Restart AVAudioEngine if it was running before the reconfiguration
     // The processing graph is correctly configured for `format` so a failure to restart the engine is not a
     // failure to configure; pause and let the client resume when the condition clears
-    if (NSError *startError = nil;
-#if TARGET_OS_IPHONE
-        !isInterrupted_ &&
-#endif /* TARGET_OS_IPHONE */
-        !startEngineIfNeeded(&startError)) {
+    if (NSError *startError = nil; engineShouldRun_ && !startEngineIfNeeded(&startError)) {
         const auto prevFlags = clearFlags(Flags::playing);
         lock.unlock();
         const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
