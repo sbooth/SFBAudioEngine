@@ -2670,7 +2670,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         }
 
         if (const auto interruptionOption =
-            [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
+                    [[userInfo objectForKey:AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
             !(interruptionOption & AVAudioSessionInterruptionOptionShouldResume)) {
             return;
         }
