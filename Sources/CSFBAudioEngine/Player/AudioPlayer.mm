@@ -609,7 +609,11 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     auto *notificationCenter = CFNotificationCenterGetLocalCenter();
     CFNotificationCenterRemoveEveryObserver(notificationCenter, this);
 
-    deactivatePlayerAndStopEngine();
+    {
+        std::lock_guard lock{engineMutex_};
+        [engine_ stop];
+        clearFlags(Flags::active | Flags::playing);
+    }
 
     clearDecoderQueue();
     cancelActiveDecoders();
