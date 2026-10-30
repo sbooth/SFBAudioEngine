@@ -720,6 +720,10 @@ bool sfb::AudioPlayer::pause() noexcept {
         if (bits::is_clear(loadFlags(), Flags::active)) {
             return false;
         }
+#if TARGET_OS_IPHONE
+        // An explicit pause must not be overridden by a subsequent, possibly late, interruption ended notification
+        wasPlayingBeforeInterruption_ = false;
+#endif /* TARGET_OS_IPHONE */
         const auto prevFlags = clearFlags(Flags::playing);
         wasPlaying = bits::is_set(prevFlags, Flags::playing);
     }
@@ -768,9 +772,11 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
     SFBAudioPlayerPlaybackState playbackState;
     {
         std::lock_guard lock{engineMutex_};
-
         if (const auto flags = loadFlags(); bits::is_set(flags, Flags::playing)) {
             // Playing, transition to paused
+#if TARGET_OS_IPHONE
+            wasPlayingBeforeInterruption_ = false;
+#endif /* TARGET_OS_IPHONE */
             clearFlags(Flags::playing);
             playbackState = SFBAudioPlayerPlaybackStatePaused;
         } else {
