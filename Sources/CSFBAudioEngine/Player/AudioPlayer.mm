@@ -2283,7 +2283,8 @@ bool sfb::AudioPlayer::processPauseRenderingEvent() noexcept {
 
     // Add the presentation latency to determine when the audio reaches the device
     const auto presentationLatency = engine_.outputNode.presentationLatency;
-    pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(presentationLatency * static_cast<double>(nanosecondsPerSecond)));
+    pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
+                                       presentationLatency * static_cast<double>(nanosecondsPerSecond)));
 
     // Since the engine pause is submitted for asynchronous execution, store a weak reference to the owning
     // SFBAudioPlayer to prevent use-after-free in the event the player is deallocated before the closure is called
