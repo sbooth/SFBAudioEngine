@@ -232,6 +232,14 @@ uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &time
     return timestamp.mHostTime + host_time::fromNanoseconds(scaledNanos);
 }
 
+/// Returns `seconds` expressed as a host time delta
+uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
+#if DEBUG
+    assert(!isnan(seconds) && !isinf(seconds));
+#endif /* DEBUG */
+    return host_time::fromNanoseconds(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
+}
+
 } /* namespace */
 
 namespace sfb {
@@ -2293,16 +2301,14 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
 
     // Add the downstream presentation latency, including any nodes inserted before the mixer,
     // to determine when the audio should reach the device
-    const auto presentationLatency = sourceNode_.outputPresentationLatency;
-    const auto pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
-                                                  presentationLatency * static_cast<double>(nanosecondsPerSecond)));
+    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
 
     // Since the engine pause is submitted for asynchronous execution, store a weak reference to the owning
     // SFBAudioPlayer to prevent use-after-free in the event the player is deallocated before the closure is called
     __weak SFBAudioPlayer *weakPlayer = player_;
 
     // Pause the engine once the audio has played
-    dispatch_after(pauseHostTime, eventQueue_, ^{
+    dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
@@ -2327,6 +2333,8 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
 }
 
 void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept {
+    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
+
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
@@ -2390,6 +2398,8 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 }
 
 void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime) noexcept {
+    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
+
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
