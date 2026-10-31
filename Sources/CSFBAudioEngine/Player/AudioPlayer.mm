@@ -1577,9 +1577,9 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     // Process pending `AVAudioEngine` pause requests
     if (bits::is_set_and_is_clear(flags, Flags::active, Flags::playing)) {
         if (const auto generation = pauseRequestGeneration_.load(std::memory_order_acquire);
-            generation != pauseGeneration_) [[unlikely]] {
+            generation != processedPauseGeneration_) [[unlikely]] {
             if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
-                pauseGeneration_ = generation;
+                processedPauseGeneration_ = generation;
             } else {
                 setFlags(Flags::renderEventDropped);
             }

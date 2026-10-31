@@ -419,9 +419,10 @@ class AudioPlayer final {
     /// The host time of the last ring buffer underrun
     uint64_t lastUnderrunHostTime_{0};
 
-    /// The generation of the most recently processed `AVAudioEngine` pause request
+    /// The generation of the most recent `AVAudioEngine` pause request for which the render block enqueued
+    /// a pause engine event
     /// - note: Only accessed from the render block
-    uint64_t pauseGeneration_{0};
+    uint64_t processedPauseGeneration_{0};
 
     // MARK: - Events
 
