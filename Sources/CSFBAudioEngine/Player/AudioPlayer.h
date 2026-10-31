@@ -154,8 +154,20 @@ class AudioPlayer final {
     AVAudioEngine *engine_{nil};
     /// Source node driving the audio processing graph
     AVAudioSourceNode *sourceNode_{nil};
-    /// Mutex protecting playback state and processing graph configuration changes
+    /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
+    /// changes
     mutable mtx::UnfairMutex engineMutex_;
+    /// Whether the player intends for the `AVAudioEngine` to be running
+    ///
+    /// This is not a cache of `engine_.isRunning`. It records whether the engine was running as a result of the
+    /// player's own actions, so that it can be restored after an internal stop (processing graph reconfiguration or
+    /// a hardware configuration change, both of which stop the engine). `startEngine()` sets it to the result of each
+    /// start attempt. It is also cleared, and the engine stopped, when the player is deactivated and when an audio
+    /// session interruption begins. Every path that clears it leaves the engine stopped, so a running engine implies
+    /// it is set unless the engine was started outside the player.
+    /// - invariant: `engineShouldRun_` implies `Flags::active` whenever `engineMutex_` is not held
+    /// - note: Protected by `engineMutex_`
+    bool engineShouldRun_{false};
 
     /// Current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
@@ -180,8 +192,9 @@ class AudioPlayer final {
     static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 #if TARGET_OS_IPHONE
-    /// Playback state before audio session interruption
-    unsigned int preInterruptState_{0};
+    /// Whether the player was playing when an audio session interruption began
+    /// - note: Protected by `engineMutex_`
+    bool wasPlayingBeforeInterruption_{false};
 #endif /* TARGET_OS_IPHONE */
 
   public:
@@ -207,8 +220,7 @@ class AudioPlayer final {
     // MARK: - Playback Control
 
     bool play(NSError **error) noexcept;
-    bool pause() noexcept;
-    bool resume() noexcept;
+    void pause() noexcept;
     void stop() noexcept;
     bool togglePlayPause(NSError **error) noexcept;
 
@@ -278,12 +290,18 @@ class AudioPlayer final {
 
   private:
     /// Possible bits in `flags_`
+    ///
+    /// The player state is described by `active` and `playing` and is independent of whether the `AVAudioEngine` is
+    /// running. The engine may be stopped and restarted internally (processing graph reconfiguration, hardware
+    /// configuration changes, audio session interruptions) without changing the player state. Following an internal
+    /// stop the engine is restarted automatically only if `engineShouldRun_` is set.
     enum class Flags : unsigned int {
         /// Clear
         none = 0,
-        /// Cached value of `engine_.isRunning`
-        engineRunning = 1u << 0,
+        /// The player is active (i.e. not stopped, whether playing or paused)
+        active = 1u << 0,
         /// The render block should output audio
+        /// - invariant: `playing` implies `active`
         playing = 1u << 1,
         /// The render block should output silence
         muted = 1u << 2,
@@ -296,6 +314,14 @@ class AudioPlayer final {
     };
 
     friend constexpr void is_bitmask_enum(Flags);
+
+    // `playbackState()` converts the player state flags directly to `SFBAudioPlayerPlaybackState`
+    static_assert(bits::to_underlying(Flags::none) == SFBAudioPlayerPlaybackStateStopped,
+                  "Flags::none must match SFBAudioPlayerPlaybackStateStopped");
+    static_assert(bits::to_underlying(Flags::active) == SFBAudioPlayerPlaybackStatePaused,
+                  "Flags::active must match SFBAudioPlayerPlaybackStatePaused");
+    static_assert(bits::to_underlying(Flags::active | Flags::playing) == SFBAudioPlayerPlaybackStatePlaying,
+                  "Flags::active | Flags::playing must match SFBAudioPlayerPlaybackStatePlaying");
 
     /// Atomically loads the value of `flags_` using the specified memory order and returns the result
     [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
@@ -316,6 +342,32 @@ class AudioPlayer final {
     Flags clearFlags(Flags flags, std::memory_order order = std::memory_order_acq_rel) noexcept {
         return static_cast<Flags>(flags_.fetch_and(~bits::to_underlying(flags), order));
     }
+
+    // MARK: - Player State Management
+
+    /// Starts the `AVAudioEngine` if it is not running
+    ///
+    /// If the engine is not running, attempts to start it and sets `engineShouldRun_` to the result. If the engine is
+    /// already running, `engineShouldRun_` is already set and is left unchanged (checked by an assertion in debug
+    /// builds). The player state is neither checked nor modified: callers check the state before calling and publish
+    /// any state change only after this returns `true`, so other threads never observe a requested state before the
+    /// engine is running. A caller that starts the engine for an inactive player must set `Flags::active` before
+    /// releasing `engineMutex_`.
+    /// - important: The caller must hold `engineMutex_`
+    /// - parameter error: An optional pointer to an `NSError` object to receive error information
+    /// - returns: `true` if the engine is running
+    bool startEngine(NSError **error) noexcept;
+
+    /// Notifies the delegate of an engine start failure and a playback state change if needed
+    void notifyDelegateOfEngineStartFailure(NSError *_Nullable error, bool wasPlaying) noexcept;
+
+    /// Deactivates the player and stops the `AVAudioEngine`
+    /// - note: The caller is responsible for clearing the decoder queue and canceling active decoders if desired
+    /// - returns: `true` if the player was active
+    bool deactivatePlayerAndStopEngine() noexcept;
+
+    /// Notifies the delegate of a playback state change
+    void notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept;
 
     // MARK: - Decoding
 
@@ -460,7 +512,7 @@ class AudioPlayer final {
     DecoderState *_Nullable decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept;
 
   public:
-    // MARK: - AVAudioEngine Notification Handling
+    // MARK: - Notification Handling
 
     /// Called to process `AVAudioEngineConfigurationChangeNotification`
     void handleAudioEngineConfigurationChange(AVAudioEngine *_Nonnull engine,
@@ -474,13 +526,14 @@ class AudioPlayer final {
   private:
     // MARK: - Processing Graph Management
 
-    /// Stops the AVAudioEngine if it is running and returns true if it was stopped
-    bool stopEngineIfRunning() noexcept;
-
     /// Configures the player to render audio with `format`
+    ///
+    /// The player state is preserved across the reconfiguration. The `AVAudioEngine` is restarted afterward if
+    /// `engineShouldRun_` is set. If the engine cannot be restarted the player is paused and the error is reported to
+    /// the delegate, but the reconfiguration is still considered successful.
     /// - parameter format: The desired audio format
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
-    /// - returns: `true` if the player was successfully configured
+    /// - returns: `true` if the processing graph and ring buffer were successfully configured
     bool configureProcessingGraphAndRingBufferForFormat(AVAudioFormat *_Nonnull format, NSError **error) noexcept;
 };
 
@@ -496,28 +549,30 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
     return queuedDecoders_.empty();
 }
 
+inline bool AudioPlayer::engineIsRunning() const noexcept { return engine_.isRunning; }
+
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
-    const auto state = flags & (Flags::engineRunning | Flags::playing);
+    const auto state = flags & (Flags::active | Flags::playing);
 #if DEBUG
-    assert(bits::is_set_or_is_clear(state, Flags::engineRunning, Flags::playing));
+    assert(bits::is_set_or_is_clear(state, Flags::active, Flags::playing));
 #endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
 inline bool AudioPlayer::isPlaying() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_all(flags, Flags::engineRunning | Flags::playing);
+    return bits::has_all(flags, Flags::active | Flags::playing);
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_set_and_is_clear(flags, Flags::engineRunning, Flags::playing);
+    return bits::is_set_and_is_clear(flags, Flags::active, Flags::playing);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_clear(flags, Flags::engineRunning);
+    return bits::is_clear(flags, Flags::active);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
