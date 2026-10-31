@@ -1444,6 +1444,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
             return true;
         }
 
+        // Discard the stale audio and reset the render state
         // These operations are not thread-safe but the engine is not running
         audioBuffer_.discardAll();
         audioMetadata_.discardAll();
