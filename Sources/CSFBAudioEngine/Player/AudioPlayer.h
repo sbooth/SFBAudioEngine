@@ -161,9 +161,10 @@ class AudioPlayer final {
     ///
     /// This is not a cache of `engine_.isRunning`. It records whether the engine was running as a result of the
     /// player's own actions, so that it can be restored after an internal stop (processing graph reconfiguration or
-    /// a hardware configuration change, both of which stop the engine). `startEngine()` sets it when the engine is
-    /// started or found running and clears it when a start fails. It is also cleared when the player is deactivated
-    /// and when an audio session interruption stops the engine.
+    /// a hardware configuration change, both of which stop the engine). `startEngine()` sets it to the result of each
+    /// start attempt. It is also cleared, and the engine stopped, when the player is deactivated and when an audio
+    /// session interruption begins. Every path that clears it leaves the engine stopped, so a running engine implies
+    /// it is set unless the engine was started outside the player.
     /// - invariant: `engineShouldRun_` implies `Flags::active` whenever `engineMutex_` is not held
     /// - note: Protected by `engineMutex_`
     bool engineShouldRun_{false};
@@ -347,10 +348,12 @@ class AudioPlayer final {
 
     /// Starts the `AVAudioEngine` if it is not running
     ///
-    /// Sets `engineShouldRun_` if the engine is running on return and clears it if the start failed. The player state
-    /// is neither checked nor modified: callers check the state before calling and publish any state change only after
-    /// this returns `true`, so other threads never observe a requested state before the engine is running. A caller
-    /// that sets `engineShouldRun_` for an inactive player must set `Flags::active` before releasing `engineMutex_`.
+    /// If the engine is not running, attempts to start it and sets `engineShouldRun_` to the result. If the engine is
+    /// already running, `engineShouldRun_` is already set and is left unchanged (checked by an assertion in debug
+    /// builds). The player state is neither checked nor modified: callers check the state before calling and publish
+    /// any state change only after this returns `true`, so other threads never observe a requested state before the
+    /// engine is running. A caller that starts the engine for an inactive player must set `Flags::active` before
+    /// releasing `engineMutex_`.
     /// - important: The caller must hold `engineMutex_`
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the engine is running

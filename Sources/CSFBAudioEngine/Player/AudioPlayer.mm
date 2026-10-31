@@ -2627,9 +2627,10 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
     case AVAudioSessionInterruptionTypeBegan: {
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
 
-        // The system stops the AVAudioEngine when an interruption begins; the player is paused and
-        // active decoders are preserved. Clearing engineShouldRun_ prevents automatic restarts until
-        // playback is resumed.
+        // The system stops the AVAudioEngine when an interruption begins, but the notification can arrive late
+        // (for example after the app was suspended) while the engine is still running, so stop it explicitly.
+        // The player is paused and active decoders are preserved. Clearing engineShouldRun_ prevents automatic
+        // restarts until playback is resumed.
         auto wasPlaying = false;
         {
             std::lock_guard lock{engineMutex_};
