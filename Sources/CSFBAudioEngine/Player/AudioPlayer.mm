@@ -2306,7 +2306,7 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_, "Audio player deallocated before pause engine event processing");
+            os_log_debug(log_, "Audio player deallocated between pause engine event and sending -pause");
             return;
         }
 
@@ -2349,13 +2349,13 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_, "Audio player deallocated between rendering will start and rendering started "
-                               "notifications");
+            os_log_debug(log_, "Audio player deallocated between rendering will start event and rendering started "
+                               "notification");
             return;
         }
 
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
-            os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
+            os_log_debug(log_, "%{public}@ canceled after rendering will start event", decoder);
             return;
         }
 
@@ -2412,13 +2412,13 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_, "Audio player deallocated between rendering will complete and rendering "
-                               "complete notifications");
+            os_log_debug(log_, "Audio player deallocated between rendering will complete event and rendering "
+                               "complete notification");
             return;
         }
 
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
-            os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
+            os_log_debug(log_, "%{public}@ canceled after rendering will complete event", decoder);
             return;
         }
 

@@ -157,7 +157,7 @@ class AudioPlayer final {
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
     mutable mtx::UnfairMutex engineMutex_;
-    /// The generation of the most recent `AVAudioEngine` pause request
+    /// The epoch of the most recent `AVAudioEngine` pause request
     std::atomic_uint64_t pauseRequestGeneration_{0};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
