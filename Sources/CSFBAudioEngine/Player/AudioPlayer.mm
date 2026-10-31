@@ -727,8 +727,7 @@ void sfb::AudioPlayer::pause() noexcept {
         const auto prevFlags = clearFlags(Flags::playing);
         wasPlaying = bits::is_set(prevFlags, Flags::playing);
         // The render block detects the pause and enqueues a pause rendering event, which pauses the engine once
-        // audio already sent to the output has finished playing. Supersede any engine pause pending for an earlier
-        // pause.
+        // audio already sent to the output has finished playing
         if (wasPlaying) {
             ++enginePauseGeneration_;
         }
@@ -760,7 +759,6 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
             wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
             clearFlags(Flags::playing);
-            // Supersede any engine pause pending for an earlier pause; see pause()
             ++enginePauseGeneration_;
             playbackState = SFBAudioPlayerPlaybackStatePaused;
         } else {
