@@ -2630,15 +2630,17 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         // The system stops the AVAudioEngine when an interruption begins; the player is paused and
         // active decoders are preserved. Clearing engineShouldRun_ prevents automatic restarts until
         // playback is resumed.
+        auto wasPlaying = false;
         {
             std::lock_guard lock{engineMutex_};
             [engine_ stop];
             engineShouldRun_ = false;
             const auto prevFlags = clearFlags(Flags::playing);
-            wasPlayingBeforeInterruption_ = bits::is_set(prevFlags, Flags::playing);
+            wasPlaying = bits::is_set(prevFlags, Flags::playing);
+            wasPlayingBeforeInterruption_ = wasPlaying;
         }
 
-        if (wasPlayingBeforeInterruption_) {
+        if (wasPlaying) {
             notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
         }
 
