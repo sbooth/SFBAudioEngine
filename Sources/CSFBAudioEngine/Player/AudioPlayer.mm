@@ -612,7 +612,6 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     {
         std::lock_guard lock{engineMutex_};
         [engine_ stop];
-        engineShouldRun_ = false;
         clearFlags(Flags::active | Flags::playing);
     }
 
@@ -727,6 +726,9 @@ void sfb::AudioPlayer::pause() noexcept {
 #endif /* TARGET_OS_IPHONE */
         const auto prevFlags = clearFlags(Flags::playing);
         wasPlaying = bits::is_set(prevFlags, Flags::playing);
+        if (wasPlaying) {
+            pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
+        }
     }
 
     if (wasPlaying) {
@@ -755,6 +757,7 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
             wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
             clearFlags(Flags::playing);
+            pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
             playbackState = SFBAudioPlayerPlaybackStatePaused;
         } else {
             // Stopped or paused, transition to playing
@@ -1429,8 +1432,20 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 #endif /* DEBUG */
 
     const auto flags = loadFlags();
-    if (bits::is_set(flags, Flags::audioStale)) {
-        return true;
+    if (bits::is_set(flags, Flags::audioStale)) [[unlikely]] {
+        std::lock_guard lock{engineMutex_};
+
+        // Stale audio is discarded by the render block or here if the engine is not running
+        if (engine_.isRunning) {
+            return true;
+        }
+
+        // Discard the stale audio and reset the render state
+        // These operations are not thread-safe but the engine is not running
+        audioBuffer_.discardAll();
+        audioMetadata_.discardAll();
+        renderingChunk_ = {};
+        clearFlags(Flags::audioStale);
     }
 
     // Decode and write chunks and metadata to the ring buffers
@@ -1557,6 +1572,18 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         audioMetadata_.discardAll();
         renderingChunk_ = {};
         clearFlags(Flags::audioStale);
+    }
+
+    // Process pending `AVAudioEngine` pause requests
+    if (bits::is_set_and_is_clear(flags, Flags::active, Flags::playing)) {
+        if (const auto generation = pauseRequestGeneration_.load(std::memory_order_acquire);
+            generation != processedPauseGeneration_) [[unlikely]] {
+            if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
+                processedPauseGeneration_ = generation;
+            } else {
+                setFlags(Flags::renderEventDropped);
+            }
+        }
     }
 
     // Output silence if muted, not playing, or the ring buffer was just emptied
@@ -1750,6 +1777,9 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
                 break;
             case EventCommand::renderBufferUnderrun:
                 processRenderBufferUnderrunEvent();
+                break;
+            case EventCommand::pauseEngine:
+                processPauseEngineEvent();
                 break;
 
             default:
@@ -2236,6 +2266,66 @@ bool sfb::AudioPlayer::processRenderBufferUnderrunEvent() noexcept {
     return true;
 }
 
+bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
+    EventCommand command;
+    // The host time from the render cycle's timestamp
+    uint64_t hostTime;
+    // The generation of the pause engine request processed by the render cycle
+    uint64_t generation;
+    if (!events_.dequeue(command, hostTime, generation)) {
+        os_log_error(log_, "Missing host time or generation for pause engine event");
+        return false;
+    }
+
+#if DEBUG
+    assert(command == EventCommand::pauseEngine);
+#endif /* DEBUG */
+
+    {
+        std::lock_guard lock{engineMutex_};
+
+        // Nothing to do if the request was superseded by a later pause, or if the player has resumed or stopped
+        if (generation != pauseRequestGeneration_.load(std::memory_order_relaxed) ||
+            !bits::is_set_and_is_clear(loadFlags(), Flags::active, Flags::playing)) {
+            return true;
+        }
+    }
+
+    // Add the downstream presentation latency, including any nodes inserted before the mixer,
+    // to determine when the audio should reach the device
+    const auto presentationLatency = sourceNode_.outputPresentationLatency;
+    const auto pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
+                                                  presentationLatency * static_cast<double>(nanosecondsPerSecond)));
+
+    // Since the engine pause is submitted for asynchronous execution, store a weak reference to the owning
+    // SFBAudioPlayer to prevent use-after-free in the event the player is deallocated before the closure is called
+    __weak SFBAudioPlayer *weakPlayer = player_;
+
+    // Pause the engine once the audio has played
+    dispatch_after(pauseHostTime, eventQueue_, ^{
+        // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
+        __strong SFBAudioPlayer *player = weakPlayer;
+        if (player == nil) {
+            os_log_debug(log_, "Audio player deallocated between pause engine event and sending -pause");
+            return;
+        }
+
+        // Not this, but that: `this` is not safe to use within this closure
+        auto &that = player->_player;
+
+        std::lock_guard lock{that->engineMutex_};
+
+        // Skip if the player has since resumed or stopped, or paused again
+        if (that->pauseRequestGeneration_.load(std::memory_order_relaxed) != generation ||
+            !bits::is_set_and_is_clear(that->loadFlags(), Flags::active, Flags::playing)) {
+            return;
+        }
+        [that->engine_ pause];
+    });
+
+    return true;
+}
+
 void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept {
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
@@ -2259,13 +2349,13 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_, "Audio player deallocated between rendering will start and rendering started "
-                               "notifications");
+            os_log_debug(log_, "Audio player deallocated between rendering will start event and rendering started "
+                               "notification");
             return;
         }
 
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
-            os_log_debug(log_, "%{public}@ canceled after rendering will start notification", decoder);
+            os_log_debug(log_, "%{public}@ canceled after rendering will start event", decoder);
             return;
         }
 
@@ -2322,13 +2412,13 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_, "Audio player deallocated between rendering will complete and rendering "
-                               "complete notifications");
+            os_log_debug(log_, "Audio player deallocated between rendering will complete event and rendering "
+                               "complete notification");
             return;
         }
 
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
-            os_log_debug(log_, "%{public}@ canceled after rendering will complete notification", decoder);
+            os_log_debug(log_, "%{public}@ canceled after rendering will complete event", decoder);
             return;
         }
 
@@ -2565,10 +2655,9 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             // AVAudioEngine stops itself when a configuration change occurs but it could have been restarted
             // before the notification was delivered or the lock was acquired.
             // Disconnecting the main mixer node from the output node when the engine is running causes an
-            // exception so ensure the engine is stopped before updating the bus format.
-            if (engine_.isRunning) {
-                [engine_ stop];
-            }
+            // exception so ensure the engine is stopped before updating the bus format. Stop unconditionally
+            // since a paused engine is not running but retains its render resources.
+            [engine_ stop];
 
             [engine_ disconnectNodeInput:outputNode bus:0];
 
@@ -2578,8 +2667,8 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             [engine_ prepare];
         }
 
-        // Restart AVAudioEngine if it was running before the configuration change
-        if (NSError *startError = nil; engineShouldRun_ && !startEngine(&startError)) {
+        // Restart AVAudioEngine if the player is playing; a paused player's engine is restarted by -play
+        if (NSError *startError = nil; bits::is_set(loadFlags(), Flags::playing) && !startEngine(&startError)) {
             const auto prevFlags = clearFlags(Flags::playing);
             lock.unlock();
             const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
@@ -2605,13 +2694,11 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
         // The system stops the AVAudioEngine when an interruption begins, but the notification can arrive late
         // (for example after the app was suspended) while the engine is still running, so stop it explicitly.
-        // The player is paused and active decoders are preserved. Clearing engineShouldRun_ prevents automatic
-        // restarts until playback is resumed.
+        // The player is paused and active decoders are preserved.
         auto wasPlaying = false;
         {
             std::lock_guard lock{engineMutex_};
             [engine_ stop];
-            engineShouldRun_ = false;
             const auto prevFlags = clearFlags(Flags::playing);
             wasPlaying = bits::is_set(prevFlags, Flags::playing);
             wasPlayingBeforeInterruption_ = wasPlaying;
@@ -2690,7 +2777,7 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
 #endif /* DEBUG */
 
     if (!engine_.isRunning) {
-        if (NSError *startError = nil; !(engineShouldRun_ = [engine_ startAndReturnError:&startError])) {
+        if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
             os_log_error(log_, "Error starting AVAudioEngine: %{public}@", startError);
             if (error != nullptr) {
                 *error = startError;
@@ -2698,11 +2785,6 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
             return false;
         }
     }
-
-#if DEBUG
-    // A running engine without engineShouldRun_ means the engine was started outside the player
-    assert(!engine_.isRunning || engineShouldRun_);
-#endif /* DEBUG */
 
     return true;
 }
@@ -2730,7 +2812,6 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     std::lock_guard lock{engineMutex_};
     const auto prevFlags = clearFlags(Flags::active | Flags::playing);
     [engine_ stop];
-    engineShouldRun_ = false;
 #if TARGET_OS_IPHONE
     wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
@@ -2822,10 +2903,10 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
 
     [engine_ prepare];
 
-    // Restart AVAudioEngine if it was running before the reconfiguration
+    // Restart AVAudioEngine if the player is playing; a paused player's engine is restarted by -play
     // The processing graph is correctly configured for `format` so a failure to restart the engine is not a
     // failure to configure; pause and let the client resume when the condition clears
-    if (NSError *startError = nil; engineShouldRun_ && !startEngine(&startError)) {
+    if (NSError *startError = nil; bits::is_set(loadFlags(), Flags::playing) && !startEngine(&startError)) {
         const auto prevFlags = clearFlags(Flags::playing);
         lock.unlock();
         const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);

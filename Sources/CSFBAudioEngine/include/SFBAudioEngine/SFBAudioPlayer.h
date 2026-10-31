@@ -45,12 +45,13 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///
 /// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped.
 ///
-/// The playback state is independent of the state of the underlying `AVAudioEngine`. While the player is active
-/// (i.e. playing or paused) the player keeps the engine running, restarting it as needed after internal stops such as
-/// processing graph reconfiguration or hardware configuration changes. If the engine cannot be restarted the player
-/// transitions from playing to paused, reports the error to the delegate, and retains its decoders. Following an engine
-/// start failure, or an audio session interruption that does not end with playback resuming automatically, the engine
-/// remains stopped until ``-playReturningError:`` is called.
+/// The playback state is independent of the state of the underlying `AVAudioEngine`. The engine runs only while the
+/// player is playing, so a paused player does not consume power for audio I/O and is not reported to the system as
+/// playing. While playing, the player restarts the engine as needed after internal stops such as processing graph
+/// reconfiguration or hardware configuration changes. If the engine cannot be restarted the player transitions from
+/// playing to paused, reports the error to the delegate, and retains its decoders. When the player is paused the
+/// engine is paused once audio already sent to the output has finished playing, and ``-playReturningError:``
+/// restarts it.
 ///
 /// `SFBAudioPlayer` supports delegate-based notifications for the following events:
 ///
@@ -159,8 +160,9 @@ NS_SWIFT_NAME(AudioPlayer)
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 /// Pauses playback
 ///
-/// The playback session, decoders, and playback position are retained. If called during an audio session
-/// interruption, this method prevents playback from resuming automatically when the interruption ends.
+/// The playback session, decoders, and playback position are retained. The `AVAudioEngine` is paused once audio
+/// already sent to the output has finished playing. If called during an audio session interruption, this method
+/// prevents playback from resuming automatically when the interruption ends.
 /// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` the playback state is unchanged
 - (void)pause;
 /// Stops playback, ending the playback session and stopping the `AVAudioEngine`
@@ -182,9 +184,9 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Player State
 
 /// `YES` if the `AVAudioEngine` is running
-/// - note: The engine state is independent of the playback state. It may briefly differ from it, for example while
-/// the processing graph is reconfigured, and the engine may remain stopped while paused following an engine start
-/// failure or an audio session interruption
+/// - note: The engine runs only while the player is playing. It may briefly differ from the playback state, for
+/// example while the processing graph is reconfigured, or after the player pauses while audio already sent to the
+/// output finishes playing
 @property(nonatomic, readonly) BOOL engineIsRunning;
 
 /// The current playback state
