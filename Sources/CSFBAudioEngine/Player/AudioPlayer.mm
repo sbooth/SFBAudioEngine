@@ -1436,8 +1436,19 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 #endif /* DEBUG */
 
     const auto flags = loadFlags();
-    if (bits::is_set(flags, Flags::audioStale)) {
-        return true;
+    if (bits::is_set(flags, Flags::audioStale)) [[unlikely]] {
+        std::lock_guard lock{engineMutex_};
+
+        // Stale audio is discarded by the render block or here if the engine is not running
+        if (engine_.isRunning) {
+            return true;
+        }
+
+        // These operations are not thread-safe but the engine is not running
+        audioBuffer_.discardAll();
+        audioMetadata_.discardAll();
+        renderingChunk_ = {};
+        clearFlags(Flags::audioStale);
     }
 
     // Decode and write chunks and metadata to the ring buffers
