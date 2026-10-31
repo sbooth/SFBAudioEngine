@@ -161,10 +161,10 @@ class AudioPlayer final {
     ///
     /// This is not a cache of `engine_.isRunning`. It records whether the engine was running as a result of the
     /// player's own actions, so that it can be restored after an internal stop (processing graph reconfiguration or
-    /// a hardware configuration change, both of which stop the engine). `startEngineIfNeeded()` sets it when the engine
-    /// is started or found running for an active player and clears it when a start fails. It is also cleared when the
-    /// player is deactivated and when an audio session interruption stops the engine.
-    /// - invariant: `engineShouldRun_` implies `Flags::active`
+    /// a hardware configuration change, both of which stop the engine). `startEngine()` sets it when the engine is
+    /// started or found running and clears it when a start fails. It is also cleared when the player is deactivated
+    /// and when an audio session interruption stops the engine.
+    /// - invariant: `engineShouldRun_` implies `Flags::active` whenever `engineMutex_` is not held
     /// - note: Protected by `engineMutex_`
     bool engineShouldRun_{false};
 
@@ -345,13 +345,16 @@ class AudioPlayer final {
 
     // MARK: - Player State Management
 
-    /// Starts the `AVAudioEngine` if the player is active and the engine is not running
+    /// Starts the `AVAudioEngine` if it is not running
     ///
-    /// If the player is active, `engineShouldRun_` is set if the engine is running on return and cleared if the start
-    /// failed.
+    /// Sets `engineShouldRun_` if the engine is running on return and clears it if the start failed. The player state
+    /// is neither checked nor modified: callers check the state before calling and publish any state change only after
+    /// this returns `true`, so other threads never observe a requested state before the engine is running. A caller
+    /// that sets `engineShouldRun_` for an inactive player must set `Flags::active` before releasing `engineMutex_`.
+    /// - important: The caller must hold `engineMutex_`
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
-    /// - returns: `true` if the engine is running or does not need to run
-    bool startEngineIfNeeded(NSError **error) noexcept;
+    /// - returns: `true` if the engine is running
+    bool startEngine(NSError **error) noexcept;
 
     /// Notifies the delegate of an engine start failure and a playback state change if needed
     void notifyDelegateOfEngineStartFailure(NSError *_Nullable error, bool wasPlaying) noexcept;
