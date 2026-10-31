@@ -157,9 +157,9 @@ class AudioPlayer final {
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
     mutable mtx::UnfairMutex engineMutex_;
-    /// Incremented each time the player pauses, so an engine pause pending for an earlier pause is discarded
-    /// - note: Protected by `engineMutex_`
-    uint64_t enginePauseGeneration_{0};
+    /// The generation of the most recent `AVAudioEngine` pause request
+    std::atomic_uint64_t pauseRequestGeneration_{0};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
     /// Current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
@@ -419,11 +419,9 @@ class AudioPlayer final {
     /// The host time of the last ring buffer underrun
     uint64_t lastUnderrunHostTime_{0};
 
-    /// Whether the previous render cycle was for a playing player
-    ///
-    /// Used to detect the first render cycle after the player pauses, which enqueues a rendering paused event.
+    /// The generation of the most recently processed `AVAudioEngine` pause request
     /// - note: Only accessed from the render block
-    bool lastRenderCycleWasPlaying_{false};
+    uint64_t pauseGeneration_{0};
 
     // MARK: - Events
 
@@ -447,8 +445,8 @@ class AudioPlayer final {
         renderingComplete = 8,
         /// Ring buffer contained fewer audio frames than requested
         renderBufferUnderrun = 9,
-        /// First render cycle after player pause
-        pauseRendering = 10,
+        /// `AVAudioEngine` pause requested
+        pauseEngine = 10,
     };
 
     // MARK: - Event Processing
@@ -484,8 +482,8 @@ class AudioPlayer final {
     /// Reads and processes a render buffer underrun event from `events_`
     bool processRenderBufferUnderrunEvent() noexcept;
 
-    /// Dequeues and processes a pause rendering event from `events_`
-    bool processPauseRenderingEvent() noexcept;
+    /// Dequeues and processes a pause engine event from `events_`
+    bool processPauseEngineEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;

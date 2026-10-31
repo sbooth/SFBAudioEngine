@@ -726,10 +726,8 @@ void sfb::AudioPlayer::pause() noexcept {
 #endif /* TARGET_OS_IPHONE */
         const auto prevFlags = clearFlags(Flags::playing);
         wasPlaying = bits::is_set(prevFlags, Flags::playing);
-        // The render block detects the pause and enqueues a pause rendering event, which pauses the engine once
-        // audio already sent to the output has finished playing
         if (wasPlaying) {
-            ++enginePauseGeneration_;
+            pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
         }
     }
 
@@ -759,7 +757,7 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
             wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
             clearFlags(Flags::playing);
-            ++enginePauseGeneration_;
+            pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
             playbackState = SFBAudioPlayerPlaybackStatePaused;
         } else {
             // Stopped or paused, transition to playing
@@ -1576,14 +1574,17 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         clearFlags(Flags::audioStale);
     }
 
-    // Detect player pause
-    const auto isPlaying = bits::is_set(flags, Flags::playing);
-    if (lastRenderCycleWasPlaying_ && !isPlaying && bits::is_set(flags, Flags::active)) [[unlikely]] {
-        if (!events_.enqueue(EventCommand::pauseRendering, timestamp.mHostTime)) [[unlikely]] {
-            setFlags(Flags::renderEventDropped);
+    // Process pending `AVAudioEngine` pause requests
+    if (bits::is_set_and_is_clear(flags, Flags::active, Flags::playing)) {
+        if (const auto generation = pauseRequestGeneration_.load(std::memory_order_acquire);
+            generation != pauseGeneration_) [[unlikely]] {
+            if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
+                pauseGeneration_ = generation;
+            } else {
+                setFlags(Flags::renderEventDropped);
+            }
         }
     }
-    lastRenderCycleWasPlaying_ = isPlaying;
 
     // Output silence if muted, not playing, or the ring buffer was just emptied
     if (bits::is_set_or_is_clear(flags, Flags::muted, Flags::playing) || isStale) {
@@ -1777,8 +1778,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             case EventCommand::renderBufferUnderrun:
                 processRenderBufferUnderrunEvent();
                 break;
-            case EventCommand::pauseRendering:
-                processPauseRenderingEvent();
+            case EventCommand::pauseEngine:
+                processPauseEngineEvent();
                 break;
 
             default:
@@ -2265,30 +2266,30 @@ bool sfb::AudioPlayer::processRenderBufferUnderrunEvent() noexcept {
     return true;
 }
 
-bool sfb::AudioPlayer::processPauseRenderingEvent() noexcept {
+bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     EventCommand command;
     // The host time from the render cycle's timestamp
     uint64_t hostTime;
-    if (!events_.dequeue(command, hostTime)) {
-        os_log_error(log_, "Missing host time for pause rendering event");
+    // The generation of the pause engine request processed by the render cycle
+    uint64_t generation;
+    if (!events_.dequeue(command, hostTime, generation)) {
+        os_log_error(log_, "Missing host time or generation for pause engine event");
         return false;
     }
 
 #if DEBUG
-    assert(command == EventCommand::pauseRendering);
+    assert(command == EventCommand::pauseEngine);
 #endif /* DEBUG */
 
-    uint64_t generation;
     uint64_t pauseHostTime;
     {
         std::lock_guard lock{engineMutex_};
 
-        // Nothing to do if the player has resumed or stopped since the render cycle
-        if (!bits::is_set_and_is_clear(loadFlags(), Flags::active, Flags::playing)) {
+        // Nothing to do if the request was superseded by a later pause, or if the player has resumed or stopped
+        if (generation != pauseRequestGeneration_.load(std::memory_order_relaxed) ||
+            !bits::is_set_and_is_clear(loadFlags(), Flags::active, Flags::playing)) {
             return true;
         }
-
-        generation = enginePauseGeneration_;
     }
 
     // Add the presentation latency to determine when the audio reaches the device
@@ -2305,7 +2306,7 @@ bool sfb::AudioPlayer::processPauseRenderingEvent() noexcept {
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
-            os_log_debug(log_, "Audio player deallocated between pause rendering and pause engine notifications");
+            os_log_debug(log_, "Audio player deallocated before pause engine event processing");
             return;
         }
 
@@ -2315,7 +2316,7 @@ bool sfb::AudioPlayer::processPauseRenderingEvent() noexcept {
         std::lock_guard lock{that->engineMutex_};
 
         // Skip if the player has since resumed or stopped, or paused again
-        if (that->enginePauseGeneration_ != generation ||
+        if (that->pauseRequestGeneration_.load(std::memory_order_relaxed) != generation ||
             !bits::is_set_and_is_clear(that->loadFlags(), Flags::active, Flags::playing)) {
             return;
         }
