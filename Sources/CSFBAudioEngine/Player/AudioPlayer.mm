@@ -234,9 +234,9 @@ uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &time
 
 /// Returns `seconds` expressed as a host time delta
 uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
-#if DEBUG
-    assert(!isnan(seconds) && !isinf(seconds));
-#endif /* DEBUG */
+    if (!std::isfinite(seconds) || seconds <= 0) [[unlikely]] {
+        return 0;
+    }
     return host_time::fromNanoseconds(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
 }
 
