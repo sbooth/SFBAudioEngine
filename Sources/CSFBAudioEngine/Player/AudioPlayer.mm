@@ -2281,7 +2281,6 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     assert(command == EventCommand::pauseEngine);
 #endif /* DEBUG */
 
-    uint64_t pauseHostTime;
     {
         std::lock_guard lock{engineMutex_};
 
@@ -2292,10 +2291,11 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
         }
     }
 
-    // Add the presentation latency to determine when the audio reaches the device
+    // Add the downstream presentation latency, including any nodes inserted before the mixer,
+    // to determine when the audio should reach the device
     const auto presentationLatency = sourceNode_.outputPresentationLatency;
-    pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
-                                       presentationLatency * static_cast<double>(nanosecondsPerSecond)));
+    const auto pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
+                                                  presentationLatency * static_cast<double>(nanosecondsPerSecond)));
 
     // Since the engine pause is submitted for asynchronous execution, store a weak reference to the owning
     // SFBAudioPlayer to prevent use-after-free in the event the player is deallocated before the closure is called
