@@ -157,17 +157,9 @@ class AudioPlayer final {
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
     mutable mtx::UnfairMutex engineMutex_;
-    /// Whether the player intends for the `AVAudioEngine` to be running
-    ///
-    /// This is not a cache of `engine_.isRunning`. It records whether the engine was running as a result of the
-    /// player's own actions, so that it can be restored after an internal stop (processing graph reconfiguration or
-    /// a hardware configuration change, both of which stop the engine). `startEngine()` sets it to the result of each
-    /// start attempt. It is also cleared, and the engine stopped, when the player is deactivated and when an audio
-    /// session interruption begins. Every path that clears it leaves the engine stopped, so a running engine implies
-    /// it is set unless the engine was started outside the player.
-    /// - invariant: `engineShouldRun_` implies `Flags::active` whenever `engineMutex_` is not held
+    /// Incremented each time the player pauses, so an engine pause pending for an earlier pause is discarded
     /// - note: Protected by `engineMutex_`
-    bool engineShouldRun_{false};
+    uint64_t enginePauseGeneration_{0};
 
     /// Current playback snapshot
     mutable detail::TransportSnapshot currentSnapshot_{};
@@ -292,9 +284,10 @@ class AudioPlayer final {
     /// Possible bits in `flags_`
     ///
     /// The player state is described by `active` and `playing` and is independent of whether the `AVAudioEngine` is
-    /// running. The engine may be stopped and restarted internally (processing graph reconfiguration, hardware
-    /// configuration changes, audio session interruptions) without changing the player state. Following an internal
-    /// stop the engine is restarted automatically only if `engineShouldRun_` is set.
+    /// running. The engine runs only while the player is playing: it is paused shortly after the player pauses, and
+    /// stopped when the player stops. The engine may also be stopped internally (processing graph reconfiguration,
+    /// hardware configuration changes, audio session interruptions) without changing the player state; following an
+    /// internal stop the engine is restarted automatically only if the player is playing.
     enum class Flags : unsigned int {
         /// Clear
         none = 0,
@@ -347,12 +340,9 @@ class AudioPlayer final {
 
     /// Starts the `AVAudioEngine` if it is not running
     ///
-    /// If the engine is not running, attempts to start it and sets `engineShouldRun_` to the result. If the engine is
-    /// already running, `engineShouldRun_` is already set and is left unchanged (checked by an assertion in debug
-    /// builds). The player state is neither checked nor modified: callers check the state before calling and publish
-    /// any state change only after this returns `true`, so other threads never observe a requested state before the
-    /// engine is running. A caller that starts the engine for an inactive player must set `Flags::active` before
-    /// releasing `engineMutex_`.
+    /// The player state is neither checked nor modified: callers check the state before calling and publish any state
+    /// change only after this returns `true`, so other threads never observe a requested state before the engine is
+    /// running.
     /// - important: The caller must hold `engineMutex_`
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the engine is running
@@ -429,6 +419,12 @@ class AudioPlayer final {
     /// The host time of the last ring buffer underrun
     uint64_t lastUnderrunHostTime_{0};
 
+    /// Whether the previous render cycle was for a playing player
+    ///
+    /// Used to detect the first render cycle after the player pauses, which enqueues a rendering paused event.
+    /// - note: Only accessed from the render block
+    bool lastRenderCycleWasPlaying_{false};
+
     // MARK: - Events
 
     /// Event commands
@@ -451,6 +447,8 @@ class AudioPlayer final {
         renderingComplete = 8,
         /// Ring buffer contained fewer audio frames than requested
         renderBufferUnderrun = 9,
+        /// First render cycle after player pause
+        pauseRendering = 10,
     };
 
     // MARK: - Event Processing
@@ -485,6 +483,9 @@ class AudioPlayer final {
 
     /// Reads and processes a render buffer underrun event from `events_`
     bool processRenderBufferUnderrunEvent() noexcept;
+
+    /// Dequeues and processes a pause rendering event from `events_`
+    bool processPauseRenderingEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
@@ -528,9 +529,9 @@ class AudioPlayer final {
 
     /// Configures the player to render audio with `format`
     ///
-    /// The player state is preserved across the reconfiguration. The `AVAudioEngine` is restarted afterward if
-    /// `engineShouldRun_` is set. If the engine cannot be restarted the player is paused and the error is reported to
-    /// the delegate, but the reconfiguration is still considered successful.
+    /// The player state is preserved across the reconfiguration. The `AVAudioEngine` is restarted afterward if the
+    /// player is playing. If the engine cannot be restarted the player is paused and the error is reported to the
+    /// delegate, but the reconfiguration is still considered successful.
     /// - parameter format: The desired audio format
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the processing graph and ring buffer were successfully configured
