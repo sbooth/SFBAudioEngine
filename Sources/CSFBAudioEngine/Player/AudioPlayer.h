@@ -220,8 +220,7 @@ class AudioPlayer final {
     // MARK: - Playback Control
 
     bool play(NSError **error) noexcept;
-    bool pause() noexcept;
-    bool resume() noexcept;
+    void pause() noexcept;
     void stop() noexcept;
     bool togglePlayPause(NSError **error) noexcept;
 

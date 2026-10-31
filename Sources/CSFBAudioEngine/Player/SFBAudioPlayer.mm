@@ -132,12 +132,8 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     return _player->play(error);
 }
 
-- (BOOL)pause {
-    return _player->pause();
-}
-
-- (BOOL)resume {
-    return _player->resume();
+- (void)pause {
+    _player->pause();
 }
 
 - (void)stop {
