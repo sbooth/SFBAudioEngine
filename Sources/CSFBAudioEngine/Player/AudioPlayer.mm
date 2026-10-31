@@ -2293,7 +2293,7 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     }
 
     // Add the presentation latency to determine when the audio reaches the device
-    const auto presentationLatency = engine_.outputNode.presentationLatency;
+    const auto presentationLatency = sourceNode_.outputPresentationLatency;
     pauseHostTime = hostTime + host_time::fromNanoseconds(static_cast<uint64_t>(
                                        presentationLatency * static_cast<double>(nanosecondsPerSecond)));
 
