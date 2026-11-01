@@ -128,6 +128,11 @@ class AudioPlayer final {
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
     /// The current output generation, incremented when the engine is stopped
+    ///
+    /// Only stops that discard the active decoders advance the output generation. Interruptions and configuration
+    /// changes also stop the engine but retain the player state and decoders; their scheduled notifications are still
+    /// delivered because the decoders they describe have already been removed from `activeDecoders_` and counted,
+    /// and dropping them would lose the rendering complete callback, stall end of audio, and leave now playing stale.
     /// - note: Protected by `activeDecodersMutex_`
     uint64_t outputGeneration_{1};
 
@@ -178,6 +183,7 @@ class AudioPlayer final {
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
     /// Mutex protecting `nowPlaying_`
+    /// - note: May be acquired while holding `activeDecodersMutex_`, never the reverse
     mutable mtx::UnfairMutex nowPlayingMutex_;
 
     /// Dispatch queue used for asynchronous render event notifications
@@ -246,7 +252,12 @@ class AudioPlayer final {
     Decoder _Nullable nowPlaying() const noexcept;
 
   private:
-    void setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    /// Sets now playing and returns `true` if it changed
+    bool setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    /// Notifies the delegate that now playing changed to `nowPlaying`
+    void notifyDelegateOfNowPlayingChange(Decoder _Nullable nowPlaying) noexcept;
+    /// Sets now playing and notifies the delegate if it changed
+    void setNowPlayingAndNotifyDelegate(Decoder _Nullable nowPlaying) noexcept;
 
   public:
     // MARK: - Playback Properties

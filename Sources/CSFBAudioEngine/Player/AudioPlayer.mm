@@ -752,7 +752,7 @@ void sfb::AudioPlayer::stop() noexcept {
 
     // Clear now playing if no decoders were active when the engine was stopped
     if (canceledCount == 0) {
-        setNowPlaying(nil);
+        setNowPlayingAndNotifyDelegate(nil);
     }
 
     if (wasActive) {
@@ -807,15 +807,16 @@ auto sfb::AudioPlayer::currentDecoder() const noexcept -> Decoder {
     return decoderState->decoder_;
 }
 
-void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
-    {
-        std::lock_guard lock{nowPlayingMutex_};
-        if (nowPlaying_ == nowPlaying) {
-            return;
-        }
-        nowPlaying_ = nowPlaying;
+bool sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
+    std::lock_guard lock{nowPlayingMutex_};
+    if (nowPlaying_ == nowPlaying) {
+        return false;
     }
+    nowPlaying_ = nowPlaying;
+    return true;
+}
 
+void sfb::AudioPlayer::notifyDelegateOfNowPlayingChange(Decoder nowPlaying) noexcept {
     os_log_debug(log_, "Now playing changed to %{public}@", nowPlaying);
 
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
@@ -823,6 +824,13 @@ void sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)]) {
             [delegate audioPlayer:player nowPlayingChanged:nowPlaying];
         }
+    }
+}
+
+void sfb::AudioPlayer::setNowPlayingAndNotifyDelegate(Decoder nowPlaying) noexcept {
+    const auto nowPlayingChanged = setNowPlaying(nowPlaying);
+    if (nowPlayingChanged) {
+        notifyDelegateOfNowPlayingChange(nowPlaying);
     }
 }
 
@@ -1874,7 +1882,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
         assert(currentSnapshot.isValid_);
 #endif /* DEBUG */
         publishTransportSnapshot(currentSnapshot);
-        setNowPlaying(decoder);
+        setNowPlayingAndNotifyDelegate(decoder);
     }
 
     return true;
@@ -2028,8 +2036,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     }();
 
     if (hasNoDecoders) {
-        setNowPlaying(nil);
-
+        setNowPlayingAndNotifyDelegate(nil);
         if (const auto wasActive = deactivatePlayerAndStopEngine(); wasActive) {
             notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
         }
@@ -2384,12 +2391,16 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         auto &that = player->_player;
 
         // Notifications from earlier output epochs become stale when the engine stops
+        auto nowPlayingChanged = false;
         {
             std::lock_guard lock{that->activeDecodersMutex_};
             if (outputGeneration != that->outputGeneration_) {
                 os_log_debug(log_, "Ignoring stale rendering started notification for %{public}@", decoder);
                 return;
             }
+            // Update now playing while holding the lock so a concurrent stop either invalidates this notification
+            // or clears now playing after it is set
+            nowPlayingChanged = that->setNowPlaying(decoder);
         }
 
 #if DEBUG
@@ -2403,7 +2414,9 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         }
 #endif /* DEBUG */
 
-        that->setNowPlaying(decoder);
+        if (nowPlayingChanged) {
+            that->notifyDelegateOfNowPlayingChange(decoder);
+        }
 
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)]) {
@@ -2507,7 +2520,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
 
-            that->setNowPlaying(nil);
+            that->setNowPlayingAndNotifyDelegate(nil);
 
             // Nothing more to do if the player was stopped while the audio was playing
             if (bits::is_clear(that->loadFlags(), Flags::active)) {
