@@ -123,9 +123,13 @@ class AudioPlayer final {
     spsc::AudioRingBuffer audioBuffer_;
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
+
     /// The current playback generation
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
+    /// The current output generation, incremented when the engine is stopped
+    /// - note: Protected by `activeDecodersMutex_`
+    uint64_t outputGeneration_{1};
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -178,12 +182,6 @@ class AudioPlayer final {
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};
-    /// The current rendering notification generation, incremented when the engine is stopped
-    ///
-    /// Stopping the engine discards audio in the downstream pipeline, so rendering started and rendering complete
-    /// notifications scheduled in an earlier generation are stale and ignored.
-    /// - note: Protected by `activeDecodersMutex_`
-    uint64_t renderingNotificationGeneration_{0};
     /// The number of rendering complete notifications scheduled but not yet delivered
     ///
     /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
@@ -502,11 +500,11 @@ class AudioPlayer final {
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime,
-                                       uint64_t notificationGeneration) noexcept;
+                                       uint64_t outputGeneration) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
-                                          uint64_t notificationGeneration) noexcept;
+                                          uint64_t outputGeneration) noexcept;
 
     // MARK: - Transport Snapshots
 
