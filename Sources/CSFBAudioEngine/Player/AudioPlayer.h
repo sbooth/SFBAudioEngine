@@ -133,14 +133,9 @@ class AudioPlayer final {
     mutable mtx::UnfairMutex activeDecodersMutex_;
 
     /// The number of rendering complete notifications scheduled but not yet delivered
-    ///
-    /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
-    /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
-    /// End of audio is reached only when no completions are pending, and a non-gapless processing graph
-    /// reconfiguration waits until none are pending so the preceding decoder's audio finishes playing before the engine
-    /// is stopped.
-    /// - note: Protected by `activeDecodersMutex_`, so a decoder removed from `activeDecoders_` is always counted
-    unsigned int pendingRenderingCompletions_{0};
+    unsigned int scheduledRenderingCompleteNotifications_{0};
+    /// The epoch of `scheduledRenderingCompleteNotifications_`
+    uint64_t renderingCompleteNotificationGeneration_{0};
 
     /// Decoders enqueued for playback that are not yet active
     std::deque<Decoder> queuedDecoders_;
@@ -500,7 +495,10 @@ class AudioPlayer final {
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+    /// - parameter completionEpoch: The value of `renderingCompleteNotificationGeneration_` when the rendering
+    ///   complete event was processed
+    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
+                                          uint64_t completionEpoch) noexcept;
 
     // MARK: - Transport Snapshots
 
@@ -512,8 +510,8 @@ class AudioPlayer final {
 
     // MARK: - Active Decoder Management
 
-    /// Cancels all active decoders in sequence
-    void cancelActiveDecoders() noexcept;
+    /// Cancels all active decoders in sequence, returning the number of decoders canceled
+    std::size_t cancelActiveDecoders() noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
     DecoderState *_Nullable firstActiveDecoderState() const noexcept;

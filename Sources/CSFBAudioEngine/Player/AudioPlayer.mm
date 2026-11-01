@@ -616,7 +616,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     }
 
     clearDecoderQueue();
-    cancelActiveDecoders();
+    (void)cancelActiveDecoders();
 
     // Register a stop callback for the decoding thread
     std::stop_callback decodingThreadStopCallback(decodingThread_.get_stop_token(),
@@ -675,7 +675,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
     os_log_info(log_, "Enqueued %{public}@", decoder);
 
     if (forImmediatePlayback) {
-        cancelActiveDecoders();
+        (void)cancelActiveDecoders();
         // Mute until the decoder becomes active
         setFlags(Flags::muted);
     }
@@ -740,7 +740,12 @@ void sfb::AudioPlayer::stop() noexcept {
     const auto wasActive = deactivatePlayerAndStopEngine();
 
     clearDecoderQueue();
-    cancelActiveDecoders();
+    const auto canceledCount = cancelActiveDecoders();
+
+    // Clear now playing if no decoders were active when the engine was stopped
+    if (canceledCount == 0) {
+        setNowPlaying(nil);
+    }
 
     if (wasActive) {
         notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
@@ -780,7 +785,7 @@ void sfb::AudioPlayer::reset() noexcept {
         [engine_ reset];
     }
     clearDecoderQueue();
-    cancelActiveDecoders();
+    (void)cancelActiveDecoders();
 }
 
 // MARK: - Player State
@@ -1398,7 +1403,7 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
         // the graph
         const auto okToReconfigure = [&]() noexcept {
             std::lock_guard lock{activeDecodersMutex_};
-            return activeDecoders_.size() == 1 && pendingRenderingCompletions_ == 0;
+            return activeDecoders_.size() == 1 && scheduledRenderingCompleteNotifications_ == 0;
         }();
 
         if (!okToReconfigure) {
@@ -2011,7 +2016,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
     const auto hasNoDecoders = [&]() noexcept {
         std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
-        return queuedDecoders_.empty() && activeDecoders_.empty() && pendingRenderingCompletions_ == 0;
+        return queuedDecoders_.empty() && activeDecoders_.empty() && scheduledRenderingCompleteNotifications_ == 0;
     }();
 
     if (hasNoDecoders) {
@@ -2192,6 +2197,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 #endif /* DEBUG */
 
     Decoder decoder{nil};
+    uint64_t completionEpoch{0};
 
     {
         std::lock_guard lock{activeDecodersMutex_};
@@ -2213,8 +2219,9 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 
             decoder = (*iter)->decoder_;
 
-            // The decoder's audio is still in the pipeline until its rendering complete notification runs
-            ++pendingRenderingCompletions_;
+            // The decoder's audio is still inflight until its rendering complete notification runs
+            ++scheduledRenderingCompleteNotifications_;
+            completionEpoch = renderingCompleteNotificationGeneration_;
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
@@ -2242,7 +2249,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
     assert(decoder != nil);
 #endif /* DEBUG */
 
-    handleRenderingWillCompleteEvent(decoder, eventTime);
+    handleRenderingWillCompleteEvent(decoder, eventTime, completionEpoch);
     return true;
 }
 
@@ -2392,7 +2399,8 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
     }
 }
 
-void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime) noexcept {
+void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime,
+                                                        uint64_t completionEpoch) noexcept {
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
@@ -2423,18 +2431,22 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         // Not this, but that: `this` is not safe to use within this closure
         auto &that = player->_player;
 
-        // Rendering for this decoder is now complete
         unsigned int remaining;
         {
             std::lock_guard lock{that->activeDecodersMutex_};
+            // Notifications from earlier generations become stale when the engine stops
+            if (completionEpoch != that->renderingCompleteNotificationGeneration_) {
+                os_log_debug(log_, "Ignoring stale rendering complete notification for %{public}@", decoder);
+                return;
+            }
 #if DEBUG
-            assert(that->pendingRenderingCompletions_ > 0);
+            assert(that->scheduledRenderingCompleteNotifications_ > 0);
 #endif /* DEBUG */
-            remaining = --that->pendingRenderingCompletions_;
+            remaining = --that->scheduledRenderingCompleteNotifications_;
         }
 
-        // If no completions remain and a format change is pending, wake the decoding thread to reconfigure the
-        // processing graph
+        // If no rendering complete notifications are scheduled and a format change is pending, wake the decoding
+        // thread to reconfigure the processing graph
         if (remaining == 0 && bits::is_set(that->loadFlags(), Flags::formatChangePending)) {
             that->decodingSemaphore_.signal();
         }
@@ -2463,7 +2475,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         const auto hasNoDecoders = [&]() noexcept {
             std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
             return that->queuedDecoders_.empty() && that->activeDecoders_.empty() &&
-                   that->pendingRenderingCompletions_ == 0;
+                   that->scheduledRenderingCompleteNotifications_ == 0;
         }();
 
         // End of audio
@@ -2578,22 +2590,23 @@ auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::Transpo
 
 // MARK: - Active Decoder Management
 
-void sfb::AudioPlayer::cancelActiveDecoders() noexcept {
+std::size_t sfb::AudioPlayer::cancelActiveDecoders() noexcept {
     std::lock_guard lock{activeDecodersMutex_};
 
     // Cancel all active decoders
-    auto signal = false;
+    std::size_t count = 0;
     for (const auto &decoderState : activeDecoders_) {
         if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::canceled)) {
             decoderState->setFlags(DecoderState::Flags::cancelRequested);
-            signal = true;
+            ++count;
         }
     }
 
     // Signal the decoding thread if any cancelations were requested
-    if (signal) {
+    if (count > 0) {
         decodingSemaphore_.signal();
     }
+    return count;
 }
 
 auto sfb::AudioPlayer::firstActiveDecoderState() const noexcept -> DecoderState * {
@@ -2835,12 +2848,28 @@ void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool w
 }
 
 bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
-    std::lock_guard lock{engineMutex_};
-    const auto prevFlags = clearFlags(Flags::active | Flags::playing);
-    [engine_ stop];
+    Flags prevFlags;
+    {
+        std::lock_guard lock{engineMutex_};
+        prevFlags = clearFlags(Flags::active | Flags::playing);
+        [engine_ stop];
 #if TARGET_OS_IPHONE
-    wasPlayingBeforeInterruption_ = false;
+        wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
+    }
+
+    // Stopping the engine discards inflight audio, so mark pending rendering complete notifications as stale
+    {
+        std::lock_guard lock{activeDecodersMutex_};
+        ++renderingCompleteNotificationGeneration_;
+        scheduledRenderingCompleteNotifications_ = 0;
+    }
+
+    // If a format change is pending, wake the decoding thread to reconfigure the processing graph
+    if (bits::is_set(prevFlags, Flags::formatChangePending)) {
+        decodingSemaphore_.signal();
+    }
+
     return bits::is_set(prevFlags, Flags::active);
 }
 
