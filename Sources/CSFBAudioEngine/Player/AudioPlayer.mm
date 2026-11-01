@@ -276,7 +276,7 @@ struct AudioPlayer::DecoderState final {
         decodingSuspended = 1u << 4,
         /// Rendering started
         renderingStarted = 1u << 5,
-        /// Decoder cancelation requested
+        /// Decoder cancellation requested
         cancelRequested = 1u << 6,
         /// Decoder canceled
         canceled = 1u << 7,
@@ -1153,11 +1153,16 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bo
         eventSemaphore_.signal();
     }
 
+    // All requested cancellations have been processed and any stale audio is marked
+    auto flagsToClear = Flags::cancellationPending;
+
     // Clear the format mismatch flag if any decoders were canceled
     if (anyCanceled) {
         formatMismatch = false;
-        clearFlags(Flags::formatChangePending);
+        flagsToClear |= Flags::formatChangePending;
     }
+
+    clearFlags(flagsToClear);
 
     // Return the earliest decoder state that has not completed rendering
     return firstActiveDecoderState();
@@ -1588,7 +1593,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     const auto flags = loadFlags();
     const auto isStale = bits::is_set(flags, Flags::audioStale);
 
-    // Discard any stale frames in the ring buffer from a seek or decoder cancelation
+    // Discard any stale frames in the ring buffer from a seek or decoder cancellation
     if (isStale) [[unlikely]] {
         audioBuffer_.discardAll();
         audioMetadata_.discardAll();
@@ -1608,8 +1613,9 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         }
     }
 
-    // Output silence if muted, not playing, or the ring buffer was just emptied
-    if (bits::is_set_or_is_clear(flags, Flags::muted, Flags::playing) || isStale) {
+    // Output silence if muted, not playing, a decoder cancellation is pending, or the ring buffer was just emptied
+    if (bits::has_any(flags, Flags::muted | Flags::cancellationPending) || bits::is_clear(flags, Flags::playing) ||
+        isStale) {
         isSilence = YES;
         for (AudioBuffer &buffer : std::span{outputData.mBuffers, outputData.mNumberBuffers}) {
             std::memset(buffer.mData, 0, buffer.mDataByteSize);
@@ -2638,10 +2644,13 @@ std::size_t sfb::AudioPlayer::cancelActiveDecoders() noexcept {
         }
     }
 
-    // Signal the decoding thread if any cancelations were requested
+    // Signal the decoding thread if any cancellations were requested
     if (count > 0) {
+        // Output silence until the decoding thread processes the cancellations and marks any stale audio
+        setFlags(Flags::cancellationPending);
         decodingSemaphore_.signal();
     }
+
     return count;
 }
 
