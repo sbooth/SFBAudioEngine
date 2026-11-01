@@ -124,7 +124,7 @@ class AudioPlayer final {
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
 
-    /// The current playback generation
+    /// The current playback generation, incremented after a seek, decoder cancellation, or when the engine is stopped
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
     /// The current output generation, incremented when the engine is stopped
