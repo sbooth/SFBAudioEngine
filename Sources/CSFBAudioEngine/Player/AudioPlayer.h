@@ -218,10 +218,8 @@ class AudioPlayer final {
 
     ~AudioPlayer() noexcept;
 
-    [[nodiscard]] bool ownsCurrentThread() const noexcept {
-        const auto tid = std::this_thread::get_id();
-        return tid == eventThread_.get_id() || tid == decodingThread_.get_id();
-    }
+    /// Returns `true` if the current thread is this player's decoding or event processing thread
+    [[nodiscard]] bool ownsCurrentThread() const noexcept;
 
     // MARK: - Playlist Management
 

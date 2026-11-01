@@ -527,6 +527,15 @@ inline bool AudioPlayer::DecoderState::seekToFrame(AVAudioFramePosition frame, N
 
 // MARK: - AudioPlayer
 
+namespace {
+
+/// The player owning the current thread, set when a decoding or event processing thread starts
+thread_local const sfb::AudioPlayer *threadOwner = nullptr;
+
+} /* namespace */
+
+bool sfb::AudioPlayer::ownsCurrentThread() const noexcept { return threadOwner == this; }
+
 sfb::AudioPlayer::AudioPlayer() {
     // ========================================
     // Rendering Setup
@@ -563,15 +572,6 @@ sfb::AudioPlayer::AudioPlayer() {
         throw std::runtime_error("dispatch_queue_create_with_target failed");
     }
 
-    // Launch the decoding and event processing threads
-    try {
-        decodingThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::processDecoders, this));
-        eventThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::processEvents, this));
-    } catch (const std::exception &e) {
-        os_log_error(log_, "Unable to create thread: %{public}s", e.what());
-        throw;
-    }
-
     // ========================================
     // Audio Processing Graph Setup
 
@@ -597,6 +597,34 @@ sfb::AudioPlayer::AudioPlayer() {
 #if DEBUG
     logProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
 #endif /* DEBUG */
+
+    // ========================================
+    // Thread Launch
+
+    // Launch the decoding and event processing threads once everything they use is initialized
+    try {
+        decodingThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::processDecoders, this));
+        eventThread_ = std::jthread(std::bind_front(&sfb::AudioPlayer::processEvents, this));
+    } catch (const std::exception &e) {
+        os_log_error(log_, "Unable to create thread: %{public}s", e.what());
+#if false
+        // Not currently needed: the decoding thread is the only thread that can exist if this catch block executes
+        if (eventThread_.joinable()) {
+            eventThread_.request_stop();
+            eventSemaphore_.signal();
+            eventThread_.join();
+        }
+#endif /* false */
+        if (decodingThread_.joinable()) {
+            decodingThread_.request_stop();
+            decodingSemaphore_.signal();
+            decodingThread_.join();
+        }
+        throw;
+    }
+
+    // ========================================
+    // Notification Registration
 
     // Register for configuration change notifications
     auto *notificationCenter = CFNotificationCenterGetLocalCenter();
@@ -1064,6 +1092,8 @@ void sfb::AudioPlayer::logProcessingGraphDescription(os_log_t log, os_log_type_t
 // MARK: - Decoding
 
 void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
+    threadOwner = this;
+
     pthread_setname_np("AudioPlayer.Decoding");
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
@@ -1758,6 +1788,8 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
 // MARK: - Event Processing
 
 void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
+    threadOwner = this;
+
     pthread_setname_np("AudioPlayer.Events");
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
@@ -2671,6 +2703,13 @@ auto sfb::AudioPlayer::decoderStateWithSequenceNumber(uint64_t sequenceNumber) c
 
 void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engine,
                                                             [[maybe_unused]] NSDictionary *userInfo) noexcept {
+    // Keep the owning SFBAudioPlayer alive until this handler returns
+    __strong SFBAudioPlayer *player = player_;
+    if (player == nil) {
+        os_log_debug(log_, "Ignoring AVAudioEngineConfigurationChangeNotification for deallocated audio player");
+        return;
+    }
+
     if (engine != engine_) {
         os_log_error(log_,
                      "AVAudioEngineConfigurationChangeNotification received for incorrect AVAudioEngine instance");
@@ -2755,16 +2794,21 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         }
     }
 
-    if (__strong SFBAudioPlayer *player = player_; player != nil) {
-        if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
-            delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioEngineConfigurationChange:)]) {
-            [delegate audioPlayer:player audioEngineConfigurationChange:userInfo];
-        }
+    if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
+        delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioEngineConfigurationChange:)]) {
+        [delegate audioPlayer:player audioEngineConfigurationChange:userInfo];
     }
 }
 
 #if TARGET_OS_IPHONE
 void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) noexcept {
+    // Keep the owning SFBAudioPlayer alive until this handler returns
+    __strong SFBAudioPlayer *player = player_;
+    if (player == nil) {
+        os_log_debug(log_, "Ignoring AVAudioSessionInterruptionNotification for deallocated audio player");
+        return;
+    }
+
     const auto interruptionType = [[userInfo objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
     switch (interruptionType) {
     case AVAudioSessionInterruptionTypeBegan: {
@@ -2786,11 +2830,9 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
         }
 
-        if (__strong SFBAudioPlayer *player = player_; player != nil) {
-            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
-                delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
-                [delegate audioPlayer:player audioSessionInterruption:userInfo];
-            }
+        if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
+            delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
+            [delegate audioPlayer:player audioSessionInterruption:userInfo];
         }
 
         break;
@@ -2799,11 +2841,9 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
     case AVAudioSessionInterruptionTypeEnded: {
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
 
-        if (__strong SFBAudioPlayer *player = player_; player != nil) {
-            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
-                delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
-                [delegate audioPlayer:player audioSessionInterruption:userInfo];
-            }
+        if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
+            delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
+            [delegate audioPlayer:player audioSessionInterruption:userInfo];
         }
 
         if (const auto interruptionOption =
