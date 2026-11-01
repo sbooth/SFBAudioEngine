@@ -1459,6 +1459,13 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 #endif /* DEBUG */
 
     const auto flags = loadFlags();
+
+    // Process pending cancellations before decoding. Cancelling a decoder that has started decoding marks the ring
+    // buffer stale, which would also discard any audio decoded now.
+    if (bits::is_set(flags, Flags::cancellationPending)) [[unlikely]] {
+        return false;
+    }
+
     if (bits::is_set(flags, Flags::audioStale)) [[unlikely]] {
         std::lock_guard lock{engineMutex_};
 
