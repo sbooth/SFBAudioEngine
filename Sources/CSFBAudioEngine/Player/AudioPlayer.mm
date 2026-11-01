@@ -2640,6 +2640,9 @@ std::size_t sfb::AudioPlayer::cancelActiveDecoders() noexcept {
 
     // Signal the decoding thread if any cancelations were requested
     if (count > 0) {
+        // Mute until the cancelations are processed and the ring buffer is refilled; until then the ring buffer may
+        // contain audio from the canceled decoders that is not yet marked stale
+        setFlags(Flags::muted);
         decodingSemaphore_.signal();
     }
     return count;
