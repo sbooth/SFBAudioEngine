@@ -123,7 +123,7 @@ class AudioPlayer final {
     spsc::AudioRingBuffer audioBuffer_;
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
-    /// The current transport epoch
+    /// The current playback generation
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
@@ -134,7 +134,7 @@ class AudioPlayer final {
 
     /// The number of rendering complete notifications scheduled but not yet delivered
     unsigned int scheduledRenderingCompleteNotifications_{0};
-    /// The epoch of `scheduledRenderingCompleteNotifications_`
+    /// The generation of the most recent scheduled rendering complete notification
     uint64_t renderingCompleteNotificationGeneration_{0};
 
     /// Decoders enqueued for playback that are not yet active
@@ -162,7 +162,7 @@ class AudioPlayer final {
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
     mutable mtx::UnfairMutex engineMutex_;
-    /// The epoch of the most recent `AVAudioEngine` pause request
+    /// The generation of the most recent `AVAudioEngine` pause request
     std::atomic_uint64_t pauseRequestGeneration_{0};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
@@ -495,10 +495,10 @@ class AudioPlayer final {
     void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    /// - parameter completionEpoch: The value of `renderingCompleteNotificationGeneration_` when the rendering
+    /// - parameter notificationGeneration: The value of `renderingCompleteNotificationGeneration_` when the rendering
     ///   complete event was processed
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
-                                          uint64_t completionEpoch) noexcept;
+                                          uint64_t notificationGeneration) noexcept;
 
     // MARK: - Transport Snapshots
 

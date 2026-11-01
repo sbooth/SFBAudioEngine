@@ -1117,7 +1117,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bo
             // Empty the ring buffer since the decoder could have contributed stale frames
             setFlags(Flags::audioStale);
 
-            // Increment the playback epoch to expire any inflight events
+            // Increment the playback generation to expire any inflight events
             playbackGeneration_.fetch_add(1, std::memory_order_release);
         }
 
@@ -1172,10 +1172,10 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
     const auto framePosition = decoderState->framesDecoded();
 
     {
-        // Ensure the playback epoch increment and frame counter updates occur together
+        // Ensure the playback generation increment and frame counter updates occur together
         std::lock_guard lock{activeDecodersMutex_};
 
-        // Increment the playback epoch to expire any inflight events
+        // Increment the playback generation to expire any inflight events
         playbackGeneration_.fetch_add(1, std::memory_order_release);
 
         // Sync frames rendered with frames decoded
@@ -2137,7 +2137,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     // However, between the time the frames rendered event was queued and when it is processed
     // a decoder may have been canceled or a seek may have occurred, making the event stale.
     //
-    // This is indicated by an increment in the transport epoch/playback generation.
+    // This is indicated by an increment in the playback generation.
     //
     // NB: The generation check and frames rendered load below must happen under
     // activeDecodersMutex_. A seek on the decoding thread bumps playbackGeneration_ and resets
@@ -2197,12 +2197,12 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 #endif /* DEBUG */
 
     Decoder decoder{nil};
-    uint64_t completionEpoch{0};
+    uint64_t notificationGeneration{0};
 
     {
         std::lock_guard lock{activeDecodersMutex_};
 
-        // Discard stale events from previous playback generations
+        // Discard stale events from previous playback epochs
         if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
             os_log_debug(log_, "Discarding stale rendering complete event");
             return true;
@@ -2221,7 +2221,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 
             // The decoder's audio is still inflight until its rendering complete notification runs
             ++scheduledRenderingCompleteNotifications_;
-            completionEpoch = renderingCompleteNotificationGeneration_;
+            notificationGeneration = renderingCompleteNotificationGeneration_;
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
@@ -2249,7 +2249,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
     assert(decoder != nil);
 #endif /* DEBUG */
 
-    handleRenderingWillCompleteEvent(decoder, eventTime, completionEpoch);
+    handleRenderingWillCompleteEvent(decoder, eventTime, notificationGeneration);
     return true;
 }
 
@@ -2400,7 +2400,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 }
 
 void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime,
-                                                        uint64_t completionEpoch) noexcept {
+                                                        uint64_t notificationGeneration) noexcept {
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
@@ -2434,8 +2434,8 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         unsigned int remaining;
         {
             std::lock_guard lock{that->activeDecodersMutex_};
-            // Notifications from earlier generations become stale when the engine stops
-            if (completionEpoch != that->renderingCompleteNotificationGeneration_) {
+            // Notifications from earlier epochs become stale when the engine stops
+            if (notificationGeneration != that->renderingCompleteNotificationGeneration_) {
                 os_log_debug(log_, "Ignoring stale rendering complete notification for %{public}@", decoder);
                 return;
             }
