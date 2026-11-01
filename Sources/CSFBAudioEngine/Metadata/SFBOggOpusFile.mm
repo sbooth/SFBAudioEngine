@@ -7,14 +7,14 @@
 
 #import "SFBOggOpusFile.h"
 
+#import <taglib/opusfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/opusfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameOggOpus = @"org.sbooth.AudioEngine.File.OggOpus";
 

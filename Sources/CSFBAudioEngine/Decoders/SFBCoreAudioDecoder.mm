@@ -7,19 +7,19 @@
 
 #import "SFBCoreAudioDecoder.h"
 
+#import <os/log.h>
+
+#import <AudioToolbox/AudioToolbox.h>
+
+#import <algorithm>
+#import <cstdlib>
+#import <vector>
+
 #import "AudioFileWrapper.hpp"
 #import "ExtAudioFileWrapper.hpp"
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <AudioToolbox/AudioToolbox.h>
-
-#import <os/log.h>
-
-#import <algorithm>
-#import <cstdlib>
-#import <vector>
 
 SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
 

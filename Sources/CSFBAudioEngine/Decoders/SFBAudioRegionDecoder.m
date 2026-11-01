@@ -7,11 +7,11 @@
 
 #import "SFBAudioRegionDecoder.h"
 
-#import "SFBAudioDecoder+Internal.h"
+#import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 
-#import <os/log.h>
+#import "SFBAudioDecoder+Internal.h"
 
 #import <stdlib.h>
 

@@ -7,14 +7,14 @@
 
 #import "SFBOggVorbisFile.h"
 
+#import <taglib/tfilestream.h>
+#import <taglib/vorbisfile.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/tfilestream.h>
-#import <taglib/vorbisfile.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameOggVorbis = @"org.sbooth.AudioEngine.File.OggVorbis";
 

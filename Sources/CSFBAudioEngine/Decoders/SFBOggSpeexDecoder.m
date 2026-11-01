@@ -7,8 +7,9 @@
 
 #import "SFBOggSpeexDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
+
+#import <Accelerate/Accelerate.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <ogg/ogg.h>
@@ -17,9 +18,8 @@
 #import <speex/speex_header.h>
 #import <speex/speex_stereo.h>
 
-#import <Accelerate/Accelerate.h>
-
-#import <os/log.h>
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
 

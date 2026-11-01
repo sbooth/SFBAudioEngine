@@ -7,12 +7,12 @@
 
 #import "SFBProTrackerModuleFile.h"
 
+#import <taglib/modfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/modfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sbooth.AudioEngine.File.ProTrackerModule";
 
