@@ -136,6 +136,8 @@ class AudioPlayer final {
     ///
     /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
     /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
+    /// End of audio notifications and non-gapless processing graph reconfigurations wait until no rendering complete
+    /// notifications are pending.
     /// - note: Protected by `activeDecodersMutex_` so a decoder removed from `activeDecoders_` is always counted
     unsigned int scheduledRenderingCompleteNotifications_{0};
     /// The current rendering complete notification generation, incremented when the engine is stopped
