@@ -2433,7 +2433,8 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             remaining = --that->pendingRenderingCompletions_;
         }
 
-        // If no completions remain and a format change is pending, wake the decoding thread to reconfigure the processing graph
+        // If no completions remain and a format change is pending, wake the decoding thread to reconfigure the
+        // processing graph
         if (remaining == 0 && bits::is_set(that->loadFlags(), Flags::formatChangePending)) {
             that->decodingSemaphore_.signal();
         }
