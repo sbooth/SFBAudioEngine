@@ -7,22 +7,22 @@
 
 #import "SFBDSDPCMDecoder.h"
 
-#import "SFBAudioDecoder+Internal.h"
-#import "SFBDSDDecoder.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
-
-#import <os/log.h>
 
 #import <algorithm>
 #import <cstdint>
 #import <vector>
 
+#import "SFBAudioDecoder+Internal.h"
+#import "SFBDSDDecoder.h"
+#import "SFBLocalizedNameForURL.h"
+
 namespace {
 
 constexpr int kDSDPacketsPerPCMFrame = 8 / kSFBPCMFramesPerDSDPacket;
-constexpr int kBufferSizePackets = 16384;
+constexpr int kBufferSizePackets = 16'384;
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 constexpr unsigned char sBitReverseTable256[256] = {
@@ -324,7 +324,7 @@ class DXD {
         return NO;
     }
 
-    if (asbd->mSampleRate != kSFBSampleRateDSD64) {
+    if (asbd->mSampleRate != static_cast<Float64>(kSFBSampleRateDSD64)) {
         os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %g", asbd->mSampleRate);
         if (error != nullptr) {
             NSMutableDictionary *userInfo = [NSMutableDictionary
@@ -440,12 +440,11 @@ class DXD {
         // NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
 
         float *const *floatChannelData = buffer.floatChannelData;
-        AVAudioChannelCount channelCount = buffer.format.channelCount;
-        const bool isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) ==
-                                 kAudioFormatFlagIsBigEndian;
+        const auto channelCount = buffer.format.channelCount;
+        const auto isBigEndian = (_buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian) != 0;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const auto *const input = static_cast<const unsigned char *>(_buffer.data) + channel;
-            float *output = floatChannelData[channel];
+            float *output = floatChannelData[channel] + buffer.frameLength;
             _context[channel].translate(framesDecoded, input, channelCount, !isBigEndian, output, 1);
             // Boost signal by 6 dBFS
             vDSP_vsmul(output, 1, &linearGain, output, 1, framesDecoded);

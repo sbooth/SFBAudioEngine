@@ -7,11 +7,6 @@
 
 #import "SFBShortenDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
-
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-
 #import <libkern/OSByteOrder.h>
 #import <os/log.h>
 
@@ -21,6 +16,11 @@
 #import <cstring>
 #import <ranges>
 #import <vector>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
 
@@ -62,7 +62,7 @@ constexpr auto functionZero = 8;
 constexpr auto functionVerbatim = 9;
 
 // Format limitations
-constexpr auto maxBlocksize = 65535;
+constexpr auto maxBlocksize = 65'535;
 constexpr auto verbatimChunkMaxSizeBytes = 256;
 
 // File types
@@ -142,8 +142,12 @@ class VariableLengthInput {
 
     bool getRiceGolombCode(int32_t &i32, int k) noexcept {
 #if DEBUG
-        assert(k < 32);
+        assert(k >= 0 && k < 32);
 #endif /* DEBUG */
+        if (k < 0 || k > 31) {
+            return false;
+        }
+
         if (bitsAvailable_ == 0 && !refillBitBuffer()) {
             return false;
         }
@@ -643,7 +647,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             const auto framesCopied = [buffer appendFromBuffer:_frameBuffer
                                              readingFromOffset:0
                                                    frameLength:framesToCopy];
-            const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
+            [[maybe_unused]] const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 #if DEBUG
             assert(framesTrimmed == framesCopied);
 #endif /* DEBUG */
@@ -696,7 +700,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     entry = std::prev(entry);
 
 #if DEBUG
-    os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %d to seek to frame %lld",
+    os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %u to seek to frame %lld",
                  std::ranges::distance(_seekTableEntries.cbegin(), entry), entry->frameNumber_, frame);
 #endif
 
@@ -1558,7 +1562,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 
     // Validate seek table version
     if (header.version_ != seekTableRevision) {
-        os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %d", header.version_);
+        os_log_error(gSFBAudioDecoderLog, "Unsupported seek table header version: %u", header.version_);
         if (![_inputSource seekToOffset:startOffset error:error]) {
             return false;
         }
@@ -1655,7 +1659,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     if (startOffset != entries[0].byteOffsetInFile_) {
         os_log_error(
                 gSFBAudioDecoderLog,
-                "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)",
+                "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%u)",
                 (long)startOffset, entries[0].byteOffsetInFile_);
         return false;
     }

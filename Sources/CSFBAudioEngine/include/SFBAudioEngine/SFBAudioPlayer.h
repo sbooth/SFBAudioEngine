@@ -5,10 +5,10 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import <SFBAudioEngine/SFBPCMDecoding.h>
-
 #import <AVFAudio/AVFAudio.h>
 #import <Foundation/Foundation.h>
+
+#import <SFBAudioEngine/SFBPCMDecoding.h>
 
 #if !TARGET_OS_IPHONE
 #import <AudioToolbox/AudioToolbox.h>
@@ -25,12 +25,16 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
 
 /// The possible playback states for `SFBAudioPlayer`
+///
+/// The playback state reflects the player's transport state and is independent of whether the underlying
+/// `AVAudioEngine` is running. The player may stop and restart the engine internally, for example when reconfiguring
+/// the processing graph or in response to a hardware configuration change, without changing the playback state.
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
-    /// The `AVAudioEngine` is not running
+    /// No playback session is active
     SFBAudioPlayerPlaybackStateStopped = 0,
-    /// The `AVAudioEngine` is running and the player is not rendering audio
+    /// A playback session is active but the player is not rendering audio
     SFBAudioPlayerPlaybackStatePaused = 1,
-    /// The `AVAudioEngine` is running and the player is rendering audio
+    /// A playback session is active and the player is rendering audio
     SFBAudioPlayerPlaybackStatePlaying = 3,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
@@ -40,6 +44,14 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
 ///
 /// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped.
+///
+/// The playback state is independent of the state of the underlying `AVAudioEngine`. The engine runs only while the
+/// player is playing, so a paused player does not consume power for audio I/O and is not reported to the system as
+/// playing. While playing, the player restarts the engine as needed after internal stops such as processing graph
+/// reconfiguration or hardware configuration changes. If the engine cannot be restarted the player transitions from
+/// playing to paused, reports the error to the delegate, and retains its decoders. When the player is paused the
+/// engine is paused once audio already sent to the output has finished playing, and ``-playReturningError:``
+/// restarts it.
 ///
 /// `SFBAudioPlayer` supports delegate-based notifications for the following events:
 ///
@@ -52,12 +64,13 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 ///  7. Now playing changed
 ///  8. Playback state changed
 ///  9. End of audio
-///  10. Decoder canceled by user
-///  11. Decoding aborted due to error
-///  12. Asynchronous error encountered
-///  13. Processing graph format change with custom nodes present
-///  14. `AVAudioEngineConfigurationChange` notification received
-///  15. `AVAudioSessionInterruption` notification received
+///  10. Seek complete
+///  11. Decoder canceled by user
+///  12. Decoding aborted due to error
+///  13. Asynchronous error encountered
+///  14. Processing graph format change with custom nodes present
+///  15. `AVAudioEngineConfigurationChange` notification received
+///  16. `AVAudioSessionInterruption` notification received
 ///
 /// The dispatch queue on which delegate messages are sent is not specified.
 NS_SWIFT_NAME(AudioPlayer)
@@ -66,30 +79,33 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Playlist Management
 
 /// Cancels the current decoder, clears any queued decoders, creates and enqueues a decoder, and starts playback
-/// - note: This is equivalent to ``-enqueueURL:forImmediatePlayback:error:`` with `YES` for `forImmediatePlayback`
-/// followed by ``-playReturningError:``
+/// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
+/// during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued and playback started successfully
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
 /// Cancels the current decoder, clears any queued decoders, enqueues a decoder, and starts playback
-/// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `YES` for `forImmediatePlayback`
-/// followed by ``-playReturningError:``
+/// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
+/// successful enqueue operation is undefined.
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued and playback started successfully
 - (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
-/// - note: This is equivalent to ``-enqueueURL:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
+/// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
+/// during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Creates and enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any
 /// queued decoders
-/// - note: This is equivalent to creating an `SFBAudioDecoder` object for `url` and passing that object to
-/// ``-enqueueDecoder:forImmediatePlayback:error:``
+/// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
+/// during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
 /// before enqueuing
@@ -99,15 +115,20 @@ NS_SWIFT_NAME(AudioPlayer)
         forImmediatePlayback:(BOOL)forImmediatePlayback
                        error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 /// Enqueues a decoder for subsequent playback
-/// - note: This is equivalent to ``-enqueueDecoder:forImmediatePlayback:error:`` with `NO` for `forImmediatePlayback`
+/// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
+/// successful enqueue operation is undefined.
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued
 /// decoders
-/// - note: If `forImmediatePlayback` is `YES`, the audio processing graph is reconfigured for
-/// `decoder.processingFormat` if necessary
+/// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
+/// successful enqueue operation is undefined.
+/// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
+/// occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
 /// before enqueuing
@@ -128,28 +149,33 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Control
 
-/// Starts the `AVAudioEngine` and begins rendering audio
+/// Starts or resumes playback
+///
+/// If the player is stopped this begins a playback session, and enqueued audio plays as it becomes available. If the
+/// player is paused playback resumes. The `AVAudioEngine` is started if it is not running.
 /// - note: If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
+/// - note: If the `AVAudioEngine` cannot be started the playback state is unchanged
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
+/// - returns: `YES` if the player is playing, or `NO` if the `AVAudioEngine` could not be started
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
-/// Pauses audio rendering
-/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
-/// - returns: `YES` if the `AVAudioEngine` is running and the player is not rendering audio
-- (BOOL)pause;
-/// Resumes audio rendering
-/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
-/// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
-- (BOOL)resume;
-/// Stops the `AVAudioEngine`
-/// - note: This method cancels the current decoder and clears any queued decoders
-/// - note: If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
+/// Pauses playback
+///
+/// The playback session, decoders, and playback position are retained. The `AVAudioEngine` is paused once audio
+/// already sent to the output has finished playing. If called during an audio session interruption, this method
+/// prevents playback from resuming automatically when the interruption ends.
+/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` the playback state is unchanged
+- (void)pause;
+/// Stops playback, ending the playback session and stopping the `AVAudioEngine`
+/// - note: This method cancels the current decoder and clears any queued decoders, even if the player is already
+///   stopped
 - (void)stop;
 /// Toggles the player between playing and paused states, starting playback if stopped
 ///
-/// If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method sends ``-playReturningError:``
-/// If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method sends ``-pause``
-/// If the current playback state is `SFBAudioPlayerPlaybackStatePaused` this method sends ``-resume``
+/// If the player is playing this is equivalent to ``-pause``; otherwise it is equivalent to ``-playReturningError:``.
+/// The playback state is checked and changed atomically, so the transition always matches the state at the time it is
+/// applied, which checking ``isPlaying`` and then calling ``-pause`` or ``-playReturningError:`` cannot guarantee.
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` if the player is playing or paused, or `NO` if the `AVAudioEngine` could not be started
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
 /// Cancels the current decoder, clears any queued decoders, and resets the `AVAudioEngine`
@@ -158,15 +184,18 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Player State
 
 /// `YES` if the `AVAudioEngine` is running
+/// - note: The engine runs only while the player is playing. It may briefly differ from the playback state, for
+/// example while the processing graph is reconfigured, or after the player pauses while audio already sent to the
+/// output finishes playing
 @property(nonatomic, readonly) BOOL engineIsRunning;
 
 /// The current playback state
 @property(nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
-/// `YES` if the `AVAudioEngine` is running and the player is rendering audio
+/// `YES` if a playback session is active and the player is rendering audio
 @property(nonatomic, readonly) BOOL isPlaying;
-/// `YES` if the `AVAudioEngine` is running and the player is not rendering audio
+/// `YES` if a playback session is active and the player is not rendering audio
 @property(nonatomic, readonly) BOOL isPaused;
-/// `YES` if the `AVAudioEngine` is not running
+/// `YES` if no playback session is active
 @property(nonatomic, readonly) BOOL isStopped;
 
 /// `YES` if a decoder is available to supply audio for the next render cycle
@@ -180,58 +209,68 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Properties
 
-/// The frame position in the current decoder or `SFBUnknownFramePosition` if unknown or the current decoder is `nil`
+/// The frame position from the current decoder or `SFBUnknownFramePosition` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
-/// The frame length of the current decoder or `SFBUnknownFrameLength` if unknown or the current decoder is `nil`
+/// The frame length from the current decoder or `SFBUnknownFrameLength` if unknown or the current playback snapshot is
+/// invalid
 @property(nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
-/// The playback position in the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current decoder is
-/// `nil`
+/// The playback position from the current decoder or `SFBInvalidPlaybackPosition` if unknown or the current playback
+/// snapshot is invalid
 @property(nonatomic, readonly) SFBPlaybackPosition playbackPosition;
 
-/// The current time in the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
+/// The current time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
-/// The total time of the current decoder or `SFBUnknownTime` if unknown or the current decoder is `nil`
+/// The total time from the current decoder or `SFBUnknownTime` if unknown or the current playback snapshot is invalid
 @property(nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
-/// The playback time in the current decoder or `SFBInvalidPlaybackTime` if unknown or the current decoder is `nil`
+/// The playback time from the current decoder or `SFBInvalidPlaybackTime` if unknown or the current playback snapshot
+/// is invalid
 @property(nonatomic, readonly) SFBPlaybackTime playbackTime;
 
-/// Retrieves the playback position and time
+/// Retrieves the playback position and time from the current decoder
 /// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position
 /// information
 /// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
-/// - returns: `NO` if the current decoder is `nil`
+/// - returns: `NO` if the current playback snapshot is invalid
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition
                     andTime:(nullable SFBPlaybackTime *)playbackTime;
 
 // MARK: - Seeking
 
 /// Seeks forward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - note: Out-of-range seek requests are clamped to valid frame positions
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekForward;
 /// Seeks backward in the current decoder by 3 seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - note: Out-of-range seek requests are clamped to valid frame positions
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekBackward;
 
 /// Seeks forward in the current decoder by the specified number of seconds
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter secondsToSkip: The number of seconds to skip forward
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(forward:));
 /// Seeks backward in the current decoder by the specified number of seconds
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter secondsToSkip: The number of seconds to skip backward
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip NS_SWIFT_NAME(seek(backward:));
 
 /// Seeks to the specified time in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter timeInSeconds: The desired time in seconds
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds NS_SWIFT_NAME(seek(time:));
 /// Seeks to the specified position in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter position: The desired position in the interval `[0, 1)`
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
+/// - note: Out-of-range seek requests are clamped to valid frame positions
 /// - parameter frame: The desired audio frame
-/// - returns: `NO` if the seek is invalid or the current decoder is `nil` or doesn't support seeking
+/// - returns: `NO` if the the current playback snapshot is invalid or the decoder doesn't support seeking
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame NS_SWIFT_NAME(seek(frame:));
 
 /// Returns `YES` if the current decoder supports seeking
@@ -365,8 +404,19 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter playbackState: The current playback state
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
 /// Called to notify the delegate when rendering is complete for all available decoders
+///
+/// If the delegate implements this method the playback session remains active, so audio enqueued afterward will play
+/// without a call to ``-playReturningError:``. If the delegate does not implement this method the player is stopped.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
+/// Called to notify the delegate after performing a user-initiated seek in a decoder
+/// - warning: Do not change any properties of `decoder`
+/// - parameter audioPlayer: The `SFBAudioPlayer` object processing `decoder`
+/// - parameter decoder: The decoder that performed the seek
+/// - parameter frame: The new frame position in `decoder`
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer
+            didSeek:(id<SFBPCMDecoding>)decoder
+            toFrame:(AVAudioFramePosition)frame;
 /// Called to notify the delegate that the decoding and rendering processes for a decoder have been canceled by a
 /// user-initiated request
 /// - warning: Do not change any properties of `decoder`
@@ -421,9 +471,17 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 #if TARGET_OS_IPHONE
 /// Called to notify the delegate of an `AVAudioSession` interruption begin or end
 ///
-/// If the interruption began, this method is called after the playback state is saved and the player is stopped.
-/// If the interruption ended, this method is called before optionally attempting to activate the audio session and
-/// resume playback.
+/// If the interruption began, this method is called after the player is paused. The playback session and decoders are
+/// preserved.
+/// If the interruption ended, this method is called before the player optionally resumes playback. Playback is
+/// resumed only if the player was playing when the interruption began, was not paused or stopped during the
+/// interruption (including from this method), and the interruption options include
+/// `AVAudioSessionInterruptionOptionShouldResume`.
+///
+/// The player does not activate the audio session. To allow playback to resume automatically, activate the audio
+/// session from this method. To prevent playback from resuming, call ``-pause`` from this method. If playback is not
+/// resumed, the `AVAudioEngine` remains stopped until ``-playReturningError:`` is called; ensure the audio session is
+/// active before calling it.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter userInfo: The `userInfo` object from the notification
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioSessionInterruption:(nullable NSDictionary *)userInfo;

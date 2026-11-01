@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/AVFAudioExtensions",
       "state" : {
-        "revision" : "541d8617956cc46af45c2c5ae3f7c23439a2f666",
-        "version" : "0.5.0"
+        "revision" : "276deda6780b974be0d3dacf1bb0a890754b9e1b",
+        "version" : "0.5.1"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXAudioRingBuffer",
       "state" : {
-        "revision" : "f0a002189abb574b06e56b8d01ab958f0e2c5553",
-        "version" : "0.1.0"
+        "revision" : "266fb309d074f7843c9f125435b5921075c957b5",
+        "version" : "0.2.0"
       }
     },
     {
@@ -41,8 +41,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXDispatchSemaphore",
       "state" : {
-        "revision" : "d24b32760fd066739bc4d2c71522d3461398e304",
-        "version" : "0.4.0"
+        "revision" : "cd267c1dffae0e132abe7b63fcee1e1fe357f23d",
+        "version" : "0.4.1"
+      }
+    },
+    {
+      "identity" : "cxxmessagequeue",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sbooth/CXXMessageQueue",
+      "state" : {
+        "revision" : "0e9d1901f281986822e4ad2d6d6d9b5ecbe3c7db",
+        "version" : "0.2.2"
       }
     },
     {
@@ -55,12 +64,12 @@
       }
     },
     {
-      "identity" : "cxxringbuffer",
+      "identity" : "cxxqueue",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXRingBuffer",
+      "location" : "https://github.com/sbooth/CXXQueue",
       "state" : {
-        "revision" : "b316e9bd3d30ac425f06016273832d2b60c277b8",
-        "version" : "0.6.0"
+        "revision" : "b3b39f38e81d1fc5294ae99c81e019e1fe3b8582",
+        "version" : "0.1.1"
       }
     },
     {
@@ -68,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXTagLib",
       "state" : {
-        "revision" : "a243fefb04d56eeade7669b4ec90dc2997089fbb",
-        "version" : "2.1.1"
+        "revision" : "9e499ea0a69d107791ac0a2fe9d6a59cf401c6f9",
+        "version" : "2.3.2"
       }
     },
     {
@@ -77,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXUnfairLock",
       "state" : {
-        "revision" : "64e5c4a3a9d532bb26023b15c10d87b8ce09ab45",
-        "version" : "0.3.0"
+        "revision" : "d134022b339567958b3a941dfa3cd079d31f1030",
+        "version" : "0.3.1"
       }
     },
     {

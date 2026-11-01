@@ -7,12 +7,12 @@
 
 #import "SFBMPEGDecoder.h"
 
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <mpg123/mpg123.h>
 
-#import <os/log.h>
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
 
@@ -31,7 +31,7 @@ static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
     return 0;
 }
 
-static off_t lseek_callback(void *iohandle, off_t offset, int whence) {
+static int64_t lseek_callback(void *iohandle, int64_t offset, int whence) {
     NSCParameterAssert(iohandle != NULL);
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
@@ -108,9 +108,10 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     NSCParameterAssert(len >= 3);
 
     const unsigned char *loc = buf;
-    for (;;) {
+    const unsigned char *end = buf + len - 2;
+    while (loc < end) {
         // Search for first byte of MP3 sync word
-        loc = (const unsigned char *)memchr(loc, 0xff, len - (loc - buf) - 2);
+        loc = (const unsigned char *)memchr(loc, 0xff, end - loc);
         if (!loc) {
             break;
         }
@@ -259,7 +260,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     mpg123_param2(_mpg123, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
     mpg123_param2(_mpg123, MPG123_RESYNC_LIMIT, 2048, 0);
 
-    if (mpg123_reader64(_mpg123, read_callback, lseek_callback, NULL) != MPG123_OK) {
+    if (mpg123_reader64(_mpg123, read_callback, _inputSource.supportsSeeking ? lseek_callback : NULL, NULL) !=
+        MPG123_OK) {
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
 
@@ -311,7 +313,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 
     _processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32
                                                          sampleRate:rate
-                                                        interleaved:NO
+                                                        interleaved:YES
                                                       channelLayout:channelLayout];
 
     size_t bufferSizeBytes = mpg123_outblock(_mpg123);
@@ -345,7 +347,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
 
-    if (mpg123_scan(_mpg123) != MPG123_OK) {
+    if (_inputSource.supportsSeeking && mpg123_scan(_mpg123) != MPG123_OK) {
         mpg123_close(_mpg123);
         mpg123_delete(_mpg123);
         _mpg123 = NULL;
@@ -357,7 +359,6 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     }
 
     _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:framesPerMPEGFrame];
-    _buffer.frameLength = 0;
 
     return YES;
 }
@@ -382,7 +383,11 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 }
 
 - (AVAudioFramePosition)frameLength {
-    return mpg123_length(_mpg123);
+    int64_t length = mpg123_length64(_mpg123);
+    if (length == MPG123_ERR) {
+        return SFBUnknownFrameLength;
+    }
+    return length;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error {
@@ -430,22 +435,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
             return NO;
         }
 
-        // Deinterleave the samples
-        AVAudioFrameCount framesDecoded =
-                (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
-
-        float *const *floatChannelData = _buffer.floatChannelData;
-        AVAudioChannelCount channelCount = _buffer.format.channelCount;
-        for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
-            const float *input = (float *)audioData + channel;
-            float *output = floatChannelData[channel];
-            for (AVAudioFrameCount frame = 0; frame < framesDecoded; ++frame) {
-                *output++ = *input;
-                input += channelCount;
-            }
-        }
-
-        _buffer.frameLength = framesDecoded;
+        memcpy(_buffer.audioBufferList->mBuffers[0].mData, audioData, bytesDecoded);
+        _buffer.frameLength = (AVAudioFrameCount)(bytesDecoded / (_buffer.stride * sizeof(float)));
     }
 
     _framePosition += framesProcessed;
@@ -466,6 +457,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     }
 
     _framePosition = offset;
+    _buffer.frameLength = 0;
+
     return offset >= 0;
 }
 

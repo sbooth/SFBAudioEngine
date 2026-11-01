@@ -5,19 +5,19 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBAudioMetadata+TagLibXiphComment.h"
-#import "TagLibStringUtilities.h"
-
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import <memory>
 
+#import "SFBAudioMetadata+TagLibXiphComment.h"
+#import "TagLibStringUtilities.h"
+
 namespace {
 
 /// A `std::unique_ptr` deleter for `CFTypeRef` objects
 struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) { CFRelease(cf); }
+    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) noexcept { CFRelease(cf); }
 };
 
 using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
@@ -31,7 +31,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
 
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 
-    for (auto it : tag->fieldListMap()) {
+    for (const auto &it : tag->fieldListMap()) {
         // According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is
         // a safer choice
         NSString *key = [NSString stringWithUTF8String:it.first.toCString(true)];
@@ -118,7 +118,7 @@ using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_de
     }
 
     // Add the pictures parsed by TagLib from the "METADATA_BLOCK_PICTURE" and "COVERART" Xiph comments
-    for (auto *iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
+    for (const auto *iter : const_cast<TagLib::Ogg::XiphComment *>(tag)->pictureList()) {
         NSData *imageData = [NSData dataWithBytes:iter->data().data() length:iter->data().size()];
 
         NSString *description = nil;

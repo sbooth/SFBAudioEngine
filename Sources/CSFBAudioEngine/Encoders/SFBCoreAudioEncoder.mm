@@ -7,17 +7,17 @@
 
 #import "SFBCoreAudioEncoder.h"
 
+#import <os/log.h>
+
+#import <AudioToolbox/AudioToolbox.h>
+
+#import <algorithm>
+#import <vector>
+
 #import "AudioFileWrapper.hpp"
 #import "ExtAudioFileWrapper.hpp"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <AudioToolbox/AudioToolbox.h>
-
-#import <os/log.h>
-
-#import <algorithm>
-#import <vector>
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
 
@@ -597,7 +597,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                             [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
                     break;
                 default:
-                    os_log_info(gSFBAudioEncoderLog, "Ignoring unknown AudioConverterPropertyID: %d '%{public}.4s'",
+                    os_log_info(gSFBAudioEncoderLog, "Ignoring unknown AudioConverterPropertyID: %u '%{public}.4s'",
                                 propertyID, SFBCStringForOSType(propertyID));
                     break;
                 }

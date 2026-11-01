@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: cpp-linter
         uses: cpp-linter/cpp-linter-action@v2
         id: linter
@@ -38,7 +38,7 @@ jobs:
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
           format-review: true
           extensions: 'h,hpp,c,cpp,m,mm'
-          version: 21
+          version: 22
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed > 0
         run: exit 1

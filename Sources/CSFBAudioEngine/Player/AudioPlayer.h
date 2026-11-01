@@ -7,32 +7,98 @@
 
 #pragma once
 
-#import "SFBAudioDecoder.h"
-#import "SFBAudioPlayer.h"
-#import "bitmask_enum.hpp"
-
-#import <dsema/Semaphore.hpp>
-#import <mtx/UnfairMutex.hpp>
-#import <spsc/AudioRingBuffer.hpp>
-#import <spsc/RingBuffer.hpp>
+#import <os/log.h>
 
 #import <AVFAudio/AVFAudio.h>
-
-#import <os/log.h>
 
 #import <atomic>
 #import <cassert>
 #import <deque>
 #import <memory>
 #import <mutex>
+#import <optional>
 #import <stop_token>
 #import <thread>
 #import <vector>
+
+#import <dsema/Semaphore.hpp>
+#import <mpsc/MessageQueue.hpp>
+#import <mtx/UnfairMutex.hpp>
+#import <spsc/AudioRingBuffer.hpp>
+#import <spsc/Queue.hpp>
+
+#import "SFBAudioDecoder.h"
+#import "SFBAudioPlayer.h"
+#import "bitmask_enum.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 
 namespace sfb {
+
+namespace detail {
+
+/// A descriptor for a decoded chunk of audio.
+struct DecodedChunkDescriptor final {
+    /// The playback generation at the time this chunk was decoded
+    uint64_t playbackGeneration_{0};
+    /// Decoder sequence number that produced the audio
+    uint64_t sequenceNumber_{0};
+    /// Number of audio frames in the chunk
+    uint32_t frameLength_{0};
+    /// Whether this is the last chunk from the decoder
+    bool isLast_{false};
+
+    /// Returns true if this chunk contains zero frames
+    [[nodiscard]] bool isEmpty() const noexcept { return frameLength_ == 0; }
+};
+
+/// A descriptor for a rendering chunk of audio.
+struct RenderingChunkDescriptor final {
+    /// The decoded chunk descriptor
+    DecodedChunkDescriptor descriptor_{};
+    /// The number of frames consumed from `descriptor_`
+    uint32_t framesConsumed_{0};
+
+    /// Returns the number of frames remaining in this chunk
+    [[nodiscard]] uint32_t framesRemaining() const noexcept { return descriptor_.frameLength_ - framesConsumed_; }
+
+    /// Returns true if all frames from the decoded chunk descriptor have been consumed
+    [[nodiscard]] bool allFramesConsumed() const noexcept { return framesConsumed_ == descriptor_.frameLength_; }
+};
+
+/// A snapshot encapsulating a consistent view of playback state.
+struct TransportSnapshot final {
+    /// Decoder sequence number for the snapshot.
+    uint64_t sequenceNumber_{0};
+    /// Decoder frame position.
+    int64_t framePosition_{SFBUnknownFramePosition};
+    /// Decoder frame length.
+    int64_t frameLength_{SFBUnknownFrameLength};
+    /// Decoder sample rate in Hz.
+    double sampleRate_{0};
+    /// Whether the decoder supports seeking.
+    bool supportsSeeking_{false};
+    /// Whether this snapshot contains valid data.
+    bool isValid_{false};
+
+    /// Gets the playback position and time for this snapshot.
+    /// @param position An optional pointer to receive the playback position
+    /// @param time An optional pointer to receive the playback time
+    /// @return false if the snapshot is not valid
+    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                    SFBPlaybackTime *_Nullable time) const noexcept;
+};
+
+/// A seek request.
+struct SeekRequest final {
+    /// Decoder sequence number for the request.
+    uint64_t sequenceNumber_{0};
+    /// Requested frame position.
+    int64_t frame_{-1};
+};
+
+} /* namespace detail */
 
 // MARK: - AudioPlayer
 
@@ -54,7 +120,21 @@ class AudioPlayer final {
     using DecoderStateVector = std::vector<std::unique_ptr<DecoderState>>;
 
     /// Ring buffer transferring audio between the decoding thread and the render block
-    spsc::AudioRingBuffer audioRingBuffer_;
+    spsc::AudioRingBuffer audioBuffer_;
+    /// Queue transferring audio metadata between the decoding thread and the render block
+    spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
+
+    /// The current playback generation, incremented after a seek, decoder cancellation, or when the engine is stopped
+    std::atomic_uint64_t playbackGeneration_{1};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
+    /// The current output generation, incremented when the engine is stopped
+    ///
+    /// Only stops that discard the active decoders advance the output generation. Interruptions and configuration
+    /// changes also stop the engine but retain the player state and decoders; their scheduled notifications are still
+    /// delivered because the decoders they describe have already been removed from `activeDecoders_` and counted,
+    /// and dropping them would lose the rendering complete callback, stall end of audio, and leave now playing stale.
+    /// - note: Protected by `activeDecodersMutex_`
+    uint64_t outputGeneration_{1};
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -76,33 +156,55 @@ class AudioPlayer final {
     /// Dispatch semaphore used for communication with the event processing thread
     dsema::Semaphore eventSemaphore_{0};
 
-    /// Ring buffer communicating events from the decoding thread to the event processing thread
-    spsc::RingBuffer decodingEvents_;
-    /// Ring buffer communicating events from the render block to the event processing thread
-    spsc::RingBuffer renderingEvents_;
+    /// Message queue communicating events to the event processing thread
+    mpsc::MessageQueue<256, 32> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
     /// Source node driving the audio processing graph
     AVAudioSourceNode *sourceNode_{nil};
-    /// Mutex protecting playback state and processing graph configuration changes
+    /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
+    /// changes
     mutable mtx::UnfairMutex engineMutex_;
+    /// The generation of the most recent `AVAudioEngine` pause request
+    std::atomic_uint64_t pauseRequestGeneration_{0};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
+
+    /// Current playback snapshot
+    mutable detail::TransportSnapshot currentSnapshot_{};
+    /// Seqlock protecting `currentSnapshot_`
+    std::atomic_uint64_t snapshotSequence_{0};
+    static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
+    /// Pending seek request
+    std::atomic<detail::SeekRequest> pendingSeek_{};
+    static_assert(std::atomic<detail::SeekRequest>::is_always_lock_free,
+                  "Lock-free std::atomic<detail::SeekRequest> required");
 
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
     /// Mutex protecting `nowPlaying_`
+    /// - note: May be acquired while holding `activeDecodersMutex_`, never the reverse
     mutable mtx::UnfairMutex nowPlayingMutex_;
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};
+    /// The number of rendering complete notifications scheduled but not yet delivered
+    ///
+    /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
+    /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
+    /// End of audio notifications and non-gapless processing graph reconfigurations wait until no rendering complete
+    /// notifications are pending.
+    /// - note: Protected by `activeDecodersMutex_` so a decoder removed from `activeDecoders_` is always counted
+    unsigned int scheduledRenderingCompleteNotifications_{0};
 
     /// Player flags
     std::atomic_uint flags_{0};
     static_assert(std::atomic_uint::is_always_lock_free, "Lock-free std::atomic_uint required");
 
 #if TARGET_OS_IPHONE
-    /// Playback state before audio session interruption
-    unsigned int preInterruptState_{0};
+    /// Whether the player was playing when an audio session interruption began
+    /// - note: Protected by `engineMutex_`
+    bool wasPlayingBeforeInterruption_{false};
 #endif /* TARGET_OS_IPHONE */
 
   public:
@@ -128,8 +230,7 @@ class AudioPlayer final {
     // MARK: - Playback Control
 
     bool play(NSError **error) noexcept;
-    bool pause() noexcept;
-    bool resume() noexcept;
+    void pause() noexcept;
     void stop() noexcept;
     bool togglePlayPause(NSError **error) noexcept;
 
@@ -151,15 +252,20 @@ class AudioPlayer final {
     Decoder _Nullable nowPlaying() const noexcept;
 
   private:
-    void setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    /// Sets now playing and returns `true` if it changed
+    [[nodiscard]] bool setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    /// Notifies the delegate that now playing changed to `nowPlaying`
+    void notifyDelegateOfNowPlayingChange(Decoder _Nullable nowPlaying) noexcept;
+    /// Sets now playing and notifies the delegate if it changed
+    void setNowPlayingAndNotifyDelegate(Decoder _Nullable nowPlaying) noexcept;
 
   public:
     // MARK: - Playback Properties
 
     SFBPlaybackPosition playbackPosition() const noexcept;
     SFBPlaybackTime playbackTime() const noexcept;
-    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable playbackPosition,
-                                    SFBPlaybackTime *_Nullable playbackTime) const noexcept;
+    bool getPlaybackPositionAndTime(SFBPlaybackPosition *_Nullable position,
+                                    SFBPlaybackTime *_Nullable time) const noexcept;
 
     // MARK: - Seeking
 
@@ -170,8 +276,7 @@ class AudioPlayer final {
     bool supportsSeeking() const noexcept;
 
   private:
-    bool performClampingSeekToFrame(DecoderState *_Nonnull decoderState, AVAudioFramePosition frame,
-                                    bool isRelative) noexcept;
+    bool seekToFrameInSnapshot(const detail::TransportSnapshot &snapshot, AVAudioFramePosition frame) noexcept;
 
   public:
 #if !TARGET_OS_IPHONE
@@ -200,23 +305,41 @@ class AudioPlayer final {
 
   private:
     /// Possible bits in `flags_`
+    ///
+    /// The player state is described by `active` and `playing` and is independent of whether the `AVAudioEngine` is
+    /// running. The engine runs only while the player is playing: it is paused shortly after the player pauses, and
+    /// stopped when the player stops. The engine may also be stopped internally (processing graph reconfiguration,
+    /// hardware configuration changes, audio session interruptions) without changing the player state; following an
+    /// internal stop the engine is restarted automatically only if the player is playing.
     enum class Flags : unsigned int {
-        /// Cached value of `engine_.isRunning`
-        engineIsRunning = 1u << 0,
+        /// Clear
+        none = 0,
+        /// The player is active (i.e. not stopped, whether playing or paused)
+        active = 1u << 0,
         /// The render block should output audio
-        isPlaying = 1u << 1,
+        /// - invariant: `playing` implies `active`
+        playing = 1u << 1,
         /// The render block should output silence
-        isMuted = 1u << 2,
-        /// The ring buffer needs to be drained during the next render cycle
-        drainRequired = 1u << 3,
+        muted = 1u << 2,
+        /// The ring buffer contains stale audio and needs to be emptied during the next render cycle
+        audioStale = 1u << 3,
+        /// A ring buffer format change is pending
+        formatChangePending = 1u << 4,
+        /// The event message queue had insufficient space to record a render event
+        renderEventDropped = 1u << 5,
+        /// Cancellation was requested for an active decoder but has not yet been processed by the decoding thread
+        cancellationPending = 1u << 6,
     };
 
-    // Enable bitmask operations for `Flags`
     friend constexpr void is_bitmask_enum(Flags);
 
-    // Hidden friends
-    friend constexpr Flags operator|(Flags l, Flags r) noexcept { return bits::operator|(l, r); }
-    friend constexpr Flags operator&(Flags l, Flags r) noexcept { return bits::operator&(l, r); }
+    // `playbackState()` converts the player state flags directly to `SFBAudioPlayerPlaybackState`
+    static_assert(bits::to_underlying(Flags::none) == SFBAudioPlayerPlaybackStateStopped,
+                  "Flags::none must match SFBAudioPlayerPlaybackStateStopped");
+    static_assert(bits::to_underlying(Flags::active) == SFBAudioPlayerPlaybackStatePaused,
+                  "Flags::active must match SFBAudioPlayerPlaybackStatePaused");
+    static_assert(bits::to_underlying(Flags::active | Flags::playing) == SFBAudioPlayerPlaybackStatePlaying,
+                  "Flags::active | Flags::playing must match SFBAudioPlayerPlaybackStatePlaying");
 
     /// Atomically loads the value of `flags_` using the specified memory order and returns the result
     [[nodiscard]] Flags loadFlags(std::memory_order order = std::memory_order_acquire) const noexcept {
@@ -238,84 +361,184 @@ class AudioPlayer final {
         return static_cast<Flags>(flags_.fetch_and(~bits::to_underlying(flags), order));
     }
 
+    // MARK: - Player State Management
+
+    /// Starts the `AVAudioEngine` if it is not running
+    ///
+    /// The player state is neither checked nor modified: callers check the state before calling and publish any state
+    /// change only after this returns `true`, so other threads never observe a requested state before the engine is
+    /// running.
+    /// - important: The caller must hold `engineMutex_`
+    /// - parameter error: An optional pointer to an `NSError` object to receive error information
+    /// - returns: `true` if the engine is running
+    bool startEngine(NSError **error) noexcept;
+
+    /// Notifies the delegate of an engine start failure and a playback state change if needed
+    void notifyDelegateOfEngineStartFailure(NSError *_Nullable error, bool wasPlaying) noexcept;
+
+    /// Deactivates the player and stops the `AVAudioEngine`
+    /// - note: The caller is responsible for clearing the decoder queue and canceling active decoders if desired
+    /// - returns: `true` if the player was active
+    bool deactivatePlayerAndStopEngine() noexcept;
+
+    /// Notifies the delegate of a playback state change
+    void notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept;
+
     // MARK: - Decoding
 
     /// Dequeues and processes decoders from the decoder queue
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
-    /// Writes an error event to `decodingEvents_` and signals `eventSemaphore_`
-    void submitDecodingErrorEvent(NSError *error) noexcept;
+    /// Processes decoder cancellations and returns the first active decoder state
+    DecoderState *_Nullable processDecoderCancellations(bool &formatMismatch) noexcept;
+
+    /// Processes the pending seek for `decoderState`
+    bool processPendingSeek(DecoderState *_Nonnull decoderState, bool &formatMismatch) noexcept;
+
+    /// Returns the first decoder state in `activeDecoders_` that is eligible for decoding
+    DecoderState *_Nullable firstIncompleteDecoderState() const noexcept;
+
+    /// Suspnds and rewinds decoders following a seek in the decoder state with `sequenceNumber` if needed
+    void suspendAndRewindDecodersFollowing(uint64_t sequenceNumber) noexcept;
+
+    /// Dequeues and returns the next decoder or nullptr if none
+    DecoderState *_Nullable dequeueNextDecoder() noexcept;
+
+    /// Prepares `decoderState` for decoding
+    bool prepareDequeuedDecoder(DecoderState *_Nonnull decoderState) noexcept;
+
+    /// Allocates the buffer that is the intermediary between the decoder state and the ring buffer if needed
+    bool allocateDecodeBufferIfNeeded(AVAudioPCMBuffer *_Nullable __strong &buffer,
+                                      AVAudioFormat *_Nonnull renderFormat,
+                                      DecoderState *_Nonnull decoderState) noexcept;
+
+    /// Configures the processing graph for `decoderState` if able
+    bool configureForDecoder(DecoderState *_Nullable &decoderState, AVAudioPCMBuffer *_Nullable __strong &buffer,
+                             bool &formatMismatch) noexcept;
+
+    /// Decodes audio from `decoderState` into the ring buffer
+    bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
+
+    /// Returns the appropriate decoding semaphore timeout
+    int64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
     // MARK: - Rendering
 
     /// Render block implementation
     OSStatus render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
-                    AudioBufferList *_Nonnull outputData) noexcept;
+                    AudioBufferList &outputData) noexcept;
+
+    /// Enqueues frames rendered event(s) for rendered audio
+    void enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
+
+    /// Enqueues an empty frames rendered event if an empty decoded chunk descriptor is present
+    void enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
+
+    /// The current rendering chunk descriptor
+    std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
+
+    /// The sequence number of the decoder that produced the most recently rendered chunk
+    uint64_t lastRenderedSequenceNumber_{0};
+
+    /// The host time of the last ring buffer underrun
+    uint64_t lastUnderrunHostTime_{0};
+
+    /// The generation of the most recent `AVAudioEngine` pause request for which the render block enqueued
+    /// a pause engine event
+    /// - note: Only accessed from the render block
+    uint64_t processedPauseGeneration_{0};
 
     // MARK: - Events
 
-    /// Decoding thread events
-    enum class DecodingEventCommand : uint32_t {
+    /// Event commands
+    enum class EventCommand : uint16_t {
         /// Decoding started
-        started = 1,
+        decodingStarted = 1,
         /// Decoding complete
-        complete = 2,
+        decodingComplete = 2,
+        /// Seek complete
+        seekComplete = 3,
         /// Decoder canceled by user or aborted due to error
-        canceled = 3,
-        /// Decoding error
-        error = 4,
-    };
-
-    /// Render block events
-    enum class RenderingEventCommand : uint32_t {
+        decoderCanceled = 4,
+        /// Allocation failure
+        allocationFailure = 5,
+        /// Rendering started
+        renderingStarted = 6,
         /// Audio frames rendered from ring buffer
-        framesRendered = 1,
+        framesRendered = 7,
+        /// Rendering complete
+        renderingComplete = 8,
+        /// Ring buffer contained fewer audio frames than requested
+        renderBufferUnderrun = 9,
+        /// `AVAudioEngine` pause requested
+        pauseEngine = 10,
     };
 
     // MARK: - Event Processing
 
-    /// Reads and sequences event headers from `decodingEvents_` and `renderingEvents_` for processing in order
+    /// Peeks and identifies event commands in `events_` for processing
     /// - note: This is the thread entry point for the event processing thread
-    void sequenceAndProcessEvents(std::stop_token stoken) noexcept;
+    void processEvents(std::stop_token stoken) noexcept;
 
-    /// Reads and processes an event payload from `decodingEvents_`
-    bool processDecodingEvent(DecodingEventCommand command) noexcept;
-
-    /// Reads and processes a decoding started event from `decodingEvents_`
+    /// Dequeues and processes a decoding started event from `events_`
     bool processDecodingStartedEvent() noexcept;
 
-    /// Reads and processes a decoding complete event from `decodingEvents_`
+    /// Dequeues and processes a decoding complete event from `events_`
     bool processDecodingCompleteEvent() noexcept;
 
-    /// Reads and processes a decoder canceled event from `decodingEvents_`
+    /// Dequeues and processes a seek complete event from `events_`
+    bool processSeekCompleteEvent() noexcept;
+
+    /// Dequeues and processes a decoder canceled event from `events_`
     bool processDecoderCanceledEvent() noexcept;
 
-    /// Reads and processes a decoding error event from `decodingEvents_`
-    bool processDecodingErrorEvent() noexcept;
+    /// Dequeues and processes an allocation failure event from `events_`
+    bool processAllocationFailureEvent() noexcept;
 
-    /// Reads and processes an event payload from `renderingEvents_`
-    bool processRenderingEvent(RenderingEventCommand command) noexcept;
+    /// Dequeues and processes a rendering started event from `events_`
+    bool processRenderingStartedEvent() noexcept;
 
-    /// Reads and processes a frames rendered event from `renderingEvents_`
+    /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
 
+    /// Dequeues and processes a rendering complete event from `events_`
+    bool processRenderingCompleteEvent() noexcept;
+
+    /// Reads and processes a render buffer underrun event from `events_`
+    bool processRenderBufferUnderrunEvent() noexcept;
+
+    /// Dequeues and processes a pause engine event from `events_`
+    bool processPauseEngineEvent() noexcept;
+
     /// Called when the first audio frame from a decoder will render.
-    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
+                                          uint64_t outputGeneration) noexcept;
+
+    // MARK: - Transport Snapshots
+
+    /// Publishes a playback snapshot.
+    void publishTransportSnapshot(const detail::TransportSnapshot &snapshot) noexcept;
+
+    /// Reads the most recently published playback snapshot.
+    [[nodiscard]] detail::TransportSnapshot loadTransportSnapshot() const noexcept;
 
     // MARK: - Active Decoder Management
 
-    /// Cancels all active decoders in sequence
-    void cancelActiveDecoders() noexcept;
+    /// Cancels all active decoders in sequence, returning the number of decoders canceled
+    std::size_t cancelActiveDecoders() noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
     DecoderState *_Nullable firstActiveDecoderState() const noexcept;
 
+    /// Returns the decoder state in `activeDecoders_` with the specified sequence number
+    DecoderState *_Nullable decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept;
+
   public:
-    // MARK: - AVAudioEngine Notification Handling
+    // MARK: - Notification Handling
 
     /// Called to process `AVAudioEngineConfigurationChangeNotification`
     void handleAudioEngineConfigurationChange(AVAudioEngine *_Nonnull engine,
@@ -329,13 +552,14 @@ class AudioPlayer final {
   private:
     // MARK: - Processing Graph Management
 
-    /// Stops the AVAudioEngine if it is running and returns true if it was stopped
-    bool stopEngineIfRunning() noexcept;
-
     /// Configures the player to render audio with `format`
+    ///
+    /// The player state is preserved across the reconfiguration. The `AVAudioEngine` is restarted afterward if the
+    /// player is playing. If the engine cannot be restarted the player is paused and the error is reported to the
+    /// delegate, but the reconfiguration is still considered successful.
     /// - parameter format: The desired audio format
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
-    /// - returns: `true` if the player was successfully configured
+    /// - returns: `true` if the processing graph and ring buffer were successfully configured
     bool configureProcessingGraphAndRingBufferForFormat(AVAudioFormat *_Nonnull format, NSError **error) noexcept;
 };
 
@@ -351,26 +575,30 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
     return queuedDecoders_.empty();
 }
 
+inline bool AudioPlayer::engineIsRunning() const noexcept { return engine_.isRunning; }
+
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
-    const auto state = flags & (Flags::engineIsRunning | Flags::isPlaying);
-    assert(!bits::is_set_without(state, Flags::isPlaying, Flags::engineIsRunning));
+    const auto state = flags & (Flags::active | Flags::playing);
+#if DEBUG
+    assert(bits::is_set_or_is_clear(state, Flags::active, Flags::playing));
+#endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 
 inline bool AudioPlayer::isPlaying() const noexcept {
     const auto flags = loadFlags();
-    return bits::has_all(flags, Flags::engineIsRunning | Flags::isPlaying);
+    return bits::has_all(flags, Flags::active | Flags::playing);
 }
 
 inline bool AudioPlayer::isPaused() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_set_without(flags, Flags::engineIsRunning, Flags::isPlaying);
+    return bits::is_set_and_is_clear(flags, Flags::active, Flags::playing);
 }
 
 inline bool AudioPlayer::isStopped() const noexcept {
     const auto flags = loadFlags();
-    return bits::is_clear(flags, Flags::engineIsRunning);
+    return bits::is_clear(flags, Flags::active);
 }
 
 inline bool AudioPlayer::isReady() const noexcept {
@@ -383,11 +611,59 @@ inline AudioPlayer::Decoder _Nullable AudioPlayer::nowPlaying() const noexcept {
     return nowPlaying_;
 }
 
+inline SFBPlaybackPosition AudioPlayer::playbackPosition() const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    SFBPlaybackPosition position;
+    snapshot.getPlaybackPositionAndTime(&position, nullptr);
+    return position;
+}
+
+inline SFBPlaybackTime AudioPlayer::playbackTime() const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    SFBPlaybackTime time;
+    snapshot.getPlaybackPositionAndTime(nullptr, &time);
+    return time;
+}
+
+inline bool AudioPlayer::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
+                                                    SFBPlaybackTime *time) const noexcept {
+    const auto snapshot = loadTransportSnapshot();
+    return snapshot.getPlaybackPositionAndTime(position, time);
+}
+
 inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { return sourceNode_; }
 
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
 inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
+
+// MARK: Transport Snapshot
+
+inline bool detail::TransportSnapshot::getPlaybackPositionAndTime(SFBPlaybackPosition *position,
+                                                                  SFBPlaybackTime *time) const noexcept {
+    if (position != nullptr) {
+        if (!isValid_) {
+            *position = SFBInvalidPlaybackPosition;
+        } else {
+            *position = {.framePosition = framePosition_, .frameLength = frameLength_};
+        }
+    }
+
+    if (time != nullptr) {
+        auto playbackTime = SFBInvalidPlaybackTime;
+        if (isValid_ && sampleRate_ > 0) {
+            if (framePosition_ != SFBUnknownFramePosition) {
+                playbackTime.currentTime = framePosition_ / sampleRate_;
+            }
+            if (frameLength_ != SFBUnknownFrameLength) {
+                playbackTime.totalTime = frameLength_ / sampleRate_;
+            }
+        }
+        *time = playbackTime;
+    }
+
+    return isValid_;
+}
 
 } /* namespace sfb */
 

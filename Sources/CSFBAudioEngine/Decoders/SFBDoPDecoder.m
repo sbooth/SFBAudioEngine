@@ -7,11 +7,11 @@
 
 #import "SFBDoPDecoder.h"
 
+#import <os/log.h>
+
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <os/log.h>
 
 #import <stdint.h>
 

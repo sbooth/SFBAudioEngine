@@ -7,10 +7,10 @@
 
 #import "SFBAudioFile.h"
 
+#import <os/log.h>
+
 #import "SFBAudioFile+Internal.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <os/log.h>
 
 // NSError domain for AudioFile and subclasses
 NSErrorDomain const SFBAudioFileErrorDomain = @"org.sbooth.AudioEngine.AudioFile";

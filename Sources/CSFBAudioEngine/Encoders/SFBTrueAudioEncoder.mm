@@ -157,7 +157,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         _encoder = std::make_unique<tta::tta_encoder>(static_cast<TTA_io_callback *>(_callbacks.get()));
         _encoder->init_set_info(&streamInfo, 0);
     } catch (const tta::tta_exception &e) {
-        os_log_error(gSFBAudioEncoderLog, "Error creating True Audio encoder: %d", e.code());
+        os_log_error(gSFBAudioEncoderLog, "Error creating True Audio encoder: %d", static_cast<int>(e.code()));
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInvalidFormat
@@ -216,7 +216,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
         auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
         _encoder->process_stream(static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToWrite);
     } catch (const tta::tta_exception &e) {
-        os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", e.code());
+        os_log_error(gSFBAudioEncoderLog, "_encoder->process_stream() failed: %d", static_cast<int>(e.code()));
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError
@@ -234,7 +234,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
     try {
         _encoder->finalize();
     } catch (const tta::tta_exception &e) {
-        os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", e.code());
+        os_log_error(gSFBAudioEncoderLog, "_encoder->finalize() failed: %d", static_cast<int>(e.code()));
         if (error != nullptr) {
             *error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain
                                          code:SFBAudioEncoderErrorCodeInternalError

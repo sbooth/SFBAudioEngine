@@ -5,9 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBAudioPlayer+Internal.h"
-
 #import <exception>
+
+#import "SFBAudioPlayer+Internal.h"
 
 NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPlayer";
 
@@ -132,12 +132,8 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     return _player->play(error);
 }
 
-- (BOOL)pause {
-    return _player->pause();
-}
-
-- (BOOL)resume {
-    return _player->resume();
+- (void)pause {
+    _player->pause();
 }
 
 - (void)stop {

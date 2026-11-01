@@ -7,13 +7,13 @@
 
 #import "SFBOggOpusEncoder.h"
 
-#import <AVFAudioExtensions/AVFAudioExtensions.h>
-#import <opus/opusenc.h>
-
 #import <os/log.h>
 
 #import <algorithm>
 #import <memory>
+
+#import <AVFAudioExtensions/AVFAudioExtensions.h>
+#import <opus/opusenc.h>
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggOpus = @"org.sbooth.AudioEngine.Encoder.OggOpus";
 
@@ -46,12 +46,12 @@ namespace {
 
 /// A `std::unique_ptr` deleter for `OggOpusEnc` objects
 struct ogg_opus_enc_deleter {
-    void operator()(OggOpusEnc *enc) { ope_encoder_destroy(enc); }
+    void operator()(OggOpusEnc *enc) noexcept { ope_encoder_destroy(enc); }
 };
 
 /// A `std::unique_ptr` deleter for `OggOpusComments` objects
 struct ogg_opus_comments_deleter {
-    void operator()(OggOpusComments *comments) { ope_comments_destroy(comments); }
+    void operator()(OggOpusComments *comments) noexcept { ope_comments_destroy(comments); }
 };
 
 using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
@@ -110,9 +110,9 @@ int closeCallback(void *user_data) noexcept {
         return nil;
     }
 
-    double sampleRate = 48000;
+    double sampleRate = 48'000;
     if ([[_settings objectForKey:SFBAudioEncodingSettingsKeyOpusPreserveSampleRate] boolValue]) {
-        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768000) {
+        if (sourceFormat.sampleRate < 100 || sourceFormat.sampleRate > 768'000) {
             return nil;
         }
         sampleRate = sourceFormat.sampleRate;
@@ -161,8 +161,8 @@ int closeCallback(void *user_data) noexcept {
 - (BOOL)openReturningError:(NSError **)error {
     //    NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %g", _processingFormat.sampleRate);
     //    NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %g", _processingFormat.sampleRate);
-    //    NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
-    //    NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %u", _processingFormat.channelCount);
+    //    NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %u", _processingFormat.channelCount);
 
     if (![super openReturningError:error]) {
         return NO;

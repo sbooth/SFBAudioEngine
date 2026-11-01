@@ -7,14 +7,14 @@
 
 #import "SFBWavPackEncoder.h"
 
-#import "SFBCStringForOSType.h"
-
-#import <wavpack/wavpack.h>
+#import <os/log.h>
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <CommonCrypto/CommonCrypto.h>
 
-#import <os/log.h>
+#import <wavpack/wavpack.h>
+
+#import "SFBCStringForOSType.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.Encoder.WavPack";
 
@@ -117,7 +117,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount) {
         // TODO: Use WavPack channel identities as a fallback?
         else {
             os_log_info(gSFBAudioEncoderLog,
-                        "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d "
+                        "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %u failed: %d "
                         "'%{public}.4s'",
                         layoutTag, status, SFBCStringForOSType(status));
         }

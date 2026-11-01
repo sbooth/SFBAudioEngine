@@ -13,19 +13,19 @@ void sfb::addAudioPropertiesToDictionary(const TagLib::AudioProperties *properti
     assert(properties != nil);
     assert(dictionary != nil);
 
-    if (properties->lengthInMilliseconds() != 0) {
-        dictionary[SFBAudioPropertiesKeyDuration] = @(properties->lengthInMilliseconds() / 1000.0);
+    if (const auto lengthInMilliseconds = properties->lengthInMilliseconds(); lengthInMilliseconds != 0) {
+        dictionary[SFBAudioPropertiesKeyDuration] = @(lengthInMilliseconds / 1000.0);
     }
 
-    if (properties->channels() != 0) {
-        dictionary[SFBAudioPropertiesKeyChannelCount] = @(properties->channels());
+    if (const auto channels = properties->channels(); channels != 0) {
+        dictionary[SFBAudioPropertiesKeyChannelCount] = @(channels);
     }
 
-    if (properties->sampleRate() != 0) {
-        dictionary[SFBAudioPropertiesKeySampleRate] = @(properties->sampleRate());
+    if (const auto sampleRate = properties->sampleRate(); sampleRate != 0) {
+        dictionary[SFBAudioPropertiesKeySampleRate] = @(sampleRate);
     }
 
-    if (properties->bitrate() != 0) {
-        dictionary[SFBAudioPropertiesKeyBitrate] = @(properties->bitrate());
+    if (const auto bitrate = properties->bitrate(); bitrate != 0) {
+        dictionary[SFBAudioPropertiesKeyBitrate] = @(bitrate);
     }
 }

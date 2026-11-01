@@ -7,12 +7,12 @@
 
 #import "SFBScreamTracker3ModuleFile.h"
 
+#import <taglib/s3mfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/s3mfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
         @"org.sbooth.AudioEngine.File.ScreamTracker3Module";

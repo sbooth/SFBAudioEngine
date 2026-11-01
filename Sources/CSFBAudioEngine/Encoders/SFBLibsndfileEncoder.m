@@ -7,14 +7,14 @@
 
 #import "SFBLibsndfileEncoder.h"
 
-#import "SFBLibsndfileUtilities.h"
+#import <os/log.h>
+
+#import <AudioToolbox/AudioToolbox.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <sndfile/sndfile.h>
 
-#import <AudioToolbox/AudioToolbox.h>
-
-#import <os/log.h>
+#import "SFBLibsndfileUtilities.h"
 
 SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile = @"org.sbooth.AudioEngine.Encoder.Libsndfile";
 
@@ -267,7 +267,7 @@ static void SndfileChannelMapWithChannelDescriptions(int *_Nonnull channel_map, 
             break;
 
         default:
-            os_log_error(gSFBAudioEncoderLog, "Unable to map channel label: %d", channelDescriptions[i].mChannelLabel);
+            os_log_error(gSFBAudioEncoderLog, "Unable to map channel label: %u", channelDescriptions[i].mChannelLabel);
             channel_map[i] = SF_CHANNEL_MAP_INVALID;
             break;
         }

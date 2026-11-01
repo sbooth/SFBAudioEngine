@@ -7,12 +7,12 @@
 
 #import "SFBExtendedModuleFile.h"
 
+#import <taglib/tfilestream.h>
+#import <taglib/xmfile.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/tfilestream.h>
-#import <taglib/xmfile.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameExtendedModule = @"org.sbooth.AudioEngine.File.ExtendedModule";
 
