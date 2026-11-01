@@ -132,18 +132,6 @@ class AudioPlayer final {
     /// Mutex protecting `activeDecoders_`
     mutable mtx::UnfairMutex activeDecodersMutex_;
 
-    /// The number of rendering complete notifications scheduled but not yet delivered
-    ///
-    /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
-    /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
-    /// End of audio notifications and non-gapless processing graph reconfigurations wait until no rendering complete
-    /// notifications are pending.
-    /// - note: Protected by `activeDecodersMutex_` so a decoder removed from `activeDecoders_` is always counted
-    unsigned int scheduledRenderingCompleteNotifications_{0};
-    /// The current rendering complete notification generation, incremented when the engine is stopped
-    /// - note: Protected by `activeDecodersMutex_`
-    uint64_t renderingCompleteNotificationGeneration_{0};
-
     /// Decoders enqueued for playback that are not yet active
     std::deque<Decoder> queuedDecoders_;
     /// Mutex protecting `queuedDecoders_`
@@ -190,6 +178,20 @@ class AudioPlayer final {
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};
+    /// The current rendering notification generation, incremented when the engine is stopped
+    ///
+    /// Stopping the engine discards audio in the downstream pipeline, so rendering started and rendering complete
+    /// notifications scheduled in an earlier generation are stale and ignored.
+    /// - note: Protected by `activeDecodersMutex_`
+    uint64_t renderingNotificationGeneration_{0};
+    /// The number of rendering complete notifications scheduled but not yet delivered
+    ///
+    /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
+    /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
+    /// End of audio notifications and non-gapless processing graph reconfigurations wait until no rendering complete
+    /// notifications are pending.
+    /// - note: Protected by `activeDecodersMutex_` so a decoder removed from `activeDecoders_` is always counted
+    unsigned int scheduledRenderingCompleteNotifications_{0};
 
     /// Player flags
     std::atomic_uint flags_{0};
@@ -499,11 +501,10 @@ class AudioPlayer final {
     bool processPauseEngineEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
-    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime,
+                                       uint64_t notificationGeneration) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    /// - parameter notificationGeneration: The value of `renderingCompleteNotificationGeneration_` when the rendering
-    ///   complete event was processed
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
                                           uint64_t notificationGeneration) noexcept;
 

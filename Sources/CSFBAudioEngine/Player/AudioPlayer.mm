@@ -232,7 +232,7 @@ uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &time
     return timestamp.mHostTime + host_time::fromNanoseconds(scaledNanos);
 }
 
-/// Returns `seconds` expressed as a host time delta
+/// Returns `seconds` expressed as a host time delta, or 0 if `seconds` is not finite or less than or equal to zero
 uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
     if (!std::isfinite(seconds) || seconds <= 0) [[unlikely]] {
         return 0;
@@ -2085,6 +2085,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
 #endif /* DEBUG */
 
     Decoder decoder{nil};
+    uint64_t notificationGeneration{0};
 
     {
         std::lock_guard lock{activeDecodersMutex_};
@@ -2106,6 +2107,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
             (*iter)->setFlags(DecoderState::Flags::renderingStarted);
             publishTransportSnapshot((*iter)->snapshot());
             decoder = (*iter)->decoder_;
+            notificationGeneration = renderingNotificationGeneration_;
         } else {
             os_log_error(log_, "Decoder state with sequence number %llu missing for rendering started event",
                          sequenceNumber);
@@ -2117,7 +2119,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
     assert(decoder != nil);
 #endif /* DEBUG */
 
-    handleRenderingWillStartEvent(decoder, eventTime);
+    handleRenderingWillStartEvent(decoder, eventTime, notificationGeneration);
     return true;
 }
 
@@ -2229,7 +2231,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 
             // The decoder's audio is still inflight until its rendering complete notification runs
             ++scheduledRenderingCompleteNotifications_;
-            notificationGeneration = renderingCompleteNotificationGeneration_;
+            notificationGeneration = renderingNotificationGeneration_;
 
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
@@ -2341,7 +2343,8 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     return true;
 }
 
-void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime) noexcept {
+void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime,
+                                                     uint64_t notificationGeneration) noexcept {
     // Add the downstream presentation latency to determine when the audio should reach the device
     hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
 
@@ -2379,6 +2382,15 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
         // Not this, but that: `this` is not safe to use within this closure
         auto &that = player->_player;
+
+        // Notifications from earlier epochs become stale when the engine stops
+        {
+            std::lock_guard lock{that->activeDecodersMutex_};
+            if (notificationGeneration != that->renderingNotificationGeneration_) {
+                os_log_debug(log_, "Ignoring stale rendering started notification for %{public}@", decoder);
+                return;
+            }
+        }
 
 #if DEBUG
         const auto now = host_time::current();
@@ -2446,7 +2458,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         {
             std::lock_guard lock{that->activeDecodersMutex_};
             // Notifications from earlier epochs become stale when the engine stops
-            if (notificationGeneration != that->renderingCompleteNotificationGeneration_) {
+            if (notificationGeneration != that->renderingNotificationGeneration_) {
                 os_log_debug(log_, "Ignoring stale rendering complete notification for %{public}@", decoder);
                 return;
             }
@@ -2861,18 +2873,22 @@ void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool w
 bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     Flags prevFlags;
     {
-        std::lock_guard lock{engineMutex_};
+        // Stopping the engine discards inflight audio. Both locks are held so a concurrent -play cannot restart
+        // the engine and schedule notifications for a new session before they are invalidated.
+        std::scoped_lock lock{engineMutex_, activeDecodersMutex_};
+
         prevFlags = clearFlags(Flags::active | Flags::playing);
         [engine_ stop];
 #if TARGET_OS_IPHONE
         wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
-    }
 
-    // Stopping the engine discards inflight audio, so mark pending rendering complete notifications as stale
-    {
-        std::lock_guard lock{activeDecodersMutex_};
-        ++renderingCompleteNotificationGeneration_;
+        // Expire render events queued before the engine stopped so they cannot schedule notifications for
+        // discarded audio
+        playbackGeneration_.fetch_add(1, std::memory_order_release);
+
+        // Mark scheduled rendering notifications as stale
+        ++renderingNotificationGeneration_;
         scheduledRenderingCompleteNotifications_ = 0;
     }
 
