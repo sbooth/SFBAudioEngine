@@ -253,7 +253,7 @@ class AudioPlayer final {
 
   private:
     /// Sets now playing and returns `true` if it changed
-    bool setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    [[nodiscard]] bool setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
     /// Notifies the delegate that now playing changed to `nowPlaying`
     void notifyDelegateOfNowPlayingChange(Decoder _Nullable nowPlaying) noexcept;
     /// Sets now playing and notifies the delegate if it changed
