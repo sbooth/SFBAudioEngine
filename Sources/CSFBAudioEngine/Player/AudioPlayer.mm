@@ -2383,7 +2383,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         // Not this, but that: `this` is not safe to use within this closure
         auto &that = player->_player;
 
-        // Notifications from earlier epochs become stale when the engine stops
+        // Notifications from earlier output epochs become stale when the engine stops
         {
             std::lock_guard lock{that->activeDecodersMutex_};
             if (outputGeneration != that->outputGeneration_) {
@@ -2457,7 +2457,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         unsigned int remaining;
         {
             std::lock_guard lock{that->activeDecodersMutex_};
-            // Notifications from earlier epochs become stale when the engine stops
+            // Notifications from earlier output epochs become stale when the engine stops
             if (outputGeneration != that->outputGeneration_) {
                 os_log_debug(log_, "Ignoring stale rendering complete notification for %{public}@", decoder);
                 return;
