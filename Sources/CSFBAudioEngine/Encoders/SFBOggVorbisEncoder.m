@@ -7,9 +7,9 @@
 
 #import "SFBOggVorbisEncoder.h"
 
-#import <vorbis/vorbisenc.h>
-
 #import <os/log.h>
+
+#import <vorbis/vorbisenc.h>
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
 

@@ -7,15 +7,15 @@
 
 #import "SFBMusepackDecoder.h"
 
-#import "NSData+SFBExtensions.h"
-#import "SFBLocalizedNameForURL.h"
+#import <os/log.h>
+
+#import <Accelerate/Accelerate.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <mpc/mpcdec.h>
 
-#import <Accelerate/Accelerate.h>
-
-#import <os/log.h>
+#import "NSData+SFBExtensions.h"
+#import "SFBLocalizedNameForURL.h"
 
 SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
 

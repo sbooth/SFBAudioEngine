@@ -7,14 +7,14 @@
 
 #import "SFBAIFFFile.h"
 
+#import <taglib/aifffile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/aifffile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameAIFF = @"org.sbooth.AudioEngine.File.AIFF";
 

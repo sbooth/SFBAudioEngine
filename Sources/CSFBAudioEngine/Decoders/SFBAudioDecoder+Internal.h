@@ -5,10 +5,10 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <os/log.h>
+
 #import "SFBAudioDecoder.h"
 #import "SFBTernaryTruthValue.h"
-
-#import <os/log.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
