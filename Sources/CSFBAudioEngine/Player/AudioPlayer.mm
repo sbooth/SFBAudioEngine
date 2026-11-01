@@ -2081,7 +2081,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
     {
         std::lock_guard lock{activeDecodersMutex_};
 
-        // Discard stale events from previous playback generations
+        // Discard stale events from previous playback epochs
         if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
             os_log_debug(log_, "Discarding stale rendering started event");
             return true;
