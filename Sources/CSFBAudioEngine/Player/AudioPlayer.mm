@@ -2149,7 +2149,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     {
         std::lock_guard lock{activeDecodersMutex_};
 
-        // Discard stale events from previous playback generations
+        // Discard stale events from previous playback epochs
         if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
             os_log_debug(log_, "Discarding stale frames rendered event");
             return true;
