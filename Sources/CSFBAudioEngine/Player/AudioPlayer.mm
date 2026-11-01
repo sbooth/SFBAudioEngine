@@ -1394,10 +1394,11 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
 
     // If there is a format mismatch the processing graph requires reconfiguration before decoding can begin
     if (formatMismatch) {
-        // Wait until all other decoders complete processing before reconfiguring the graph
+        // Wait until all other decoders complete processing, and their audio finishes playing, before reconfiguring
+        // the graph
         const auto okToReconfigure = [&]() noexcept {
             std::lock_guard lock{activeDecodersMutex_};
-            return activeDecoders_.size() == 1;
+            return activeDecoders_.size() == 1 && pendingRenderingCompletions_ == 0;
         }();
 
         if (!okToReconfigure) {
@@ -2010,7 +2011,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
     const auto hasNoDecoders = [&]() noexcept {
         std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
-        return queuedDecoders_.empty() && activeDecoders_.empty();
+        return queuedDecoders_.empty() && activeDecoders_.empty() && pendingRenderingCompletions_ == 0;
     }();
 
     if (hasNoDecoders) {
@@ -2212,13 +2213,15 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 
             decoder = (*iter)->decoder_;
 
+            // The decoder's audio is still in the pipeline until its rendering complete notification runs
+            ++pendingRenderingCompletions_;
+
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
             activeDecoders_.erase(iter);
 
-            // Wake the decoding thread if a format change is pending or the removal freed a slot that was blocked
-            if (const auto size = activeDecoders_.size();
-                (size == 1 && bits::is_set(loadFlags(), Flags::formatChangePending)) ||
-                (size == maximumActiveDecoders - 1)) {
+            // Wake the decoding thread if the removal freed a slot that was blocked; a pending format change
+            // is signaled by the rendering complete notification
+            if (activeDecoders_.size() == maximumActiveDecoders - 1) {
                 decodingSemaphore_.signal();
             }
 
@@ -2417,13 +2420,28 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             return;
         }
 
+        // Not this, but that: `this` is not safe to use within this closure
+        auto &that = player->_player;
+
+        // Rendering for this decoder is now complete
+        unsigned int remaining;
+        {
+            std::lock_guard lock{that->activeDecodersMutex_};
+#if DEBUG
+            assert(that->pendingRenderingCompletions_ > 0);
+#endif /* DEBUG */
+            remaining = --that->pendingRenderingCompletions_;
+        }
+
+        // If no completions remain and a format change is pending, wake the decoding thread to reconfigure the processing graph
+        if (remaining == 0 && bits::is_set(that->loadFlags(), Flags::formatChangePending)) {
+            that->decodingSemaphore_.signal();
+        }
+
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
             os_log_debug(log_, "%{public}@ canceled after rendering will complete event", decoder);
             return;
         }
-
-        // Not this, but that: `this` is not safe to use within this closure
-        auto &that = player->_player;
 
 #if DEBUG
         const auto now = host_time::current();
@@ -2443,7 +2461,8 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
         const auto hasNoDecoders = [&]() noexcept {
             std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
-            return that->queuedDecoders_.empty() && that->activeDecoders_.empty();
+            return that->queuedDecoders_.empty() && that->activeDecoders_.empty() &&
+                   that->pendingRenderingCompletions_ == 0;
         }();
 
         // End of audio
@@ -2453,6 +2472,12 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 #endif /* DEBUG */
 
             that->setNowPlaying(nil);
+
+            // Nothing more to do if the player was stopped while the audio was playing
+            if (bits::is_clear(that->loadFlags(), Flags::active)) {
+                return;
+            }
+
             auto shouldStop = true;
 
             if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
