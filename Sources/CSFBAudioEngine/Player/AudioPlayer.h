@@ -123,9 +123,18 @@ class AudioPlayer final {
     spsc::AudioRingBuffer audioBuffer_;
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
-    /// The current transport epoch
+
+    /// The current playback generation, incremented after a seek, decoder cancellation, or when the engine is stopped
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
+    /// The current output generation, incremented when the engine is stopped
+    ///
+    /// Only stops that discard the active decoders advance the output generation. Interruptions and configuration
+    /// changes also stop the engine but retain the player state and decoders; their scheduled notifications are still
+    /// delivered because the decoders they describe have already been removed from `activeDecoders_` and counted,
+    /// and dropping them would lose the rendering complete callback, stall end of audio, and leave now playing stale.
+    /// - note: Protected by `activeDecodersMutex_`
+    uint64_t outputGeneration_{1};
 
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
@@ -157,7 +166,7 @@ class AudioPlayer final {
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
     mutable mtx::UnfairMutex engineMutex_;
-    /// The epoch of the most recent `AVAudioEngine` pause request
+    /// The generation of the most recent `AVAudioEngine` pause request
     std::atomic_uint64_t pauseRequestGeneration_{0};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
 
@@ -174,10 +183,19 @@ class AudioPlayer final {
     /// Decoder currently rendering audio
     Decoder nowPlaying_{nil};
     /// Mutex protecting `nowPlaying_`
+    /// - note: May be acquired while holding `activeDecodersMutex_`, never the reverse
     mutable mtx::UnfairMutex nowPlayingMutex_;
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};
+    /// The number of rendering complete notifications scheduled but not yet delivered
+    ///
+    /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
+    /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
+    /// End of audio notifications and non-gapless processing graph reconfigurations wait until no rendering complete
+    /// notifications are pending.
+    /// - note: Protected by `activeDecodersMutex_` so a decoder removed from `activeDecoders_` is always counted
+    unsigned int scheduledRenderingCompleteNotifications_{0};
 
     /// Player flags
     std::atomic_uint flags_{0};
@@ -234,7 +252,12 @@ class AudioPlayer final {
     Decoder _Nullable nowPlaying() const noexcept;
 
   private:
-    void setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    /// Sets now playing and returns `true` if it changed
+    [[nodiscard]] bool setNowPlaying(Decoder _Nullable nowPlaying) noexcept;
+    /// Notifies the delegate that now playing changed to `nowPlaying`
+    void notifyDelegateOfNowPlayingChange(Decoder _Nullable nowPlaying) noexcept;
+    /// Sets now playing and notifies the delegate if it changed
+    void setNowPlayingAndNotifyDelegate(Decoder _Nullable nowPlaying) noexcept;
 
   public:
     // MARK: - Playback Properties
@@ -487,10 +510,11 @@ class AudioPlayer final {
     bool processPauseEngineEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
-    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime) noexcept;
+    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
+                                          uint64_t outputGeneration) noexcept;
 
     // MARK: - Transport Snapshots
 
@@ -502,8 +526,8 @@ class AudioPlayer final {
 
     // MARK: - Active Decoder Management
 
-    /// Cancels all active decoders in sequence
-    void cancelActiveDecoders() noexcept;
+    /// Cancels all active decoders in sequence, returning the number of decoders canceled
+    std::size_t cancelActiveDecoders() noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that has not been canceled
     DecoderState *_Nullable firstActiveDecoderState() const noexcept;
