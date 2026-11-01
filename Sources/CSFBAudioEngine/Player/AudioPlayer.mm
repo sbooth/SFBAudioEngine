@@ -2445,9 +2445,11 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             remaining = --that->scheduledRenderingCompleteNotifications_;
         }
 
+        const auto flags = that->loadFlags();
+
         // If no rendering complete notifications are scheduled and a format change is pending, wake the decoding
         // thread to reconfigure the processing graph
-        if (remaining == 0 && bits::is_set(that->loadFlags(), Flags::formatChangePending)) {
+        if (remaining == 0 && bits::is_set(flags, Flags::formatChangePending)) {
             that->decodingSemaphore_.signal();
         }
 
@@ -2487,7 +2489,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             that->setNowPlaying(nil);
 
             // Nothing more to do if the player was stopped while the audio was playing
-            if (bits::is_clear(that->loadFlags(), Flags::active)) {
+            if (bits::is_clear(flags, Flags::active)) {
                 return;
             }
 
