@@ -7,9 +7,9 @@
 
 #import "SFBLibsndfileUtilities.h"
 
-#import "SFBAudioEngineTypes.h"
-
 #import <sndfile/sndfile.h>
+
+#import "SFBAudioEngineTypes.h"
 
 void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format) {
     NSCParameterAssert(asbd != NULL);

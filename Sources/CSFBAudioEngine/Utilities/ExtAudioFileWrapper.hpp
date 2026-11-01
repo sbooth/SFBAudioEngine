@@ -19,10 +19,7 @@ class ExtAudioFileWrapper final {
     /// Creates an empty extended audio file wrapper.
     ExtAudioFileWrapper() noexcept = default;
 
-    // This class is non-copyable
     ExtAudioFileWrapper(const ExtAudioFileWrapper &) = delete;
-
-    // This class is non-assignable
     ExtAudioFileWrapper &operator=(const ExtAudioFileWrapper &) = delete;
 
     /// Move constructor.
@@ -87,8 +84,8 @@ inline ExtAudioFileWrapper::operator ExtAudioFileRef _Nullable() const noexcept 
 inline ExtAudioFileRef _Nullable ExtAudioFileWrapper::get() const noexcept { return extAudioFile_; }
 
 inline void ExtAudioFileWrapper::reset(ExtAudioFileRef _Nullable extAudioFile) noexcept {
-    if (auto oldExtAudioFile = std::exchange(extAudioFile_, extAudioFile); oldExtAudioFile) {
-        ExtAudioFileDispose(oldExtAudioFile);
+    if (auto old = std::exchange(extAudioFile_, extAudioFile); old != nullptr) {
+        ExtAudioFileDispose(old);
     }
 }
 

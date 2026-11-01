@@ -7,14 +7,14 @@
 
 #import "SFBOggFLACFile.h"
 
+#import <taglib/oggflacfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSData+SFBExtensions.h"
 #import "NSFileHandle+SFBHeaderReading.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/oggflacfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioEngine.File.OggFLAC";
 

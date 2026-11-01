@@ -7,12 +7,12 @@
 
 #import "SFBImpulseTrackerModuleFile.h"
 
+#import <taglib/itfile.h>
+#import <taglib/tfilestream.h>
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <taglib/itfile.h>
-#import <taglib/tfilestream.h>
 
 SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
         @"org.sbooth.AudioEngine.File.ImpulseTrackerModule";
