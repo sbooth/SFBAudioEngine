@@ -37,15 +37,6 @@
       }
     },
     {
-      "identity" : "cxxdispatchsemaphore",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXDispatchSemaphore",
-      "state" : {
-        "revision" : "cd267c1dffae0e132abe7b63fcee1e1fe357f23d",
-        "version" : "0.4.1"
-      }
-    },
-    {
       "identity" : "cxxmessagequeue",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMessageQueue",
