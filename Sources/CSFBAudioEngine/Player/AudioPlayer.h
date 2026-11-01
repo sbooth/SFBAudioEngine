@@ -133,8 +133,15 @@ class AudioPlayer final {
     mutable mtx::UnfairMutex activeDecodersMutex_;
 
     /// The number of rendering complete notifications scheduled but not yet delivered
+    ///
+    /// A decoder is removed from `activeDecoders_` when its final frame is rendered, but its audio reaches the output
+    /// device only after the downstream presentation latency, when its delayed rendering complete notification runs.
+    /// End of audio is reached only when no rendering complete notifications are pending so the preceding decoder's
+    /// audio finishes playing before the engine is stopped.
+    /// - note: Protected by `activeDecodersMutex_`, so a decoder removed from `activeDecoders_` is always counted
     unsigned int scheduledRenderingCompleteNotifications_{0};
     /// The generation of the most recent scheduled rendering complete notification
+    /// - note: Protected by `activeDecodersMutex_`
     uint64_t renderingCompleteNotificationGeneration_{0};
 
     /// Decoders enqueued for playback that are not yet active
