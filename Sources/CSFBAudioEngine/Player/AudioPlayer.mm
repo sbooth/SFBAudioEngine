@@ -616,7 +616,7 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     }
 
     clearDecoderQueue();
-    (void)cancelActiveDecoders();
+    cancelActiveDecoders();
 
     // Register a stop callback for the decoding thread
     std::stop_callback decodingThreadStopCallback(decodingThread_.get_stop_token(),
@@ -675,7 +675,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
     os_log_info(log_, "Enqueued %{public}@", decoder);
 
     if (forImmediatePlayback) {
-        (void)cancelActiveDecoders();
+        cancelActiveDecoders();
         // Mute until the decoder becomes active
         setFlags(Flags::muted);
     }
@@ -785,7 +785,7 @@ void sfb::AudioPlayer::reset() noexcept {
         [engine_ reset];
     }
     clearDecoderQueue();
-    (void)cancelActiveDecoders();
+    cancelActiveDecoders();
 }
 
 // MARK: - Player State
