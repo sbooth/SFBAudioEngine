@@ -534,8 +534,6 @@ thread_local const sfb::AudioPlayer *threadOwner = nullptr;
 
 } /* namespace */
 
-bool sfb::AudioPlayer::ownsCurrentThread() const noexcept { return threadOwner == this; }
-
 sfb::AudioPlayer::AudioPlayer() {
     // ========================================
     // Rendering Setup
@@ -686,6 +684,8 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     os_log_debug(log_, "<AudioPlayer: %p> destroyed", this);
 }
+
+bool sfb::AudioPlayer::ownsCurrentThread() const noexcept { return threadOwner == this; }
 
 // MARK: - Playlist Management
 
