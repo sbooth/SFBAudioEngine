@@ -157,7 +157,7 @@ class AudioPlayer final {
     dsema::Semaphore eventSemaphore_{0};
 
     /// Message queue communicating events to the event processing thread
-    mpsc::MessageQueue<256, 32> events_;
+    mpsc::MessageQueue<64, 32> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
