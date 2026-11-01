@@ -2720,7 +2720,7 @@ auto sfb::AudioPlayer::decoderStateWithSequenceNumber(uint64_t sequenceNumber) c
 void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engine,
                                                             [[maybe_unused]] NSDictionary *userInfo) noexcept {
     // Keep the owning SFBAudioPlayer alive until this handler returns
-    __strong SFBAudioPlayer *player = player_;
+    __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = player_;
     if (player == nil) {
         os_log_debug(log_, "Ignoring AVAudioEngineConfigurationChangeNotification for deallocated audio player");
         return;
@@ -2819,7 +2819,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
 #if TARGET_OS_IPHONE
 void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) noexcept {
     // Keep the owning SFBAudioPlayer alive until this handler returns
-    __strong SFBAudioPlayer *player = player_;
+    __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = player_;
     if (player == nil) {
         os_log_debug(log_, "Ignoring AVAudioSessionInterruptionNotification for deallocated audio player");
         return;
