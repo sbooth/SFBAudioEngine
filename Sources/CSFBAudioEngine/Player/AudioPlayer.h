@@ -330,6 +330,8 @@ class AudioPlayer final {
         formatChangePending = 1u << 4,
         /// The event message queue had insufficient space to record a render event
         renderEventDropped = 1u << 5,
+        /// Cancellation was requested for an active decoder but has not yet been processed by the decoding thread
+        cancellationPending = 1u << 6,
     };
 
     friend constexpr void is_bitmask_enum(Flags);
