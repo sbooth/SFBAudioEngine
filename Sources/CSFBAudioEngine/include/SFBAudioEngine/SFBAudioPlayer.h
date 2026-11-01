@@ -25,12 +25,16 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
 
 /// The possible playback states for `SFBAudioPlayer`
+///
+/// The playback state reflects the player's transport state and is independent of whether the underlying
+/// `AVAudioEngine` is running. The player may stop and restart the engine internally, for example when reconfiguring
+/// the processing graph or in response to a hardware configuration change, without changing the playback state.
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
-    /// The `AVAudioEngine` is not running
+    /// No playback session is active
     SFBAudioPlayerPlaybackStateStopped = 0,
-    /// The `AVAudioEngine` is running and the player is not rendering audio
+    /// A playback session is active but the player is not rendering audio
     SFBAudioPlayerPlaybackStatePaused = 1,
-    /// The `AVAudioEngine` is running and the player is rendering audio
+    /// A playback session is active and the player is rendering audio
     SFBAudioPlayerPlaybackStatePlaying = 3,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
@@ -40,6 +44,14 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
 ///
 /// An `SFBAudioPlayer` may be in one of three playback states: playing, paused, or stopped.
+///
+/// The playback state is independent of the state of the underlying `AVAudioEngine`. The engine runs only while the
+/// player is playing, so a paused player does not consume power for audio I/O and is not reported to the system as
+/// playing. While playing, the player restarts the engine as needed after internal stops such as processing graph
+/// reconfiguration or hardware configuration changes. If the engine cannot be restarted the player transitions from
+/// playing to paused, reports the error to the delegate, and retains its decoders. When the player is paused the
+/// engine is paused once audio already sent to the output has finished playing, and ``-playReturningError:``
+/// restarts it.
 ///
 /// `SFBAudioPlayer` supports delegate-based notifications for the following events:
 ///
@@ -137,28 +149,33 @@ NS_SWIFT_NAME(AudioPlayer)
 
 // MARK: - Playback Control
 
-/// Starts the `AVAudioEngine` and begins rendering audio
+/// Starts or resumes playback
+///
+/// If the player is stopped this begins a playback session, and enqueued audio plays as it becomes available. If the
+/// player is paused playback resumes. The `AVAudioEngine` is started if it is not running.
 /// - note: If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
+/// - note: If the `AVAudioEngine` cannot be started the playback state is unchanged
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
-/// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
+/// - returns: `YES` if the player is playing, or `NO` if the `AVAudioEngine` could not be started
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
-/// Pauses audio rendering
-/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` this method has no effect
-/// - returns: `YES` if the `AVAudioEngine` is running and the player is not rendering audio
-- (BOOL)pause;
-/// Resumes audio rendering
-/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePaused` this method has no effect
-/// - returns: `YES` if the `AVAudioEngine` is running and the player is rendering audio
-- (BOOL)resume;
-/// Stops the `AVAudioEngine`
-/// - note: This method cancels the current decoder and clears any queued decoders
-/// - note: If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method has no effect
+/// Pauses playback
+///
+/// The playback session, decoders, and playback position are retained. The `AVAudioEngine` is paused once audio
+/// already sent to the output has finished playing. If called during an audio session interruption, this method
+/// prevents playback from resuming automatically when the interruption ends.
+/// - note: If the current playback state is not `SFBAudioPlayerPlaybackStatePlaying` the playback state is unchanged
+- (void)pause;
+/// Stops playback, ending the playback session and stopping the `AVAudioEngine`
+/// - note: This method cancels the current decoder and clears any queued decoders, even if the player is already
+///   stopped
 - (void)stop;
 /// Toggles the player between playing and paused states, starting playback if stopped
 ///
-/// If the current playback state is `SFBAudioPlayerPlaybackStateStopped` this method sends ``-playReturningError:``
-/// If the current playback state is `SFBAudioPlayerPlaybackStatePlaying` this method sends ``-pause``
-/// If the current playback state is `SFBAudioPlayerPlaybackStatePaused` this method sends ``-resume``
+/// If the player is playing this is equivalent to ``-pause``; otherwise it is equivalent to ``-playReturningError:``.
+/// The playback state is checked and changed atomically, so the transition always matches the state at the time it is
+/// applied, which checking ``isPlaying`` and then calling ``-pause`` or ``-playReturningError:`` cannot guarantee.
+/// - parameter error: An optional pointer to an `NSError` object to receive error information
+/// - returns: `YES` if the player is playing or paused, or `NO` if the `AVAudioEngine` could not be started
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
 /// Cancels the current decoder, clears any queued decoders, and resets the `AVAudioEngine`
@@ -167,15 +184,18 @@ NS_SWIFT_NAME(AudioPlayer)
 // MARK: - Player State
 
 /// `YES` if the `AVAudioEngine` is running
+/// - note: The engine runs only while the player is playing. It may briefly differ from the playback state, for
+/// example while the processing graph is reconfigured, or after the player pauses while audio already sent to the
+/// output finishes playing
 @property(nonatomic, readonly) BOOL engineIsRunning;
 
 /// The current playback state
 @property(nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
-/// `YES` if the `AVAudioEngine` is running and the player is rendering audio
+/// `YES` if a playback session is active and the player is rendering audio
 @property(nonatomic, readonly) BOOL isPlaying;
-/// `YES` if the `AVAudioEngine` is running and the player is not rendering audio
+/// `YES` if a playback session is active and the player is not rendering audio
 @property(nonatomic, readonly) BOOL isPaused;
-/// `YES` if the `AVAudioEngine` is not running
+/// `YES` if no playback session is active
 @property(nonatomic, readonly) BOOL isStopped;
 
 /// `YES` if a decoder is available to supply audio for the next render cycle
@@ -384,6 +404,9 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 /// - parameter playbackState: The current playback state
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
 /// Called to notify the delegate when rendering is complete for all available decoders
+///
+/// If the delegate implements this method the playback session remains active, so audio enqueued afterward will play
+/// without a call to ``-playReturningError:``. If the delegate does not implement this method the player is stopped.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
 /// Called to notify the delegate after performing a user-initiated seek in a decoder
@@ -448,9 +471,17 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 #if TARGET_OS_IPHONE
 /// Called to notify the delegate of an `AVAudioSession` interruption begin or end
 ///
-/// If the interruption began, this method is called after the playback state is saved and the player is stopped.
-/// If the interruption ended, this method is called before optionally attempting to activate the audio session and
-/// resume playback.
+/// If the interruption began, this method is called after the player is paused. The playback session and decoders are
+/// preserved.
+/// If the interruption ended, this method is called before the player optionally resumes playback. Playback is
+/// resumed only if the player was playing when the interruption began, was not paused or stopped during the
+/// interruption (including from this method), and the interruption options include
+/// `AVAudioSessionInterruptionOptionShouldResume`.
+///
+/// The player does not activate the audio session. To allow playback to resume automatically, activate the audio
+/// session from this method. To prevent playback from resuming, call ``-pause`` from this method. If playback is not
+/// resumed, the `AVAudioEngine` remains stopped until ``-playReturningError:`` is called; ensure the audio session is
+/// active before calling it.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter userInfo: The `userInfo` object from the notification
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer audioSessionInterruption:(nullable NSDictionary *)userInfo;
