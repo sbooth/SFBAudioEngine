@@ -21,7 +21,7 @@ namespace msema {
 
 /// A semaphore_t wrapper.
 class Semaphore final {
-public:
+  public:
     /// Creates a new semaphore.
     ///
     /// The semaphore uses a first-in-first-out policy for scheduling thread wakeup.
@@ -75,7 +75,7 @@ public:
     /// @return true if the semaphore was signalled, false otherwise.
     bool signal_all() noexcept;
 
-private:
+  private:
     /// The underlying mach semaphore.
     semaphore_t semaphore_{SEMAPHORE_NULL};
     /// The mach task associated with the semaphore.
@@ -141,7 +141,7 @@ inline constexpr mach_timespec_t timespec_zero{0, 0};
 
 /// A std::error_category for mach return values
 class mach_error_category : public std::error_category {
-public:
+  public:
     const char *name() const noexcept override { return "mach"; }
     std::string message(int condition) const override {
         return mach_error_string(static_cast<mach_error_t>(condition));
