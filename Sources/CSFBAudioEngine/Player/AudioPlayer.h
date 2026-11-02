@@ -29,7 +29,7 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 #import "bitmask_enum.hpp"
-#import "mtx.hpp"
+#import "unfair_mutex.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
