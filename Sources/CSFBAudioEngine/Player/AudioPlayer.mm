@@ -1687,7 +1687,6 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     }
 
     eventSemaphore_.signal();
-
     return noErr;
 }
 
