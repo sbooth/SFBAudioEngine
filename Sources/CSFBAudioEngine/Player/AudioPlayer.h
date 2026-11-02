@@ -23,13 +23,13 @@
 
 #import <dsema/Semaphore.hpp>
 #import <mpsc/MessageQueue.hpp>
-#import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
 #import <spsc/Queue.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 #import "bitmask_enum.hpp"
+#import "mtx.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
