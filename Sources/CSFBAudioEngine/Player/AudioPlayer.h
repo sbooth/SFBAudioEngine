@@ -218,6 +218,9 @@ class AudioPlayer final {
 
     ~AudioPlayer() noexcept;
 
+    /// Returns `true` if the current thread is this player's decoding or event processing thread
+    [[nodiscard]] bool ownsCurrentThread() const noexcept;
+
     // MARK: - Playlist Management
 
     bool enqueueDecoder(Decoder _Nonnull decoder, bool forImmediatePlayback, NSError **error) noexcept;

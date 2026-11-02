@@ -7,10 +7,10 @@
 
 #pragma once
 
-#import <mach/mach_time.h>
+#include <mach/mach_time.h>
 
-#import <cassert>
-#import <cstdint>
+#include <cassert>
+#include <cstdint>
 
 namespace host_time {
 namespace detail {
