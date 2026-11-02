@@ -27,9 +27,9 @@
 #import <spsc/AudioRingBuffer.hpp>
 #import <spsc/Queue.hpp>
 
+#import "BitmaskEnum.hpp"
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
-#import "bitmask_enum.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
