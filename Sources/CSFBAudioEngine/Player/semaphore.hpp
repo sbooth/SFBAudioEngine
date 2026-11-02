@@ -61,7 +61,7 @@ class Semaphore final {
     dispatch_semaphore_t semaphore_{nullptr};
 };
 
-// MARK: - Implementation -
+// MARK: -
 
 inline Semaphore::Semaphore(std::intptr_t value) {
     if (value < 0) {
