@@ -84,7 +84,7 @@ class Semaphore final {
     task_t task_{TASK_NULL};
 };
 
-// MARK: - Implementation -
+// MARK: -
 
 namespace detail {
 
