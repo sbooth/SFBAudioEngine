@@ -8,7 +8,7 @@
 import Testing
 @testable import SFBAudioEngine
 
-@Suite struct SFBAudioEngineTests {
+@Suite struct InputOutputTests {
     @Test func inputSourceFromData() throws {
         let input = InputSource(data: Data(repeating: 0xfe, count: 16))
         #expect(input.isOpen)
