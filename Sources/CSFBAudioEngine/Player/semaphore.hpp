@@ -7,15 +7,17 @@
 
 #pragma once
 
-#import <mach/mach_error.h>
-#import <mach/mach_init.h>
-#import <mach/mach_time.h>
-#import <mach/semaphore.h>
-#import <mach/task.h>
+#include <mach/mach_error.h>
+#include <mach/mach_init.h>
+#include <mach/mach_time.h>
+#include <mach/semaphore.h>
+#include <mach/task.h>
 
-#import <cassert>
-#import <limits>
-#import <system_error>
+#include <cassert>
+#include <limits>
+#include <system_error>
+
+#include "host_time.hpp"
 
 namespace msema {
 
@@ -88,36 +90,6 @@ namespace detail {
 
 /// The number of nanoseconds in one second.
 inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
-
-/// A fraction used to convert host ticks to nanoseconds.
-inline const auto timebase = []() noexcept {
-    mach_timebase_info_data_t timebase_info;
-    [[maybe_unused]] const auto kr = mach_timebase_info(&timebase_info);
-    assert(kr == KERN_SUCCESS);
-    return timebase_info;
-}();
-
-/// Converts mach ticks to nanoseconds.
-[[nodiscard]] inline uint64_t ticks_to_nsec(uint64_t ticks) noexcept {
-    if (timebase.numer != timebase.denom) {
-        __uint128_t ns = ticks;
-        ns *= timebase.numer;
-        ns /= timebase.denom;
-        return static_cast<uint64_t>(ns);
-    }
-    return ticks;
-}
-
-/// Converts nanoseconds to mach ticks.
-[[nodiscard]] inline uint64_t nsec_to_ticks(uint64_t ns) noexcept {
-    if (timebase.numer != timebase.denom) {
-        __uint128_t t = ns;
-        t *= timebase.denom;
-        t /= timebase.numer;
-        return static_cast<uint64_t>(t);
-    }
-    return ns;
-}
 
 /// Converts a mach_timespec_t to a nanosecond count.
 [[nodiscard]] constexpr uint64_t timespec_to_nsec(mach_timespec_t ts) noexcept {
@@ -200,7 +172,7 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
     }
 
     const auto wait_nsec = detail::timespec_to_nsec(wait_time);
-    const auto deadline = mach_absolute_time() + detail::nsec_to_ticks(wait_nsec);
+    const auto deadline = mach_absolute_time() + host_time::fromNanoseconds(wait_nsec);
 
     for (;;) {
         const auto now = mach_absolute_time();
@@ -208,7 +180,7 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
             return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
         }
 
-        const auto remaining_nsec = detail::ticks_to_nsec(deadline - now);
+        const auto remaining_nsec = host_time::toNanoseconds(deadline - now);
         const auto current_wait = detail::nsec_to_timespec(remaining_nsec);
 
         const auto kr = semaphore_timedwait(semaphore_, current_wait);
