@@ -73,15 +73,6 @@
       }
     },
     {
-      "identity" : "cxxunfairlock",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXUnfairLock",
-      "state" : {
-        "revision" : "d134022b339567958b3a941dfa3cd079d31f1030",
-        "version" : "0.3.1"
-      }
-    },
-    {
       "identity" : "flac-binary-xcframework",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/flac-binary-xcframework",
