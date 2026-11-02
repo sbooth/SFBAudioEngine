@@ -29,7 +29,7 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 #import "bitmask_enum.hpp"
-#import "unfair_mutex.hpp"
+#import "UnfairMutex.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
@@ -139,12 +139,12 @@ class AudioPlayer final {
     /// Active decoders and associated state
     DecoderStateVector activeDecoders_;
     /// Mutex protecting `activeDecoders_`
-    mutable mtx::unfair_mutex activeDecodersMutex_;
+    mutable mtx::UnfairMutex activeDecodersMutex_;
 
     /// Decoders enqueued for playback that are not yet active
     std::deque<Decoder> queuedDecoders_;
     /// Mutex protecting `queuedDecoders_`
-    mutable mtx::unfair_mutex queuedDecodersMutex_;
+    mutable mtx::UnfairMutex queuedDecodersMutex_;
 
     /// Thread used for decoding
     std::jthread decodingThread_;
@@ -165,7 +165,7 @@ class AudioPlayer final {
     AVAudioSourceNode *sourceNode_{nil};
     /// Mutex serializing player state transitions, `AVAudioEngine` start/stop, and processing graph configuration
     /// changes
-    mutable mtx::unfair_mutex engineMutex_;
+    mutable mtx::UnfairMutex engineMutex_;
     /// The generation of the most recent `AVAudioEngine` pause request
     std::atomic_uint64_t pauseRequestGeneration_{0};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
@@ -184,7 +184,7 @@ class AudioPlayer final {
     Decoder nowPlaying_{nil};
     /// Mutex protecting `nowPlaying_`
     /// - note: May be acquired while holding `activeDecodersMutex_`, never the reverse
-    mutable mtx::unfair_mutex nowPlayingMutex_;
+    mutable mtx::UnfairMutex nowPlayingMutex_;
 
     /// Dispatch queue used for asynchronous render event notifications
     dispatch_queue_t eventQueue_{nil};

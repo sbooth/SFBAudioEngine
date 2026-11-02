@@ -15,21 +15,21 @@ namespace mtx {
 /// A wrapper around os_unfair_lock satisfying the Lockable requirements.
 ///
 /// This class may be used with std::lock_guard for a scope-based lock.
-class __attribute__((capability("mutex"))) unfair_mutex final {
+class __attribute__((capability("mutex"))) UnfairMutex final {
   public:
     // MARK: Construction and Destruction
 
     /// Creates a new unfair mutex.
-    unfair_mutex() noexcept = default;
+    UnfairMutex() noexcept = default;
 
-    unfair_mutex(const unfair_mutex &) = delete;
-    unfair_mutex &operator=(const unfair_mutex &) = delete;
+    UnfairMutex(const UnfairMutex &) = delete;
+    UnfairMutex &operator=(const UnfairMutex &) = delete;
 
-    unfair_mutex(unfair_mutex &&) = delete;
-    unfair_mutex &operator=(unfair_mutex &&) = delete;
+    UnfairMutex(UnfairMutex &&) = delete;
+    UnfairMutex &operator=(UnfairMutex &&) = delete;
 
     /// Destroys the unfair mutex.
-    ~unfair_mutex() noexcept = default;
+    ~UnfairMutex() noexcept = default;
 
     // MARK: Lockable
 
@@ -55,14 +55,14 @@ class __attribute__((capability("mutex"))) unfair_mutex final {
     /// If the mutex is currently owned by the calling thread, this function returns.
     ///
     /// If the mutex is unlocked or owned by a different thread, this function asserts and terminates the process.
-    void assert_owner() const noexcept __attribute__((assert_capability(this)));
+    void assertIsOwner() const noexcept __attribute__((assert_capability(this)));
 
     /// Asserts that the calling thread is not the current owner of the mutex.
     ///
     /// If the mutex is unlocked or owned by a different thread, this function returns.
     ///
     /// If the mutex is currently owned by the current thread, this function asserts and terminates the process.
-    void assert_not_owner() const noexcept;
+    void assertIsNotOwner() const noexcept;
 
   private:
     /// The locking primitive.
@@ -73,18 +73,18 @@ class __attribute__((capability("mutex"))) unfair_mutex final {
 
 // MARK: Lockable
 
-inline void unfair_mutex::lock() noexcept { os_unfair_lock_lock(&lock_); }
+inline void UnfairMutex::lock() noexcept { os_unfair_lock_lock(&lock_); }
 
-inline void unfair_mutex::lock(os_unfair_lock_flags_t flags) noexcept { os_unfair_lock_lock_with_flags(&lock_, flags); }
+inline void UnfairMutex::lock(os_unfair_lock_flags_t flags) noexcept { os_unfair_lock_lock_with_flags(&lock_, flags); }
 
-inline void unfair_mutex::unlock() noexcept { os_unfair_lock_unlock(&lock_); }
+inline void UnfairMutex::unlock() noexcept { os_unfair_lock_unlock(&lock_); }
 
-inline bool unfair_mutex::try_lock() noexcept { return os_unfair_lock_trylock(&lock_); }
+inline bool UnfairMutex::try_lock() noexcept { return os_unfair_lock_trylock(&lock_); }
 
 // MARK: Ownership
 
-inline void unfair_mutex::assert_owner() const noexcept { os_unfair_lock_assert_owner(&lock_); }
+inline void UnfairMutex::assertIsOwner() const noexcept { os_unfair_lock_assert_owner(&lock_); }
 
-inline void unfair_mutex::assert_not_owner() const noexcept { os_unfair_lock_assert_not_owner(&lock_); }
+inline void UnfairMutex::assertIsNotOwner() const noexcept { os_unfair_lock_assert_not_owner(&lock_); }
 
 } /* namespace mtx */
