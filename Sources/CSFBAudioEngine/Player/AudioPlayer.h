@@ -21,7 +21,6 @@
 #import <thread>
 #import <vector>
 
-#import <dsema/Semaphore.hpp>
 #import <mpsc/MessageQueue.hpp>
 #import <spsc/AudioRingBuffer.hpp>
 #import <spsc/Queue.hpp>
@@ -29,6 +28,7 @@
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 #import "bitmask_enum.hpp"
+#import "semaphore.hpp"
 #import "unfair_mutex.hpp"
 
 #pragma clang diagnostic push
