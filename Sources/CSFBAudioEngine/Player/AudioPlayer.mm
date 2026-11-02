@@ -2376,7 +2376,7 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     // Pause the engine once the audio has played
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
-        __strong SFBAudioPlayer *player = weakPlayer;
+        __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
             os_log_debug(log_, "Audio player deallocated between pause engine event and sending -pause");
             return;
@@ -2423,7 +2423,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
     // Schedule the rendering started notification at the expected host time
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
-        __strong SFBAudioPlayer *player = weakPlayer;
+        __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
             os_log_debug(log_, "Audio player deallocated between rendering will start event and rendering started "
                                "notification");
@@ -2505,7 +2505,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
     // Schedule the rendering complete notification at the expected host time
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
-        __strong SFBAudioPlayer *player = weakPlayer;
+        __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
             os_log_debug(log_, "Audio player deallocated between rendering will complete event and rendering "
                                "complete notification");
