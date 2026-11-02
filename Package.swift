@@ -26,7 +26,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/sbooth/AVFAudioExtensions", .upToNextMinor(from: "0.5.1")),
         .package(url: "https://github.com/sbooth/CXXAudioRingBuffer", .upToNextMinor(from: "0.2.0")),
-        .package(url: "https://github.com/sbooth/CXXDispatchSemaphore", .upToNextMinor(from: "0.4.1")),
         .package(url: "https://github.com/sbooth/CXXMessageQueue", .upToNextMinor(from: "0.2.2")),
         .package(url: "https://github.com/sbooth/CXXQueue", .upToNextMinor(from: "0.1.1")),
 
@@ -64,7 +63,6 @@ let package = Package(
             dependencies: [
                 .product(name: "AVFAudioExtensions", package: "AVFAudioExtensions"),
                 .product(name: "CXXAudioRingBuffer", package: "CXXAudioRingBuffer"),
-                .product(name: "CXXDispatchSemaphore", package: "CXXDispatchSemaphore"),
                 .product(name: "CXXMessageQueue", package: "CXXMessageQueue"),
                 .product(name: "CXXQueue", package: "CXXQueue"),
                 // Standalone dependencies
