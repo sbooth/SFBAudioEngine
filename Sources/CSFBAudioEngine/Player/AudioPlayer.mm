@@ -2698,7 +2698,7 @@ std::size_t sfb::AudioPlayer::cancelActiveDecoders() noexcept {
 
 auto sfb::AudioPlayer::firstActiveDecoderState() const noexcept -> DecoderState * {
 #if DEBUG
-    activeDecodersMutex_.assertIsOwner();
+    activeDecodersMutex_.assert_owner();
 #endif /* DEBUG */
     const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
         const auto decoderFlags = decoderState->loadFlags();
@@ -2709,7 +2709,7 @@ auto sfb::AudioPlayer::firstActiveDecoderState() const noexcept -> DecoderState 
 
 auto sfb::AudioPlayer::decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept -> DecoderState * {
 #if DEBUG
-    activeDecodersMutex_.assertIsOwner();
+    activeDecodersMutex_.assert_owner();
 #endif /* DEBUG */
     const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
     return iter != activeDecoders_.cend() ? iter->get() : nullptr;
@@ -2907,7 +2907,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
 bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
 #if DEBUG
-    engineMutex_.assertIsOwner();
+    engineMutex_.assert_owner();
 #endif /* DEBUG */
 
     if (!engine_.isRunning) {
@@ -2925,7 +2925,7 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
 
 void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool wasPlaying) noexcept {
 #if DEBUG
-    engineMutex_.assertIsNotOwner();
+    engineMutex_.assert_not_owner();
 #endif /* DEBUG */
 
     if (wasPlaying) {
