@@ -28,7 +28,6 @@ let package = Package(
         .package(url: "https://github.com/sbooth/CXXAudioRingBuffer", .upToNextMinor(from: "0.2.0")),
         .package(url: "https://github.com/sbooth/CXXMessageQueue", .upToNextMinor(from: "0.2.2")),
         .package(url: "https://github.com/sbooth/CXXQueue", .upToNextMinor(from: "0.1.1")),
-        .package(url: "https://github.com/sbooth/CXXUnfairLock", .upToNextMinor(from: "0.3.1")),
 
         // Standalone dependencies from source
         .package(url: "https://github.com/sbooth/CDUMB", from: "2.0.3"),
@@ -66,7 +65,6 @@ let package = Package(
                 .product(name: "CXXAudioRingBuffer", package: "CXXAudioRingBuffer"),
                 .product(name: "CXXMessageQueue", package: "CXXMessageQueue"),
                 .product(name: "CXXQueue", package: "CXXQueue"),
-                .product(name: "CXXUnfairLock", package: "CXXUnfairLock"),
                 // Standalone dependencies
                 .product(name: "dumb", package: "CDUMB"),
                 .product(name: "MAC", package: "CXXMonkeysAudio"),

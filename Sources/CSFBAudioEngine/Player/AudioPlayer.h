@@ -22,14 +22,14 @@
 #import <vector>
 
 #import <mpsc/MessageQueue.hpp>
-#import <mtx/UnfairMutex.hpp>
 #import <spsc/AudioRingBuffer.hpp>
 #import <spsc/Queue.hpp>
 
 #import "SFBAudioDecoder.h"
 #import "SFBAudioPlayer.h"
 #import "bitmask_enum.hpp"
-#import "msema.hpp"
+#import "semaphore.hpp"
+#import "unfair_mutex.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
