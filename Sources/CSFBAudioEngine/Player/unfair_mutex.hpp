@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <os/availability.h>
 #include <os/lock.h>
 
 namespace mtx {
@@ -35,11 +34,6 @@ class __attribute__((capability("mutex"))) UnfairMutex final {
 
     /// Locks the mutex.
     void lock() noexcept __attribute__((acquire_capability()));
-
-    /// Locks the mutex.
-    /// @param flags Flags to alter the behavior of the os_unfair_lock.
-    void lock(os_unfair_lock_flags_t flags) noexcept __attribute__((acquire_capability()))
-    API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.0), watchos(11.0), visionos(2.0));
 
     /// Unlocks the mutex.
     void unlock() noexcept __attribute__((release_capability()));
@@ -74,8 +68,6 @@ class __attribute__((capability("mutex"))) UnfairMutex final {
 // MARK: Lockable
 
 inline void UnfairMutex::lock() noexcept { os_unfair_lock_lock(&lock_); }
-
-inline void UnfairMutex::lock(os_unfair_lock_flags_t flags) noexcept { os_unfair_lock_lock_with_flags(&lock_, flags); }
 
 inline void UnfairMutex::unlock() noexcept { os_unfair_lock_unlock(&lock_); }
 
