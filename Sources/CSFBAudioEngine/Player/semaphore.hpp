@@ -17,8 +17,6 @@ namespace dsema {
 /// A dispatch_semaphore_t wrapper.
 class Semaphore final {
   public:
-    // MARK: Construction and Destruction
-
     /// Creates a new semaphore.
     /// @param value The starting value for the semaphore.
     /// @throw std::invalid_argument if value is less than zero or std::runtime_error if the semaphore could not be
@@ -39,8 +37,6 @@ class Semaphore final {
 
     /// Releases the underlying dispatch semaphore.
     ~Semaphore() noexcept = default;
-
-    // MARK: Primitives
 
     /// Waits for (decrements) the semaphore.
     ///
@@ -67,8 +63,6 @@ class Semaphore final {
 
 // MARK: - Implementation -
 
-// MARK: Construction
-
 inline Semaphore::Semaphore(std::intptr_t value) {
     if (value < 0) {
         throw std::invalid_argument("Semaphore starting value may not be less than zero");
@@ -79,8 +73,6 @@ inline Semaphore::Semaphore(std::intptr_t value) {
         throw std::runtime_error("Unable to create dispatch semaphore");
     }
 }
-
-// MARK: Primitives
 
 inline bool Semaphore::wait(dispatch_time_t timeout) noexcept {
     return dispatch_semaphore_wait(semaphore_, timeout) == 0;
