@@ -229,7 +229,7 @@ uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &time
     const auto deltaSeconds = static_cast<double>(frameOffset) / sampleRate;
     const auto scaledNanos =
             static_cast<uint64_t>(deltaSeconds * timestamp.mRateScalar * static_cast<double>(nanosecondsPerSecond));
-    return timestamp.mHostTime + host_time::fromNanoseconds(scaledNanos);
+    return timestamp.mHostTime + host_time::from_nanos(scaledNanos);
 }
 
 /// Returns `seconds` expressed as a host time delta, or 0 if `seconds` is not finite or less than or equal to zero
@@ -237,7 +237,7 @@ uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
     if (!std::isfinite(seconds) || seconds <= 0) [[unlikely]] {
         return 0;
     }
-    return host_time::fromNanoseconds(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
+    return host_time::from_nanos(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
 }
 
 } /* namespace */
@@ -1680,7 +1680,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     if (framesRead != frameCount && bits::is_clear(flags, Flags::formatChangePending)) [[unlikely]] {
         // Throttle underrun events to prevent saturating the event message queue
         constexpr auto throttleInterval = 100 * nanosecondsPerMillisecond;
-        if (host_time::toNanoseconds(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
+        if (host_time::to_nanos(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
             if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
                     [[unlikely]] {
                 setFlags(Flags::renderEventDropped);
@@ -2405,13 +2405,11 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering started event processed %.2f msec late for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
-                     decoder);
+                     static_cast<double>(host_time::to_nanos(now - hostTime)) / nanosecondsPerMillisecond, decoder);
     } else {
 #if DEBUG
         os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(hostTime - now)) / nanosecondsPerMillisecond,
-                     decoder);
+                     static_cast<double>(host_time::to_nanos(hostTime - now)) / nanosecondsPerMillisecond, decoder);
 #endif /* DEBUG */
     }
 
@@ -2453,7 +2451,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
 
 #if DEBUG
         const auto now = host_time::current();
-        const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
+        const auto delta = host_time::to_nanos(absoluteDifference(hostTime, now));
         const auto tolerance =
                 static_cast<uint64_t>(nanosecondsPerSecond / [that->sourceNode_ outputFormatForBus:0].sampleRate);
         if (delta > tolerance) {
@@ -2487,13 +2485,11 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete event processed %.2f msec late for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
-                     decoder);
+                     static_cast<double>(host_time::to_nanos(now - hostTime)) / nanosecondsPerMillisecond, decoder);
     } else {
 #if DEBUG
         os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@",
-                     static_cast<double>(host_time::toNanoseconds(hostTime - now)) / nanosecondsPerMillisecond,
-                     decoder);
+                     static_cast<double>(host_time::to_nanos(hostTime - now)) / nanosecondsPerMillisecond, decoder);
 #endif /* DEBUG */
     }
 
@@ -2542,7 +2538,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
 #if DEBUG
         const auto now = host_time::current();
-        const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
+        const auto delta = host_time::to_nanos(absoluteDifference(hostTime, now));
         const auto tolerance =
                 static_cast<uint64_t>(nanosecondsPerSecond / [that->sourceNode_ outputFormatForBus:0].sampleRate);
         if (delta > tolerance) {

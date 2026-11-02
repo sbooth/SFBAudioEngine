@@ -53,7 +53,7 @@ inline const auto timebase = []() noexcept {
 /// Converts host time `t` to nanoseconds and returns the result.
 ///
 /// This is equivalent to the macOS-only function ``AudioConvertHostTimeToNanos``.
-[[nodiscard]] inline uint64_t toNanoseconds(uint64_t t) noexcept {
+[[nodiscard]] inline uint64_t to_nanos(uint64_t t) noexcept {
     if (detail::timebase.numer != detail::timebase.denom) {
         __uint128_t ns = t;
         ns *= detail::timebase.numer;
@@ -67,7 +67,7 @@ inline const auto timebase = []() noexcept {
 /// Converts `ns` nanoseconds to host time and returns the result.
 ///
 /// This is equivalent to the macOS-only function ``AudioConvertNanosToHostTime``.
-[[nodiscard]] inline uint64_t fromNanoseconds(uint64_t ns) noexcept {
+[[nodiscard]] inline uint64_t from_nanos(uint64_t ns) noexcept {
     if (detail::timebase.numer != detail::timebase.denom) {
         __uint128_t t = ns;
         t *= detail::timebase.denom;
