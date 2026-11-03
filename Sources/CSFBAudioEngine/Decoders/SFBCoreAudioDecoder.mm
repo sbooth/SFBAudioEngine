@@ -11,7 +11,6 @@
 
 #import <algorithm>
 #import <cstdlib>
-#import <memory>
 #import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -19,24 +18,14 @@
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
+#import "unique_ref.hpp"
 
 SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `AudioFileID` objects
-struct audio_file_id_deleter {
-    void operator()(AudioFileID _Nonnull af) const noexcept { AudioFileClose(af); }
-};
-
-using unique_audio_file = std::unique_ptr<std::remove_pointer_t<AudioFileID>, audio_file_id_deleter>;
-
-/// A `std::unique_ptr` deleter for `ExtAudioFileRef` objects
-struct ext_audio_file_id_deleter {
-    void operator()(ExtAudioFileRef _Nonnull eaf) const noexcept { ExtAudioFileDispose(eaf); }
-};
-
-using unique_ext_audio_file = std::unique_ptr<std::remove_pointer_t<ExtAudioFileRef>, ext_audio_file_id_deleter>;
+using unique_audio_file = util::unique_ref<AudioFileID, AudioFileClose>;
+using unique_ext_audio_file = util::unique_ref<ExtAudioFileRef, ExtAudioFileDispose>;
 
 // ========================================
 // Callbacks
