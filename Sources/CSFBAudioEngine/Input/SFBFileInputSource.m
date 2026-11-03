@@ -8,10 +8,9 @@
 #import "SFBFileInputSource.h"
 
 #import <stdio.h>
+#import <sys/stat.h>
 
 #import "SFBInputSource+Internal.h"
-
-#import <sys/stat.h>
 
 @interface SFBFileInputSource () {
   @private

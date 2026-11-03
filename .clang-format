@@ -42,7 +42,7 @@ Macros:
 
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '^<((sys/|dispatch|libkern|mach|objc|os)/|[^/]+\.h>)'
+  - Regex: '^<((sys|dispatch|libkern|mach|objc|os)/|[^/]+\.h>)'
     Priority: 2
   - Regex: '^<[^./>]+>$'
     Priority: 4
