@@ -5,6 +5,8 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#pragma once
+
 #include <memory>
 
 namespace util {
