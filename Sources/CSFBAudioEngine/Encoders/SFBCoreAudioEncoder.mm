@@ -9,15 +9,14 @@
 
 #import <os/log.h>
 
-#import <AudioToolbox/AudioToolbox.h>
-
 #import <algorithm>
 #import <vector>
 
-#import "AudioFileWrapper.hpp"
-#import "ExtAudioFileWrapper.hpp"
+#import <AudioToolbox/AudioToolbox.h>
+
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
+#import "unique_ref.hpp"
 
 SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio = @"org.sbooth.AudioEngine.Encoder.CoreAudio";
 
@@ -29,6 +28,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConve
         @"Audio Converter Property Settings";
 
 namespace {
+
+using unique_audio_file = util::unique_ref<AudioFileID, AudioFileClose>;
+using unique_ext_audio_file = util::unique_ref<ExtAudioFileRef, ExtAudioFileDispose>;
 
 template <typename T>
 OSStatus setAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID,
@@ -212,8 +214,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 @interface SFBCoreAudioEncoder () {
   @private
-    audio_toolbox::AudioFileWrapper _af;
-    audio_toolbox::ExtAudioFileWrapper _eaf;
+    unique_audio_file _af;
+    unique_ext_audio_file _eaf;
 }
 @end
 
@@ -514,10 +516,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return NO;
     }
 
-    auto af = audio_toolbox::AudioFileWrapper(audioFile);
+    unique_audio_file af{audioFile};
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af, true, &extAudioFile);
+    result = ExtAudioFileWrapAudioFileID(af.get(), true, &extAudioFile);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -527,10 +529,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return NO;
     }
 
-    auto eaf = audio_toolbox::ExtAudioFileWrapper(extAudioFile);
+    unique_ext_audio_file eaf{extAudioFile};
 
-    result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription),
-                                     _processingFormat.streamDescription);
+    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
+                                     sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
@@ -542,7 +544,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     }
 
     if (_processingFormat.channelLayout) {
-        result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientChannelLayout,
+        result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientChannelLayout,
                                          sizeof(_processingFormat.channelLayout.layout),
                                          _processingFormat.channelLayout.layout);
         if (result != noErr) {
@@ -615,7 +617,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
             // Notify ExtAudioFile about the converter property changes
             CFArrayRef converterConfig = nullptr;
-            result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ConverterConfig, sizeof(converterConfig),
+            result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ConverterConfig, sizeof(converterConfig),
                                              &converterConfig);
             if (result != noErr) {
                 os_log_error(
@@ -652,7 +654,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    OSStatus status = ExtAudioFileTell(_eaf, &currentFrame);
+    OSStatus status = ExtAudioFileTell(_eaf.get(), &currentFrame);
     if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", status,
                      SFBCStringForOSType(status));
@@ -670,7 +672,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return YES;
     }
 
-    auto result = ExtAudioFileWrite(_eaf, frameLength, buffer.audioBufferList);
+    auto result = ExtAudioFileWrite(_eaf.get(), frameLength, buffer.audioBufferList);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrite failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));

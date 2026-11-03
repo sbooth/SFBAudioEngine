@@ -10,10 +10,11 @@
 #import <os/log.h>
 
 #import <algorithm>
-#import <memory>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <opus/opusenc.h>
+
+#import "unique_ref.hpp"
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggOpus = @"org.sbooth.AudioEngine.Encoder.OggOpus";
 
@@ -44,18 +45,8 @@ SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsVal
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `OggOpusEnc` objects
-struct ogg_opus_enc_deleter {
-    void operator()(OggOpusEnc *enc) noexcept { ope_encoder_destroy(enc); }
-};
-
-/// A `std::unique_ptr` deleter for `OggOpusComments` objects
-struct ogg_opus_comments_deleter {
-    void operator()(OggOpusComments *comments) noexcept { ope_comments_destroy(comments); }
-};
-
-using ogg_opus_enc_unique_ptr = std::unique_ptr<OggOpusEnc, ogg_opus_enc_deleter>;
-using ogg_opus_comments_unique_ptr = std::unique_ptr<OggOpusComments, ogg_opus_comments_deleter>;
+using unique_opus_encoder = util::unique_ref<OggOpusEnc, ope_encoder_destroy>;
+using unique_opus_comments = util::unique_ref<OggOpusComments, ope_comments_destroy>;
 
 int writeCallback(void *user_data, const unsigned char *ptr, opus_int32 len) noexcept {
     SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
@@ -73,8 +64,8 @@ int closeCallback(void *user_data) noexcept {
 
 @interface SFBOggOpusEncoder () {
   @private
-    ogg_opus_enc_unique_ptr _enc;
-    ogg_opus_comments_unique_ptr _comments;
+    unique_opus_encoder _enc;
+    unique_opus_comments _comments;
     AVAudioPCMBuffer *_frameBuffer;
     AVAudioFramePosition _framePosition;
 }
@@ -170,7 +161,7 @@ int closeCallback(void *user_data) noexcept {
 
     OpusEncCallbacks callbacks = {writeCallback, closeCallback};
 
-    ogg_opus_comments_unique_ptr comments{ope_comments_create()};
+    unique_opus_comments comments{ope_comments_create()};
     if (!comments) {
         os_log_error(gSFBAudioEncoderLog, "ope_comments_create failed");
         if (error != nullptr) {
@@ -192,7 +183,7 @@ int closeCallback(void *user_data) noexcept {
         return NO;
     }
 
-    ogg_opus_enc_unique_ptr enc{(ope_encoder_create_callbacks(
+    unique_opus_encoder enc{(ope_encoder_create_callbacks(
             &callbacks, (__bridge void *)self, comments.get(), static_cast<opus_int32>(_processingFormat.sampleRate),
             static_cast<int>(_processingFormat.channelCount),
             _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result))};

@@ -8,14 +8,14 @@
 #import "SFBFLACDecoder.h"
 
 #import <os/log.h>
-
-#import <AudioToolbox/AudioFormat.h>
+#import <simd/simd.h>
 
 #import <algorithm>
 #import <cstdlib>
 #import <cstring>
-#import <memory>
 #import <optional>
+
+#import <AudioToolbox/AudioFormat.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <FLAC/metadata.h>
@@ -23,8 +23,7 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <simd/simd.h>
+#import "unique_ref.hpp"
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
 SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC = @"org.sbooth.AudioEngine.Decoder.OggFLAC";
@@ -41,12 +40,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyFLACMD5Sum = @"
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `FLAC__StreamDecoder` objects
-struct flac__stream_decoder_deleter {
-    void operator()(FLAC__StreamDecoder *decoder) noexcept { FLAC__stream_decoder_delete(decoder); }
-};
-
-using flac__stream_decoder_unique_ptr = std::unique_ptr<FLAC__StreamDecoder, flac__stream_decoder_deleter>;
+using unique_flac_decoder = util::unique_ref<FLAC__StreamDecoder, FLAC__stream_decoder_delete>;
 
 /// Returns an AVAudioChannelLayout for the given WAVE channel mask
 AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) noexcept {
@@ -80,7 +74,7 @@ AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) 
 
 @interface SFBFLACDecoder () {
   @private
-    flac__stream_decoder_unique_ptr _flac;
+    unique_flac_decoder _flac;
     std::optional<FLAC__StreamMetadata_StreamInfo> _streamInfo;
     uint32_t _channelMask; /* from WAVEFORMATEXTENSIBLE_CHANNEL_MASK */
     AVAudioFramePosition _framePosition;
@@ -251,7 +245,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
     }
 
     // Create FLAC decoder
-    flac__stream_decoder_unique_ptr flac{FLAC__stream_decoder_new()};
+    unique_flac_decoder flac{FLAC__stream_decoder_new()};
     if (!flac) {
         if (error != nullptr) {
             *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];

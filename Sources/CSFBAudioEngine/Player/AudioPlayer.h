@@ -9,8 +9,6 @@
 
 #import <os/log.h>
 
-#import <AVFAudio/AVFAudio.h>
-
 #import <atomic>
 #import <cassert>
 #import <deque>
@@ -20,6 +18,8 @@
 #import <stop_token>
 #import <thread>
 #import <vector>
+
+#import <AVFAudio/AVFAudio.h>
 
 #import <mpsc/MessageQueue.hpp>
 #import <spsc/AudioRingBuffer.hpp>
