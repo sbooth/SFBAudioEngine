@@ -152,7 +152,7 @@ inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
     }
 }
 
-inline Semaphore::~Semaphore() noexcept { (void)semaphore_destroy(task_, semaphore_); }
+inline Semaphore::~Semaphore() noexcept { semaphore_destroy(task_, semaphore_); }
 
 inline bool Semaphore::wait() noexcept {
     kern_return_t kr;
