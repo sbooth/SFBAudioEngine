@@ -10,11 +10,11 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <memory>
 #import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "AudioFileWrapper.hpp"
 #import "ExtAudioFileWrapper.hpp"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
@@ -29,6 +29,13 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConve
         @"Audio Converter Property Settings";
 
 namespace {
+
+/// A `std::unique_ptr` deleter for `AudioFileID` objects
+struct audio_file_id_deleter {
+    void operator()(AudioFileID _Nonnull af) const noexcept { AudioFileClose(af); }
+};
+
+using unique_audio_file = std::unique_ptr<std::remove_pointer_t<AudioFileID>, audio_file_id_deleter>;
 
 template <typename T>
 OSStatus setAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID,
@@ -212,7 +219,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 @interface SFBCoreAudioEncoder () {
   @private
-    audio_toolbox::AudioFileWrapper _af;
+    unique_audio_file _af;
     audio_toolbox::ExtAudioFileWrapper _eaf;
 }
 @end
@@ -514,10 +521,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return NO;
     }
 
-    auto af = audio_toolbox::AudioFileWrapper(audioFile);
+    unique_audio_file af{audioFile};
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af, true, &extAudioFile);
+    result = ExtAudioFileWrapAudioFileID(af.get(), true, &extAudioFile);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));

@@ -11,11 +11,11 @@
 
 #import <algorithm>
 #import <cstdlib>
+#import <memory>
 #import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "AudioFileWrapper.hpp"
 #import "ExtAudioFileWrapper.hpp"
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
@@ -24,6 +24,13 @@
 SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
 
 namespace {
+
+/// A `std::unique_ptr` deleter for `AudioFileID` objects
+struct audio_file_id_deleter {
+    void operator()(AudioFileID _Nonnull af) const noexcept { AudioFileClose(af); }
+};
+
+using unique_audio_file = std::unique_ptr<std::remove_pointer_t<AudioFileID>, audio_file_id_deleter>;
 
 // ========================================
 // Callbacks
@@ -98,7 +105,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 @interface SFBCoreAudioDecoder () {
   @private
-    audio_toolbox::AudioFileWrapper _af;
+    unique_audio_file _af;
     audio_toolbox::ExtAudioFileWrapper _eaf;
 }
 @end
@@ -278,10 +285,10 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         return NO;
     }
 
-    auto af = audio_toolbox::AudioFileWrapper(audioFile);
+    unique_audio_file af{audioFile};
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af, false, &extAudioFile);
+    result = ExtAudioFileWrapAudioFileID(af.get(), false, &extAudioFile);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
