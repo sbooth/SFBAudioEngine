@@ -1130,7 +1130,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
-        decodingSemaphore_.timedwait(msema::detail::nsec_to_timespec(timeout));
+        decodingSemaphore_.timedwait(timeout);
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
@@ -1866,7 +1866,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event signal
-        eventSemaphore_.timedwait({0, 500'000'000});
+        eventSemaphore_.timedwait(500'000'000);
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);

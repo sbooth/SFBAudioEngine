@@ -64,6 +64,14 @@ class Semaphore final {
     /// occurred.
     timedwait_result timedwait(mach_timespec_t wait_time) noexcept;
 
+    /// Decrements the semaphore count.
+    ///
+    /// If the semaphore count is negative after decrementing, the calling thread blocks.
+    /// @param nanoseconds How long to wait before a timeout occurs.
+    /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error
+    /// occurred.
+    timedwait_result timedwait(uint64_t nanoseconds) noexcept;
+
     /// Increments the semaphore count.
     ///
     /// If the count goes non-negative (i.e. greater than or equal to 0) and a thread is blocked on the semaphore, then
@@ -189,6 +197,10 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
         }
         return detail::to_timedwait_result(kr);
     }
+}
+
+inline auto Semaphore::timedwait(uint64_t nanoseconds) noexcept -> timedwait_result {
+    return timedwait(detail::nsec_to_timespec(nanoseconds));
 }
 
 inline bool Semaphore::signal() noexcept { return semaphore_signal(semaphore_) == KERN_SUCCESS; }
