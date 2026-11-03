@@ -12,6 +12,8 @@
 #import <algorithm>
 #import <memory>
 
+#import "unique_ref.hpp"
+
 #import <lame/lame.h>
 
 SFBAudioEncoderName const SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
@@ -32,18 +34,13 @@ SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `lame_global_flags` objects
-struct lame_global_flags_deleter {
-    void operator()(lame_global_flags *gfp) noexcept { lame_close(gfp); }
-};
-
-using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_global_flags_deleter>;
+using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>;
 
 } /* namespace */
 
 @interface SFBMP3Encoder () {
   @private
-    lame_global_flags_unique_ptr _gfp;
+    unique_lame_global_flags _gfp;
     AVAudioFramePosition _framePosition;
     NSInteger _id3v2TagSize;
 }
@@ -94,7 +91,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         return NO;
     }
 
-    lame_global_flags_unique_ptr gfp{lame_init()};
+    unique_lame_global_flags gfp{lame_init()};
     if (!gfp) {
         os_log_error(gSFBAudioEncoderLog, "lame_init failed");
         if (error != nullptr) {
