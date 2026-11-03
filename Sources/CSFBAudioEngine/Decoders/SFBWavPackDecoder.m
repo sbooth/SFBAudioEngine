@@ -8,6 +8,7 @@
 #import "SFBWavPackDecoder.h"
 
 #import <os/log.h>
+#import <simd/simd.h>
 
 #import <Accelerate/Accelerate.h>
 #import <AudioToolbox/AudioToolbox.h>
@@ -17,8 +18,6 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <simd/simd.h>
 
 SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
 
