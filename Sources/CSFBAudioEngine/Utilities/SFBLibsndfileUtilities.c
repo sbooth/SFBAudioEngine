@@ -13,7 +13,7 @@
 
 #include "SFBAudioEngineTypes.h"
 
-void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format) {
+void SFBFillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format) {
     assert(asbd != NULL);
 
     int majorFormat = format & SF_FORMAT_TYPEMASK;

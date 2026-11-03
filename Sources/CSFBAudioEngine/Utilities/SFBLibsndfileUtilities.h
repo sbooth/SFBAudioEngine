@@ -10,5 +10,5 @@
 #include <CoreAudioTypes/CoreAudioTypes.h>
 
 /// Fills an `AudioStreamBasicDescription` with details from a sndfile format
-/// - note: Currently this functions fills at most `mFormatID`, `mFormatFlags`, and `mBitsPerChannel`
-void FillASBDWithSndfileFormat(AudioStreamBasicDescription *_Nonnull asbd, int format);
+/// - note: Currently this function fills at most `mFormatID`, `mFormatFlags`, and `mBitsPerChannel`
+void SFBFillASBDWithSndfileFormat(AudioStreamBasicDescription *_Nonnull asbd, int format);
