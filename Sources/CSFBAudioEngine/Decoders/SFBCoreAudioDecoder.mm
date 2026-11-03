@@ -16,7 +16,6 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "ExtAudioFileWrapper.hpp"
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
@@ -31,6 +30,13 @@ struct audio_file_id_deleter {
 };
 
 using unique_audio_file = std::unique_ptr<std::remove_pointer_t<AudioFileID>, audio_file_id_deleter>;
+
+/// A `std::unique_ptr` deleter for `ExtAudioFileRef` objects
+struct ext_audio_file_id_deleter {
+    void operator()(ExtAudioFileRef _Nonnull eaf) const noexcept { ExtAudioFileDispose(eaf); }
+};
+
+using unique_ext_audio_file = std::unique_ptr<std::remove_pointer_t<ExtAudioFileRef>, ext_audio_file_id_deleter>;
 
 // ========================================
 // Callbacks
@@ -106,7 +112,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 @interface SFBCoreAudioDecoder () {
   @private
     unique_audio_file _af;
-    audio_toolbox::ExtAudioFileWrapper _eaf;
+    unique_ext_audio_file _eaf;
 }
 @end
 
@@ -298,12 +304,12 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         return NO;
     }
 
-    auto eaf = audio_toolbox::ExtAudioFileWrapper(extAudioFile);
+    unique_ext_audio_file eaf{extAudioFile};
 
     // Query file format
     AudioStreamBasicDescription format{};
     UInt32 dataSize = sizeof(format);
-    result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
+    result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result,
@@ -320,10 +326,10 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
     // Query channel layout
     AVAudioChannelLayout *channelLayout = nil;
-    result = ExtAudioFileGetPropertyInfo(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
+    result = ExtAudioFileGetPropertyInfo(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
     if (result == noErr) {
         AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(std::malloc(dataSize));
-        result = ExtAudioFileGetProperty(eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
+        result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
         if (result != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'",
@@ -416,7 +422,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         return NO;
     }
 
-    result = ExtAudioFileSetProperty(eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription),
+    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription),
                                      _processingFormat.streamDescription);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
@@ -447,7 +453,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    auto result = ExtAudioFileTell(_eaf, &currentFrame);
+    auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -459,7 +465,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 - (AVAudioFramePosition)frameLength {
     SInt64 frameLength;
     UInt32 dataSize = sizeof(frameLength);
-    auto result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
+    auto result = ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d '%{public}.4s'",
@@ -481,7 +487,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
     buffer.frameLength = buffer.frameCapacity;
 
-    auto result = ExtAudioFileRead(_eaf, &frameLength, buffer.mutableAudioBufferList);
+    auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -502,7 +508,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
-    auto result = ExtAudioFileSeek(_eaf, frame);
+    auto result = ExtAudioFileSeek(_eaf.get(), frame);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
