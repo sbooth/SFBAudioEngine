@@ -8,12 +8,11 @@
 #import "SFBAudioRegionDecoder.h"
 
 #import <os/log.h>
+#import <stdlib.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 
 #import "SFBAudioDecoder+Internal.h"
-
-#import <stdlib.h>
 
 @interface SFBAudioRegionDecoder () {
   @private

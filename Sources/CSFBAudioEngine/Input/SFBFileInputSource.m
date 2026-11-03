@@ -7,10 +7,10 @@
 
 #import "SFBFileInputSource.h"
 
-#import "SFBInputSource+Internal.h"
-
 #import <stdio.h>
 #import <sys/stat.h>
+
+#import "SFBInputSource+Internal.h"
 
 @interface SFBFileInputSource () {
   @private

@@ -9,11 +9,11 @@
 
 #import <os/log.h>
 
-#import <Accelerate/Accelerate.h>
-
 #import <algorithm>
 #import <cstdint>
 #import <vector>
+
+#import <Accelerate/Accelerate.h>
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"

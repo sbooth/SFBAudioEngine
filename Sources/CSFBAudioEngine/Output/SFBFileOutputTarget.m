@@ -7,9 +7,9 @@
 
 #import "SFBFileOutputTarget.h"
 
-#import "SFBOutputTarget+Internal.h"
-
 #import <stdio.h>
+
+#import "SFBOutputTarget+Internal.h"
 
 @interface SFBFileOutputTarget () {
   @private
