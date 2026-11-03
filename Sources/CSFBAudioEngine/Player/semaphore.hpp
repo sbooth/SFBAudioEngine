@@ -9,7 +9,6 @@
 
 #include <mach/mach_error.h>
 #include <mach/mach_init.h>
-#include <mach/mach_time.h>
 #include <mach/semaphore.h>
 #include <mach/task.h>
 
@@ -178,10 +177,10 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
     }
 
     const auto wait_nsec = detail::timespec_to_nsec(wait_time);
-    const auto deadline = mach_absolute_time() + host_time::fromNanoseconds(wait_nsec);
+    const auto deadline = host_time::current() + host_time::fromNanoseconds(wait_nsec);
 
     for (;;) {
-        const auto now = mach_absolute_time();
+        const auto now = host_time::current();
         if (now >= deadline) {
             return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
         }
