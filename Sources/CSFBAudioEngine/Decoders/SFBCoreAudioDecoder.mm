@@ -9,11 +9,11 @@
 
 #import <os/log.h>
 
-#import <AudioToolbox/AudioToolbox.h>
-
 #import <algorithm>
 #import <cstdlib>
 #import <vector>
+
+#import <AudioToolbox/AudioToolbox.h>
 
 #import "AudioFileWrapper.hpp"
 #import "ExtAudioFileWrapper.hpp"

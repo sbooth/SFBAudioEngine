@@ -5,10 +5,10 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <memory>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-
-#import <memory>
 
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "TagLibStringUtilities.h"

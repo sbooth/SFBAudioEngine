@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <AudioToolbox/AudioFile.h>
-
 #include <utility>
+
+#include <AudioToolbox/AudioFile.h>
 
 namespace audio_toolbox {
 

@@ -7,11 +7,11 @@
 
 #import <os/log.h>
 
-#import <AudioToolbox/AudioToolbox.h>
-
 #import <algorithm>
 #import <exception>
 #import <memory>
+
+#import <AudioToolbox/AudioToolbox.h>
 
 #define PLATFORM_APPLE
 

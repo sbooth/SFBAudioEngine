@@ -7,9 +7,10 @@
 
 #import "SFBFileInputSource.h"
 
+#import <stdio.h>
+
 #import "SFBInputSource+Internal.h"
 
-#import <stdio.h>
 #import <sys/stat.h>
 
 @interface SFBFileInputSource () {
