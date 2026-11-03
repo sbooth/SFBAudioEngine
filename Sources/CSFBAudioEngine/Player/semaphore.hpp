@@ -88,8 +88,6 @@ class Semaphore final {
   private:
     /// The underlying mach semaphore.
     semaphore_t semaphore_{SEMAPHORE_NULL};
-    /// The mach task associated with the semaphore.
-    task_t task_{TASK_NULL};
 };
 
 // MARK: -
@@ -153,14 +151,14 @@ inline std::error_code mach_error_code(kern_return_t kr) {
 
 } /* namespace detail */
 
-inline Semaphore::Semaphore(int value) : task_{mach_task_self()} {
-    const auto kr = semaphore_create(task_, &semaphore_, SYNC_POLICY_FIFO, value);
+inline Semaphore::Semaphore(int value) {
+    const auto kr = semaphore_create(mach_task_self(), &semaphore_, SYNC_POLICY_FIFO, value);
     if (kr != KERN_SUCCESS) {
         throw std::system_error(detail::mach_error_code(kr), "Unable to create mach semaphore");
     }
 }
 
-inline Semaphore::~Semaphore() noexcept { semaphore_destroy(task_, semaphore_); }
+inline Semaphore::~Semaphore() noexcept { semaphore_destroy(mach_task_self(), semaphore_); }
 
 inline bool Semaphore::wait() noexcept {
     kern_return_t kr;
