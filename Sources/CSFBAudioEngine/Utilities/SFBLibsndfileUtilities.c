@@ -5,14 +5,16 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBLibsndfileUtilities.h"
+#include "SFBLibsndfileUtilities.h"
 
-#import <sndfile/sndfile.h>
+#include <assert.h>
 
-#import "SFBAudioEngineTypes.h"
+#include <sndfile/sndfile.h>
+
+#include "SFBAudioEngineTypes.h"
 
 void FillASBDWithSndfileFormat(AudioStreamBasicDescription *asbd, int format) {
-    NSCParameterAssert(asbd != NULL);
+    assert(asbd != NULL);
 
     int majorFormat = format & SF_FORMAT_TYPEMASK;
     int subtype = format & SF_FORMAT_SUBMASK;

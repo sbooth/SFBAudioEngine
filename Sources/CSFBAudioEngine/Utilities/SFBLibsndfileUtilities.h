@@ -7,7 +7,7 @@
 
 #pragma once
 
-#import <CoreAudioTypes/CoreAudioTypes.h>
+#include <CoreAudioTypes/CoreAudioTypes.h>
 
 /// Fills an `AudioStreamBasicDescription` with details from a sndfile format
 /// - note: Currently this functions fills at most `mFormatID`, `mFormatFlags`, and `mBitsPerChannel`
