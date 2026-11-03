@@ -9,8 +9,6 @@
 
 #import <objc/runtime.h>
 
-#import <AudioToolbox/AudioFormat.h>
-
 #import <algorithm>
 #import <atomic>
 #import <cmath>
@@ -18,6 +16,8 @@
 #import <limits>
 #import <ranges>
 #import <span>
+
+#import <AudioToolbox/AudioFormat.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 

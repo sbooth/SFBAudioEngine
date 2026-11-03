@@ -8,12 +8,11 @@
 #import "SFBDSFDecoder.h"
 
 #import <os/log.h>
+#import <stdint.h>
 
 #import "NSData+SFBExtensions.h"
 #import "SFBCStringForOSType.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <stdint.h>
 
 SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecoder.DSF";
 

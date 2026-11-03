@@ -9,13 +9,13 @@
 
 #import <os/log.h>
 
-#import <AudioToolbox/AudioFormat.h>
-
 #import <algorithm>
 #import <cstdlib>
 #import <cstring>
 #import <memory>
 #import <optional>
+
+#import <AudioToolbox/AudioFormat.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
 #import <FLAC/metadata.h>

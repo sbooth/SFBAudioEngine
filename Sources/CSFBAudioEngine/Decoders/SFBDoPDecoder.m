@@ -8,12 +8,11 @@
 #import "SFBDoPDecoder.h"
 
 #import <os/log.h>
+#import <stdint.h>
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <stdint.h>
 
 #define DSD_PACKETS_PER_DOP_FRAME (16 / kSFBPCMFramesPerDSDPacket)
 #define BUFFER_SIZE_PACKETS 4096
