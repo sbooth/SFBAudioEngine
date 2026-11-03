@@ -472,7 +472,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     sourceStreamDescription.mSampleRate = _sfinfo.samplerate;
     sourceStreamDescription.mChannelsPerFrame = (UInt32)_sfinfo.channels;
 
-    FillASBDWithSndfileFormat(&sourceStreamDescription, _sfinfo.format);
+    SFBFillASBDWithSndfileFormat(&sourceStreamDescription, _sfinfo.format);
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription
                                                        channelLayout:channelLayout];
