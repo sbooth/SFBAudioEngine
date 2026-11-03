@@ -542,8 +542,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
     unique_ext_audio_file eaf{extAudioFile};
 
-    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription),
-                                     _processingFormat.streamDescription);
+    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
+                                     sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",

@@ -422,8 +422,8 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         return NO;
     }
 
-    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription),
-                                     _processingFormat.streamDescription);
+    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
+                                     sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
