@@ -1644,6 +1644,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
             generation != processedPauseGeneration_) [[unlikely]] {
             if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
                 processedPauseGeneration_ = generation;
+                eventSemaphore_.signal();
             } else {
                 setFlags(Flags::renderEventDropped);
             }
