@@ -12,7 +12,6 @@
 #import <algorithm>
 #import <cstdlib>
 #import <cstring>
-#import <memory>
 #import <optional>
 
 #import <AudioToolbox/AudioFormat.h>

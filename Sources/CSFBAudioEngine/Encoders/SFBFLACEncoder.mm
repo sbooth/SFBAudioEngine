@@ -10,7 +10,6 @@
 #import <os/log.h>
 
 #import <algorithm>
-#import <memory>
 
 #import <FLAC/metadata.h>
 #import <FLAC/stream_encoder.h>

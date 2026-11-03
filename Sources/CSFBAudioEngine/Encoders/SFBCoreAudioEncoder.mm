@@ -10,7 +10,6 @@
 #import <os/log.h>
 
 #import <algorithm>
-#import <memory>
 #import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
