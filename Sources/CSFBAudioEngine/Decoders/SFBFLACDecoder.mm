@@ -8,6 +8,7 @@
 #import "SFBFLACDecoder.h"
 
 #import <os/log.h>
+#import <simd/simd.h>
 
 #import <algorithm>
 #import <cstdlib>
@@ -23,8 +24,6 @@
 
 #import "NSData+SFBExtensions.h"
 #import "SFBLocalizedNameForURL.h"
-
-#import <simd/simd.h>
 
 SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
 SFBAudioDecoderName const SFBAudioDecoderNameOggFLAC = @"org.sbooth.AudioEngine.Decoder.OggFLAC";
