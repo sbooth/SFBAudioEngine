@@ -1130,7 +1130,13 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
-        decodingSemaphore_.timedwait(timeout);
+        [[maybe_unused]] const auto result = decodingSemaphore_.timedwait(timeout);
+#if DEBUG
+        if (result == msema::Semaphore::timedwait_result::timed_out && decoderState == nullptr && decodingWorkPending())
+                [[unlikely]] {
+            os_log_debug(log_, "Decoding thread woke on timeout with work pending: possible missed signal");
+        }
+#endif /* DEBUG */
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
@@ -1621,6 +1627,36 @@ uint64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noe
             static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
     return static_cast<uint64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
 }
+
+#if DEBUG
+bool sfb::AudioPlayer::decodingWorkPending() const noexcept {
+    const auto flags = loadFlags();
+
+    // Cancellation was requested but not processed
+    if (bits::is_set(flags, Flags::cancellationPending)) {
+        return true;
+    }
+
+    std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
+
+    // A decoder is waiting in the queue and there is room for it to become active
+    if (!queuedDecoders_.empty() && activeDecoders_.size() < maximumActiveDecoders) {
+        return true;
+    }
+
+    // While a format change is pending the next decoder is active but waits until the previous decoder's
+    // audio has finished rendering; only the gate opening is signaled
+    if (bits::is_set(flags, Flags::formatChangePending)) {
+        return activeDecoders_.size() == 1 && scheduledRenderingCompleteNotifications_ == 0;
+    }
+
+    // An active decoder has not finished decoding
+    return std::ranges::any_of(activeDecoders_, [](const auto &state) noexcept {
+        return bits::has_none(state->loadFlags(),
+                              DecoderState::Flags::canceled | DecoderState::Flags::decodingComplete);
+    });
+}
+#endif /* DEBUG */
 
 // MARK: - Rendering
 
