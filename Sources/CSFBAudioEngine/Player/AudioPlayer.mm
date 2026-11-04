@@ -1551,19 +1551,6 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
         // A short frame count signifies decoding complete
         const auto decodingComplete = framesDecoded < buffer.frameCapacity;
 
-        // Write the decoded chunk descriptor to the metadata buffer
-        descriptor.frameLength_ = framesDecoded;
-        descriptor.isLast_ = decodingComplete;
-        if (!audioMetadata_.push(descriptor)) [[unlikely]] {
-            os_log_fault(log_, "Error writing chunk descriptor: spsc::Queue::push failed");
-        }
-
-        // Write the decoded audio to the audio buffer for rendering
-        const auto framesWritten = audioBuffer_.write(*(buffer.audioBufferList), framesDecoded);
-        if (framesWritten != framesDecoded) {
-            os_log_fault(log_, "Error writing audio: spsc::AudioRingBuffer::write failed for %u frames", framesDecoded);
-        }
-
         // Decoding complete
         if (decodingComplete) {
             decoderState->setFlags(DecoderState::Flags::decodingComplete);
@@ -1584,7 +1571,27 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
             } else {
                 os_log_debug(log_, "Decoding complete after resuming for %{public}@", decoderState->decoder_);
             }
+        }
 
+        // After the final chunk is written the render block may complete rendering at any time, after which
+        // the event processing thread will delete the decoder state. The decoder state is thus unsafe to use
+        // once the final chunk is published.
+
+        // Write the decoded chunk descriptor to the metadata buffer
+        descriptor.frameLength_ = framesDecoded;
+        descriptor.isLast_ = decodingComplete;
+        if (!audioMetadata_.push(descriptor)) [[unlikely]] {
+            os_log_fault(log_, "Error writing chunk descriptor: spsc::Queue::push failed");
+        }
+
+        // Write the decoded audio to the audio buffer for rendering
+        const auto framesWritten = audioBuffer_.write(*(buffer.audioBufferList), framesDecoded);
+        if (framesWritten != framesDecoded) {
+            os_log_fault(log_, "Error writing audio: spsc::AudioRingBuffer::write failed for %u frames", framesDecoded);
+        }
+
+        // The final chunk is published so `decoderState` is no longer safe to use
+        if (decodingComplete) {
             break;
         }
     }
