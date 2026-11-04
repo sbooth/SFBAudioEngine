@@ -1868,8 +1868,11 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        // Wait for an event signal
-        eventSemaphore_.timedwait(500'000'000);
+        // Wait for an event signal; the timeout is a backstop against a missed signal
+        if (eventSemaphore_.timedwait(5'000'000'000) == msema::Semaphore::timedwait_result::timed_out &&
+            !events_.isEmpty()) [[unlikely]] {
+            os_log_fault(log_, "Event processing thread woke on timeout with events pending");
+        }
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);
