@@ -45,6 +45,9 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
+/// The maximum duration a thread waits for a signal before waking
+constexpr auto signalWaitTimeout = std::chrono::seconds{5};
+
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 
@@ -1605,12 +1608,11 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 }
 
 std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
-    constexpr auto fiveSeconds = std::chrono::seconds(5);
-    constexpr auto twoPointFiveMilliseconds = std::chrono::microseconds(2'500);
+    constexpr auto twoPointFiveMilliseconds = std::chrono::microseconds{2'500};
 
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return fiveSeconds;
+        return signalWaitTimeout;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1905,9 +1907,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        // Wait for an event; the timeout is a backstop against a missed signal
-        constexpr auto fiveSeconds = std::chrono::seconds(5);
-        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(fiveSeconds);
+        // Wait for an event; the timeout is protection against a missed signal
+        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(signalWaitTimeout);
 #if DEBUG
         if (result == msema::Semaphore::timedwait_result::timed_out && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
