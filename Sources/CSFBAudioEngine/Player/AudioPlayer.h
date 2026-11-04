@@ -429,6 +429,12 @@ class AudioPlayer final {
     /// Returns the appropriate decoding semaphore timeout in nanoseconds
     uint64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
+#if DEBUG
+    /// Returns `true` if the decoding thread has work that should have been signaled
+    /// - note: Used only to detect missed signals when a wait with no decoder to process times out
+    bool decodingWorkPending() const noexcept;
+#endif /* DEBUG */
+
     // MARK: - Rendering
 
     /// Render block implementation
