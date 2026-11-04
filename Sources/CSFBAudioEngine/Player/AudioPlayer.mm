@@ -1131,8 +1131,14 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         }
 
         // Decode and write chunks to the ring buffer
-        if (decoderState != nullptr && !decodeIntoRingBuffer(decoderState, buffer)) {
-            continue;
+        if (decoderState != nullptr) {
+            if (!decodeIntoRingBuffer(decoderState, buffer)) {
+                continue;
+            }
+            // If the decoder's final chunk was published process the next decoder without waiting
+            if (decoderState == nullptr) {
+                continue;
+            }
         }
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
@@ -1485,7 +1491,7 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
     return true;
 }
 
-bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept {
+bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudioPCMBuffer *buffer) noexcept {
 #if DEBUG
     assert(decoderState != nullptr);
     assert(buffer != nil);
@@ -1592,6 +1598,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 
         // The final chunk is published so `decoderState` is no longer safe to use
         if (decodingComplete) {
+            decoderState = nullptr;
             break;
         }
     }
