@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <limits>
 #include <system_error>
 
@@ -97,11 +98,6 @@ namespace detail {
 /// The number of nanoseconds in one second.
 inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
 
-/// Converts a mach_timespec_t to a nanosecond count.
-[[nodiscard]] constexpr uint64_t timespec_to_nsec(mach_timespec_t ts) noexcept {
-    return static_cast<uint64_t>(ts.tv_sec) * nsec_per_sec + static_cast<uint64_t>(ts.tv_nsec);
-}
-
 /// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
 [[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t ns) noexcept {
     constexpr uint64_t max_sec = std::numeric_limits<unsigned int>::max();
@@ -172,13 +168,16 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
     if (BAD_MACH_TIMESPEC(&wait_time)) {
         return timedwait_result::error;
     }
+    return timedwait(std::chrono::seconds{wait_time.tv_sec} + std::chrono::nanoseconds{wait_time.tv_nsec});
+}
 
-    if (wait_time.tv_sec == 0 && wait_time.tv_nsec == 0) {
+inline auto Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept -> timedwait_result {
+    if (timeout <= std::chrono::nanoseconds::zero()) {
         return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
     }
 
-    const auto wait_nsec = detail::timespec_to_nsec(wait_time);
-    const auto deadline = host_time::current() + host_time::fromNanoseconds(wait_nsec);
+    const auto nanoseconds = static_cast<uint64_t>(timeout.count());
+    const auto deadline = host_time::current() + host_time::fromNanoseconds(nanoseconds);
 
     for (;;) {
         const auto now = host_time::current();
@@ -186,23 +185,15 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
             return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
         }
 
-        const auto remaining_nsec = host_time::toNanoseconds(deadline - now);
-        const auto current_wait = detail::nsec_to_timespec(remaining_nsec);
+        const auto remainingNanoseconds = host_time::toNanoseconds(deadline - now);
+        const auto currentWait = detail::nsec_to_timespec(remainingNanoseconds);
 
-        const auto kr = semaphore_timedwait(semaphore_, current_wait);
+        const auto kr = semaphore_timedwait(semaphore_, currentWait);
         if (kr == KERN_ABORTED) {
             continue;
         }
         return detail::to_timedwait_result(kr);
     }
-}
-
-inline auto Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept -> timedwait_result {
-    if (timeout <= std::chrono::nanoseconds::zero()) {
-        return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
-    }
-    const auto nanoseconds = static_cast<uint64_t>(timeout.count());
-    return timedwait(detail::nsec_to_timespec(nanoseconds));
 }
 
 inline bool Semaphore::signal() noexcept { return semaphore_signal(semaphore_) == KERN_SUCCESS; }
