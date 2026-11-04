@@ -1599,12 +1599,12 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
 }
 
 uint64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
-    constexpr uint64_t oneHalfSecond = 500'000'000;
+    constexpr uint64_t fiveSeconds = 5'000'000'000;
     constexpr uint64_t twoPointFiveMilliseconds = 2'500'000;
 
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return oneHalfSecond;
+        return fiveSeconds;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1868,11 +1868,14 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        // Wait for an event signal; the timeout is a backstop against a missed signal
-        if (eventSemaphore_.timedwait(5'000'000'000) == msema::Semaphore::timedwait_result::timed_out &&
-            !events_.isEmpty()) [[unlikely]] {
-            os_log_fault(log_, "Event processing thread woke on timeout with events pending");
+        // Wait for an event; the timeout is a backstop against a missed signal
+        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(5'000'000'000);
+#if DEBUG
+        if (result == msema::Semaphore::timedwait_result::timed_out && !events_.isEmpty()) [[unlikely]] {
+            // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
+            os_log_debug(log_, "Event processing thread woke on timeout with events pending: possible missed signal");
         }
+#endif /* DEBUG */
     }
 
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);
