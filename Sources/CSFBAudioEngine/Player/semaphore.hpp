@@ -13,6 +13,7 @@
 #include <mach/task.h>
 
 #include <cassert>
+#include <chrono>
 #include <limits>
 #include <system_error>
 
@@ -66,10 +67,10 @@ class Semaphore final {
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
-    /// @param nanoseconds How long to wait before a timeout occurs.
+    /// @param timeout How long to wait before a timeout occurs.
     /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error
     /// occurred.
-    timedwait_result timedwait(uint64_t nanoseconds) noexcept;
+    timedwait_result timedwait(std::chrono::nanoseconds timeout) noexcept;
 
     /// Increments the semaphore count.
     ///
@@ -196,7 +197,11 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
     }
 }
 
-inline auto Semaphore::timedwait(uint64_t nanoseconds) noexcept -> timedwait_result {
+inline auto Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept -> timedwait_result {
+    if (timeout <= std::chrono::nanoseconds::zero()) {
+        return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
+    }
+    const auto nanoseconds = static_cast<uint64_t>(timeout.count());
     return timedwait(detail::nsec_to_timespec(nanoseconds));
 }
 

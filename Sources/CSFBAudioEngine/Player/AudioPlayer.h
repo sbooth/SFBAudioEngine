@@ -11,6 +11,7 @@
 
 #import <atomic>
 #import <cassert>
+#import <chrono>
 #import <deque>
 #import <memory>
 #import <mutex>
@@ -426,8 +427,8 @@ class AudioPlayer final {
     /// Decodes audio from `decoderState` into the ring buffer
     bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
-    /// Returns the appropriate decoding semaphore timeout in nanoseconds
-    uint64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
+    /// Returns the appropriate decoding semaphore timeout
+    std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
 #if DEBUG
     /// Returns `true` if the decoding thread has work that should have been signaled

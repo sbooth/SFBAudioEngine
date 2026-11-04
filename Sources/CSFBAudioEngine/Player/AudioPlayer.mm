@@ -1604,9 +1604,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
     return true;
 }
 
-uint64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
-    constexpr uint64_t fiveSeconds = 5'000'000'000;
-    constexpr uint64_t twoPointFiveMilliseconds = 2'500'000;
+std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+    constexpr auto fiveSeconds = std::chrono::seconds(5);
+    constexpr auto twoPointFiveMilliseconds = std::chrono::microseconds(2'500);
 
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
@@ -1625,7 +1625,8 @@ uint64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noe
     // Calculate the time until the free space reaches the target threshold
     const auto durationSeconds =
             static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<uint64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
+    const auto durationNanoseconds = durationSeconds * static_cast<double>(nanosecondsPerSecond);
+    return std::chrono::nanoseconds(static_cast<int64_t>(durationNanoseconds));
 }
 
 #if DEBUG
@@ -1905,8 +1906,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event; the timeout is a backstop against a missed signal
-        constexpr uint64_t timeout = 5'000'000'000;
-        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(timeout);
+        constexpr auto fiveSeconds = std::chrono::seconds(5);
+        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(fiveSeconds);
 #if DEBUG
         if (result == msema::Semaphore::timedwait_result::timed_out && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
