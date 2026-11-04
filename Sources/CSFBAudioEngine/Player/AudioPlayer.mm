@@ -1869,7 +1869,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event; the timeout is a backstop against a missed signal
-        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(5'000'000'000);
+        constexpr uint64_t timeout = 5'000'000'000;
+        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(timeout);
 #if DEBUG
         if (result == msema::Semaphore::timedwait_result::timed_out && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
