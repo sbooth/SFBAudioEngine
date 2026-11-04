@@ -1176,7 +1176,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bo
 
     // Signal the event thread if any decoders were canceled
     if (signal) {
-        eventSemaphore_.signal();
+        signalEventSemaphore();
     }
 
     // All requested cancellations have been processed and any stale audio is marked
@@ -1230,7 +1230,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
     }
 
     if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition)) [[likely]] {
-        eventSemaphore_.signal();
+        signalEventSemaphore();
     } else {
         os_log_fault(log_, "Error writing seek complete event");
     }
@@ -1342,7 +1342,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
     } catch (const std::exception &e) {
         os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder, e.what());
         if (events_.enqueue(EventCommand::allocationFailure)) [[likely]] {
-            eventSemaphore_.signal();
+            signalEventSemaphore();
         } else {
             os_log_fault(log_, "Error writing allocation failure event");
         }
@@ -1524,7 +1524,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
                 os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
                 // Submit the decoding started event for the initial start only
                 if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) [[likely]] {
-                    eventSemaphore_.signal();
+                    signalEventSemaphore();
                 } else {
                     os_log_fault(log_, "Error writing decoding started event");
                 }
@@ -1566,7 +1566,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *decoderState, AVAudioP
             // Submit the decoding complete event for the first completion only
             if (!resumed) {
                 if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) [[likely]] {
-                    eventSemaphore_.signal();
+                    signalEventSemaphore();
                 } else {
                     os_log_fault(log_, "Error writing decoding complete event");
                 }
@@ -1644,7 +1644,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
             generation != processedPauseGeneration_) [[unlikely]] {
             if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
                 processedPauseGeneration_ = generation;
-                eventSemaphore_.signal();
+                signalEventSemaphore();
             } else {
                 setFlags(Flags::renderEventDropped);
             }
@@ -1687,7 +1687,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         }
     }
 
-    eventSemaphore_.signal();
+    signalEventSemaphore();
     return noErr;
 }
 
@@ -1808,6 +1808,9 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
     while (!stoken.stop_requested()) {
+        // Clear before draining so an event enqueued during the drain is followed by a new signal
+        eventSignaled_.exchange(false, std::memory_order_acq_rel);
+
 #if DEBUG
         if (const auto occupancy =
                     static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);

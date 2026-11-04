@@ -155,6 +155,9 @@ class AudioPlayer final {
     std::jthread eventThread_;
     /// Semaphore used for communication with the event processing thread
     msema::Semaphore eventSemaphore_{0};
+    /// Whether `eventSemaphore_` has been signaled since the event processing thread last began draining events
+    std::atomic_bool eventSignaled_{false};
+    static_assert(std::atomic_bool::is_always_lock_free, "Lock-free std::atomic_bool required");
 
     /// Message queue communicating events to the event processing thread
     mpsc::MessageQueue<256, 32> events_;
@@ -521,6 +524,9 @@ class AudioPlayer final {
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
                                           uint64_t outputGeneration) noexcept;
 
+    /// Signals the event semaphore if required
+    void signalEventSemaphore() noexcept;
+
     // MARK: - Transport Snapshots
 
     /// Publishes a playback snapshot.
@@ -639,6 +645,12 @@ inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { re
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
 inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
+
+inline void AudioPlayer::signalEventSemaphore() noexcept {
+    if (!eventSignaled_.exchange(true, std::memory_order_acq_rel)) {
+        eventSemaphore_.signal();
+    }
+}
 
 // MARK: Transport Snapshot
 
