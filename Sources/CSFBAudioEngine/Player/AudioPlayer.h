@@ -425,7 +425,7 @@ class AudioPlayer final {
                              bool &formatMismatch) noexcept;
 
     /// Decodes audio from `decoderState` into the ring buffer
-    bool decodeIntoRingBuffer(DecoderState *decoderState, AVAudioPCMBuffer *buffer) noexcept;
+    bool decodeIntoRingBuffer(DecoderState *_Nonnull &decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
     /// Returns the appropriate decoding semaphore timeout
     std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
