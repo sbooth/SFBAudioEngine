@@ -1952,7 +1952,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         using namespace std::chrono_literals;
-        
+
         // Wait for an event; the timeout is protection against a missed signal
         [[maybe_unused]] const auto result = eventSemaphore_.timedwait(5s);
 #if DEBUG
