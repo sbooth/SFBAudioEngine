@@ -87,6 +87,9 @@ inline bool Semaphore::wait(dispatch_time_t timeout) noexcept {
 }
 
 inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
+    if (timeout <= std::chrono::nanoseconds::zero()) {
+        return wait(DISPATCH_TIME_NOW);
+    }
     return wait(dispatch_time(DISPATCH_TIME_NOW, timeout.count()));
 }
 
