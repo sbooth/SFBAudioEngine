@@ -332,6 +332,9 @@ class AudioPlayer final {
         renderEventDropped = 1u << 5,
         /// Cancellation was requested for an active decoder but has not yet been processed by the decoding thread
         cancellationPending = 1u << 6,
+        /// The player started the audio engine
+        /// - note: Set and cleared while holding `engineMutex_`
+        engineRunning = 1u << 7,
     };
 
     friend constexpr void is_bitmask_enum(Flags);
