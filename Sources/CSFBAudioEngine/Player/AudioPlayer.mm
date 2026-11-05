@@ -2610,11 +2610,12 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 #if DEBUG
                 assert(false && "Unknown SFBAudioPlayerActionAtEndOfAudio");
 #endif /* DEBUG */
-                os_log_error(log_, "Unknown end of audio action: %u", static_cast<uint32_t>(action));
+                os_log_error(log_, "Unknown end of audio action: %ld", static_cast<long>(action));
                 break;
             }
 
-            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate; delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
+            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
+                delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
                 [delegate audioPlayerEndOfAudio:player];
             }
         }
