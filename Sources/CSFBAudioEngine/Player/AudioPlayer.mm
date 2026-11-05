@@ -648,8 +648,8 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     {
         std::lock_guard lock{engineMutex_};
-        [engine_ stop];
         clearFlags(Flags::active | Flags::playing);
+        [engine_ stop];
     }
 
     clearDecoderQueue();
@@ -746,6 +746,8 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
             return false;
         }
         setFlags(Flags::active | Flags::playing);
+        // The event processing thread polls less often when not playing
+        eventSemaphore_.signal();
     }
 
     notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePlaying);
@@ -810,6 +812,8 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
                 return false;
             }
             setFlags(Flags::active | Flags::playing);
+            // The event processing thread polls less often when not playing
+            eventSemaphore_.signal();
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         }
     }
@@ -1875,20 +1879,21 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             }
         }
 
-        if (const auto prevFlags = clearFlags(Flags::renderEventDropped);
-            bits::is_set(prevFlags, Flags::renderEventDropped)) {
+        const auto prevFlags = clearFlags(Flags::renderEventDropped);
+        if (bits::is_set(prevFlags, Flags::renderEventDropped)) {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        int64_t deltaNanos;
-        {
+        // Poll more frequently when the render block can produce events
+        auto deltaNanos = halfSecondDispatchTimeDelta;
+        if (bits::is_set(prevFlags, Flags::playing)) {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
                 deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
-            } else {
-                // Use a longer timeout when idle
-                deltaNanos = halfSecondDispatchTimeDelta;
             }
+        } else if (bits::is_set(prevFlags, Flags::active) && engine_.isRunning) {
+            // A paused player's engine keeps running until the delayed engine pause takes effect
+            deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
         }
 
         // Decoding events will be signaled; render events are polled using the timeout
@@ -2899,6 +2904,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             }
 
             const auto prevFlags = setFlags(Flags::playing);
+            // The event processing thread polls less often when not playing
+            eventSemaphore_.signal();
             didResume = bits::is_clear(prevFlags, Flags::playing);
         }
 
