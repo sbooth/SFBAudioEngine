@@ -11,6 +11,7 @@
 
 #import <atomic>
 #import <cassert>
+#import <chrono>
 #import <deque>
 #import <memory>
 #import <mutex>
@@ -148,12 +149,12 @@ class AudioPlayer final {
 
     /// Thread used for decoding
     std::jthread decodingThread_;
-    /// Dispatch semaphore used for communication with the decoding thread
+    /// Semaphore used for communication with the decoding thread
     dsema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
-    /// Dispatch semaphore used for communication with the event processing thread
+    /// Semaphore used for communication with the event processing thread
     dsema::Semaphore eventSemaphore_{0};
 
     /// Message queue communicating events to the event processing thread
@@ -424,7 +425,7 @@ class AudioPlayer final {
     bool decodeIntoRingBuffer(DecoderState *_Nonnull &decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
     /// Returns the appropriate decoding semaphore timeout
-    int64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
+    std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
     // MARK: - Rendering
 
