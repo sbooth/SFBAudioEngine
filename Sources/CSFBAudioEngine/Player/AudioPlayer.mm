@@ -1747,10 +1747,12 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         // Throttle underrun events to prevent saturating the event message queue
         constexpr auto throttleInterval = 100 * nanosecondsPerMillisecond;
         if (host_time::toNanoseconds(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
-            if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
-                    [[unlikely]] {
-                setFlags(Flags::renderEventDropped);
-            }
+            if (events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
+                [[likely]] {
+                    eventEnqueued = true;
+                } else {
+                    setFlags(Flags::renderEventDropped);
+                }
             lastUnderrunHostTime_ = timestamp.mHostTime;
         }
     }
