@@ -46,8 +46,10 @@ class Semaphore final {
     /// @return true if the semaphore was decremented, false otherwise.
     bool wait(dispatch_time_t timeout) noexcept;
 
+    /// Waits for (decrements) the semaphore.
+    ///
     /// If the resulting value is less than zero this function waits for a signal to occur before returning.
-    /// @param timeout The earliest time at which the function will stop waiting.
+    /// @param timeout How long to wait before timing out.
     /// @return true if the semaphore was decremented, false otherwise.
     bool wait(std::chrono::nanoseconds timeout) noexcept;
 
