@@ -1880,14 +1880,15 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        int64_t deltaNanos;
-        {
-            std::lock_guard lock{activeDecodersMutex_};
-            if (firstActiveDecoderState() != nullptr) {
+        int64_t deltaNanos = halfSecondDispatchTimeDelta;
+        if (engine_.isRunning) {
+            if (bits::is_clear(loadFlags(), Flags::playing)) {
                 deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
             } else {
-                // Use a longer timeout when idle
-                deltaNanos = halfSecondDispatchTimeDelta;
+                std::lock_guard lock{activeDecodersMutex_};
+                if (firstActiveDecoderState() != nullptr) {
+                    deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
+                }
             }
         }
 
@@ -2932,6 +2933,9 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
             }
             return false;
         }
+
+        // The event processing thread polls slowly while the engine is stopped; wake it to recompute its timeout
+        eventSemaphore_.signal();
     }
 
     return true;
