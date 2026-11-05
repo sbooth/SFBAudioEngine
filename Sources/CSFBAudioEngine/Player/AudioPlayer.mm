@@ -1634,7 +1634,8 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
     }
 
     // Calculate the time until the free space reaches the target threshold
-    const auto duration = std::chrono::duration<double>{static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate};
+    const auto duration = std::chrono::duration<double>{static_cast<double>(targetMaxFreeSpace - freeSpace) /
+                                                        audioBuffer_.format().mSampleRate};
     return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 }
 
