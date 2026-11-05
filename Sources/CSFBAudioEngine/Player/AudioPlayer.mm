@@ -1950,8 +1950,9 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
-        // Wait for an event; the timeout is protection against a missed signal
         using namespace std::chrono_literals;
+
+        // Wait for an event; the timeout is protection against a missed signal
         [[maybe_unused]] const auto result = eventSemaphore_.wait(500ms);
 #if DEBUG
         if (!result && !events_.isEmpty()) [[unlikely]] {
