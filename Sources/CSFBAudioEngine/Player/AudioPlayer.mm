@@ -1142,7 +1142,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         const auto timeout = decodingTimeout(decoderState);
         [[maybe_unused]] const auto result = decodingSemaphore_.timedwait(timeout);
 #if DEBUG
-        if (result == msema::Semaphore::timedwait_result::timed_out && decoderState == nullptr && decodingWorkPending())
+        if (result == msema::Semaphore::timedwait_result::timed_out && decoderState == nullptr && shouldBeProcessingDecoders())
                 [[unlikely]] {
             os_log_debug(log_, "Decoding thread woke on timeout with work pending: possible missed signal");
         }
@@ -1647,7 +1647,7 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
 }
 
 #if DEBUG
-bool sfb::AudioPlayer::decodingWorkPending() const noexcept {
+bool sfb::AudioPlayer::shouldBeProcessingDecoders() const noexcept {
     const auto flags = loadFlags();
 
     // Cancellation was requested but not processed
