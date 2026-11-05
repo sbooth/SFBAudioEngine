@@ -1142,8 +1142,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         const auto timeout = decodingTimeout(decoderState);
         [[maybe_unused]] const auto result = decodingSemaphore_.timedwait(timeout);
 #if DEBUG
-        if (result == msema::Semaphore::timedwait_result::timed_out && decoderState == nullptr && shouldBeProcessingDecoders())
-                [[unlikely]] {
+        if (result == msema::Semaphore::timedwait_result::timed_out && decoderState == nullptr &&
+            shouldBeProcessingDecoders()) [[unlikely]] {
             os_log_debug(log_, "Decoding thread woke on timeout with decoder to process: possible missed signal");
         }
 #endif /* DEBUG */
