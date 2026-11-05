@@ -160,12 +160,12 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     _player->reset();
 }
 
-- (SFBAudioPlayerActionAtEndOfAudio)actionAtEndOfAudio {
-    return _player->actionAtEndOfAudio();
+- (SFBAudioPlayerEndOfAudioAction)endOfAudioAction {
+    return _player->endOfAudioAction();
 }
 
-- (void)setActionAtEndOfAudio:(SFBAudioPlayerActionAtEndOfAudio)actionAtEndOfAudio {
-    _player->setActionAtEndOfAudio(actionAtEndOfAudio);
+- (void)setEndOfAudioAction:(SFBAudioPlayerEndOfAudioAction)endOfAudioAction {
+    _player->setEndOfAudioAction(endOfAudioAction);
 }
 
 // MARK: - Player State

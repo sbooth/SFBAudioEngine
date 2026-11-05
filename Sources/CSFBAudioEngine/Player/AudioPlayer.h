@@ -209,9 +209,9 @@ class AudioPlayer final {
 #endif /* TARGET_OS_IPHONE */
 
     /// The action taken when rendering is complete for all available decoders
-    std::atomic<SFBAudioPlayerActionAtEndOfAudio> actionAtEndOfAudio_{SFBAudioPlayerActionAtEndOfAudioStop};
-    static_assert(std::atomic<SFBAudioPlayerActionAtEndOfAudio>::is_always_lock_free,
-                  "Lock-free std::atomic<SFBAudioPlayerActionAtEndOfAudio> required");
+    std::atomic<SFBAudioPlayerEndOfAudioAction> endOfAudioAction_{SFBAudioPlayerEndOfAudioActionStop};
+    static_assert(std::atomic<SFBAudioPlayerEndOfAudioAction>::is_always_lock_free,
+                  "Lock-free std::atomic<SFBAudioPlayerEndOfAudioAction> required");
 
   public:
     AudioPlayer();
@@ -245,8 +245,8 @@ class AudioPlayer final {
 
     void reset() noexcept;
 
-    SFBAudioPlayerActionAtEndOfAudio actionAtEndOfAudio() const noexcept;
-    void setActionAtEndOfAudio(SFBAudioPlayerActionAtEndOfAudio actionAtEndOfAudio) noexcept;
+    SFBAudioPlayerEndOfAudioAction endOfAudioAction() const noexcept;
+    void setEndOfAudioAction(SFBAudioPlayerEndOfAudioAction endOfAudioAction) noexcept;
 
     // MARK: - Player State
 
@@ -587,12 +587,12 @@ inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
     return queuedDecoders_.empty();
 }
 
-inline SFBAudioPlayerActionAtEndOfAudio AudioPlayer::actionAtEndOfAudio() const noexcept {
-    return actionAtEndOfAudio_.load(std::memory_order_relaxed);
+inline SFBAudioPlayerEndOfAudioAction AudioPlayer::endOfAudioAction() const noexcept {
+    return endOfAudioAction_.load(std::memory_order_relaxed);
 }
 
-inline void AudioPlayer::setActionAtEndOfAudio(SFBAudioPlayerActionAtEndOfAudio actionAtEndOfAudio) noexcept {
-    actionAtEndOfAudio_.store(actionAtEndOfAudio, std::memory_order_relaxed);
+inline void AudioPlayer::setEndOfAudioAction(SFBAudioPlayerEndOfAudioAction endOfAudioAction) noexcept {
+    endOfAudioAction_.store(endOfAudioAction, std::memory_order_relaxed);
 }
 
 inline bool AudioPlayer::engineIsRunning() const noexcept { return engine_.isRunning; }

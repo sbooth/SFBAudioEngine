@@ -39,14 +39,14 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
 /// The possible actions `SFBAudioPlayer` can take when rendering is complete for all available decoders
-typedef NS_ENUM(NSInteger, SFBAudioPlayerActionAtEndOfAudio) {
+typedef NS_ENUM(NSInteger, SFBAudioPlayerEndOfAudioAction) {
     /// Stop playback, ending the playback session and stopping the `AVAudioEngine`
-    SFBAudioPlayerActionAtEndOfAudioStop = 0,
+    SFBAudioPlayerEndOfAudioActionStop = 0,
     /// Pause playback, retaining the playback session and pausing the `AVAudioEngine`
-    SFBAudioPlayerActionAtEndOfAudioPause = 1,
+    SFBAudioPlayerEndOfAudioActionPause = 1,
     /// Continue playback with the `AVAudioEngine` running
-    SFBAudioPlayerActionAtEndOfAudioContinue = 2,
-} NS_SWIFT_NAME(AudioPlayer.ActionAtEndOfAudio);
+    SFBAudioPlayerEndOfAudioActionContinue = 2,
+} NS_SWIFT_NAME(AudioPlayer.EndOfAudioAction);
 
 /// An audio player using an `AVAudioEngine` processing graph for playback
 ///
@@ -193,8 +193,8 @@ NS_SWIFT_NAME(AudioPlayer)
 
 /// The action the player takes when rendering is complete for all available decoders
 ///
-/// The default is `SFBAudioPlayerActionAtEndOfAudioStop`.
-@property(nonatomic) SFBAudioPlayerActionAtEndOfAudio actionAtEndOfAudio;
+/// The default is `SFBAudioPlayerEndOfAudioActionStop`.
+@property(nonatomic) SFBAudioPlayerEndOfAudioAction endOfAudioAction;
 
 // MARK: - Player State
 
@@ -420,7 +420,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
 /// Called to notify the delegate when rendering is complete for all available decoders
 ///
-/// This method is called after the player performs the action specified by ``-[SFBAudioPlayer actionAtEndOfAudio]``,
+/// This method is called after the player performs the action specified by ``-[SFBAudioPlayer endOfAudioAction]``,
 /// so the delegate may enqueue additional audio or change the playback state in response.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
