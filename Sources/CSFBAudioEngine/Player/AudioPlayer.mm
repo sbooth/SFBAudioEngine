@@ -2584,37 +2584,44 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
 
+            // The end of audio action is only performed if the player was not stopped while the audio was playing
+            const auto wasActive = bits::is_set(that->loadFlags(), Flags::active);
+
+            // Perform the action before the now playing and end of audio notifications. The end of audio decision
+            // reflects the decoders present when it was made, and a delegate may enqueue or play audio in response to
+            // a notification; performing the action afterward could stop or pause that playback.
+            if (wasActive) {
+                const auto action = that->endOfAudioAction();
+                switch (action) {
+                case SFBAudioPlayerEndOfAudioActionStop:
+                    if (that->deactivatePlayerAndStopEngine()) {
+                        that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+                    }
+                    break;
+                case SFBAudioPlayerEndOfAudioActionPause:
+                    that->pause();
+                    break;
+                case SFBAudioPlayerEndOfAudioActionContinue:
+                    // The playback session remains active so audio enqueued later plays without a call to -play
+                    break;
+                default:
+#if DEBUG
+                    assert(false && "Unknown SFBAudioPlayerEndOfAudioAction");
+#endif /* DEBUG */
+                    os_log_error(log_, "Unknown end of audio action: %ld; stopping playback",
+                                 static_cast<long>(action));
+                    if (that->deactivatePlayerAndStopEngine()) {
+                        that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+                    }
+                    break;
+                }
+            }
+
             that->setNowPlayingAndNotifyDelegate(nil);
 
             // Nothing more to do if the player was stopped while the audio was playing
-            if (bits::is_clear(that->loadFlags(), Flags::active)) {
+            if (!wasActive) {
                 return;
-            }
-
-            // Perform the action before notifying the delegate so audio enqueued or playback state changes made by
-            // the delegate in response are not undone
-            const auto action = that->endOfAudioAction();
-            switch (action) {
-            case SFBAudioPlayerEndOfAudioActionStop:
-                if (const auto wasActive = that->deactivatePlayerAndStopEngine(); wasActive) {
-                    that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
-                }
-                break;
-            case SFBAudioPlayerEndOfAudioActionPause:
-                that->pause();
-                break;
-            case SFBAudioPlayerEndOfAudioActionContinue:
-                // The playback session remains active so audio enqueued later plays without a call to -play
-                break;
-            default:
-#if DEBUG
-                assert(false && "Unknown SFBAudioPlayerEndOfAudioAction");
-#endif /* DEBUG */
-                os_log_error(log_, "Unknown end of audio action: %ld; stopping playback", static_cast<long>(action));
-                if (const auto wasActive = that->deactivatePlayerAndStopEngine(); wasActive) {
-                    that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
-                }
-                break;
             }
 
             if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
