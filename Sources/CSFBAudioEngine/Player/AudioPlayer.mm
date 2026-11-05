@@ -45,13 +45,6 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
-/// 0.5 seconds
-constexpr auto halfSecond = std::chrono::milliseconds{500};
-/// 2.5 milliseconds
-constexpr auto twoPointFiveMilliseconds = std::chrono::microseconds{2'500};
-/// 7.5 milliseconds
-constexpr auto sevenPointFiveMilliseconds = std::chrono::microseconds{7'500};
-
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 
@@ -1624,9 +1617,11 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
 }
 
 std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+    using namespace std::chrono_literals;
+
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return halfSecond;
+        return 500ms;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1635,7 +1630,7 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return twoPointFiveMilliseconds;
+        return 2500us;
     }
 
     // Calculate the time until the free space reaches the target threshold
@@ -1883,16 +1878,18 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
+        using namespace std::chrono_literals;
+
         // Poll more frequently when the render block can produce events
-        std::chrono::nanoseconds timeout = halfSecond;
+        std::chrono::nanoseconds timeout = 500ms;
         if (bits::is_set(prevFlags, Flags::playing)) {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
-                timeout = sevenPointFiveMilliseconds;
+                timeout = 7500us;
             }
         } else if (bits::is_set(prevFlags, Flags::active) && engine_.isRunning) {
             // A paused player's engine keeps running until the delayed engine pause takes effect
-            timeout = sevenPointFiveMilliseconds;
+            timeout = 7500us;
         }
 
         // Decoding events will be signaled; render events are polled using the timeout
