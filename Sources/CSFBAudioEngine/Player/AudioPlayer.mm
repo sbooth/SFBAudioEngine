@@ -1881,7 +1881,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         // Poll more frequently when the render block can produce events
-        int64_t deltaNanos = halfSecondDispatchTimeDelta;
+        auto deltaNanos = halfSecondDispatchTimeDelta;
         if (bits::is_set(prevFlags, Flags::playing)) {
             std::lock_guard lock{activeDecodersMutex_};
             if (firstActiveDecoderState() != nullptr) {
