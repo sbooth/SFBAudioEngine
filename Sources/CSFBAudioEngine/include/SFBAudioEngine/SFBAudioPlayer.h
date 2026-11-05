@@ -43,12 +43,8 @@ typedef NS_ENUM(NSInteger, SFBAudioPlayerActionAtEndOfAudio) {
     /// Stop playback, ending the playback session and stopping the `AVAudioEngine`
     SFBAudioPlayerActionAtEndOfAudioStop = 0,
     /// Pause playback, retaining the playback session and pausing the `AVAudioEngine`
-    ///
-    /// Audio enqueued afterward plays after a call to ``-[SFBAudioPlayer playReturningError:]``.
     SFBAudioPlayerActionAtEndOfAudioPause = 1,
     /// Continue playback with the `AVAudioEngine` running
-    ///
-    /// Audio enqueued afterward plays immediately without a call to ``-[SFBAudioPlayer playReturningError:]``.
     SFBAudioPlayerActionAtEndOfAudioContinue = 2,
 } NS_SWIFT_NAME(AudioPlayer.ActionAtEndOfAudio);
 
