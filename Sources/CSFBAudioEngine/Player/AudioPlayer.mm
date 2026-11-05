@@ -746,6 +746,8 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
             return false;
         }
         setFlags(Flags::active | Flags::playing);
+        // The event processing thread polls less often when not playing
+        eventSemaphore_.signal();
     }
 
     notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePlaying);
@@ -810,6 +812,8 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
                 return false;
             }
             setFlags(Flags::active | Flags::playing);
+            // The event processing thread polls less often when not playing
+            eventSemaphore_.signal();
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         }
     }
@@ -2900,6 +2904,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             }
 
             const auto prevFlags = setFlags(Flags::playing);
+            // The event processing thread polls less often when not playing
+            eventSemaphore_.signal();
             didResume = bits::is_clear(prevFlags, Flags::playing);
         }
 
@@ -2933,9 +2939,6 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
             }
             return false;
         }
-
-        // The event processing thread polls less often while the engine is stopped
-        eventSemaphore_.signal();
     }
 
     return true;
