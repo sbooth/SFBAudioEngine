@@ -2853,7 +2853,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
         {
             std::lock_guard lock{engineMutex_};
             [engine_ stop];
-            const auto prevFlags = clearFlags(Flags::playing | Flags::engineRunning);
+            const auto prevFlags = clearFlags(Flags::playing);
             wasPlaying = bits::is_set(prevFlags, Flags::playing);
             wasPlayingBeforeInterruption_ = wasPlaying;
         }
