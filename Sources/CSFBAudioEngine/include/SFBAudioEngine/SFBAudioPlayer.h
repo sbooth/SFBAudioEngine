@@ -38,6 +38,20 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
     SFBAudioPlayerPlaybackStatePlaying = 3,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
+/// Actions an audio player can take when rendering is complete for all available decoders
+typedef NS_ENUM(NSInteger, SFBAudioPlayerActionAtEndOfAudio) {
+    /// Stop playback, ending the playback session and stopping the `AVAudioEngine`
+    SFBAudioPlayerActionAtEndOfAudioStop = 0,
+    /// Pause playback, retaining the playback session and pausing the `AVAudioEngine`
+    ///
+    /// Audio enqueued afterward plays after a call to ``-[SFBAudioPlayer playReturningError:]``.
+    SFBAudioPlayerActionAtEndOfAudioPause = 1,
+    /// Continue playback with the `AVAudioEngine` running
+    ///
+    /// Audio enqueued afterward plays immediately without a call to ``-[SFBAudioPlayer playReturningError:]``.
+    SFBAudioPlayerActionAtEndOfAudioContinue = 2,
+} NS_SWIFT_NAME(AudioPlayer.ActionAtEndOfAudio);
+
 /// An audio player using an `AVAudioEngine` processing graph for playback
 ///
 /// `SFBAudioPlayer` supports gapless playback for audio with the same sample rate and number of channels.
@@ -180,6 +194,11 @@ NS_SWIFT_NAME(AudioPlayer)
 
 /// Cancels the current decoder, clears any queued decoders, and resets the `AVAudioEngine`
 - (void)reset;
+
+/// The action the player takes when rendering is complete for all available decoders
+///
+/// The default is `SFBAudioPlayerActionAtEndOfAudioStop`.
+@property(nonatomic) SFBAudioPlayerActionAtEndOfAudio actionAtEndOfAudio;
 
 // MARK: - Player State
 
@@ -405,8 +424,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
 /// Called to notify the delegate when rendering is complete for all available decoders
 ///
-/// If the delegate implements this method the playback session remains active, so audio enqueued afterward will play
-/// without a call to ``-playReturningError:``. If the delegate does not implement this method the player is stopped.
+/// This method is called after the player performs the action specified by ``-[SFBAudioPlayer actionAtEndOfAudio]``,
+/// so the delegate may enqueue additional audio or change the playback state in response.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
 /// Called to notify the delegate after performing a user-initiated seek in a decoder

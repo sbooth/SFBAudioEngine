@@ -2591,20 +2591,31 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                 return;
             }
 
-            auto shouldStop = true;
-
-            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
-                delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
-                [delegate audioPlayerEndOfAudio:player];
-                shouldStop = false;
-            }
-
-            // If the delegate handles end of audio the player remains active so audio
-            // enqueued later will play without an explicit call to -play
-            if (shouldStop) {
+            // Perform the action before notifying the delegate so audio enqueued or playback state changes made by
+            // the delegate in response are not undone
+            const auto action = that->actionAtEndOfAudio();
+            switch (action) {
+            case SFBAudioPlayerActionAtEndOfAudioStop:
                 if (const auto wasActive = that->deactivatePlayerAndStopEngine(); wasActive) {
                     that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
                 }
+                break;
+            case SFBAudioPlayerActionAtEndOfAudioPause:
+                that->pause();
+                break;
+            case SFBAudioPlayerActionAtEndOfAudioContinue:
+                // The playback session remains active so audio enqueued later plays without a call to -play
+                break;
+            default:
+#if DEBUG
+                assert(false && "Unknown SFBAudioPlayerActionAtEndOfAudio");
+#endif /* DEBUG */
+                os_log_error(log_, "Unknown end of audio action: %u", static_cast<uint32_t>(action));
+                break;
+            }
+
+            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate; delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
+                [delegate audioPlayerEndOfAudio:player];
             }
         }
     });
