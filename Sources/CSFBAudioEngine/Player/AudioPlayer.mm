@@ -270,7 +270,7 @@ struct AudioPlayer::DecoderState final {
         decodingSuspended = 1u << 4,
         /// Rendering started
         renderingStarted = 1u << 5,
-        /// Decoder cancellation requested
+        /// Decoder cancelation requested
         cancelRequested = 1u << 6,
         /// Decoder canceled
         canceled = 1u << 7,
@@ -1103,8 +1103,8 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     auto formatMismatch = false;
 
     while (!stoken.stop_requested()) {
-        // Process cancellations and retrieve the first active decoder state
-        auto *decoderState = processDecoderCancellations(formatMismatch);
+        // Process cancelations and retrieve the first active decoder state
+        auto *decoderState = processDecoderCancelations(formatMismatch);
 
         // Process pending seek requests
         if (decoderState != nullptr && !processPendingSeek(decoderState, formatMismatch)) {
@@ -1152,7 +1152,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
 }
 
-sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bool &formatMismatch) noexcept {
+sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(bool &formatMismatch) noexcept {
     std::lock_guard lock{activeDecodersMutex_};
 
     auto signal = false;
@@ -1195,8 +1195,8 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancellations(bo
         signalEventSemaphore();
     }
 
-    // All requested cancellations have been processed and any stale audio is marked
-    auto flagsToClear = Flags::cancellationPending;
+    // All requested cancelations have been processed and any stale audio is marked
+    auto flagsToClear = Flags::cancelationPending;
 
     // Clear the format mismatch flag if any decoders were canceled
     if (anyCanceled) {
@@ -1502,9 +1502,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
 
     const auto flags = loadFlags();
 
-    // Process pending cancellations before decoding. Cancelling a decoder that has started decoding marks the ring
+    // Process pending cancelations before decoding. Canceling a decoder that has started decoding marks the ring
     // buffer stale, which would also discard any audio decoded now.
-    if (bits::is_set(flags, Flags::cancellationPending)) [[unlikely]] {
+    if (bits::is_set(flags, Flags::cancelationPending)) [[unlikely]] {
         return false;
     }
 
@@ -1682,7 +1682,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     const auto flags = loadFlags();
     const auto isStale = bits::is_set(flags, Flags::audioStale);
 
-    // Discard any stale frames in the ring buffer from a seek or decoder cancellation
+    // Discard any stale frames in the ring buffer from a seek or decoder cancelation
     if (isStale) [[unlikely]] {
         audioBuffer_.discardAll();
         audioMetadata_.discardAll();
@@ -1712,8 +1712,8 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         }
     }
 
-    // Output silence if muted, not playing, a decoder cancellation is pending, or the ring buffer was just emptied
-    if (bits::has_any(flags, Flags::muted | Flags::cancellationPending) || bits::is_clear(flags, Flags::playing) ||
+    // Output silence if muted, not playing, a decoder cancelation is pending, or the ring buffer was just emptied
+    if (bits::has_any(flags, Flags::muted | Flags::cancelationPending) || bits::is_clear(flags, Flags::playing) ||
         isStale) {
         isSilence = YES;
         for (AudioBuffer &buffer : std::span{outputData.mBuffers, outputData.mNumberBuffers}) {
@@ -2649,27 +2649,49 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             os_log_debug(log_, "End of audio reached");
 #endif /* DEBUG */
 
+            // The end of audio action is only performed if the player was not stopped while the audio was playing
+            const auto wasActive = bits::is_set(that->loadFlags(), Flags::active);
+
+            // Perform the action before the now playing and end of audio notifications. The end of audio decision
+            // reflects the decoders present when it was made, and a delegate may enqueue or play audio in response to
+            // a notification; performing the action afterward could stop or pause that playback.
+            if (wasActive) {
+                const auto action = that->endOfAudioAction();
+                switch (action) {
+                case SFBAudioPlayerEndOfAudioActionStop:
+                    if (that->deactivatePlayerAndStopEngine()) {
+                        that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+                    }
+                    break;
+                case SFBAudioPlayerEndOfAudioActionPause:
+                    that->pause();
+                    break;
+                case SFBAudioPlayerEndOfAudioActionContinue:
+                    // The playback session remains active so audio enqueued later plays without a call to -play
+                    break;
+                default:
+#if DEBUG
+                    assert(false && "Unknown SFBAudioPlayerEndOfAudioAction");
+#endif /* DEBUG */
+                    os_log_error(log_, "Unknown end of audio action: %ld; stopping playback",
+                                 static_cast<long>(action));
+                    if (that->deactivatePlayerAndStopEngine()) {
+                        that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+                    }
+                    break;
+                }
+            }
+
             that->setNowPlayingAndNotifyDelegate(nil);
 
             // Nothing more to do if the player was stopped while the audio was playing
-            if (bits::is_clear(that->loadFlags(), Flags::active)) {
+            if (!wasActive) {
                 return;
             }
-
-            auto shouldStop = true;
 
             if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
                 delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
                 [delegate audioPlayerEndOfAudio:player];
-                shouldStop = false;
-            }
-
-            // If the delegate handles end of audio the player remains active so audio
-            // enqueued later will play without an explicit call to -play
-            if (shouldStop) {
-                if (const auto wasActive = that->deactivatePlayerAndStopEngine(); wasActive) {
-                    that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
-                }
             }
         }
     });
@@ -2767,10 +2789,10 @@ std::size_t sfb::AudioPlayer::cancelActiveDecoders() noexcept {
         }
     }
 
-    // Signal the decoding thread if any cancellations were requested
+    // Signal the decoding thread if any cancelations were requested
     if (count > 0) {
-        // Output silence until the decoding thread processes the cancellations and marks any stale audio
-        setFlags(Flags::cancellationPending);
+        // Output silence until the decoding thread processes the cancelations and marks any stale audio
+        setFlags(Flags::cancelationPending);
         decodingSemaphore_.signal();
     }
 
