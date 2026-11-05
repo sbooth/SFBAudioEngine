@@ -12,7 +12,6 @@
 #include <mach/semaphore.h>
 #include <mach/task.h>
 
-#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <limits>

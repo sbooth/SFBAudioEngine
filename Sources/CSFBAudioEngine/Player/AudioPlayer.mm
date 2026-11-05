@@ -46,9 +46,6 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
-/// The maximum duration a thread waits for a signal before waking
-constexpr auto signalWaitTimeout = std::chrono::seconds{5};
-
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 
@@ -1627,11 +1624,11 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
 }
 
 std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
-    constexpr auto twoPointFiveMilliseconds = std::chrono::microseconds{2'500};
+    using namespace std::chrono_literals;
 
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return signalWaitTimeout;
+        return 5s;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1640,14 +1637,13 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return twoPointFiveMilliseconds;
+        return 2500us;
     }
 
     // Calculate the time until the free space reaches the target threshold
-    const auto durationSeconds =
-            static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    const auto durationNanoseconds = durationSeconds * static_cast<double>(nanosecondsPerSecond);
-    return std::chrono::nanoseconds(static_cast<int64_t>(durationNanoseconds));
+    const auto duration = std::chrono::duration<double>{static_cast<double>(targetMaxFreeSpace - freeSpace) /
+                                                        audioBuffer_.format().mSampleRate};
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 }
 
 #if DEBUG
@@ -1955,8 +1951,10 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
+        using namespace std::chrono_literals;
+        
         // Wait for an event; the timeout is protection against a missed signal
-        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(signalWaitTimeout);
+        [[maybe_unused]] const auto result = eventSemaphore_.timedwait(5s);
 #if DEBUG
         if (result == msema::Semaphore::timedwait_result::timed_out && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
