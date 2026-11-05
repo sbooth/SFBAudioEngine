@@ -125,7 +125,7 @@ class AudioPlayer final {
     /// Queue transferring audio metadata between the decoding thread and the render block
     spsc::Queue<detail::DecodedChunkDescriptor, 16> audioMetadata_;
 
-    /// The current playback generation, incremented after a seek, decoder cancellation, or when the engine is stopped
+    /// The current playback generation, incremented after a seek, decoder cancelation, or when the engine is stopped
     std::atomic_uint64_t playbackGeneration_{1};
     static_assert(std::atomic_uint64_t::is_always_lock_free, "Lock-free std::atomic_uint64_t required");
     /// The current output generation, incremented when the engine is stopped
@@ -339,8 +339,8 @@ class AudioPlayer final {
         formatChangePending = 1u << 4,
         /// The event message queue had insufficient space to record a render event
         renderEventDropped = 1u << 5,
-        /// Cancellation was requested for an active decoder but has not yet been processed by the decoding thread
-        cancellationPending = 1u << 6,
+        /// Cancelation was requested for an active decoder but has not yet been processed by the decoding thread
+        cancelationPending = 1u << 6,
     };
 
     friend constexpr void is_bitmask_enum(Flags);
@@ -402,8 +402,8 @@ class AudioPlayer final {
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
-    /// Processes decoder cancellations and returns the first active decoder state
-    DecoderState *_Nullable processDecoderCancellations(bool &formatMismatch) noexcept;
+    /// Processes decoder cancelations and returns the first active decoder state
+    DecoderState *_Nullable processDecoderCancelations(bool &formatMismatch) noexcept;
 
     /// Processes the pending seek for `decoderState`
     bool processPendingSeek(DecoderState *_Nonnull decoderState, bool &formatMismatch) noexcept;
