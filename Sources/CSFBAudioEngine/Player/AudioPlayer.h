@@ -208,6 +208,11 @@ class AudioPlayer final {
     bool wasPlayingBeforeInterruption_{false};
 #endif /* TARGET_OS_IPHONE */
 
+    /// The action taken when rendering is complete for all available decoders
+    std::atomic<SFBAudioPlayerEndOfAudioAction> endOfAudioAction_{SFBAudioPlayerEndOfAudioActionStop};
+    static_assert(std::atomic<SFBAudioPlayerEndOfAudioAction>::is_always_lock_free,
+                  "Lock-free std::atomic<SFBAudioPlayerEndOfAudioAction> required");
+
   public:
     AudioPlayer();
 
@@ -239,6 +244,9 @@ class AudioPlayer final {
     bool togglePlayPause(NSError **error) noexcept;
 
     void reset() noexcept;
+
+    SFBAudioPlayerEndOfAudioAction endOfAudioAction() const noexcept;
+    void setEndOfAudioAction(SFBAudioPlayerEndOfAudioAction endOfAudioAction) noexcept;
 
     // MARK: - Player State
 
@@ -577,6 +585,14 @@ inline void AudioPlayer::clearDecoderQueue() noexcept {
 inline bool AudioPlayer::decoderQueueIsEmpty() const noexcept {
     std::lock_guard lock{queuedDecodersMutex_};
     return queuedDecoders_.empty();
+}
+
+inline SFBAudioPlayerEndOfAudioAction AudioPlayer::endOfAudioAction() const noexcept {
+    return endOfAudioAction_.load(std::memory_order_relaxed);
+}
+
+inline void AudioPlayer::setEndOfAudioAction(SFBAudioPlayerEndOfAudioAction endOfAudioAction) noexcept {
+    endOfAudioAction_.store(endOfAudioAction, std::memory_order_relaxed);
 }
 
 inline bool AudioPlayer::engineIsRunning() const noexcept { return engine_.isRunning; }
