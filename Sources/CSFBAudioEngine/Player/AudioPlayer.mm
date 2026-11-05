@@ -1748,11 +1748,11 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         constexpr auto throttleInterval = 100 * nanosecondsPerMillisecond;
         if (host_time::toNanoseconds(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
             if (events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
-                [[likely]] {
-                    eventEnqueued = true;
-                } else {
-                    setFlags(Flags::renderEventDropped);
-                }
+                    [[likely]] {
+                eventEnqueued = true;
+            } else {
+                setFlags(Flags::renderEventDropped);
+            }
             lastUnderrunHostTime_ = timestamp.mHostTime;
         }
     }
@@ -1954,7 +1954,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event; the timeout is protection against a missed signal
-        [[maybe_unused]] const auto result = eventSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, halfSecondDispatchTimeDelta));
+        [[maybe_unused]] const auto result =
+                eventSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, halfSecondDispatchTimeDelta));
 #if DEBUG
         if (!result && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
