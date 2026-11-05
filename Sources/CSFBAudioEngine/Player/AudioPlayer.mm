@@ -46,11 +46,6 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
-/// 0.5 second dispatch time delta, expressed in nanoseconds
-constexpr int64_t halfSecondDispatchTimeDelta = 500'000'000;
-/// 2.5 millisecond dispatch time delta, expressed in nanoseconds
-constexpr int64_t twoPointFiveMillisecondDispatchTimeDelta = 2'500'000;
-
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 
@@ -1146,7 +1141,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
-        [[maybe_unused]] const auto result = decodingSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, timeout));
+        [[maybe_unused]] const auto result = decodingSemaphore_.wait(timeout);
 #if DEBUG
         if (!result && decoderState == nullptr && shouldBeProcessingDecoders()) [[unlikely]] {
             os_log_debug(log_, "Decoding thread woke on timeout with decoder to process: possible missed signal");
@@ -1627,10 +1622,12 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
     return true;
 }
 
-int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noexcept {
+    using namespace std::chrono_literals;
+
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return halfSecondDispatchTimeDelta;
+        return 500ms;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1639,13 +1636,13 @@ int64_t sfb::AudioPlayer::decodingTimeout(DecoderState *decoderState) const noex
 
     if (freeSpace > targetMaxFreeSpace) {
         // Minimal timeout if the ring buffer has more free space than desired
-        return twoPointFiveMillisecondDispatchTimeDelta;
+        return 2500us;
     }
 
     // Calculate the time until the free space reaches the target threshold
-    const auto durationSeconds =
-            static_cast<double>(targetMaxFreeSpace - freeSpace) / audioBuffer_.format().mSampleRate;
-    return static_cast<int64_t>(durationSeconds * static_cast<double>(nanosecondsPerSecond));
+    const auto duration = std::chrono::duration<double>{static_cast<double>(targetMaxFreeSpace - freeSpace) /
+                                                        audioBuffer_.format().mSampleRate};
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 }
 
 #if DEBUG
@@ -1954,8 +1951,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         }
 
         // Wait for an event; the timeout is protection against a missed signal
-        [[maybe_unused]] const auto result =
-                eventSemaphore_.wait(dispatch_time(DISPATCH_TIME_NOW, halfSecondDispatchTimeDelta));
+        using namespace std::chrono_literals;
+        [[maybe_unused]] const auto result = eventSemaphore_.wait(500ms);
 #if DEBUG
         if (!result && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"

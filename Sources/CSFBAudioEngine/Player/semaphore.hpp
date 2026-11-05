@@ -9,6 +9,7 @@
 
 #include <dispatch/dispatch.h>
 
+#include <chrono>
 #include <cstdint>
 #include <stdexcept>
 
@@ -45,6 +46,13 @@ class Semaphore final {
     /// @return true if the semaphore was decremented, false otherwise.
     bool wait(dispatch_time_t timeout) noexcept;
 
+    /// Waits for (decrements) the semaphore.
+    ///
+    /// If the resulting value is less than zero this function waits for a signal to occur before returning.
+    /// @param timeout How long to wait before timing out.
+    /// @return true if the semaphore was decremented, false otherwise.
+    bool wait(std::chrono::nanoseconds timeout) noexcept;
+
     /// Signals (increments) the semaphore.
     ///
     /// If the previous value was less than zero, this function wakes a waiting thread.
@@ -76,6 +84,13 @@ inline Semaphore::Semaphore(std::intptr_t value) {
 
 inline bool Semaphore::wait(dispatch_time_t timeout) noexcept {
     return dispatch_semaphore_wait(semaphore_, timeout) == 0;
+}
+
+inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
+    if (timeout <= std::chrono::nanoseconds::zero()) {
+        return wait(DISPATCH_TIME_NOW);
+    }
+    return wait(dispatch_time(DISPATCH_TIME_NOW, timeout.count()));
 }
 
 inline bool Semaphore::signal() noexcept { return dispatch_semaphore_signal(semaphore_) != 0; }

@@ -11,6 +11,7 @@
 
 #import <atomic>
 #import <cassert>
+#import <chrono>
 #import <deque>
 #import <memory>
 #import <mutex>
@@ -427,7 +428,7 @@ class AudioPlayer final {
     bool decodeIntoRingBuffer(DecoderState *_Nonnull &decoderState, AVAudioPCMBuffer *buffer) noexcept;
 
     /// Returns the appropriate decoding semaphore timeout
-    int64_t decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
+    std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
 #if DEBUG
     /// Returns `true` if the decoding thread has a decoder to process and should not be idle
