@@ -2407,7 +2407,6 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
             !bits::is_set_and_is_clear(that->loadFlags(), Flags::active, Flags::playing)) {
             return;
         }
-
         [that->engine_ pause];
     });
 
@@ -2968,8 +2967,8 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
         // the engine and schedule notifications for a new session before they are invalidated.
         std::scoped_lock lock{engineMutex_, activeDecodersMutex_};
 
-        [engine_ stop];
         prevFlags = clearFlags(Flags::active | Flags::playing);
+        [engine_ stop];
 #if TARGET_OS_IPHONE
         wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
