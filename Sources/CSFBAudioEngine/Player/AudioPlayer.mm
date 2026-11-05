@@ -1627,7 +1627,7 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
 
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return 500ms;
+        return 5s;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1953,7 +1953,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         using namespace std::chrono_literals;
 
         // Wait for an event; the timeout is protection against a missed signal
-        [[maybe_unused]] const auto result = eventSemaphore_.wait(500ms);
+        [[maybe_unused]] const auto result = eventSemaphore_.wait(5s);
 #if DEBUG
         if (!result && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
