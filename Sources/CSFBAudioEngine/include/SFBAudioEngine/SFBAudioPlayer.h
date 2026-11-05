@@ -38,7 +38,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
     SFBAudioPlayerPlaybackStatePlaying = 3,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
-/// Actions an audio player can take when rendering is complete for all available decoders
+/// The possible actions `SFBAudioPlayer` can take when rendering is complete for all available decoders
 typedef NS_ENUM(NSInteger, SFBAudioPlayerActionAtEndOfAudio) {
     /// Stop playback, ending the playback session and stopping the `AVAudioEngine`
     SFBAudioPlayerActionAtEndOfAudioStop = 0,
