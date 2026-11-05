@@ -27,6 +27,7 @@
 #import "SFBAudioPlayer+Internal.h"
 #import "SFBCStringForOSType.h"
 #import "host_time.hpp"
+#import "scope_exit.hpp"
 
 namespace {
 
@@ -1691,13 +1692,21 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         decodingSemaphore_.signal();
     }
 
+    // Whether this render cycle enqueued an event and should signal the event semaphore
+    auto eventEnqueued = false;
+    const auto sendSignal = util::scope_exit{[&]() noexcept {
+        if (eventEnqueued) {
+            signalEventSemaphore();
+        }
+    }};
+
     // Process pending `AVAudioEngine` pause requests
     if (bits::is_set_and_is_clear(flags, Flags::active, Flags::playing)) {
         if (const auto generation = pauseRequestGeneration_.load(std::memory_order_acquire);
             generation != processedPauseGeneration_) [[unlikely]] {
             if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
                 processedPauseGeneration_ = generation;
-                signalEventSemaphore();
+                eventEnqueued = true;
             } else {
                 setFlags(Flags::renderEventDropped);
             }
@@ -1719,10 +1728,14 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 
     // Enqueue frames rendered event(s)
     if (framesRead > 0) [[likely]] {
-        enqueueFramesRenderedEvents(framesRead, timestamp);
+        if (enqueueFramesRenderedEvents(framesRead, timestamp)) [[likely]] {
+            eventEnqueued = true;
+        }
     } else {
         isSilence = YES;
-        enqueueEmptyFramesRenderedEvent(timestamp);
+        if (enqueueEmptyFramesRenderedEvent(timestamp)) {
+            eventEnqueued = true;
+        }
     }
 
     // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
@@ -1732,23 +1745,25 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         // Throttle underrun events to prevent saturating the event message queue
         constexpr auto throttleInterval = 100 * nanosecondsPerMillisecond;
         if (host_time::toNanoseconds(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
-            if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
-                    [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
+                    [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
             lastUnderrunHostTime_ = timestamp.mHostTime;
         }
     }
 
-    signalEventSemaphore();
     return noErr;
 }
 
-void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
+bool sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
 #if DEBUG
     assert(framesRead > 0);
 #endif /* DEBUG */
 
+    auto eventEnqueued = false;
     auto framesRemaining = framesRead;
     do {
         // Read the next chunk descriptor if needed
@@ -1774,17 +1789,20 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         // Rendering is starting
         if (renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_) [[unlikely]] {
             const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, audioBuffer_.format().mSampleRate);
-            if (!events_.enqueue(EventCommand::renderingStarted, eventTime,
-                                 renderingChunk_->descriptor_.sequenceNumber_,
-                                 renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderingStarted, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
+                                renderingChunk_->descriptor_.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
 
         // Submit the frames rendered event if any frames were rendered
         if (chunkFramesConsumed > 0) [[likely]] {
-            if (!events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
-                                 chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
+                                chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
@@ -1793,9 +1811,11 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         if (renderingChunk_->descriptor_.isLast_ && chunkFramesConsumed == chunkFramesRemaining) [[unlikely]] {
             const auto eventTime = hostTimeForFrameOffset(frameOffset + chunkFramesConsumed, timestamp,
                                                           audioBuffer_.format().mSampleRate);
-            if (!events_.enqueue(EventCommand::renderingComplete, eventTime,
-                                 renderingChunk_->descriptor_.sequenceNumber_,
-                                 renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderingComplete, eventTime,
+                                renderingChunk_->descriptor_.sequenceNumber_,
+                                renderingChunk_->descriptor_.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
@@ -1810,12 +1830,16 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
             renderingChunk_.reset();
         }
     } while (framesRemaining > 0);
+
+    return eventEnqueued;
 }
 
-void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept {
+bool sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept {
 #if DEBUG
     assert(!renderingChunk_);
 #endif /* DEBUG */
+
+    auto eventEnqueued = false;
 
     // Check for an empty decoded chunk descriptor, and if found enqueue an empty frames rendered event to signify
     // rendering complete
@@ -1830,15 +1854,19 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
 
         // Rendering is starting
         if (chunkSequenceNumber != lastRenderedSequenceNumber_) {
-            if (!events_.enqueue(EventCommand::renderingStarted, eventTime, chunkDescriptor.sequenceNumber_,
-                                 chunkDescriptor.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderingStarted, eventTime, chunkDescriptor.sequenceNumber_,
+                                chunkDescriptor.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
 
         // Rendering is complete
-        if (!events_.enqueue(EventCommand::renderingComplete, eventTime, chunkDescriptor.sequenceNumber_,
-                             chunkDescriptor.playbackGeneration_)) [[unlikely]] {
+        if (events_.enqueue(EventCommand::renderingComplete, eventTime, chunkDescriptor.sequenceNumber_,
+                            chunkDescriptor.playbackGeneration_)) [[likely]] {
+            eventEnqueued = true;
+        } else {
             setFlags(Flags::renderEventDropped);
         }
 
@@ -1848,6 +1876,8 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
         // Chunk processing complete
         audioMetadata_.discard();
     }
+
+    return eventEnqueued;
 }
 
 // MARK: - Event Processing

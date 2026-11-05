@@ -443,10 +443,12 @@ class AudioPlayer final {
                     AudioBufferList &outputData) noexcept;
 
     /// Enqueues frames rendered event(s) for rendered audio
-    void enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
+    /// - returns: `true` if an event was enqueued
+    [[nodiscard]] bool enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
 
     /// Enqueues an empty frames rendered event if an empty decoded chunk descriptor is present
-    void enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
+    /// - returns: `true` if an event was enqueued
+    [[nodiscard]] bool enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
 
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
