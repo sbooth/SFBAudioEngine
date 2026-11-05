@@ -645,8 +645,8 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
 
     {
         std::lock_guard lock{engineMutex_};
-        [engine_ stop];
         clearFlags(Flags::active | Flags::playing);
+        [engine_ stop];
     }
 
     clearDecoderQueue();
@@ -743,6 +743,8 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
             return false;
         }
         setFlags(Flags::active | Flags::playing);
+        // The event processing thread polls less often when not playing
+        eventSemaphore_.signal();
     }
 
     notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePlaying);
@@ -807,6 +809,8 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
                 return false;
             }
             setFlags(Flags::active | Flags::playing);
+            // The event processing thread polls less often when not playing
+            eventSemaphore_.signal();
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         }
     }
@@ -2965,6 +2969,8 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
             }
 
             const auto prevFlags = setFlags(Flags::playing);
+            // The event processing thread polls less often when not playing
+            eventSemaphore_.signal();
             didResume = bits::is_clear(prevFlags, Flags::playing);
         }
 
