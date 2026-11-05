@@ -1882,15 +1882,14 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
 
         // Poll more frequently when the render block can produce events
         int64_t deltaNanos = halfSecondDispatchTimeDelta;
-        if (bits::is_set(prevFlags, Flags::engineRunning)) {
-            if (bits::is_clear(prevFlags, Flags::playing)) {
+        if (bits::is_set(prevFlags, Flags::playing)) {
+            std::lock_guard lock{activeDecodersMutex_};
+            if (firstActiveDecoderState() != nullptr) {
                 deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
-            } else {
-                std::lock_guard lock{activeDecodersMutex_};
-                if (firstActiveDecoderState() != nullptr) {
-                    deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
-                }
             }
+        } else if (bits::is_set(prevFlags, Flags::active) && engine_.isRunning) {
+            // A paused player's engine keeps running until the delayed engine pause takes effect
+            deltaNanos = sevenPointFiveMillisecondDispatchTimeDelta;
         }
 
         // Decoding events will be signaled; render events are polled using the timeout
@@ -2410,7 +2409,6 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
         }
 
         [that->engine_ pause];
-        that->clearFlags(Flags::engineRunning);
     });
 
     return true;
@@ -2809,7 +2807,6 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             // exception so ensure the engine is stopped before updating the bus format. Stop unconditionally
             // since a paused engine is not running but retains its render resources.
             [engine_ stop];
-            clearFlags(Flags::engineRunning);
 
             [engine_ disconnectNodeInput:outputNode bus:0];
 
@@ -2938,8 +2935,7 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
             return false;
         }
 
-        // The event processing thread polls less often while the engine is stopped; wake it to recompute its timeout
-        setFlags(Flags::engineRunning);
+        // The event processing thread polls less often while the engine is stopped
         eventSemaphore_.signal();
     }
 
@@ -2973,7 +2969,7 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
         std::scoped_lock lock{engineMutex_, activeDecodersMutex_};
 
         [engine_ stop];
-        prevFlags = clearFlags(Flags::active | Flags::playing | Flags::engineRunning);
+        prevFlags = clearFlags(Flags::active | Flags::playing);
 #if TARGET_OS_IPHONE
         wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
@@ -3035,7 +3031,6 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     // Even if the engine isn't running, call -stop to force release of any render resources
     // This is necessary when transitioning between formats with different channel counts
     [engine_ stop];
-    clearFlags(Flags::engineRunning);
 
     // Reconfigure the processing graph
     AVAudioConnectionPoint *sourceNodeOutputConnectionPoint = [[engine_ outputConnectionPointsForNode:sourceNode_
