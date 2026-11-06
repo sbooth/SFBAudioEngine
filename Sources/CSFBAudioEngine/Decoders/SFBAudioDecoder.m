@@ -514,8 +514,8 @@ static NSMutableArray *_registeredSubclasses = nil;
     // N.B. `sortUsingComparator:` sorts in ascending order
     // To sort the array in descending order the comparator is reversed
     [_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
-        int a = ((SFBAudioDecoderSubclassInfo *)obj1).priority;
-        int b = ((SFBAudioDecoderSubclassInfo *)obj2).priority;
+        const int a = ((SFBAudioDecoderSubclassInfo *)obj1).priority;
+        const int b = ((SFBAudioDecoderSubclassInfo *)obj2).priority;
         if (a > b) {
             return NSOrderedAscending;
         }

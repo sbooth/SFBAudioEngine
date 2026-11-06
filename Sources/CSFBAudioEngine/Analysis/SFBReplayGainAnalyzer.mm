@@ -212,8 +212,8 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         return nil;
     }
 
-    auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
-    auto digitalPeak = analyzer->digital_peak();
+    const auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
+    const auto digitalPeak = analyzer->digital_peak();
 
     if (!loudness.has_value()) {
         if (error != nil) {
@@ -281,8 +281,8 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 
         analyzers[i] = analyzer.get();
 
-        auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
-        auto digitalPeak = analyzer->digital_peak();
+        const auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
+        const auto digitalPeak = analyzer->digital_peak();
 
         if (!loudness.has_value()) {
             if (error != nil) {
@@ -304,7 +304,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         [trackReplayGain setObject:[[SFBReplayGain alloc] initWithGain:gain peak:digitalPeak] forKey:url];
     }
 
-    auto loudness = loudness::EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(analyzers);
+    const auto loudness = loudness::EbuR128Analyzer::GetRelativeGatedIntegratedLoudness(analyzers);
     if (!loudness.has_value()) {
         if (error != nil) {
             *error = [NSError errorWithDomain:SFBReplayGainAnalyzerErrorDomain

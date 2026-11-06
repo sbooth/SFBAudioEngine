@@ -29,10 +29,10 @@ namespace {
 
 // Convert a four byte chunk ID to a uint32_t
 uint32_t bytesToID(const char bytes[4]) noexcept {
-    auto one = bytes[0];
-    auto two = bytes[1];
-    auto three = bytes[2];
-    auto four = bytes[3];
+    const auto one = bytes[0];
+    const auto two = bytes[1];
+    const auto three = bytes[2];
+    const auto four = bytes[3];
 
     // Verify well-formedness
     if (!std::isprint(one) || !std::isprint(two) || !std::isprint(three) || !std::isprint(four)) {
@@ -858,18 +858,18 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
         return YES;
     }
 
-    AVAudioPacketCount packetsRemaining = static_cast<AVAudioPacketCount>(_packetCount - _packetPosition);
+    const AVAudioPacketCount packetsRemaining = static_cast<AVAudioPacketCount>(_packetCount - _packetPosition);
     AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
     AVAudioPacketCount packetsRead = 0;
 
-    uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+    const uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
     for (;;) {
         // Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
         // a clustered frame (one channel byte per channel)
 
         auto *buf = static_cast<unsigned char *>(buffer.data) + buffer.byteLength;
-        NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
+        const NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
         NSInteger bytesRead;
         if (![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error]) {
@@ -912,7 +912,7 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
 - (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error {
     NSParameterAssert(packet >= 0);
 
-    NSInteger packetOffset = packet * kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+    const NSInteger packetOffset = packet * kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
     if (![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
         os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld",
                      _audioOffset + packetOffset);

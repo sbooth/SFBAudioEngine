@@ -184,7 +184,7 @@ class VariableLengthInput {
             return false;
         }
 
-        uint32_t uvar = static_cast<uint32_t>(var);
+        const uint32_t uvar = static_cast<uint32_t>(var);
         if (uvar & 1) {
             i32 = ~(uvar >> 1);
         } else {
@@ -964,7 +964,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 
     // headerBytes is at least canonicalHeaderSizeBytes (44) in size
 
-    auto chunkID = OSReadBigInt32(headerBytes.data(), 0);
+    const auto chunkID = OSReadBigInt32(headerBytes.data(), 0);
     //	auto chunkSize = OSReadBigInt32(headerBytes.data(), 4);
 
     if (chunkID == 'RIFF') {
@@ -1015,7 +1015,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
         chunkID = OSReadBigInt32(chunkData, offset);
         offset += 4;
 
-        auto chunkSize = OSReadLittleInt32(chunkData, offset);
+        const auto chunkSize = OSReadLittleInt32(chunkData, offset);
         offset += 4;
 
         switch (chunkID) {
@@ -1028,7 +1028,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto formatTag = OSReadLittleInt16(chunkData, offset);
+            const auto formatTag = OSReadLittleInt16(chunkData, offset);
             offset += 2;
             if (formatTag != waveFormatPCMTag) {
                 os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", formatTag);
@@ -1040,7 +1040,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto channels = OSReadLittleInt16(chunkData, offset);
+            const auto channels = OSReadLittleInt16(chunkData, offset);
             offset += 2;
             if (_channelCount != channels) {
                 os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)",
@@ -1130,7 +1130,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto channels = OSReadBigInt16(chunkData, offset);
+            const auto channels = OSReadBigInt16(chunkData, offset);
             offset += 2;
             if (_channelCount != channels) {
                 os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)",
@@ -1144,7 +1144,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             offset += 2;
 
             // sample rate is IEEE 754 80-bit extended float (16-bit exponent, 1-bit integer part, 63-bit fraction)
-            auto exp = static_cast<int16_t>(OSReadBigInt16(chunkData, offset)) - 16383 - 63;
+            const auto exp = static_cast<int16_t>(OSReadBigInt16(chunkData, offset)) - 16383 - 63;
             offset += 2;
             if (exp < -63 || exp > 63) {
                 os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
@@ -1154,7 +1154,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto frac = OSReadBigInt64(chunkData, offset);
+            const auto frac = OSReadBigInt64(chunkData, offset);
             offset += 8;
             if (exp >= 0) {
                 _sampleRate = static_cast<uint32_t>(frac << exp);
@@ -1566,7 +1566,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 
     std::vector<SeekTableEntry> entries;
 
-    auto count = (trailer.seekTableSize_ - seekTrailerSizeBytes - seekHeaderSizeBytes) / seekEntrySizeBytes;
+    const auto count = (trailer.seekTableSize_ - seekTrailerSizeBytes - seekHeaderSizeBytes) / seekEntrySizeBytes;
     for (uint32_t i = 0; i < count; ++i) {
         unsigned char buf[seekEntrySizeBytes];
         NSInteger bytesRead;
@@ -1582,7 +1582,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             return false;
         }
 
-        auto entry = parseSeekTableEntry(buf);
+        const auto entry = parseSeekTableEntry(buf);
         entries.push_back(entry);
     }
 
@@ -1636,7 +1636,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             return {};
         }
 
-        auto entry = parseSeekTableEntry(buf);
+        const auto entry = parseSeekTableEntry(buf);
         entries.push_back(entry);
 
         if (inputSource.atEOF) {

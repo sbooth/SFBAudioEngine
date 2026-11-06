@@ -277,7 +277,7 @@ static long tell_func_callback(void *datasource) {
 
     while (framesRemaining > 0) {
         // Decode a chunk of samples from the file
-        long framesRead = ov_read_float(&_vorbisFile, &pcm_channels, (int)framesRemaining, &bitstream);
+        const long framesRead = ov_read_float(&_vorbisFile, &pcm_channels, (int)framesRemaining, &bitstream);
 
         if (framesRead < 0) {
             os_log_error(gSFBAudioDecoderLog, "Ogg Vorbis decoding error");
@@ -294,7 +294,7 @@ static long tell_func_callback(void *datasource) {
 
         // Copy the frames from the decoding buffer to the output buffer
         float *const *floatChannelData = buffer.floatChannelData;
-        AVAudioChannelCount channelCount = buffer.format.channelCount;
+        const AVAudioChannelCount channelCount = buffer.format.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const float *input = pcm_channels[channel];
             float *output = floatChannelData[channel] + buffer.frameLength;

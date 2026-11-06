@@ -373,10 +373,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
-                                                readingFromOffset:0
-                                                      frameLength:framesRemaining];
+        const AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        const AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+                                                      readingFromOffset:0
+                                                            frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];
 
         framesProcessed += framesCopied;
@@ -540,7 +540,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                 }
 
                 // Get the resultant Ogg page
-                int result = ogg_stream_pagein(&_streamState, &_page);
+                const int result = ogg_stream_pagein(&_streamState, &_page);
                 if (result) {
                     os_log_error(gSFBAudioDecoderLog, "Error reading Ogg page");
                     if (error) {

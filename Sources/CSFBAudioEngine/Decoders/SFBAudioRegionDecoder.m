@@ -192,7 +192,7 @@
         return NO;
     }
 
-    AVAudioFramePosition decoderFrameLength = _decoder.frameLength;
+    const AVAudioFramePosition decoderFrameLength = _decoder.frameLength;
     if (decoderFrameLength == SFBUnknownFrameLength) {
         os_log_error(gSFBAudioDecoderLog, "Invalid frame length from %{public}@", _decoder);
         [_decoder closeReturningError:nil];
@@ -269,7 +269,7 @@
 }
 
 - (AVAudioFramePosition)framePosition {
-    AVAudioFramePosition framePosition = _decoder.framePosition;
+    const AVAudioFramePosition framePosition = _decoder.framePosition;
     if (framePosition == SFBUnknownFramePosition) {
         return SFBUnknownFramePosition;
     }
@@ -284,7 +284,7 @@
 }
 
 - (AVAudioFramePosition)frameOffset {
-    AVAudioFramePosition framePosition = _decoder.framePosition;
+    const AVAudioFramePosition framePosition = _decoder.framePosition;
     if (framePosition == SFBUnknownFramePosition) {
         return SFBUnknownFramePosition;
     }
@@ -317,9 +317,10 @@
 
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
-        AVAudioFrameCount framesRemainingInRegion =
+        const AVAudioFrameCount framesRemainingInRegion =
                 (AVAudioFrameCount)(_startFrame + _frameLength - _decoder.framePosition);
-        AVAudioFrameCount framesToDecode = MIN(MIN(framesRemaining, framesRemainingInRegion), _buffer.frameCapacity);
+        const AVAudioFrameCount framesToDecode =
+                MIN(MIN(framesRemaining, framesRemainingInRegion), _buffer.frameCapacity);
 
         // Nothing left to read
         if (framesToDecode == 0) {

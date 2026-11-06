@@ -90,18 +90,18 @@ using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
         bool ok;
         const auto pos = s.find("/", 0);
         if (pos != -1) {
-            auto upos = static_cast<unsigned int>(pos);
-            int trackNum = s.substr(0, upos).toInt(&ok);
+            const auto upos = static_cast<unsigned int>(pos);
+            const int trackNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
             }
 
-            int trackTotal = s.substr(upos + 1).toInt(&ok);
+            const int trackTotal = s.substr(upos + 1).toInt(&ok);
             if (ok) {
                 self.trackTotal = @(trackTotal);
             }
         } else if (s.length() > 0) {
-            int trackNum = s.toInt(&ok);
+            const int trackNum = s.toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
             }

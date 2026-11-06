@@ -385,7 +385,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Generate interleaved native PCM output
     AudioStreamBasicDescription processingStreamDescription = {0};
 
-    int subtype = _sfinfo.format & SF_FORMAT_SUBMASK;
+    const int subtype = _sfinfo.format & SF_FORMAT_SUBMASK;
     switch (subtype) {
         // 8-bit PCM will be high-aligned in shorts
     case SF_FORMAT_PCM_U8:
@@ -441,7 +441,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     AVAudioChannelLayout *channelLayout = nil;
 
     int channel_map[_sfinfo.channels];
-    int result = sf_command(_sndfile, SFC_GET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+    const int result = sf_command(_sndfile, SFC_GET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
     if (result == SF_TRUE) {
         channelLayout = ChannelLayoutFromSndfileChannelMap(channel_map, _sfinfo.channels);
     }
@@ -483,7 +483,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
 - (BOOL)closeReturningError:(NSError **)error {
     if (_sndfile) {
-        int result = sf_close(_sndfile);
+        const int result = sf_close(_sndfile);
         if (result) {
             os_log_error(gSFBAudioDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
         }
@@ -543,7 +543,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     buffer.frameLength = (AVAudioFrameCount)framesRead;
 
-    int result = sf_error(_sndfile);
+    const int result = sf_error(_sndfile);
     if (result) {
         os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
         if (error) {
@@ -558,7 +558,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
+    const sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
     if (result == -1) {
         os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
         if (error) {

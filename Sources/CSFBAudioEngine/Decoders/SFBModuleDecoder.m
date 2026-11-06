@@ -193,11 +193,11 @@ static dumb_off_t get_size_callback(void *f) {
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesToCopy = MIN(framesRemaining, DUMB_BUF_FRAMES);
+        const AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        const AVAudioFrameCount framesToCopy = MIN(framesRemaining, DUMB_BUF_FRAMES);
 
         long samplesSize = framesToCopy;
-        long framesCopied =
+        const long framesCopied =
                 duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE,
                                framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
 
@@ -227,7 +227,7 @@ static dumb_off_t get_size_callback(void *f) {
         _framePosition = 0;
     }
 
-    AVAudioFramePosition framesToSkip = frame - _framePosition;
+    const AVAudioFramePosition framesToSkip = frame - _framePosition;
     duh_sigrenderer_generate_samples(_dsr, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToSkip, NULL);
     _framePosition += framesToSkip;
 
