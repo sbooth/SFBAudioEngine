@@ -393,6 +393,13 @@ class AudioPlayer final {
     /// - returns: `true` if the player was active
     bool deactivatePlayerAndStopEngine() noexcept;
 
+    /// Deactivates the player and stops the `AVAudioEngine`
+    /// - important: The caller must hold `engineMutex_` and `activeDecodersMutex_`
+    /// - note: The caller is responsible for clearing the decoder queue and canceling active decoders if desired
+    /// - note: The caller is responsible for waking the decoding thread if `Flags::formatChangePending` was set
+    /// - returns: The player flags before deactivation
+    Flags deactivatePlayerAndStopEngineLocked() noexcept;
+
     /// Starts the engine if needed and begins or resumes playback
     /// - important: The caller must hold `engineMutex_`
     /// - precondition: The player is not playing
