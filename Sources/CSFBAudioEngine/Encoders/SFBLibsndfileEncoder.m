@@ -7,6 +7,7 @@
 
 #import "SFBLibsndfileEncoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -104,7 +105,7 @@ SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettings
 
 /// Returns the major format corresponding to `pathExtension` or `0` if none
 static int MajorFormatForExtension(NSString *pathExtension) {
-    NSCParameterAssert(pathExtension != nil);
+    assert(pathExtension != nil);
 
     int majorCount = 0;
     sf_command(NULL, SFC_GET_FORMAT_MAJOR_COUNT, &majorCount, sizeof(int));
@@ -126,7 +127,7 @@ static int MajorFormatForExtension(NSString *pathExtension) {
 
 /// Returns the subtype corresponding to `format` or `0` if none
 static int InferSubtypeFromFormat(AVAudioFormat *format) {
-    NSCParameterAssert(format != nil);
+    assert(format != nil);
 
     const AudioStreamBasicDescription *asbd = format.streamDescription;
     if (asbd->mFormatID != kAudioFormatLinearPCM) {
@@ -141,7 +142,7 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
             return SF_FORMAT_DOUBLE;
         }
     } else {
-        BOOL isSignedInteger =
+        const BOOL isSignedInteger =
                 (asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) == kAudioFormatFlagIsSignedInteger;
         switch (asbd->mBitsPerChannel) {
         case 8:
@@ -174,9 +175,9 @@ static int InferSubtypeFromFormat(AVAudioFormat *format) {
 /// Fills a sndfile channel map with the corresponding channels from `channelDescriptions`
 static void SndfileChannelMapWithChannelDescriptions(int *_Nonnull channel_map, int channels,
                                                      const AudioChannelDescription *channelDescriptions) {
-    NSCParameterAssert(channel_map != NULL);
-    NSCParameterAssert(channels > 0);
-    NSCParameterAssert(channelDescriptions != NULL);
+    assert(channel_map != NULL);
+    assert(channels > 0);
+    assert(channelDescriptions != NULL);
 
     for (int i = 0; i < channels; ++i) {
         switch (channelDescriptions[i].mChannelLabel) {
@@ -277,8 +278,8 @@ static void SndfileChannelMapWithChannelDescriptions(int *_Nonnull channel_map, 
 /// Fills a sndfile channel map with the corresponding channels from `channelBitmap`
 static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int channels,
                                                AudioChannelBitmap channelBitmap, NSError **error) {
-    NSCParameterAssert(channel_map != NULL);
-    NSCParameterAssert(channels > 0);
+    assert(channel_map != NULL);
+    assert(channels > 0);
 
     UInt32 dataSize;
     OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof channelBitmap,
@@ -318,8 +319,8 @@ static BOOL SndfileChannelMapWithChannelBitmap(int *_Nonnull channel_map, int ch
 /// Fills a sndfile channel map with the corresponding channels from `layoutTag`
 static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int channels,
                                                   AudioChannelLayoutTag layoutTag, NSError **error) {
-    NSCParameterAssert(channel_map != NULL);
-    NSCParameterAssert(channels > 0);
+    assert(channel_map != NULL);
+    assert(channels > 0);
 
     UInt32 dataSize;
     OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag, sizeof layoutTag, &layoutTag,
@@ -359,11 +360,11 @@ static BOOL SndfileChannelMapWithChannelLayoutTag(int *_Nonnull channel_map, int
 /// Fills a sndfile channel map with the corresponding channels from `channelLayout`
 static BOOL SndfileChannelMapFromChannelLayout(int *_Nonnull channel_map, int channels,
                                                AVAudioChannelLayout *_Nonnull channelLayout, NSError **error) {
-    NSCParameterAssert(channel_map != NULL);
-    NSCParameterAssert(channels > 0);
-    NSCParameterAssert(channelLayout != nil);
+    assert(channel_map != NULL);
+    assert(channels > 0);
+    assert(channelLayout != nil);
 
-    AudioChannelLayoutTag layoutTag = channelLayout.layoutTag;
+    const AudioChannelLayoutTag layoutTag = channelLayout.layoutTag;
 
     if (layoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
         SndfileChannelMapWithChannelDescriptions(channel_map, channels, channelLayout.layout->mChannelDescriptions);
@@ -384,7 +385,7 @@ enum WriteMethod {
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger length;
@@ -395,7 +396,7 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 }
 
 static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     if (!encoder->_outputTarget.supportsSeeking) {
@@ -435,7 +436,7 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
 }
 
 static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
@@ -447,7 +448,7 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
 }
 
 static sf_count_t my_sf_vio_write(const void *ptr, sf_count_t count, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
 
@@ -460,7 +461,7 @@ static sf_count_t my_sf_vio_write(const void *ptr, sf_count_t count, void *user_
 }
 
 static sf_count_t my_sf_vio_tell(void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileEncoder *encoder = (__bridge SFBLibsndfileEncoder *)user_data;
     NSInteger offset;
@@ -828,7 +829,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
             // There is no way to distinguish lack of support from failure to set since
             // in both cases sf_command returns 0 and the underlying error is not set
             // Rather than failing just log the error and continue
-            int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+            const int result = sf_command(_sndfile, SFC_SET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
             if (result != SF_TRUE) {
                 os_log_error(gSFBAudioEncoderLog, "sf_command(SFC_SET_CHANNEL_MAP_INFO) failed: %{public}s",
                              sf_error_number(sf_error(_sndfile)));
@@ -857,7 +858,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
 - (BOOL)closeReturningError:(NSError **)error {
     if (_sndfile) {
-        int result = sf_close(_sndfile);
+        const int result = sf_close(_sndfile);
         if (result) {
             os_log_error(gSFBAudioEncoderLog, "sf_close failed: %{public}s", sf_error_number(result));
         }
@@ -917,7 +918,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
         os_log_info(gSFBAudioEncoderLog, "sf_writef_XXX wrote %lld/%u frames", framesWritten, frameLength);
     }
 
-    int result = sf_error(_sndfile);
+    const int result = sf_error(_sndfile);
     if (result) {
         os_log_error(gSFBAudioEncoderLog, "sf_writef_XXX failed: %{public}s", sf_error_number(result));
         if (error) {

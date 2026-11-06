@@ -7,6 +7,7 @@
 
 #import "SFBLibsndfileDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -29,7 +30,7 @@ static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 to
 static void FillOutASBDForLPCM(AudioStreamBasicDescription *_Nonnull asbd, Float64 sampleRate, UInt32 channelsPerFrame,
                                UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian,
                                BOOL isNonInterleaved) {
-    NSCParameterAssert(asbd != NULL);
+    assert(asbd != NULL);
 
     asbd->mFormatID = kAudioFormatLinearPCM;
     asbd->mFormatFlags =
@@ -46,8 +47,8 @@ static void FillOutASBDForLPCM(AudioStreamBasicDescription *_Nonnull asbd, Float
 
 /// Returns an `AVAudioChannelLayout` object initialized with the channels from a sndfile channel map
 static AVAudioChannelLayout *_Nullable ChannelLayoutFromSndfileChannelMap(int *_Nonnull channel_map, int channels) {
-    NSCParameterAssert(channel_map != NULL);
-    NSCParameterAssert(channels > 0);
+    assert(channel_map != NULL);
+    assert(channels > 0);
 
     // Convert from sndfile channel map to Core Audio channel label
     AudioChannelLabel labels[channels];
@@ -160,7 +161,7 @@ enum ReadMethod {
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     NSInteger length;
@@ -171,7 +172,7 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 }
 
 static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     if (!decoder->_inputSource.supportsSeeking) {
@@ -211,7 +212,7 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
 }
 
 static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
 
@@ -223,7 +224,7 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
 }
 
 static sf_count_t my_sf_vio_tell(void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     NSInteger offset;
@@ -288,8 +289,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:MAX(SFBAIFFDetectionSize, SFBWAVEDetectionSize)
                                         skipID3v2Tag:NO
@@ -384,7 +385,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     // Generate interleaved native PCM output
     AudioStreamBasicDescription processingStreamDescription = {0};
 
-    int subtype = _sfinfo.format & SF_FORMAT_SUBMASK;
+    const int subtype = _sfinfo.format & SF_FORMAT_SUBMASK;
     switch (subtype) {
         // 8-bit PCM will be high-aligned in shorts
     case SF_FORMAT_PCM_U8:
@@ -440,7 +441,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
     AVAudioChannelLayout *channelLayout = nil;
 
     int channel_map[_sfinfo.channels];
-    int result = sf_command(_sndfile, SFC_GET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
+    const int result = sf_command(_sndfile, SFC_GET_CHANNEL_MAP_INFO, channel_map, (int)sizeof(channel_map));
     if (result == SF_TRUE) {
         channelLayout = ChannelLayoutFromSndfileChannelMap(channel_map, _sfinfo.channels);
     }
@@ -482,7 +483,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
 - (BOOL)closeReturningError:(NSError **)error {
     if (_sndfile) {
-        int result = sf_close(_sndfile);
+        const int result = sf_close(_sndfile);
         if (result) {
             os_log_error(gSFBAudioDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
         }
@@ -542,7 +543,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 
     buffer.frameLength = (AVAudioFrameCount)framesRead;
 
-    int result = sf_error(_sndfile);
+    const int result = sf_error(_sndfile);
     if (result) {
         os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
         if (error) {
@@ -557,7 +558,7 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
+    const sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
     if (result == -1) {
         os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
         if (error) {

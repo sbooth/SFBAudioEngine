@@ -11,6 +11,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <cmath>
 #import <cstdlib>
 #import <cstring>
@@ -141,9 +142,7 @@ class VariableLengthInput {
     }
 
     bool getRiceGolombCode(int32_t &i32, int k) noexcept {
-#if DEBUG
         assert(k >= 0 && k < 32);
-#endif /* DEBUG */
         if (k < 0 || k > 31) {
             return false;
         }
@@ -166,9 +165,7 @@ class VariableLengthInput {
                 bitsAvailable_ -= k;
                 k = 0;
             } else {
-#if DEBUG
                 assert(bitsAvailable_ < 32);
-#endif /* DEBUG */
                 result = (result << bitsAvailable_) | static_cast<int32_t>(bitBuffer_ & maskTable_[bitsAvailable_]);
                 k -= bitsAvailable_;
                 if (!refillBitBuffer()) {
@@ -187,7 +184,7 @@ class VariableLengthInput {
             return false;
         }
 
-        uint32_t uvar = static_cast<uint32_t>(var);
+        const uint32_t uvar = static_cast<uint32_t>(var);
         if (uvar & 1) {
             i32 = ~(uvar >> 1);
         } else {
@@ -405,8 +402,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {
@@ -648,9 +645,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                                              readingFromOffset:0
                                                    frameLength:framesToCopy];
             [[maybe_unused]] const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
-#if DEBUG
             assert(framesTrimmed == framesCopied);
-#endif /* DEBUG */
             framesDecoded += framesCopied;
         }
 
@@ -699,10 +694,10 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     }
     entry = std::prev(entry);
 
-#if DEBUG
+#ifndef NDEBUG
     os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %u to seek to frame %lld",
                  std::ranges::distance(_seekTableEntries.cbegin(), entry), entry->frameNumber_, frame);
-#endif
+#endif /* !NDEBUG */
 
     if (![_inputSource seekToOffset:entry->lastBufferReadPosition_ error:error]) {
         return NO;
@@ -969,7 +964,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 
     // headerBytes is at least canonicalHeaderSizeBytes (44) in size
 
-    auto chunkID = OSReadBigInt32(headerBytes.data(), 0);
+    const auto chunkID = OSReadBigInt32(headerBytes.data(), 0);
     //	auto chunkSize = OSReadBigInt32(headerBytes.data(), 4);
 
     if (chunkID == 'RIFF') {
@@ -995,8 +990,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (bool)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
-    NSParameterAssert(chunkData != nullptr);
-    NSParameterAssert(size >= 28);
+    assert(chunkData != nullptr);
+    assert(size >= 28);
 
     constexpr auto waveFormatPCMTag = 0x0001;
 
@@ -1020,7 +1015,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
         chunkID = OSReadBigInt32(chunkData, offset);
         offset += 4;
 
-        auto chunkSize = OSReadLittleInt32(chunkData, offset);
+        const auto chunkSize = OSReadLittleInt32(chunkData, offset);
         offset += 4;
 
         switch (chunkID) {
@@ -1033,7 +1028,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto formatTag = OSReadLittleInt16(chunkData, offset);
+            const auto formatTag = OSReadLittleInt16(chunkData, offset);
             offset += 2;
             if (formatTag != waveFormatPCMTag) {
                 os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", formatTag);
@@ -1045,7 +1040,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto channels = OSReadLittleInt16(chunkData, offset);
+            const auto channels = OSReadLittleInt16(chunkData, offset);
             offset += 2;
             if (_channelCount != channels) {
                 os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)",
@@ -1095,8 +1090,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (bool)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
-    NSParameterAssert(chunkData != nullptr);
-    NSParameterAssert(size >= 30);
+    assert(chunkData != nullptr);
+    assert(size >= 30);
 
     uintptr_t offset = 0;
 
@@ -1135,7 +1130,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto channels = OSReadBigInt16(chunkData, offset);
+            const auto channels = OSReadBigInt16(chunkData, offset);
             offset += 2;
             if (_channelCount != channels) {
                 os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)",
@@ -1149,7 +1144,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             offset += 2;
 
             // sample rate is IEEE 754 80-bit extended float (16-bit exponent, 1-bit integer part, 63-bit fraction)
-            auto exp = static_cast<int16_t>(OSReadBigInt16(chunkData, offset)) - 16383 - 63;
+            const auto exp = static_cast<int16_t>(OSReadBigInt16(chunkData, offset)) - 16383 - 63;
             offset += 2;
             if (exp < -63 || exp > 63) {
                 os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
@@ -1159,7 +1154,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                 return false;
             }
 
-            auto frac = OSReadBigInt64(chunkData, offset);
+            const auto frac = OSReadBigInt64(chunkData, offset);
             offset += 8;
             if (exp >= 0) {
                 _sampleRate = static_cast<uint32_t>(frac << exp);
@@ -1571,7 +1566,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 
     std::vector<SeekTableEntry> entries;
 
-    auto count = (trailer.seekTableSize_ - seekTrailerSizeBytes - seekHeaderSizeBytes) / seekEntrySizeBytes;
+    const auto count = (trailer.seekTableSize_ - seekTrailerSizeBytes - seekHeaderSizeBytes) / seekEntrySizeBytes;
     for (uint32_t i = 0; i < count; ++i) {
         unsigned char buf[seekEntrySizeBytes];
         NSInteger bytesRead;
@@ -1587,7 +1582,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             return false;
         }
 
-        auto entry = parseSeekTableEntry(buf);
+        const auto entry = parseSeekTableEntry(buf);
         entries.push_back(entry);
     }
 
@@ -1604,7 +1599,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url {
-    NSParameterAssert(url != nil);
+    assert(url != nil);
 
     NSError *error;
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:&error];
@@ -1641,7 +1636,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
             return {};
         }
 
-        auto entry = parseSeekTableEntry(buf);
+        const auto entry = parseSeekTableEntry(buf);
         entries.push_back(entry);
 
         if (inputSource.atEOF) {

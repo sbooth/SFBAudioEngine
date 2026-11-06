@@ -7,6 +7,7 @@
 
 #import "SFBWavPackDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 #import <simd/simd.h>
 
@@ -42,7 +43,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio = 
 #define BUFFER_SIZE_FRAMES 2048
 
 static int32_t read_bytes_callback(void *id, void *data, int32_t bcount) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -54,7 +55,7 @@ static int32_t read_bytes_callback(void *id, void *data, int32_t bcount) {
 }
 
 static int64_t get_pos_callback(void *id) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -66,14 +67,14 @@ static int64_t get_pos_callback(void *id) {
 }
 
 static int set_pos_abs_callback(void *id, int64_t pos) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
     return ![decoder->_inputSource seekToOffset:pos error:nil];
 }
 
 static int set_pos_rel_callback(void *id, int64_t delta, int mode) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -110,7 +111,7 @@ static int set_pos_rel_callback(void *id, int64_t delta, int mode) {
 // A small read buffer in SFBWavPackDecoder would work but this function
 // only seems to be called once per file (when opening) so it may not be worthwhile
 static int push_back_byte_callback(void *id, int c) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -131,7 +132,7 @@ static int push_back_byte_callback(void *id, int c) {
 }
 
 static int64_t get_length_callback(void *id) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -143,7 +144,7 @@ static int64_t get_length_callback(void *id) {
 }
 
 static int can_seek_callback(void *id) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
     return (int)decoder->_inputSource.supportsSeeking;
@@ -180,8 +181,8 @@ static int can_seek_callback(void *id) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBWavPackDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {
@@ -230,7 +231,7 @@ static int can_seek_callback(void *id) {
     AVAudioChannelLayout *channelLayout = nil;
 
     // Attempt to use the standard WAVE channel mask
-    int channelMask = WavpackGetChannelMask(_wpc);
+    const int channelMask = WavpackGetChannelMask(_wpc);
     if (channelMask) {
         AudioChannelLayout layout = {
                 .mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
@@ -240,8 +241,8 @@ static int can_seek_callback(void *id) {
 
         AudioChannelLayoutTag tag = 0;
         UInt32 propertySize = sizeof(tag);
-        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof layout, &layout,
-                                                 &propertySize, &tag);
+        const OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_TagForChannelLayout, sizeof layout, &layout,
+                                                       &propertySize, &tag);
         if (status == noErr) {
             channelLayout = [[AVAudioChannelLayout alloc] initWithLayoutTag:tag];
         } else {
@@ -251,7 +252,7 @@ static int can_seek_callback(void *id) {
 
     // Fall back on the WavPack channel identities
     if (!channelLayout) {
-        int channelCount = WavpackGetNumChannels(_wpc);
+        const int channelCount = WavpackGetNumChannels(_wpc);
         unsigned char identities[channelCount + 1];
         WavpackGetChannelIdentities(_wpc, identities);
 
@@ -273,7 +274,7 @@ static int can_seek_callback(void *id) {
         // 255:         Present but unknown or unused channel
 
         for (int i = 0; i < channelCount; ++i) {
-            unsigned char ident = identities[i];
+            const unsigned char ident = identities[i];
             if ((ident >= 1 && ident <= 18) || (ident >= 33 && ident <= 44) || (ident >= 200 && ident <= 207)) {
                 labels[i] = ident;
             } else if (ident >= 221 && ident <= 224) {
@@ -446,10 +447,10 @@ static int can_seek_callback(void *id) {
 
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
-        uint32_t framesToRead = MIN(framesRemaining, BUFFER_SIZE_FRAMES);
+        const uint32_t framesToRead = MIN(framesRemaining, BUFFER_SIZE_FRAMES);
 
         // Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
-        uint32_t samplesRead = WavpackUnpackSamples(_wpc, _buffer, framesToRead);
+        const uint32_t samplesRead = WavpackUnpackSamples(_wpc, _buffer, framesToRead);
 
         if (samplesRead == 0) {
             break;
@@ -461,7 +462,7 @@ static int can_seek_callback(void *id) {
         // end of file is encountered or an error occurs. If all samples have been unpacked then 0 will be returned.
 
         // The samples returned are handled differently based on the file's mode
-        int mode = WavpackGetMode(_wpc);
+        const int mode = WavpackGetMode(_wpc);
         // int qmode = WavpackGetQualifyMode(_wpc);
 
         if (mode & MODE_FLOAT) {
@@ -473,14 +474,14 @@ static int can_seek_callback(void *id) {
             // four byte buffer entry but high-aligned within the number of bytes used for the original data
             if (WavpackGetBitsPerSample(_wpc) != 32) {
                 // Shift the samples to high alignment
-                int shift = 32 - (8 * WavpackGetBytesPerSample(_wpc));
+                const int shift = 32 - (8 * WavpackGetBytesPerSample(_wpc));
 
-                uint32_t count = WavpackGetNumChannels(_wpc) * samplesRead;
+                const uint32_t count = WavpackGetNumChannels(_wpc) * samplesRead;
                 uint32_t *dst = (uint32_t *)((unsigned char *)buffer.audioBufferList->mBuffers[0].mData +
                                              buffer.audioBufferList->mBuffers[0].mDataByteSize);
 
                 uint32_t i = 0;
-                uint32_t simd_vector_size = 16;
+                const uint32_t simd_vector_size = 16;
                 if (count > simd_vector_size) {
                     for (; i <= count - simd_vector_size; i += simd_vector_size) {
                         simd_uint16 v = *(simd_packed_uint16 *)(&_buffer[i]);

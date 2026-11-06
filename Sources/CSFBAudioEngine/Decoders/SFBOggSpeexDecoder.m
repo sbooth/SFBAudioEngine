@@ -7,6 +7,7 @@
 
 #import "SFBOggSpeexDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
@@ -83,8 +84,8 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggSpeexDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {
@@ -372,10 +373,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
-                                                readingFromOffset:0
-                                                      frameLength:framesRemaining];
+        const AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        const AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+                                                      readingFromOffset:0
+                                                            frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];
 
         framesProcessed += framesCopied;
@@ -539,7 +540,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                 }
 
                 // Get the resultant Ogg page
-                int result = ogg_stream_pagein(&_streamState, &_page);
+                const int result = ogg_stream_pagein(&_streamState, &_page);
                 if (result) {
                     os_log_error(gSFBAudioDecoderLog, "Error reading Ogg page");
                     if (error) {

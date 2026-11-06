@@ -7,6 +7,7 @@
 
 #import "SFBBufferOutputTarget.h"
 
+#import <assert.h>
 #import <stdint.h>
 
 @interface SFBBufferOutputTarget () {
@@ -20,8 +21,8 @@
 @implementation SFBBufferOutputTarget
 
 - (instancetype)initWithBuffer:(void *)buffer capacity:(size_t)capacity {
-    NSParameterAssert(buffer != nil);
-    NSParameterAssert(capacity > 0);
+    assert(buffer != NULL);
+    assert(capacity > 0);
 
     if ((self = [super initWithURL:nil])) {
         _buffer = buffer;
@@ -48,7 +49,7 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesRead != NULL);
 
-    size_t bytesAvailable = _capacity - _pos;
+    const size_t bytesAvailable = _capacity - _pos;
     if (bytesAvailable == 0) {
         if (error) {
             *error = [self posixErrorWithCode:EINVAL];
@@ -56,7 +57,7 @@
         return NO;
     }
 
-    size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
+    const size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
     memcpy(buffer, (const unsigned char *)_buffer + _pos, bytesToCopy);
     _pos += bytesToCopy;
     *bytesRead = (NSInteger)bytesToCopy;
@@ -72,15 +73,15 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesWritten != NULL);
 
-    size_t remainingCapacity = _capacity - _pos;
+    const size_t remainingCapacity = _capacity - _pos;
     if (remainingCapacity == 0) {
         if (error) {
-            *error = [self posixErrorWithCode:EINVAL];
+            *error = [self posixErrorWithCode:ENOSPC];
         }
         return NO;
     }
 
-    size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
+    const size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
     memcpy((unsigned char *)_buffer + _pos, buffer, bytesToCopy);
     _pos += bytesToCopy;
     *bytesWritten = (NSInteger)bytesToCopy;

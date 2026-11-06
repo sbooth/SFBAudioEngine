@@ -7,6 +7,7 @@
 
 #import "SFBMusepackEncoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <mpc/libmpcenc.h>
@@ -17,7 +18,7 @@ SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @"Quality";
 
 static size_t my_mpc_write_callback(const void *restrict ptr, size_t size, size_t nitems, void *context) {
-    NSCParameterAssert(context != NULL);
+    assert(context != NULL);
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger bytesWritten;
@@ -31,7 +32,7 @@ static size_t my_mpc_write_callback(const void *restrict ptr, size_t size, size_
 }
 
 static int my_mpc_seek_callback(void *context, off_t offset, int whence) {
-    NSCParameterAssert(context != NULL);
+    assert(context != NULL);
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     switch (whence) {
@@ -67,7 +68,7 @@ static int my_mpc_seek_callback(void *context, off_t offset, int whence) {
 }
 
 static off_t my_mpc_tell_callback(void *context) {
-    NSCParameterAssert(context != NULL);
+    assert(context != NULL);
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger offset;
@@ -155,7 +156,7 @@ static off_t my_mpc_tell_callback(void *context) {
 
     NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMusepackQuality];
     if (quality != nil) {
-        float quality_value = quality.floatValue;
+        const float quality_value = quality.floatValue;
         if (quality_value < 0 || quality_value > 10) {
             os_log_info(gSFBAudioEncoderLog, "Ignoring invalid Musepack quality: %g", quality_value);
         } else if (mpc_stream_encoder_set_quality(_enc, quality_value) != MPC_STATUS_OK) {

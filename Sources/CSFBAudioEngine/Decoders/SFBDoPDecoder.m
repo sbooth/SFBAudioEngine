@@ -223,17 +223,17 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
     AVAudioFrameCount framesRead = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesRead;
+        const AVAudioFrameCount framesRemaining = frameLength - framesRead;
 
         // Grab the DSD audio
-        AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
+        const AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
         if (![_decoder decodeIntoBuffer:_buffer
                             packetCount:MIN(_buffer.packetCapacity, dsdPacketsRemaining)
                                   error:error]) {
             return NO;
         }
 
-        AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
+        const AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
         if (dsdPacketsDecoded == 0) {
             break;
         }
@@ -241,10 +241,10 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate) {
         // Convert to DoP
         // NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
 
-        AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
+        const AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
         unsigned char marker = _marker;
-        AVAudioChannelCount channelCount = _processingFormat.channelCount;
+        const AVAudioChannelCount channelCount = _processingFormat.channelCount;
         for (AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
             const unsigned char *input = (const unsigned char *)_buffer.data + channel;
             unsigned char *output = (unsigned char *)buffer.audioBufferList->mBuffers[channel].mData +

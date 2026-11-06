@@ -5,13 +5,15 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "TagLibStringUtilities.h"
 
 @implementation SFBAudioMetadata (TagLibAPETag)
 
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     if (tag->isEmpty()) {
         return;
@@ -116,9 +118,9 @@
             if ([key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame ||
                 [key caseInsensitiveCompare:@"Cover Art (Back)"] == NSOrderedSame) {
                 auto binaryData = item.binaryData();
-                auto pos = binaryData.find('\0');
+                const auto pos = binaryData.find('\0');
                 if (pos != -1 && binaryData.size() > 3) {
-                    auto upos = static_cast<unsigned int>(pos);
+                    const auto upos = static_cast<unsigned int>(pos);
                     NSData *imageData = [NSData dataWithBytes:binaryData.mid(upos + 1).data()
                                                        length:(binaryData.size() - upos - 1)];
                     SFBAttachedPictureType type = [key caseInsensitiveCompare:@"Cover Art (Front)"] == NSOrderedSame

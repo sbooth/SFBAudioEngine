@@ -7,6 +7,8 @@
 
 #import "SFBOggFLACFile.h"
 
+#import <cassert>
+
 #import <taglib/oggflacfile.h>
 #import <taglib/tfilestream.h>
 
@@ -39,8 +41,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameOggFLAC = @"org.sbooth.AudioE
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {
