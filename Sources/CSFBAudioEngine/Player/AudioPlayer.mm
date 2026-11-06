@@ -231,6 +231,20 @@ uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
     return host_time::fromNanoseconds(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
 }
 
+/// Returns a string representation of a playback state
+const char *playbackStateDescription(SFBAudioPlayerPlaybackState playbackState) noexcept {
+    switch (playbackState) {
+    case SFBAudioPlayerPlaybackStatePlaying:
+        return "playing";
+    case SFBAudioPlayerPlaybackStatePaused:
+        return "paused";
+    case SFBAudioPlayerPlaybackStateStopped:
+        return "stopped";
+    default:
+        return nullptr;
+    }
+}
+
 } /* namespace */
 
 namespace sfb {
@@ -571,9 +585,7 @@ sfb::AudioPlayer::AudioPlayer() {
     [engine_ connect:sourceNode_ to:engine_.mainMixerNode format:format];
     [engine_ prepare];
 
-#ifndef NDEBUG
     logProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
-#endif /* !NDEBUG */
 
     // ========================================
     // Thread Launch
@@ -2554,6 +2566,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             wasActive = bits::is_set(that->loadFlags(), Flags::active);
 
             if (wasActive) {
+                os_log_debug(log_, "End of audio reached");
                 const auto action = that->endOfAudioAction();
                 switch (action) {
                 case SFBAudioPlayerEndOfAudioActionStop:
@@ -2580,10 +2593,6 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
             nowPlayingChanged = that->setNowPlaying(nil);
         }
-
-#ifndef NDEBUG
-        os_log_debug(log_, "End of audio reached");
-#endif /* !NDEBUG */
 
         // If a format change is pending, wake the decoding thread to reconfigure the processing graph
         if (bits::is_set(prevFlags, Flags::formatChangePending)) {
@@ -3001,6 +3010,7 @@ auto sfb::AudioPlayer::deactivatePlayerAndStopEngineLocked() noexcept -> Flags {
 }
 
 void sfb::AudioPlayer::notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept {
+    os_log_debug(log_, "Playback state changed to %{public}s", playbackStateDescription(playbackState));
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
