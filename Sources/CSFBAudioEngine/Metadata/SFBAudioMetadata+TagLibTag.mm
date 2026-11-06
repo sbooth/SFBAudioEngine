@@ -5,10 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
-#import "SFBAudioMetadata+TagLibTag.h"
-
 #import <cassert>
 
+#import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 
 @implementation SFBAudioMetadata (TagLibTag)
