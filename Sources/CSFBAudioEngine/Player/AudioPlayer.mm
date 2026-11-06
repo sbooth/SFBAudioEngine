@@ -1650,7 +1650,7 @@ bool sfb::AudioPlayer::shouldBeProcessingDecoders() const noexcept {
     const auto flags = loadFlags();
 
     // Cancellation was requested but not processed
-    if (bits::is_set(flags, Flags::cancellationPending)) {
+    if (bits::is_set(flags, Flags::cancelationPending)) {
         return true;
     }
 
