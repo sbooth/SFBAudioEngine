@@ -76,11 +76,11 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     return length;
 }
 
-NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcept {
+NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus status) noexcept {
     NSMutableDictionary *userInfo = [NSMutableDictionary
             dictionaryWithObjectsAndKeys:NSLocalizedString(@"The file's extension may not match the file's type.", @""),
                                          NSLocalizedRecoverySuggestionErrorKey,
-                                         [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
+                                         [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil],
                                          NSUnderlyingErrorKey, nil];
 
     if (url != nil) {
@@ -118,11 +118,11 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
-        if (result != noErr) {
+        auto status = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+        if (status != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             pathExtensions = [NSSet set];
             return;
         }
@@ -130,11 +130,11 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         const auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
-        if (result != noErr) {
+        status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
+        if (status != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             pathExtensions = [NSSet set];
             return;
         }
@@ -143,16 +143,16 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         for (UInt32 type : readableTypes) {
             CFArrayRef extensionsForType = nil;
             size = sizeof(extensionsForType);
-            result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size,
+            status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size,
                                             &extensionsForType);
 
-            if (result == noErr) {
+            if (status == noErr) {
                 [supportedPathExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
             } else {
                 os_log_error(
                         gSFBAudioDecoderLog,
                         "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'",
-                        result, SFBCStringForOSType(result));
+                        status, SFBCStringForOSType(status));
             }
         }
 
@@ -168,11 +168,11 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
-        if (result != noErr) {
+        auto status = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+        if (status != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             mimeTypes = [NSSet set];
             return;
         }
@@ -180,11 +180,11 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         const auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
-        if (result != noErr) {
+        status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
+        if (status != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             mimeTypes = [NSSet set];
             return;
         }
@@ -193,15 +193,15 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
         for (UInt32 type : readableTypes) {
             CFArrayRef mimeTypesForType = nil;
             size = sizeof(mimeTypesForType);
-            result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size,
+            status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size,
                                             &mimeTypesForType);
 
-            if (result == noErr) {
+            if (status == noErr) {
                 [supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
             } else {
                 os_log_error(gSFBAudioDecoderLog,
                              "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'",
-                             result, SFBCStringForOSType(result));
+                             status, SFBCStringForOSType(status));
             }
         }
 
@@ -270,13 +270,13 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
     // Open the input file
     AudioFileID audioFile;
-    auto result = AudioFileOpenWithCallbacks((__bridge void *)self, readCallback, nullptr, getSizeCallback, nullptr, 0,
+    auto status = AudioFileOpenWithCallbacks((__bridge void *)self, readCallback, nullptr, getSizeCallback, nullptr, 0,
                                              &audioFile);
-    if (result != noErr) {
-        os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    if (status != noErr) {
+        os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = formatNotRecognizedError(_inputSource.url, result);
+            *error = formatNotRecognizedError(_inputSource.url, status);
         }
         return NO;
     }
@@ -284,12 +284,12 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
     unique_audio_file af{audioFile};
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af.get(), false, &extAudioFile);
-    if (result != noErr) {
-        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    status = ExtAudioFileWrapAudioFileID(af.get(), false, &extAudioFile);
+    if (status != noErr) {
+        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = formatNotRecognizedError(_inputSource.url, result);
+            *error = formatNotRecognizedError(_inputSource.url, status);
         }
         return NO;
     }
@@ -299,36 +299,36 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
     // Query file format
     AudioStreamBasicDescription format{};
     UInt32 dataSize = sizeof(format);
-    result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
-    if (result != noErr) {
+    status = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
+    if (status != noErr) {
         os_log_error(gSFBAudioDecoderLog,
-                     "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+                     "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
             NSDictionary *userInfo = nil;
             if (_inputSource.url != nil) {
                 userInfo = [NSDictionary dictionaryWithObject:_inputSource.url forKey:NSURLErrorKey];
             }
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:userInfo];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:userInfo];
         }
         return NO;
     }
 
     // Query channel layout
     AVAudioChannelLayout *channelLayout = nil;
-    result = ExtAudioFileGetPropertyInfo(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
-    if (result == noErr) {
+    status = ExtAudioFileGetPropertyInfo(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
+    if (status == noErr) {
         AudioChannelLayout *layout = static_cast<AudioChannelLayout *>(std::malloc(dataSize));
-        result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
-        if (result != noErr) {
+        status = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
+        if (status != noErr) {
             os_log_error(gSFBAudioDecoderLog,
                          "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
 
             std::free(layout);
 
             if (error != nullptr) {
-                *error = formatNotRecognizedError(_inputSource.url, result);
+                *error = formatNotRecognizedError(_inputSource.url, status);
             }
             return NO;
         }
@@ -347,7 +347,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
     } else {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
     }
 
     _sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
@@ -407,19 +407,19 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
     // attempting to set kExtAudioFileProperty_ClientDataFormat will segfault
     if (_processingFormat == nil) {
         if (error != nullptr) {
-            *error = formatNotRecognizedError(_inputSource.url, result);
+            *error = formatNotRecognizedError(_inputSource.url, status);
         }
         return NO;
     }
 
-    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
+    status = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
                                      sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = formatNotRecognizedError(_inputSource.url, result);
+            *error = formatNotRecognizedError(_inputSource.url, status);
         }
         return NO;
     }
@@ -443,10 +443,10 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    const auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
-    if (result != noErr) {
-        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    const auto status = ExtAudioFileTell(_eaf.get(), &currentFrame);
+    if (status != noErr) {
+        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         return SFBUnknownFramePosition;
     }
     return currentFrame;
@@ -455,12 +455,12 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 - (AVAudioFramePosition)frameLength {
     SInt64 frameLength;
     UInt32 dataSize = sizeof(frameLength);
-    const auto result =
+    const auto status =
             ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return SFBUnknownFrameLength;
     }
     return frameLength;
@@ -478,15 +478,15 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
     buffer.frameLength = buffer.frameCapacity;
 
-    const auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
-    if (result != noErr) {
-        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    const auto status = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
+    if (status != noErr) {
+        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         buffer.frameLength = 0;
         if (error != nullptr) {
             NSError *decodingError = [self genericDecodingError];
             NSMutableDictionary *userInfo = [decodingError.userInfo mutableCopy];
-            userInfo[NSUnderlyingErrorKey] = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            userInfo[NSUnderlyingErrorKey] = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
             *error = [NSError errorWithDomain:decodingError.domain code:decodingError.code userInfo:userInfo];
         }
         return NO;
@@ -499,14 +499,14 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
-    const auto result = ExtAudioFileSeek(_eaf.get(), frame);
-    if (result != noErr) {
-        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    const auto status = ExtAudioFileSeek(_eaf.get(), frame);
+    if (status != noErr) {
+        os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
             NSError *seekError = [self genericSeekError];
             NSMutableDictionary *userInfo = [seekError.userInfo mutableCopy];
-            userInfo[NSUnderlyingErrorKey] = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            userInfo[NSUnderlyingErrorKey] = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
             *error = [NSError errorWithDomain:seekError.domain code:seekError.code userInfo:userInfo];
         }
         return NO;

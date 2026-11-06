@@ -45,24 +45,24 @@ std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexce
     CFStringRef extension = (__bridge CFStringRef)pathExtension;
 
     UInt32 size = 0;
-    auto result =
+    auto status =
             AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_TypesForExtension) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return {};
     }
 
     const auto typesForExtensionCount = size / sizeof(AudioFileTypeID);
     std::vector<AudioFileTypeID> typesForExtension(typesForExtensionCount);
 
-    result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size,
+    status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size,
                                     typesForExtension.data());
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_TypesForExtension) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return {};
     }
 
@@ -71,24 +71,24 @@ std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexce
 
 std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bool forEncoding = false) noexcept {
     UInt32 size = 0;
-    auto result =
+    auto status =
             AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_AvailableFormatIDs) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return {};
     }
 
     const auto availableFormatIDCount = size / sizeof(AudioFormatID);
     std::vector<AudioFormatID> availableFormatIDs(availableFormatIDCount);
 
-    result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size,
+    status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size,
                                     availableFormatIDs.data());
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AvailableFormatIDs) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return {};
     }
 
@@ -96,22 +96,22 @@ std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bo
         return availableFormatIDs;
     }
 
-    result = AudioFormatGetPropertyInfo(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size);
-    if (result != noErr) {
+    status = AudioFormatGetPropertyInfo(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size);
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "AudioFormatGetPropertyInfo (kAudioFormatProperty_EncodeFormatIDs) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return {};
     }
 
     const auto encodeFormatIDCount = size / sizeof(AudioFormatID);
     std::vector<AudioFormatID> encodeFormatIDs(encodeFormatIDCount);
 
-    result = AudioFormatGetProperty(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size, encodeFormatIDs.data());
-    if (result != noErr) {
+    status = AudioFormatGetProperty(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size, encodeFormatIDs.data());
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "AudioFormatGetPropertyInfo (kAudioFormatProperty_EncodeFormatIDs) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return {};
     }
 
@@ -232,11 +232,11 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
-        if (result != noErr) {
+        auto status = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
+        if (status != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             pathExtensions = [NSSet set];
             return;
         }
@@ -244,11 +244,11 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         const auto writableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> writableTypes(writableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
-        if (result != noErr) {
+        status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
+        if (status != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             pathExtensions = [NSSet set];
             return;
         }
@@ -257,16 +257,16 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         for (UInt32 type : writableTypes) {
             CFArrayRef extensionsForType = nil;
             size = sizeof(extensionsForType);
-            result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size,
+            status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size,
                                             &extensionsForType);
 
-            if (result == noErr) {
+            if (status == noErr) {
                 [supportedPathExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
             } else {
                 os_log_error(
                         gSFBAudioEncoderLog,
                         "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'",
-                        result, SFBCStringForOSType(result));
+                        status, SFBCStringForOSType(status));
             }
         }
 
@@ -282,11 +282,11 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         UInt32 size = 0;
-        auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
-        if (result != noErr) {
+        auto status = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
+        if (status != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             mimeTypes = [NSSet set];
             return;
         }
@@ -294,11 +294,11 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         const auto writableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> writableTypes(writableTypesCount);
 
-        result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
-        if (result != noErr) {
+        status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
+        if (status != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             mimeTypes = [NSSet set];
             return;
         }
@@ -307,15 +307,15 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         for (UInt32 type : writableTypes) {
             CFArrayRef mimeTypesForType = nil;
             size = sizeof(mimeTypesForType);
-            result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size,
+            status = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size,
                                             &mimeTypesForType);
 
-            if (result == noErr) {
+            if (status == noErr) {
                 [supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
             } else {
                 os_log_error(gSFBAudioEncoderLog,
                              "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'",
-                             result, SFBCStringForOSType(result));
+                             status, SFBCStringForOSType(status));
             }
         }
 
@@ -440,10 +440,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         // There is no way to determine caller intent and select the most appropriate format; use PCM if available,
         // otherwise use the first one
         formatID = availableFormatIDs[0];
-        const auto result =
+        const auto iter =
                 std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
-        if (result != std::cend(availableFormatIDs)) {
-            formatID = *result;
+        if (iter != std::cend(availableFormatIDs)) {
+            formatID = *iter;
         }
         os_log_info(gSFBAudioEncoderLog,
                     "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set: guessed '%{public}.4s' based on format "
@@ -507,13 +507,13 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                                                        channelLayout:_processingFormat.channelLayout];
 
     AudioFileID audioFile;
-    auto result = AudioFileInitializeWithCallbacks((__bridge void *)self, readProc, writeProc, getSizeProc, setSizeProc,
+    auto status = AudioFileInitializeWithCallbacks((__bridge void *)self, readProc, writeProc, getSizeProc, setSizeProc,
                                                    fileType, &format, 0, &audioFile);
-    if (result != noErr) {
-        os_log_error(gSFBAudioEncoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    if (status != noErr) {
+        os_log_error(gSFBAudioEncoderLog, "AudioFileOpenWithCallbacks failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
@@ -521,41 +521,41 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
     unique_audio_file af{audioFile};
 
     ExtAudioFileRef extAudioFile;
-    result = ExtAudioFileWrapAudioFileID(af.get(), true, &extAudioFile);
-    if (result != noErr) {
-        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    status = ExtAudioFileWrapAudioFileID(af.get(), true, &extAudioFile);
+    if (status != noErr) {
+        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrapAudioFileID failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
 
     unique_ext_audio_file eaf{extAudioFile};
 
-    result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
+    status = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat,
                                      sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog,
                      "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
 
     if (_processingFormat.channelLayout) {
-        result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientChannelLayout,
+        status = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientChannelLayout,
                                          sizeof(_processingFormat.channelLayout.layout),
                                          _processingFormat.channelLayout.layout);
-        if (result != noErr) {
+        if (status != noErr) {
             os_log_error(
                     gSFBAudioEncoderLog,
                     "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientChannelLayout) failed: %d '%{public}.4s'",
-                    result, SFBCStringForOSType(result));
+                    status, SFBCStringForOSType(status));
             if (error != nullptr) {
-                *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+                *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
             }
             return NO;
         }
@@ -566,13 +566,13 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         audioConverterPropertySettings != nil) {
         AudioConverterRef audioConverter = nullptr;
         UInt32 size = sizeof(audioConverter);
-        result = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);
-        if (result != noErr) {
+        status = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);
+        if (status != noErr) {
             os_log_error(gSFBAudioEncoderLog,
                          "ExtAudioFileGetProperty (kExtAudioFileProperty_AudioConverter) failed: %d '%{public}.4s'",
-                         result, SFBCStringForOSType(result));
+                         status, SFBCStringForOSType(status));
             if (error != nullptr) {
-                *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+                *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
             }
             return NO;
         }
@@ -582,7 +582,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                 const AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
                 switch (propertyID) {
                 case kAudioConverterSampleRateConverterComplexity:
-                    result = setAudioConverterProperty<OSType>(
+                    status = setAudioConverterProperty<OSType>(
                             audioConverter, propertyID,
                             [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
                     break;
@@ -596,7 +596,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                 case kAudioConverterPropertyDithering:
                 case kAudioConverterPropertyDitherBitDepth:
 #endif
-                    result = setAudioConverterProperty<UInt32>(
+                    status = setAudioConverterProperty<UInt32>(
                             audioConverter, propertyID,
                             [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
                     break;
@@ -606,12 +606,12 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
                     break;
                 }
 
-                if (result != noErr) {
+                if (status != noErr) {
                     os_log_error(gSFBAudioEncoderLog,
                                  "AudioConverterSetProperty ('%{public}.4s') failed: %d '%{public}.4s'",
-                                 SFBCStringForOSType(propertyID), result, SFBCStringForOSType(result));
+                                 SFBCStringForOSType(propertyID), status, SFBCStringForOSType(status));
                     if (error != nullptr) {
-                        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+                        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
                     }
                     return NO;
                 }
@@ -619,15 +619,15 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
             // Notify ExtAudioFile about the converter property changes
             CFArrayRef converterConfig = nullptr;
-            result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ConverterConfig, sizeof(converterConfig),
+            status = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ConverterConfig, sizeof(converterConfig),
                                              &converterConfig);
-            if (result != noErr) {
+            if (status != noErr) {
                 os_log_error(
                         gSFBAudioEncoderLog,
                         "ExtAudioFileSetProperty (kExtAudioFileProperty_ConverterConfig) failed: %d '%{public}.4s'",
-                        result, SFBCStringForOSType(result));
+                        status, SFBCStringForOSType(status));
                 if (error != nullptr) {
-                    *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+                    *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
                 }
                 return NO;
             }
@@ -674,12 +674,12 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return YES;
     }
 
-    const auto result = ExtAudioFileWrite(_eaf.get(), frameLength, buffer.audioBufferList);
-    if (result != noErr) {
-        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrite failed: %d '%{public}.4s'", result,
-                     SFBCStringForOSType(result));
+    const auto status = ExtAudioFileWrite(_eaf.get(), frameLength, buffer.audioBufferList);
+    if (status != noErr) {
+        os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrite failed: %d '%{public}.4s'", status,
+                     SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return NO;
     }
