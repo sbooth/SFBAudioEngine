@@ -198,7 +198,7 @@ int closeCallback(void *user_data) noexcept {
     }
 
     if (NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrate]; bitrate != nil) {
-        opus_int32 intValue = bitrate.intValue;
+        const opus_int32 intValue = bitrate.intValue;
         if (intValue >= 6 && intValue <= 256) {
             // TODO: Opus now supports from 500-512000 bits per second, auto, and max
             result = ope_encoder_ctl(
@@ -243,7 +243,7 @@ int closeCallback(void *user_data) noexcept {
     }
 
     if (NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusComplexity]; complexity != nil) {
-        int intValue = complexity.intValue;
+        const int intValue = complexity.intValue;
         if (intValue >= 0 && intValue <= 10) {
             result = ope_encoder_ctl(enc.get(), OPUS_SET_COMPLEXITY(intValue));
             if (result != OPE_OK) {
@@ -376,14 +376,14 @@ int closeCallback(void *user_data) noexcept {
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesCopied = [_frameBuffer appendFromBuffer:buffer readingFromOffset:framesProcessed];
+        const AVAudioFrameCount framesCopied = [_frameBuffer appendFromBuffer:buffer readingFromOffset:framesProcessed];
         framesProcessed += framesCopied;
 
         // Encode the next Opus frame
         if (_frameBuffer.isFull) {
-            int result = ope_encoder_write_float(_enc.get(),
-                                                 static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
-                                                 static_cast<int>(_frameBuffer.frameLength));
+            const int result = ope_encoder_write_float(
+                    _enc.get(), static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
+                    static_cast<int>(_frameBuffer.frameLength));
             if (result != OPE_OK) {
                 os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
                 if (error != nullptr) {
@@ -410,9 +410,9 @@ int closeCallback(void *user_data) noexcept {
 - (BOOL)finishEncodingReturningError:(NSError **)error {
     // Write remaining partial frame
     if (!_frameBuffer.isEmpty) {
-        int result = ope_encoder_write_float(_enc.get(),
-                                             static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
-                                             static_cast<int>(_frameBuffer.frameLength));
+        const int result = ope_encoder_write_float(
+                _enc.get(), static_cast<float *>(_frameBuffer.audioBufferList->mBuffers[0].mData),
+                static_cast<int>(_frameBuffer.frameLength));
         if (result != OPE_OK) {
             os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
             if (error != nullptr) {
@@ -427,7 +427,7 @@ int closeCallback(void *user_data) noexcept {
         _frameBuffer.frameLength = 0;
     }
 
-    int result = ope_encoder_drain(_enc.get());
+    const int result = ope_encoder_drain(_enc.get());
     if (result != OPE_OK) {
         os_log_error(gSFBAudioEncoderLog, "ope_encoder_drain failed: %{public}s", ope_strerror(result));
         if (error != nullptr) {

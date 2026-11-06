@@ -386,7 +386,7 @@ class AudioPlayer final {
     /// - important: The caller must hold `engineMutex_`
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the engine is running
-    bool startEngine(NSError **error) noexcept;
+    bool startEngineLocked(NSError **error) noexcept;
 
     /// Notifies the delegate of an engine start failure and a playback state change if needed
     void notifyDelegateOfEngineStartFailure(NSError *_Nullable error, bool wasPlaying) noexcept;
@@ -395,6 +395,25 @@ class AudioPlayer final {
     /// - note: The caller is responsible for clearing the decoder queue and canceling active decoders if desired
     /// - returns: `true` if the player was active
     bool deactivatePlayerAndStopEngine() noexcept;
+
+    /// Deactivates the player and stops the `AVAudioEngine`
+    /// - important: The caller must hold `engineMutex_` and `activeDecodersMutex_`
+    /// - note: The caller is responsible for clearing the decoder queue and canceling active decoders if desired
+    /// - note: The caller is responsible for waking the decoding thread if `Flags::formatChangePending` was set
+    /// - returns: The player flags before deactivation
+    Flags deactivatePlayerAndStopEngineLocked() noexcept;
+
+    /// Starts the engine if needed and begins or resumes playback
+    /// - important: The caller must hold `engineMutex_`
+    /// - precondition: The player is not playing
+    /// - parameter error: An optional pointer to an `NSError` object to receive error information
+    /// - returns: `true` if the player is playing, or `false` if the engine could not be started
+    bool playLocked(NSError **error) noexcept;
+
+    /// Pauses playback and requests that the engine be paused
+    /// - important: The caller must hold `engineMutex_`
+    /// - returns: `true` if the player was playing
+    bool pauseLocked() noexcept;
 
     /// Notifies the delegate of a playback state change
     void notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept;
@@ -614,9 +633,7 @@ inline bool AudioPlayer::engineIsRunning() const noexcept { return engine_.isRun
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     const auto state = flags & (Flags::active | Flags::playing);
-#if DEBUG
     assert(bits::is_set_or_is_clear(state, Flags::active, Flags::playing));
-#endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 

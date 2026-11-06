@@ -7,6 +7,7 @@
 
 #import "SFBDSFDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 #import <stdint.h>
 
@@ -21,7 +22,7 @@ SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecod
 
 // Read a four byte chunk ID as a uint32_t
 static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
-    NSCParameterAssert(chunkID != NULL);
+    assert(chunkID != NULL);
 
     unsigned char chunkIDBytes[4];
     NSInteger bytesRead;
@@ -38,8 +39,8 @@ static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
 static void matrixTranspose(const unsigned char *restrict A, unsigned char *restrict B, size_t rows, size_t columns) {
     for (size_t r = 0; r < rows; r += MATRIX_TRANPOSE_BLOCK_SIZE) {
         for (size_t c = 0; c < columns; c += MATRIX_TRANPOSE_BLOCK_SIZE) {
-            size_t r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
-            size_t c_end = MIN(c + MATRIX_TRANPOSE_BLOCK_SIZE, columns);
+            const size_t r_end = MIN(r + MATRIX_TRANPOSE_BLOCK_SIZE, rows);
+            const size_t c_end = MIN(c + MATRIX_TRANPOSE_BLOCK_SIZE, columns);
             for (size_t i = r; i < r_end; ++i) {
                 for (size_t j = c; j < c_end; ++j) {
                     B[(j * rows) + i] = A[(i * columns) + j];
@@ -80,8 +81,8 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSFDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {
@@ -368,19 +369,19 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
         return YES;
     }
 
-    AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
-    AVAudioPacketCount packetsToRead = MIN(packetCount, packetsRemaining);
+    const AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
+    const AVAudioPacketCount packetsToRead = MIN(packetCount, packetsRemaining);
     AVAudioPacketCount packetsProcessed = 0;
 
-    uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+    const uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
     for (;;) {
-        AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
-        AVAudioPacketCount packetsToCopy = MIN(packetsInBuffer, packetsToRead - packetsProcessed);
+        const AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
+        const AVAudioPacketCount packetsToCopy = MIN(packetsInBuffer, packetsToRead - packetsProcessed);
 
         // Copy data from the internal buffer to output
         if (packetsToCopy) {
-            uint32_t copySize = packetsToCopy * packetSize;
+            const uint32_t copySize = packetsToCopy * packetSize;
             memcpy((unsigned char *)buffer.data + (buffer.packetCount * packetSize), _buffer.data, copySize);
             buffer.packetCount += packetsToCopy;
             buffer.byteLength += copySize;
@@ -416,14 +417,14 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
 - (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error {
     NSParameterAssert(packet >= 0);
 
-    AVAudioChannelCount channelCount = _processingFormat.channelCount;
+    const AVAudioChannelCount channelCount = _processingFormat.channelCount;
 
     // A DSF version 1 block is 4096 bytes per channel
     // This equates to 4096 packets or 32768 frames per block
 
     // Seek to the start of the block containing packet
-    NSInteger blockNumber = packet / DSF_BLOCK_SIZE_BYTES_PER_CHANNEL;
-    NSInteger blockOffset = blockNumber * DSF_BLOCK_SIZE_BYTES_PER_CHANNEL * channelCount;
+    const NSInteger blockNumber = packet / DSF_BLOCK_SIZE_BYTES_PER_CHANNEL;
+    const NSInteger blockOffset = blockNumber * DSF_BLOCK_SIZE_BYTES_PER_CHANNEL * channelCount;
 
     NSError *seekError = nil;
     if (![_inputSource seekToOffset:(_audioOffset + blockOffset) error:&seekError]) {
@@ -447,12 +448,12 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
     }
 
     // Skip ahead in the interleaved audio to the specified packet
-    AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
-    AVAudioPacketCount packetsToSkip = (AVAudioPacketCount)(packet % packetsInBuffer);
-    AVAudioPacketCount packetsToMove = packetsInBuffer - packetsToSkip;
+    const AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
+    const AVAudioPacketCount packetsToSkip = (AVAudioPacketCount)(packet % packetsInBuffer);
+    const AVAudioPacketCount packetsToMove = packetsInBuffer - packetsToSkip;
 
     // Move data
-    uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+    const uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
     const unsigned char *src = (unsigned char *)_buffer.data + (packetsToSkip * packetSize);
     memmove(_buffer.data, src, packetsToMove * packetSize);
 
@@ -473,7 +474,7 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
 // Interleaving is accomplished by matrix transposition.
 - (BOOL)readAndInterleaveDSFBlockReturningError:(NSError **)error {
     unsigned char *buf = (unsigned char *)_buffer.data;
-    uint32_t bufsize = _buffer.byteCapacity;
+    const uint32_t bufsize = _buffer.byteCapacity;
 
     NSInteger bytesRead;
     if (![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error]) {
@@ -497,7 +498,7 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
     }
 
     // Deinterleave the blocks and interleave the samples into clustered frames
-    AVAudioChannelCount channelCount = _processingFormat.channelCount;
+    const AVAudioChannelCount channelCount = _processingFormat.channelCount;
     assert(channelCount != 0);
     unsigned char tmp[bufsize];
     matrixTranspose(buf, tmp, channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);

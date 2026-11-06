@@ -10,6 +10,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <memory>
 
 #import "NSData+SFBExtensions.h"
@@ -83,8 +84,8 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
     if (header == nil) {
@@ -251,9 +252,9 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 
     try {
         while (_framesToSkip > 0) {
-            auto framesToSkip = std::min(_framesToSkip, frameLength);
-            auto bytesToSkip = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
-            auto framesSkipped = _decoder->process_stream(
+            const auto framesToSkip = std::min(_framesToSkip, frameLength);
+            const auto bytesToSkip = framesToSkip * _processingFormat.streamDescription->mBytesPerFrame;
+            const auto framesSkipped = _decoder->process_stream(
                     static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToSkip);
 
             // EOS reached finishing seek
@@ -264,8 +265,8 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
             _framesToSkip -= static_cast<TTAuint32>(framesSkipped);
         }
 
-        auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
-        auto framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(
+        const auto bytesToRead = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
+        const auto framesRead = static_cast<AVAudioFrameCount>(_decoder->process_stream(
                 static_cast<TTAuint8 *>(buffer.audioBufferList->mBuffers[0].mData), bytesToRead));
 
         // EOS
@@ -289,7 +290,7 @@ TTAint64 seekCallback(struct _tag_TTA_io_callback *io, TTAint64 offset) noexcept
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    TTAuint32 seconds = static_cast<TTAuint32>(frame / _processingFormat.sampleRate);
+    const TTAuint32 seconds = static_cast<TTAuint32>(frame / _processingFormat.sampleRate);
     TTAuint32 frame_start = 0;
 
     try {

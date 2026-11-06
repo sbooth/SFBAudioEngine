@@ -62,7 +62,7 @@ static void SFBCreateOutputTargetLog(void) {
 
 + (instancetype)outputTargetWithBuffer:(void *)buffer capacity:(NSInteger)capacity {
     NSParameterAssert(buffer != NULL);
-    NSParameterAssert(capacity >= 0);
+    NSParameterAssert(capacity > 0);
     return [[SFBBufferOutputTarget alloc] initWithBuffer:buffer capacity:(size_t)capacity];
 }
 

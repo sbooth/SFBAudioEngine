@@ -7,10 +7,12 @@
 
 #import "SFBErrorWithLocalizedDescription.h"
 
+#import <assert.h>
+
 NSError *SFBErrorWithLocalizedDescription(NSErrorDomain domain, NSInteger code, NSString *format,
                                           NSDictionary *userInfo, ...) {
-    NSCParameterAssert(domain != nil);
-    NSCParameterAssert(format != nil);
+    assert(domain != nil);
+    assert(format != nil);
 
     va_list ap;
     va_start(ap, userInfo);

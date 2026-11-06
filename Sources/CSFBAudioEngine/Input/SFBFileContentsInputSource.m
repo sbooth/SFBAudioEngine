@@ -7,11 +7,13 @@
 
 #import "SFBFileContentsInputSource.h"
 
+#import <assert.h>
+
 @implementation SFBFileContentsInputSource
 
 - (instancetype)initWithContentsOfURL:(NSURL *)url error:(NSError **)error {
-    NSParameterAssert(url != nil);
-    NSParameterAssert(url.isFileURL);
+    assert(url != nil);
+    assert(url.isFileURL);
 
     NSData *data = [NSData dataWithContentsOfURL:url options:0 error:error];
     if (!data) {

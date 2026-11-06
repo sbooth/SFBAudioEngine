@@ -7,6 +7,8 @@
 
 #import "SFBImpulseTrackerModuleFile.h"
 
+#import <cassert>
+
 #import <taglib/itfile.h>
 #import <taglib/tfilestream.h>
 
@@ -38,8 +40,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameImpulseTrackerModule =
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     *formatIsSupported = SFBTernaryTruthValueUnknown;
 

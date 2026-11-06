@@ -7,6 +7,7 @@
 
 #import "SFBMusepackDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
@@ -49,7 +50,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffs
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength = @"total_file_length";
 
 static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     NSInteger bytesRead;
@@ -60,14 +61,14 @@ static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t si
 }
 
 static mpc_bool_t seek_callback(mpc_reader *p_reader, mpc_int32_t offset) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     return (mpc_bool_t)[decoder->_inputSource seekToOffset:offset error:nil];
 }
 
 static mpc_int32_t tell_callback(mpc_reader *p_reader) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     NSInteger offset;
@@ -78,7 +79,7 @@ static mpc_int32_t tell_callback(mpc_reader *p_reader) {
 }
 
 static mpc_int32_t get_size_callback(mpc_reader *p_reader) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
 
@@ -90,7 +91,7 @@ static mpc_int32_t get_size_callback(mpc_reader *p_reader) {
 }
 
 static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     return (mpc_bool_t)decoder.supportsSeeking;
@@ -127,8 +128,8 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBMusepackDetectionSize skipID3v2Tag:YES error:error];
     if (!header) {
@@ -282,10 +283,10 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
-                                                readingFromOffset:0
-                                                      frameLength:framesRemaining];
+        const AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        const AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+                                                      readingFromOffset:0
+                                                            frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];
 
         framesProcessed += framesCopied;
@@ -320,7 +321,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         float minValue = -1.f;
         float maxValue = 8388607.f / 8388608.f;
 
-        AVAudioChannelCount channelCount = _buffer.format.channelCount;
+        const AVAudioChannelCount channelCount = _buffer.format.channelCount;
         vDSP_vclip((float *)frame.buffer, 1, &minValue, &maxValue, (float *)frame.buffer, 1,
                    frame.samples * channelCount);
         memcpy(_buffer.audioBufferList->mBuffers[0].mData, frame.buffer, frame.samples * channelCount * sizeof(float));

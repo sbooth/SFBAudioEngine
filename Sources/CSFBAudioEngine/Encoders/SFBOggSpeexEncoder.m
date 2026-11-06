@@ -39,8 +39,8 @@ SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexM
 SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband = @"Ultra Wideband";
 
 static void vorbis_comment_init(char **comments, size_t *length, const char *vendor_string) {
-    size_t vendor_length = strlen(vendor_string);
-    size_t len = 4 + vendor_length + 4;
+    const size_t vendor_length = strlen(vendor_string);
+    const size_t len = 4 + vendor_length + 4;
     char *p = (char *)malloc(len);
     if (p == NULL) {
         *comments = NULL;
@@ -48,7 +48,7 @@ static void vorbis_comment_init(char **comments, size_t *length, const char *ven
         return;
     }
 
-    uint32_t user_comment_list_length = 0;
+    const uint32_t user_comment_list_length = 0;
 
     OSWriteLittleInt32(p, 0, vendor_length);
     memcpy(p + 4, vendor_string, vendor_length);
@@ -63,12 +63,12 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 {
     char *p = *comments;
 
-    size_t vendor_length = OSReadLittleInt32(p, 0);
-    size_t user_comment_list_length = OSReadLittleInt32(p, 4 + vendor_length);
+    const size_t vendor_length = OSReadLittleInt32(p, 0);
+    const size_t user_comment_list_length = OSReadLittleInt32(p, 4 + vendor_length);
 
-    size_t tag_len = (tag ? strlen(tag) : 0);
-    size_t val_len = strlen(val);
-    size_t len = (*length) + 4 + tag_len + val_len;
+    const size_t tag_len = (tag ? strlen(tag) : 0);
+    const size_t val_len = strlen(val);
+    const size_t len = (*length) + 4 + tag_len + val_len;
     p = (char *)reallocf(p, len);
     if(p == NULL) {
         *comments = NULL;
@@ -169,7 +169,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     }
 
     // Initialize the ogg stream
-    int result = ogg_stream_init(&_os, (int)arc4random());
+    const int result = ogg_stream_init(&_os, (int)arc4random());
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "ogg_stream_init failed");
         if (error) {
@@ -313,7 +313,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     _speex_frames_per_ogg_packet = 1; // 1-10 default 1
     NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket];
     if (framesPerPacket != nil) {
-        int intValue = framesPerPacket.intValue;
+        const int intValue = framesPerPacket.intValue;
         if (intValue < 1 || intValue > 10) {
             os_log_error(gSFBAudioEncoderLog, "Invalid Speex frames per packet: %d", intValue);
             ogg_stream_clear(&_os);
@@ -470,7 +470,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesCopied = [_frameBuffer appendFromBuffer:buffer readingFromOffset:framesProcessed];
+        const AVAudioFrameCount framesCopied = [_frameBuffer appendFromBuffer:buffer readingFromOffset:framesProcessed];
         framesProcessed += framesCopied;
 
         // Encode the next Speex frame
@@ -506,7 +506,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
             speex_bits_pack(&_bits, 15, 5);
         }
 
-        int byte_count = speex_bits_write(&_bits, cbits, MAX_FRAME_BYTES);
+        const int byte_count = speex_bits_write(&_bits, cbits, MAX_FRAME_BYTES);
 
         ogg_packet op;
         op.packet = (unsigned char *)cbits;
@@ -567,7 +567,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
         char cbits[MAX_FRAME_BYTES];
 
         speex_bits_insert_terminator(&_bits);
-        int byte_count = speex_bits_write(&_bits, cbits, MAX_FRAME_BYTES);
+        const int byte_count = speex_bits_write(&_bits, cbits, MAX_FRAME_BYTES);
         speex_bits_reset(&_bits);
 
         ogg_packet op;

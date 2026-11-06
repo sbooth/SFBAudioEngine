@@ -5,6 +5,8 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -29,7 +31,7 @@ using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
 @implementation SFBAudioMetadata (TagLibID3v2Tag)
 
 - (void)addMetadataFromTagLibID3v2Tag:(const TagLib::ID3v2::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     // Add the basic tags not specific to ID3v2
     [self addMetadataFromTagLibTag:tag];
@@ -88,18 +90,18 @@ using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
         bool ok;
         const auto pos = s.find("/", 0);
         if (pos != -1) {
-            auto upos = static_cast<unsigned int>(pos);
-            int trackNum = s.substr(0, upos).toInt(&ok);
+            const auto upos = static_cast<unsigned int>(pos);
+            const int trackNum = s.substr(0, upos).toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
             }
 
-            int trackTotal = s.substr(upos + 1).toInt(&ok);
+            const int trackTotal = s.substr(upos + 1).toInt(&ok);
             if (ok) {
                 self.trackTotal = @(trackTotal);
             }
         } else if (s.length() > 0) {
-            int trackNum = s.toInt(&ok);
+            const int trackNum = s.toInt(&ok);
             if (ok) {
                 self.trackNumber = @(trackNum);
             }
