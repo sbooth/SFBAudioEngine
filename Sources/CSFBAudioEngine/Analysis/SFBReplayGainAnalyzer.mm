@@ -9,6 +9,7 @@
 
 #import <os/log.h>
 
+#import <cassert>
 #import <memory>
 #import <vector>
 
@@ -131,8 +132,8 @@ void analyzeURL(void *context, size_t iteration) noexcept {
 @implementation SFBAlbumReplayGain
 - (instancetype)initWithReplayGain:(SFBReplayGain *)replayGain
                    trackReplayGain:(NSDictionary<NSURL *, SFBReplayGain *> *)trackReplayGain {
-    NSParameterAssert(replayGain != nil);
-    NSParameterAssert(trackReplayGain != nil);
+    assert(replayGain != nil);
+    assert(trackReplayGain != nil);
     if ((self = [super init])) {
         _replayGain = replayGain;
         _trackReplayGain = trackReplayGain;

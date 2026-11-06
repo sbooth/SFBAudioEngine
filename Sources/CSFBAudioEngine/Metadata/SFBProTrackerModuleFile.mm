@@ -7,6 +7,8 @@
 
 #import "SFBProTrackerModuleFile.h"
 
+#import <cassert>
+
 #import <taglib/modfile.h>
 #import <taglib/tfilestream.h>
 
@@ -37,8 +39,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameProTrackerModule = @"org.sboo
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     *formatIsSupported = SFBTernaryTruthValueUnknown;
 

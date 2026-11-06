@@ -94,6 +94,10 @@ let package = Package(
                 .headerSearchPath("Analysis"),
                 .headerSearchPath("Metadata"),
                 .headerSearchPath("Conversion"),
+                .define("NDEBUG", .when(configuration: .release)),
+            ],
+            cxxSettings: [
+                .define("NDEBUG", .when(configuration: .release)),
             ],
             linkerSettings: [
                 .linkedFramework("Accelerate"),

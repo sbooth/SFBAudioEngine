@@ -5,13 +5,15 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 
 @implementation SFBAudioMetadata (TagLibID3v1Tag)
 
 - (void)addMetadataFromTagLibID3v1Tag:(const TagLib::ID3v1::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     // ID3v1 tags are only supposed to contain characters in ISO 8859-1 format, but that isn't always the case
     // AddTagToDictionary assumes UTF-8, so everything should work properly

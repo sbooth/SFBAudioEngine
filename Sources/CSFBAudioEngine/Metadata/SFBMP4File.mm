@@ -7,6 +7,8 @@
 
 #import "SFBMP4File.h"
 
+#import <cassert>
+
 #import <taglib/mp4file.h>
 #import <taglib/tfilestream.h>
 
@@ -39,8 +41,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMP4 = @"org.sbooth.AudioEngin
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBMPEG4DetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {

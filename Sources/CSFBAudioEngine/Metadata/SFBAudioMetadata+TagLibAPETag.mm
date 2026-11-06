@@ -5,13 +5,15 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "TagLibStringUtilities.h"
 
 @implementation SFBAudioMetadata (TagLibAPETag)
 
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     if (tag->isEmpty()) {
         return;

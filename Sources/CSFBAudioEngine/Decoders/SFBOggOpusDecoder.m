@@ -7,6 +7,7 @@
 
 #import "SFBOggOpusDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <opus/opusfile.h>
@@ -29,7 +30,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggOpusMapping 
 #define OPUS_SAMPLE_RATE 48000
 
 static int read_callback(void *stream, unsigned char *ptr, int nbytes) {
-    NSCParameterAssert(stream != NULL);
+    assert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     NSInteger bytesRead;
@@ -40,7 +41,7 @@ static int read_callback(void *stream, unsigned char *ptr, int nbytes) {
 }
 
 static int seek_callback(void *stream, opus_int64 offset, int whence) {
-    NSCParameterAssert(stream != NULL);
+    assert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     if (!decoder->_inputSource.supportsSeeking) {
@@ -71,7 +72,7 @@ static int seek_callback(void *stream, opus_int64 offset, int whence) {
 }
 
 static opus_int64 tell_callback(void *stream) {
-    NSCParameterAssert(stream != NULL);
+    assert(stream != NULL);
 
     SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
     NSInteger offset;
@@ -108,8 +109,8 @@ static opus_int64 tell_callback(void *stream) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggOpusDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {

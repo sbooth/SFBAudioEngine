@@ -5,6 +5,8 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -21,7 +23,7 @@ using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
 @implementation SFBAudioMetadata (TagLibXiphComment)
 
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 

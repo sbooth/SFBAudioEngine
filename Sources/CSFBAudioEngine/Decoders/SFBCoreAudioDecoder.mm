@@ -10,6 +10,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <cstdlib>
 #import <vector>
 
@@ -31,7 +32,7 @@ using unique_ext_audio_file = util::unique_ref<ExtAudioFileRef, ExtAudioFileDisp
 // Callbacks
 OSStatus readCallback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer,
                       UInt32 *actualCount) noexcept {
-    NSCParameterAssert(inClientData != nullptr);
+    assert(inClientData != nullptr);
 
     SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
 
@@ -64,7 +65,7 @@ OSStatus readCallback(void *inClientData, SInt64 inPosition, UInt32 requestCount
 }
 
 SInt64 getSizeCallback(void *inClientData) noexcept {
-    NSCParameterAssert(inClientData != nullptr);
+    assert(inClientData != nullptr);
 
     SFBCoreAudioDecoder *decoder = (__bridge SFBCoreAudioDecoder *)inClientData;
 
@@ -217,8 +218,8 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:std::max({SFBMPEG4DetectionSize, SFBCAFDetectionSize,
                                                                SFBAIFFDetectionSize, SFBWAVEDetectionSize})

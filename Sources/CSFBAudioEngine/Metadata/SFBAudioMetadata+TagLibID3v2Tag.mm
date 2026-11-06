@@ -5,6 +5,8 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -29,7 +31,7 @@ using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
 @implementation SFBAudioMetadata (TagLibID3v2Tag)
 
 - (void)addMetadataFromTagLibID3v2Tag:(const TagLib::ID3v2::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     // Add the basic tags not specific to ID3v2
     [self addMetadataFromTagLibTag:tag];
