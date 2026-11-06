@@ -440,10 +440,10 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         // There is no way to determine caller intent and select the most appropriate format; use PCM if available,
         // otherwise use the first one
         formatID = availableFormatIDs[0];
-        const auto status =
+        const auto iter =
                 std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
-        if (status != std::cend(availableFormatIDs)) {
-            formatID = *status;
+        if (iter != std::cend(availableFormatIDs)) {
+            formatID = *iter;
         }
         os_log_info(gSFBAudioEncoderLog,
                     "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set: guessed '%{public}.4s' based on format "
