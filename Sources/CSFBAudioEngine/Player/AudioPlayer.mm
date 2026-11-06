@@ -11,6 +11,7 @@
 
 #import <algorithm>
 #import <atomic>
+#import <cassert>
 #import <cmath>
 #import <concepts>
 #import <limits>
