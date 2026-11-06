@@ -735,39 +735,63 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
         if (bits::is_set(loadFlags(), Flags::playing)) {
             return true;
         }
-        if (!startEngine(error)) {
+        if (!playLocked(error)) {
             return false;
         }
-        setFlags(Flags::active | Flags::playing);
-        // The event processing thread polls less often when not playing
-        eventSemaphore_.signal();
     }
 
     notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePlaying);
     return true;
 }
 
+bool sfb::AudioPlayer::playLocked(NSError **error) noexcept {
+#if DEBUG
+    engineMutex_.assertIsOwner();
+    assert(bits::is_clear(loadFlags(), Flags::playing));
+#endif /* DEBUG */
+
+    // Publish the new state only once the engine is running so a failed start has no visible effect
+    if (!startEngineLocked(error)) {
+        return false;
+    }
+    setFlags(Flags::active | Flags::playing);
+
+    // The event processing thread polls less often when not playing
+    eventSemaphore_.signal();
+
+    return true;
+}
+
 void sfb::AudioPlayer::pause() noexcept {
-    auto wasPlaying = false;
+    bool wasPlaying;
     {
         std::lock_guard lock{engineMutex_};
-        if (bits::is_clear(loadFlags(), Flags::active)) {
-            return;
-        }
-#if TARGET_OS_IPHONE
-        // An explicit pause should not be overridden by a subsequent, possibly late, interruption ended notification
-        wasPlayingBeforeInterruption_ = false;
-#endif /* TARGET_OS_IPHONE */
-        const auto prevFlags = clearFlags(Flags::playing);
-        wasPlaying = bits::is_set(prevFlags, Flags::playing);
-        if (wasPlaying) {
-            pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
-        }
+        wasPlaying = pauseLocked();
     }
 
     if (wasPlaying) {
         notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
     }
+}
+
+bool sfb::AudioPlayer::pauseLocked() noexcept {
+#if DEBUG
+    engineMutex_.assertIsOwner();
+#endif /* DEBUG */
+
+    if (bits::is_clear(loadFlags(), Flags::active)) {
+        return false;
+    }
+#if TARGET_OS_IPHONE
+    // An explicit pause should not be overridden by a subsequent, possibly late, interruption ended notification
+    wasPlayingBeforeInterruption_ = false;
+#endif /* TARGET_OS_IPHONE */
+    const auto prevFlags = clearFlags(Flags::playing);
+    const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
+    if (wasPlaying) {
+        pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
+    }
+    return wasPlaying;
 }
 
 void sfb::AudioPlayer::stop() noexcept {
@@ -790,23 +814,15 @@ bool sfb::AudioPlayer::togglePlayPause(NSError **error) noexcept {
     SFBAudioPlayerPlaybackState playbackState;
     {
         std::lock_guard lock{engineMutex_};
-        if (const auto flags = loadFlags(); bits::is_set(flags, Flags::playing)) {
+        if (bits::is_set(loadFlags(), Flags::playing)) {
             // Playing, transition to paused
-#if TARGET_OS_IPHONE
-            wasPlayingBeforeInterruption_ = false;
-#endif /* TARGET_OS_IPHONE */
-            clearFlags(Flags::playing);
-            pauseRequestGeneration_.fetch_add(1, std::memory_order_release);
+            pauseLocked();
             playbackState = SFBAudioPlayerPlaybackStatePaused;
         } else {
             // Stopped or paused, transition to playing
-            // Publish the new state only once the engine is running so a failed start has no visible effect
-            if (!startEngine(error)) {
+            if (!playLocked(error)) {
                 return false;
             }
-            setFlags(Flags::active | Flags::playing);
-            // The event processing thread polls less often when not playing
-            eventSemaphore_.signal();
             playbackState = SFBAudioPlayerPlaybackStatePlaying;
         }
     }
@@ -2839,7 +2855,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
         }
 
         // Restart AVAudioEngine if the player is playing; a paused player's engine is restarted by -play
-        if (NSError *startError = nil; bits::is_set(loadFlags(), Flags::playing) && !startEngine(&startError)) {
+        if (NSError *startError = nil; bits::is_set(loadFlags(), Flags::playing) && !startEngineLocked(&startError)) {
             const auto prevFlags = clearFlags(Flags::playing);
             lock.unlock();
             const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
@@ -2945,7 +2961,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 
 // MARK: - Player State Management
 
-bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
+bool sfb::AudioPlayer::startEngineLocked(NSError **error) noexcept {
 #if DEBUG
     engineMutex_.assertIsOwner();
 #endif /* DEBUG */
@@ -2985,23 +3001,8 @@ void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool w
 bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     Flags prevFlags;
     {
-        // Stopping the engine discards inflight audio. Both locks are held so a concurrent -play cannot restart
-        // the engine and schedule notifications for a new session before they are invalidated.
-        std::scoped_lock lock{engineMutex_, activeDecodersMutex_};
-
-        prevFlags = clearFlags(Flags::active | Flags::playing);
-        [engine_ stop];
-#if TARGET_OS_IPHONE
-        wasPlayingBeforeInterruption_ = false;
-#endif /* TARGET_OS_IPHONE */
-
-        // Expire render events queued before the engine stopped so they cannot schedule notifications for
-        // discarded audio
-        playbackGeneration_.fetch_add(1, std::memory_order_release);
-
-        // Mark scheduled rendering notifications as stale
-        ++outputGeneration_;
-        scheduledRenderingCompleteNotifications_ = 0;
+        std::lock_guard lock{engineMutex_};
+        prevFlags = deactivatePlayerAndStopEngineLocked();
     }
 
     // If a format change is pending, wake the decoding thread to reconfigure the processing graph
@@ -3010,6 +3011,33 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     }
 
     return bits::is_set(prevFlags, Flags::active);
+}
+
+auto sfb::AudioPlayer::deactivatePlayerAndStopEngineLocked() noexcept -> Flags {
+#if DEBUG
+    engineMutex_.assertIsOwner();
+#endif /* DEBUG */
+
+    // Stopping the engine discards inflight audio. The caller holds engineMutex_ so a concurrent -play cannot restart
+    // the engine and schedule notifications for a new session before they are invalidated, and activeDecodersMutex_
+    // is held so rendering notifications observe the deactivation and their invalidation together.
+    std::lock_guard lock{activeDecodersMutex_};
+
+    const auto prevFlags = clearFlags(Flags::active | Flags::playing);
+    [engine_ stop];
+#if TARGET_OS_IPHONE
+    wasPlayingBeforeInterruption_ = false;
+#endif /* TARGET_OS_IPHONE */
+
+    // Expire render events queued before the engine stopped so they cannot schedule notifications for
+    // discarded audio
+    playbackGeneration_.fetch_add(1, std::memory_order_release);
+
+    // Mark scheduled rendering notifications as stale
+    ++outputGeneration_;
+    scheduledRenderingCompleteNotifications_ = 0;
+
+    return prevFlags;
 }
 
 void sfb::AudioPlayer::notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept {
@@ -3100,7 +3128,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     // Restart AVAudioEngine if the player is playing; a paused player's engine is restarted by -play
     // The processing graph is correctly configured for `format` so a failure to restart the engine is not a
     // failure to configure; pause and let the client resume when the condition clears
-    if (NSError *startError = nil; bits::is_set(loadFlags(), Flags::playing) && !startEngine(&startError)) {
+    if (NSError *startError = nil; bits::is_set(loadFlags(), Flags::playing) && !startEngineLocked(&startError)) {
         const auto prevFlags = clearFlags(Flags::playing);
         lock.unlock();
         const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
