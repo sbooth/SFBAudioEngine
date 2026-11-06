@@ -409,12 +409,6 @@ class AudioPlayer final {
     /// - returns: `true` if the player was playing
     bool pauseLocked() noexcept;
 
-    /// Deactivates the player and stops the `AVAudioEngine`
-    /// - important: The caller must hold `engineMutex_`
-    /// - note: The caller is responsible for waking the decoding thread if `Flags::formatChangePending` was set
-    /// - returns: The player flags before deactivation
-    Flags deactivatePlayerAndStopEngineLocked() noexcept;
-
     /// Notifies the delegate of a playback state change
     void notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept;
 

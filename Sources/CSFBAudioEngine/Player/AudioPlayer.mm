@@ -3001,8 +3001,23 @@ void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool w
 bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     Flags prevFlags;
     {
-        std::lock_guard lock{engineMutex_};
-        prevFlags = deactivatePlayerAndStopEngineLocked();
+        // Stopping the engine discards inflight audio. Both locks are held so a concurrent -play cannot restart
+        // the engine and schedule notifications for a new session before they are invalidated.
+        std::scoped_lock lock{engineMutex_, activeDecodersMutex_};
+
+        prevFlags = clearFlags(Flags::active | Flags::playing);
+        [engine_ stop];
+#if TARGET_OS_IPHONE
+        wasPlayingBeforeInterruption_ = false;
+#endif /* TARGET_OS_IPHONE */
+
+        // Expire render events queued before the engine stopped so they cannot schedule notifications for
+        // discarded audio
+        playbackGeneration_.fetch_add(1, std::memory_order_release);
+
+        // Mark scheduled rendering notifications as stale
+        ++outputGeneration_;
+        scheduledRenderingCompleteNotifications_ = 0;
     }
 
     // If a format change is pending, wake the decoding thread to reconfigure the processing graph
@@ -3011,33 +3026,6 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     }
 
     return bits::is_set(prevFlags, Flags::active);
-}
-
-auto sfb::AudioPlayer::deactivatePlayerAndStopEngineLocked() noexcept -> Flags {
-#if DEBUG
-    engineMutex_.assertIsOwner();
-#endif /* DEBUG */
-
-    // Stopping the engine discards inflight audio. The caller holds engineMutex_ so a concurrent -play cannot restart
-    // the engine and schedule notifications for a new session before they are invalidated, and activeDecodersMutex_
-    // is held so rendering notifications observe the deactivation and their invalidation together.
-    std::lock_guard lock{activeDecodersMutex_};
-
-    const auto prevFlags = clearFlags(Flags::active | Flags::playing);
-    [engine_ stop];
-#if TARGET_OS_IPHONE
-    wasPlayingBeforeInterruption_ = false;
-#endif /* TARGET_OS_IPHONE */
-
-    // Expire render events queued before the engine stopped so they cannot schedule notifications for
-    // discarded audio
-    playbackGeneration_.fetch_add(1, std::memory_order_release);
-
-    // Mark scheduled rendering notifications as stale
-    ++outputGeneration_;
-    scheduledRenderingCompleteNotifications_ = 0;
-
-    return prevFlags;
 }
 
 void sfb::AudioPlayer::notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept {
