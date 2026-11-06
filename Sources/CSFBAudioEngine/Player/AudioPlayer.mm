@@ -2110,7 +2110,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
             assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
-#endif
+#endif /* !NDEBUG */
 
             (*iter)->setFlags(DecoderState::Flags::renderingStarted);
             publishTransportSnapshot((*iter)->snapshot());
@@ -2176,7 +2176,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
             assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
-#endif
+#endif /* !NDEBUG */
 
             (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_acq_rel);
             publishTransportSnapshot((*iter)->snapshot());
@@ -2227,7 +2227,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
             assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingComplete));
-#endif
+#endif /* !NDEBUG */
 
             decoder = (*iter)->decoder_;
 
