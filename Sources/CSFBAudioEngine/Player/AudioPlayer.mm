@@ -2930,7 +2930,7 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
                 return;
             }
 
-            if (NSError *startError = nil; !startEngine(&startError)) {
+            if (NSError *startError = nil; !startEngineLocked(&startError)) {
                 const auto prevFlags = clearFlags(Flags::playing);
                 lock.unlock();
                 const auto wasPlaying = bits::is_set(prevFlags, Flags::playing);
