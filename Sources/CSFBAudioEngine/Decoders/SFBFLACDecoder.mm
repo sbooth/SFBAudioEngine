@@ -520,9 +520,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                      "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
     }
 
-    auto status = FLAC__stream_decoder_init_stream(decoder, readCallback, seekCallback, tellCallback, lengthCallback,
-                                                   eofCallback, writeCallback, metadataCallback, errorCallback,
-                                                   (__bridge void *)self);
+    const auto status = FLAC__stream_decoder_init_stream(decoder, readCallback, seekCallback, tellCallback,
+                                                         lengthCallback, eofCallback, writeCallback, metadataCallback,
+                                                         errorCallback, (__bridge void *)self);
     if (status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
         os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_stream failed: %{public}s",
                      FLAC__stream_decoder_get_resolved_state_string(decoder));
@@ -720,9 +720,9 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
                      "FLAC__stream_decoder_set_metadata_respond(FLAC__METADATA_TYPE_VORBIS_COMMENT) failed");
     }
 
-    auto status = FLAC__stream_decoder_init_ogg_stream(decoder, readCallback, seekCallback, tellCallback,
-                                                       lengthCallback, eofCallback, writeCallback, metadataCallback,
-                                                       errorCallback, (__bridge void *)self);
+    const auto status = FLAC__stream_decoder_init_ogg_stream(decoder, readCallback, seekCallback, tellCallback,
+                                                             lengthCallback, eofCallback, writeCallback,
+                                                             metadataCallback, errorCallback, (__bridge void *)self);
 
     if (status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
         os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_ogg_stream failed: %{public}s",

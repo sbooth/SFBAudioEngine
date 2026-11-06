@@ -274,7 +274,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
 
         if (NSNumber *vbrMax = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate];
             vbrMax != nil) {
-            auto bitrate = vbrMax.intValue * 1000;
+            const auto bitrate = vbrMax.intValue * 1000;
             result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_max_bitrate_kbps(%d) failed", bitrate);
@@ -386,7 +386,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
         return NO;
     }
 
-    auto result = lame_encode_buffer_interleaved_ieee_float(
+    const auto result = lame_encode_buffer_interleaved_ieee_float(
             _gfp.get(), static_cast<const float *>(buffer.audioBufferList->mBuffers[0].mData),
             static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
     if (result == -1) {
@@ -436,7 +436,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
         return NO;
     }
 
-    auto result = lame_encode_flush(_gfp.get(), buf.get(), bufsize);
+    const auto result = lame_encode_flush(_gfp.get(), buf.get(), bufsize);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_flush failed");
         if (error != nullptr) {
@@ -451,7 +451,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
 }
 
 - (BOOL)writeID3v1TagReturningError:(NSError **)error {
-    auto bufsize = lame_get_id3v1_tag(_gfp.get(), nullptr, 0);
+    const auto bufsize = lame_get_id3v1_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -461,7 +461,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
             return NO;
         }
 
-        auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
+        const auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
         if (![_outputTarget writeBytes:buf.get()
@@ -477,7 +477,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
 }
 
 - (BOOL)writeID3v2TagReturningError:(NSError **)error {
-    auto bufsize = lame_get_id3v2_tag(_gfp.get(), nullptr, 0);
+    const auto bufsize = lame_get_id3v2_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -487,7 +487,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
             return NO;
         }
 
-        auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
+        const auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
         if (![_outputTarget writeBytes:buf.get()
@@ -505,7 +505,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
 }
 
 - (BOOL)writeXingHeaderReturningError:(NSError **)error {
-    auto bufsize = lame_get_lametag_frame(_gfp.get(), nullptr, 0);
+    const auto bufsize = lame_get_lametag_frame(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -515,7 +515,7 @@ using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>
             return NO;
         }
 
-        auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
+        const auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
 
         if (![_outputTarget seekToOffset:_id3v2TagSize error:error]) {
             return NO;

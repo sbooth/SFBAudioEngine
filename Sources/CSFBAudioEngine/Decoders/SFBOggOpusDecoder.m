@@ -270,8 +270,9 @@ static opus_int64 tell_callback(void *stream) {
     AVAudioFrameCount framesRemaining = frameLength;
     while (framesRemaining > 0) {
         // Decode a chunk of samples from the file
-        int framesRead = op_read_float(_opusFile, buffer.floatChannelData[0] + (buffer.frameLength * buffer.stride),
-                                       (int)(framesRemaining * buffer.stride), NULL);
+        const int framesRead =
+                op_read_float(_opusFile, buffer.floatChannelData[0] + (buffer.frameLength * buffer.stride),
+                              (int)(framesRemaining * buffer.stride), NULL);
 
         if (framesRead < 0) {
             os_log_error(gSFBAudioDecoderLog, "Ogg Opus decoding error");

@@ -283,10 +283,10 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
-                                                readingFromOffset:0
-                                                      frameLength:framesRemaining];
+        const AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        const AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+                                                      readingFromOffset:0
+                                                            frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];
 
         framesProcessed += framesCopied;
@@ -321,7 +321,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
         float minValue = -1.f;
         float maxValue = 8388607.f / 8388608.f;
 
-        AVAudioChannelCount channelCount = _buffer.format.channelCount;
+        const AVAudioChannelCount channelCount = _buffer.format.channelCount;
         vDSP_vclip((float *)frame.buffer, 1, &minValue, &maxValue, (float *)frame.buffer, 1,
                    frame.samples * channelCount);
         memcpy(_buffer.audioBufferList->mBuffers[0].mData, frame.buffer, frame.samples * channelCount * sizeof(float));

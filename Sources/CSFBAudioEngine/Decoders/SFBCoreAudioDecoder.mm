@@ -127,7 +127,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
             return;
         }
 
-        auto readableTypesCount = size / sizeof(UInt32);
+        const auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
@@ -177,7 +177,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
             return;
         }
 
-        auto readableTypesCount = size / sizeof(UInt32);
+        const auto readableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> readableTypes(readableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, readableTypes.data());
@@ -443,7 +443,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
+    const auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -455,7 +455,8 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 - (AVAudioFramePosition)frameLength {
     SInt64 frameLength;
     UInt32 dataSize = sizeof(frameLength);
-    auto result = ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
+    const auto result =
+            ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog,
                      "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d '%{public}.4s'",
@@ -477,7 +478,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
     buffer.frameLength = buffer.frameCapacity;
 
-    auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
+    const auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
@@ -498,7 +499,7 @@ NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcep
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
-    auto result = ExtAudioFileSeek(_eaf.get(), frame);
+    const auto result = ExtAudioFileSeek(_eaf.get(), frame);
     if (result != noErr) {
         os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));

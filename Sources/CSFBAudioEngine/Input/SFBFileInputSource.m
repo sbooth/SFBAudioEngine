@@ -24,7 +24,7 @@
 - (BOOL)openReturningError:(NSError **)error {
     _file = fopen(_url.fileSystemRepresentation, "r");
     if (!_file) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBInputSourceLog, "fopen failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -33,7 +33,7 @@
     }
 
     if (fstat(fileno(_file), &_filestats) == -1) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBInputSourceLog, "fstat failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -52,10 +52,10 @@
 
 - (BOOL)closeReturningError:(NSError **)error {
     if (_file) {
-        int result = fclose(_file);
+        const int result = fclose(_file);
         _file = NULL;
         if (result) {
-            int err = errno;
+            const int err = errno;
             os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(err), err);
             if (error) {
                 *error = [self posixErrorWithCode:err];
@@ -75,9 +75,9 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesRead != NULL);
 
-    size_t read = fread(buffer, 1, (size_t)length, _file);
+    const size_t read = fread(buffer, 1, (size_t)length, _file);
     if (read != (size_t)length && ferror(_file)) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBInputSourceLog, "fread error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -94,9 +94,9 @@
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error {
     NSParameterAssert(offset != NULL);
-    off_t result = ftello(_file);
+    const off_t result = ftello(_file);
     if (result == -1) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBInputSourceLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -122,7 +122,7 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     NSParameterAssert(offset >= 0);
     if (fseeko(_file, offset, SEEK_SET)) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBInputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {

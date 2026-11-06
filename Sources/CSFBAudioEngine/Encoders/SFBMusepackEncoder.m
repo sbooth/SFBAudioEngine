@@ -156,7 +156,7 @@ static off_t my_mpc_tell_callback(void *context) {
 
     NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMusepackQuality];
     if (quality != nil) {
-        float quality_value = quality.floatValue;
+        const float quality_value = quality.floatValue;
         if (quality_value < 0 || quality_value > 10) {
             os_log_info(gSFBAudioEncoderLog, "Ignoring invalid Musepack quality: %g", quality_value);
         } else if (mpc_stream_encoder_set_quality(_enc, quality_value) != MPC_STATUS_OK) {

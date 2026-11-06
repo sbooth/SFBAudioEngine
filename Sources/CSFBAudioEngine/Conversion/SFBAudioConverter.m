@@ -190,7 +190,7 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 }
 
 - (BOOL)closeReturningError:(NSError **)error {
-    BOOL result = [_encoder closeReturningError:error];
+    const BOOL result = [_encoder closeReturningError:error];
     return [_decoder closeReturningError:error] && result;
 }
 

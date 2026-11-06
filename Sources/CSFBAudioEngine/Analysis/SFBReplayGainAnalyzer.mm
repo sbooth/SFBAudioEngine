@@ -213,7 +213,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
     }
 
     auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
-    auto digitalPeak = analyzer->digital_peak();
+    const auto digitalPeak = analyzer->digital_peak();
 
     if (!loudness.has_value()) {
         if (error != nil) {
@@ -282,7 +282,7 @@ void analyzeURL(void *context, size_t iteration) noexcept {
         analyzers[i] = analyzer.get();
 
         auto loudness = analyzer->GetRelativeGatedIntegratedLoudness();
-        auto digitalPeak = analyzer->digital_peak();
+        const auto digitalPeak = analyzer->digital_peak();
 
         if (!loudness.has_value()) {
             if (error != nil) {

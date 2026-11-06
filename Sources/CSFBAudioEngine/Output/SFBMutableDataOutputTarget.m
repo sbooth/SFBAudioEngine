@@ -46,7 +46,7 @@
     NSParameterAssert(bytesRead != NULL);
 
     NSUInteger count = (NSUInteger)length;
-    NSUInteger remaining = _data.length - _pos;
+    const NSUInteger remaining = _data.length - _pos;
     if (count > remaining) {
         count = remaining;
     }

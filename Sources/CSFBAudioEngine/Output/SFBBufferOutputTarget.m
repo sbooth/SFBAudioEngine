@@ -49,7 +49,7 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesRead != NULL);
 
-    size_t bytesAvailable = _capacity - _pos;
+    const size_t bytesAvailable = _capacity - _pos;
     if (bytesAvailable == 0) {
         if (error) {
             *error = [self posixErrorWithCode:EINVAL];
@@ -57,7 +57,7 @@
         return NO;
     }
 
-    size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
+    const size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
     memcpy(buffer, (const unsigned char *)_buffer + _pos, bytesToCopy);
     _pos += bytesToCopy;
     *bytesRead = (NSInteger)bytesToCopy;
@@ -73,7 +73,7 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesWritten != NULL);
 
-    size_t remainingCapacity = _capacity - _pos;
+    const size_t remainingCapacity = _capacity - _pos;
     if (remainingCapacity == 0) {
         if (error) {
             *error = [self posixErrorWithCode:ENOSPC];
@@ -81,7 +81,7 @@
         return NO;
     }
 
-    size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
+    const size_t bytesToCopy = MIN(remainingCapacity, (size_t)length);
     memcpy((unsigned char *)_buffer + _pos, buffer, bytesToCopy);
     _pos += bytesToCopy;
     *bytesWritten = (NSInteger)bytesToCopy;

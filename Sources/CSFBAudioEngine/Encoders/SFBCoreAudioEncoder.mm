@@ -54,7 +54,7 @@ std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexce
         return {};
     }
 
-    auto typesForExtensionCount = size / sizeof(AudioFileTypeID);
+    const auto typesForExtensionCount = size / sizeof(AudioFileTypeID);
     std::vector<AudioFileTypeID> typesForExtension(typesForExtensionCount);
 
     result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_TypesForExtension, sizeof(extension), &extension, &size,
@@ -80,7 +80,7 @@ std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bo
         return {};
     }
 
-    auto availableFormatIDCount = size / sizeof(AudioFormatID);
+    const auto availableFormatIDCount = size / sizeof(AudioFormatID);
     std::vector<AudioFormatID> availableFormatIDs(availableFormatIDCount);
 
     result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AvailableFormatIDs, sizeof(fileTypeID), &fileTypeID, &size,
@@ -104,7 +104,7 @@ std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bo
         return {};
     }
 
-    auto encodeFormatIDCount = size / sizeof(AudioFormatID);
+    const auto encodeFormatIDCount = size / sizeof(AudioFormatID);
     std::vector<AudioFormatID> encodeFormatIDs(encodeFormatIDCount);
 
     result = AudioFormatGetProperty(kAudioFormatProperty_EncodeFormatIDs, 0, nullptr, &size, encodeFormatIDs.data());
@@ -241,7 +241,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
             return;
         }
 
-        auto writableTypesCount = size / sizeof(UInt32);
+        const auto writableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> writableTypes(writableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
@@ -291,7 +291,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
             return;
         }
 
-        auto writableTypesCount = size / sizeof(UInt32);
+        const auto writableTypesCount = size / sizeof(UInt32);
         std::vector<UInt32> writableTypes(writableTypesCount);
 
         result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, writableTypes.data());
@@ -440,7 +440,8 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         // There is no way to determine caller intent and select the most appropriate format; use PCM if available,
         // otherwise use the first one
         formatID = availableFormatIDs[0];
-        auto result = std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
+        const auto result =
+                std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
         if (result != std::cend(availableFormatIDs)) {
             formatID = *result;
         }
@@ -578,7 +579,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
         if (audioConverter != nullptr) {
             for (NSNumber *key in audioConverterPropertySettings) {
-                AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
+                const AudioConverterPropertyID propertyID = static_cast<AudioConverterPropertyID>(key.unsignedIntValue);
                 switch (propertyID) {
                 case kAudioConverterSampleRateConverterComplexity:
                     result = setAudioConverterProperty<OSType>(
@@ -655,7 +656,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
 
 - (AVAudioFramePosition)framePosition {
     SInt64 currentFrame;
-    OSStatus status = ExtAudioFileTell(_eaf.get(), &currentFrame);
+    const OSStatus status = ExtAudioFileTell(_eaf.get(), &currentFrame);
     if (status != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", status,
                      SFBCStringForOSType(status));
@@ -673,7 +674,7 @@ OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
         return YES;
     }
 
-    auto result = ExtAudioFileWrite(_eaf.get(), frameLength, buffer.audioBufferList);
+    const auto result = ExtAudioFileWrite(_eaf.get(), frameLength, buffer.audioBufferList);
     if (result != noErr) {
         os_log_error(gSFBAudioEncoderLog, "ExtAudioFileWrite failed: %d '%{public}.4s'", result,
                      SFBCStringForOSType(result));
