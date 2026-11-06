@@ -37,15 +37,6 @@
       }
     },
     {
-      "identity" : "cxxdispatchsemaphore",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXDispatchSemaphore",
-      "state" : {
-        "revision" : "cd267c1dffae0e132abe7b63fcee1e1fe357f23d",
-        "version" : "0.4.1"
-      }
-    },
-    {
       "identity" : "cxxmessagequeue",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sbooth/CXXMessageQueue",
@@ -79,15 +70,6 @@
       "state" : {
         "revision" : "9e499ea0a69d107791ac0a2fe9d6a59cf401c6f9",
         "version" : "2.3.2"
-      }
-    },
-    {
-      "identity" : "cxxunfairlock",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sbooth/CXXUnfairLock",
-      "state" : {
-        "revision" : "d134022b339567958b3a941dfa3cd079d31f1030",
-        "version" : "0.3.1"
       }
     },
     {
