@@ -83,12 +83,12 @@ NSString *_Nullable audioDeviceName(AUAudioUnit *_Nonnull audioUnit) noexcept {
                                           .mElement = kAudioObjectPropertyElementMain};
     CFStringRef name = nullptr;
     UInt32 dataSize = sizeof(name);
-    const auto result = AudioObjectGetPropertyData(audioUnit.deviceID, &address, 0, nullptr, &dataSize, &name);
-    if (result != noErr) {
+    const auto status = AudioObjectGetPropertyData(audioUnit.deviceID, &address, 0, nullptr, &dataSize, &name);
+    if (status != noErr) {
         os_log_error(sfb::AudioPlayer::log_,
                      "AudioObjectGetPropertyData (kAudioObjectPropertyName, kAudioObjectPropertyScopeOutput, "
                      "kAudioObjectPropertyElementMain) failed: %d '%{public}.4s'",
-                     result, SFBCStringForOSType(result));
+                     status, SFBCStringForOSType(status));
         return nil;
     }
     return (__bridge_transfer NSString *)name;
@@ -981,13 +981,13 @@ bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &sn
 
 float sfb::AudioPlayer::volumeForChannel(AudioObjectPropertyElement channel) const noexcept {
     AudioUnitParameterValue volume;
-    const auto result = AudioUnitGetParameter(engine_.outputNode.audioUnit, kHALOutputParam_Volume,
+    const auto status = AudioUnitGetParameter(engine_.outputNode.audioUnit, kHALOutputParam_Volume,
                                               kAudioUnitScope_Global, channel, &volume);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(
                 log_,
                 "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'",
-                channel, result, SFBCStringForOSType(result));
+                channel, status, SFBCStringForOSType(status));
         return std::nanf("1");
     }
 
@@ -997,15 +997,15 @@ float sfb::AudioPlayer::volumeForChannel(AudioObjectPropertyElement channel) con
 bool sfb::AudioPlayer::setVolumeForChannel(float volume, AudioObjectPropertyElement channel, NSError **error) noexcept {
     os_log_info(log_, "Setting volume for channel %u to %g", channel, volume);
 
-    const auto result = AudioUnitSetParameter(engine_.outputNode.audioUnit, kHALOutputParam_Volume,
+    const auto status = AudioUnitSetParameter(engine_.outputNode.audioUnit, kHALOutputParam_Volume,
                                               kAudioUnitScope_Global, channel, volume, 0);
-    if (result != noErr) {
+    if (status != noErr) {
         os_log_error(
                 log_,
                 "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'",
-                channel, result, SFBCStringForOSType(result));
+                channel, status, SFBCStringForOSType(status));
         if (error != nullptr) {
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         }
         return false;
     }
