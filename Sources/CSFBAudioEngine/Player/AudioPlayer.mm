@@ -742,12 +742,7 @@ bool sfb::AudioPlayer::playLocked(NSError **error) noexcept {
 }
 
 void sfb::AudioPlayer::pause() noexcept {
-    bool wasPlaying;
-    {
-        std::lock_guard lock{engineMutex_};
-        wasPlaying = pauseLocked();
-    }
-
+    const auto wasPlaying = engineMutex_.withLock([&]() noexcept { return pauseLocked(); });
     if (wasPlaying) {
         notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
     }

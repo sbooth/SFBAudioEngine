@@ -9,6 +9,10 @@
 
 #include <os/lock.h>
 
+#include <functional>
+#include <mutex>
+#include <type_traits>
+
 namespace mtx {
 
 /// A wrapper around os_unfair_lock satisfying the Lockable requirements.
@@ -42,6 +46,22 @@ class __attribute__((capability("mutex"))) UnfairMutex final {
     /// @return true if the mutex was successfully acquired, false if the mutex was already locked.
     [[nodiscard]] bool try_lock() noexcept __attribute__((try_acquire_capability(true)));
 
+    // MARK: Scoped Locking
+
+    /// Executes a callable within a locked scope.
+    ///
+    /// Acquires the mutex, blocking until it becomes available, then invokes the provided callable while holding the
+    /// mutex. The mutex is released when the callable finishes, including if it exits by throwing an exception.
+    /// @tparam Func The type of the callable object.
+    /// @tparam Args The types of arguments to pass to the callable.
+    /// @param func The lambda, function, or functor to execute.
+    /// @param args Arguments to be perfectly forwarded to the callable.
+    /// @return The result of the callable execution.
+    /// @throw Any exception thrown by the callable.
+    template <typename Func, typename... Args>
+    auto withLock(Func &&func, Args &&...args) noexcept(std::is_nothrow_invocable_v<Func &&, Args &&...>)
+            __attribute__((locks_excluded(this)));
+
     // MARK: Ownership
 
     /// Asserts that the calling thread is the current owner of the mutex.
@@ -72,6 +92,15 @@ inline void UnfairMutex::lock() noexcept { os_unfair_lock_lock(&lock_); }
 inline void UnfairMutex::unlock() noexcept { os_unfair_lock_unlock(&lock_); }
 
 inline bool UnfairMutex::try_lock() noexcept { return os_unfair_lock_trylock(&lock_); }
+
+// MARK: Scoped Locking
+
+template <typename Func, typename... Args>
+inline auto UnfairMutex::withLock(Func &&func,
+                                  Args &&...args) noexcept(std::is_nothrow_invocable_v<Func &&, Args &&...>) {
+    std::lock_guard lock{*this};
+    return std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+}
 
 // MARK: Ownership
 
