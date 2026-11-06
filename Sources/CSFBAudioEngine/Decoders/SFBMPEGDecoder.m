@@ -158,8 +158,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSInteger originalOffset;
     if (![inputSource getOffset:&originalOffset error:error]) {

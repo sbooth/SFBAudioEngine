@@ -219,8 +219,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBFLACDetectionSize skipID3v2Tag:YES error:error];
     if (header == nil) {
@@ -538,10 +538,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder
                                             frame:(const FLAC__Frame *)frame
                                            buffer:(const FLAC__int32 *const[])buffer {
-#ifndef NDEBUG
-    NSParameterAssert(decoder != nullptr);
-    NSParameterAssert(frame != nullptr);
-#endif /* !NDEBUG */
+    assert(decoder != nullptr);
+    assert(frame != nullptr);
 
     // Ensure adequate buffer size
     if (frame->header.blocksize > _streamInfo->max_blocksize && _frameBuffer.frameCapacity < frame->header.blocksize) {
@@ -644,7 +642,7 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 }
 
 - (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata {
-    NSParameterAssert(metadata != nullptr);
+    assert(metadata != nullptr);
 
     if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         _streamInfo = metadata->data.stream_info;
@@ -699,8 +697,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBOggFLACDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {

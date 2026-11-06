@@ -289,8 +289,8 @@ static sf_count_t my_sf_vio_tell(void *user_data) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:MAX(SFBAIFFDetectionSize, SFBWAVEDetectionSize)
                                         skipID3v2Tag:NO

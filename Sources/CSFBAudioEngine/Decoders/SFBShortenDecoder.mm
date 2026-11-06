@@ -402,8 +402,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {
@@ -990,8 +990,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (bool)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
-    NSParameterAssert(chunkData != nullptr);
-    NSParameterAssert(size >= 28);
+    assert(chunkData != nullptr);
+    assert(size >= 28);
 
     constexpr auto waveFormatPCMTag = 0x0001;
 
@@ -1090,8 +1090,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (bool)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
-    NSParameterAssert(chunkData != nullptr);
-    NSParameterAssert(size >= 30);
+    assert(chunkData != nullptr);
+    assert(size >= 30);
 
     uintptr_t offset = 0;
 
@@ -1599,7 +1599,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url {
-    NSParameterAssert(url != nil);
+    assert(url != nil);
 
     NSError *error;
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:&error];

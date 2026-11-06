@@ -471,7 +471,7 @@ void metadataCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
 }
 
 - (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error {
-    NSParameterAssert(encoder != nullptr);
+    assert(encoder != nullptr);
 
     auto encoderStatus = FLAC__stream_encoder_init_stream(encoder, writeCallback, seekCallback, tellCallback,
                                                           metadataCallback, (__bridge void *)self);
@@ -514,7 +514,7 @@ void metadataCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
 }
 
 - (BOOL)initializeFLACStreamEncoder:(FLAC__StreamEncoder *)encoder error:(NSError **)error {
-    NSParameterAssert(encoder != nullptr);
+    assert(encoder != nullptr);
 
     // As long as the FLAC encoder is non-null and uninitialized this setter will succeed
     FLAC__stream_encoder_set_ogg_serial_number(encoder, static_cast<int>(arc4random()));

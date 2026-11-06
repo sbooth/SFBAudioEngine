@@ -27,7 +27,7 @@ using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
 @implementation SFBAudioMetadata (TagLibMP4Tag)
 
 - (void)addMetadataFromTagLibMP4Tag:(const TagLib::MP4::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     // Add the basic tags not specific to MP4
     [self addMetadataFromTagLibTag:tag];

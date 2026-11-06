@@ -7,6 +7,7 @@
 
 #import "SFBDSDDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import "SFBDSDDecoder+Internal.h"
@@ -405,8 +406,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (NSError *)invalidFormatError:(NSString *)formatName recoverySuggestion:(NSString *)recoverySuggestion {
-    NSParameterAssert(formatName != nil);
-    NSParameterAssert(recoverySuggestion != nil);
+    assert(formatName != nil);
+    assert(recoverySuggestion != nil);
 
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:recoverySuggestion
                                                                        forKey:NSLocalizedRecoverySuggestionErrorKey];

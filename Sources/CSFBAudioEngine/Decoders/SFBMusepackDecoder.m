@@ -128,8 +128,8 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBMusepackDetectionSize skipID3v2Tag:YES error:error];
     if (!header) {

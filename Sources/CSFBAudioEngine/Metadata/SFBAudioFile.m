@@ -7,6 +7,7 @@
 
 #import "SFBAudioFile.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import "SFBAudioFile+Internal.h"
@@ -322,7 +323,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (NSError *)genericInvalidFormatError:(NSString *)formatName {
-    NSParameterAssert(formatName != nil);
+    assert(formatName != nil);
 
     NSMutableDictionary *userInfo = [NSMutableDictionary
             dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")

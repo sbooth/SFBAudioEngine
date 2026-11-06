@@ -13,7 +13,7 @@
 @implementation SFBAudioMetadata (TagLibTag)
 
 - (void)addMetadataFromTagLibTag:(const TagLib::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     self.title = [NSString stringWithUTF8String:tag->title().toCString(true)];
     self.artist = [NSString stringWithUTF8String:tag->artist().toCString(true)];

@@ -13,7 +13,7 @@
 @implementation SFBAudioMetadata (TagLibAPETag)
 
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     if (tag->isEmpty()) {
         return;

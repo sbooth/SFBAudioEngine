@@ -7,6 +7,8 @@
 
 #import "SFBDataInputSource.h"
 
+#import <assert.h>
+
 @interface SFBDataInputSource () {
   @private
     NSData *_data;
@@ -21,7 +23,7 @@
 }
 
 - (instancetype)initWithData:(NSData *)data url:(NSURL *)url {
-    NSParameterAssert(data != nil);
+    assert(data != nil);
 
     if ((self = [super initWithURL:url])) {
         _data = [data copy];
