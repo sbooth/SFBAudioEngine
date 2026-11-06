@@ -587,7 +587,9 @@ sfb::AudioPlayer::AudioPlayer() {
     [engine_ connect:sourceNode_ to:engine_.mainMixerNode format:format];
     [engine_ prepare];
 
+#ifndef NDEBUG
     logProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
+#endif /* !NDEBUG */
 
     // ========================================
     // Thread Launch
