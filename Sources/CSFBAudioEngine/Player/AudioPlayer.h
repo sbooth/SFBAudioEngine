@@ -393,10 +393,6 @@ class AudioPlayer final {
     /// - returns: `true` if the player was active
     bool deactivatePlayerAndStopEngine() noexcept;
 
-    // The `*Locked()` functions change the player state while the caller holds `engineMutex_`, so a state change can be
-    // combined with other checks or changes in a single critical section. They do not notify the delegate; the caller
-    // does so after releasing `engineMutex_`.
-
     /// Starts the engine if needed and begins or resumes playback
     /// - important: The caller must hold `engineMutex_`
     /// - precondition: The player is not playing
