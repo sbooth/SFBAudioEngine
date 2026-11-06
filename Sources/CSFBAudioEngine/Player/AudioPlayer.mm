@@ -745,6 +745,9 @@ void sfb::AudioPlayer::pause() noexcept {
     bool wasPlaying;
     {
         std::lock_guard lock{engineMutex_};
+        if (bits::is_clear(loadFlags(), Flags::active)) {
+            return;
+        }
         wasPlaying = pauseLocked();
     }
 
@@ -758,11 +761,9 @@ bool sfb::AudioPlayer::pauseLocked() noexcept {
     engineMutex_.assertIsOwner();
 #endif /* !NDEBUG */
 
-    if (bits::is_clear(loadFlags(), Flags::active)) {
-        return false;
-    }
 #if TARGET_OS_IPHONE
-    // An explicit pause should not be overridden by a subsequent, possibly late, interruption ended notification
+    // An explicit pause should not be overridden by a subsequent, possibly late, interruption ended notification,
+    // even if the player is already paused because of the interruption
     wasPlayingBeforeInterruption_ = false;
 #endif /* TARGET_OS_IPHONE */
     const auto prevFlags = clearFlags(Flags::playing);
