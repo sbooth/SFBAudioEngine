@@ -7,6 +7,7 @@
 
 #import "SFBAudioFile.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import "SFBAudioFile+Internal.h"
@@ -264,9 +265,9 @@ static NSMutableArray *_registeredSubclasses = nil;
         _url = url;
         _properties = [[SFBAudioProperties alloc] init];
         _metadata = [[SFBAudioMetadata alloc] init];
-#if DEBUG
+#ifndef NDEBUG
         os_log_debug(gSFBAudioFileLog, "Created %{public}@ based on score of %i", self, score);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     }
 
     return self;
@@ -322,7 +323,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (NSError *)genericInvalidFormatError:(NSString *)formatName {
-    NSParameterAssert(formatName != nil);
+    assert(formatName != nil);
 
     NSMutableDictionary *userInfo = [NSMutableDictionary
             dictionaryWithObject:NSLocalizedString(@"The file's extension may not match the file's type.", @"")
@@ -438,8 +439,8 @@ static NSMutableArray *_registeredSubclasses = nil;
     // N.B. `sortUsingComparator:` sorts in ascending order
     // To sort the array in descending order the comparator is reversed
     [_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
-        int a = ((SFBAudioFileSubclassInfo *)obj1).priority;
-        int b = ((SFBAudioFileSubclassInfo *)obj2).priority;
+        const int a = ((SFBAudioFileSubclassInfo *)obj1).priority;
+        const int b = ((SFBAudioFileSubclassInfo *)obj2).priority;
         if (a > b) {
             return NSOrderedAscending;
         }

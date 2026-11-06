@@ -10,7 +10,8 @@
 #import <os/log.h>
 
 #import <algorithm>
-#import <memory>
+
+#import "unique_ref.hpp"
 
 #import <lame/lame.h>
 
@@ -32,18 +33,13 @@ SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `lame_global_flags` objects
-struct lame_global_flags_deleter {
-    void operator()(lame_global_flags *gfp) noexcept { lame_close(gfp); }
-};
-
-using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_global_flags_deleter>;
+using unique_lame_global_flags = util::unique_ref<lame_global_flags, lame_close>;
 
 } /* namespace */
 
 @interface SFBMP3Encoder () {
   @private
-    lame_global_flags_unique_ptr _gfp;
+    unique_lame_global_flags _gfp;
     AVAudioFramePosition _framePosition;
     NSInteger _id3v2TagSize;
 }
@@ -94,7 +90,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         return NO;
     }
 
-    lame_global_flags_unique_ptr gfp{lame_init()};
+    unique_lame_global_flags gfp{lame_init()};
     if (!gfp) {
         os_log_error(gSFBAudioEncoderLog, "lame_init failed");
         if (error != nullptr) {
@@ -278,7 +274,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 
         if (NSNumber *vbrMax = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRMaximumBitrate];
             vbrMax != nil) {
-            auto bitrate = vbrMax.intValue * 1000;
+            const auto bitrate = vbrMax.intValue * 1000;
             result = lame_set_VBR_max_bitrate_kbps(gfp.get(), bitrate);
             if (result == -1) {
                 os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_max_bitrate_kbps(%d) failed", bitrate);
@@ -390,7 +386,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         return NO;
     }
 
-    auto result = lame_encode_buffer_interleaved_ieee_float(
+    const auto result = lame_encode_buffer_interleaved_ieee_float(
             _gfp.get(), static_cast<const float *>(buffer.audioBufferList->mBuffers[0].mData),
             static_cast<int>(frameLength), buf.get(), static_cast<int>(bufsize));
     if (result == -1) {
@@ -440,7 +436,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
         return NO;
     }
 
-    auto result = lame_encode_flush(_gfp.get(), buf.get(), bufsize);
+    const auto result = lame_encode_flush(_gfp.get(), buf.get(), bufsize);
     if (result == -1) {
         os_log_error(gSFBAudioEncoderLog, "lame_encode_flush failed");
         if (error != nullptr) {
@@ -455,7 +451,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)writeID3v1TagReturningError:(NSError **)error {
-    auto bufsize = lame_get_id3v1_tag(_gfp.get(), nullptr, 0);
+    const auto bufsize = lame_get_id3v1_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -465,7 +461,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             return NO;
         }
 
-        auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
+        const auto result = lame_get_id3v1_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
         if (![_outputTarget writeBytes:buf.get()
@@ -481,7 +477,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)writeID3v2TagReturningError:(NSError **)error {
-    auto bufsize = lame_get_id3v2_tag(_gfp.get(), nullptr, 0);
+    const auto bufsize = lame_get_id3v2_tag(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -491,7 +487,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             return NO;
         }
 
-        auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
+        const auto result = lame_get_id3v2_tag(_gfp.get(), buf.get(), bufsize);
 
         NSInteger bytesWritten;
         if (![_outputTarget writeBytes:buf.get()
@@ -509,7 +505,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
 }
 
 - (BOOL)writeXingHeaderReturningError:(NSError **)error {
-    auto bufsize = lame_get_lametag_frame(_gfp.get(), nullptr, 0);
+    const auto bufsize = lame_get_lametag_frame(_gfp.get(), nullptr, 0);
     if (bufsize > 0) {
         auto buf = std::make_unique<unsigned char[]>(bufsize);
         if (!buf) {
@@ -519,7 +515,7 @@ using lame_global_flags_unique_ptr = std::unique_ptr<lame_global_flags, lame_glo
             return NO;
         }
 
-        auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
+        const auto result = lame_get_lametag_frame(_gfp.get(), buf.get(), bufsize);
 
         if (![_outputTarget seekToOffset:_id3v2TagSize error:error]) {
             return NO;

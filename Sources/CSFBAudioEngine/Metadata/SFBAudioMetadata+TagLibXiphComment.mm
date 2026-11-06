@@ -5,29 +5,25 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#import <memory>
-
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "TagLibStringUtilities.h"
+#import "unique_ref.hpp"
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `CFTypeRef` objects
-struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) noexcept { CFRelease(cf); }
-};
-
-using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
+using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
 
 } /* namespace */
 
 @implementation SFBAudioMetadata (TagLibXiphComment)
 
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     NSMutableDictionary *additionalMetadata = [NSMutableDictionary dictionary];
 
@@ -248,7 +244,7 @@ void sfb::setXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::Xi
 std::unique_ptr<TagLib::FLAC::Picture> sfb::ConvertAttachedPictureToFLACPicture(SFBAttachedPicture *attachedPicture) {
     assert(attachedPicture != nil);
 
-    cg_image_source_unique_ptr imageSource{
+    unique_cg_image_source imageSource{
             CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
     if (!imageSource) {
         return nullptr;

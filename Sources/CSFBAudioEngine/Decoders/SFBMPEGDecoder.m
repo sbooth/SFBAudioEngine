@@ -7,6 +7,7 @@
 
 #import "SFBMPEGDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -19,7 +20,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Dec
 // ========================================
 // Callbacks
 static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
-    NSCParameterAssert(iohandle != NULL);
+    assert(iohandle != NULL);
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
 
@@ -32,7 +33,7 @@ static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
 }
 
 static int64_t lseek_callback(void *iohandle, int64_t offset, int whence) {
-    NSCParameterAssert(iohandle != NULL);
+    assert(iohandle != NULL);
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
 
@@ -96,16 +97,16 @@ static BOOL is_id3v2_tag_header(const unsigned char *buf) {
 /// Returns the total size in bytes of the ID3v2 tag with @c header.
 /// @warning @c header must be at least 10 bytes in size.
 static uint32_t id3v2_tag_total_size(const unsigned char *header) {
-    unsigned char flags = header[5];
+    const unsigned char flags = header[5];
     // The size is stored as a 32-bit synchsafe integer with 28 effective bits
-    uint32_t size = (header[6] << 21) | (header[7] << 14) | (header[8] << 7) | header[9];
+    const uint32_t size = (header[6] << 21) | (header[7] << 14) | (header[8] << 7) | header[9];
     return 10 + size + (flags & 0x10 ? 10 : 0);
 }
 
 /// Searches for an MP3 sync word and minimal valid frame header in @c buf.
 static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned char *buf, NSInteger len) {
-    NSCParameterAssert(buf != NULL);
-    NSCParameterAssert(len >= 3);
+    assert(buf != NULL);
+    assert(len >= 3);
 
     const unsigned char *loc = buf;
     const unsigned char *end = buf + len - 2;
@@ -157,8 +158,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSInteger originalOffset;
     if (![inputSource getOffset:&originalOffset error:error]) {
@@ -316,8 +317,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
                                                         interleaved:YES
                                                       channelLayout:channelLayout];
 
-    size_t bufferSizeBytes = mpg123_outblock(_mpg123);
-    UInt32 framesPerMPEGFrame = (UInt32)(bufferSizeBytes / ((size_t)channels * sizeof(float)));
+    const size_t bufferSizeBytes = mpg123_outblock(_mpg123);
+    const UInt32 framesPerMPEGFrame = (UInt32)(bufferSizeBytes / ((size_t)channels * sizeof(float)));
 
     // Set up the source format
     AudioStreamBasicDescription sourceStreamDescription = {0};
@@ -405,10 +406,10 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
     AVAudioFrameCount framesProcessed = 0;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-        AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
-                                                readingFromOffset:0
-                                                      frameLength:framesRemaining];
+        const AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+        const AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer
+                                                      readingFromOffset:0
+                                                            frameLength:framesRemaining];
         [_buffer trimAtOffset:0 frameLength:framesCopied];
 
         framesProcessed += framesCopied;
@@ -422,7 +423,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
         off_t frameNumber;
         unsigned char *audioData = NULL;
         size_t bytesDecoded = 0;
-        int result = mpg123_decode_frame(_mpg123, &frameNumber, &audioData, &bytesDecoded);
+        const int result = mpg123_decode_frame(_mpg123, &frameNumber, &audioData, &bytesDecoded);
         // EOS
         if (result == MPG123_DONE) {
             break;
@@ -447,7 +448,7 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error {
     NSParameterAssert(frame >= 0);
 
-    off_t offset = mpg123_seek(_mpg123, frame, SEEK_SET);
+    const off_t offset = mpg123_seek(_mpg123, frame, SEEK_SET);
     if (offset < 0) {
         os_log_error(gSFBAudioDecoderLog, "mpg123 seek error");
         if (error) {

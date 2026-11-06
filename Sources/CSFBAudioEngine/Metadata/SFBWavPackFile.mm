@@ -7,6 +7,8 @@
 
 #import "SFBWavPackFile.h"
 
+#import <cassert>
+
 #import <taglib/tfilestream.h>
 #import <taglib/wavpackfile.h>
 
@@ -40,8 +42,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameWavPack = @"org.sbooth.AudioE
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBWavPackDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {

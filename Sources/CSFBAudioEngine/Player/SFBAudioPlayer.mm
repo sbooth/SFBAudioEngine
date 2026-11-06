@@ -61,6 +61,18 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
     return self;
 }
 
+- (void)dealloc {
+    auto player = std::move(_player);
+    if (player && player->ownsCurrentThread()) {
+        auto *raw = player.release();
+        // Call ~AudioPlayer() on a non-owned thread to prevent self-join
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+            delete raw;
+        });
+    }
+    // Otherwise unique_ptr's destructor runs inline
+}
+
 // MARK: - Playlist Management
 
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error {
@@ -146,6 +158,14 @@ NSErrorDomain const SFBAudioPlayerErrorDomain = @"org.sbooth.AudioEngine.AudioPl
 
 - (void)reset {
     _player->reset();
+}
+
+- (SFBAudioPlayerEndOfAudioAction)endOfAudioAction {
+    return _player->endOfAudioAction();
+}
+
+- (void)setEndOfAudioAction:(SFBAudioPlayerEndOfAudioAction)endOfAudioAction {
+    _player->setEndOfAudioAction(endOfAudioAction);
 }
 
 // MARK: - Player State

@@ -7,6 +7,8 @@
 
 #import "SFBTrueAudioFile.h"
 
+#import <cassert>
+
 #import <taglib/tfilestream.h>
 #import <taglib/trueaudiofile.h>
 
@@ -40,8 +42,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameTrueAudio = @"org.sbooth.Audi
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBTrueAudioDetectionSize skipID3v2Tag:YES error:error];
     if (header == nil) {

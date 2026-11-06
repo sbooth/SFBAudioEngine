@@ -7,6 +7,8 @@
 
 #import "SFBScreamTracker3ModuleFile.h"
 
+#import <cassert>
+
 #import <taglib/s3mfile.h>
 #import <taglib/tfilestream.h>
 
@@ -38,8 +40,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameScreamTracker3Module =
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     *formatIsSupported = SFBTernaryTruthValueUnknown;
 

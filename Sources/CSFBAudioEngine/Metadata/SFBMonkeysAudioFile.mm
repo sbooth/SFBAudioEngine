@@ -7,6 +7,8 @@
 
 #import "SFBMonkeysAudioFile.h"
 
+#import <cassert>
+
 #import <taglib/apefile.h>
 #import <taglib/tfilestream.h>
 
@@ -40,8 +42,8 @@ SFBAudioFileFormatName const SFBAudioFileFormatNameMonkeysAudio = @"org.sbooth.A
 + (BOOL)testFileHandle:(NSFileHandle *)fileHandle
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(fileHandle != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(fileHandle != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [fileHandle readHeaderOfLength:SFBAPEDetectionSize skipID3v2Tag:YES error:error];
     if (header == nil) {
