@@ -734,10 +734,8 @@ bool sfb::AudioPlayer::playLocked(NSError **error) noexcept {
         return false;
     }
     setFlags(Flags::active | Flags::playing);
-
     // The event processing thread polls less often when not playing
     eventSemaphore_.signal();
-
     return true;
 }
 
