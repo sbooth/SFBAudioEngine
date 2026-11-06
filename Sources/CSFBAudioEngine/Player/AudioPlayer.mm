@@ -569,9 +569,9 @@ sfb::AudioPlayer::AudioPlayer() {
     [engine_ connect:sourceNode_ to:engine_.mainMixerNode format:format];
     [engine_ prepare];
 
-#if DEBUG
+#ifndef NDEBUG
     logProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     // ========================================
     // Thread Launch
@@ -1562,13 +1562,13 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
         }
     }
 
-#if DEBUG
+#ifndef NDEBUG
     if (const auto occupancy = static_cast<double>(audioMetadata_.capacity - audioMetadata_.availableToWrite()) /
                                static_cast<double>(audioMetadata_.capacity);
         occupancy > twoThirds) {
         os_log_debug(log_, "Less than 1/3 headroom in metadata queue: occupancy %.2f", occupancy);
     }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     // Clear the mute and pending format change flags if needed now that the ring buffer is full
     if (bits::has_any(flags, Flags::muted | Flags::formatChangePending)) {
@@ -1776,13 +1776,13 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 
     while (!stoken.stop_requested()) {
-#if DEBUG
+#ifndef NDEBUG
         if (const auto occupancy =
                     static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);
             occupancy > twoThirds) {
             os_log_debug(log_, "Less than 1/3 headroom in event message queue: occupancy %.2f", occupancy);
         }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
         // Process pending events
         EventCommand eventCommand;
@@ -2348,11 +2348,11 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
                      decoder);
     } else {
-#if DEBUG
+#ifndef NDEBUG
         os_log_debug(log_, "Rendering will start in %.2f msec for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(hostTime - now)) / nanosecondsPerMillisecond,
                      decoder);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     }
 
     // Since the rendering started notification is submitted for asynchronous execution,
@@ -2391,7 +2391,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
             nowPlayingChanged = that->setNowPlaying(decoder);
         }
 
-#if DEBUG
+#ifndef NDEBUG
         const auto now = host_time::current();
         const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
         const auto tolerance =
@@ -2400,7 +2400,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
             os_log_debug(log_, "Rendering started notification arrived %.2f msec %s",
                          static_cast<double>(delta) / nanosecondsPerMillisecond, now > hostTime ? "late" : "early");
         }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
         if (nowPlayingChanged) {
             that->notifyDelegateOfNowPlayingChange(decoder);
@@ -2430,11 +2430,11 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                      static_cast<double>(host_time::toNanoseconds(now - hostTime)) / nanosecondsPerMillisecond,
                      decoder);
     } else {
-#if DEBUG
+#ifndef NDEBUG
         os_log_debug(log_, "Rendering will complete in %.2f msec for %{public}@",
                      static_cast<double>(host_time::toNanoseconds(hostTime - now)) / nanosecondsPerMillisecond,
                      decoder);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     }
 
     // Since the rendering complete notification is submitted for asynchronous execution,
@@ -2478,7 +2478,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             return;
         }
 
-#if DEBUG
+#ifndef NDEBUG
         const auto now = host_time::current();
         const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
         const auto tolerance =
@@ -2487,7 +2487,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s",
                          static_cast<double>(delta) / nanosecondsPerMillisecond, now > hostTime ? "late" : "early");
         }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)]) {
@@ -2502,9 +2502,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
 
         // End of audio
         if (hasNoDecoders) {
-#if DEBUG
+#ifndef NDEBUG
             os_log_debug(log_, "End of audio reached");
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
             // The end of audio action is only performed if the player was not stopped while the audio was playing
             const auto wasActive = bits::is_set(that->loadFlags(), Flags::active);
@@ -2597,9 +2597,9 @@ auto sfb::AudioPlayer::loadTransportSnapshot() const noexcept -> detail::Transpo
 
         // Retry immediately if a write is currently in progress
         if (isOdd(seq)) [[unlikely]] {
-#if DEBUG
+#ifndef NDEBUG
             os_log_debug(log_, "Unable to load playback snapshot: write in progress");
-#endif /* DEBUG */
+#endif /* !NDEBUG */
             cpuPause();
             continue;
         }
@@ -2653,9 +2653,9 @@ std::size_t sfb::AudioPlayer::cancelActiveDecoders() noexcept {
 }
 
 auto sfb::AudioPlayer::firstActiveDecoderState() const noexcept -> DecoderState * {
-#if DEBUG
+#ifndef NDEBUG
     activeDecodersMutex_.assertIsOwner();
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     const auto iter = std::ranges::find_if(activeDecoders_, [](const auto &decoderState) noexcept {
         const auto decoderFlags = decoderState->loadFlags();
         return bits::has_none(decoderFlags, DecoderState::Flags::needsInitialization | DecoderState::Flags::canceled);
@@ -2664,9 +2664,9 @@ auto sfb::AudioPlayer::firstActiveDecoderState() const noexcept -> DecoderState 
 }
 
 auto sfb::AudioPlayer::decoderStateWithSequenceNumber(uint64_t sequenceNumber) const noexcept -> DecoderState * {
-#if DEBUG
+#ifndef NDEBUG
     activeDecodersMutex_.assertIsOwner();
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
     return iter != activeDecoders_.cend() ? iter->get() : nullptr;
 }
@@ -2724,7 +2724,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
                          outputNodeOutputFormatSampleRate, outputNodeOutputFormatChannelCount);
         } else if (outputNodeOutputFormatSampleRate != mixerNodeOutputFormat.sampleRate ||
                    outputNodeOutputFormatChannelCount != mixerNodeOutputFormat.channelCount) {
-#if DEBUG
+#ifndef NDEBUG
             if (outputNodeOutputFormatSampleRate != mixerNodeOutputFormat.sampleRate) {
                 os_log_debug(log_,
                              "Mismatch between main mixer → output node connection sample rate (%g Hz) and hardware "
@@ -2739,7 +2739,7 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
             }
             os_log_debug(log_, "Setting main mixer → output node connection format to %{public}@",
                          stringDescribingAVAudioFormat(outputNodeOutputFormat));
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
             // AVAudioEngine stops itself when a configuration change occurs but it could have been restarted
             // before the notification was delivered or the lock was acquired.
@@ -2864,9 +2864,9 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
 // MARK: - Player State Management
 
 bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
-#if DEBUG
+#ifndef NDEBUG
     engineMutex_.assertIsOwner();
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     if (!engine_.isRunning) {
         if (NSError *startError = nil; ![engine_ startAndReturnError:&startError]) {
@@ -2882,9 +2882,9 @@ bool sfb::AudioPlayer::startEngine(NSError **error) noexcept {
 }
 
 void sfb::AudioPlayer::notifyDelegateOfEngineStartFailure(NSError *error, bool wasPlaying) noexcept {
-#if DEBUG
+#ifndef NDEBUG
     engineMutex_.assertIsNotOwner();
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     if (wasPlaying) {
         notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStatePaused);
@@ -3007,9 +3007,9 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
         [engine_ connect:sourceNode_ to:mixerNode format:format];
     }
 
-#if DEBUG
+#ifndef NDEBUG
     logProcessingGraphDescription(log_, OS_LOG_TYPE_DEBUG);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     [engine_ prepare];
 

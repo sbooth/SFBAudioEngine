@@ -292,9 +292,9 @@ static NSMutableArray *_registeredSubclasses = nil;
 
     if ((self = [[subclass alloc] init])) {
         _inputSource = inputSource;
-#if DEBUG
+#ifndef NDEBUG
         os_log_debug(gSFBDSDDecoderLog, "Created %{public}@ based on score of %i", self, score);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     }
 
     return self;

@@ -7,6 +7,7 @@
 
 #import "SFBModuleDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <dumb/dumb.h>
@@ -21,7 +22,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameModule = @"org.sbooth.AudioEngine.D
 #define DUMB_BUF_FRAMES 512
 
 static int skip_callback(void *f, dumb_off_t n) {
-    NSCParameterAssert(f != NULL);
+    assert(f != NULL);
 
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
@@ -34,7 +35,7 @@ static int skip_callback(void *f, dumb_off_t n) {
 }
 
 static int getc_callback(void *f) {
-    NSCParameterAssert(f != NULL);
+    assert(f != NULL);
 
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
@@ -46,7 +47,7 @@ static int getc_callback(void *f) {
 }
 
 static dumb_ssize_t getnc_callback(char *ptr, size_t n, void *f) {
-    NSCParameterAssert(f != NULL);
+    assert(f != NULL);
 
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
@@ -62,7 +63,7 @@ static void close_callback(void *f) {
 }
 
 static int seek_callback(void *f, dumb_off_t offset) {
-    NSCParameterAssert(f != NULL);
+    assert(f != NULL);
 
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
@@ -73,7 +74,7 @@ static int seek_callback(void *f, dumb_off_t offset) {
 }
 
 static dumb_off_t get_size_callback(void *f) {
-    NSCParameterAssert(f != NULL);
+    assert(f != NULL);
 
     SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 

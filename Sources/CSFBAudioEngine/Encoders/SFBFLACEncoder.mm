@@ -10,6 +10,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 
 #import <FLAC/metadata.h>
 #import <FLAC/stream_encoder.h>
@@ -49,7 +50,7 @@ namespace {
 
 FLAC__StreamEncoderReadStatus readCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder, FLAC__byte buffer[],
                                            size_t *bytes, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputTarget *outputTarget = flacEncoder->_outputTarget;
@@ -71,7 +72,7 @@ FLAC__StreamEncoderReadStatus readCallback([[maybe_unused]] const FLAC__StreamEn
 FLAC__StreamEncoderWriteStatus writeCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
                                              const FLAC__byte buffer[], size_t bytes, uint32_t samples,
                                              uint32_t current_frame, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputTarget *outputTarget = flacEncoder->_outputTarget;
@@ -94,7 +95,7 @@ FLAC__StreamEncoderWriteStatus writeCallback([[maybe_unused]] const FLAC__Stream
 
 FLAC__StreamEncoderSeekStatus seekCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
                                            FLAC__uint64 absolute_byte_offset, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputTarget *outputTarget = flacEncoder->_outputTarget;
@@ -112,7 +113,7 @@ FLAC__StreamEncoderSeekStatus seekCallback([[maybe_unused]] const FLAC__StreamEn
 
 FLAC__StreamEncoderTellStatus tellCallback([[maybe_unused]] const FLAC__StreamEncoder *encoder,
                                            FLAC__uint64 *absolute_byte_offset, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
     SFBOutputTarget *outputTarget = flacEncoder->_outputTarget;

@@ -7,6 +7,7 @@
 
 #import "SFBLibsndfileDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -29,7 +30,7 @@ static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 to
 static void FillOutASBDForLPCM(AudioStreamBasicDescription *_Nonnull asbd, Float64 sampleRate, UInt32 channelsPerFrame,
                                UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian,
                                BOOL isNonInterleaved) {
-    NSCParameterAssert(asbd != NULL);
+    assert(asbd != NULL);
 
     asbd->mFormatID = kAudioFormatLinearPCM;
     asbd->mFormatFlags =
@@ -46,8 +47,8 @@ static void FillOutASBDForLPCM(AudioStreamBasicDescription *_Nonnull asbd, Float
 
 /// Returns an `AVAudioChannelLayout` object initialized with the channels from a sndfile channel map
 static AVAudioChannelLayout *_Nullable ChannelLayoutFromSndfileChannelMap(int *_Nonnull channel_map, int channels) {
-    NSCParameterAssert(channel_map != NULL);
-    NSCParameterAssert(channels > 0);
+    assert(channel_map != NULL);
+    assert(channels > 0);
 
     // Convert from sndfile channel map to Core Audio channel label
     AudioChannelLabel labels[channels];
@@ -160,7 +161,7 @@ enum ReadMethod {
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     NSInteger length;
@@ -171,7 +172,7 @@ static sf_count_t my_sf_vio_get_filelen(void *user_data) {
 }
 
 static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     if (!decoder->_inputSource.supportsSeeking) {
@@ -211,7 +212,7 @@ static sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
 }
 
 static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
 
@@ -223,7 +224,7 @@ static sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data) {
 }
 
 static sf_count_t my_sf_vio_tell(void *user_data) {
-    NSCParameterAssert(user_data != NULL);
+    assert(user_data != NULL);
 
     SFBLibsndfileDecoder *decoder = (__bridge SFBLibsndfileDecoder *)user_data;
     NSInteger offset;

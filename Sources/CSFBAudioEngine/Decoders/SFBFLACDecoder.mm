@@ -45,7 +45,7 @@ using unique_flac_decoder = util::unique_ref<FLAC__StreamDecoder, FLAC__stream_d
 
 /// Returns an AVAudioChannelLayout for the given WAVE channel mask
 AVAudioChannelLayout *_Nullable channelLayoutFromWAVEMask(UInt32 dwChannelMask) noexcept {
-    NSCParameterAssert(dwChannelMask != 0);
+    assert(dwChannelMask != 0);
 
     UInt32 propertySize = 0;
     OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForBitmap, sizeof dwChannelMask,
@@ -97,7 +97,7 @@ namespace {
 
 FLAC__StreamDecoderReadStatus readCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder, FLAC__byte buffer[],
                                            size_t *bytes, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     SFBInputSource *inputSource = flacDecoder->_inputSource;
@@ -118,7 +118,7 @@ FLAC__StreamDecoderReadStatus readCallback([[maybe_unused]] const FLAC__StreamDe
 
 FLAC__StreamDecoderSeekStatus seekCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder,
                                            FLAC__uint64 absolute_byte_offset, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     SFBInputSource *inputSource = flacDecoder->_inputSource;
@@ -136,7 +136,7 @@ FLAC__StreamDecoderSeekStatus seekCallback([[maybe_unused]] const FLAC__StreamDe
 
 FLAC__StreamDecoderTellStatus tellCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder,
                                            FLAC__uint64 *absolute_byte_offset, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
@@ -151,7 +151,7 @@ FLAC__StreamDecoderTellStatus tellCallback([[maybe_unused]] const FLAC__StreamDe
 
 FLAC__StreamDecoderLengthStatus lengthCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder,
                                                FLAC__uint64 *stream_length, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
@@ -165,7 +165,7 @@ FLAC__StreamDecoderLengthStatus lengthCallback([[maybe_unused]] const FLAC__Stre
 }
 
 FLAC__bool eofCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder, void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     return flacDecoder->_inputSource.atEOF;
@@ -174,7 +174,7 @@ FLAC__bool eofCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder, void
 FLAC__StreamDecoderWriteStatus writeCallback([[maybe_unused]] const FLAC__StreamDecoder *decoder,
                                              const FLAC__Frame *frame, const FLAC__int32 *const buffer[],
                                              void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
@@ -182,7 +182,7 @@ FLAC__StreamDecoderWriteStatus writeCallback([[maybe_unused]] const FLAC__Stream
 
 void metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata,
                       void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     [flacDecoder handleFLACMetadata:decoder metadata:metadata];
@@ -190,7 +190,7 @@ void metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMeta
 
 void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status,
                    void *client_data) noexcept {
-    NSCParameterAssert(client_data != nullptr);
+    assert(client_data != nullptr);
 
     SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
     [flacDecoder handleFLACError:decoder status:status];
@@ -538,10 +538,10 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder
                                             frame:(const FLAC__Frame *)frame
                                            buffer:(const FLAC__int32 *const[])buffer {
-#if DEBUG
+#ifndef NDEBUG
     NSParameterAssert(decoder != nullptr);
     NSParameterAssert(frame != nullptr);
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     // Ensure adequate buffer size
     if (frame->header.blocksize > _streamInfo->max_blocksize && _frameBuffer.frameCapacity < frame->header.blocksize) {

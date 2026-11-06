@@ -694,10 +694,10 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     }
     entry = std::prev(entry);
 
-#if DEBUG
+#ifndef NDEBUG
     os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %u to seek to frame %lld",
                  std::ranges::distance(_seekTableEntries.cbegin(), entry), entry->frameNumber_, frame);
-#endif
+#endif /* !NDEBUG */
 
     if (![_inputSource seekToOffset:entry->lastBufferReadPosition_ error:error]) {
         return NO;

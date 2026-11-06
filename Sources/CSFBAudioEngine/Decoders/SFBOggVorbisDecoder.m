@@ -7,6 +7,7 @@
 
 #import "SFBOggVorbisDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <vorbis/vorbisfile.h>
@@ -25,7 +26,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrat
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggVorbisBitrateWindow = @"bitrate_window";
 
 static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource) {
-    NSCParameterAssert(datasource != NULL);
+    assert(datasource != NULL);
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
     NSInteger bytesRead;
@@ -36,7 +37,7 @@ static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *dat
 }
 
 static int seek_func_callback(void *datasource, ogg_int64_t offset, int whence) {
-    NSCParameterAssert(datasource != NULL);
+    assert(datasource != NULL);
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
 
@@ -64,7 +65,7 @@ static int seek_func_callback(void *datasource, ogg_int64_t offset, int whence) 
 }
 
 static long tell_func_callback(void *datasource) {
-    NSCParameterAssert(datasource != NULL);
+    assert(datasource != NULL);
 
     SFBOggVorbisDecoder *decoder = (__bridge SFBOggVorbisDecoder *)datasource;
     NSInteger offset;

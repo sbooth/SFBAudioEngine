@@ -7,6 +7,7 @@
 
 #import "SFBMusepackDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <Accelerate/Accelerate.h>
@@ -49,7 +50,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTagOffs
 SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyMusepackTotalFileLength = @"total_file_length";
 
 static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     NSInteger bytesRead;
@@ -60,14 +61,14 @@ static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t si
 }
 
 static mpc_bool_t seek_callback(mpc_reader *p_reader, mpc_int32_t offset) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     return (mpc_bool_t)[decoder->_inputSource seekToOffset:offset error:nil];
 }
 
 static mpc_int32_t tell_callback(mpc_reader *p_reader) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     NSInteger offset;
@@ -78,7 +79,7 @@ static mpc_int32_t tell_callback(mpc_reader *p_reader) {
 }
 
 static mpc_int32_t get_size_callback(mpc_reader *p_reader) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
 
@@ -90,7 +91,7 @@ static mpc_int32_t get_size_callback(mpc_reader *p_reader) {
 }
 
 static mpc_bool_t canseek_callback(mpc_reader *p_reader) {
-    NSCParameterAssert(p_reader != NULL);
+    assert(p_reader != NULL);
 
     SFBMusepackDecoder *decoder = (__bridge SFBMusepackDecoder *)p_reader->data;
     return (mpc_bool_t)decoder.supportsSeeking;

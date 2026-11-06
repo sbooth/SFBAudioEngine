@@ -7,6 +7,7 @@
 
 #import "SFBMusepackEncoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <mpc/libmpcenc.h>
@@ -17,7 +18,7 @@ SFBAudioEncoderName const SFBAudioEncoderNameMusepack = @"org.sbooth.AudioEngine
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality = @"Quality";
 
 static size_t my_mpc_write_callback(const void *restrict ptr, size_t size, size_t nitems, void *context) {
-    NSCParameterAssert(context != NULL);
+    assert(context != NULL);
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger bytesWritten;
@@ -31,7 +32,7 @@ static size_t my_mpc_write_callback(const void *restrict ptr, size_t size, size_
 }
 
 static int my_mpc_seek_callback(void *context, off_t offset, int whence) {
-    NSCParameterAssert(context != NULL);
+    assert(context != NULL);
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     switch (whence) {
@@ -67,7 +68,7 @@ static int my_mpc_seek_callback(void *context, off_t offset, int whence) {
 }
 
 static off_t my_mpc_tell_callback(void *context) {
-    NSCParameterAssert(context != NULL);
+    assert(context != NULL);
     SFBMusepackEncoder *encoder = (__bridge SFBMusepackEncoder *)context;
 
     NSInteger offset;
