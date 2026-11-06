@@ -231,6 +231,7 @@ uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
     return host_time::fromNanoseconds(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
 }
 
+#ifndef NDEBUG
 /// Returns a string representation of a playback state
 const char *playbackStateDescription(SFBAudioPlayerPlaybackState playbackState) noexcept {
     switch (playbackState) {
@@ -244,6 +245,7 @@ const char *playbackStateDescription(SFBAudioPlayerPlaybackState playbackState) 
         return nullptr;
     }
 }
+#endif /* !NDEBUG */
 
 } /* namespace */
 
