@@ -10,6 +10,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <cstdint>
 #import <map>
 #import <memory>
@@ -59,7 +60,7 @@ uint32_t bytesToID(const char bytes[4]) noexcept {
 
 // Read an ID as a uint32_t, performing validation
 bool readID(SFBInputSource *inputSource, uint32_t &chunkID) noexcept {
-    NSCParameterAssert(inputSource != nil);
+    assert(inputSource != nil);
 
     char chunkIDBytes[4];
     if (NSInteger bytesRead;
@@ -704,8 +705,8 @@ std::unique_ptr<FormDSDChunk> parseDSDIFF(SFBInputSource *inputSource) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSDIFFDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {

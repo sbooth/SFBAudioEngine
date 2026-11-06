@@ -7,6 +7,7 @@
 
 #import "SFBWavPackEncoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -39,7 +40,7 @@ SFBAudioEncodingSettingsValueWavPackCompressionLevel const
 @end
 
 static int wavpack_block_output(void *id, void *data, int32_t bcount) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
     SFBWavPackEncoder *encoder = (__bridge SFBWavPackEncoder *)id;
 
     if (!encoder->_firstBlock) {

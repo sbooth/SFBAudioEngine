@@ -7,6 +7,7 @@
 
 #import "SFBDSFDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 #import <stdint.h>
 
@@ -21,7 +22,7 @@ SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecod
 
 // Read a four byte chunk ID as a uint32_t
 static BOOL readChunkID(SFBInputSource *inputSource, uint32_t *chunkID) {
-    NSCParameterAssert(chunkID != NULL);
+    assert(chunkID != NULL);
 
     unsigned char chunkIDBytes[4];
     NSInteger bytesRead;
@@ -80,8 +81,8 @@ static void matrixTranspose(const unsigned char *restrict A, unsigned char *rest
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBDSFDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {

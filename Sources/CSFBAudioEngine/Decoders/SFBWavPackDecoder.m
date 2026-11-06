@@ -7,6 +7,7 @@
 
 #import "SFBWavPackDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 #import <simd/simd.h>
 
@@ -42,7 +43,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyWavPackRatio = 
 #define BUFFER_SIZE_FRAMES 2048
 
 static int32_t read_bytes_callback(void *id, void *data, int32_t bcount) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -54,7 +55,7 @@ static int32_t read_bytes_callback(void *id, void *data, int32_t bcount) {
 }
 
 static int64_t get_pos_callback(void *id) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -66,14 +67,14 @@ static int64_t get_pos_callback(void *id) {
 }
 
 static int set_pos_abs_callback(void *id, int64_t pos) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
     return ![decoder->_inputSource seekToOffset:pos error:nil];
 }
 
 static int set_pos_rel_callback(void *id, int64_t delta, int mode) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -110,7 +111,7 @@ static int set_pos_rel_callback(void *id, int64_t delta, int mode) {
 // A small read buffer in SFBWavPackDecoder would work but this function
 // only seems to be called once per file (when opening) so it may not be worthwhile
 static int push_back_byte_callback(void *id, int c) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -131,7 +132,7 @@ static int push_back_byte_callback(void *id, int c) {
 }
 
 static int64_t get_length_callback(void *id) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
 
@@ -143,7 +144,7 @@ static int64_t get_length_callback(void *id) {
 }
 
 static int can_seek_callback(void *id) {
-    NSCParameterAssert(id != NULL);
+    assert(id != NULL);
 
     SFBWavPackDecoder *decoder = (__bridge SFBWavPackDecoder *)id;
     return (int)decoder->_inputSource.supportsSeeking;
@@ -180,8 +181,8 @@ static int can_seek_callback(void *id) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSData *header = [inputSource readHeaderOfLength:SFBWavPackDetectionSize skipID3v2Tag:NO error:error];
     if (!header) {

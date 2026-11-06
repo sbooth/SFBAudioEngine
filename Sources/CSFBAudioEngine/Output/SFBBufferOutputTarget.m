@@ -7,6 +7,7 @@
 
 #import "SFBBufferOutputTarget.h"
 
+#import <assert.h>
 #import <stdint.h>
 
 @interface SFBBufferOutputTarget () {
@@ -20,8 +21,8 @@
 @implementation SFBBufferOutputTarget
 
 - (instancetype)initWithBuffer:(void *)buffer capacity:(size_t)capacity {
-    NSParameterAssert(buffer != nil);
-    NSParameterAssert(capacity > 0);
+    assert(buffer != NULL);
+    assert(capacity > 0);
 
     if ((self = [super initWithURL:nil])) {
         _buffer = buffer;

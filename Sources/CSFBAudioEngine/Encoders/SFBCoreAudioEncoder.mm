@@ -10,6 +10,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -35,12 +36,12 @@ using unique_ext_audio_file = util::unique_ref<ExtAudioFileRef, ExtAudioFileDisp
 template <typename T>
 OSStatus setAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID,
                                    T propertyValue) noexcept {
-    NSCParameterAssert(audioConverter != nullptr);
+    assert(audioConverter != nullptr);
     return AudioConverterSetProperty(audioConverter, propertyID, sizeof(propertyValue), &propertyValue);
 }
 
 std::vector<AudioFileTypeID> typeIDsForExtension(NSString *pathExtension) noexcept {
-    NSCParameterAssert(pathExtension != nil);
+    assert(pathExtension != nil);
     CFStringRef extension = (__bridge CFStringRef)pathExtension;
 
     UInt32 size = 0;
@@ -123,7 +124,7 @@ std::vector<AudioFormatID> formatIDsForFileTypeID(AudioFileTypeID fileTypeID, bo
 
 OSStatus readProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer,
                   UInt32 *actualCount) noexcept {
-    NSCParameterAssert(inClientData != nullptr);
+    assert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputTarget *outputTarget = encoder->_outputTarget;
@@ -154,7 +155,7 @@ OSStatus readProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, vo
 
 OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, const void *buffer,
                    UInt32 *actualCount) noexcept {
-    NSCParameterAssert(inClientData != nullptr);
+    assert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputTarget *outputTarget = encoder->_outputTarget;
@@ -184,7 +185,7 @@ OSStatus writeProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, c
 }
 
 SInt64 getSizeProc(void *inClientData) noexcept {
-    NSCParameterAssert(inClientData != nullptr);
+    assert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputTarget *outputTarget = encoder->_outputTarget;
@@ -198,7 +199,7 @@ SInt64 getSizeProc(void *inClientData) noexcept {
 }
 
 OSStatus setSizeProc(void *inClientData, SInt64 inSize) noexcept {
-    NSCParameterAssert(inClientData != nullptr);
+    assert(inClientData != nullptr);
 
     SFBCoreAudioEncoder *encoder = (__bridge SFBCoreAudioEncoder *)inClientData;
     SFBOutputTarget *outputTarget = encoder->_outputTarget;

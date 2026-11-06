@@ -11,6 +11,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <cmath>
 #import <cstdlib>
 #import <cstring>
@@ -141,9 +142,7 @@ class VariableLengthInput {
     }
 
     bool getRiceGolombCode(int32_t &i32, int k) noexcept {
-#if DEBUG
         assert(k >= 0 && k < 32);
-#endif /* DEBUG */
         if (k < 0 || k > 31) {
             return false;
         }
@@ -166,9 +165,7 @@ class VariableLengthInput {
                 bitsAvailable_ -= k;
                 k = 0;
             } else {
-#if DEBUG
                 assert(bitsAvailable_ < 32);
-#endif /* DEBUG */
                 result = (result << bitsAvailable_) | static_cast<int32_t>(bitBuffer_ & maskTable_[bitsAvailable_]);
                 k -= bitsAvailable_;
                 if (!refillBitBuffer()) {
@@ -405,8 +402,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != nullptr);
+    assert(inputSource != nil);
+    assert(formatIsSupported != nullptr);
 
     NSData *header = [inputSource readHeaderOfLength:SFBShortenDetectionSize skipID3v2Tag:NO error:error];
     if (header == nil) {
@@ -648,9 +645,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                                              readingFromOffset:0
                                                    frameLength:framesToCopy];
             [[maybe_unused]] const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
-#if DEBUG
             assert(framesTrimmed == framesCopied);
-#endif /* DEBUG */
             framesDecoded += framesCopied;
         }
 
@@ -699,10 +694,10 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
     }
     entry = std::prev(entry);
 
-#if DEBUG
+#ifndef NDEBUG
     os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %u to seek to frame %lld",
                  std::ranges::distance(_seekTableEntries.cbegin(), entry), entry->frameNumber_, frame);
-#endif
+#endif /* !NDEBUG */
 
     if (![_inputSource seekToOffset:entry->lastBufferReadPosition_ error:error]) {
         return NO;
@@ -995,8 +990,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (bool)parseRIFFChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
-    NSParameterAssert(chunkData != nullptr);
-    NSParameterAssert(size >= 28);
+    assert(chunkData != nullptr);
+    assert(size >= 28);
 
     constexpr auto waveFormatPCMTag = 0x0001;
 
@@ -1095,8 +1090,8 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (bool)parseFORMChunk:(const unsigned char *)chunkData size:(size_t)size error:(NSError **)error {
-    NSParameterAssert(chunkData != nullptr);
-    NSParameterAssert(size >= 30);
+    assert(chunkData != nullptr);
+    assert(size >= 30);
 
     uintptr_t offset = 0;
 
@@ -1604,7 +1599,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
 }
 
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url {
-    NSParameterAssert(url != nil);
+    assert(url != nil);
 
     NSError *error;
     SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:&error];

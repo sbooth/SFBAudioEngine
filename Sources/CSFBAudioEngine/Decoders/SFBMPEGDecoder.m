@@ -7,6 +7,7 @@
 
 #import "SFBMPEGDecoder.h"
 
+#import <assert.h>
 #import <os/log.h>
 
 #import <AVFAudioExtensions/AVFAudioExtensions.h>
@@ -19,7 +20,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Dec
 // ========================================
 // Callbacks
 static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
-    NSCParameterAssert(iohandle != NULL);
+    assert(iohandle != NULL);
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
 
@@ -32,7 +33,7 @@ static int read_callback(void *iohandle, void *ptr, size_t size, size_t *read) {
 }
 
 static int64_t lseek_callback(void *iohandle, int64_t offset, int whence) {
-    NSCParameterAssert(iohandle != NULL);
+    assert(iohandle != NULL);
 
     SFBMPEGDecoder *decoder = (__bridge SFBMPEGDecoder *)iohandle;
 
@@ -104,8 +105,8 @@ static uint32_t id3v2_tag_total_size(const unsigned char *header) {
 
 /// Searches for an MP3 sync word and minimal valid frame header in @c buf.
 static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned char *buf, NSInteger len) {
-    NSCParameterAssert(buf != NULL);
-    NSCParameterAssert(len >= 3);
+    assert(buf != NULL);
+    assert(len >= 3);
 
     const unsigned char *loc = buf;
     const unsigned char *end = buf + len - 2;
@@ -157,8 +158,8 @@ static BOOL contains_mp3_sync_word_and_minimal_valid_frame_header(const unsigned
 + (BOOL)testInputSource:(SFBInputSource *)inputSource
         formatIsSupported:(SFBTernaryTruthValue *)formatIsSupported
                     error:(NSError **)error {
-    NSParameterAssert(inputSource != nil);
-    NSParameterAssert(formatIsSupported != NULL);
+    assert(inputSource != nil);
+    assert(formatIsSupported != NULL);
 
     NSInteger originalOffset;
     if (![inputSource getOffset:&originalOffset error:error]) {

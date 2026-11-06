@@ -7,6 +7,8 @@
 
 #import "AddAudioPropertiesToDictionary.h"
 
+#import <cassert>
+
 #import "SFBAudioProperties.h"
 
 void sfb::addAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary) {
