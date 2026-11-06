@@ -5,6 +5,9 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import "SFBAudioMetadata+TagLibMP4Tag.h"
+
+#import <cassert>
 #import <cstdio>
 
 #import <ImageIO/ImageIO.h>
@@ -12,7 +15,6 @@
 
 #import <taglib/mp4coverart.h>
 
-#import "SFBAudioMetadata+TagLibMP4Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 #import "unique_ref.hpp"

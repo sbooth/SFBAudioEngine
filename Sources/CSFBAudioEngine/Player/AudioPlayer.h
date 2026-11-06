@@ -600,9 +600,7 @@ inline bool AudioPlayer::engineIsRunning() const noexcept { return engine_.isRun
 inline SFBAudioPlayerPlaybackState AudioPlayer::playbackState() const noexcept {
     const auto flags = loadFlags();
     const auto state = flags & (Flags::active | Flags::playing);
-#if DEBUG
     assert(bits::is_set_or_is_clear(state, Flags::active, Flags::playing));
-#endif /* DEBUG */
     return static_cast<SFBAudioPlayerPlaybackState>(state);
 }
 

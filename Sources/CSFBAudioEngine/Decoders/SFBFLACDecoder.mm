@@ -11,6 +11,7 @@
 #import <simd/simd.h>
 
 #import <algorithm>
+#import <cassert>
 #import <cstdlib>
 #import <cstring>
 #import <optional>
@@ -597,10 +598,8 @@ void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorS
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
 
-#if DEBUG
     // libFLAC always sets FLAC__FRAME_NUMBER_TYPE_SAMPLE_NUMBER
     assert(frame->header.number_type == FLAC__FRAME_NUMBER_TYPE_SAMPLE_NUMBER);
-#endif /* DEBUG */
     _framePosition = frame->header.number.sample_number;
 
     // FLAC hands us 32-bit signed integers with the samples low-aligned

@@ -5,6 +5,10 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import "SFBAudioMetadata+TagLibID3v2Tag.h"
+
+#import <cassert>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -15,7 +19,6 @@
 #import <taglib/textidentificationframe.h>
 #import <taglib/unsynchronizedlyricsframe.h>
 
-#import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 #import "unique_ref.hpp"

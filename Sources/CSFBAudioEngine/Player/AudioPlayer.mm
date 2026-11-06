@@ -74,9 +74,7 @@ void audioSessionInterruptionNotificationCallback([[maybe_unused]] CFNotificatio
 ///
 /// This is the value of `kAudioObjectPropertyName` in the output scope on the main element
 NSString *_Nullable audioDeviceName(AUAudioUnit *_Nonnull audioUnit) noexcept {
-#if DEBUG
     assert(audioUnit != nil);
-#endif /* DEBUG */
 
     AudioObjectPropertyAddress address = {.mSelector = kAudioObjectPropertyName,
                                           .mScope = kAudioObjectPropertyScopeOutput,
@@ -215,10 +213,8 @@ bool isSnapshotSeekable(const sfb::detail::TransportSnapshot &snapshot) noexcept
 
 /// Computes the host time for a given frame offset relative to `timestamp` at `sampleRate`
 uint64_t hostTimeForFrameOffset(uint32_t frameOffset, const AudioTimeStamp &timestamp, double sampleRate) noexcept {
-#if DEBUG
     assert((timestamp.mFlags & kAudioTimeStampHostTimeValid) != 0);
     assert((timestamp.mFlags & kAudioTimeStampRateScalarValid) != 0);
-#endif /* DEBUG */
     const auto deltaSeconds = static_cast<double>(frameOffset) / sampleRate;
     const auto scaledNanos =
             static_cast<uint64_t>(deltaSeconds * timestamp.mRateScalar * static_cast<double>(nanosecondsPerSecond));
@@ -353,19 +349,15 @@ struct AudioPlayer::DecoderState final {
 std::atomic_uint64_t AudioPlayer::DecoderState::sequenceCounter_{1};
 
 inline AudioPlayer::DecoderState::DecoderState(Decoder _Nonnull decoder) noexcept : decoder_{decoder} {
-#if DEBUG
     assert(decoder != nil);
-#endif /* DEBUG */
 }
 
 inline bool AudioPlayer::DecoderState::allocate(AVAudioFrameCount frameCapacity) noexcept {
-#if DEBUG
     assert(decoder_.isOpen);
     assert(converter_ == nil);
     assert(decodeBuffer_ == nil);
     assert(bits::is_set(loadFlags(), Flags::needsInitialization));
     assert(frameCapacity != 0);
-#endif /* DEBUG */
 
     auto format = decoder_.processingFormat;
     if (format == nil) {
@@ -441,9 +433,7 @@ inline AVAudioFramePosition AudioPlayer::DecoderState::frameLength() const noexc
 inline bool AudioPlayer::DecoderState::supportsSeeking() const noexcept { return supportsSeeking_; }
 
 inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noexcept {
-#if DEBUG
     assert(bits::is_clear(loadFlags(), Flags::needsInitialization));
-#endif /* DEBUG */
     return {.sequenceNumber_ = sequenceNumber_,
             .framePosition_ = framesRendered(),
             .frameLength_ = frameLength(),
@@ -453,10 +443,8 @@ inline detail::TransportSnapshot AudioPlayer::DecoderState::snapshot() const noe
 }
 
 inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull buffer, NSError **error) noexcept {
-#if DEBUG
     assert(buffer != nil);
     assert(buffer.frameCapacity == decodeBuffer_.frameCapacity);
-#endif /* DEBUG */
 
     if (![decoder_ decodeIntoBuffer:decodeBuffer_ frameLength:decodeBuffer_.frameCapacity error:error]) {
         return false;
@@ -474,19 +462,15 @@ inline bool AudioPlayer::DecoderState::decodeAudio(AVAudioPCMBuffer *_Nonnull bu
     if (![converter_ convertToBuffer:buffer fromBuffer:decodeBuffer_ error:error]) {
         return false;
     }
-#if DEBUG
     assert(framesDecoded == buffer.frameLength);
-#endif /* DEBUG */
 
     return true;
 }
 
 inline bool AudioPlayer::DecoderState::seekToFrame(AVAudioFramePosition frame, NSError **error) noexcept {
-#if DEBUG
     assert(frame >= 0);
     assert(frame != SFBUnknownFramePosition);
     assert(supportsSeeking_);
-#endif /* DEBUG */
 
     os_log_debug(log_, "Seeking to frame %lld in %{public}@", frame, decoder_);
 
@@ -633,9 +617,7 @@ sfb::AudioPlayer::AudioPlayer() {
 }
 
 sfb::AudioPlayer::~AudioPlayer() noexcept {
-#if DEBUG
     assert(!ownsCurrentThread() && "~AudioPlayer() called from decoding or event processing thread");
-#endif /* DEBUG */
     auto *notificationCenter = CFNotificationCenterGetLocalCenter();
     CFNotificationCenterRemoveEveryObserver(notificationCenter, this);
 
@@ -683,9 +665,7 @@ bool sfb::AudioPlayer::ownsCurrentThread() const noexcept { return threadOwner =
 // MARK: - Playlist Management
 
 bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback, NSError **error) noexcept {
-#if DEBUG
     assert(decoder != nil);
-#endif /* DEBUG */
 
     // Ensure only one decoder can be enqueued at a time
     std::lock_guard lock{queuedDecodersMutex_};
@@ -718,9 +698,7 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
 }
 
 bool sfb::AudioPlayer::formatWillBeGaplessIfEnqueued(AVAudioFormat *format) const noexcept {
-#if DEBUG
     assert(format != nil);
-#endif /* DEBUG */
     // Gapless playback requires the same number of channels at the same sample rate with the same channel layout
     auto renderFormat = [sourceNode_ outputFormatForBus:0];
     return format.channelCount == renderFormat.channelCount && format.sampleRate == renderFormat.sampleRate &&
@@ -941,14 +919,12 @@ bool sfb::AudioPlayer::supportsSeeking() const noexcept {
 }
 
 bool sfb::AudioPlayer::seekToFrameInSnapshot(const detail::TransportSnapshot &snapshot, int64_t frame) noexcept {
-#if DEBUG
     assert(snapshot.isValid_);
     assert(snapshot.supportsSeeking_);
     assert(snapshot.framePosition_ != SFBUnknownFramePosition);
     assert(snapshot.frameLength_ != SFBUnknownFrameLength);
     assert(snapshot.framePosition_ < snapshot.frameLength_);
     assert(snapshot.frameLength_ >= 1);
-#endif /* DEBUG */
 
     const auto clampedFrame = std::clamp(frame, 0LL, snapshot.frameLength_ - 1);
     if (clampedFrame != snapshot.framePosition_) {
@@ -1021,9 +997,7 @@ bool sfb::AudioPlayer::setOutputDeviceID(AUAudioObjectID outputDeviceID, NSError
 // MARK: - AVAudioEngine
 
 void sfb::AudioPlayer::modifyProcessingGraph(void (^block)(AVAudioEngine *engine)) const noexcept {
-#if DEBUG
     assert(block != nil);
-#endif /* DEBUG */
 
     std::lock_guard lock{engineMutex_};
     block(engine_);
@@ -1205,9 +1179,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(boo
 }
 
 bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &formatMismatch) noexcept {
-#if DEBUG
     assert(decoderState != nullptr);
-#endif /* DEBUG */
 
     auto pendingSeek = pendingSeek_.load(std::memory_order_acquire);
     if (pendingSeek.sequenceNumber_ != decoderState->sequenceNumber_) {
@@ -1345,9 +1317,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
     // Create the decoder state and add it to the list of active decoders
     try {
         activeDecoders_.push_back(std::make_unique<DecoderState>(decoder));
-#if DEBUG
         assert(std::ranges::is_sorted(activeDecoders_, std::ranges::less{}, &DecoderState::sequenceNumber_));
-#endif /* DEBUG */
         return activeDecoders_.back().get();
     } catch (const std::exception &e) {
         os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder, e.what());
@@ -1361,9 +1331,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
 }
 
 bool sfb::AudioPlayer::prepareDequeuedDecoder(DecoderState *decoderState) noexcept {
-#if DEBUG
     assert(decoderState != nullptr);
-#endif /* DEBUG */
 
     // Open the decoder if necessary
     if (!decoderState->decoder_.isOpen) {
@@ -1400,10 +1368,8 @@ bool sfb::AudioPlayer::prepareDequeuedDecoder(DecoderState *decoderState) noexce
 
 bool sfb::AudioPlayer::allocateDecodeBufferIfNeeded(AVAudioPCMBuffer *__strong &buffer, AVAudioFormat *renderFormat,
                                                     DecoderState *decoderState) noexcept {
-#if DEBUG
     assert(renderFormat != nil);
     assert(decoderState != nullptr);
-#endif /* DEBUG */
 
     if (buffer != nil) {
         auto format = buffer.format;
@@ -1428,9 +1394,7 @@ bool sfb::AudioPlayer::allocateDecodeBufferIfNeeded(AVAudioPCMBuffer *__strong &
 
 bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioPCMBuffer *__strong &buffer,
                                            bool &formatMismatch) noexcept {
-#if DEBUG
     assert(decoderState != nullptr);
-#endif /* DEBUG */
 
     // Before decoding starts determine the decoder and ring buffer format compatibility
     if (bits::is_clear(decoderState->loadFlags(), DecoderState::Flags::decodingStarted)) {
@@ -1489,10 +1453,8 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
 }
 
 bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudioPCMBuffer *buffer) noexcept {
-#if DEBUG
     assert(decoderState != nullptr);
     assert(buffer != nil);
-#endif /* DEBUG */
 
     const auto flags = loadFlags();
 
@@ -1706,9 +1668,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 }
 
 void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
-#if DEBUG
     assert(framesRead > 0);
-#endif /* DEBUG */
 
     auto framesRemaining = framesRead;
     do {
@@ -1728,9 +1688,7 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto chunkFramesRemaining = renderingChunk_->framesRemaining();
         const auto chunkFramesConsumed = std::min(chunkFramesRemaining, framesRemaining);
 
-#if DEBUG
         assert(chunkFramesConsumed > 0 || renderingChunk_->descriptor_.isLast_);
-#endif /* DEBUG */
 
         // Rendering is starting
         if (renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_) [[unlikely]] {
@@ -1774,17 +1732,13 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
 }
 
 void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept {
-#if DEBUG
     assert(!renderingChunk_);
-#endif /* DEBUG */
 
     // Check for an empty decoded chunk descriptor, and if found enqueue an empty frames rendered event to signify
     // rendering complete
     if (detail::DecodedChunkDescriptor chunkDescriptor{};
         audioMetadata_.peek(chunkDescriptor) && chunkDescriptor.isEmpty()) {
-#if DEBUG
         assert(chunkDescriptor.isLast_);
-#endif /* DEBUG */
         const auto chunkSequenceNumber = chunkDescriptor.sequenceNumber_;
 
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
@@ -1866,9 +1820,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
                 break;
 
             default:
-#if DEBUG
                 assert(false && "Unknown EventCommand");
-#endif /* DEBUG */
                 os_log_error(log_, "Unknown event command: %u", static_cast<uint32_t>(eventCommand));
                 break;
             }
@@ -1910,9 +1862,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::decodingStarted);
-#endif /* DEBUG */
 
     Decoder decoder = nil;
     Decoder currentDecoder = nil;
@@ -1942,9 +1892,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     }
 
     if (bits::is_clear(loadFlags(), Flags::playing) && decoder == currentDecoder) {
-#if DEBUG
         assert(currentSnapshot.isValid_);
-#endif /* DEBUG */
         publishTransportSnapshot(currentSnapshot);
         setNowPlayingAndNotifyDelegate(decoder);
     }
@@ -1960,9 +1908,7 @@ bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::decodingComplete);
-#endif /* DEBUG */
 
     Decoder decoder = nil;
     {
@@ -1996,9 +1942,7 @@ bool sfb::AudioPlayer::processSeekCompleteEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::seekComplete);
-#endif /* DEBUG */
 
     Decoder decoder = nil;
     detail::TransportSnapshot snapshot{};
@@ -2015,9 +1959,7 @@ bool sfb::AudioPlayer::processSeekCompleteEvent() noexcept {
         }
     }
 
-#if DEBUG
     assert(snapshot.isValid_);
-#endif /* DEBUG */
     publishTransportSnapshot(snapshot);
 
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
@@ -2038,9 +1980,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::decoderCanceled);
-#endif /* DEBUG */
 
     Decoder decoder = nil;
     NSError *error = nil;
@@ -2116,9 +2056,7 @@ bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::allocationFailure);
-#endif /* DEBUG */
 
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
@@ -2151,9 +2089,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::renderingStarted);
-#endif /* DEBUG */
 
     Decoder decoder{nil};
     uint64_t outputGeneration{0};
@@ -2169,11 +2105,11 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
-#if DEBUG
+#ifndef NDEBUG
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
             assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
-#endif /* DEBUG */
+#endif
 
             (*iter)->setFlags(DecoderState::Flags::renderingStarted);
             publishTransportSnapshot((*iter)->snapshot());
@@ -2186,9 +2122,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
         }
     }
 
-#if DEBUG
     assert(decoder != nil);
-#endif /* DEBUG */
 
     handleRenderingWillStartEvent(decoder, eventTime, outputGeneration);
     return true;
@@ -2208,9 +2142,7 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::framesRendered);
-#endif /* DEBUG */
 
     // If a frames rendered event was posted it means valid frames were rendered
     // during that render cycle.
@@ -2238,12 +2170,12 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
-#if DEBUG
+#ifndef NDEBUG
             assert(frameCount > 0);
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
             assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
-#endif /* DEBUG */
+#endif
 
             (*iter)->framesRendered_.fetch_add(frameCount, std::memory_order_acq_rel);
             publishTransportSnapshot((*iter)->snapshot());
@@ -2273,9 +2205,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::renderingComplete);
-#endif /* DEBUG */
 
     Decoder decoder{nil};
     uint64_t outputGeneration{0};
@@ -2291,12 +2221,12 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
-#if DEBUG
+#ifndef NDEBUG
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
             assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingComplete));
-#endif /*DEBUG */
+#endif
 
             decoder = (*iter)->decoder_;
 
@@ -2326,9 +2256,7 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
         }
     }
 
-#if DEBUG
     assert(decoder != nil);
-#endif /* DEBUG */
 
     handleRenderingWillCompleteEvent(decoder, eventTime, outputGeneration);
     return true;
@@ -2347,9 +2275,7 @@ bool sfb::AudioPlayer::processRenderBufferUnderrunEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::renderBufferUnderrun);
-#endif /* DEBUG */
 
     os_log_error(log_, "Audio ring buffer underrun: %u/%u frames rendered for host time %llu", framesRendered,
                  framesRequested, hostTime);
@@ -2368,9 +2294,7 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
         return false;
     }
 
-#if DEBUG
     assert(command == EventCommand::pauseEngine);
-#endif /* DEBUG */
 
     {
         std::lock_guard lock{engineMutex_};
@@ -2539,9 +2463,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                 os_log_debug(log_, "Ignoring stale rendering complete notification for %{public}@", decoder);
                 return;
             }
-#if DEBUG
             assert(that->scheduledRenderingCompleteNotifications_ > 0);
-#endif /* DEBUG */
             remaining = --that->scheduledRenderingCompleteNotifications_;
         }
 
@@ -2605,9 +2527,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                     // The playback session remains active so audio enqueued later plays without a call to -play
                     break;
                 default:
-#if DEBUG
                     assert(false && "Unknown SFBAudioPlayerEndOfAudioAction");
-#endif /* DEBUG */
                     os_log_error(log_, "Unknown end of audio action: %ld; stopping playback",
                                  static_cast<long>(action));
                     if (that->deactivatePlayerAndStopEngine()) {
@@ -2645,9 +2565,7 @@ void sfb::AudioPlayer::publishTransportSnapshot(const detail::TransportSnapshot 
     // Fetch current sequence and mark write in progress (odd sequence number)
     const auto seq = snapshotSequence_.load(std::memory_order_relaxed);
     snapshotSequence_.store(seq + 1, std::memory_order_release);
-#if DEBUG
     assert(isOdd(snapshotSequence_.load(std::memory_order_relaxed)));
-#endif /* DEBUG */
     // Formally required but no current processor requires it
     // std::atomic_thread_fence(std::memory_order_release);
 
@@ -3024,11 +2942,9 @@ void sfb::AudioPlayer::notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybac
 // MARK: - Processing Graph Management
 
 bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFormat *format, NSError **error) noexcept {
-#if DEBUG
     assert(format != nil);
     assert(format.isStandard);
     assert(![[sourceNode_ outputFormatForBus:0] isEqual:format]);
-#endif /* DEBUG */
 
     os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", stringDescribingAVAudioFormat(format));
 

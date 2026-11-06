@@ -6,6 +6,9 @@
 //
 
 #import "SFBAudioMetadata+TagLibAPETag.h"
+
+#import <cassert>
+
 #import "TagLibStringUtilities.h"
 
 @implementation SFBAudioMetadata (TagLibAPETag)

@@ -11,6 +11,7 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <cassert>
 #import <cmath>
 #import <cstdlib>
 #import <cstring>
@@ -141,9 +142,7 @@ class VariableLengthInput {
     }
 
     bool getRiceGolombCode(int32_t &i32, int k) noexcept {
-#if DEBUG
         assert(k >= 0 && k < 32);
-#endif /* DEBUG */
         if (k < 0 || k > 31) {
             return false;
         }
@@ -166,9 +165,7 @@ class VariableLengthInput {
                 bitsAvailable_ -= k;
                 k = 0;
             } else {
-#if DEBUG
                 assert(bitsAvailable_ < 32);
-#endif /* DEBUG */
                 result = (result << bitsAvailable_) | static_cast<int32_t>(bitBuffer_ & maskTable_[bitsAvailable_]);
                 k -= bitsAvailable_;
                 if (!refillBitBuffer()) {
@@ -648,9 +645,7 @@ SeekTableEntry parseSeekTableEntry(const void *buf) {
                                              readingFromOffset:0
                                                    frameLength:framesToCopy];
             [[maybe_unused]] const auto framesTrimmed = [_frameBuffer trimAtOffset:0 frameLength:framesCopied];
-#if DEBUG
             assert(framesTrimmed == framesCopied);
-#endif /* DEBUG */
             framesDecoded += framesCopied;
         }
 
