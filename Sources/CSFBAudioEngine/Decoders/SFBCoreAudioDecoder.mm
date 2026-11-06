@@ -76,11 +76,11 @@ SInt64 getSizeCallback(void *inClientData) noexcept {
     return length;
 }
 
-NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus result) noexcept {
+NSError *formatNotRecognizedError(NSURL *_Nullable url, OSStatus status) noexcept {
     NSMutableDictionary *userInfo = [NSMutableDictionary
             dictionaryWithObjectsAndKeys:NSLocalizedString(@"The file's extension may not match the file's type.", @""),
                                          NSLocalizedRecoverySuggestionErrorKey,
-                                         [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil],
+                                         [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil],
                                          NSUnderlyingErrorKey, nil];
 
     if (url != nil) {
