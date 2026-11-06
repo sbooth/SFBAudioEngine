@@ -96,6 +96,9 @@ let package = Package(
                 .headerSearchPath("Conversion"),
                 .define("NDEBUG", .when(configuration: .release)),
             ],
+            cxxSettings: [
+                .define("NDEBUG", .when(configuration: .release)),
+            ],
             linkerSettings: [
                 .linkedFramework("Accelerate"),
                 .linkedFramework("AudioToolbox"),
