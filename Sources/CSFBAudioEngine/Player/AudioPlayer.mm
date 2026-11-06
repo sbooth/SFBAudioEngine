@@ -1836,7 +1836,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     while (!stoken.stop_requested()) {
 #ifndef NDEBUG
         if (const auto occupancy =
-            static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);
+                    static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);
             occupancy > twoThirds) {
             os_log_debug(log_, "Less than 1/3 headroom in event message queue: occupancy %.2f", occupancy);
         }
@@ -2459,7 +2459,7 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         if (player == nil) {
 #ifndef NDEBUG
             os_log_debug(log_, "Audio player deallocated between rendering will start event and rendering started "
-                         "notification");
+                               "notification");
 #endif /* !NDEBUG */
             return;
         }
@@ -2547,7 +2547,7 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         if (player == nil) {
 #ifndef NDEBUG
             os_log_debug(log_, "Audio player deallocated between rendering will complete event and rendering "
-                         "complete notification");
+                               "complete notification");
 #endif /* !NDEBUG */
             return;
         }
